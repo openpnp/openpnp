@@ -45,7 +45,6 @@ import javax.swing.KeyStroke;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
 import javax.swing.border.EmptyBorder;
-import javax.swing.border.EtchedBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
@@ -121,8 +120,8 @@ public class ClassSelectionDialog<T> extends JDialog {
         selectAction.setEnabled(false);
     }
 
-    private final Action selectAction = new AbstractAction(Translations.getStringOrDefault(
-            "ClassSelectionDialog.Action.Accept", "Accept")) {
+    private final Action selectAction = new AbstractAction(Translations.getString(
+            "ClassSelectionDialog.Action.Accept")) {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             selectedClass = ((ClassListItem<T>) list.getSelectedValue()).getTheClass();
@@ -130,8 +129,8 @@ public class ClassSelectionDialog<T> extends JDialog {
         }
     };
 
-    private final Action cancelAction = new AbstractAction(Translations.getStringOrDefault(
-            "ClassSelectionDialog.Action.Cancel", "Cancel")) {
+    private final Action cancelAction = new AbstractAction(Translations.getString(
+            "ClassSelectionDialog.Action.Cancel")) {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             setVisible(false);

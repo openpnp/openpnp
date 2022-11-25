@@ -1225,48 +1225,39 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
     public PropertySheet[] getPropertySheets() {
         PropertySheet[] sheets = new PropertySheet[] {
                 new PropertySheetWizardAdapter(WizardUtils.configurationWizardFactory(CameraConfigurationWizard.class,
-                        this.getId(), this), Translations.getStringOrDefault(
-                                "ReferenceCamera.CameraConfigurationWizard.tab.title",
-                        "General Configuration")),
+                        this.getId(), this), Translations.getString(
+                                "ReferenceCamera.CameraConfigurationWizard.tab.title")),
                 new PropertySheetWizardAdapter(WizardUtils.configurationWizardFactory(
-                        CameraVisionConfigurationWizard.class, this.getId(), this), Translations.getStringOrDefault(
-                                "ReferenceCamera.CameraVisionConfigurationWizard.tab.title",
-                        "Camera Settling")),
-                new PropertySheetWizardAdapter(getConfigurationWizard(), Translations.getStringOrDefault(
-                        "ReferenceCamera.DeviceSettings.tab.title",
-                        "Device Settings")),
+                        CameraVisionConfigurationWizard.class, this.getId(), this), Translations.getString(
+                                "ReferenceCamera.CameraVisionConfigurationWizard.tab.title")),
+                new PropertySheetWizardAdapter(getConfigurationWizard(), Translations.getString(
+                        "ReferenceCamera.DeviceSettings.tab.title")),
                 new PropertySheetWizardAdapter(WizardUtils.configurationWizardFactory(
                         ReferenceCameraWhiteBalanceConfigurationWizard.class, this.getId(), this),
-                        Translations.getStringOrDefault(
-                                "ReferenceCamera.ReferenceCameraWhiteBalanceConfigurationWizard.tab.title",
-                                "White Balance")),
+                        Translations.getString(
+                                "ReferenceCamera.ReferenceCameraWhiteBalanceConfigurationWizard.tab.title")),
                 new PropertySheetWizardAdapter(WizardUtils.configurationWizardFactory(
                         ReferenceCameraPositionConfigurationWizard.class, this.getId(), getMachine(), this),
-                        Translations.getStringOrDefault(
-                                "ReferenceCamera.ReferenceCameraPositionConfigurationWizard.tab.title",
-                                "Position")),
+                        Translations.getString(
+                                "ReferenceCamera.ReferenceCameraPositionConfigurationWizard.tab.title")),
                 new PropertySheetWizardAdapter(WizardUtils.configurationWizardFactory(
                         ReferenceCameraCalibrationConfigurationWizard.class, this.getId(), this),
-                        Translations.getStringOrDefault(
-                                "ReferenceCamera.ReferenceCameraCalibrationConfigurationWizard.tab.title",
-                                "Lens Calibration")),
+                        Translations.getString(
+                                "ReferenceCamera.ReferenceCameraCalibrationConfigurationWizard.tab.title")),
                 new PropertySheetWizardAdapter(WizardUtils.configurationWizardFactory(
                         ReferenceCameraTransformsConfigurationWizard.class, this.getId(), this),
-                        Translations.getStringOrDefault(
-                                "ReferenceCamera.ReferenceCameraTransformsConfigurationWizard.tab.title",
-                                "Image Transforms")),
+                        Translations.getString(
+                                "ReferenceCamera.ReferenceCameraTransformsConfigurationWizard.tab.title")),
                 new PropertySheetWizardAdapter(WizardUtils.configurationWizardFactory(
                         ReferenceCameraCalibrationWizard.class, this.getId(), this),
-                        Translations.getStringOrDefault(
-                                "ReferenceCamera.ReferenceCameraCalibrationWizard.tab.title",
-                                "Advanced Calibration"))
+                        Translations.getString(
+                                "ReferenceCamera.ReferenceCameraCalibrationWizard.tab.title"))
         };
         if (getFocusSensingMethod() != FocusSensingMethod.None) {
                 sheets = Collect.concat(sheets, new PropertySheet[] {
                         new PropertySheetWizardAdapter(getFocusProvider().getConfigurationWizard(this),
-                                Translations.getStringOrDefault(
-                                        "ReferenceCamera.FocusProvider.ConfigurationWizard.tab.title",
-                                        "Auto Focus")),
+                                Translations.getString(
+                                        "ReferenceCamera.FocusProvider.ConfigurationWizard.tab.title")),
                 });
         }
         return sheets;
@@ -1277,23 +1268,19 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
         return new Action[] { deleteAction };
     }
     
-    public Action deleteAction = new AbstractAction(Translations.getStringOrDefault(
-            "ReferenceCamera.Action.Delete",
-            "Delete Camera")) {
+    public Action deleteAction = new AbstractAction(Translations.getString("ReferenceCamera.Action.Delete")) {
         {
             putValue(SMALL_ICON, Icons.delete);
-            putValue(NAME, Translations.getStringOrDefault("ReferenceCamera.Action.Delete","Delete Camera"));
-            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault("ReferenceCamera.Action.Delete.Description",
-                    "Delete the currently selected camera."));
+            putValue(NAME, Translations.getString("ReferenceCamera.Action.Delete"));
+            putValue(SHORT_DESCRIPTION, Translations.getString("ReferenceCamera.Action.Delete.Description"));
         }
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
             int ret = JOptionPane.showConfirmDialog(MainFrame.get(),
-                    Translations.getStringOrDefault("DialogMessages.ConfirmDelete.text",
-                            "Are you sure you want to delete") + " " + getName() + "?",
-                    Translations.getStringOrDefault("DialogMessages.ConfirmDelete.title",
-                            "Delete") + " " + getName() + "?", JOptionPane.YES_NO_OPTION);
+                    Translations.getString("DialogMessages.ConfirmDelete.text") + " " + getName() + "?",
+                    Translations.getString("DialogMessages.ConfirmDelete.title") + " " + getName() + "?",
+                    JOptionPane.YES_NO_OPTION);
             if (ret == JOptionPane.YES_OPTION) {
                 if (getHead() != null) {
                     getHead().removeCamera(ReferenceCamera.this);

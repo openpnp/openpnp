@@ -43,8 +43,8 @@ public class GcodeDriverConsole extends AbstractConfigurationWizard {
         historyCursor = 0;
 
         JPanel gcodeConsole = new JPanel();
-        gcodeConsole.setBorder(new TitledBorder(null, Translations.getStringOrDefault(
-                "GcodeDriverConsole.GCodeConsolePanel.Border.title", "Gcode console"),
+        gcodeConsole.setBorder(new TitledBorder(null, Translations.getString(
+                "GcodeDriverConsole.GCodeConsolePanel.Border.title"),
                 TitledBorder.LEADING, TitledBorder.TOP, null));
         contentPanel.add(gcodeConsole);
 
@@ -73,8 +73,7 @@ public class GcodeDriverConsole extends AbstractConfigurationWizard {
         textAreaConsole.setRows(5);
         scrollPane.setViewportView(textAreaConsole);
 
-        lblCmdLine = new JLabel(Translations.getStringOrDefault(
-                "GcodeDriverConsole.GCodeConsolePanel.CommandLineLabel.text", "Command line:"));
+        lblCmdLine = new JLabel(Translations.getString("GcodeDriverConsole.GCodeConsolePanel.CommandLineLabel.text"));
         gcodeConsole.add(lblCmdLine, "2, 4");
 
         cmdLineTextField = new JTextField();
@@ -117,8 +116,8 @@ public class GcodeDriverConsole extends AbstractConfigurationWizard {
         sendGcodeConCmdBtn = new JButton(sendGcodeConCmdAction);
         gcodeConsole.add(sendGcodeConCmdBtn, "6, 4");
         
-        forceUpperCaseChk = new JCheckBox(Translations.getStringOrDefault(
-                "GcodeDriverConsole.GCodeConsolePanel.ForceUpperCaseLabel.text", "Force Upper Case"));
+        forceUpperCaseChk = new JCheckBox(Translations.getString(
+                "GcodeDriverConsole.GCodeConsolePanel.ForceUpperCaseLabel.text"));
         forceUpperCaseChk.setSelected(true);
         gcodeConsole.add(forceUpperCaseChk, "2, 6");
 
@@ -197,8 +196,8 @@ public class GcodeDriverConsole extends AbstractConfigurationWizard {
         }
     }
 
-    private Action sendGcodeConCmdAction = new AbstractAction(Translations.getStringOrDefault(
-            "GcodeDriverConsole.GCodeConsolePanel.SendButton.text", "Send")) {
+    private Action sendGcodeConCmdAction = new AbstractAction(Translations.getString(
+            "GcodeDriverConsole.GCodeConsolePanel.SendButton.text")) {
         @Override
         public void actionPerformed(ActionEvent e) {
             sendGcodeConCmd();

@@ -142,8 +142,7 @@ public class VisionSettingsPanel extends JPanel implements WizardContainer {
         JPanel filterPanel = new JPanel();
         toolbarPanel.add(filterPanel, BorderLayout.EAST);
         
-        JLabel lblFilterType = new JLabel(Translations.getStringOrDefault("VisionSettingsPanel.TypeLabel.text",
-                "Type"));
+        JLabel lblFilterType = new JLabel(Translations.getString("VisionSettingsPanel.TypeLabel.text"));
         filterPanel.add(lblFilterType);
         
         visionTypeFilter = new JComboBox(VisionTypeFilter.values());
@@ -188,10 +187,8 @@ public class VisionSettingsPanel extends JPanel implements WizardContainer {
     public final Action newSettingsAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.add);
-            putValue(NAME, Translations.getStringOrDefault("VisionSettingsPanel.Action.NewSettings",
-                    "New Settings"));
-            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault(
-                    "VisionSettingsPanel.Action.NewSettings.Description","Create a new Bottom Vision Settings."));
+            putValue(NAME, Translations.getString("VisionSettingsPanel.Action.NewSettings"));
+            putValue(SHORT_DESCRIPTION, Translations.getString("VisionSettingsPanel.Action.NewSettings.Description"));
         }
 
         @Override
@@ -206,11 +203,9 @@ public class VisionSettingsPanel extends JPanel implements WizardContainer {
     public final Action deleteSettingsAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.delete);
-            putValue(NAME, Translations.getStringOrDefault(
-                    "VisionSettingsPanel.Action.DeleteSettings", "Delete Settings"));
-            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault(
-                    "VisionSettingsPanel.Action.DeleteSettings.Description",
-                    "Delete the currently selected settings."));
+            putValue(NAME, Translations.getString("VisionSettingsPanel.Action.DeleteSettings"));
+            putValue(SHORT_DESCRIPTION, Translations.getString(
+                    "VisionSettingsPanel.Action.DeleteSettings.Description"));
         }
 
         @Override
@@ -224,10 +219,9 @@ public class VisionSettingsPanel extends JPanel implements WizardContainer {
 
             if (!usedIn.isEmpty()) {
                 String errorNames = new AbstractVisionSettings.ListConverter(false).convertForward(usedIn);
-                MessageBoxes.errorBox(getTopLevelAncestor(), Translations.getStringOrDefault(
-                        "CommonWords.error", "Error"),
-                        Translations.getStringOrDefault("CommonPhrases.selectionCannotBeDeletedUsedBy",
-                                "The selection cannot be deleted. It is used by") + " " + errorNames + ".");
+                MessageBoxes.errorBox(getTopLevelAncestor(), Translations.getString("CommonWords.error"),
+                        Translations.getString("CommonPhrases.selectionCannotBeDeletedUsedBy")
+                                + " " + errorNames + ".");
                 return;
             }
 
@@ -240,11 +234,11 @@ public class VisionSettingsPanel extends JPanel implements WizardContainer {
             }
 
             int ret = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                    Translations.getStringOrDefault("DialogMessages.ConfirmDelete.text",
-                            "Are you sure you want to delete") + " " + formattedNames + "?",
-                    Translations.getStringOrDefault("DialogMessages.ConfirmDelete.title", "Delete")
-                            + " " + selections.size() + " " + Translations.getStringOrDefault(
-                            "CommonPhrases.visionSettings", "vision settings") + "?",
+                    Translations.getString("DialogMessages.ConfirmDelete.text")
+                            + " " + formattedNames + "?",
+                    Translations.getString("DialogMessages.ConfirmDelete.title")
+                            + " " + selections.size() + " " + Translations.getString("CommonPhrases.visionSettings")
+                            + "?",
                     JOptionPane.YES_NO_OPTION);
             if (ret == JOptionPane.YES_OPTION) {
                 for (AbstractVisionSettings visionSettings : selections) {
@@ -257,11 +251,9 @@ public class VisionSettingsPanel extends JPanel implements WizardContainer {
     public final Action copyPackageToClipboardAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.copy);
-            putValue(NAME, Translations.getStringOrDefault("VisionSettingsPanel.Action.CopySettingsToClipboard",
-                    "Copy Vision Settings to Clipboard"));
-            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault(
-                    "VisionSettingsPanel.Action.CopySettingsToClipboard.Description",
-                    "Copy the currently selected vision settings to the clipboard in text format."));
+            putValue(NAME, Translations.getString("VisionSettingsPanel.Action.CopySettingsToClipboard"));
+            putValue(SHORT_DESCRIPTION, Translations.getString(
+                    "VisionSettingsPanel.Action.CopySettingsToClipboard.Description"));
         }
 
         @Override
@@ -289,12 +281,9 @@ public class VisionSettingsPanel extends JPanel implements WizardContainer {
     public final Action pastePackageToClipboardAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.paste);
-            putValue(NAME, Translations.getStringOrDefault(
-                    "VisionSettingsPanel.Action.CreateSettingsFromClipboard",
-                    "Create Vision Settings from Clipboard"));
-            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault(
-                    "VisionSettingsPanel.Action.CreateSettingsFromClipboard.Description",
-                    "Create a new vision setting from a definition on the clipboard."));
+            putValue(NAME, Translations.getString("VisionSettingsPanel.Action.CreateSettingsFromClipboard"));
+            putValue(SHORT_DESCRIPTION, Translations.getString(
+                    "VisionSettingsPanel.Action.CreateSettingsFromClipboard.Description"));
         }
 
         @Override

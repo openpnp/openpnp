@@ -292,7 +292,7 @@ public class JogControlsPanel extends JPanel {
 
         JPanel panelControls = new JPanel();
         //tabbedPane_1.addTab("Jog", null, panelControls, null); //$NON-NLS-1$
-        tabbedPane_1.addTab(Translations.getStringOrDefault("JogControlsPanel.Tab.Jog", "Jog"),
+        tabbedPane_1.addTab(Translations.getString("JogControlsPanel.Tab.Jog"), //$NON-NLS-1$
                 null, panelControls, null); //$NON-NLS-1$
         panelControls.setLayout(new FormLayout(
                 new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,

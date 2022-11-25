@@ -77,16 +77,14 @@ public class ReferenceNozzleCompatibleNozzleTipsWizard extends AbstractConfigura
     }
 
         class NozzleTipsTableModel extends AbstractTableModel {
-        private String[] columnNames = new String[] {
-                Translations.getStringOrDefault(
-                "ReferenceNozzleCompatibleNozzleTipsWizard.NozzleTipsTableModel.ColumnName.NozzleTip",
-                "Nozzle Tip"),
-                Translations.getStringOrDefault(
-                        "ReferenceNozzleCompatibleNozzleTipsWizard.NozzleTipsTableModel.ColumnName.Compatible",
-                        "Compatible?"),
-                Translations.getStringOrDefault(
-                                "ReferenceNozzleCompatibleNozzleTipsWizard.NozzleTipsTableModel.ColumnName.Loaded",
-                        "Loaded?") };
+            private String[] columnNames = new String[]{
+                    Translations.getString(
+                            "ReferenceNozzleCompatibleNozzleTipsWizard.NozzleTipsTableModel.ColumnName.NozzleTip"),
+                    Translations.getString(
+                            "ReferenceNozzleCompatibleNozzleTipsWizard.NozzleTipsTableModel.ColumnName.Compatible"),
+                    Translations.getString(
+                            "ReferenceNozzleCompatibleNozzleTipsWizard.NozzleTipsTableModel.ColumnName.Loaded"
+                    )};
         private Class[] columnClasses = new Class[] { String.class, Boolean.class, Boolean.class };
         private List<NozzleTip> nozzleTips;
 

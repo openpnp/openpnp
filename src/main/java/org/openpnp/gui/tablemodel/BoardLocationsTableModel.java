@@ -36,15 +36,15 @@ public class BoardLocationsTableModel extends AbstractTableModel {
     private final Configuration configuration;
 
     private String[] columnNames = new String[] {
-            Translations.getStringOrDefault("BoardLocationsTableModel.ColumnName.Board", "Board"),
-            Translations.getStringOrDefault("BoardLocationsTableModel.ColumnName.Width", "Width"),
-            Translations.getStringOrDefault("BoardLocationsTableModel.ColumnName.Length", "Length"),
-            Translations.getStringOrDefault("BoardLocationsTableModel.ColumnName.Side", "Side"),
+            Translations.getString("BoardLocationsTableModel.ColumnName.Board"),
+            Translations.getString("BoardLocationsTableModel.ColumnName.Width"),
+            Translations.getString("BoardLocationsTableModel.ColumnName.Length"),
+            Translations.getString("BoardLocationsTableModel.ColumnName.Side"),
             "X", "Y", "Z",
-            Translations.getStringOrDefault("BoardLocationsTableModel.ColumnName.Rotation", "Rot."),
-            Translations.getStringOrDefault("BoardLocationsTableModel.ColumnName.Enabled", "Enabled?"),
-            Translations.getStringOrDefault("BoardLocationsTableModel.ColumnName.CheckFids",
-                    "Check Fids?")};
+            Translations.getString("BoardLocationsTableModel.ColumnName.Rotation"),
+            Translations.getString("BoardLocationsTableModel.ColumnName.Enabled"),
+            Translations.getString("BoardLocationsTableModel.ColumnName.CheckFids"
+            )};
 
     private Class[] columnTypes = new Class[] {String.class, LengthCellValue.class,
             LengthCellValue.class, Side.class, LengthCellValue.class, LengthCellValue.class,

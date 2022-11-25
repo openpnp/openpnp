@@ -73,8 +73,8 @@ public class CameraVisionConfigurationWizard extends AbstractConfigurationWizard
 
 
         panelVision = new JPanel();
-        panelVision.setBorder(new TitledBorder(null, Translations.getStringOrDefault(
-                "CameraVisionConfigurationWizard.VisionPanel.Border.title", "Camera Settling"),
+        panelVision.setBorder(new TitledBorder(null, Translations.getString(
+                "CameraVisionConfigurationWizard.VisionPanel.Border.title"),
                 TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panelVision);
         panelVision.setLayout(new FormLayout(new ColumnSpec[] {
@@ -110,10 +110,8 @@ public class CameraVisionConfigurationWizard extends AbstractConfigurationWizard
                         FormSpecs.RELATED_GAP_ROWSPEC,
                         RowSpec.decode("max(70dlu;default):grow"),}));
 
-        lblSettleMethod = new JLabel(Translations.getStringOrDefault(
-                "CameraVisionConfigurationWizard.VisionPanel.SettleMethodLabel.text",
-                "Settle Method"
-        ));
+        lblSettleMethod = new JLabel(Translations.getString(
+                "CameraVisionConfigurationWizard.VisionPanel.SettleMethodLabel.text"));
         panelVision.add(lblSettleMethod, "2, 2, 1, 3, right, default");
 
         settleMethod = new JComboBox(AbstractCamera.SettleMethod.values());
@@ -124,46 +122,42 @@ public class CameraVisionConfigurationWizard extends AbstractConfigurationWizard
         });
         panelVision.add(settleMethod, "4, 2, 1, 3, fill, default");
 
-        lblSettleTimeMs = new JLabel(Translations.getStringOrDefault(
-                "CameraVisionConfigurationWizard.VisionPanel.SettleTimeLabel.text", "Settle Time (ms)"));
+        lblSettleTimeMs = new JLabel(Translations.getString(
+                "CameraVisionConfigurationWizard.VisionPanel.SettleTimeLabel.text"));
         panelVision.add(lblSettleTimeMs, "8, 2, right, center");
 
         settleTimeMs = new JTextField();
         panelVision.add(settleTimeMs, "10, 2, fill, center");
         settleTimeMs.setColumns(10);
 
-        lblSettleTimeoutMs = new JLabel(Translations.getStringOrDefault(
-                "CameraVisionConfigurationWizard.VisionPanel.SettleTimeOutLabel.text", "Settle Timeout (ms)"));
+        lblSettleTimeoutMs = new JLabel(Translations.getString(
+                "CameraVisionConfigurationWizard.VisionPanel.SettleTimeOutLabel.text"));
         panelVision.add(lblSettleTimeoutMs, "8, 4, right, default");
 
         settleTimeoutMs = new JTextField();
         panelVision.add(settleTimeoutMs, "10, 4, fill, default");
         settleTimeoutMs.setColumns(10);
 
-        lblSettleThreshold = new JLabel(Translations.getStringOrDefault(
-                "CameraVisionConfigurationWizard.VisionPanel.SettleThresholdLabel.text",
-                "Settle Threshold"));
+        lblSettleThreshold = new JLabel(Translations.getString(
+                "CameraVisionConfigurationWizard.VisionPanel.SettleThresholdLabel.text"));
         panelVision.add(lblSettleThreshold, "2, 6, right, default");
 
         settleThreshold = new JTextField();
         panelVision.add(settleThreshold, "4, 6, fill, default");
         settleThreshold.setColumns(10);
 
-        lblSettleDebounce = new JLabel(Translations.getStringOrDefault(
-                "CameraVisionConfigurationWizard.VisionPanel.DebounceFramesLabel.text",
-                "Debounce Frames"));
+        lblSettleDebounce = new JLabel(Translations.getString(
+                "CameraVisionConfigurationWizard.VisionPanel.DebounceFramesLabel.text"));
         panelVision.add(lblSettleDebounce, "8, 6, right, default");
 
         settleDebounce = new JTextField();
         panelVision.add(settleDebounce, "10, 6, fill, default");
         settleDebounce.setColumns(10);
 
-        lblSettleFullColor = new JLabel(Translations.getStringOrDefault(
-                "CameraVisionConfigurationWizard.VisionPanel.ColorSensitiveLabel.text",
-                "Color Sensitive?"));
-        lblSettleFullColor.setToolTipText(Translations.getStringOrDefault(
-                "CameraVisionConfigurationWizard.VisionPanel.ColorSensitiveLabel.toolTipText",
-                "Compare as full color image, i.e. difference in colors with same brightness will register."));
+        lblSettleFullColor = new JLabel(Translations.getString(
+                "CameraVisionConfigurationWizard.VisionPanel.ColorSensitiveLabel.text"));
+        lblSettleFullColor.setToolTipText(Translations.getString(
+                "CameraVisionConfigurationWizard.VisionPanel.ColorSensitiveLabel.toolTipText"));
         panelVision.add(lblSettleFullColor, "2, 8, right, default");
 
         settleFullColor = new JCheckBox("");
@@ -208,69 +202,49 @@ public class CameraVisionConfigurationWizard extends AbstractConfigurationWizard
         btnTestRotate = new JButton(settleTestRotateAction);
         panelSettleTest.add(btnTestRotate, "6, 6");
 
-        lblSettleGradient = new JLabel(Translations.getStringOrDefault(
-                "CameraVisionConfigurationWizard.VisionPanel.EdgeSensitiveLabel.text","Edge Sensitive?"));
-        lblSettleGradient.setToolTipText(Translations.getStringOrDefault(
-                "CameraVisionConfigurationWizard.VisionPanel.EdgeSensitiveLabel.toolTipText",
-                "Use the gradients of the images rather than brightness."));
+        lblSettleGradient = new JLabel(Translations.getString(
+                "CameraVisionConfigurationWizard.VisionPanel.EdgeSensitiveLabel.text"));
+        lblSettleGradient.setToolTipText(Translations.getString(
+                "CameraVisionConfigurationWizard.VisionPanel.EdgeSensitiveLabel.toolTipText"));
         panelVision.add(lblSettleGradient, "8, 8, right, default");
 
         settleGradients = new JCheckBox("");
         panelVision.add(settleGradients, "10, 8");
 
-        lblContrastEnhance = new JLabel(Translations.getStringOrDefault(
-                "CameraVisionConfigurationWizard.VisionPanel.EnhanceContrastLabel.text", "Enhance Contrast"));
-        lblContrastEnhance.setToolTipText(Translations.getStringOrDefault(
-                "CameraVisionConfigurationWizard.VisionPanel.EnhanceContrastLabel.toolTipText",
-                "How much it should enhance the contrast from 0.0 (original image) to 1.0 (full dynamic range)."));
+        lblContrastEnhance = new JLabel(Translations.getString(
+                "CameraVisionConfigurationWizard.VisionPanel.EnhanceContrastLabel.text"));
+        lblContrastEnhance.setToolTipText(Translations.getString(
+                "CameraVisionConfigurationWizard.VisionPanel.EnhanceContrastLabel.toolTipText"));
         panelVision.add(lblContrastEnhance, "2, 10, right, default");
 
         settleContrastEnhance = new JTextField();
         panelVision.add(settleContrastEnhance, "4, 10, default, top");
         settleContrastEnhance.setColumns(10);
 
-        lblSettleGaussianBlur = new JLabel(Translations.getStringOrDefault(
-                "CameraVisionConfigurationWizard.VisionPanel.DenoisePixelLabel.text", "Denoise (Pixel)"));
-        lblSettleGaussianBlur.setToolTipText(Translations.getStringOrDefault(
-                "CameraVisionConfigurationWizard.VisionPanel.DenoisePixelLabel.toolTipText",
-                "<html>\n" +
-                        "Diameter in pixels of the Gaussian Blur used to denoise the images. <br/>\n" +
-                        "For large diameters the image will be scaled down for better speed.\n" +
-                        "</html>"
-        ));
+        lblSettleGaussianBlur = new JLabel(Translations.getString(
+                "CameraVisionConfigurationWizard.VisionPanel.DenoisePixelLabel.text"));
+        lblSettleGaussianBlur.setToolTipText(Translations.getString(
+                "CameraVisionConfigurationWizard.VisionPanel.DenoisePixelLabel.toolTipText"));
         panelVision.add(lblSettleGaussianBlur, "8, 10, right, default");
 
         settleGaussianBlur = new JTextField();
         panelVision.add(settleGaussianBlur, "10, 10, fill, default");
         settleGaussianBlur.setColumns(10);
 
-        lblSettleMaskCircle = new JLabel(Translations.getStringOrDefault(
-                "CameraVisionConfigurationWizard.VisionPanel.CenterMaskLabel.text", "Center Mask"));
-        lblSettleMaskCircle.setToolTipText(Translations.getStringOrDefault(
-                "CameraVisionConfigurationWizard.VisionPanel.CenterMaskLabel.toolTipText",
-                "<html>\n" +
-                        "<p>Size of the central circular mask, relative to the camera dimension <br/>\n" +
-                        "(height or width, whichever is smaller).</p>\n" +
-                        "<p>Examples:</p>\n" +
-                        "<ul>\n" +
-                        "<li>0.0 No mask</li>\n" +
-                        "<li>0.5 Circular center area of half the camera view</li>\n" +
-                        "<li>1.0 Circular center area to the edge of the camera view</li>\n" +
-                        "<li>1.5 Circular area vignetting the camera view</li>\n" +
-                        "</ul>\n" +
-                        "</html>"
-        ));
+        lblSettleMaskCircle = new JLabel(Translations.getString(
+                "CameraVisionConfigurationWizard.VisionPanel.CenterMaskLabel.text"));
+        lblSettleMaskCircle.setToolTipText(Translations.getString(
+                "CameraVisionConfigurationWizard.VisionPanel.CenterMaskLabel.toolTipText"));
         panelVision.add(lblSettleMaskCircle, "2, 12, right, default");
 
         settleMaskCircle = new JTextField();
         panelVision.add(settleMaskCircle, "4, 12, fill, default");
         settleMaskCircle.setColumns(10);
 
-        lblSettleDiagnostics = new JLabel(Translations.getStringOrDefault(
-                "CameraVisionConfigurationWizard.VisionPanel.DiagnosticsLabel.text", "Diagnostics?"));
-        lblSettleDiagnostics.setToolTipText(Translations.getStringOrDefault(
-                "CameraVisionConfigurationWizard.VisionPanel.DiagnosticsLabel.toolTipText",
-                "Enable graphical diagnostics and replay of settle frames."));
+        lblSettleDiagnostics = new JLabel(Translations.getString(
+                "CameraVisionConfigurationWizard.VisionPanel.DiagnosticsLabel.text"));
+        lblSettleDiagnostics.setToolTipText(Translations.getString(
+                "CameraVisionConfigurationWizard.VisionPanel.DiagnosticsLabel.toolTipText"));
         panelVision.add(lblSettleDiagnostics, "8, 12, right, default");
 
         settleDiagnostics = new JCheckBox("");

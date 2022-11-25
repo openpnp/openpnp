@@ -137,7 +137,7 @@ public class IssuePanel extends JPanel {
         }
         : dynamicRowspec(rowCount)));
 
-        lblSubject = new JLabel(Translations.getStringOrDefault("IssuePanel.SubjectLabel.text", "Subject"));
+        lblSubject = new JLabel(Translations.getString("IssuePanel.SubjectLabel.text"));
         panel.add(lblSubject, "2, 2, right, center");
 
         panel_1 = new JPanel();
@@ -152,7 +152,7 @@ public class IssuePanel extends JPanel {
         panel_1.add(subjectText, "1, 1, fill, default");
         subjectText.setBackground(lblSubject.getBackground());
 
-        lblIssue = new JLabel(Translations.getStringOrDefault("IssuePanel.IssueLabel.text", "Issue"));
+        lblIssue = new JLabel(Translations.getString("IssuePanel.IssueLabel.text"));
         panel.add(lblIssue, "2, 4, right, center");
 
         panel_2 = new JPanel();
@@ -171,7 +171,7 @@ public class IssuePanel extends JPanel {
         issueText.setWrapStyleWord(true);  
         issueText.setLineWrap(true);
 
-        lblSolution = new JLabel(Translations.getStringOrDefault("IssuePanel.SolutionLabel.text","Solution"));
+        lblSolution = new JLabel(Translations.getString("IssuePanel.SolutionLabel.text"));
         panel.add(lblSolution, "2, 6, right, center");
 
         panel_3 = new JPanel();

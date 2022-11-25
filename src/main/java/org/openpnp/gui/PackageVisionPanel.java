@@ -82,8 +82,7 @@ public class PackageVisionPanel extends JPanel {
         JPanel propertiesPanel = new JPanel();
         add(propertiesPanel, BorderLayout.NORTH);
         propertiesPanel.setBorder(
-                new TitledBorder(null, Translations.getStringOrDefault(
-                        "PackageVisionPanel.SettingsPanel.Boprder.title", "Settings"),
+                new TitledBorder(null, Translations.getString("PackageVisionPanel.SettingsPanel.Boprder.title"),
                         TitledBorder.LEADING, TitledBorder.TOP, null));
         propertiesPanel.setLayout(new FormLayout(
                 new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
@@ -92,23 +91,22 @@ public class PackageVisionPanel extends JPanel {
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
 
-        JLabel lblUnits = new JLabel(Translations.getStringOrDefault(
-                "PackageVisionPanel.SettingsPanel.UnitsLabel.text","Units"));
+        JLabel lblUnits = new JLabel(Translations.getString("PackageVisionPanel.SettingsPanel.UnitsLabel.text"));
         propertiesPanel.add(lblUnits, "2, 2, right, default");
 
         unitsCombo = new JComboBox(LengthUnit.values());
         propertiesPanel.add(unitsCombo, "4, 2, left, default");
 
-        JLabel lblBodyWidth = new JLabel(Translations.getStringOrDefault(
-                "PackageVisionPanel.SettingsPanel.BodyWidthLabel.text","Body Width"));
+        JLabel lblBodyWidth = new JLabel(Translations.getString(
+                "PackageVisionPanel.SettingsPanel.BodyWidthLabel.text"));
         propertiesPanel.add(lblBodyWidth, "2, 4, right, default");
 
         bodyWidthTf = new JTextField();
         propertiesPanel.add(bodyWidthTf, "4, 4, left, default");
         bodyWidthTf.setColumns(10);
 
-        JLabel lblBodyHeight = new JLabel(Translations.getStringOrDefault(
-                "PackageVisionPanel.SettingsPanel.BodyLengthLabel.text","Body Length"));
+        JLabel lblBodyHeight = new JLabel(Translations.getString("" +
+                "PackageVisionPanel.SettingsPanel.BodyLengthLabel.text"));
         propertiesPanel.add(lblBodyHeight, "2, 6, right, default");
 
         bodyHeightTf = new JTextField();
@@ -118,8 +116,8 @@ public class PackageVisionPanel extends JPanel {
         JPanel tablePanel = new JPanel();
         add(tablePanel, BorderLayout.CENTER);
         tablePanel.setBorder(
-                new TitledBorder(null, Translations.getStringOrDefault(
-                        "PackageVisionPanel.PadsPanel.Border.title", "Pads"),
+                new TitledBorder(null, Translations.getString(
+                        "PackageVisionPanel.PadsPanel.Border.title"),
                         TitledBorder.LEADING, TitledBorder.TOP, null, null));
 
         table = new AutoSelectTextTable(tableModel);
@@ -217,11 +215,9 @@ public class PackageVisionPanel extends JPanel {
     public final Action newAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.add);
-            putValue(NAME, Translations.getStringOrDefault("PackageVisionPanel.PadsPanel.Action.NewPad",
-                    "New Pad..."));
-            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault(
-                    "PackageVisionPanel.PadsPanel.Action.NewPad.Description",
-                    "Create a new pad, specifying it's ID."));
+            putValue(NAME, Translations.getString("PackageVisionPanel.PadsPanel.Action.NewPad"));
+            putValue(SHORT_DESCRIPTION, Translations.getString(
+                    "PackageVisionPanel.PadsPanel.Action.NewPad.Description"));
         }
 
         @Override
@@ -242,20 +238,18 @@ public class PackageVisionPanel extends JPanel {
     public final Action deleteAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.delete);
-            putValue(NAME, Translations.getStringOrDefault("PackageVisionPanel.PadsPanel.Action.DeletePad",
-                    "Delete Pad"));
-            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault(
-                    "PackageVisionPanel.PadsPanel.Action.DeletePad.Description",
-                    "Delete the currently selected pad."));
+            putValue(NAME, Translations.getString("PackageVisionPanel.PadsPanel.Action.DeletePad"));
+            putValue(SHORT_DESCRIPTION, Translations.getString(
+                    "PackageVisionPanel.PadsPanel.Action.DeletePad.Description"));
         }
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
             int ret = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                    Translations.getStringOrDefault("DialogMessages.ConfirmDelete.text",
-                            "Are you sure you want to delete") + " " + getSelectedPad().getName() + "?",
-                    Translations.getStringOrDefault("DialogMessages.ConfirmDelete.title",
-                            "Delete") + " " + getSelectedPad().getName() + "?", JOptionPane.YES_NO_OPTION);
+                    Translations.getString("DialogMessages.ConfirmDelete.text")
+                            + " " + getSelectedPad().getName() + "?",
+                    Translations.getString("DialogMessages.ConfirmDelete.title")
+                            + " " + getSelectedPad().getName() + "?", JOptionPane.YES_NO_OPTION);
             if (ret == JOptionPane.YES_OPTION) {
                 footprint.removePad(getSelectedPad());
             }

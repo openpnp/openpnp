@@ -60,8 +60,8 @@ public class GcodeDriverGcodes extends AbstractConfigurationWizard {
         this.driver = driver;
 
         JPanel gcodePanel = new JPanel();
-        gcodePanel.setBorder(new TitledBorder(null, Translations.getStringOrDefault(
-                "GcodeDriverGcodes.GCodePanel.Border.title", "Gcode"),
+        gcodePanel.setBorder(new TitledBorder(null, Translations.getString(
+                "GcodeDriverGcodes.GCodePanel.Border.title"),
                 TitledBorder.LEADING, TitledBorder.TOP, null));
         contentPanel.add(gcodePanel);
         gcodePanel.setLayout(new FormLayout(
@@ -71,12 +71,12 @@ public class GcodeDriverGcodes extends AbstractConfigurationWizard {
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, RowSpec.decode("default:grow"),}));
 
-        JLabel lblHeadMountable = new JLabel(Translations.getStringOrDefault(
-                "GcodeDriverGcodes.GCodePanel.HeadMountableLabel.text","Head Mountable"));
+        JLabel lblHeadMountable = new JLabel(Translations.getString(
+                "GcodeDriverGcodes.GCodePanel.HeadMountableLabel.text"));
         gcodePanel.add(lblHeadMountable, "2, 2");
 
-        JLabel lblSetting = new JLabel(Translations.getStringOrDefault(
-                "GcodeDriverGcodes.GCodePanel.SettingLabel.text", "Setting"));
+        JLabel lblSetting = new JLabel(Translations.getString(
+                "GcodeDriverGcodes.GCodePanel.SettingLabel.text"));
         gcodePanel.add(lblSetting, "4, 2");
 
         comboBoxHm = new JComboBox<>();
@@ -132,8 +132,8 @@ public class GcodeDriverGcodes extends AbstractConfigurationWizard {
         textAreaCommand.setRows(5);
 
         JPanel importExportPanel = new JPanel();
-        importExportPanel.setBorder(new TitledBorder(null, Translations.getStringOrDefault(
-                "GcodeDriverGcodes.ImportExportPanel.Border.title", "Import / Export"),
+        importExportPanel.setBorder(new TitledBorder(null, Translations.getString(
+                "GcodeDriverGcodes.ImportExportPanel.Border.title"),
                 TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(importExportPanel);
         importExportPanel.setLayout(new FormLayout(new ColumnSpec[] {
@@ -279,18 +279,15 @@ public class GcodeDriverGcodes extends AbstractConfigurationWizard {
     public final Action exportProfileAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.export);
-            putValue(NAME, Translations.getStringOrDefault(
-                    "GcodeDriverGcodes.Action.Export","Export Gcode File"));
-            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault("GcodeDriverGcodes.Action.Export.Description",
-                    "Export the Gcode profile to a file."));
+            putValue(NAME, Translations.getString("GcodeDriverGcodes.Action.Export"));
+            putValue(SHORT_DESCRIPTION, Translations.getString("GcodeDriverGcodes.Action.Export.Description"));
         }
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
             try {
-                FileDialog fileDialog = new FileDialog(MainFrame.get(), Translations.getStringOrDefault(
-                        "GcodeDriverGcodes.SaveFileDialog.title", "Save Gcode Profile As..."),
-                        FileDialog.SAVE);
+                FileDialog fileDialog = new FileDialog(MainFrame.get(), Translations.getString(
+                        "GcodeDriverGcodes.SaveFileDialog.title"), FileDialog.SAVE);
                 fileDialog.setFilenameFilter(new FilenameFilter() {
                     @Override
                     public boolean accept(File dir, String name) {
@@ -329,18 +326,15 @@ public class GcodeDriverGcodes extends AbstractConfigurationWizard {
     public final Action importProfileAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.importt);
-            putValue(NAME, Translations.getStringOrDefault(
-                    "GcodeDriverGcodes.Action.Import", "Load Gcode File"));
-            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault(
-                    "GcodeDriverGcodes.Action.Import.Description", "Import the Gcode profile from a file."));
+            putValue(NAME, Translations.getString("GcodeDriverGcodes.Action.Import"));
+            putValue(SHORT_DESCRIPTION, Translations.getString("GcodeDriverGcodes.Action.Import.Description"));
         }
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
             try {
-                FileDialog fileDialog = new FileDialog(MainFrame.get(), Translations.getStringOrDefault(
-                        "GcodeDriverGcodes.OpenFileDialog.title", "Load Gcode Profile From..."),
-                        FileDialog.LOAD);
+                FileDialog fileDialog = new FileDialog(MainFrame.get(), Translations.getString(
+                        "GcodeDriverGcodes.OpenFileDialog.title"), FileDialog.LOAD);
                 fileDialog.setFilenameFilter(new FilenameFilter() {
                     @Override
                     public boolean accept(File dir, String name) {
@@ -364,10 +358,8 @@ public class GcodeDriverGcodes extends AbstractConfigurationWizard {
     public final Action copyProfileToClipboardAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.copy);
-            putValue(NAME, Translations.getStringOrDefault(
-                    "GcodeDriverGcodes.Action.CopyProfile", "Copy Gcode to Clipboard"));
-            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault(
-                    "GcodeDriverGcodes.Action.CopyProfile.Description", "Copy the Gcode profile to the clipboard."));
+            putValue(NAME, Translations.getString("GcodeDriverGcodes.Action.CopyProfile"));
+            putValue(SHORT_DESCRIPTION, Translations.getString("GcodeDriverGcodes.Action.CopyProfile.Description"));
         }
 
         @Override
@@ -379,9 +371,8 @@ public class GcodeDriverGcodes extends AbstractConfigurationWizard {
                 StringSelection stringSelection = new StringSelection(w.toString());
                 Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
                 clipboard.setContents(stringSelection, null);
-                MessageBoxes.infoBox(Translations.getStringOrDefault("CommonPhrases.copiedGcode", "Copied Gcode"),
-                        Translations.getStringOrDefault("CommonPhrases.copiedGcodeToClipboard",
-                                "Copied Gcode to Clipboard"));
+                MessageBoxes.infoBox(Translations.getString("CommonPhrases.copiedGcode"),
+                        Translations.getString("CommonPhrases.copiedGcodeToClipboard"));
             }
             catch (Exception e) {
                 MessageBoxes.errorBox(MainFrame.get(), "Copy Failed", e);
@@ -392,11 +383,8 @@ public class GcodeDriverGcodes extends AbstractConfigurationWizard {
     public final Action pasteProfileFromClipboardAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.paste);
-            putValue(NAME, Translations.getStringOrDefault(
-                    "GcodeDriverGcodes.Action.PasteProfile", "Paste Gcode from Clipboard"));
-            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault(
-                    "GcodeDriverGcodes.Action.PasteProfile.Description",
-                    "Import the Gcode profile from the clipboard."));
+            putValue(NAME, Translations.getString("GcodeDriverGcodes.Action.PasteProfile"));
+            putValue(SHORT_DESCRIPTION, Translations.getString("GcodeDriverGcodes.Action.PasteProfile.Description"));
         }
 
         @Override
@@ -408,9 +396,8 @@ public class GcodeDriverGcodes extends AbstractConfigurationWizard {
                 StringReader r = new StringReader(s);
                 GcodeDriver d = ser.read(GcodeDriver.class, s);
                 // copySettings(d, driver);
-                MessageBoxes.infoBox(Translations.getStringOrDefault("CommonPhrases.pastedGcode",
-                        "Pasted Gcode"), Translations.getStringOrDefault("CommonPhrases.pastedGcodeFromClipboard",
-                        "Pasted Gcode from Clipboard"));
+                MessageBoxes.infoBox(Translations.getString("CommonPhrases.pastedGcode"),
+                        Translations.getString("CommonPhrases.pastedGcodeFromClipboard"));
             }
             catch (Exception e) {
                 MessageBoxes.errorBox(MainFrame.get(), "Paste Failed", e);
@@ -420,11 +407,8 @@ public class GcodeDriverGcodes extends AbstractConfigurationWizard {
     public final Action resetToDefaultAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.delete);
-            putValue(NAME, Translations.getStringOrDefault(
-                    "GcodeDriverGcodes.Action.ResetToDefaults", "Reset to defaults"));
-            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault(
-                    "GcodeDriverGcodes.Action.ResetToDefaults.Description",
-                    "Reset the Gcode profile to the default."));
+            putValue(NAME, Translations.getString("GcodeDriverGcodes.Action.ResetToDefaults"));
+            putValue(SHORT_DESCRIPTION, Translations.getString("GcodeDriverGcodes.Action.ResetToDefaults.Description"));
         }
 
         @Override

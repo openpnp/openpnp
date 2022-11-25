@@ -129,18 +129,9 @@ public class IssuesAndSolutionsPanel extends JPanel {
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,}));
 
-        JLabel lblMilestone = new JLabel(Translations.getStringOrDefault(
-                "IssuesAndSolutionsPanel.MilestoneLabel.text", "Milestone"));
+        JLabel lblMilestone = new JLabel(Translations.getString("IssuesAndSolutionsPanel.MilestoneLabel.text"));
         lblMilestone.setFont(lblMilestone.getFont().deriveFont(lblMilestone.getFont().getStyle() | Font.BOLD));
-        lblMilestone.setToolTipText(Translations.getStringOrDefault(
-                "IssuesAndSolutionsPanel.MilestoneLabel.toolTipText",
-                "<html>\n" +
-                        "The target milestone for the machine configuration.<br/>\n" +
-                        "The milestone filters and sometimes influences proposed solutions<br/>\n" +
-                        "to ensure that basic machine operation is achieved, before more advanced,<br/>\n" +
-                        "more complex <em>and more difficult</em> solutions are targeted.\n" +
-                        "</html>\n"
-        ));
+        lblMilestone.setToolTipText(Translations.getString("IssuesAndSolutionsPanel.MilestoneLabel.toolTipText"));
         toolbar.add(lblMilestone, "4, 3, right, default");
 
         targetMilestone = new JLabel(" - ");
@@ -277,12 +268,8 @@ public class IssuesAndSolutionsPanel extends JPanel {
         JButton btnFindSolutions = new JButton(findSolutionsAction);
         toolbar.add(btnFindSolutions, "2, 3, 1, 3, fill, fill");
         
-        JLabel lblSolved = new JLabel(Translations.getStringOrDefault(
-                "IssuesAndSolutionsPanel.IncludeSolvedLabel.text", "Include Solved?"));
-        lblSolved.setToolTipText(Translations.getStringOrDefault(
-                "IssuesAndSolutionsPanel.IncludeSolvedLabel.toolTipText",
-                "<html>Include already solved solutions, if they can be revisited.<br/>\n" +
-                        "Some solutions can only be accepted once, these will not reappear.</html>"));
+        JLabel lblSolved = new JLabel(Translations.getString("IssuesAndSolutionsPanel.IncludeSolvedLabel.text"));
+        lblSolved.setToolTipText(Translations.getString("IssuesAndSolutionsPanel.IncludeSolvedLabel.toolTipText"));
         toolbar.add(lblSolved, "9, 3, right, default");
         
         showSolved = new JCheckBox("");
@@ -293,11 +280,9 @@ public class IssuesAndSolutionsPanel extends JPanel {
         });
         toolbar.add(showSolved, "11, 3");
         
-        JLabel lblDismissed = new JLabel(Translations.getStringOrDefault(
-                "IssuesAndSolutionsPanel.IncludeDismissedLabel.text", "Include Dismissed?"));
-        lblDismissed.setToolTipText(Translations.getStringOrDefault(
-                "IssuesAndSolutionsPanel.IncludeDismissedLabel.toolTipText",
-                "<html>Include already dismissed solutions.</html>"));
+        JLabel lblDismissed = new JLabel(Translations.getString("IssuesAndSolutionsPanel.IncludeDismissedLabel.text"));
+        lblDismissed.setToolTipText(Translations.getString(
+                "IssuesAndSolutionsPanel.IncludeDismissedLabel.toolTipText"));
         toolbar.add(lblDismissed, "15, 3, right, default");
         
         showDismissed = new JCheckBox("");
@@ -317,9 +302,7 @@ public class IssuesAndSolutionsPanel extends JPanel {
         label_1 = new JLabel(" - ");
         toolbar.add(label_1, "4, 5, 16, 1");
 
-        labelWarn = new JLabel(Translations.getStringOrDefault("IssuesAndSolutionsPanel.WarnLabel.text",
-                " After each round of solving issues, please run Find Issues & Solutions again to catch dependent issues. "
-        ));
+        labelWarn = new JLabel(Translations.getString("IssuesAndSolutionsPanel.WarnLabel.text"));
         labelWarn.setBorder(UIManager.getBorder("ToolTip.border"));
         labelWarn.setBackground(UIManager.getColor("ToolTip.background"));
         toolbar.add(labelWarn, "2, 7, 22, 1, left, default");
@@ -404,15 +387,14 @@ public class IssuesAndSolutionsPanel extends JPanel {
                     Color color = maxSeverity.color;
                     color = saturate(color);
                     //"<html>Issues &amp; Solutions <span style=\"color:#"
-                    tabs.setTitleAt(index, Translations.getStringOrDefault(
-                            "MainFrame.RightComponent.tabs.IssuesAndSolutionsHtml",
-                            "<html>Issues &amp; Solutions <span style=\"color:#")
+                    tabs.setTitleAt(index, Translations.getString(
+                            "MainFrame.RightComponent.tabs.IssuesAndSolutionsHtml")
                             +String.format("%02x%02x%02x", color.getRed(), color.getGreen(), color.getBlue())
                             +";\">&#"+(indicatorUnicode)+";</span></html>");
                 }
                 else {
-                    tabs.setTitleAt(index, Translations.getStringOrDefault(
-                            "MainFrame.RightComponent.tabs.IssuesAndSolutions","Issues & Solutions"));
+                    tabs.setTitleAt(index, Translations.getString(
+                            "MainFrame.RightComponent.tabs.IssuesAndSolutions"));
                 }
             }
         }
@@ -449,12 +431,11 @@ public class IssuesAndSolutionsPanel extends JPanel {
     }
 
     private Action findSolutionsAction =
-            new AbstractAction(Translations.getStringOrDefault("IssuesAndSolutionsPanel.Action.FindSolution",
-                    "Find Issues & Solutions"), Icons.solutions) {
+            new AbstractAction(Translations.getString("IssuesAndSolutionsPanel.Action.FindSolution"),
+                    Icons.solutions) {
         {
-            putValue(Action.SHORT_DESCRIPTION, Translations.getStringOrDefault(
-                    "IssuesAndSolutionsPanel.Action.FindSolution.Description",
-                    "<html>Find Issues and Solutions for your machine.</html>"));
+            putValue(Action.SHORT_DESCRIPTION, Translations.getString(
+                    "IssuesAndSolutionsPanel.Action.FindSolution.Description"));
         }
 
         @Override
@@ -464,12 +445,11 @@ public class IssuesAndSolutionsPanel extends JPanel {
     };
 
     private Action acceptSolutionAction =
-            new AbstractAction(Translations.getStringOrDefault(
-                    "IssuesAndSolutionsPanel.Action.AcceptSolution", "Accept"), Icons.accept) {
+            new AbstractAction(Translations.getString("IssuesAndSolutionsPanel.Action.AcceptSolution"),
+                    Icons.accept) {
         {
-            putValue(Action.SHORT_DESCRIPTION, Translations.getStringOrDefault(
-                    "IssuesAndSolutionsPanel.Action.AcceptSolution.Description",
-                    "<html>Accept the solutions and apply any changes.</html>"));
+            putValue(Action.SHORT_DESCRIPTION, Translations.getString(
+                    "IssuesAndSolutionsPanel.Action.AcceptSolution.Description"));
         }
 
         @Override
@@ -494,14 +474,11 @@ public class IssuesAndSolutionsPanel extends JPanel {
         }
     };
 
-    private Action dismissSolutionAction = new AbstractAction(Translations.getStringOrDefault(
-                    "IssuesAndSolutionsPanel.Action.DismissSolution", "Dismiss"), Icons.dismiss) {
+    private Action dismissSolutionAction = new AbstractAction(Translations.getString(
+                    "IssuesAndSolutionsPanel.Action.DismissSolution"), Icons.dismiss) {
         {
-            putValue(Action.SHORT_DESCRIPTION, Translations.getStringOrDefault(
-                    "IssuesAndSolutionsPanel.Action.DismissSolution.Description",
-                    "<html>Dismiss the solutions. If the solution has just applied any changes before" +
-                            " (with no Find Solutions between), <strong>undo</strong> them.</html>"
-            ));
+            putValue(Action.SHORT_DESCRIPTION, Translations.getString(
+                    "IssuesAndSolutionsPanel.Action.DismissSolution.Description"));
         }
 
         @Override
@@ -517,14 +494,11 @@ public class IssuesAndSolutionsPanel extends JPanel {
         }
     };
 
-    private Action reopenSolutionAction = new AbstractAction(Translations.getStringOrDefault(
-            "IssuesAndSolutionsPanel.Action.ReopenSolution", "Reopen"), Icons.undo) {
+    private Action reopenSolutionAction = new AbstractAction(Translations.getString(
+            "IssuesAndSolutionsPanel.Action.ReopenSolution"), Icons.undo) {
         {
-            putValue(Action.SHORT_DESCRIPTION, Translations.getStringOrDefault(
-                    "IssuesAndSolutionsPanel.Action.ReopenSolution.Description",
-                    "<html>Reopen the solution. If the solution has just applied any changes before" +
-                            " (with no Find Solutions between), <strong>undo</strong> them.</html>"
-            ));
+            putValue(Action.SHORT_DESCRIPTION, Translations.getString(
+                    "IssuesAndSolutionsPanel.Action.ReopenSolution.Description"));
         }
 
         @Override
@@ -543,9 +517,8 @@ public class IssuesAndSolutionsPanel extends JPanel {
     private Action infoAction =
             new AbstractAction("", Icons.info) {
         {
-            putValue(Action.SHORT_DESCRIPTION, Translations.getStringOrDefault(
-                    "IssuesAndSolutionsPanel.Action.Info.Description",
-                    "<html>Open the Wiki page with instructions related to the issue and possible solutions.</html>"));
+            putValue(Action.SHORT_DESCRIPTION, Translations.getString(
+                    "IssuesAndSolutionsPanel.Action.Info.Description"));
         }
 
         @Override
@@ -565,9 +538,8 @@ public class IssuesAndSolutionsPanel extends JPanel {
     private Action infoMilestoneAction =
             new AbstractAction("", Icons.info) {
         {
-            putValue(Action.SHORT_DESCRIPTION, Translations.getStringOrDefault(
-                    "IssuesAndSolutionsPanel.Action.InfoMilestone.Description",
-                    "<html>Open the Wiki page about Issues & Solutions and Milestones.</html>"));
+            putValue(Action.SHORT_DESCRIPTION, Translations.getString(
+                    "IssuesAndSolutionsPanel.Action.InfoMilestone.Description"));
         }
 
         @Override

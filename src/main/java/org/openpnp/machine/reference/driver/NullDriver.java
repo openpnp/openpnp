@@ -277,10 +277,8 @@ public class NullDriver extends AbstractDriver {
         if (solutions.isTargeting(Milestone.Connect)) {
             solutions.add(new Solutions.Issue(
                     this,
-                    Translations.getStringOrDefault("NullDriver.Issue",
-                            "The simulation NullDriver can replaced with a GcodeDriver to drive a real controller."),
-                    Translations.getStringOrDefault("NullDriver.Solution", "Replace with GcodeDriver."),
-                    Severity.Fundamental,
+                    Translations.getString("NullDriver.Issue"),
+                    Translations.getString("NullDriver.Solution"),Severity.Fundamental,
                     "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Driver-Setup#automatic-conversion-of-the-nulldriver") {
 
                 @Override

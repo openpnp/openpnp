@@ -45,8 +45,8 @@ public class ReferenceBottomVisionConfigurationWizard extends AbstractConfigurat
         this.bottomVision = bottomVision;
 
         JPanel panel = new JPanel();
-        panel.setBorder(new TitledBorder(null, Translations.getStringOrDefault(
-                "ReferenceBottomVisionConfigurationWizard.GeneralPanel.Border.title", "General"),
+        panel.setBorder(new TitledBorder(null, Translations.getString(
+                "ReferenceBottomVisionConfigurationWizard.GeneralPanel.Border.title"),
                 TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panel);
         panel.setLayout(new FormLayout(new ColumnSpec[] {
@@ -70,16 +70,15 @@ public class ReferenceBottomVisionConfigurationWizard extends AbstractConfigurat
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
 
-        JLabel lblEnabled = new JLabel(Translations.getStringOrDefault(
-                "ReferenceBottomVisionConfigurationWizard.GeneralPanel.EnabledLabel.text","Enabled?"));
+        JLabel lblEnabled = new JLabel(Translations.getString(
+                "ReferenceBottomVisionConfigurationWizard.GeneralPanel.EnabledLabel.text"));
         panel.add(lblEnabled, "2, 2");
 
         enabledCheckbox = new JCheckBox("");
         panel.add(enabledCheckbox, "4, 2");
 
-        JLabel lblBottomVision = new JLabel(Translations.getStringOrDefault(
-                "ReferenceBottomVisionConfigurationWizard.GeneralPanel.BottomVisionSettingsLabel.text",
-                "Bottom Vision Settings"));
+        JLabel lblBottomVision = new JLabel(Translations.getString(
+                "ReferenceBottomVisionConfigurationWizard.GeneralPanel.BottomVisionSettingsLabel.text"));
         panel.add(lblBottomVision, "2, 4, right, default");
                 
                 visionSettings = new JComboBox(new VisionSettingsComboBoxModel(BottomVisionSettings.class));
@@ -92,48 +91,39 @@ public class ReferenceBottomVisionConfigurationWizard extends AbstractConfigurat
                 });
                 panel.add(visionSettings, "4, 4, 3, 1, fill, default");
 
-        JLabel lblPreRot = new JLabel(Translations.getStringOrDefault(
-                "ReferenceBottomVisionConfigurationWizard.GeneralPanel.RotatePartsLabel.text",
-                "Rotate parts prior to vision?"));
-        lblPreRot.setToolTipText(Translations.getStringOrDefault(
-                "ReferenceBottomVisionConfigurationWizard.GeneralPanel.RotatePartsLabel.toolTipText",
-                "Pre-rotate default setting for bottom vision. Can be overridden on individual parts."));
+        JLabel lblPreRot = new JLabel(Translations.getString(
+                "ReferenceBottomVisionConfigurationWizard.GeneralPanel.RotatePartsLabel.text"));
+        lblPreRot.setToolTipText(Translations.getString(
+                "ReferenceBottomVisionConfigurationWizard.GeneralPanel.RotatePartsLabel.toolTipText"));
         panel.add(lblPreRot, "2, 6");
 
         preRotCheckbox = new JCheckBox("");
         panel.add(preRotCheckbox, "4, 6");
         
-        JLabel lblMaxVisionPasses = new JLabel(Translations.getStringOrDefault(
-                "ReferenceBottomVisionConfigurationWizard.GeneralPanel.MaxVisionPassesLabel.text",
-                "Max. vision passes"));
-        lblMaxVisionPasses.setToolTipText(Translations.getStringOrDefault(
-                "ReferenceBottomVisionConfigurationWizard.GeneralPanel.MaxVisionPassesLabel.toolTipText",
-                "The maximum number of bottom vision passes performed to get a good fix on the part."));
+        JLabel lblMaxVisionPasses = new JLabel(Translations.getString(
+                "ReferenceBottomVisionConfigurationWizard.GeneralPanel.MaxVisionPassesLabel.text"));
+        lblMaxVisionPasses.setToolTipText(Translations.getString(
+                "ReferenceBottomVisionConfigurationWizard.GeneralPanel.MaxVisionPassesLabel.toolTipText"));
         panel.add(lblMaxVisionPasses, "2, 8, right, default");
         
         textFieldMaxVisionPasses = new JTextField();
         panel.add(textFieldMaxVisionPasses, "4, 8");
         textFieldMaxVisionPasses.setColumns(10);
         
-        JLabel lblMaxLinearOffset = new JLabel(Translations.getStringOrDefault(
-                "ReferenceBottomVisionConfigurationWizard.GeneralPanel.MaxLinearOffsetLabel.text",
-                "Max. linear offset"));
-        lblMaxLinearOffset.setToolTipText(Translations.getStringOrDefault(
-                "ReferenceBottomVisionConfigurationWizard.GeneralPanel.MaxLinearOffsetLabel.toolTipText",
-                "The maximum linear part offset accepted as a good fix i.e. where no additional vision pass is needed."));
+        JLabel lblMaxLinearOffset = new JLabel(Translations.getString(
+                "ReferenceBottomVisionConfigurationWizard.GeneralPanel.MaxLinearOffsetLabel.text"));
+        lblMaxLinearOffset.setToolTipText(Translations.getString(
+                "ReferenceBottomVisionConfigurationWizard.GeneralPanel.MaxLinearOffsetLabel.toolTipText"));
         panel.add(lblMaxLinearOffset, "2, 10, right, default");
         
         textFieldMaxLinearOffset = new JTextField();
         panel.add(textFieldMaxLinearOffset, "4, 10, fill, default");
         textFieldMaxLinearOffset.setColumns(10);
         
-        JLabel lblMaxAngularOffset = new JLabel(Translations.getStringOrDefault(
-                "ReferenceBottomVisionConfigurationWizard.GeneralPanel.MaxAngularOffsetLabel.text",
-                "Max. angular offset"));
-        lblMaxAngularOffset.setToolTipText(Translations.getStringOrDefault(
-                "ReferenceBottomVisionConfigurationWizard.GeneralPanel.MaxAngularOffsetLabel.toolTipText",
-                "The maximum angular part offset accepted as a good fix i.e. where no additional vision pass is needed."
-        ));
+        JLabel lblMaxAngularOffset = new JLabel(Translations.getString(
+                "ReferenceBottomVisionConfigurationWizard.GeneralPanel.MaxAngularOffsetLabel.text"));
+        lblMaxAngularOffset.setToolTipText(Translations.getString(
+                "ReferenceBottomVisionConfigurationWizard.GeneralPanel.MaxAngularOffsetLabel.toolTipText"));
         panel.add(lblMaxAngularOffset, "6, 10, right, default");
         
         textFieldMaxAngularOffset = new JTextField();
@@ -162,8 +152,7 @@ public class ReferenceBottomVisionConfigurationWizard extends AbstractConfigurat
 
     @Override
     public String getWizardName() {
-        return Translations.getStringOrDefault("ReferenceBottomVisionConfigurationWizard.wizardName",
-                "ReferenceBottomVision");
+        return Translations.getString("ReferenceBottomVisionConfigurationWizard.wizardName");
     }
 
     @Override

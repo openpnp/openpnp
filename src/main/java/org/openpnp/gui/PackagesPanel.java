@@ -129,8 +129,7 @@ public class PackagesPanel extends JPanel implements WizardContainer {
         JPanel panel_1 = new JPanel();
         toolbarAndSearch.add(panel_1, BorderLayout.EAST);
 
-        JLabel lblSearch = new JLabel(Translations.getStringOrDefault("PackagesPanel.SearchLabel.text",
-                "Search"));
+        JLabel lblSearch = new JLabel(Translations.getString("PackagesPanel.SearchLabel.text"));
         panel_1.add(lblSearch);
 
         searchTextField = new JTextField();
@@ -276,10 +275,8 @@ public class PackagesPanel extends JPanel implements WizardContainer {
     public final Action newPackageAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.add);
-            putValue(NAME, Translations.getStringOrDefault("PackagesPanel.Action.NewPackage",
-                    "New Package..."));
-            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault("PackagesPanel.Action.NewPackage.Description",
-                    "Create a new package, specifying it's ID."));
+            putValue(NAME, Translations.getString("PackagesPanel.Action.NewPackage"));
+            putValue(SHORT_DESCRIPTION, Translations.getString("PackagesPanel.Action.NewPackage.Description"));
         }
 
         @Override
@@ -304,11 +301,8 @@ public class PackagesPanel extends JPanel implements WizardContainer {
     public final Action deletePackageAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.delete);
-            putValue(NAME, Translations.getStringOrDefault(
-                    "PackagesPanel.Action.DeletePackage", "Delete Package"));
-            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault(
-                    "PackagesPanel.Action.DeletePackage.Description",
-                    "Delete the currently selected package."));
+            putValue(NAME, Translations.getString("PackagesPanel.Action.DeletePackage"));
+            putValue(SHORT_DESCRIPTION, Translations.getString("PackagesPanel.Action.DeletePackage.Description"));
         }
 
         @Override
@@ -319,10 +313,10 @@ public class PackagesPanel extends JPanel implements WizardContainer {
                 for (Part part : Configuration.get().getParts()) {
                     if (part.getPackage() == pkg) {
                         MessageBoxes.errorBox(getTopLevelAncestor(),
-                                Translations.getStringOrDefault("CommonWords.error", "Error"),
-                                pkg.getId() + " " + Translations.getStringOrDefault(
-                                        "CommonPhrases.cannotBeDeletedUsedBy",
-                                        "cannot be deleted. It is used by") + " " + part.getId());
+                                Translations.getString("CommonWords.error"),
+                                pkg.getId() + " " + Translations.getString(
+                                        "CommonPhrases.cannotBeDeletedUsedBy"
+                                ) + " " + part.getId());
                         return;
                     }
                 }
@@ -338,11 +332,11 @@ public class PackagesPanel extends JPanel implements WizardContainer {
             }
             
             int ret = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                    Translations.getStringOrDefault("DialogMessages.ConfirmDelete.text",
-                            "Are you sure you want to delete") + " " + formattedIds + "?",
-                    Translations.getStringOrDefault("DialogMessages.ConfirmDelete.title",
-                            "Delete") + selections.size() + " " + Translations.getStringOrDefault(
-                                    "CommonWords.packages", "packages") + "?", JOptionPane.YES_NO_OPTION);
+                    Translations.getString("DialogMessages.ConfirmDelete.text"
+                    ) + " " + formattedIds + "?",
+                    Translations.getString("DialogMessages.ConfirmDelete.title"
+                    ) + selections.size() + " " + Translations.getString(
+                                    "CommonWords.packages") + "?", JOptionPane.YES_NO_OPTION);
             if (ret == JOptionPane.YES_OPTION) {
                 for (Package pkg : selections) {
                     Configuration.get().removePackage(pkg);
@@ -354,11 +348,8 @@ public class PackagesPanel extends JPanel implements WizardContainer {
     public final Action copyPackageToClipboardAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.copy);
-            putValue(NAME, Translations.getStringOrDefault(
-                    "PackagesPanel.Action.CopyPackage", "Copy Package to Clipboard"));
-            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault(
-                    "PackagesPanel.Action.CopyPackage.Description",
-                    "Copy the currently selected package to the clipboard in text format."));
+            putValue(NAME, Translations.getString("PackagesPanel.Action.CopyPackage"));
+            putValue(SHORT_DESCRIPTION, Translations.getString("PackagesPanel.Action.CopyPackage.Description"));
         }
 
         @Override
@@ -384,11 +375,8 @@ public class PackagesPanel extends JPanel implements WizardContainer {
     public final Action pastePackageToClipboardAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.paste);
-            putValue(NAME, Translations.getStringOrDefault("PackagesPanel.Action.PastePackage",
-                    "Create Package from Clipboard"));
-            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault(
-                    "PackagesPanel.Action.PastePackage.Description",
-                    "Create a new package from a definition on the clipboard."));
+            putValue(NAME, Translations.getString("PackagesPanel.Action.PastePackage"));
+            putValue(SHORT_DESCRIPTION, Translations.getString("PackagesPanel.Action.PastePackage.Description"));
         }
 
         @Override
@@ -444,11 +432,11 @@ public class PackagesPanel extends JPanel implements WizardContainer {
         }
         tabbedPane.removeAll();
         if (selectedPackage != null) {
-            tabbedPane.add(Translations.getStringOrDefault("PackagesPanel.NozzleTipsTab.title","Nozzle Tips"),
+            tabbedPane.add(Translations.getString("PackagesPanel.NozzleTipsTab.title"),
                     new PackageNozzleTipsPanel(selectedPackage));
-            tabbedPane.add(Translations.getStringOrDefault("PackagesPanel.VisionTab.title", "Vision"),
+            tabbedPane.add(Translations.getString("PackagesPanel.VisionTab.title"),
                     new JScrollPane(new PackageVisionPanel(selectedPackage)));
-            tabbedPane.add(Translations.getStringOrDefault("PackagesPanel.SettingsTab.title", "Settings"),
+            tabbedPane.add(Translations.getString("PackagesPanel.SettingsTab.title"),
                     new JScrollPane(new PackageSettingsPanel(selectedPackage)));
             Machine machine = Configuration.get().getMachine();
             for (PartAlignment partAlignment : machine.getPartAlignments()) {

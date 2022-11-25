@@ -36,20 +36,16 @@ public class SignalersPropertySheetHolder extends SimplePropertySheetHolder {
         {
             putValue(SMALL_ICON, Icons.add);
             putValue(NAME, "New Signaler...");
-            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault(
-                    "SignalersPropertySheetHolder.Action.NewSignaler.Description", "Create a new signaler."));
+            putValue(SHORT_DESCRIPTION, Translations.getString(
+                    "SignalersPropertySheetHolder.Action.NewSignaler.Description"));
         }
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
             Configuration configuration = Configuration.get();
             ClassSelectionDialog<Signaler> dialog = new ClassSelectionDialog<>(MainFrame.get(),
-                    Translations.getStringOrDefault(
-                            "SignalersPropertySheetHolder.SelectionDialog.title",
-                            "Select Signaler..."
-                    ), Translations.getStringOrDefault(
-                            "SignalersPropertySheetHolder.SelectionDialog.description",
-                    "Please select a Signaler implementation from the list below."),
+                    Translations.getString("SignalersPropertySheetHolder.SelectionDialog.title"),
+                    Translations.getString("SignalersPropertySheetHolder.SelectionDialog.description"),
                     configuration.getMachine().getCompatibleSignalerClasses());
             dialog.setVisible(true);
             Class<? extends Signaler> cls = dialog.getSelectedClass();

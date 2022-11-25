@@ -384,11 +384,8 @@ public class SimulatedUpCamera extends ReferenceCamera {
         if (solutions.isTargeting(Milestone.Connect)) {
             solutions.add(new Solutions.Issue(
                     this,
-                    Translations.getStringOrDefault("SimulatedUpCamera.Issue",
-                            "The SimulatedUpCamera can be replaced with a " +
-                                    "OpenPnpCaptureCamera to connect to a real USB camera."),
-                    Translations.getStringOrDefault("SimulatedUpCamera.Solution",
-                            "Replace with OpenPnpCaptureCamera."),
+                    Translations.getString("SimulatedUpCamera.Issue"),
+                    Translations.getString("SimulatedUpCamera.Solution"),
                     Severity.Fundamental,
                     "https://github.com/openpnp/openpnp/wiki/OpenPnpCaptureCamera") {
 

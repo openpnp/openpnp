@@ -86,7 +86,7 @@ public class LogPanel extends JPanel {
         JPanel settingsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
 
         settingsPanel.setBorder(new TitledBorder(null,
-                Translations.getStringOrDefault("LogPanel.SettingsPanel.Border.title","Global Logging Settings"),
+                Translations.getString("LogPanel.SettingsPanel.Border.title"),
                 TitledBorder.LEADING, TitledBorder.TOP, null));
 
         settingsPanel.add(createGlobalLogLevelPanel());
@@ -96,9 +96,8 @@ public class LogPanel extends JPanel {
         // The filter settings
         JPanel filterPanel = new JPanel(new BorderLayout(0, 0));
 
-        filterPanel.setBorder(new TitledBorder(null, Translations.getStringOrDefault(
-                "LogPanel.FilterLoggingPanel.Border.title", "Filter Logging Panel"),
-                TitledBorder.LEADING, TitledBorder.TOP, null));
+        filterPanel.setBorder(new TitledBorder(null, Translations.getString(
+                "LogPanel.FilterLoggingPanel.Border.title"), TitledBorder.LEADING, TitledBorder.TOP, null));
 
         JPanel filterContentPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
 
@@ -112,16 +111,15 @@ public class LogPanel extends JPanel {
         JPanel filterControlPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
 
         JButton btnClear = new JButton(Icons.delete);
-        btnClear.setToolTipText(Translations.getStringOrDefault(
-                "LogPanel.FilterLoggingPanel.ClearButton.toolTipText", "Clear log"));
+        btnClear.setToolTipText(Translations.getString("LogPanel.FilterLoggingPanel.ClearButton.toolTipText"));
 
         btnClear.addActionListener(e -> logEntries.clear());
 
         filterControlPanel.add(btnClear);
 
         JButton btnCopyToClipboard = new JButton(Icons.copy);
-        btnCopyToClipboard.setToolTipText(Translations.getStringOrDefault(
-                "LogPanel.FilterLoggingPanel.CopyToClipboardButton.toolTipText", "Copy to clipboard"));
+        btnCopyToClipboard.setToolTipText(Translations.getString(
+                "LogPanel.FilterLoggingPanel.CopyToClipboardButton.toolTipText"));
 
         btnCopyToClipboard.addActionListener(e -> {
             StringBuilder sb = new StringBuilder();
@@ -132,8 +130,7 @@ public class LogPanel extends JPanel {
         filterControlPanel.add(btnCopyToClipboard);
 
         JButton btnScroll = new JButton(Icons.scrollDown);
-        btnScroll.setToolTipText(Translations.getStringOrDefault(
-                "LogPanel.FilterLoggingPanel.ScrollDownButton.toolTipText", "Scroll down"));
+        btnScroll.setToolTipText(Translations.getString("LogPanel.FilterLoggingPanel.ScrollDownButton.toolTipText"));
 
         btnScroll.addActionListener(e -> {
             autoScroller.scrollDown();
@@ -175,8 +172,8 @@ public class LogPanel extends JPanel {
     }
 
     private JCheckBox createSystemOutputCheckbox() {
-        JCheckBox systemOutCheckbox = new JCheckBox(Translations.getStringOrDefault(
-                "LogPanel.FilterLoggingPanel.SystemOutputChkBox.text", "System Output"));
+        JCheckBox systemOutCheckbox = new JCheckBox(Translations.getString(
+                "LogPanel.FilterLoggingPanel.SystemOutputChkBox.text"));
         systemOutCheckbox.setSelected(systemOutEnabled);
         systemOutCheckbox.addActionListener(e -> {
             systemOutEnabled = systemOutCheckbox.isSelected();
@@ -218,8 +215,7 @@ public class LogPanel extends JPanel {
     private JPanel createSearchFieldPanel() {
         JPanel searchField = new JPanel();
 
-        JLabel lblSearch = new JLabel(Translations.getStringOrDefault(
-                "LogPanel.FilterLoggingPanel.SearchLabel.text", "Search"));
+        JLabel lblSearch = new JLabel(Translations.getString("LogPanel.FilterLoggingPanel.SearchLabel.text"));
         searchField.add(lblSearch);
 
         JTextField searchTextField = new JTextField();
@@ -256,8 +252,8 @@ public class LogPanel extends JPanel {
 
     private JPanel createFilterLogLevelPanel() {
         JPanel filterLogLevelPanel = new JPanel();
-        filterLogLevelPanel.add(new JLabel(Translations.getStringOrDefault(
-                "LogPanel.FilterLoggingPanel.LogLevelLabel.text", "Log Level:")));
+        filterLogLevelPanel.add(new JLabel(Translations.getString(
+                "LogPanel.FilterLoggingPanel.LogLevelLabel.text")));
         JComboBox logLevelFilterComboBox = new JComboBox(Level.values());
         logLevelFilterComboBox.setSelectedItem(filterLogLevel);
         logLevelFilterComboBox.addActionListener(e -> {
@@ -273,8 +269,8 @@ public class LogPanel extends JPanel {
 
     private JPanel createGlobalLogLevelPanel() {
         JPanel globalLogLevelPanel = new JPanel();
-        globalLogLevelPanel.add(new JLabel(Translations.getStringOrDefault(
-                "LogPanel.FilterLoggingPanel.GlobalLogLevelLabel.text", "Global Log Level:")));
+        globalLogLevelPanel.add(new JLabel(Translations.getString(
+                "LogPanel.FilterLoggingPanel.GlobalLogLevelLabel.text")));
         JComboBox logLevelFilterComboBox = new JComboBox(Level.values());
         logLevelFilterComboBox.setSelectedItem((Level.valueOf(prefs.get(PREF_LOG_LEVEL, PREF_LOG_LEVEL_DEF))));
         logLevelFilterComboBox.addActionListener(e -> {
