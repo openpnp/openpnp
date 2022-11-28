@@ -1,5 +1,13 @@
 # Your First Pull Request
 
+___
+**WARNING:** the following is no longer up to date. Pull requests should be created as proper feature branches and always based on/targeted against the `test` branch of OpenPnP.
+
+See [this tutorial](https://www.atlassian.com/git/tutorials/comparing-workflows/feature-branch-workflow) about feature branches (just an example, there are many other tutorials and guidelines).
+
+**HELP WANTED!** The following should be rewritten to reflect a proper feature branch workflow. **HELP WANTED!**
+___
+
 A step by step tutorial to help new contributors submit their first pull request. By the end of this tutorial you will have a basic understanding of Git, Github and Pull Requests.
 
 # Why Pull Requests?
