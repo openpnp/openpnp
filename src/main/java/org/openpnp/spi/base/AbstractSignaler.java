@@ -87,14 +87,14 @@ public abstract class AbstractSignaler extends AbstractModelObject implements Si
         {
             putValue(SMALL_ICON, Icons.delete);
             putValue(NAME, "Delete Signaler");
-            putValue(SHORT_DESCRIPTION, Translations.getString("AbstractSignaler.Action.Delete.Description"));
+            putValue(SHORT_DESCRIPTION, Translations.getString("AbstractSignaler.Action.Delete.Description")); //$NON-NLS-1$
         }
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
             int ret = JOptionPane.showConfirmDialog(MainFrame.get(),
-                    Translations.getString("DialogMessages.ConfirmDelete.text") + " " + getName() + "?",
-                    Translations.getString("DialogMessages.ConfirmDelete.title") + " " + getName() + "?",
+                    Translations.getString("DialogMessages.ConfirmDelete.text") + " " + getName() + "?", //$NON-NLS-1$ //$NON-NLS-1$ //$NON-NLS-1$
+                    Translations.getString("DialogMessages.ConfirmDelete.title") + " " + getName() + "?", //$NON-NLS-1$ //$NON-NLS-1$ //$NON-NLS-1$
                     JOptionPane.YES_NO_OPTION);
             if (ret == JOptionPane.YES_OPTION) {
                 Configuration.get().getMachine().removeSignaler(AbstractSignaler.this);

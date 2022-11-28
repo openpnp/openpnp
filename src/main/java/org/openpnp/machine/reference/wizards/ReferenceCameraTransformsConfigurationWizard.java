@@ -83,7 +83,7 @@ public class ReferenceCameraTransformsConfigurationWizard extends AbstractConfig
                 FormSpecs.DEFAULT_ROWSPEC,}));
 
         lblRotation = new JLabel(Translations.getString(
-                "ReferenceCameraTransformsConfigurationWizard.TransformsPanel.RotationLabel.text"));
+                "ReferenceCameraTransformsConfigurationWizard.TransformsPanel.RotationLabel.text")); //$NON-NLS-1$
         panelTransforms.add(lblRotation, "2, 2, right, default");
 
         textFieldRotation = new JTextField();
@@ -91,13 +91,13 @@ public class ReferenceCameraTransformsConfigurationWizard extends AbstractConfig
         textFieldRotation.setColumns(10);
         
         advancedCalWarning = new JLabel(Translations.getString(
-                "ReferenceCameraTransformsConfigurationWizard.TransformsPanel.AdvancedCalibrationActiveLabel.text"
+                "ReferenceCameraTransformsConfigurationWizard.TransformsPanel.AdvancedCalibrationActiveLabel.text" //$NON-NLS-1$
         ));
         advancedCalWarning.setForeground(Color.RED);
         panelTransforms.add(advancedCalWarning, "7, 2, right, default");
 
         lblOffsetX = new JLabel(Translations.getString(
-                "ReferenceCameraTransformsConfigurationWizard.TransformsPanel.OffsetXLabel.text"));
+                "ReferenceCameraTransformsConfigurationWizard.TransformsPanel.OffsetXLabel.text")); //$NON-NLS-1$
         panelTransforms.add(lblOffsetX, "2, 4, right, default");
 
         textFieldOffsetX = new JTextField();
@@ -105,7 +105,7 @@ public class ReferenceCameraTransformsConfigurationWizard extends AbstractConfig
         textFieldOffsetX.setColumns(10);
 
         lblOffsetY = new JLabel(Translations.getString(
-                "ReferenceCameraTransformsConfigurationWizard.TransformsPanel.OffsetYLabel.text"));
+                "ReferenceCameraTransformsConfigurationWizard.TransformsPanel.OffsetYLabel.text")); //$NON-NLS-1$
         panelTransforms.add(lblOffsetY, "2, 6, right, default");
 
         textFieldOffsetY = new JTextField();
@@ -113,21 +113,21 @@ public class ReferenceCameraTransformsConfigurationWizard extends AbstractConfig
         textFieldOffsetY.setColumns(10);
 
         lblFlipX = new JLabel(Translations.getString(
-                "ReferenceCameraTransformsConfigurationWizard.TransformsPanel.FlipVerticalLabel.text"));
+                "ReferenceCameraTransformsConfigurationWizard.TransformsPanel.FlipVerticalLabel.text")); //$NON-NLS-1$
         panelTransforms.add(lblFlipX, "2, 8, right, default");
 
         chckbxFlipX = new JCheckBox("");
         panelTransforms.add(chckbxFlipX, "4, 8");
 
         lblFlipY = new JLabel(Translations.getString(
-                "ReferenceCameraTransformsConfigurationWizard.TransformsPanel.FlipHorizontalLabel.text"));
+                "ReferenceCameraTransformsConfigurationWizard.TransformsPanel.FlipHorizontalLabel.text")); //$NON-NLS-1$
         panelTransforms.add(lblFlipY, "2, 10, right, default");
 
         checkBoxFlipY = new JCheckBox("");
         panelTransforms.add(checkBoxFlipY, "4, 10");
         
         lblCropX = new JLabel(Translations.getString(
-                "ReferenceCameraTransformsConfigurationWizard.TransformsPanel.CropWidthLabel.text"));
+                "ReferenceCameraTransformsConfigurationWizard.TransformsPanel.CropWidthLabel.text")); //$NON-NLS-1$
         panelTransforms.add(lblCropX, "2, 12, right, default");
         
         cropWidthTextField = new JTextField();
@@ -135,11 +135,11 @@ public class ReferenceCameraTransformsConfigurationWizard extends AbstractConfig
         cropWidthTextField.setColumns(10);
         
         lblNewLabel = new JLabel(Translations.getString(
-                "ReferenceCameraTransformsConfigurationWizard.TransformsPanel.Use0ForNoCropping1Label.text"));
+                "ReferenceCameraTransformsConfigurationWizard.TransformsPanel.Use0ForNoCropping1Label.text")); //$NON-NLS-1$
         panelTransforms.add(lblNewLabel, "7, 12");
         
         lblCropHeight = new JLabel(Translations.getString(
-                "ReferenceCameraTransformsConfigurationWizard.TransformsPanel.CropHeightLabel.text"));
+                "ReferenceCameraTransformsConfigurationWizard.TransformsPanel.CropHeightLabel.text")); //$NON-NLS-1$
         panelTransforms.add(lblCropHeight, "2, 14, right, default");
         
         cropHeightTextField = new JTextField();
@@ -147,11 +147,11 @@ public class ReferenceCameraTransformsConfigurationWizard extends AbstractConfig
         cropHeightTextField.setColumns(10);
         
         lblNewLabel_1 = new JLabel(Translations.getString(
-                "ReferenceCameraTransformsConfigurationWizard.TransformsPanel.Use0ForNoCropping2Label.text"));
+                "ReferenceCameraTransformsConfigurationWizard.TransformsPanel.Use0ForNoCropping2Label.text")); //$NON-NLS-1$
         panelTransforms.add(lblNewLabel_1, "7, 14");
         
         lblScaleWidth = new JLabel(Translations.getString(
-                "ReferenceCameraTransformsConfigurationWizard.TransformsPanel.ScaleWidthLabel.text"));
+                "ReferenceCameraTransformsConfigurationWizard.TransformsPanel.ScaleWidthLabel.text")); //$NON-NLS-1$
         panelTransforms.add(lblScaleWidth, "2, 16, right, default");
         
         scaleWidthTf = new JTextField();
@@ -159,11 +159,11 @@ public class ReferenceCameraTransformsConfigurationWizard extends AbstractConfig
         scaleWidthTf.setColumns(10);
         
         lbluseFor = new JLabel(Translations.getString(
-                "ReferenceCameraTransformsConfigurationWizard.TransformsPanel.Use0ForNoScaling1Label.text"));
+                "ReferenceCameraTransformsConfigurationWizard.TransformsPanel.Use0ForNoScaling1Label.text")); //$NON-NLS-1$
         panelTransforms.add(lbluseFor, "7, 16");
         
         lblScaleHeight = new JLabel(Translations.getString(
-                "ReferenceCameraTransformsConfigurationWizard.TransformsPanel.ScaleHeightLabel.text"));
+                "ReferenceCameraTransformsConfigurationWizard.TransformsPanel.ScaleHeightLabel.text")); //$NON-NLS-1$
         panelTransforms.add(lblScaleHeight, "2, 18, right, default");
         
         scaleHeightTf = new JTextField();
@@ -171,18 +171,18 @@ public class ReferenceCameraTransformsConfigurationWizard extends AbstractConfig
         scaleHeightTf.setColumns(10);
         
         label = new JLabel(Translations.getString(
-                "ReferenceCameraTransformsConfigurationWizard.TransformsPanel.Use0ForNoScaling2Label.text"));
+                "ReferenceCameraTransformsConfigurationWizard.TransformsPanel.Use0ForNoScaling2Label.text")); //$NON-NLS-1$
         panelTransforms.add(label, "7, 18");
         
         lblDeinterlace = new JLabel(Translations.getString(
-                "ReferenceCameraTransformsConfigurationWizard.TransformsPanel.DeInterlaceLabel.text"));
+                "ReferenceCameraTransformsConfigurationWizard.TransformsPanel.DeInterlaceLabel.text")); //$NON-NLS-1$
         panelTransforms.add(lblDeinterlace, "2, 20, right, default");
         
         deinterlaceChk = new JCheckBox("");
         panelTransforms.add(deinterlaceChk, "4, 20");
         
         lblremovesInterlacingFrom = new JLabel(Translations.getString(
-                "ReferenceCameraTransformsConfigurationWizard.TransformsPanel.RemoveInterlacingLabel.text"));
+                "ReferenceCameraTransformsConfigurationWizard.TransformsPanel.RemoveInterlacingLabel.text")); //$NON-NLS-1$
         panelTransforms.add(lblremovesInterlacingFrom, "7, 20");
     }
 

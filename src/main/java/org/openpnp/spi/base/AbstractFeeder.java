@@ -153,7 +153,7 @@ public abstract class AbstractFeeder extends AbstractModelObject implements Feed
     @Override
     public PropertySheet[] getPropertySheets() {
         return new PropertySheet[] {new PropertySheetWizardAdapter(getConfigurationWizard(),
-                Translations.getString("AbstractFeeder.ConfigurationWizard.title"))};
+                Translations.getString("AbstractFeeder.ConfigurationWizard.title"))}; //$NON-NLS-1$
     }
     
     public void postPick(Nozzle nozzle) throws Exception { }
