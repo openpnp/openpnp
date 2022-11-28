@@ -215,9 +215,9 @@ public class PackageVisionPanel extends JPanel {
     public final Action newAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.add);
-            putValue(NAME, Translations.getString("PackageVisionPanel.PadsPanel.Action.NewPad"));
+            putValue(NAME, Translations.getString("PackageVisionPanel.PadsPanel.Action.NewPad")); //$NON-NLS-1$
             putValue(SHORT_DESCRIPTION, Translations.getString(
-                    "PackageVisionPanel.PadsPanel.Action.NewPad.Description"));
+                    "PackageVisionPanel.PadsPanel.Action.NewPad.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -238,18 +238,18 @@ public class PackageVisionPanel extends JPanel {
     public final Action deleteAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.delete);
-            putValue(NAME, Translations.getString("PackageVisionPanel.PadsPanel.Action.DeletePad"));
+            putValue(NAME, Translations.getString("PackageVisionPanel.PadsPanel.Action.DeletePad")); //$NON-NLS-1$
             putValue(SHORT_DESCRIPTION, Translations.getString(
-                    "PackageVisionPanel.PadsPanel.Action.DeletePad.Description"));
+                    "PackageVisionPanel.PadsPanel.Action.DeletePad.Description")); //$NON-NLS-1$
         }
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
             int ret = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                    Translations.getString("DialogMessages.ConfirmDelete.text")
-                            + " " + getSelectedPad().getName() + "?",
-                    Translations.getString("DialogMessages.ConfirmDelete.title")
-                            + " " + getSelectedPad().getName() + "?", JOptionPane.YES_NO_OPTION);
+                    Translations.getString("DialogMessages.ConfirmDelete.text") //$NON-NLS-1$
+                            + " " + getSelectedPad().getName() + "?", //$NON-NLS-1$ //$NON-NLS-1$
+                    Translations.getString("DialogMessages.ConfirmDelete.title") //$NON-NLS-1$ //$NON-NLS-1$
+                            + " " + getSelectedPad().getName() + "?", JOptionPane.YES_NO_OPTION); //$NON-NLS-1$ //$NON-NLS-1$
             if (ret == JOptionPane.YES_OPTION) {
                 footprint.removePad(getSelectedPad());
             }

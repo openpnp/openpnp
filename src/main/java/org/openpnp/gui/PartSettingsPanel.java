@@ -56,7 +56,7 @@ public class PartSettingsPanel extends JPanel {
         
         pickConditionsPanel = new JPanel();
         pickConditionsPanel.setBorder(new TitledBorder(null, Translations.getString(
-                "PartSettingsPanel.pickConditionsPanel.Border.title"),
+                "PartSettingsPanel.pickConditionsPanel.Border.title"), //$NON-NLS-1$
                 TitledBorder.LEADING, TitledBorder.TOP, null));
         add(pickConditionsPanel);
         pickConditionsPanel.setLayout(new FormLayout(new ColumnSpec[] {
@@ -69,7 +69,7 @@ public class PartSettingsPanel extends JPanel {
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
         lblNewLabel = new JLabel(Translations.getString(
-                "PartSettingsPanel.pickConditionsPanel.pickRetryCountLabel.text"));
+                "PartSettingsPanel.pickConditionsPanel.pickRetryCountLabel.text")); //$NON-NLS-1$
         pickConditionsPanel.add(lblNewLabel, "2, 2, right, default");
         
         pickRetryCount = new JTextField();
