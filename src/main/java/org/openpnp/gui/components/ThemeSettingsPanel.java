@@ -123,7 +123,7 @@ public class ThemeSettingsPanel extends JPanel {
         themesList = new JList<>();
         JScrollPane themesScrollPane = new JScrollPane();
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-        themesLabel.setText(Translations.getString("Theme.Section.Theme"));
+        themesLabel.setText(Translations.getString("Theme.Section.Theme")); //$NON-NLS-1$
         themesLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         add(themesLabel);
         themesList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -166,7 +166,7 @@ public class ThemeSettingsPanel extends JPanel {
             }
         });
         JLabel fontLabel = new JLabel();
-        fontLabel.setText(Translations.getString("Theme.Section.FontSize"));
+        fontLabel.setText(Translations.getString("Theme.Section.FontSize")); //$NON-NLS-1$
         fontLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         JSeparator separator = new JSeparator(JSeparator.HORIZONTAL);
         separator.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -175,7 +175,7 @@ public class ThemeSettingsPanel extends JPanel {
         separator.setMinimumSize(new Dimension(0, 5));
         add(separator);
 
-        chckbxAlternatingRows = new JCheckBox(Translations.getString("ThemeSettingsPanel.chckbxAlternatingRows.text"));
+        chckbxAlternatingRows = new JCheckBox(Translations.getString("ThemeSettingsPanel.chckbxAlternatingRows.text")); //$NON-NLS-1$
         add(chckbxAlternatingRows);
         chckbxAlternatingRows.setSelected(UIManager.getColor("Table.alternateRowColor") != null); 
 
@@ -226,7 +226,7 @@ public class ThemeSettingsPanel extends JPanel {
         }
 
         dict.put(defaultPercent, mid);
-        mid.setText(Translations.getString("Theme.FontSize.Default"));
+        mid.setText(Translations.getString("Theme.FontSize.Default")); //$NON-NLS-1$
         mid.setAlignmentX(JComponent.CENTER_ALIGNMENT);
         mid.setHorizontalTextPosition(JLabel.RIGHT);
 
@@ -247,18 +247,18 @@ public class ThemeSettingsPanel extends JPanel {
 
         themes.clear();
 
-        themes.add(new ThemeInfo(Translations.getString("Theme.Section.System"), null, false, null, null));
+        themes.add(new ThemeInfo(Translations.getString("Theme.Section.System"), null, false, null, null)); //$NON-NLS-1$
         UIManager.LookAndFeelInfo[] lookAndFeels = UIManager.getInstalledLookAndFeels();
         for (UIManager.LookAndFeelInfo lookAndFeel : lookAndFeels) {
             String name = lookAndFeel.getName();
             if (lookAndFeel.getClassName().equals(UIManager.getSystemLookAndFeelClassName())){
-                name += " " + Translations.getString("Theme.Default");
+                name += " " + Translations.getString("Theme.Default"); //$NON-NLS-1$ //$NON-NLS-1$
             }
             String className = lookAndFeel.getClassName();
             themes.add(new ThemeInfo(name, null, false, null, className));
         }
 
-        themes.add(new ThemeInfo(Translations.getString("Theme.Section.Extra"), null, false, null, null));
+        themes.add(new ThemeInfo(Translations.getString("Theme.Section.Extra"), null, false, null, null)); //$NON-NLS-1$
         themes.add(new ThemeInfo("Light", null, false, null, FlatLightLaf.class.getName()));
         themes.add(new ThemeInfo("Dark", null, true, null, FlatDarkLaf.class.getName()));
         themes.add(new ThemeInfo("IntelliJ Light", null, false, null, FlatIntelliJLaf.class.getName()));
@@ -271,7 +271,7 @@ public class ThemeSettingsPanel extends JPanel {
         File[] themeFiles = themesDirectory.listFiles((dir, name) -> name.endsWith(".theme.json") || name.endsWith(".properties"));
         if (themeFiles != null) {
             if (themeFiles.length > 0) {
-                themes.add(new ThemeInfo(Translations.getString("Theme.Section.User"), null, false, null, null));
+                themes.add(new ThemeInfo(Translations.getString("Theme.Section.User"), null, false, null, null)); //$NON-NLS-1$
                 for (File f : themeFiles) {
                     String fName = f.getName();
                     String name = fName.endsWith(".properties")
