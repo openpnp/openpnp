@@ -325,9 +325,9 @@ public class PartsPanel extends JPanel implements WizardContainer {
             }
             
             int ret = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                    Translations.getString("DialogMessages.ConfirmDelete.text") + " " + formattedIds + "?", //$NON-NLS-1$ //$NON-NLS-1$ //$NON-NLS-1$
-                    Translations.getString("DialogMessages.ConfirmDelete.title") + " " + selections.size() + " " + Translations.getString( //$NON-NLS-1$ //$NON-NLS-1$ //$NON-NLS-1$
-                                    "CommonWords.parts") + "?", JOptionPane.YES_NO_OPTION); //$NON-NLS-1$ //$NON-NLS-1$
+                    Translations.getString("DialogMessages.ConfirmDelete.text") + " " + formattedIds + "?", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                    Translations.getString("DialogMessages.ConfirmDelete.title") + " " + selections.size() + " " + Translations.getString( //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                                    "CommonWords.parts") + "?", JOptionPane.YES_NO_OPTION); //$NON-NLS-1$ //$NON-NLS-2$
             if (ret == JOptionPane.YES_OPTION) {
                 for (Part part : selections) {
                     Configuration.get().removePart(part);

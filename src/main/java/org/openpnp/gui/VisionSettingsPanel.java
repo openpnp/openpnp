@@ -221,7 +221,7 @@ public class VisionSettingsPanel extends JPanel implements WizardContainer {
                 String errorNames = new AbstractVisionSettings.ListConverter(false).convertForward(usedIn);
                 MessageBoxes.errorBox(getTopLevelAncestor(), Translations.getString("CommonWords.error"), //$NON-NLS-1$
                         Translations.getString("CommonPhrases.selectionCannotBeDeletedUsedBy") //$NON-NLS-1$
-                                + " " + errorNames + "."); //$NON-NLS-1$ //$NON-NLS-1$
+                                + " " + errorNames + "."); //$NON-NLS-1$ //$NON-NLS-2$
                 return;
             }
 
@@ -235,9 +235,9 @@ public class VisionSettingsPanel extends JPanel implements WizardContainer {
 
             int ret = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
                     Translations.getString("DialogMessages.ConfirmDelete.text") //$NON-NLS-1$
-                            + " " + formattedNames + "?", //$NON-NLS-1$ //$NON-NLS-1$
+                            + " " + formattedNames + "?", //$NON-NLS-1$ //$NON-NLS-2$
                     Translations.getString("DialogMessages.ConfirmDelete.title") //$NON-NLS-1$
-                            + " " + selections.size() + " " + Translations.getString("CommonPhrases.visionSettings") //$NON-NLS-1$ //$NON-NLS-1$ //$NON-NLS-1$
+                            + " " + selections.size() + " " + Translations.getString("CommonPhrases.visionSettings") //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                             + "?", //$NON-NLS-1$
                     JOptionPane.YES_NO_OPTION);
             if (ret == JOptionPane.YES_OPTION) {
