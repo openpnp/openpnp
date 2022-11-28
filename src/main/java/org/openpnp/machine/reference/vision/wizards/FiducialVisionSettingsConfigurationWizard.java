@@ -101,7 +101,7 @@ public class FiducialVisionSettingsConfigurationWizard extends AbstractConfigura
             ) + " " + settingsHolder.getShortName()); //$NON-NLS-1$
             btnSpecializeSetting.setToolTipText(Translations.getString(
                     "FiducialVisionSettingsConfigurationWizard.GeneralPanel.SpecializeSettingsButton.toolTipText" //$NON-NLS-1$
-            ) + " " + settingsHolder.getClass().getSimpleName()+" "+settingsHolder.getShortName()); //$NON-NLS-1$ //$NON-NLS-1$
+            ) + " " + settingsHolder.getClass().getSimpleName()+" "+settingsHolder.getShortName()); //$NON-NLS-1$ //$NON-NLS-2$
         }
         else if (settingsHolder != null) {
             btnSpecializeSetting.setText(Translations.getString(

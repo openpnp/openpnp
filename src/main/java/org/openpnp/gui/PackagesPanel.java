@@ -336,7 +336,7 @@ public class PackagesPanel extends JPanel implements WizardContainer {
                     ) + " " + formattedIds + "?", //$NON-NLS-1$ //$NON-NLS-1$
                     Translations.getString("DialogMessages.ConfirmDelete.title" //$NON-NLS-1$
                     ) + selections.size() + " " + Translations.getString(
-                                    "CommonWords.packages") + "?", JOptionPane.YES_NO_OPTION); //$NON-NLS-1$ //$NON-NLS-1$
+                                    "CommonWords.packages") + "?", JOptionPane.YES_NO_OPTION); //$NON-NLS-1$ //$NON-NLS-2$
             if (ret == JOptionPane.YES_OPTION) {
                 for (Package pkg : selections) {
                     Configuration.get().removePackage(pkg);

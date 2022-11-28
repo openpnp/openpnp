@@ -390,7 +390,7 @@ public class IssuesAndSolutionsPanel extends JPanel {
                     tabs.setTitleAt(index, Translations.getString(
                             "MainFrame.RightComponent.tabs.IssuesAndSolutionsHtml") //$NON-NLS-1$
                             +String.format("%02x%02x%02x", color.getRed(), color.getGreen(), color.getBlue()) //$NON-NLS-1$
-                            +";\">&#"+(indicatorUnicode)+";</span></html>"); //$NON-NLS-1$ //$NON-NLS-1$
+                            +";\">&#"+(indicatorUnicode)+";</span></html>"); //$NON-NLS-1$ //$NON-NLS-2$
                 }
                 else {
                     tabs.setTitleAt(index, Translations.getString(

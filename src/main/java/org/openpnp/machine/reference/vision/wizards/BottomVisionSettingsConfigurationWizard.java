@@ -119,7 +119,7 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
                     "BottomVisionSettingsConfigurationWizard.SpecializeSettingsButton.SpecializeForText") //$NON-NLS-1$
                     + " " +settingsHolder.getShortName()); //$NON-NLS-1$
             btnSpecializeSetting.setToolTipText(Translations.getString(
-                    "BottomVisionSettingsConfigurationWizard.SpecializeSettingsButton.toolTipText") + " " //$NON-NLS-1$ //$NON-NLS-1$
+                    "BottomVisionSettingsConfigurationWizard.SpecializeSettingsButton.toolTipText") + " " //$NON-NLS-1$ //$NON-NLS-2$
                     + settingsHolder.getClass().getSimpleName()+" "+settingsHolder.getShortName());
         }
         else if (settingsHolder != null) {

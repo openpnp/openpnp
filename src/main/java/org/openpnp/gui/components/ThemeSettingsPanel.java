@@ -252,7 +252,7 @@ public class ThemeSettingsPanel extends JPanel {
         for (UIManager.LookAndFeelInfo lookAndFeel : lookAndFeels) {
             String name = lookAndFeel.getName();
             if (lookAndFeel.getClassName().equals(UIManager.getSystemLookAndFeelClassName())){
-                name += " " + Translations.getString("Theme.Default"); //$NON-NLS-1$ //$NON-NLS-1$
+                name += " " + Translations.getString("Theme.Default"); //$NON-NLS-1$ //$NON-NLS-2$
             }
             String className = lookAndFeel.getClassName();
             themes.add(new ThemeInfo(name, null, false, null, className));

@@ -477,7 +477,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         }
         else {
             title = Translations.getString("FeedersPanel.SelectFeederImplementationDialog.SelectFor.title" //$NON-NLS-1$
-            ) + " " + part.getId() + "..."; //$NON-NLS-1$ //$NON-NLS-1$
+            ) + " " + part.getId() + "..."; //$NON-NLS-1$ //$NON-NLS-2$
         }
         ClassSelectionDialog<Feeder> dialog =
                 new ClassSelectionDialog<>(JOptionPane.getFrameForComponent(FeedersPanel.this),
@@ -557,9 +557,9 @@ public class FeedersPanel extends JPanel implements WizardContainer {
             }
             
             int ret = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                    Translations.getString("DialogMessages.ConfirmDelete.text") + " " + formattedIds + "?", //$NON-NLS-1$ //$NON-NLS-1$ //$NON-NLS-1$
-                    Translations.getString("DialogMessages.ConfirmDelete.title") + " " + //$NON-NLS-1$ //$NON-NLS-1$
-                            selections.size() + " " + Translations.getString("CommonWords.feeders") + "?", //$NON-NLS-1$ //$NON-NLS-1$ //$NON-NLS-1$
+                    Translations.getString("DialogMessages.ConfirmDelete.text") + " " + formattedIds + "?", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                    Translations.getString("DialogMessages.ConfirmDelete.title") + " " + //$NON-NLS-1$ //$NON-NLS-2$
+                            selections.size() + " " + Translations.getString("CommonWords.feeders") + "?", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                     JOptionPane.YES_NO_OPTION);
             if (ret == JOptionPane.YES_OPTION) {
                 for (Feeder feeder : selections) {
