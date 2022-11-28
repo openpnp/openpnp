@@ -63,7 +63,7 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
         
         JPanel settingsPanel = new JPanel();
         settingsPanel.setBorder(new TitledBorder(null, Translations.getString(
-                "GcodeDriverSettings.SettingsPanel.Border.title"),
+                "GcodeDriverSettings.SettingsPanel.Border.title"), //$NON-NLS-1$
                 TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(settingsPanel);
         settingsPanel.setLayout(new FormLayout(new ColumnSpec[] {
@@ -98,24 +98,24 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
                 RowSpec.decode("max(50dlu;default)"),}));
         
         JLabel lblMotionControlType = new JLabel(Translations.getString(
-                "GcodeDriverSettings.SettingsPanel.MotionControlTypeLabel.text"));
+                "GcodeDriverSettings.SettingsPanel.MotionControlTypeLabel.text")); //$NON-NLS-1$
         lblMotionControlType.setToolTipText(Translations.getString(
-                "GcodeDriverSettings.SettingsPanel.MotionControlTypeLabel.toolTipText"));
+                "GcodeDriverSettings.SettingsPanel.MotionControlTypeLabel.toolTipText")); //$NON-NLS-1$
         settingsPanel.add(lblMotionControlType, "2, 2, right, default");
         
         motionControlType = new JComboBox(MotionControlType.values());
         settingsPanel.add(motionControlType, "4, 2, 5, 1, fill, default");
         
-        JLabel lblUnits = new JLabel(Translations.getString("GcodeDriverSettings.SettingsPanel.UnitsLabel.text"));
+        JLabel lblUnits = new JLabel(Translations.getString("GcodeDriverSettings.SettingsPanel.UnitsLabel.text")); //$NON-NLS-1$
         settingsPanel.add(lblUnits, "6, 4, right, default");
         
         unitsCb = new JComboBox(LengthUnit.values());
         settingsPanel.add(unitsCb, "8, 4, fill, default");
         
         JLabel lblMaxFeedRate = new JLabel(Translations.getString(
-                "GcodeDriverSettings.SettingsPanel.MaxFeedRate.text"));
+                "GcodeDriverSettings.SettingsPanel.MaxFeedRate.text")); //$NON-NLS-1$
         lblMaxFeedRate.setToolTipText(Translations.getString(
-                "GcodeDriverSettings.SettingsPanel.MaxFeedRate.toolTipText"));
+                "GcodeDriverSettings.SettingsPanel.MaxFeedRate.toolTipText")); //$NON-NLS-1$
         settingsPanel.add(lblMaxFeedRate, "6, 6, right, default");
         
         maxFeedRateTf = new JTextField();
@@ -123,7 +123,7 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
         maxFeedRateTf.setColumns(5);
         
         JLabel lblCommandTimeoutms = new JLabel(Translations.getString(
-                "GcodeDriverSettings.SettingsPanel.CommandTimeout.text"));
+                "GcodeDriverSettings.SettingsPanel.CommandTimeout.text")); //$NON-NLS-1$
         settingsPanel.add(lblCommandTimeoutms, "2, 4, right, default");
         
         commandTimeoutTf = new JTextField();
@@ -131,7 +131,7 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
         commandTimeoutTf.setColumns(10);
         
         JLabel lblConnectWaitTime = new JLabel(Translations.getString(
-                "GcodeDriverSettings.SettingsPanel.ConnectWaitTimeoutLabel.text"));
+                "GcodeDriverSettings.SettingsPanel.ConnectWaitTimeoutLabel.text")); //$NON-NLS-1$
         settingsPanel.add(lblConnectWaitTime, "2, 6, right, default");
         
         connectWaitTimeTf = new JTextField();
@@ -139,25 +139,25 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
         connectWaitTimeTf.setColumns(10);
         
         JLabel lblLetterVariables = new JLabel(Translations.getString(
-                "GcodeDriverSettings.SettingsPanel.LetterVariablesLabel.text"));
+                "GcodeDriverSettings.SettingsPanel.LetterVariablesLabel.text")); //$NON-NLS-1$
         lblLetterVariables.setToolTipText(Translations.getString(
-                "GcodeDriverSettings.SettingsPanel.LetterVariablesLabel.toolTipText"));
+                "GcodeDriverSettings.SettingsPanel.LetterVariablesLabel.toolTipText")); //$NON-NLS-1$
         settingsPanel.add(lblLetterVariables, "2, 8, right, default");
         
         letterVariables = new JCheckBox("");
         settingsPanel.add(letterVariables, "4, 8");
         
         JLabel lblAllowPremoveCommands = new JLabel(Translations.getString(
-                "GcodeDriverSettings.SettingsPanel.AllowPreMoveCommandsLabel.text"));
+                "GcodeDriverSettings.SettingsPanel.AllowPreMoveCommandsLabel.text")); //$NON-NLS-1$
         settingsPanel.add(lblAllowPremoveCommands, "6, 8, right, default");
         
         supportingPreMove = new JCheckBox("");
         settingsPanel.add(supportingPreMove, "8, 8");
         
         JLabel lblRemoveComments = new JLabel(Translations.getString(
-                "GcodeDriverSettings.SettingsPanel.RemoveCommentsLabel.text"));
+                "GcodeDriverSettings.SettingsPanel.RemoveCommentsLabel.text")); //$NON-NLS-1$
         lblRemoveComments.setToolTipText(Translations.getString(
-                "GcodeDriverSettings.SettingsPanel.RemoveCommentsLabel.toolTipText"));
+                "GcodeDriverSettings.SettingsPanel.RemoveCommentsLabel.toolTipText")); //$NON-NLS-1$
         settingsPanel.add(lblRemoveComments, "2, 10, right, default");
         
         removeComments = new JCheckBox("");
@@ -165,41 +165,41 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
         settingsPanel.add(removeComments, "4, 10");
         
         JLabel lblCompressGcode = new JLabel(Translations.getString(
-                "GcodeDriverSettings.SettingsPanel.CompressGCodeLabel.text"));
+                "GcodeDriverSettings.SettingsPanel.CompressGCodeLabel.text")); //$NON-NLS-1$
         lblCompressGcode.setToolTipText(Translations.getString(
-                "GcodeDriverSettings.SettingsPanel.CompressGCodeLabel.toolTipText"));
+                "GcodeDriverSettings.SettingsPanel.CompressGCodeLabel.toolTipText")); //$NON-NLS-1$
         settingsPanel.add(lblCompressGcode, "6, 10, right, default");
         
         compressGcode = new JCheckBox("");
         settingsPanel.add(compressGcode, "8, 10");
         
         JLabel lblBackslashEscapedCharacters = new JLabel(Translations.getString(
-                "GcodeDriverSettings.SettingsPanel.BackslashEscapedCharactersLabel.text"));
+                "GcodeDriverSettings.SettingsPanel.BackslashEscapedCharactersLabel.text")); //$NON-NLS-1$
         lblBackslashEscapedCharacters.setToolTipText(Translations.getString(
-                "GcodeDriverSettings.SettingsPanel.BackslashEscapedCharactersLabel.toolTipText"));
+                "GcodeDriverSettings.SettingsPanel.BackslashEscapedCharactersLabel.toolTipText")); //$NON-NLS-1$
         settingsPanel.add(lblBackslashEscapedCharacters, "2, 12, right, default");
         
         backslashEscapedCharacters = new JCheckBox("");
         backslashEscapedCharacters.setToolTipText(Translations.getString(
-                "GcodeDriverSettings.SettingsPanel.BackslashEscapedCharactersLabel.toolTipText"));
+                "GcodeDriverSettings.SettingsPanel.BackslashEscapedCharactersLabel.toolTipText")); //$NON-NLS-1$
         settingsPanel.add(backslashEscapedCharacters, "4, 12");
         
         JLabel lblLogGcode = new JLabel(Translations.getString(
-                "GcodeDriverSettings.SettingsPanel.LogGCodeLabel.text"));
+                "GcodeDriverSettings.SettingsPanel.LogGCodeLabel.text")); //$NON-NLS-1$
         lblLogGcode.setToolTipText(Translations.getString(
-                "GcodeDriverSettings.SettingsPanel.LogGCodeLabel.toolTipText"));
+                "GcodeDriverSettings.SettingsPanel.LogGCodeLabel.toolTipText")); //$NON-NLS-1$
         settingsPanel.add(lblLogGcode, "6, 12, right, default");
         
         loggingGcode = new JCheckBox("");
         settingsPanel.add(loggingGcode, "8, 12");
         
         JButton btnDetectFirmware = new JButton(Translations.getString(
-                "GcodeDriverSettings.SettingsPanel.DetectFirmwareButton.text"));
+                "GcodeDriverSettings.SettingsPanel.DetectFirmwareButton.text")); //$NON-NLS-1$
         btnDetectFirmware.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
                 firmwareConfiguration.setText(Translations.getString(
-                        "GcodeDriverSettings.SettingsPanel.FirmwareConfigurationTextArea.Detecting.text"));
+                        "GcodeDriverSettings.SettingsPanel.FirmwareConfigurationTextArea.Detecting.text")); //$NON-NLS-1$
                 ReferenceMachine machine = (ReferenceMachine) Configuration.get().getMachine();
                 UiUtils.messageBoxOnException(() -> {
                     if (machine.isEnabled()) {
@@ -262,16 +262,16 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
         {
             putValue(SMALL_ICON, Icons.export);
             putValue(NAME, Translations.getString(
-                    "GcodeDriverSettings.Action.ExportProfile"));
+                    "GcodeDriverSettings.Action.ExportProfile")); //$NON-NLS-1$
             putValue(SHORT_DESCRIPTION, Translations.getString(
-                    "GcodeDriverSettings.Action.ExportProfile.Description"));
+                    "GcodeDriverSettings.Action.ExportProfile.Description")); //$NON-NLS-1$
         }
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
             try {
                 FileDialog fileDialog = new FileDialog(MainFrame.get(), Translations.getString(
-                        "GcodeDriverSettings.SaveFileDialog.title"), FileDialog.SAVE);
+                        "GcodeDriverSettings.SaveFileDialog.title"), FileDialog.SAVE); //$NON-NLS-1$
                 fileDialog.setFilenameFilter(new FilenameFilter() {
                     @Override
                     public boolean accept(File dir, String name) {
@@ -312,14 +312,14 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
             putValue(SMALL_ICON, Icons.importt);
             putValue(NAME, Translations.getString("GcodeDriverSettings.Action.ImportProfile"));
             putValue(SHORT_DESCRIPTION, Translations.getString(
-                    "GcodeDriverSettings.Action.ImportProfile.Description"));
+                    "GcodeDriverSettings.Action.ImportProfile.Description")); //$NON-NLS-1$
         }
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
             try {
                 FileDialog fileDialog = new FileDialog(MainFrame.get(), Translations.getString(
-                        "GcodeDriverSettings.OpenFileDialog.title"), FileDialog.LOAD);
+                        "GcodeDriverSettings.OpenFileDialog.title"), FileDialog.LOAD); //$NON-NLS-1$
                 fileDialog.setFilenameFilter(new FilenameFilter() {
                     @Override
                     public boolean accept(File dir, String name) {
@@ -343,9 +343,9 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
     public final Action copyProfileToClipboardAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.copy);
-            putValue(NAME, Translations.getString("GcodeDriverSettings.Action.CopyProfile"));
+            putValue(NAME, Translations.getString("GcodeDriverSettings.Action.CopyProfile")); //$NON-NLS-1$
             putValue(SHORT_DESCRIPTION, Translations.getString(
-                    "GcodeDriverSettings.Action.CopyProfile.Description"));
+                    "GcodeDriverSettings.Action.CopyProfile.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -357,8 +357,8 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
                 StringSelection stringSelection = new StringSelection(w.toString());
                 Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
                 clipboard.setContents(stringSelection, null);
-                MessageBoxes.infoBox(Translations.getString("CommonPhrases.copiedGcode"),
-                        Translations.getString("CommonPhrases.copiedGcodeToClipboard"));
+                MessageBoxes.infoBox(Translations.getString("CommonPhrases.copiedGcode"), //$NON-NLS-1$
+                        Translations.getString("CommonPhrases.copiedGcodeToClipboard")); //$NON-NLS-1$
             }
             catch (Exception e) {
                 MessageBoxes.errorBox(MainFrame.get(), "Copy Failed", e);
@@ -369,9 +369,9 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
     public final Action pasteProfileFromClipboardAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.paste);
-            putValue(NAME, Translations.getString("GcodeDriverSettings.Action.PasteProfile"));
+            putValue(NAME, Translations.getString("GcodeDriverSettings.Action.PasteProfile")); //$NON-NLS-1$
             putValue(SHORT_DESCRIPTION, Translations.getString(
-                    "GcodeDriverSettings.Action.PasteProfile.Description"));
+                    "GcodeDriverSettings.Action.PasteProfile.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -383,8 +383,8 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
                 StringReader r = new StringReader(s);
                 GcodeDriver d = ser.read(GcodeDriver.class, s);
                 // copySettings(d, driver);
-                MessageBoxes.infoBox(Translations.getString("CommonPhrases.pastedGcode"),
-                        Translations.getString("CommonPhrases.pastedGcodeFromClipboard"));
+                MessageBoxes.infoBox(Translations.getString("CommonPhrases.pastedGcode"), //$NON-NLS-1$
+                        Translations.getString("CommonPhrases.pastedGcodeFromClipboard")); //$NON-NLS-1$
             }
             catch (Exception e) {
                 MessageBoxes.errorBox(MainFrame.get(), "Paste Failed", e);

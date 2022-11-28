@@ -197,7 +197,7 @@ public class GcodeDriverConsole extends AbstractConfigurationWizard {
     }
 
     private Action sendGcodeConCmdAction = new AbstractAction(Translations.getString(
-            "GcodeDriverConsole.GCodeConsolePanel.SendButton.text")) {
+            "GcodeDriverConsole.GCodeConsolePanel.SendButton.text")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent e) {
             sendGcodeConCmd();

@@ -67,7 +67,7 @@ public class FiducialVisionSettingsConfigurationWizard extends AbstractConfigura
         createPanel();
 
         lblName = new JLabel(Translations.getString(
-                "FiducialVisionSettingsConfigurationWizard.GeneralPanel.NameLabel.text"));
+                "FiducialVisionSettingsConfigurationWizard.GeneralPanel.NameLabel.text")); //$NON-NLS-1$
         panel.add(lblName, "2, 2, right, default");
 
         name = new JTextField();
@@ -86,26 +86,26 @@ public class FiducialVisionSettingsConfigurationWizard extends AbstractConfigura
         panelAssignedTo.add(usedIn, "1, 1, fill, fill");
 
         JLabel lblAssignedTo = new JLabel(Translations.getString(
-                "FiducialVisionSettingsConfigurationWizard.GeneralPanel.AssignedToLabel.text"));
+                "FiducialVisionSettingsConfigurationWizard.GeneralPanel.AssignedToLabel.text")); //$NON-NLS-1$
         panel.add(lblAssignedTo, "2, 4");
 
         JLabel lblSettings = new JLabel(Translations.getString(
-                "FiducialVisionSettingsConfigurationWizard.GeneralPanel.ManageSettingsLabel.text"));
+                "FiducialVisionSettingsConfigurationWizard.GeneralPanel.ManageSettingsLabel.text")); //$NON-NLS-1$
         panel.add(lblSettings, "2, 6");
 
         btnSpecializeSetting = new JButton();
         btnSpecializeSetting.setText(" ");
         if (settingsHolder != null && fiducialLocator.getParentHolder(settingsHolder) != null) {
             btnSpecializeSetting.setText(Translations.getString(
-                    "FiducialVisionSettingsConfigurationWizard.GeneralPanel.SpecializeSettingsButton.SpecializeForText"
-            ) + " " + settingsHolder.getShortName());
+                    "FiducialVisionSettingsConfigurationWizard.GeneralPanel.SpecializeSettingsButton.SpecializeForText" //$NON-NLS-1$
+            ) + " " + settingsHolder.getShortName()); //$NON-NLS-1$
             btnSpecializeSetting.setToolTipText(Translations.getString(
-                    "FiducialVisionSettingsConfigurationWizard.GeneralPanel.SpecializeSettingsButton.toolTipText"
-            ) + " " + settingsHolder.getClass().getSimpleName()+" "+settingsHolder.getShortName());
+                    "FiducialVisionSettingsConfigurationWizard.GeneralPanel.SpecializeSettingsButton.toolTipText" //$NON-NLS-1$
+            ) + " " + settingsHolder.getClass().getSimpleName()+" "+settingsHolder.getShortName()); //$NON-NLS-1$ //$NON-NLS-1$
         }
         else if (settingsHolder != null) {
             btnSpecializeSetting.setText(Translations.getString(
-                    "FiducialVisionSettingsConfigurationWizard.GeneralPanel.SpecializeSettingsButton.OptimizeText"
+                    "FiducialVisionSettingsConfigurationWizard.GeneralPanel.SpecializeSettingsButton.OptimizeText" //$NON-NLS-1$
             ));
             btnSpecializeSetting.setToolTipText("<html>Optimize the Fiducial Vision Settings and their assignments:<br/>"
                     + "<ul>"
@@ -119,7 +119,7 @@ public class FiducialVisionSettingsConfigurationWizard extends AbstractConfigura
         else {
             btnSpecializeSetting.setEnabled(false);
             btnSpecializeSetting.setText(Translations.getString(
-                    "FiducialVisionSettingsConfigurationWizard.GeneralPanel.SpecializeSettingsButton.SpecializeText"));
+                    "FiducialVisionSettingsConfigurationWizard.GeneralPanel.SpecializeSettingsButton.SpecializeText")); //$NON-NLS-1$
             btnSpecializeSetting.setToolTipText("");
         }
 
@@ -147,7 +147,7 @@ public class FiducialVisionSettingsConfigurationWizard extends AbstractConfigura
 
         final String subjects = settingsHolder instanceof Package ? "Parts" : "Parts and Packages";
         btnGeneralizeSettings = new JButton(Translations.getString(
-                "FiducialVisionSettingsConfigurationWizard.GeneralPanel.GeneralizeSettingsButton.text"));
+                "FiducialVisionSettingsConfigurationWizard.GeneralPanel.GeneralizeSettingsButton.text")); //$NON-NLS-1$
         btnGeneralizeSettings.addActionListener((e) -> {
             UiUtils.messageBoxOnException(() -> {
                 List<PartSettingsHolder> list = settingsHolder.getSpecializedFiducialVisionIn();
@@ -170,8 +170,8 @@ public class FiducialVisionSettingsConfigurationWizard extends AbstractConfigura
         }
         else {
             btnGeneralizeSettings.setText(Translations.getString(
-                    "FiducialVisionSettingsConfigurationWizard.GeneralPanel.GeneralizeSettingsButton.GeneralizeFor.text"
-            ) + " " +settingsHolder.getShortName());
+                    "FiducialVisionSettingsConfigurationWizard.GeneralPanel.GeneralizeSettingsButton.GeneralizeFor.text" //$NON-NLS-1$
+            ) + " " +settingsHolder.getShortName()); //$NON-NLS-1$
             btnGeneralizeSettings.setToolTipText("<html>Generalize these Fiducial Vision Settings for all the "
                     + subjects
                     + " with the "+ settingsHolder.getClass().getSimpleName()+" "+settingsHolder.getShortName()+".<br/>"
@@ -180,7 +180,7 @@ public class FiducialVisionSettingsConfigurationWizard extends AbstractConfigura
         }
 
         JButton resetButton = new JButton(Translations.getString(
-                "FiducialVisionSettingsConfigurationWizard.GeneralPanel.ResetButton.text"));
+                "FiducialVisionSettingsConfigurationWizard.GeneralPanel.ResetButton.text")); //$NON-NLS-1$
         resetButton.addActionListener(e -> {
             UiUtils.messageBoxOnException(() -> {
                 int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
@@ -203,7 +203,7 @@ public class FiducialVisionSettingsConfigurationWizard extends AbstractConfigura
         panel.add(resetButton, "12, 6");
 
         JLabel lblEnabled = new JLabel(Translations.getString(
-                "FiducialVisionSettingsConfigurationWizard.GeneralPanel.EnabledLabel.text"));
+                "FiducialVisionSettingsConfigurationWizard.GeneralPanel.EnabledLabel.text")); //$NON-NLS-1$
         panel.add(lblEnabled, "2, 8");
 
         enabledCheckbox = new JCheckBox("");
@@ -250,7 +250,7 @@ public class FiducialVisionSettingsConfigurationWizard extends AbstractConfigura
         contentPanel.add(panelAlign);
         panelAlign.setBorder(new TitledBorder(new LineBorder(new Color(184, 207, 229)),
                 Translations.getString(
-                "FiducialVisionSettingsConfigurationWizard.TestFiducialLocatorPanel.Border.title"),
+                "FiducialVisionSettingsConfigurationWizard.TestFiducialLocatorPanel.Border.title"), //$NON-NLS-1$
                 TitledBorder.LEADING, TitledBorder.TOP, null, new Color(51, 51, 51)));
         panelAlign.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -270,7 +270,7 @@ public class FiducialVisionSettingsConfigurationWizard extends AbstractConfigura
                         FormSpecs.DEFAULT_ROWSPEC,}));
 
         JButton btnTestFiducialLocator = new JButton(Translations.getString(
-                "FiducialVisionSettingsConfigurationWizard.TestFiducialLocatorPanel.TestFiducialLocatorButton.text"
+                "FiducialVisionSettingsConfigurationWizard.TestFiducialLocatorPanel.TestFiducialLocatorButton.text" //$NON-NLS-1$
         ));
         panelAlign.add(btnTestFiducialLocator, "4, 2");
         btnTestFiducialLocator.addActionListener((e) -> {
@@ -308,7 +308,7 @@ public class FiducialVisionSettingsConfigurationWizard extends AbstractConfigura
     private void createPanel() {
         panel = new JPanel();
         panel.setBorder(new TitledBorder(null, Translations.getString(
-                "FiducialVisionSettingsConfigurationWizard.GeneralPanel.Border.title"),
+                "FiducialVisionSettingsConfigurationWizard.GeneralPanel.Border.title"), //$NON-NLS-1$
                 TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panel);
         panel.setLayout(new FormLayout(new ColumnSpec[] {
@@ -347,7 +347,7 @@ public class FiducialVisionSettingsConfigurationWizard extends AbstractConfigura
         fiducialLocator.preparePipeline(pipeline, pipelineParameterAssignments, fiducialLocator.getVisionCamera(), settingsHolder);
 
         if (edit) {
-            pipelinePanel.openPipelineEditor(Translations.getString("PipelineEditor.FiducialVisionPipeline.title"),
+            pipelinePanel.openPipelineEditor(Translations.getString("PipelineEditor.FiducialVisionPipeline.title"), //$NON-NLS-1$
                     pipeline);
         }
     }
@@ -360,7 +360,7 @@ public class FiducialVisionSettingsConfigurationWizard extends AbstractConfigura
 
     @Override
     public String getWizardName() {
-        return Translations.getString("FiducialVisionSettingsConfigurationWizard.wizardName");
+        return Translations.getString("FiducialVisionSettingsConfigurationWizard.wizardName"); //$NON-NLS-1$
     }
 
 }

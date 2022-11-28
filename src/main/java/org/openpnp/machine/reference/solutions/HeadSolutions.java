@@ -86,8 +86,8 @@ public class HeadSolutions implements Solutions.Subject {
             if (isDefaultHead && solutions.isTargeting(Milestone.Welcome)) { 
                 solutions.add(new Solutions.Issue(
                         head,
-                        Translations.getString("HeadSolutions.Issue.CreateNozzles"),
-                        Translations.getString("HeadSolutions.Solution.CreateNozzles"),
+                        Translations.getString("HeadSolutions.Issue.CreateNozzles"), //$NON-NLS-1$
+                        Translations.getString("HeadSolutions.Solution.CreateNozzles"), //$NON-NLS-1$
                         Solutions.Severity.Fundamental,
                         "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Nozzle-Setup") {
 
@@ -130,7 +130,7 @@ public class HeadSolutions implements Solutions.Subject {
                     public void setState(Solutions.State state) throws Exception {
                         if (state == State.Solved) {
                             if (solutions.confirm(Translations.getString(
-                                    "HeadSolutions.Issue.CreateNozzles.Confirm"), true)) {
+                                    "HeadSolutions.Issue.CreateNozzles.Confirm"), true)) { //$NON-NLS-1$
                                 createNozzleSolution(theCamera, (NozzleSolution) getChoice(), multiplier);
                                 // Remember this is solved (it can be revisited).
                                 solutions.setSolutionsIssueSolved(this, true);
@@ -150,9 +150,9 @@ public class HeadSolutions implements Solutions.Subject {
                         return new Solutions.Issue.CustomProperty[] {
                                 new Solutions.Issue.IntegerProperty(
                                         Translations.getString(
-                                                "HeadSolutions.Solution.CreateNozzles.NumberOfNozzlesLabel.text"),
+                                                "HeadSolutions.Solution.CreateNozzles.NumberOfNozzlesLabel.text"), //$NON-NLS-1$
                                         Translations.getString(
-                                                "HeadSolutions.Solution.CreateNozzles.NumberOfNozzlesLabel.toolTipText"
+                                                "HeadSolutions.Solution.CreateNozzles.NumberOfNozzlesLabel.toolTipText" //$NON-NLS-1$
                                         ), 1, 8) {
                                     @Override
                                     public int get() {
@@ -169,13 +169,13 @@ public class HeadSolutions implements Solutions.Subject {
                     public Solutions.Issue.Choice[] getChoices() {
                         return new Solutions.Issue.Choice[]{
                                 new Solutions.Issue.Choice(NozzleSolution.Standalone, Translations.getString(
-                                        "HeadSolutions.Solution.CreateNozzles.Choice.0"),
+                                        "HeadSolutions.Solution.CreateNozzles.Choice.0"), //$NON-NLS-1$
                                         Icons.nozzleSingle),
                                 new Solutions.Issue.Choice(NozzleSolution.DualNegated, Translations.getString(
-                                        "HeadSolutions.Solution.CreateNozzles.Choice.1"),
+                                        "HeadSolutions.Solution.CreateNozzles.Choice.1"), //$NON-NLS-1$
                                         Icons.nozzleDualNeg),
                                 new Solutions.Issue.Choice(NozzleSolution.DualCam, Translations.getString(
-                                        "HeadSolutions.Solution.CreateNozzles.Choice.2"),
+                                        "HeadSolutions.Solution.CreateNozzles.Choice.2"), //$NON-NLS-1$
                                         Icons.nozzleDualCam),
                         };
                     }

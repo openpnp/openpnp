@@ -36,15 +36,15 @@ public class ActuatorsPropertySheetHolder extends SimplePropertySheetHolder {
         {
             putValue(SMALL_ICON, Icons.add);
             putValue(NAME, "New Actuator...");
-            putValue(SHORT_DESCRIPTION, Translations.getString("ActuatorsPropertySheetHolder.Action.NewActuator"));
+            putValue(SHORT_DESCRIPTION, Translations.getString("ActuatorsPropertySheetHolder.Action.NewActuator")); //$NON-NLS-1$
         }
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
             Configuration configuration = Configuration.get();
             ClassSelectionDialog<Actuator> dialog = new ClassSelectionDialog<>(MainFrame.get(),
-                    Translations.getString("ActuatorsPropertySheetHolder.ActuatorSelectionDialog.title"),
-                    Translations.getString("ActuatorsPropertySheetHolder.ActuatorSelectionDialog.description"),
+                    Translations.getString("ActuatorsPropertySheetHolder.ActuatorSelectionDialog.title"), //$NON-NLS-1$
+                    Translations.getString("ActuatorsPropertySheetHolder.ActuatorSelectionDialog.description"), //$NON-NLS-1$
                     configuration.getMachine().getCompatibleActuatorClasses());
             dialog.setVisible(true);
             Class<? extends Actuator> cls = dialog.getSelectedClass();

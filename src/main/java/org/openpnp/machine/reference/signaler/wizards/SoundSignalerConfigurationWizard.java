@@ -51,11 +51,11 @@ public class SoundSignalerConfigurationWizard extends AbstractConfigurationWizar
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
         chckbxError = new JCheckBox(Translations.getString(
-                "SoundSignalerConfigurationWizard.PlaySoundOnErrorChkBox.text"));
+                "SoundSignalerConfigurationWizard.PlaySoundOnErrorChkBox.text")); //$NON-NLS-1$
         contentPanel.add(chckbxError, "2, 2");
         
         chckbxSuccess = new JCheckBox(Translations.getString(
-                "SoundSignalerConfigurationWizard.PlaySoundOnCompletionChkBox.text"));
+                "SoundSignalerConfigurationWizard.PlaySoundOnCompletionChkBox.text")); //$NON-NLS-1$
         contentPanel.add(chckbxSuccess, "2, 4");
     }
 

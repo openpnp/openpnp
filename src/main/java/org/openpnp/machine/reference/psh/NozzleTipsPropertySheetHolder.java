@@ -31,9 +31,9 @@ public class NozzleTipsPropertySheetHolder extends SimplePropertySheetHolder {
     public Action newAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.nozzleTipAdd);
-            putValue(NAME, Translations.getString("NozzleTipsPropertySheetHolder.Action.NewNozzleTip"));
+            putValue(NAME, Translations.getString("NozzleTipsPropertySheetHolder.Action.NewNozzleTip")); //$NON-NLS-1$
             putValue(SHORT_DESCRIPTION, Translations.getString(
-                    "NozzleTipsPropertySheetHolder.Action.NewNozzleTip.Description"));
+                    "NozzleTipsPropertySheetHolder.Action.NewNozzleTip.Description")); //$NON-NLS-1$
         }
 
         @Override

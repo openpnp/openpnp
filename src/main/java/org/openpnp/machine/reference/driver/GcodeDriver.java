@@ -1403,11 +1403,11 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         return new PropertySheet[] {
                 new PropertySheetWizardAdapter(super.getConfigurationWizard()),
                 new PropertySheetWizardAdapter(new GcodeDriverSettings(this), Translations.getString(
-                        "GCodeDriver.GCodeDriverSettings.title")),
+                        "GCodeDriver.GCodeDriverSettings.title")), //$NON-NLS-1$
                 new PropertySheetWizardAdapter(new GcodeDriverGcodes(this), Translations.getString(
-                        "GCodeDriver.GCode.title")),
+                        "GCodeDriver.GCode.title")), //$NON-NLS-1$
                 new PropertySheetWizardAdapter(new GcodeDriverConsole(this), Translations.getString(
-                        "GCodeDriver.Console.title")),
+                        "GCodeDriver.Console.title")), //$NON-NLS-1$
         };
     }
 
