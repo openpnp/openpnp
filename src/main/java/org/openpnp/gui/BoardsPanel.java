@@ -45,12 +45,14 @@ import javax.swing.JSplitPane;
 import javax.swing.JTable;
 import javax.swing.JToolBar;
 import javax.swing.ListSelectionModel;
+import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
+import javax.swing.table.TableRowSorter;
 
 import org.openpnp.Translations;
 import org.openpnp.events.PlacementsHolderLocationSelectedEvent;
@@ -58,17 +60,17 @@ import org.openpnp.events.PlacementsHolderSelectedEvent;
 import org.openpnp.events.PlacementSelectedEvent;
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.support.ActionGroup;
-import org.openpnp.gui.support.Helpers;
+import org.openpnp.gui.support.MonospacedFontTableCellRenderer;
+import org.openpnp.gui.support.TableUtils;
+import org.openpnp.gui.support.CustomAlignmentRenderer;
 import org.openpnp.gui.support.Icons;
+import org.openpnp.gui.support.LengthCellValue;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.tablemodel.PlacementsHolderTableModel;
 import org.openpnp.model.Board;
-import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Placement;
-import org.openpnp.model.PlacementsHolderLocation;
 import org.openpnp.model.Configuration.TablesLinked;
-import org.openpnp.model.Panel;
 import org.pmw.tinylog.Logger;
 
 import com.google.common.eventbus.Subscribe;
@@ -133,8 +135,17 @@ public class BoardsPanel extends JPanel {
             }
         };
 
+        TableRowSorter<PlacementsHolderTableModel> panelsTableSorter = new TableRowSorter<>(boardsTableModel);
+        boardsTable.setRowSorter(panelsTableSorter);
+        boardsTable.getTableHeader().setDefaultRenderer(new MultisortTableHeaderCellRenderer());
+        boardsTable.setDefaultRenderer(LengthCellValue.class, new MonospacedFontTableCellRenderer());
         boardsTable.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-
+        boardsTable.setAutoResizeMode(JTable.AUTO_RESIZE_NEXT_COLUMN);
+        
+        TableUtils.setColumnAlignment(boardsTableModel, boardsTable);
+        
+        TableUtils.installColumnWidthSavers(boardsTable, prefs, "BoardsPanel.boardsTable.columnWidth");
+        
         boardsTable.getModel().addTableModelListener(new TableModelListener() {
             @Override
             public void tableChanged(TableModelEvent e) {
@@ -168,7 +179,7 @@ public class BoardsPanel extends JPanel {
                         else if (selections.size() == 1) {
                             multiSelectionActionGroup.setEnabled(false);
                             singleSelectionActionGroup.setEnabled(true);
-                            boardPlacementsPanel.setBoard((Board) selections.get(0));
+                            boardPlacementsPanel.setBoard(selections.get(0));
                             if (updateLinkedTables) {
                                 Configuration.get().getBus()
                                     .post(new PlacementsHolderSelectedEvent(selections.get(0), BoardsPanel.this));
@@ -210,7 +221,6 @@ public class BoardsPanel extends JPanel {
         toolBarBoards.setFloatable(false);
         pnlBoards.add(toolBarBoards, BorderLayout.NORTH);
 
-        toolBarBoards.addSeparator();
         JButton btnAddBoard = new JButton(addBoardAction);
         btnAddBoard.setHideActionText(true);
         btnAddBoard.addMouseListener(new MouseAdapter() {

@@ -40,7 +40,7 @@ import org.simpleframework.xml.core.Commit;
 import org.simpleframework.xml.core.Persist;
 
 /**
- * A Panel is an extension of a PlacementsHolder that can hold multiple Board and Panel Locations
+ * A Panel is a PlacementsHolder that can also hold multiple Board and/or Panel Locations
  */
 @Root(name = "openpnp-panel")
 public class Panel extends PlacementsHolder<Panel> implements PropertyChangeListener {
@@ -72,21 +72,23 @@ public class Panel extends PlacementsHolder<Panel> implements PropertyChangeList
     private Boolean checkFids;
 
     /**
-     * @deprecated Use FiducialLocatable.placements instead
+     * @deprecated Use PlacementsHolder.placements instead
      */
     @Deprecated
     @ElementList(required = false)
     protected IdentifiableList<Placement> fiducials;
     
     @ElementList(required = false)
-    protected ArrayList<String> pseudoPlacementIds = new ArrayList<>();
+    protected IdentifiableList<PlacementsHolderLocation<?>> children = new IdentifiableList<>();
     
     @ElementList(required = false)
-    protected IdentifiableList<PlacementsHolderLocation<?>> children = new IdentifiableList<>();
+    protected ArrayList<String> pseudoPlacementIds = new ArrayList<>();
+    
+    protected transient IdentifiableList<Placement> pseudoPlacements = new IdentifiableList<>();
     
     @Commit
     protected void commit() {
-        //Converted deprecated elements
+        //Convert deprecated elements
         if (fiducials != null) {
             placements.addAll(fiducials);
         }
@@ -96,6 +98,7 @@ public class Panel extends PlacementsHolder<Panel> implements PropertyChangeList
         for (PlacementsHolderLocation<?> child : children) {
             child.addPropertyChangeListener(this);
         }
+        
     }
     
     @Persist
@@ -110,6 +113,12 @@ public class Panel extends PlacementsHolder<Panel> implements PropertyChangeList
         fiducials = null;
         partId = null;
         checkFids = null;
+        
+        //Refresh the list of pseudoPlacementIds
+        pseudoPlacementIds.clear();
+        for (Placement pseudoPlacement : pseudoPlacements) {
+            pseudoPlacementIds.add(pseudoPlacement.getId());
+        }
     }
     
     public Panel() {
@@ -128,18 +137,24 @@ public class Panel extends PlacementsHolder<Panel> implements PropertyChangeList
      */
     public Panel(Panel panel) {
         super(panel);
-        this.version = panel.version;
-        this.checkFids = panel.checkFids;
+        version = panel.version;
+        checkFids = panel.checkFids;
         for (PlacementsHolderLocation<?> child : panel.getChildren()) {
             if (child instanceof PanelLocation) {
-                this.addChild(new PanelLocation((PanelLocation) child));
+                PanelLocation newPanelLocation = new PanelLocation((PanelLocation) child);
+                addChild(newPanelLocation);
+                newPanelLocation.addPropertyChangeListener(this);
             }
             else if (child instanceof BoardLocation) {
-                this.addChild(new BoardLocation((BoardLocation) child));
+                BoardLocation newboardLocation = new BoardLocation((BoardLocation) child);
+                addChild(newboardLocation);
+                newboardLocation.addPropertyChangeListener(this);
             }
         }
-        for (String pseudoPlacementId : panel.pseudoPlacementIds) {
-            this.pseudoPlacementIds.add(pseudoPlacementId);
+        for (Placement pseudoPlacement : panel.pseudoPlacements) {
+            Placement newPseudoPlacement = new Placement(pseudoPlacement);
+            pseudoPlacements.add(newPseudoPlacement);
+            newPseudoPlacement.addPropertyChangeListener("id", this);
         }
     }
     
@@ -151,9 +166,124 @@ public class Panel extends PlacementsHolder<Panel> implements PropertyChangeList
     @Override
     public void dispose() {
         for (PlacementsHolderLocation<?> child : getChildren()) {
+            child.removePropertyChangeListener(this);
             child.dispose();
         }
+        for (Placement pseudoPlacement : pseudoPlacements) {
+            pseudoPlacement.removePropertyChangeListener(this);
+            pseudoPlacement.dispose();
+        }
         super.dispose();
+    }
+    
+    public List<PlacementsHolderLocation<?>> getChildren() {
+        return children;
+    }
+    
+    public void setChildren(IdentifiableList<PlacementsHolderLocation<?>> children) {
+        Object oldValue = this.children;
+        this.children = children;
+        firePropertyChange("children", oldValue, children);
+    }
+    
+    public PlacementsHolderLocation<?> getChild(int index) {
+        return children.get(index);
+    }
+    
+    public void setChild(int index, PlacementsHolderLocation<?> child) {
+        if (this == this.definition) {
+            throw new UnsupportedOperationException("Can not use setChild method to add/remove children from a Panel definition, use addChild or removeChild instead.");
+        }
+        if (child != null) {
+            if (child instanceof BoardLocation) {
+                child = new BoardLocation((BoardLocation) child.getDefinition());
+            }
+            else if (child instanceof PanelLocation) {
+                child = new PanelLocation((PanelLocation) child.getDefinition());
+            }
+            else {
+                throw new UnsupportedOperationException("Unable to create panel child of type " + child.getClass());
+            }
+            if (index >= children.size()) {
+                children.add(child);
+            }
+            else {
+                PlacementsHolderLocation<?> oldChild = children.get(index);
+                oldChild.removePropertyChangeListener(this);
+                oldChild.dispose();
+                children.set(index, child);
+            }
+            fireIndexedPropertyChange("child", index, null, child);
+            child.addPropertyChangeListener(this);
+        }
+        else {
+            if (index >= 0 && index < children.size()) {
+                child = children.get(index);
+                if (child != null) {
+                    children.remove(index);
+                    fireIndexedPropertyChange("child", index, child, null);
+                    child.removePropertyChangeListener(this);
+                    child.dispose();
+                }
+            }
+        }
+    }
+    
+    public void addChild(PlacementsHolderLocation<?> child) {
+//        if (this != this.definition) {
+//            throw new UnsupportedOperationException("This method should only be called on a Panel definition.");
+//        }
+        if (child != null) {
+            String childId = child.getId();
+            if (childId == null || children.get(childId) != null) {
+                if (child instanceof BoardLocation) {
+                    childId = children.createId("Brd");
+                }
+                else if (child instanceof PanelLocation) {
+                    childId = children.createId("Pnl");
+                }
+                else {
+                    throw new UnsupportedOperationException("Unable to create panel child id for type " + child.getClass());
+                }
+            }
+            child.setId(childId);
+            children.add(child);
+            fireIndexedPropertyChange("child", children.indexOf(child), null, child);
+            child.addPropertyChangeListener(this);
+        }
+    }
+    
+    public void removeChild(PlacementsHolderLocation<?> child) {
+        if (this != this.definition) {
+            throw new UnsupportedOperationException("This method should only be called on a Panel definition.");
+        }
+        if (child != null) {
+            int index = children.indexOf(child);
+            if (index >= 0) {
+                List<Placement> oldPseudoPlacements = new IdentifiableList<>(pseudoPlacements);
+                for (Placement pseudoPlacement : oldPseudoPlacements) {
+                    if (pseudoPlacement.getId().startsWith(child.getId() + PlacementsHolderLocation.ID_DELIMITTER)) {
+                        removePseudoPlacement(pseudoPlacement);
+//                        child.removePropertyChangeListener(pseudoPlacement);
+                    }
+                }
+                children.remove(index);
+                fireIndexedPropertyChange("child", index, child, null);
+                child.removePropertyChangeListener(this);
+                child.dispose();
+            }
+        }
+    }
+    
+//    public void removeChild(int index) {
+//        setChild(index, null);
+//    }
+    
+    public void removeAllChildren() {
+        List<PlacementsHolderLocation<?>> oldValue = children;
+        for (PlacementsHolderLocation<?> child : oldValue) {
+            removeChild(child);
+        }
     }
     
     public List<String> getPseudoPlacementIds() {
@@ -167,28 +297,211 @@ public class Panel extends PlacementsHolder<Panel> implements PropertyChangeList
     }
     
     public List<Placement> getPseudoPlacements() {
-        IdentifiableList<Placement> pseudoPlacements = new IdentifiableList<>();
-        for (String pseudoPlacementId : getPseudoPlacementIds()) {
-            Pair<PlacementsHolderLocation<?>, Placement> pair = definition.getDescendantPlacement(pseudoPlacementId);
-            Placement pseudoPlacement = new Placement(pair.second);
-            pseudoPlacement.setDefinition(pseudoPlacement);
-            pseudoPlacement.setEnabled(true);
-            pseudoPlacement.setLocation(Utils2D.calculateBoardPlacementLocation(pair.first, pair.second).derive(null, null, 0.0, null));
-            pseudoPlacement.setId(pseudoPlacementId);
-            pseudoPlacement.setSide(pair.second.getSide().flip(pair.first.getGlobalSide() == Side.Bottom));
-            pseudoPlacement.setComments("For panel alignment only");
-            pseudoPlacements.add(pseudoPlacement);
-        }
         return pseudoPlacements;
     }
     
-    @Override
-    public IdentifiableList<Placement> getPlacements() {
-        IdentifiableList<Placement> allPlacements = super.getPlacements();
-        allPlacements.addAll(getPseudoPlacements());
-        return allPlacements;
+    public void setPseudoPlacements(IdentifiableList<Placement> pseudoPlacements) {
+        Object oldValue = this.pseudoPlacements;
+        this.pseudoPlacements = pseudoPlacements;
+        firePropertyChange("pseudoPlacements", oldValue, pseudoPlacements);
+    }
+    
+    public Placement getPseudoPlacement(int index) {
+        if (index < 0 || index >= pseudoPlacements.size()) {
+            Logger.trace("OhOh!");
+        }
+        return pseudoPlacements.get(index);
+    }
+    
+    public void setPseudoPlacement(int index, Placement pseudoPlacement) {
+        if (this == this.definition) {
+            throw new UnsupportedOperationException("Use addPseudoPlacement to add a PseudoPlacement to a panel definition");
+        }
+        if (pseudoPlacement != null) {
+            pseudoPlacement = new Placement(pseudoPlacement);
+            if (index >= pseudoPlacements.size()) {
+                pseudoPlacements.add(pseudoPlacement);
+            }
+            else {
+                pseudoPlacements.set(index, pseudoPlacement);
+            }
+            pseudoPlacement.addPropertyChangeListener(this);
+            fireIndexedPropertyChange("pseudoPlacement", index, null, pseudoPlacement);
+        }
+        else {
+            if (index >= 0 && index < pseudoPlacements.size()) {
+                pseudoPlacement = pseudoPlacements.get(index);
+                pseudoPlacements.remove(pseudoPlacement);
+                pseudoPlacement.removePropertyChangeListener(this);
+                pseudoPlacement.dispose();
+                fireIndexedPropertyChange("pseudoPlacement", index, pseudoPlacement, null);
+            }
+        }
+    }
+    
+    public void addPseudoPlacement(Placement pseudoPlacement) {
+        if (this != this.definition) {
+            throw new UnsupportedOperationException("Can only add new pseudoPlacements to a panel definition");
+        }
+        if (pseudoPlacement != null) {
+            Logger.trace(String.format("Adding pseudoPlacement to %s @%08x: %s @%08x", this.getClass().getSimpleName(), this.hashCode(), pseudoPlacement, pseudoPlacement.hashCode()));
+            if (pseudoPlacements.get(pseudoPlacement.getId()) != null) {
+                removePseudoPlacement(pseudoPlacements.get(pseudoPlacement.getId()));
+            }
+            pseudoPlacements.add(pseudoPlacement);
+            pseudoPlacement.addPropertyChangeListener(this);
+            fireIndexedPropertyChange("pseudoPlacement", pseudoPlacements.indexOf(pseudoPlacement), null, pseudoPlacement);
+        }
     }
 
+    public void removePseudoPlacement(Placement pseudoPlacement) {
+        if (this != this.definition) {
+            throw new UnsupportedOperationException("Can only remove pseudoPlacements from a panel definition");
+        }
+        String id = pseudoPlacement.getId();
+        Pair<PlacementsHolderLocation<?>, Placement> pair = getDescendantPlacement(id);
+        int index = pseudoPlacements.indexOf(pseudoPlacement);
+        pseudoPlacements.remove(pseudoPlacement);
+        fireIndexedPropertyChange("pseudoPlacement", index, pseudoPlacement, null);
+        if (this == definition && pair != null && pair.second != null) {
+            pair.second.definition.removePropertyChangeListener("location", pseudoPlacement);
+            pair.second.definition.removePropertyChangeListener("side", pseudoPlacement);
+            pair.second.definition.removePropertyChangeListener("id", pseudoPlacement);
+            PlacementsHolderLocation<?> next = pair.first;
+            while (next != null) {
+                next.definition.removePropertyChangeListener("placementsHolder", pseudoPlacement);
+                next.definition.removePropertyChangeListener("location", pseudoPlacement);
+                next.definition.removePropertyChangeListener("side", pseudoPlacement);
+                next.definition.removePropertyChangeListener("id", pseudoPlacement);
+                if (next == pair.first) {
+                    next.definition.placementsHolder.definition.removePropertyChangeListener("placement", pseudoPlacement);
+                }
+                else {
+                    next.definition.placementsHolder.definition.removePropertyChangeListener("child", pseudoPlacement);
+                }
+                if (next.placementsHolder == this) {
+                    break;
+                }
+                next = next.parent;
+            }
+        }
+        pseudoPlacement.removePropertyChangeListener(this);
+        pseudoPlacement.dispose();
+    }
+    
+    public Placement createPseudoPlacement(String pseudoPlacementId) {
+        if (this != this.definition) {
+            throw new UnsupportedOperationException("Can only create pseudoPlacements for a panel definition");
+        }
+        Pair<PlacementsHolderLocation<?>, Placement> pair = getDescendantPlacement(pseudoPlacementId);
+        Placement pseudoPlacement = new Placement(pair.second) {
+            @Override
+            public void propertyChange(PropertyChangeEvent evt) {
+                if (evt instanceof IndexedPropertyChangeEvent) {
+                    Pair<PlacementsHolderLocation<?>, Placement> pair2 = getDescendantPlacement(this.id);
+                    if (evt.getNewValue() == null && pair2 == null) {
+                        Logger.trace("IndexedPropertyChangeEvent handled by PseudoPlacement " + this.id + " " + evt.getSource() + " " + evt.getPropertyName() + " " + evt.getNewValue());
+                        removePseudoPlacement(this);
+                    }
+                }
+                else {
+                    Logger.trace("PropertyChangeEvent handled by PseudoPlacement " + this.id + " " + evt.getSource() + " " + evt.getPropertyName() + " " + evt.getNewValue());
+                    if (evt.getPropertyName().equals("id") && evt.getSource() != this) {
+                        String searchStr = (String) evt.getOldValue();
+                        String[] idParts = this.id.split(PlacementsHolderLocation.ID_DELIMITTER);
+                        for (int i=0; i<idParts.length; i++) {
+                            if (searchStr.equals(idParts[i])) {
+                                //have a possible match, need to construct a new Id and test it
+                                String newId;
+                                if (i == 0) {
+                                    newId = (String) evt.getNewValue();
+                                }
+                                else {
+                                    newId = idParts[0];
+                                }
+                                for (int j=1; j<idParts.length; j++) {
+                                    newId = newId + PlacementsHolderLocation.ID_DELIMITTER;
+                                    if (j != i) {
+                                        newId = newId + idParts[j];
+                                    }
+                                    else {
+                                        newId = newId + (String) evt.getNewValue();
+                                    }
+                                }
+                                if (Panel.this.definition.getDescendantPlacement(newId) != null) {
+                                    //found it!
+                                    setId(newId);
+                                    return;
+                                }
+                            }
+                        }
+                        Logger.warn("Unable to find matching id!!!!!!!!!!!!!!!!");
+                    }
+                    else {
+                        if (evt.getPropertyName().equals("id")) {
+                            Logger.trace("hu?");
+                        }
+                        Pair<PlacementsHolderLocation<?>, Placement> pair = Panel.this.definition.getDescendantPlacement(pseudoPlacementId);
+                        Location location = Utils2D.calculateBoardPlacementLocation(pair.first, pair.second).derive(null, null, 0.0, null);
+                        Side side = pair.second.getSide().flip(pair.first.getGlobalSide() == Side.Bottom);
+                        if (children.get(0).getParent() != null) {
+                            if (children.get(0).getParent().getGlobalSide() == Side.Bottom) {
+                                location = location.invert(false, false, false, true);
+                            }
+                        }
+                        else if (side == Side.Bottom) {
+                            location = location.invert(false, false, false, true);
+                        }
+                        setLocation(location);
+                        setSide(side);
+                    }
+                }
+            }
+        };
+        
+        pseudoPlacement.setDefinition(pseudoPlacement);
+        pseudoPlacement.removePropertyChangeListener(pseudoPlacement);
+        pseudoPlacement.setEnabled(true);
+        Location location = Utils2D.calculateBoardPlacementLocation(pair.first, pair.second).derive(null, null, 0.0, null);
+        Side side = pair.second.getSide().flip(pair.first.getGlobalSide() == Side.Bottom);
+        if (children.get(0).getParent() != null) {
+            if (children.get(0).getParent().getGlobalSide() == Side.Bottom) {
+                location = location.invert(false, false, false, true);
+            }
+        }
+        else if (side == Side.Bottom) {
+            location = location.invert(false, false, false, true);
+        }
+        pseudoPlacement.setLocation(location);
+        pseudoPlacement.setId(pseudoPlacementId);
+        pseudoPlacement.setSide(side);
+        pseudoPlacement.setComments("Pseudo-placement for panel alignment only");
+
+        pair.second.definition.addPropertyChangeListener("location", pseudoPlacement);
+        pair.second.definition.addPropertyChangeListener("side", pseudoPlacement);
+        pair.second.definition.addPropertyChangeListener("id", pseudoPlacement);
+        PlacementsHolderLocation<?> next = pair.first;
+        while (next != null) {
+            next.definition.addPropertyChangeListener("placementsHolder", pseudoPlacement);
+            next.definition.addPropertyChangeListener("location", pseudoPlacement);
+            next.definition.addPropertyChangeListener("side", pseudoPlacement);
+            next.definition.addPropertyChangeListener("id", pseudoPlacement);
+            Logger.trace(String.format("Added property change listener %s @%08x to %s @%08x", pseudoPlacement.id, pseudoPlacement.hashCode(), next.definition.getClass().getSimpleName(), next.definition.hashCode()));
+            if (next == pair.first) {
+                next.definition.placementsHolder.definition.addPropertyChangeListener("placement", pseudoPlacement);
+            }
+            else {
+                next.definition.placementsHolder.definition.addPropertyChangeListener("child", pseudoPlacement);
+            }
+            if (next.placementsHolder == this) {
+                break;
+            }
+            next = next.parent;
+        }
+        
+        return pseudoPlacement;
+    }
+    
     public String getDescendantPlacementUniqueId(PlacementsHolderLocation<?> placementsParentLocation, Placement placement) {
         return placementsParentLocation.getUniqueId() + PlacementsHolderLocation.ID_DELIMITTER + placement.getId();
     }
@@ -197,6 +510,9 @@ public class Panel extends PlacementsHolder<Panel> implements PropertyChangeList
         for (PlacementsHolderLocation<?> child : children) {
             if (placementUniqueId.startsWith(child.getId())) {
                 String remainderId = placementUniqueId.substring(child.getId().length());
+                if (remainderId.startsWith(PlacementsHolderLocation.ID_DELIMITTER)) {
+                    remainderId = remainderId.substring(1);
+                }
                 Placement placement = child.getPlacementsHolder().getPlacements().get(remainderId);
                 if (placement != null) {
                     return new Pair<PlacementsHolderLocation<?>, Placement>(child, placement);
@@ -212,8 +528,19 @@ public class Panel extends PlacementsHolder<Panel> implements PropertyChangeList
         return null;
     }
     
-    public List<PlacementsHolderLocation<?>> getChildren() {
-        return Collections.unmodifiableList(children);
+    public boolean isDescendant(PlacementsHolder<?> placementsHolder) {
+        List<PlacementsHolderLocation<?>> descendants = getDescendants();
+        for (PlacementsHolderLocation<?> descendantLocation : descendants) {
+            if (descendantLocation.getPlacementsHolder() == placementsHolder) {
+                return true;
+            }
+            if (descendantLocation.getPlacementsHolder() instanceof Panel) {
+                if (((Panel) descendantLocation.getPlacementsHolder()).isDefinition(placementsHolder)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
     
     public List<PlacementsHolderLocation<?>> getDescendants() {
@@ -251,58 +578,6 @@ public class Panel extends PlacementsHolder<Panel> implements PropertyChangeList
         return Collections.unmodifiableList(retList);
     }
 
-    public void addChild(PlacementsHolderLocation<?> child) {
-        String childId = child.getId();
-        if (childId == null || children.get(childId) != null) {
-            if (child instanceof BoardLocation) {
-                childId = children.createId("Brd");
-            }
-            else if (child instanceof PanelLocation) {
-                childId = children.createId("Pnl");
-            }
-        }
-        if (child != null) {
-            child.setId(childId);
-            children.add(child);
-            fireIndexedPropertyChange("children", children.indexOf(child), null, child);
-            child.addPropertyChangeListener(this);
-            child.getDefinition().addPropertyChangeListener(child);
-        }
-        
-    }
-    
-    public void removeChild(PlacementsHolderLocation<?> child) {
-        if (child != null) {
-            int index = children.indexOf(child);
-            if (index >= 0) {
-                children.remove(child);
-                fireIndexedPropertyChange("children", index, child, null);
-                child.removePropertyChangeListener(this);
-                child.getDefinition().removePropertyChangeListener(child);
-            }
-        }
-    }
-    
-    public void removeChild(int index) {
-        if (index >= 0 && index < children.size()) {
-            PlacementsHolderLocation<?> child = children.get(index);
-            children.remove(index);
-            fireIndexedPropertyChange("children", index, child, null);
-            child.removePropertyChangeListener(this);
-            child.getDefinition().removePropertyChangeListener(child);
-        }
-    }
-    
-    public void removeAllChildren() {
-        Object oldValue = children;
-        for (PlacementsHolderLocation<?> child : children) {
-            child.removePropertyChangeListener(this);
-            child.getDefinition().removePropertyChangeListener(child);
-        }
-        children = new IdentifiableList<>(children);
-        firePropertyChange("children", oldValue, children);
-    }
-    
     public boolean isCheckFiducials() {
         return this.checkFids;
     }
@@ -314,7 +589,7 @@ public class Panel extends PlacementsHolder<Panel> implements PropertyChangeList
     public int getInstanceCount(PlacementsHolder<?> placementsHolder) {
         int instanceCount = 0;
         for (PlacementsHolderLocation<?> child : children) {
-            if (child.getPlacementsHolder().isDefinedBy(placementsHolder.getDefinition())) {
+            if (child.getPlacementsHolder().isDefinition(placementsHolder.getDefinition())) {
                 instanceCount++;
             }
             else if (child instanceof PanelLocation) {
@@ -326,26 +601,6 @@ public class Panel extends PlacementsHolder<Panel> implements PropertyChangeList
     
     @Override
     public String toString() {
-        return String.format("Panel @%08x defined by @%08x: file %s, dims: %sx%s, fiducial count: %d, children: %d", hashCode(), definition.hashCode(), file, dimensions.getLengthX(), dimensions.getLengthY(), placements.size(), children.size());
+        return String.format("Panel @%08x defined by @%08x: file %s, dims: %sx%s, fiducial count: %d, children: %d", hashCode(), definition != null ? definition.hashCode() : 0, file, dimensions.getLengthX(), dimensions.getLengthY(), placements.size(), children.size());
     }
-
-    @Override
-    public void propertyChange(PropertyChangeEvent evt) {
-//        Logger.trace(String.format("PropertyChangeEvent handled by Panel @%08x = %s", this.hashCode(), evt));
-        if (evt.getSource() != Panel.this && evt.getSource() == definition && evt.getPropertyName().equals("children") && evt instanceof IndexedPropertyChangeEvent) {
-            Logger.trace(String.format("Attempting to set %s @%08x property %s = %s", this.getClass().getSimpleName(), this.hashCode(), evt.getPropertyName(), evt.getNewValue()));
-            int index = ((IndexedPropertyChangeEvent) evt).getIndex();
-            if (evt.getNewValue() instanceof BoardLocation) {
-                addChild(new BoardLocation((BoardLocation) evt.getNewValue()));
-            }
-            else if (evt.getNewValue() instanceof PanelLocation) {
-                addChild(new PanelLocation((PanelLocation) evt.getNewValue()));
-            }
-            else if (evt.getOldValue() != null) {
-                removeChild(index);
-            }
-        }
-        super.propertyChange(evt);
-    }
-
 }

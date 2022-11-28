@@ -250,7 +250,7 @@ public class MultiPlacementBoardLocationProcess {
             
             //Refresh the job panel so that the new board location is visible
             jobPanel.refreshSelectedRow();
-            jobPanel.selectFiducialLocatableLocation(boardLocation);
+            jobPanel.selectPlacementsHolderLocation(boardLocation);
             
             //Check the results to make sure they are valid
             double boardOffset = boardLocation.getGlobalLocation().convertToUnits(LengthUnit.Millimeters).getLinearDistanceTo(savedBoardLocation);

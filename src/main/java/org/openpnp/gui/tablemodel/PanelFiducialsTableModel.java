@@ -31,7 +31,7 @@ import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
 
 @SuppressWarnings("serial")
-public class PanelFiducialsTableModel extends AbstractObjectTableModel {
+public class PanelFiducialsTableModel extends AbstractObjectTableModel implements ColumnAlignable {
     private Panel panel;
 
     private String[] columnNames =
@@ -40,6 +40,8 @@ public class PanelFiducialsTableModel extends AbstractObjectTableModel {
     @SuppressWarnings("rawtypes")
     private Class[] columnTypes = new Class[] {Boolean.class, PartCellValue.class, Part.class,
             Side.class, LengthCellValue.class, LengthCellValue.class, RotationCellValue.class};
+    
+    private int[] columnAlignments = new int[] {CENTER, LEFT, LEFT, CENTER, CENTER, CENTER, CENTER};
 
     public PanelFiducialsTableModel(Panel panel) {
         this.panel = panel;
@@ -124,7 +126,7 @@ public class PanelFiducialsTableModel extends AbstractObjectTableModel {
             }
             else if (columnIndex == 6) {
                 Location location = placement.getLocation();
-                double rotation = Double.parseDouble(aValue.toString());
+                double rotation = ((RotationCellValue) aValue).getRotation();
                 placement.setLocation(location.derive(null, null, null, rotation));
                 fireTableCellUpdated(rowIndex, columnIndex);
             }
@@ -147,13 +149,18 @@ public class PanelFiducialsTableModel extends AbstractObjectTableModel {
             case 3:
                 return placement.getSide();
             case 4:
-                return new LengthCellValue(loc.getLengthX(), true);
+                return new LengthCellValue(loc.getLengthX(), true, true);
             case 5:
-                return new LengthCellValue(loc.getLengthY(), true);
+                return new LengthCellValue(loc.getLengthY(), true, true);
             case 6:
-                return new RotationCellValue(loc.getRotation(), true);
+                return new RotationCellValue(loc.getRotation(), true, true);
             default:
                 return null;
         }
+    }
+
+    @Override
+    public int[] getColumnAlignments() {
+        return columnAlignments;
     }
 }

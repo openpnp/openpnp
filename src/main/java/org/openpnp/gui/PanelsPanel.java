@@ -52,6 +52,8 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
+import javax.swing.table.TableColumnModel;
+import javax.swing.table.TableRowSorter;
 
 import org.openpnp.Translations;
 import org.openpnp.events.PlacementsHolderLocationSelectedEvent;
@@ -59,8 +61,12 @@ import org.openpnp.events.PlacementsHolderSelectedEvent;
 import org.openpnp.events.PlacementSelectedEvent;
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.support.ActionGroup;
+import org.openpnp.gui.support.CustomAlignmentRenderer;
+import org.openpnp.gui.support.MonospacedFontTableCellRenderer;
+import org.openpnp.gui.support.TableUtils;
 import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.Icons;
+import org.openpnp.gui.support.LengthCellValue;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.tablemodel.PlacementsHolderTableModel;
 import org.openpnp.model.Panel;
@@ -131,7 +137,17 @@ public class PanelsPanel extends JPanel {
             }
         };
 
+        TableRowSorter<PlacementsHolderTableModel> panelsTableSorter = new TableRowSorter<>(panelsTableModel);
+        panelsTable.setRowSorter(panelsTableSorter);
+        panelsTable.getTableHeader().setDefaultRenderer(new MultisortTableHeaderCellRenderer());
+        panelsTable.setDefaultRenderer(LengthCellValue.class, new MonospacedFontTableCellRenderer());
         panelsTable.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+        panelsTable.setAutoResizeMode(JTable.AUTO_RESIZE_NEXT_COLUMN);
+        
+        TableUtils.setColumnAlignment(panelsTableModel, panelsTable);
+        
+        TableUtils.installColumnWidthSavers(panelsTable, prefs, "PanelsPanel.panelsTable.columnWidth");
+        
         
         panelsTable.getModel().addTableModelListener(new TableModelListener() {
             @Override
@@ -226,7 +242,6 @@ public class PanelsPanel extends JPanel {
         toolBarPanels.setFloatable(false);
         pnlPanels.add(toolBarPanels, BorderLayout.NORTH);
 
-        toolBarPanels.addSeparator();
         JButton btnAddPanel = new JButton(addPanelAction);
         btnAddPanel.setHideActionText(true);
         btnAddPanel.addMouseListener(new MouseAdapter() {
@@ -374,7 +389,7 @@ public class PanelsPanel extends JPanel {
                 if (filename == null) {
                     return;
                 }
-                if (!filename.toLowerCase().endsWith(".panle.xml")) { //$NON-NLS-1$
+                if (!filename.toLowerCase().endsWith(".panel.xml")) { //$NON-NLS-1$
                     filename = filename + ".panel.xml"; //$NON-NLS-1$
                 }
                 File file = new File(new File(fileDialog.getDirectory()), filename);

@@ -24,10 +24,12 @@ import java.util.List;
 import org.openpnp.gui.support.LengthCellValue;
 import org.openpnp.gui.support.PartCellValue;
 import org.openpnp.gui.support.RotationCellValue;
+import org.openpnp.gui.tablemodel.PlacementsTableModel.Status;
 import org.openpnp.model.Abstract2DLocatable.Side;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.Location;
+import org.openpnp.model.Panel;
 import org.openpnp.model.PanelLocation;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
@@ -37,32 +39,40 @@ import org.openpnp.model.PlacementsHolder;
 import org.openpnp.util.Utils2D;
 
 @SuppressWarnings("serial")
-public class PlacementsHolderPlacementsTableModel extends AbstractObjectTableModel {
-    private PlacementsHolder<?> fiducialLocatable = null;
+public class PlacementsHolderPlacementsTableModel extends AbstractObjectTableModel 
+        implements ColumnAlignable, ColumnWidthSaveable {
+    private PlacementsHolder<?> placementsHolder = null;
 
     private String[] columnNames =
-            new String[] {"Enabled", "ID", "Part", "Side", "X", "Y", "Rot.", "Type", "Error Handling", "Comments"};
+            new String[] {"Enabled", "ID", "Part", "Side", "X", "Y", "Rot.", "Type", 
+                    "Error Handling", "Comments"};
 
     @SuppressWarnings("rawtypes")
-    private Class[] columnTypes = new Class[] {Boolean.class, PartCellValue.class, Part.class, Side.class,
-            LengthCellValue.class, LengthCellValue.class, RotationCellValue.class, Type.class,
-            ErrorHandling.class, String.class};
+    private Class[] columnTypes = new Class[] {Boolean.class, PartCellValue.class, Part.class, 
+            Side.class, LengthCellValue.class, LengthCellValue.class, RotationCellValue.class, 
+            Type.class, ErrorHandling.class, String.class};
+    
+    private int[] columnAlignments = new int[] {CENTER, LEFT, LEFT, CENTER, CENTER, CENTER, 
+            CENTER, CENTER, CENTER, LEFT};
 
+    private int[] columnWidthTypes = new int[] {FIXED, FIXED, PROPORTIONAL, FIXED, FIXED, 
+            FIXED, FIXED, FIXED, FIXED, PROPORTIONAL};
+    
     private boolean localReferenceFrame = true;
 
     private PanelLocation parent = null;
 
     private List<Placement> placements = null;
+
+    private boolean isPanel;
     
-    public PlacementsHolder<?> getFiducialLocatable() {
-        return fiducialLocatable;
+    public PlacementsHolder<?> getPlacementsHolder() {
+        return placementsHolder;
     }
 
-    public void setFiducialLocatable(PlacementsHolder<?> fiducialLocatable) {
-        this.fiducialLocatable = fiducialLocatable;
-        if (fiducialLocatable != null) {
-            placements = fiducialLocatable.getPlacements();
-        }
+    public void setPlacementsHolder(PlacementsHolder<?> placementsHolder) {
+        this.placementsHolder = placementsHolder;
+        isPanel = placementsHolder instanceof Panel;
         fireTableDataChanged();
     }
     
@@ -73,17 +83,37 @@ public class PlacementsHolderPlacementsTableModel extends AbstractObjectTableMod
     
     public void setPlacements(List<Placement> placements) {
         this.placements = placements;
+        placementsHolder = null;
         fireTableDataChanged();
     }
 
     @Override
     public Placement getRowObjectAt(int index) {
-        return placements.get(index);
+        if (placementsHolder != null) {
+            int limit = placementsHolder.getPlacements().size();
+            if (isPanel && index >= limit) {
+                return ((Panel) placementsHolder).getPseudoPlacement(index - limit);
+            }
+            return placementsHolder.getPlacement(index);
+        }
+        else {
+            return placements.get(index);
+        }
     }
 
     @Override
     public int indexOf(Object object) {
-        return placements.indexOf(object);
+        if (placementsHolder != null) {
+            int limit = placementsHolder.getPlacements().size();
+            int index = placementsHolder.getPlacements().indexOf(object);
+            if (isPanel && index < 0) {
+                return ((Panel) placementsHolder).getPseudoPlacements().indexOf((Placement) object) + limit;
+            }
+            return index;
+        }
+        else {
+            return placements.indexOf(object);
+        }
     }
 
     @Override
@@ -96,6 +126,13 @@ public class PlacementsHolderPlacementsTableModel extends AbstractObjectTableMod
     }
 
     public int getRowCount() {
+        if (placementsHolder != null) {
+            int count = 0;
+            if (isPanel) {
+                count = ((Panel) placementsHolder).getPseudoPlacements().size();
+            }
+            return count + placementsHolder.getPlacements().size();
+        }
         return (placements == null) ? 0 : placements.size();
     }
 
@@ -112,7 +149,7 @@ public class PlacementsHolderPlacementsTableModel extends AbstractObjectTableMod
     @Override
     public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
         try {
-            Placement placement = placements.get(rowIndex);
+            Placement placement = getRowObjectAt(rowIndex);
             if (columnIndex == 0) {
                 placement.setEnabled((Boolean) aValue);
             }
@@ -146,7 +183,7 @@ public class PlacementsHolderPlacementsTableModel extends AbstractObjectTableMod
             }
             else if (columnIndex == 6) {
                 Location location = placement.getLocation();
-                double rotation = Double.parseDouble(aValue.toString());
+                double rotation = ((RotationCellValue) aValue).getRotation();
                 placement.setLocation(location.derive(null, null, null, rotation));
                 fireTableCellUpdated(rowIndex, columnIndex);
             }
@@ -169,7 +206,7 @@ public class PlacementsHolderPlacementsTableModel extends AbstractObjectTableMod
     }
 
     public Object getValueAt(int row, int col) {
-        Placement placement = placements.get(row);
+        Placement placement = getRowObjectAt(row);
         Location loc;
         Side side;
         if (localReferenceFrame || parent == null) {
@@ -190,11 +227,11 @@ public class PlacementsHolderPlacementsTableModel extends AbstractObjectTableMod
             case 3:
                 return side;
             case 4:
-                return new LengthCellValue(loc.getLengthX(), true);
+                return new LengthCellValue(loc.getLengthX(), true, true);
             case 5:
-                return new LengthCellValue(loc.getLengthY(), true);
+                return new LengthCellValue(loc.getLengthY(), true, true);
             case 6:
-                return new RotationCellValue(loc.getRotation(), true);
+                return new RotationCellValue(loc.getRotation(), true, true);
             case 7:
                 return placement.getType();
             case 8:
@@ -210,4 +247,22 @@ public class PlacementsHolderPlacementsTableModel extends AbstractObjectTableMod
         localReferenceFrame = b;
         fireTableDataChanged();
     }
+
+    @Override
+    public int[] getColumnAlignments() {
+        return columnAlignments;
+    }
+
+    @Override
+    public int[] getColumnWidthTypes() {
+        return columnWidthTypes;
+    }
+    
+//    @Override
+//    public void fireTableDataChanged() {
+//        if (placementsHolder != null) {
+//            placements = placementsHolder.getPlacements();
+//        }
+//        super.fireTableDataChanged();
+//    }
 }

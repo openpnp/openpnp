@@ -24,6 +24,7 @@ import java.util.Locale;
 
 import javax.swing.event.TableModelEvent;
 import org.openpnp.gui.support.LengthCellValue;
+import org.openpnp.gui.support.RotationCellValue;
 import org.openpnp.model.Abstract2DLocatable.Side;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.PlacementsHolderLocation;
@@ -33,16 +34,23 @@ import org.openpnp.model.Location;
 import org.openpnp.model.PanelLocation;
 
 @SuppressWarnings("serial")
-public class PlacementsHolderLocationsTableModel extends AbstractObjectTableModel {
+public class PlacementsHolderLocationsTableModel extends AbstractObjectTableModel 
+        implements ColumnAlignable, ColumnWidthSaveable {
     private final Configuration configuration;
 
-    private String[] columnNames = new String[] {"Panel/Board Id", "Name", "Width", "Length", "Side", "X", "Y", "Z",
-            "Rot.", "Enabled?", "Check Fids?"};
+    private String[] columnNames = new String[] {"Board/Panel Id", "Name", "Width", "Length", 
+            "Side", "X", "Y", "Z", "Rot.", "Enabled?", "Check Fids?"};
 
     @SuppressWarnings("rawtypes")
     private Class[] columnTypes = new Class[] {String.class, String.class, LengthCellValue.class,
             LengthCellValue.class, Side.class, LengthCellValue.class, LengthCellValue.class,
-            LengthCellValue.class, String.class, Boolean.class, Boolean.class};
+            LengthCellValue.class, RotationCellValue.class, Boolean.class, Boolean.class};
+
+    private int[] columnAlignments = new int[] {LEFT, LEFT, CENTER, CENTER, CENTER, CENTER, 
+            CENTER, CENTER, CENTER, CENTER, CENTER};
+    
+    private int[] columnWidthTypes = new int[] {FIXED, PROPORTIONAL, FIXED, FIXED, FIXED, 
+            FIXED, FIXED, FIXED, FIXED, FIXED, FIXED};
 
     private Job job;
 
@@ -101,6 +109,15 @@ public class PlacementsHolderLocationsTableModel extends AbstractObjectTableMode
         return columnNames[column];
     }
 
+    public int getColumnIndex(String columnName) {
+        for (int i=0; i<columnNames.length; i++) {
+            if (columnName.equals(columnNames[i])) {
+                return i;
+            }
+        }
+        return -1;
+    }
+    
     public int getColumnCount() {
         return columnNames.length;
     }
@@ -119,7 +136,10 @@ public class PlacementsHolderLocationsTableModel extends AbstractObjectTableMode
 
     @Override
     public boolean isCellEditable(int rowIndex, int columnIndex) {
-        if (columnIndex == 0 || columnIndex == 1) {
+        if (columnIndex == 0 && (getPlacementsHolderLocation(rowIndex).getParent() == rootPanelLocation)) {
+            return true;
+        }
+        if (columnIndex == 1) {
             return false;
         }
         if ((getPlacementsHolderLocation(rowIndex).getParent() == rootPanelLocation) ||
@@ -138,10 +158,24 @@ public class PlacementsHolderLocationsTableModel extends AbstractObjectTableMode
         try {
             PlacementsHolderLocation<?> placementsHolderLocation = getPlacementsHolderLocation(rowIndex);
             if (columnIndex == 0) {
-                placementsHolderLocation.setId((String) aValue);
+                String newUniqueId;
+                if (placementsHolderLocation.getParent() != null && placementsHolderLocation.getParent().getUniqueId() != null) {
+                    newUniqueId = placementsHolderLocation.getParent().getUniqueId() + PlacementsHolderLocation.ID_DELIMITTER + (String) aValue;
+                }
+                else {
+                    newUniqueId = (String) aValue;
+                }
+                for (int idx = 1; idx < getRowCount(); idx++) {
+                    if (idx != rowIndex && getPlacementsHolderLocation(idx).getUniqueId().equals(newUniqueId)) {
+                        return;
+                    }
+                }
+                placementsHolderLocation.getDefinition().setId((String) aValue);
+                fireTableCellUpdated(rowIndex, columnIndex);
             }
             else if (columnIndex == 1) {
-                placementsHolderLocation.getPlacementsHolder().setName((String) aValue);
+                placementsHolderLocation.getPlacementsHolder().getDefinition().setName((String) aValue);
+                fireTableCellUpdated(rowIndex, columnIndex);
             }
             else if (columnIndex == 2) {
                 LengthCellValue value = (LengthCellValue) aValue;
@@ -197,8 +231,9 @@ public class PlacementsHolderLocationsTableModel extends AbstractObjectTableMode
                 fireDecendantsCellUpdated(rowIndex, columnIndex);
             }
             else if (columnIndex == 8) {
-                placementsHolderLocation.setGlobalLocation(placementsHolderLocation.getGlobalLocation().derive(null, null, null,
-                        Double.parseDouble(aValue.toString())));
+                Location location = placementsHolderLocation.getGlobalLocation();
+                double rotation = ((RotationCellValue) aValue).getRotation();
+                placementsHolderLocation.setLocation(location.derive(null, null, null, rotation));
                 fireDecendantsCellUpdated(rowIndex, TableModelEvent.ALL_COLUMNS);
             }
             else if (columnIndex == 9) {
@@ -212,27 +247,29 @@ public class PlacementsHolderLocationsTableModel extends AbstractObjectTableMode
         }
         catch (Exception e) {
             // TODO: dialog, bad input
+            e.printStackTrace();
         }
     }
 
     public void fireDecendantsUpdated(PlacementsHolderLocation<?> placementsHolderLocation) {
-        int idx = indexOf(placementsHolderLocation);
-        if (idx >= 0) {
-            fireDecendantsCellUpdated(idx, TableModelEvent.ALL_COLUMNS);
-        }
+        fireDecendantsCellUpdated(placementsHolderLocation, TableModelEvent.ALL_COLUMNS);
     }
     
-    private void fireDecendantsCellUpdated(int rowIndex, int columnIndex) {
-        fireTableCellUpdated(rowIndex, columnIndex);
-        PlacementsHolderLocation<?> fll = getPlacementsHolderLocation(rowIndex);
-        if (fll instanceof PanelLocation) {
-            for (PlacementsHolderLocation<?> child : ((PanelLocation) fll).getChildren()) {
-                int idx = indexOf(child);
-                if (idx >= 0) {
-                    fireDecendantsCellUpdated(idx, columnIndex);
-                }
-            }
+    public void fireDecendantsCellUpdated(PlacementsHolderLocation<?> placementsHolderLocation, int columnIndex) {
+        int idx = indexOf(placementsHolderLocation);
+        if (idx >= 0) {
+            fireDecendantsCellUpdated(idx, columnIndex);
         }
+    }
+
+    private void fireDecendantsCellUpdated(int rowIndex, int columnIndex) {
+        PlacementsHolderLocation<?> fll = getPlacementsHolderLocation(rowIndex);
+        int endRow = rowIndex;
+        if (fll instanceof PanelLocation) {
+            List<PlacementsHolderLocation<?>> list = ((PanelLocation) fll).getChildren();
+            endRow = indexOf(list.get(list.size()-1));
+        }
+        fireTableChanged(new TableModelEvent(this, rowIndex, endRow, columnIndex));
     }
     
     public Object getValueAt(int row, int col) {
@@ -245,20 +282,19 @@ public class PlacementsHolderLocationsTableModel extends AbstractObjectTableMode
             case 1:
                 return placementsHolderLocation.getPlacementsHolder().getName();
             case 2:
-                return new LengthCellValue(dim.getLengthX());
+                return new LengthCellValue(dim.getLengthX(), true, true);
             case 3:
-                return new LengthCellValue(dim.getLengthY());
+                return new LengthCellValue(dim.getLengthY(), true, true);
             case 4:
                 return placementsHolderLocation.getGlobalSide();
             case 5:
-                return new LengthCellValue(loc.getLengthX());
+                return new LengthCellValue(loc.getLengthX(), true, true);
             case 6:
-                return new LengthCellValue(loc.getLengthY());
+                return new LengthCellValue(loc.getLengthY(), true, true);
             case 7:
-                return new LengthCellValue(loc.getLengthZ());
+                return new LengthCellValue(loc.getLengthZ(), true, true);
             case 8:
-                return String.format(Locale.US, configuration.getLengthDisplayFormat(),
-                        loc.getRotation(), "");
+                return new RotationCellValue(loc.getRotation(), true, true);
             case 9:
                 return placementsHolderLocation.isEnabled();
             case 10:
@@ -271,5 +307,15 @@ public class PlacementsHolderLocationsTableModel extends AbstractObjectTableMode
     @Override
     public Object getRowObjectAt(int index) {
         return getPlacementsHolderLocation(index);
+    }
+
+    @Override
+    public int[] getColumnAlignments() {
+        return columnAlignments;
+    }
+
+    @Override
+    public int[] getColumnWidthTypes() {
+        return columnWidthTypes;
     }
 }

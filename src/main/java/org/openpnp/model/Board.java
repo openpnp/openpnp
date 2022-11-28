@@ -91,6 +91,7 @@ public class Board extends PlacementsHolder<Board> implements PropertyChangeList
     @Override
     public void dispose() {
         for (BoardPad pad : solderPastePads) {
+            pad.removePropertyChangeListener(this);
             pad.dispose();
         }
         super.dispose();
@@ -123,11 +124,12 @@ public class Board extends PlacementsHolder<Board> implements PropertyChangeList
         firePropertyChange("solderPastePads", oldValue, solderPastePads);
         if (pad != null) {
             pad.removePropertyChangeListener(this);
+            pad.dispose();
         }
     }
 
     @Override
     public String toString() {
-        return String.format("Board @%08x defined by @%08x: file %s, dims: %sx%s, placements: %d", hashCode(), definition.hashCode(), file, dimensions.getLengthX(), dimensions.getLengthY(), placements.size());
+        return String.format("Board @%08x defined by @%08x: file %s, dims: %sx%s, placements: %d @%08x (@%08x)", hashCode(), definition.hashCode(), file, dimensions.getLengthX(), dimensions.getLengthY(), placements.size(), placements.hashCode(), definition.placements.hashCode());
     }
 }

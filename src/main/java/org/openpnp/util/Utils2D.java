@@ -23,6 +23,7 @@ package org.openpnp.util;
 
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
+import java.beans.PropertyChangeEvent;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -230,16 +231,20 @@ public class Utils2D {
             placementLocation = locatable.getLocation();
         }
         else if (locatable instanceof PlacementsHolderLocation) {
-            PlacementsHolderLocation<?> fiducialLocatableLocation = (PlacementsHolderLocation<?>) locatable;
-            Placement dummy = new Placement("dummy");
-            if (fiducialLocatableLocation.getGlobalSide() == Side.Bottom) {
-                Location dims = fiducialLocatableLocation.getPlacementsHolder().getDimensions();
+            PlacementsHolderLocation<?> placementsHolderLocation = (PlacementsHolderLocation<?>) locatable;
+            Placement dummy = new Placement("dummy") {
+                public void propertyChange(PropertyChangeEvent evt) {
+                    //do nothing
+                }
+            };
+            if (placementsHolderLocation.getGlobalSide() == Side.Bottom) {
+                Location dims = placementsHolderLocation.getPlacementsHolder().getDimensions();
                 dummy.setLocation(dims.derive(null, 0.0, 0.0, 0.0));
             }
             if (bl.getGlobalSide() == Side.Bottom) {
                 angleSign = -1.0;
             }
-            placementLocation = calculateBoardPlacementLocation(fiducialLocatableLocation, dummy, true);
+            placementLocation = calculateBoardPlacementLocation(placementsHolderLocation, dummy, true);
         }
         else {
             throw new UnsupportedOperationException("Unable to calculate location for type " + locatable.getClass());
@@ -281,16 +286,6 @@ public class Utils2D {
         return l;
     }
 
-    public static Location calculateRelativeBoardPlacementLocation(PlacementsHolderLocation<?> parent,
-            PlacementsHolderLocation<?> bl, Abstract2DLocatable<?> locatable) {
-        if (parent == null) {
-            return calculateBoardPlacementLocation(bl, locatable);
-        }
-        Location parentLocation = calculateBoardPlacementLocation(parent);
-        Location globalLocation = calculateBoardPlacementLocation(bl, locatable);
-        return globalLocation.getLocalLocationRelativeTo(parentLocation);
-    }
-    
     public static Location calculateBoardPlacementLocationInverse(PlacementsHolderLocation<?> bl,
             Location placementLocation) {
         AffineTransform tx = bl.getLocalToGlobalTransform();
@@ -305,6 +300,11 @@ public class Utils2D {
             e.printStackTrace();
         }
         
+        double angleSign = 1.0;
+        if (bl.getGlobalSide() == Side.Bottom) {
+            angleSign = -1.0;
+        }
+        
         // The affine calculations are always done in millimeters, so we convert everything
         // before we start calculating and then we'll convert it back to the original
         // units at the end.
@@ -317,25 +317,25 @@ public class Utils2D {
         Point2D p = new Point2D.Double(placementLocation.getX(), placementLocation.getY());
         p = tx.transform(p, null);
         
-        // The final result is the transformed X,Y, Z = 0, and the
-        // transform angle + placement angle.
-//        Location l = new Location(LengthUnit.Millimeters, 
-//                bl.getSide() == Side.Bottom ? -p.getX() : p.getX(), 
-//                p.getY(), 
-//                0., 
-//                angle + placementLocation.getRotation());
         Location l = new Location(LengthUnit.Millimeters, 
                 p.getX(), 
                 p.getY(), 
                 placementLocation.getZ() - boardLocation.getZ(), 
-                placementLocation.getRotation() + angle);
+                placementLocation.getRotation() + angleSign*angle);
         l = l.convertToUnits(placementUnits);
-        if (l.getZ() < -37) {
-            Logger.trace("Oh-Oh!");
-        }
         return l;
     }
 
+    public static Location calculateRelativeBoardPlacementLocation(PlacementsHolderLocation<?> parent,
+            PlacementsHolderLocation<?> bl, Abstract2DLocatable<?> locatable) {
+        if (parent == null) {
+            return calculateBoardPlacementLocation(bl, locatable);
+        }
+        Location parentLocation = calculateBoardPlacementLocation(parent);
+        Location globalLocation = calculateBoardPlacementLocation(bl, locatable);
+        return globalLocation.getLocalLocationRelativeTo(parentLocation);
+    }
+    
 // The following code has been removed due to it being replaced by a call to 
 // deriveAffineTransform(List<Location> source, List<Location> destination)
 //    /**
@@ -691,7 +691,7 @@ public class Utils2D {
             linearTransform = dHatsHatT.multiply(pinv);
         } else {
             //With only two points, only a unique rotation and single scale factor can be found so
-            //the Kabsch algorithm is to compute the best rotation matrix
+            //the Kabsch algorithm is used to compute the best rotation matrix
             SingularValueDecomposition svd = new SingularValueDecomposition(dHat.multiply(sHat.transpose()));
             RealMatrix rot = svd.getU().multiply(svd.getVT());
             
@@ -758,21 +758,25 @@ public class Utils2D {
         return results;
     }
     
+    /**
+     * Calculates the area of a polygon given its vertices
+     * @param vertices - the vertices of the polygon
+     * @return the area
+     */
     public static double polygonArea(List<Point> vertices)
     {
         // Initialize area
         double area = 0;
         
         // Calculate the area using the shoelace formula
-        int j = vertices.size() - 1;
+        Point vj = vertices.get(vertices.size() - 1);
         for (int i = 0; i < vertices.size(); i++)
         {
             Point vi = vertices.get(i);
-            Point vj = vertices.get(j);
             area += (vj.x + vi.x) * (vj.y - vi.y);
         
             // j is previous vertex to i
-            j = i;
+            vj = vi;
         }
         
         // Return absolute value

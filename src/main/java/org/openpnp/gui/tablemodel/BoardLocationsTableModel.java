@@ -32,7 +32,7 @@ import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 
 @SuppressWarnings("serial")
-public class BoardLocationsTableModel extends AbstractTableModel {
+public class BoardLocationsTableModel extends AbstractTableModel implements ColumnAlignable {
     private final Configuration configuration;
 
     private String[] columnNames = new String[] {"Board", "Width", "Length", "Side", "X", "Y", "Z",
@@ -42,6 +42,9 @@ public class BoardLocationsTableModel extends AbstractTableModel {
     private Class[] columnTypes = new Class[] {String.class, LengthCellValue.class,
             LengthCellValue.class, Side.class, LengthCellValue.class, LengthCellValue.class,
             LengthCellValue.class, String.class, Boolean.class, Boolean.class};
+
+    private int[] horizontalAlignments = new int[] {LEFT, CENTER, CENTER, CENTER, CENTER, CENTER,
+            CENTER, CENTER, CENTER, CENTER};
 
     private Job job;
 
@@ -187,5 +190,10 @@ public class BoardLocationsTableModel extends AbstractTableModel {
             default:
                 return null;
         }
+    }
+
+    @Override
+    public int[] getColumnAlignments() {
+        return horizontalAlignments;
     }
 }

@@ -21,7 +21,7 @@ package org.openpnp.gui.viewers;
 
 public class Viewables {
 
-    public enum types {
+    public enum Types {
         Profile,
         Location,
         Origin,

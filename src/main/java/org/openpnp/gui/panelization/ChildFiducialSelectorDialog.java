@@ -79,7 +79,7 @@ public class ChildFiducialSelectorDialog extends JDialog {
     private List<Placement> filteredPseudoPlacements;
     private List<Placement> filteredPseudoPlacementsHull;
     private List<Placement> goodPseudoPlacements;
-    protected boolean showHullOnly = true;;
+    protected boolean showHullOnly = true;
 
     /**
      * Create the dialog.
@@ -110,11 +110,12 @@ public class ChildFiducialSelectorDialog extends JDialog {
                 txtrSelectOneOr.setBackground(UIManager.getColor("Label.background"));
                 txtrSelectOneOr.setFont(UIManager.getFont("Label.font"));
                 txtrSelectOneOr.setText(
-                        "Select one or more child fiducials/placements from the list below for "
-                        + "panel alignment. Hold down the Control or Shift keys to select multiple "
-                        + "items. Use the Auto Select button to automatically select a good set. "
-                        + "If one of the of the automatically chosen items is undesirable such "
-                        + "as being too large, disable it and re-click on the Auto Select button.");
+                        "Select one or more child fiducials and/or placements from the list below "
+                        + "to use for panel alignment. Hold down the Control or Shift keys to "
+                        + "select multiple items. Click on the Auto Select button to automatically "
+                        + "select a good set. If one of the of the automatically chosen items is "
+                        + "undesirable such as being too large, disable it and re-click on the "
+                        + "Auto Select button.");
                 txtrSelectOneOr.setEditable(false);
                 instructionPanel.add(txtrSelectOneOr, BorderLayout.NORTH);
             }
@@ -277,11 +278,9 @@ public class ChildFiducialSelectorDialog extends JDialog {
     }
 
     public void addSelectedItemsToPanel() {
-        ArrayList<String> pseudoPlacementIds = new ArrayList<>();
         for (Placement fiducial : getSelections()) {
-            pseudoPlacementIds.add(fiducial.getId());
+            panelLocation.getPanel().getDefinition().addPseudoPlacement(fiducial);
         }
-        panelLocation.getPanel().getDefinition().setPseudoPlacementIds(pseudoPlacementIds);
         close();
     }
     
@@ -301,8 +300,8 @@ public class ChildFiducialSelectorDialog extends JDialog {
     
     private void generateAllPseudoPlacementsList(PanelLocation panelLocation) {
         for (PlacementsHolderLocation<?> child : panelLocation.getChildren()) {
+            String uniqueId = child.getUniqueId();
             for (Placement placement : child.getPlacementsHolder().getPlacements()) {
-                String uniqueId = child.getUniqueId();
                 String id = (uniqueId != null ? uniqueId + PlacementsHolderLocation.ID_DELIMITTER : "") + placement.getId();
                 
                 Placement pseudoPlacement = new Placement(placement);
@@ -313,7 +312,7 @@ public class ChildFiducialSelectorDialog extends JDialog {
                 pseudoPlacement.setId(id);
                 pseudoPlacement.setSide(placement.getSide().
                         flip(child.getGlobalSide() == Side.Bottom));
-                
+                pseudoPlacement.setComments("Pseudo-placement for panel alignment only");
                 allPseudoPlacements.add(pseudoPlacement);
             }
             if (child instanceof PanelLocation) {

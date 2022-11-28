@@ -112,8 +112,8 @@ public class PanelLocation extends PlacementsHolderLocation<PanelLocation> {
     }
     
     /**
-     * Checks to see if a FiducialLocatableLocation is a decendant of this PanelLocation
-     * @param potentialDecendant - the FiducialLocatableLocation to check
+     * Checks to see if a PlacementsHolderLocation is a decendant of this PanelLocation
+     * @param potentialDecendant - the PlacementsHolderLocation to check
      * @return the direct parent of potentialDecendant or null if potentialDecendant is not a 
      * decendant of this PanelLocation
      */
@@ -134,8 +134,14 @@ public class PanelLocation extends PlacementsHolderLocation<PanelLocation> {
 
     @Override
     public String toString() {
-        return String.format("PanelLocation @%08x defined by @%08x: (%s), location (%s), side (%s)", hashCode(), definition.hashCode(), fileName, getLocation(), side);
+        try {
+        return String.format("PanelLocation %s @%08x defined by @%08x: (%s), location (%s), side (%s)", getId(), hashCode(), definition != null ? definition.hashCode() : 0, fileName, getLocation(), side);
+        }
+        catch(Exception ex) {
+            return "OhOh";
+        }
     }
+        
 
     public void dump(String leader) {
         PanelLocation parentPanelLocation = getParent();

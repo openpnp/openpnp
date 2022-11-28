@@ -19,12 +19,10 @@
 
 package org.openpnp.model;
 
-import java.beans.IndexedPropertyChangeEvent;
-import java.beans.PropertyChangeEvent;
+import java.awt.geom.Path2D;
+import java.awt.geom.Rectangle2D;
 import java.beans.PropertyChangeListener;
 import java.io.File;
-import java.lang.reflect.InvocationTargetException;
-import org.apache.commons.beanutils.BeanUtils;
 import org.openpnp.spi.Definable;
 import org.openpnp.util.IdentifiableList;
 import org.pmw.tinylog.Logger;
@@ -58,6 +56,9 @@ public abstract class PlacementsHolder<T extends PlacementsHolder<T>>
     @ElementList(required = false)
     protected IdentifiableList<Placement> placements = new IdentifiableList<>();
 
+    @Element(required = false)
+    protected GeometricPath2D profile = null;
+    
     protected transient T definition;
     protected transient File file;
     protected transient boolean dirty;
@@ -87,7 +88,9 @@ public abstract class PlacementsHolder<T extends PlacementsHolder<T>>
         dimensions = holderToCopy.dimensions;
         placements = new IdentifiableList<>();
         for (Placement placement : holderToCopy.placements) {
-            placements.add(new Placement(placement));
+            Placement newPlacement = new Placement(placement);
+            placements.add(newPlacement);
+            newPlacement.addPropertyChangeListener(this);
         }
         file = holderToCopy.file;
         dirty = holderToCopy.dirty;
@@ -102,6 +105,7 @@ public abstract class PlacementsHolder<T extends PlacementsHolder<T>>
     public void dispose() {
         removePropertyChangeListener(this);
         for (Placement placement : placements) {
+            placement.removePropertyChangeListener(this);
             placement.dispose();
         }
         setDefinition(null);
@@ -146,12 +150,27 @@ public abstract class PlacementsHolder<T extends PlacementsHolder<T>>
         firePropertyChange("dimensions", oldValue, dimensions);
     }
 
+    public GeometricPath2D getProfile() {
+        if (profile != null) {
+            return profile;
+        }
+        else {
+            return new GeometricPath2D(
+                    new Rectangle2D.Double(0, 0, dimensions.getX(), dimensions.getY()),
+                    dimensions.getUnits());
+        }
+    }
+
+    public void setProfile(GeometricPath2D profile) {
+        this.profile = profile;
+    }
+
     /**
      * 
      * @return a list of placements contained by this PlacementsHolder
      */
     public IdentifiableList<Placement> getPlacements() {
-        return new IdentifiableList<>(placements);
+        return placements;
     }
 
     /**
@@ -162,13 +181,40 @@ public abstract class PlacementsHolder<T extends PlacementsHolder<T>>
         this.placements = placements;
     }
 
+    public Placement getPlacement(int index) {
+        return placements.get(index);
+    }
+    
     /**
      * Sets the placement at the specified index
      * @param index - the index of the placement to set
      * @param placement - the placement to set
      */
-    public void setPlacements(int index, Placement placement) {
-        placements.add(index, placement);
+    public void setPlacement(int index, Placement placement) {
+        Logger.trace(String.format("Setting placement on %s @%08X: index = %d, %s", this.getClass().getSimpleName(), this.hashCode(), index, placement));
+        if (placement != null) {
+            if (index >= placements.size()) {
+                placements.add(placement);
+            }
+            else {
+                Placement oldPlacement = placements.get(index);
+                oldPlacement.removePropertyChangeListener(this);
+                oldPlacement.dispose();
+                placements.set(index, placement);
+            }
+            fireIndexedPropertyChange("placement", index, null, placement);
+            placement.addPropertyChangeListener(this);
+//            placement.getDefinition().addPropertyChangeListener(placement);
+        }
+        else {
+            if (index >= 0 && index < placements.size()) {
+                placement = placements.get(index);
+                placements.remove(index);
+                fireIndexedPropertyChange("placement", index, placement, null);
+                placement.removePropertyChangeListener(this);
+                placement.dispose();
+            }
+        }
     }
 
     /**
@@ -177,10 +223,10 @@ public abstract class PlacementsHolder<T extends PlacementsHolder<T>>
      */
     public void addPlacement(Placement placement) {
         if (placement != null) {
+            Logger.trace(String.format("Adding placement to %s @%08X: %s", this.getClass().getSimpleName(), this.hashCode(), placement));
             placements.add(placement);
-            fireIndexedPropertyChange("placements", placements.indexOf(placement), null, placement);
+            fireIndexedPropertyChange("placement", placements.indexOf(placement), null, placement);
             placement.addPropertyChangeListener(this);
-            placement.getDefinition().addPropertyChangeListener(placement);
         }
         
     }
@@ -191,12 +237,7 @@ public abstract class PlacementsHolder<T extends PlacementsHolder<T>>
      */
     public void removePlacement(Placement placement) {
         if (placement != null) {
-            int index = placements.indexOf(placement);
-            if (index >= 0) {
-                placements.remove(placement);
-                fireIndexedPropertyChange("placements", index, placement, null);
-                placement.dispose();
-            }
+            setPlacement(placements.indexOf(placement), null);
         }
     }
     
@@ -205,24 +246,17 @@ public abstract class PlacementsHolder<T extends PlacementsHolder<T>>
      * @param index - the index of the placement to remove
      */
     public void removePlacement(int index) {
-        if (index >= 0 && index < placements.size()) {
-            Placement placement = placements.get(index);
-            placements.remove(index);
-            fireIndexedPropertyChange("placements", index, placement, null);
-            placement.dispose();
-        }
+        setPlacement(index, null);
     }
     
     /**
      * Removes all placements
      */
     public void removeAllPlacements() {
-        Object oldValue = new IdentifiableList<>(placements);
-        for (Placement placement : placements) {
-            placement.dispose();
+        IdentifiableList<Placement> oldValue = new IdentifiableList<>(placements);
+        for (Placement placement : oldValue) {
+            removePlacement(placement);
         }
-        placements = new IdentifiableList<>();
-        firePropertyChange("placements", oldValue, placements);
     }
     
     /**
@@ -243,24 +277,6 @@ public abstract class PlacementsHolder<T extends PlacementsHolder<T>>
         firePropertyChange("file", oldValue, file);
     }
 
-    /**
-     * @return true if this PlacementsHolder has been modified
-     */
-    public boolean isDirty() {
-        return dirty;
-    }
-
-    /**
-     * Sets the state of the dirty flag (used to indicate that this PlacementsHolder has been 
-     * modified) to the specified value
-     * @param dirty - the state to set the flag
-     */
-    public void setDirty(boolean dirty) {
-        boolean oldValue = this.dirty;
-        this.dirty = dirty;
-        firePropertyChange("dirty", oldValue, dirty);
-    }
-
     @Override
     public T getDefinition() {
         return definition;
@@ -270,7 +286,7 @@ public abstract class PlacementsHolder<T extends PlacementsHolder<T>>
     public void setDefinition(T definedBy) {
         PlacementsHolder<T> oldValue = this.definition;
         this.definition = definedBy;
-        firePropertyChange("definedBy", oldValue, definedBy);
+        firePropertyChange("definition", oldValue, definedBy);
         if (oldValue != null) {
             oldValue.removePropertyChangeListener(this);
         }
@@ -280,45 +296,28 @@ public abstract class PlacementsHolder<T extends PlacementsHolder<T>>
     }
 
     @Override
-    public boolean isDefinedBy(Object definedBy) {
+    public boolean isDefinition(Object definedBy) {
         return this.definition == definedBy;
     }
 
+    /**
+     * @return true if this PlacementsHolder has been modified
+     */
     @Override
-    public void propertyChange(PropertyChangeEvent evt) {
-//        Logger.trace(String.format("PropertyChangeEvent handled by AbstractBoard @%08x = %s", this.hashCode(), evt));
-        if (evt.getSource() != PlacementsHolder.this || !evt.getPropertyName().equals("dirty")) {
-            dirty = true;
-            if (PlacementsHolder.this != definition && evt.getSource() == definition) {
-                Logger.trace(String.format("Attempting to set %s @%08x property %s = %s", this.getClass().getSimpleName(), this.hashCode(), evt.getPropertyName(), evt.getNewValue()));
-                if (evt instanceof IndexedPropertyChangeEvent) {
-                    if (evt.getPropertyName() == "placements") {
-                        int index = ((IndexedPropertyChangeEvent) evt).getIndex();
-                        if (evt.getNewValue() instanceof Placement) {
-                            addPlacement(new Placement((Placement) evt.getNewValue()));
-                        }
-                        else if (evt.getOldValue() instanceof Placement) {
-                            removePlacement(index);
-                            ((Placement) evt.getOldValue()).dispose();
-                        }
-                    }
-                }
-                else {
-                    try {
-                        BeanUtils.setProperty(this, evt.getPropertyName(), evt.getNewValue());
-                    }
-                    catch (IllegalAccessException e) {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
-                    }
-                    catch (InvocationTargetException e) {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
-                    }
-                }
-            }
-        }
-        
+    public boolean isDirty() {
+        return dirty;
+    }
+
+    /**
+     * Sets the state of the dirty flag (used to indicate that this PlacementsHolder has been 
+     * modified) to the specified value
+     * @param dirty - the state to set the flag
+     */
+    @Override
+    public void setDirty(boolean dirty) {
+        boolean oldValue = this.dirty;
+        this.dirty = dirty;
+        firePropertyChange("dirty", oldValue, dirty);
     }
 
 }

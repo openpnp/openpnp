@@ -31,7 +31,7 @@ import org.openpnp.model.Location;
 import org.openpnp.model.Panel;
 
 @SuppressWarnings("serial")
-public class PlacementsHolderTableModel extends AbstractObjectTableModel {
+public class PlacementsHolderTableModel extends AbstractObjectTableModel implements ColumnAlignable, ColumnWidthSaveable {
     private final Configuration configuration;
 
     private String[] columnNames = new String[] {"PlacementsHolder Name", "Width", "Length"};
@@ -39,6 +39,10 @@ public class PlacementsHolderTableModel extends AbstractObjectTableModel {
     @SuppressWarnings("rawtypes")
     private Class[] columnTypes = new Class[] {String.class, LengthCellValue.class,
             LengthCellValue.class};
+    
+    private int[] columnAlignments = new int[] {LEFT, CENTER, CENTER};
+    
+    private int[] columnWidthTypes = new int[] {PROPORTIONAL, FIXED, FIXED};
 
     private Supplier<List<? extends PlacementsHolder<?>>> placementsHolders;
 
@@ -126,9 +130,9 @@ public class PlacementsHolderTableModel extends AbstractObjectTableModel {
             case 0:
                 return placementsHolder.getName();
             case 1:
-                return new LengthCellValue(dim.getLengthX());
+                return new LengthCellValue(dim.getLengthX(), true, true);
             case 2:
-                return new LengthCellValue(dim.getLengthY());
+                return new LengthCellValue(dim.getLengthY(), true, true);
             default:
                 return null;
         }
@@ -137,5 +141,15 @@ public class PlacementsHolderTableModel extends AbstractObjectTableModel {
     @Override
     public Object getRowObjectAt(int index) {
         return placementsHolders.get().get(index);
+    }
+
+    @Override
+    public int[] getColumnAlignments() {
+        return columnAlignments;
+    }
+
+    @Override
+    public int[] getColumnWidthTypes() {
+        return columnWidthTypes;
     }
 }

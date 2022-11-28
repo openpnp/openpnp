@@ -30,8 +30,11 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.prefs.Preferences;
 import java.util.regex.PatternSyntaxException;
 
 import javax.swing.AbstractAction;
@@ -67,14 +70,19 @@ import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.importer.BoardImporter;
 import org.openpnp.gui.support.ActionGroup;
 import org.openpnp.gui.support.CustomBooleanRenderer;
+import org.openpnp.gui.support.MonospacedFontTableCellRenderer;
 import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.IdentifiableListCellRenderer;
 import org.openpnp.gui.support.IdentifiableTableCellRenderer;
+import org.openpnp.gui.support.LengthCellValue;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.PartsComboBoxModel;
+import org.openpnp.gui.support.RotationCellValue;
+import org.openpnp.gui.support.TableUtils;
 import org.openpnp.gui.tablemodel.PlacementsHolderPlacementsTableModel;
 import org.openpnp.gui.tablemodel.PlacementsTableModel.Status;
+import org.openpnp.gui.viewers.PlacementsHolderLocationViewer;
 import org.openpnp.model.Abstract2DLocatable.Side;
 import org.openpnp.model.Board;
 import org.openpnp.model.BoardLocation;
@@ -87,8 +95,6 @@ import org.openpnp.model.Placement;
 import org.openpnp.model.Placement.ErrorHandling;
 import org.openpnp.model.Placement.Type;
 import org.openpnp.util.IdentifiableList;
-import org.pmw.tinylog.Logger;
-
 import com.google.common.eventbus.Subscribe;
 
 import io.github.classgraph.ClassGraph;
@@ -105,7 +111,11 @@ public class BoardPlacementsPanel extends JPanel {
     private ActionGroup multiSelectionActionGroup;
     private BoardsPanel boardsPanel;
     private Board board;
-
+    private Preferences prefs = Preferences.userNodeForPackage(BoardPlacementsPanel.class);
+    protected PlacementsHolderLocationViewer boardViewer;
+    private JButton btnImport;
+    private List<Class<? extends BoardImporter>> boardImporters;
+    
     private static Color typeColorFiducial = new Color(157, 188, 255);
     private static Color typeColorPlacement = new Color(255, 255, 255);
     
@@ -144,14 +154,23 @@ public class BoardPlacementsPanel extends JPanel {
         table = new AutoSelectTextTable(tableModel);
         table.setRowSorter(tableSorter);
         table.getTableHeader().setDefaultRenderer(new MultisortTableHeaderCellRenderer());
+        
         table.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         table.setDefaultEditor(Side.class, new DefaultCellEditor(sidesComboBox));
         table.setDefaultEditor(Part.class, new DefaultCellEditor(partsComboBox));
         table.setDefaultEditor(Type.class, new DefaultCellEditor(typesComboBox));
+        table.setDefaultRenderer(Type.class, new TypeRenderer());
         table.setDefaultEditor(ErrorHandling.class, new DefaultCellEditor(errorHandlingComboBox));
         table.setDefaultRenderer(Part.class, new IdentifiableTableCellRenderer<Part>());
-        table.setDefaultRenderer(Placement.Type.class, new TypeRenderer());
         table.setDefaultRenderer(Boolean.class, new CustomBooleanRenderer());
+        table.setDefaultRenderer(LengthCellValue.class, new MonospacedFontTableCellRenderer());
+        table.setDefaultRenderer(RotationCellValue.class, new MonospacedFontTableCellRenderer());
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_NEXT_COLUMN);
+        
+        TableUtils.setColumnAlignment(tableModel, table);
+        
+        TableUtils.installColumnWidthSavers(table, prefs, "BoardPlacementsPanel.placementsTable.columnWidth");
+        
         table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
             @Override
             public void valueChanged(ListSelectionEvent e) {
@@ -257,12 +276,14 @@ public class BoardPlacementsPanel extends JPanel {
         toolBarPlacements.setFloatable(false);
         JButton btnNewPlacement = new JButton(newAction);
         btnNewPlacement.setHideActionText(true);
+        newAction.setEnabled(false);
         toolBarPlacements.add(btnNewPlacement);
+        
         JButton btnRemovePlacement = new JButton(removeAction);
         btnRemovePlacement.setHideActionText(true);
         toolBarPlacements.add(btnRemovePlacement);
 
-        List<Class<? extends BoardImporter>> boardImporters = new ArrayList<>();
+        boardImporters = new ArrayList<>();
         try (ScanResult scanResult = new ClassGraph().enableClassInfo()
                 .acceptPackages(BoardImporter.class.getPackageName()).scan()) {
             ClassInfoList importerClassInfoList = scanResult.
@@ -273,41 +294,18 @@ public class BoardPlacementsPanel extends JPanel {
         }
         
         toolBarPlacements.addSeparator();
-        JButton btnImport = new JButton(importAction);
+        btnImport = new JButton(importAction);
         btnImport.setHideActionText(true);
-        btnImport.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mousePressed(MouseEvent e) {
-                JPopupMenu menu = new JPopupMenu();
-                for (Class<? extends BoardImporter> bi : boardImporters) {
-                    final BoardImporter boardImporter;
-                    try {
-                        boardImporter = bi.newInstance();
-                    }
-                    catch (Exception ex) {
-                        throw new Error(ex);
-                    }
-
-                    menu.add(new JMenuItem(new AbstractAction() {
-                        {
-                            putValue(NAME, boardImporter.getImporterName());
-                            putValue(SHORT_DESCRIPTION, boardImporter.getImporterDescription());
-                            putValue(MNEMONIC_KEY, KeyEvent.VK_I);
-                        }
-
-                        @Override
-                        public void actionPerformed(ActionEvent e) {
-                            importBoard(bi);
-                            refresh();
-                        }
-                    }));
-                }
-                menu.show(btnImport, (int) btnImport.getWidth(), (int) btnImport.getHeight());
-            }
-        });
         importAction.setEnabled(false);
         toolBarPlacements.add(btnImport);
 
+        toolBarPlacements.addSeparator();
+        
+        JButton btnViewer = new JButton(viewerAction);
+        btnViewer.setHideActionText(true);
+        viewerAction.setEnabled(false);
+        toolBarPlacements.add(btnViewer);
+        
         JPanel panel_1 = new JPanel();
         panel.add(panel_1, BorderLayout.EAST);
 
@@ -339,7 +337,7 @@ public class BoardPlacementsPanel extends JPanel {
     
     @Subscribe
     public void boardDefinitionStructureChanged(DefinitionStructureChangedEvent event) {
-        Logger.trace("boardDefinitionStructureChanged DefinitionStructureChangedEvent = " + event);
+//        Logger.trace("boardDefinitionStructureChanged DefinitionStructureChangedEvent = " + event);
         if (board != null && 
                 event.definition == board) {
             SwingUtilities.invokeLater(() -> {
@@ -391,8 +389,13 @@ public class BoardPlacementsPanel extends JPanel {
     
     public void setBoard(Board board) {
         this.board = board;
-        tableModel.setFiducialLocatable(board);
+        tableModel.setPlacementsHolder(board);
+        newAction.setEnabled(board != null);
         importAction.setEnabled(board != null);
+        viewerAction.setEnabled(board != null);
+        if (boardViewer != null) {
+            boardViewer.setPlacementsHolder(board);
+        }
         updateRowFilter();
     }
 
@@ -500,8 +503,7 @@ public class BoardPlacementsPanel extends JPanel {
         try {
             Board importedBoard = boardImporter.importBoard((Frame) getTopLevelAncestor());
             if (importedBoard != null) {
-                Board existingBoard = boardsPanel.getSelection();
-                IdentifiableList<Placement> existingPlacements = existingBoard.getPlacements();
+                IdentifiableList<Placement> existingPlacements = board.getPlacements();
                 int importOption = 1;
                 if (!existingPlacements.isEmpty()) {
                     //Option 0: Merge imported placements with existing placements - existing 
@@ -527,7 +529,7 @@ public class BoardPlacementsPanel extends JPanel {
                     }
                 }
                 if (importOption == 1) {
-                    existingPlacements.clear();
+                    board.removeAllPlacements();
                 }
                 for (Placement placement : importedBoard.getPlacements()) {
                     if (importOption == 0 && (existingPlacements.get(placement.getId()) != null)) {
@@ -538,7 +540,9 @@ public class BoardPlacementsPanel extends JPanel {
                         existingPlacement.setComments(placement.getComments());
                     }
                     else {
-                        existingBoard.addPlacement(placement);
+                        Placement newPlacement = new Placement(placement);
+                        newPlacement.setDefinition(newPlacement);
+                        board.addPlacement(newPlacement);
                     }
                 }
                 for (BoardPad pad : importedBoard.getSolderPastePads()) {
@@ -549,9 +553,11 @@ public class BoardPlacementsPanel extends JPanel {
                     // try to get it closer to what the user expects to see.
                     pad.setLocation(pad.getLocation()
                             .convertToUnits(boardsPanel.getSelection().getDimensions().getUnits()));
-                    existingBoard.addSolderPastePad(pad);
+                    board.addSolderPastePad(pad);
                 }
-
+                
+                importedBoard.dispose();
+                
                 Configuration.get().getBus()
                     .post(new DefinitionStructureChangedEvent(board, "placements", BoardPlacementsPanel.this));
             }
@@ -570,6 +576,58 @@ public class BoardPlacementsPanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
+            JPopupMenu menu = new JPopupMenu();
+            for (Class<? extends BoardImporter> bi : boardImporters) {
+                final BoardImporter boardImporter;
+                try {
+                    boardImporter = bi.newInstance();
+                }
+                catch (Exception ex) {
+                    throw new Error(ex);
+                }
+
+                menu.add(new JMenuItem(new AbstractAction() {
+                    {
+                        putValue(NAME, boardImporter.getImporterName());
+                        putValue(SHORT_DESCRIPTION, boardImporter.getImporterDescription());
+                        putValue(MNEMONIC_KEY, KeyEvent.VK_I);
+                    }
+
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        importBoard(bi);
+                        refresh();
+                    }
+                }));
+            }
+            menu.show(btnImport, (int) btnImport.getWidth(), (int) btnImport.getHeight());
+        }
+    };
+
+    public final Action viewerAction = new AbstractAction() {
+        {
+            putValue(SMALL_ICON, Icons.colorTrue);
+            putValue(NAME, "View Board"); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, "View a graphical representation of the selected board."); //$NON-NLS-1$
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            if (boardViewer == null) {
+                boardViewer = new PlacementsHolderLocationViewer(
+                        new BoardLocation(board), false,
+                        null);
+                boardViewer.addWindowListener(new WindowAdapter() {
+                    @Override
+                    public void windowClosing(WindowEvent e) {
+                        boardViewer = null;
+                    }
+                });
+            }
+            else {
+                boardViewer.setExtendedState(Frame.NORMAL);
+            }
+            boardViewer.setVisible(true);
         }
     };
 
@@ -712,7 +770,7 @@ public class BoardPlacementsPanel extends JPanel {
                 c.setForeground(table.getForeground());
                 c.setBackground(row%2==0 ? table.getBackground() : alternateRowColor);
             }
-
+            
             return c;
         }
     }

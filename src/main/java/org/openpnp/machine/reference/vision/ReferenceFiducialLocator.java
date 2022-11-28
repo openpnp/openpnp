@@ -32,6 +32,8 @@ import org.openpnp.model.Footprint;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.model.Panel;
+import org.openpnp.model.PanelLocation;
 import org.openpnp.model.Part;
 import org.openpnp.model.PartSettingsHolder;
 import org.openpnp.model.PartSettingsRoot;
@@ -526,8 +528,12 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
     
     private static IdentifiableList<Placement> getFiducials(PlacementsHolderLocation<?> placementsHolderLocation) {
         PlacementsHolder<?> placementsHolder = placementsHolderLocation.getPlacementsHolder();
+        IdentifiableList<Placement> placements = new IdentifiableList<>(placementsHolder.getPlacements());
+        if (placementsHolder instanceof Panel) {
+            placements.addAll(((Panel) placementsHolder).getPseudoPlacements());
+        }
         IdentifiableList<Placement> fiducials = new IdentifiableList<>();
-        for (Placement placement : placementsHolder.getPlacements()) {
+        for (Placement placement : placements) {
             if (placement.getType() == Type.Fiducial
                     && placement.getSide() == placementsHolderLocation.getGlobalSide()
                     && placement.isEnabled()) {

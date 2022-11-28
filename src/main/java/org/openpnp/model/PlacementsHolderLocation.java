@@ -34,24 +34,27 @@ import org.simpleframework.xml.core.Commit;
 public abstract class PlacementsHolderLocation<T extends PlacementsHolderLocation<T>> 
         extends Abstract2DLocatable<T> {
 
-    public static final String ID_DELIMITTER = "\u21D2"; //unicode ⇒ 
+    public enum PlacementsTransformStatus {NotSet, GloballySet, LocallySet};
+    
+    public static final String ID_DELIMITTER = "\u21D2"; //unicode character ⇒
     
     @Attribute(required = false)
     protected String fileName;
 
     @Attribute(required = false)
-    protected boolean checkFiducials = true;
+    protected boolean checkFiducials = false;
 
     @Attribute(required = false)
     protected boolean locallyEnabled = true;
 
     protected PanelLocation parent;
     protected PlacementsHolder<? extends PlacementsHolder<?>> placementsHolder;
-
+    
     /**
      * Important note: The transform is in Millimeters.
      */
     protected AffineTransform localToParentTransform;
+    protected PlacementsTransformStatus placementsTransformStatus = PlacementsTransformStatus.NotSet;
     
     @Commit
     protected void commit() {
@@ -90,6 +93,7 @@ public abstract class PlacementsHolderLocation<T extends PlacementsHolderLocatio
         else {
             this.localToParentTransform = null;
         }
+        placementsTransformStatus = placementsHolderLocationToCopy.placementsTransformStatus;
         setDefinition(placementsHolderLocationToCopy.getDefinition());
     }
     
@@ -103,6 +107,12 @@ public abstract class PlacementsHolderLocation<T extends PlacementsHolderLocatio
         setPlacementsHolder(placementsHolder);
     }
 
+    @Override
+    public void dispose() {
+        placementsHolder.dispose();
+        super.dispose();
+    }
+    
     /**
      * @return the side of the PlacementsHolder that is facing the top side of its most distant
      * ancestor (which is usually the machine)
@@ -278,19 +288,8 @@ public abstract class PlacementsHolderLocation<T extends PlacementsHolderLocatio
         Object oldValue = this.localToParentTransform;
         this.localToParentTransform = localToParentTransform;
         firePropertyChange("localToParentTransform", oldValue, localToParentTransform);
-    }
-
-    /**
-     * Sets the location of this PlacementsHolderLocation
-     * @param location - the location to set
-     */
-    public void setLocation(Location location) {
-        Location oldValue = getLocation();
-        super.setLocation(location);
-        // If the location is changing, it is not possible for the transform to still be valid, so
-        //clear it.
-        if (!getLocation().equals(oldValue)) {
-            setLocalToParentTransform(null);
+        if (localToParentTransform == null) {
+            setPlacementsTransformStatus(PlacementsTransformStatus.NotSet);
         }
     }
 
@@ -323,6 +322,37 @@ public abstract class PlacementsHolderLocation<T extends PlacementsHolderLocatio
                     .createInverse());
         }
         setLocalToParentTransform(localToParentTransform);
+        setPlacementsTransformStatus(PlacementsTransformStatus.LocallySet);
+    }
+    
+    /**
+     * Sets the location of this PlacementsHolderLocation
+     * @param location - the location to set
+     */
+    public void setLocation(Location location) {
+        Location oldValue = getLocation();
+        super.setLocation(location);
+        // If the location is changing, it is not possible for the transform to still be valid, so
+        //clear it.
+        if (!getLocation().equals(oldValue)) {
+            setLocalToParentTransform(null);
+        }
+    }
+
+    public PlacementsTransformStatus getPlacementsTransformStatus() {
+        if (placementsTransformStatus == PlacementsTransformStatus.LocallySet) {
+            return placementsTransformStatus;
+        }
+        else if (parent != null && parent.getPlacementsTransformStatus() != PlacementsTransformStatus.NotSet) {
+            return PlacementsTransformStatus.GloballySet;
+        }
+        return PlacementsTransformStatus.NotSet;
+    }
+    
+    public void setPlacementsTransformStatus(PlacementsTransformStatus placementsTransformStatus) {
+        Object oldValue = this.placementsTransformStatus;
+        this.placementsTransformStatus = placementsTransformStatus;
+        firePropertyChange("placementsTransformStatus", oldValue, placementsTransformStatus);
     }
     
     /**

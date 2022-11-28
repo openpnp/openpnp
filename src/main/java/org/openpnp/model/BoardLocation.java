@@ -165,8 +165,7 @@ public class BoardLocation extends PlacementsHolderLocation<BoardLocation> {
 
     @Override
     public String toString() {
-        return String.format("BoardLocation (%s), location (%s), side (%s)", getFileName(), 
-                getLocation(), side);
+        return String.format("BoardLocation %s @%08x defined by @%08x: (%s), location (%s), side (%s)", getId(), hashCode(), definition != null ? definition.hashCode() : 0, fileName, getLocation(), side);
     }
     
     /**

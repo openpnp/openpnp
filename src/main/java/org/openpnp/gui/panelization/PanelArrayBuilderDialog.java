@@ -59,17 +59,18 @@ import javax.swing.SpinnerNumberModel;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 
-import org.apache.commons.math3.geometry.partitioning.Side;
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.model.Abstract2DLocatable;
+import org.openpnp.model.Board;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.model.Panel;
 import org.openpnp.model.PanelLocation;
 import org.openpnp.model.Placement;
 import org.openpnp.model.PlacementsHolderLocation;
@@ -116,19 +117,27 @@ public class PanelArrayBuilderDialog extends JDialog {
 
     private Rectangle2D bounds;
 
+    private String rootChildId;
+
+    private boolean dirtyState;
+
+    private WindowAdapter windowCloseListener;
+
     /**
      * Create the dialog.
      */
     public PanelArrayBuilderDialog(PanelLocation panelLocation, PlacementsHolderLocation<?> rootChildLocation) {
         this.panelLocation = panelLocation;
         this.rootChildLocation = rootChildLocation;
-        this.addWindowListener(new WindowAdapter( ) {
+        this.rootChildId  = rootChildLocation.getId();
+        this.dirtyState = panelLocation.isDirty();
+        windowCloseListener = new WindowAdapter( ) {
 
             @Override
             public void windowClosing(WindowEvent e) {
-                // TODO Auto-generated method stub
                 cancel();
-            }});
+            }};
+        addWindowListener(windowCloseListener);
         setModalityType(ModalityType.APPLICATION_MODAL);
         setTitle("Panel Array Generator");
         setBounds(100, 100, 600, 480);
@@ -516,7 +525,10 @@ public class PanelArrayBuilderDialog extends JDialog {
 
                     @Override
                     public void actionPerformed(ActionEvent e) {
-                        newChildren.clear();
+                        if (newChildren.isEmpty()) {
+                            restoreRootChildLocation();
+                        }
+                        PanelArrayBuilderDialog.this.removeWindowListener(windowCloseListener);
                         PanelArrayBuilderDialog.this.dispatchEvent(new WindowEvent(
                                 PanelArrayBuilderDialog.this, WindowEvent.WINDOW_CLOSING));
                     }});
@@ -543,7 +555,16 @@ public class PanelArrayBuilderDialog extends JDialog {
         for (PlacementsHolderLocation<?> newChild : newChildren) {
             panelLocation.removeChild(newChild);
         }
-        newChildren.clear();
+        restoreRootChildLocation();
+    }
+    
+    protected void restoreRootChildLocation() {
+        if (!rootChildLocation.getId().equals(rootChildId)) {
+            rootChildLocation.setId(rootChildId);
+        }
+        if (panelLocation.isDirty() != dirtyState) {
+            panelLocation.setDirty(dirtyState);
+        }
     }
 
     /**
@@ -737,17 +758,22 @@ public class PanelArrayBuilderDialog extends JDialog {
                     int cCount = columnCount + ((i % 2) == 0 ? 0 : alternateRowColumnDelta);
                     Length rowOffset = alternateOffset.abs().multiply((i % 2) == 0 ? 0 : -alternateRowColumnDelta);
                     for (int j=0; j<cCount; j++) {
-                        if (i != 0 || j != 0) {
+                        if (i == 0 && j == 0 && (rowCount > 1 || cCount > 1)) {
+                            rootChildLocation.setId(String.format("%s[%d,%d]", rootChildId, i+1, j+1));
+                        }
+                        else {
                             Location offset = new Location(systemUnit);
                             offset = offset.deriveLengths(columnSpacing.multiply(j).add(rowOffset),
                                     rowSpacing.multiply(i), null, null);
                             PlacementsHolderLocation<?> newChildLocation = null;
                             if (rootChildLocation instanceof BoardLocation) {
-                                newChildLocation = new BoardLocation((BoardLocation) rootChildLocation);
+                                newChildLocation = new BoardLocation(new Board(((BoardLocation) rootChildLocation).getBoard()));
                             }
                             else if (rootChildLocation instanceof PanelLocation) {
-                                newChildLocation = new PanelLocation((PanelLocation) rootChildLocation);
+                                newChildLocation = new PanelLocation(new Panel(((PanelLocation) rootChildLocation).getPanel()));
                             }
+                            newChildLocation.setCheckFiducials(rootChildLocation.isCheckFiducials());
+                            newChildLocation.setId(String.format("%s[%d,%d]", rootChildId, i+1, j+1));
                             newChildLocation.setLocation(rootChildLocation.getLocation().add(offset));
                             newChildren.add(newChildLocation);
                             panelLocation.addChild(newChildLocation);
@@ -774,7 +800,10 @@ public class PanelArrayBuilderDialog extends JDialog {
                     }
                     
                     for (int j=0; j<aCount; j++) {
-                        if (i != 0 || j != 0) {
+                        if (i == 0 && j == 0 && (aCount > 1 || radialCount > 1)) {
+                            rootChildLocation.setId(String.format("%s[%d,%d]", rootChildId, i+1, j+1));
+                        }
+                        else {
                             double angleDeg = initAngle + angleStep*j;
                             double angleRad = Math.toRadians(angleDeg);
                             Location loc = new Location(systemUnit);
@@ -784,11 +813,13 @@ public class PanelArrayBuilderDialog extends JDialog {
                             loc = loc.derive(null, null, null, rootChildLocation.getLocation().getRotation() + angleStep*j);
                             PlacementsHolderLocation<?> newChildLocation = null;
                             if (rootChildLocation instanceof BoardLocation) {
-                                newChildLocation = new BoardLocation((BoardLocation) rootChildLocation);
+                                newChildLocation = new BoardLocation(new Board(((BoardLocation) rootChildLocation).getBoard()));
                             }
                             else if (rootChildLocation instanceof PanelLocation) {
-                                newChildLocation = new PanelLocation((PanelLocation) rootChildLocation);
+                                newChildLocation = new PanelLocation(new Panel(((PanelLocation) rootChildLocation).getPanel()));
                             }
+                            newChildLocation.setCheckFiducials(rootChildLocation.isCheckFiducials());
+                            newChildLocation.setId(String.format("%s[%d,%d]", rootChildId, i+1, j+1));
                             newChildLocation.setLocation(loc);
                             newChildren.add(newChildLocation);
                             panelLocation.addChild(newChildLocation);
@@ -833,7 +864,7 @@ public class PanelArrayBuilderDialog extends JDialog {
         offScr.scale(scale, scale);
 
         AffineTransform at = new AffineTransform();
-        at.translate(-bounds.getMinX(), (currentSize.getHeight()- 2*borderPixels)/scale);
+        at.translate(-bounds.getMinX(), bounds.getMinY() + (currentSize.getHeight()- 2*borderPixels)/scale);
         at.scale(1, -1);
 
         Shape panelOutline = new Rectangle2D.Double(0, 0, panelDimensions.getX(), panelDimensions.getY());

@@ -29,6 +29,7 @@ import org.openpnp.model.PlacementsHolder;
 import org.openpnp.model.PlacementsHolderLocation;
 import org.openpnp.model.Length;
 import org.openpnp.model.Location;
+import org.openpnp.model.Panel;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
 import org.openpnp.model.Placement.ErrorHandling;
@@ -36,7 +37,8 @@ import org.openpnp.model.Placement.Type;
 import org.openpnp.spi.Feeder;
 
 @SuppressWarnings("serial")
-public class PlacementsTableModel extends AbstractObjectTableModel {
+public class PlacementsTableModel extends AbstractObjectTableModel 
+        implements ColumnAlignable, ColumnWidthSaveable {
     final Configuration configuration;
 
     private String[] columnNames =
@@ -48,6 +50,12 @@ public class PlacementsTableModel extends AbstractObjectTableModel {
             Side.class, LengthCellValue.class, LengthCellValue.class, RotationCellValue.class, 
             Type.class, Boolean.class, Status.class, ErrorHandling.class, String.class};
 
+    private int[] columnAlignments = new int[] {CENTER, LEFT, LEFT, CENTER, CENTER, CENTER, 
+            CENTER, CENTER, CENTER, CENTER, CENTER, LEFT};
+    
+    private int[] columnWidthTypes = new int[] {FIXED, FIXED, PROPORTIONAL, FIXED, FIXED,
+            FIXED, FIXED, FIXED, FIXED, FIXED, FIXED, PROPORTIONAL};
+    
     public enum Status {
         Ready,
         MissingPart,
@@ -56,10 +64,12 @@ public class PlacementsTableModel extends AbstractObjectTableModel {
         Disabled
     }
 
-    private PlacementsHolder<?> fiducialLocatable;
-    private PlacementsHolderLocation<?> fiducialLocatableLocation;
+    private PlacementsHolder<?> placementsHolder;
+    private PlacementsHolderLocation<?> placementsHolderLocation;
     private JobPlacementsPanel jobPlacementsPanel;
     private boolean editDefinition;
+
+    private boolean isPanel;
 
     public PlacementsTableModel(Configuration configuration) {
         this.configuration = configuration;
@@ -69,27 +79,37 @@ public class PlacementsTableModel extends AbstractObjectTableModel {
     	this.jobPlacementsPanel = jobPlacementsPanel;
     }
 
-    public void setFiducialLocatableLocation(PlacementsHolderLocation<?> fiducialLocatableLocation,
+    public void setPlacementsHolderLocation(PlacementsHolderLocation<?> placementsHolderLocation,
             boolean editDefinition) {
-        this.fiducialLocatableLocation = fiducialLocatableLocation;
+        this.placementsHolderLocation = placementsHolderLocation;
         this.editDefinition = editDefinition;
-        if (fiducialLocatableLocation == null) {
-            this.fiducialLocatable = null;
+        if (placementsHolderLocation == null) {
+            placementsHolder = null;
         }
         else {
-            this.fiducialLocatable = fiducialLocatableLocation.getPlacementsHolder();
+            placementsHolder = placementsHolderLocation.getPlacementsHolder();
+            isPanel = placementsHolder instanceof Panel;
         }
         fireTableDataChanged();
     }
 
     @Override
     public Placement getRowObjectAt(int index) {
-        return fiducialLocatable.getPlacements().get(index);
+        int limit = placementsHolder.getPlacements().size();
+        if (isPanel && index >= limit) {
+            return ((Panel) placementsHolder).getPseudoPlacement(index - limit);
+        }
+        return placementsHolder.getPlacement(index);
     }
 
     @Override
     public int indexOf(Object object) {
-        return fiducialLocatable.getPlacements().indexOf(object);
+        int limit = placementsHolder.getPlacements().size();
+        int index = placementsHolder.getPlacements().indexOf(object);
+        if (isPanel && index < 0) {
+            return ((Panel) placementsHolder).getPseudoPlacements().indexOf((Placement) object) + limit;
+        }
+        return index;
     }
 
     @Override
@@ -102,7 +122,14 @@ public class PlacementsTableModel extends AbstractObjectTableModel {
     }
 
     public int getRowCount() {
-        return (fiducialLocatable == null) ? 0 : fiducialLocatable.getPlacements().size();
+        if (placementsHolder == null) {
+            return 0;
+        }
+        int count = 0;
+        if (isPanel) {
+            count = ((Panel) placementsHolder).getPseudoPlacements().size();
+        }
+        return count + placementsHolder.getPlacements().size();
     }
 
     @Override
@@ -118,7 +145,7 @@ public class PlacementsTableModel extends AbstractObjectTableModel {
     @Override
     public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
         try {
-            Placement placement = fiducialLocatable.getPlacements().get(rowIndex);
+            Placement placement = getRowObjectAt(rowIndex);
             Placement definition = (Placement) placement.getDefinition();
             if (definition == null) {
                 definition = placement;
@@ -130,12 +157,12 @@ public class PlacementsTableModel extends AbstractObjectTableModel {
                 else {
                     placement.setEnabled((Boolean) aValue);
                 }
-                fireTableCellUpdated(rowIndex, 0);
+                fireTableCellUpdated(rowIndex, columnIndex);
                 jobPlacementsPanel.updateActivePlacements();
             }
             else if (columnIndex == 2) {
                 definition.setPart((Part) aValue);
-                fireTableCellUpdated(rowIndex, 2);
+                fireTableCellUpdated(rowIndex, columnIndex);
             }
             else if (columnIndex == 3) {
                 definition.setSide((Side) aValue);
@@ -160,17 +187,17 @@ public class PlacementsTableModel extends AbstractObjectTableModel {
                 definition.setLocation(location);
             }
             else if (columnIndex == 6) {
-                definition.setLocation(placement.getLocation().derive(null, null, null,
-                        Double.parseDouble(aValue.toString())));
+                definition.setLocation(placement.getLocation().
+                        derive(null, null, null, ((RotationCellValue) aValue).getRotation()));
             }
             else if (columnIndex == 7) {
                 definition.setType((Type) aValue);
-                fireTableCellUpdated(rowIndex, 7);
+                fireTableCellUpdated(rowIndex, columnIndex);
                 jobPlacementsPanel.updateActivePlacements();
             }
             else if (columnIndex == 8) {
                 jobPlacementsPanel.getJobPanel().getJob()
-                    .setPlaced(fiducialLocatableLocation, placement.getId(), (Boolean) aValue);
+                    .setPlaced(placementsHolderLocation, placement.getId(), (Boolean) aValue);
                 jobPlacementsPanel.updateActivePlacements();
             }
             else if (columnIndex == 10) {
@@ -180,7 +207,7 @@ public class PlacementsTableModel extends AbstractObjectTableModel {
                 else {
                     placement.setErrorHandling((ErrorHandling) aValue);
                 }
-                fireTableCellUpdated(rowIndex, 10);
+                fireTableCellUpdated(rowIndex, columnIndex);
              }
             else if (columnIndex == 11) {
                 definition.setComments((String) aValue);
@@ -221,7 +248,7 @@ public class PlacementsTableModel extends AbstractObjectTableModel {
     }
 
     public Object getValueAt(int row, int col) {
-        Placement placement = fiducialLocatable.getPlacements().get(row);
+        Placement placement = getRowObjectAt(row);
         Location loc = placement.getLocation();
         switch (col) {
 			case 0:
@@ -233,11 +260,11 @@ public class PlacementsTableModel extends AbstractObjectTableModel {
             case 3:
                 return placement.getSide();
             case 4:
-                return new LengthCellValue(loc.getLengthX(), true);
+                return new LengthCellValue(loc.getLengthX(), true, true);
             case 5:
-                return new LengthCellValue(loc.getLengthY(), true);
+                return new LengthCellValue(loc.getLengthY(), true, true);
             case 6:
-                return new RotationCellValue(loc.getRotation(), true);
+                return new RotationCellValue(loc.getRotation(), true, true);
             case 7:
                 return placement.getType();
             case 8:
@@ -246,7 +273,7 @@ public class PlacementsTableModel extends AbstractObjectTableModel {
                 // would be better if the information was updated out of band by a listener.
             	jobPlacementsPanel.updateActivePlacements();
             	return jobPlacementsPanel.getJobPanel().getJob()
-            	        .getPlaced(fiducialLocatableLocation, placement.getId());
+            	        .getPlaced(placementsHolderLocation, placement.getId());
             case 9:
                 return getPlacementStatus(placement);
             case 10:
@@ -256,5 +283,15 @@ public class PlacementsTableModel extends AbstractObjectTableModel {
             default:
                 return null;
         }
+    }
+
+    @Override
+    public int[] getColumnAlignments() {
+        return columnAlignments;
+    }
+
+    @Override
+    public int[] getColumnWidthTypes() {
+        return columnWidthTypes;
     }
 }

@@ -19,6 +19,15 @@
 
 package org.openpnp.spi;
 
+import java.beans.IndexedPropertyChangeEvent;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.lang.reflect.InvocationTargetException;
+
+import org.apache.commons.beanutils.BeanUtils;
+import org.apache.commons.beanutils.PropertyUtils;
+import org.pmw.tinylog.Logger;
+
 /**
  * An interface used to indicate a one-way relationship of one object (the definition) to one or 
  * more other objects (the defined objects).  Changes to the definition object should flow to the 
@@ -27,7 +36,7 @@ package org.openpnp.spi;
  * definition is changed.
  * @param <T> the type of the Definable
  */
-public interface Definable<T> {
+public interface Definable<T> extends PropertyChangeListener {
     /**
      * 
      * @return the defining object
@@ -45,5 +54,44 @@ public interface Definable<T> {
      * @param potentialDefinition - the other object 
      * @return
      */
-    public boolean isDefinedBy(Object potentialDefinition);
+    public boolean isDefinition(Object potentialDefinition);
+    
+    public boolean isDirty();
+    
+    public void setDirty(boolean dirty);
+    
+    @Override
+    public default void propertyChange(PropertyChangeEvent evt) {
+        T definition = getDefinition();
+        Logger.trace(String.format("PropertyChangeEvent handled by %s @%08x defined by @%08x = %s", this.getClass().getSimpleName(), this.hashCode(), definition == null ? null : getDefinition().hashCode(), evt));
+        if (evt.getSource() != this || !evt.getPropertyName().equals("dirty")) {
+            setDirty(true);
+            if (evt.getSource() == definition && this != definition) {
+                Logger.trace(String.format("Attempting to set %s @%08x property %s = %s", this.getClass().getSimpleName(), this.hashCode(), evt.getPropertyName(), evt.getNewValue()));
+                try {
+                    if (evt instanceof IndexedPropertyChangeEvent) {
+                        PropertyUtils.setIndexedProperty(this, evt.getPropertyName(), 
+                            ((IndexedPropertyChangeEvent) evt).getIndex(), evt.getNewValue());
+                    }
+                    else {
+                        BeanUtils.setProperty(this, evt.getPropertyName(), evt.getNewValue());
+                    }
+                }
+                catch (IllegalAccessException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+                catch (InvocationTargetException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+                catch (NoSuchMethodException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+            }
+        }
+        
+    }
+    
 }

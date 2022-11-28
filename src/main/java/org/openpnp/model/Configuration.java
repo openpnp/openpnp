@@ -86,9 +86,16 @@ public class Configuration extends AbstractModelObject {
     private static final String PREF_LENGTH_DISPLAY_FORMAT = "Configuration.lengthDisplayFormat";
     private static final String PREF_LENGTH_DISPLAY_FORMAT_DEF = "%.3f";
 
+    private static final String PREF_LENGTH_DISPLAY_ALIGNED_FORMAT = "Configuration.lengthDisplayAlignedFormat";
+    private static final String PREF_LENGTH_DISPLAY_ALIGNED_FORMAT_DEF = "%9.3f  ";
+
     private static final String PREF_LENGTH_DISPLAY_FORMAT_WITH_UNITS =
             "Configuration.lengthDisplayFormatWithUnits";
     private static final String PREF_LENGTH_DISPLAY_FORMAT_WITH_UNITS_DEF = "%.3f%s";
+
+    private static final String PREF_LENGTH_DISPLAY_ALIGNED_FORMAT_WITH_UNITS =
+            "Configuration.lengthDisplayAlignedFormatWithUnits";
+    private static final String PREF_LENGTH_DISPLAY_ALIGNED_FORMAT_WITH_UNITS_DEF = "%9.3f%-2s";
 
     private static final String PREF_VERTICAL_SCROLL_UNIT_INCREMENT =
             "Configuration.verticalScrollUnitIncrement";
@@ -281,6 +288,14 @@ public class Configuration extends AbstractModelObject {
         prefs.put(PREF_LENGTH_DISPLAY_FORMAT, format);
     }
 
+    public String getLengthDisplayAlignedFormat() {
+        return prefs.get(PREF_LENGTH_DISPLAY_ALIGNED_FORMAT, PREF_LENGTH_DISPLAY_ALIGNED_FORMAT_DEF);
+    }
+
+    public void setLengthDisplayAlignedFormat(String format) {
+        prefs.put(PREF_LENGTH_DISPLAY_ALIGNED_FORMAT, format);
+    }
+
     public String getLengthDisplayFormatWithUnits() {
         return prefs.get(PREF_LENGTH_DISPLAY_FORMAT_WITH_UNITS,
                 PREF_LENGTH_DISPLAY_FORMAT_WITH_UNITS_DEF);
@@ -288,6 +303,15 @@ public class Configuration extends AbstractModelObject {
 
     public void setLengthDisplayFormatWithUnits(String format) {
         prefs.put(PREF_LENGTH_DISPLAY_FORMAT_WITH_UNITS, format);
+    }
+
+    public String getLengthDisplayAlignedFormatWithUnits() {
+        return prefs.get(PREF_LENGTH_DISPLAY_ALIGNED_FORMAT_WITH_UNITS,
+                PREF_LENGTH_DISPLAY_ALIGNED_FORMAT_WITH_UNITS_DEF);
+    }
+
+    public void setLengthDisplayAlignedFormatWithUnits(String format) {
+        prefs.put(PREF_LENGTH_DISPLAY_ALIGNED_FORMAT_WITH_UNITS, format);
     }
 
     public int getVerticalScrollUnitIncrement() {
@@ -686,10 +710,13 @@ public class Configuration extends AbstractModelObject {
     }
     
     /**
-     * Removes the specified panel from the configuration
-     * @param panel - the panel to remove
+     * Removes the specified Panel from the configuration.  If the Panel has been flagged as being
+     * modified, a dialog is presented to confirm if the operator desires to save the Panel to the 
+     * file system before it is removed.
+     * @param panel - the Panel to remove
      */
     public void removePanel(Panel panel) {
+        confirmSaveOfModified(panel);
         LinkedHashMap<File, Panel> oldValue = new LinkedHashMap<>(panels);
         panels.remove(panel.getFile());
         firePropertyChange("panels", oldValue, panels);
@@ -753,10 +780,13 @@ public class Configuration extends AbstractModelObject {
     }
     
     /**
-     * Removes the specified Board from the configuration
+     * Removes the specified Board from the configuration. If the Board has been flagged as being
+     * modified, a dialog is presented to confirm if the operator desires to save the Board to the 
+     * file system before it is removed.
      * @param board - the Board to remove
      */
     public void removeBoard(Board board) {
+        confirmSaveOfModified(board);
         LinkedHashMap<File, Board> oldValue = new LinkedHashMap<>(boards);
         boards.remove(board.getFile());
         firePropertyChange("boards", oldValue, boards);
@@ -876,22 +906,7 @@ public class Configuration extends AbstractModelObject {
         serializeObject(holder, file);
         
         for (Board board : getBoards()) {
-            if (board.isDirty()) {
-                int result = JOptionPane.showConfirmDialog(MainFrame.get(),
-                        "Do you want to save your changes to " + board.getFile().getName() + "?" //$NON-NLS-1$ //$NON-NLS-2$
-                                + "\n" + "If you don't save, your changes will be lost.", //$NON-NLS-1$ //$NON-NLS-2$
-                        "Save " + board.getFile().getName() + "?", //$NON-NLS-1$ //$NON-NLS-2$
-                        JOptionPane.YES_NO_CANCEL_OPTION);
-                if (result == JOptionPane.YES_OPTION) {
-                    try {
-                        saveBoard(board);
-                    }
-                    catch (Exception e) {
-                        MessageBoxes.errorBox(MainFrame.get(), "Board Save Error", //$NON-NLS-1$
-                                e.getMessage());
-                    }
-                }
-            }
+            confirmSaveOfModified(board);
         }
     }
 
@@ -929,25 +944,37 @@ public class Configuration extends AbstractModelObject {
         serializeObject(holder, file);
         
         for (Panel panel : getPanels()) {
-            if (panel.isDirty()) {
-                int result = JOptionPane.showConfirmDialog(MainFrame.get(),
-                        "Do you want to save your changes to " + panel.getFile().getName() + "?" //$NON-NLS-1$ //$NON-NLS-2$
-                                + "\n" + "If you don't save, your changes will be lost.", //$NON-NLS-1$ //$NON-NLS-2$
-                        "Save " + panel.getFile().getName() + "?", //$NON-NLS-1$ //$NON-NLS-2$
-                        JOptionPane.YES_NO_CANCEL_OPTION);
-                if (result == JOptionPane.YES_OPTION) {
-                    try {
-                        savePanel(panel);
+            confirmSaveOfModified(panel);
+        }
+    }
+
+    private void confirmSaveOfModified(PlacementsHolder<?> placementsHolder) {
+        if (placementsHolder.isDirty()) {
+            int result = JOptionPane.showConfirmDialog(MainFrame.get(),
+                    "Do you want to save your changes to " + placementsHolder.getFile().getName() + "?" //$NON-NLS-1$ //$NON-NLS-2$
+                            + "\n" + "If you don't save, your changes will be lost.", //$NON-NLS-1$ //$NON-NLS-2$
+                    "Save " + placementsHolder.getFile().getName() + "?", //$NON-NLS-1$ //$NON-NLS-2$
+                    JOptionPane.YES_NO_CANCEL_OPTION);
+            if (result == JOptionPane.YES_OPTION) {
+                try {
+                    if (placementsHolder instanceof Board) {
+                        saveBoard((Board) placementsHolder);
                     }
-                    catch (Exception e) {
-                        MessageBoxes.errorBox(MainFrame.get(), "Panel Save Error", //$NON-NLS-1$
-                                e.getMessage());
+                    else if (placementsHolder instanceof Panel) {
+                        savePanel((Panel)placementsHolder);
                     }
+                    else {
+                        throw new UnsupportedOperationException("Instance type " + placementsHolder.getClass() + " not supported.");
+                    }
+                }
+                catch (Exception e) {
+                    MessageBoxes.errorBox(MainFrame.get(), "Save Error", //$NON-NLS-1$
+                            e.getMessage());
                 }
             }
         }
     }
-
+    
     private void loadVisionSettings(File file) throws Exception {
         Serializer serializer = createSerializer();
         VisionSettingsConfigurationHolder holder =
@@ -986,8 +1013,8 @@ public class Configuration extends AbstractModelObject {
     }
 
     /**
-     * Attempts to find the Board definition associated with the given BoardLocation, creates a copy
-     * of it, and then assigns the copy to the given BoardLocation
+     * Attempts to find the Board definition associated with the given BoardLocation, create a copy
+     * of it, and then assign the copy to the given BoardLocation
      * @param job - the Job
      * @param boardLocation - the BoardLocation
      * @throws Exception if the Board definition associated with the BoardLocation can't be loaded 
@@ -1018,8 +1045,8 @@ public class Configuration extends AbstractModelObject {
     }
 
     /**
-     * Attempts to find the Panel definition associated with the given PanelLocation, creates a copy
-     * of it, and assigns the copy to the PanelLocation. Recursively resolves the Panel's children.
+     * Attempts to find the Panel definition associated with the given PanelLocation, create a copy
+     * of it, and assign the copy to the PanelLocation. Recursively resolves the Panel's children.
      * @param job - the Job
      * @param panelLocation - the PanelLocation
      * @throws Exception if the Panel and all of its descendants can't be loaded successfully
@@ -1075,6 +1102,12 @@ public class Configuration extends AbstractModelObject {
         panel.setDirty(false);
     }
     
+    /**
+     * Checks to see if the specified PlacementsHolder is used by the current job or any of the 
+     * currently loaded panels
+     * @param placementsHolder - the PlacementsHolder to check
+     * @return true if the PlacementsHolder is in use
+     */
     public boolean isInUse(PlacementsHolder<?> placementsHolder) {
         if (MainFrame.get().getJobTab().getJob().instanceCount(placementsHolder) > 0) {
             return true;
@@ -1226,6 +1259,9 @@ public class Configuration extends AbstractModelObject {
             else {
                 throw new Exception(String.format("Unable to find child %s of panel %s", childFile.getCanonicalPath(), file.getCanonicalPath()));
             }
+        }
+        for (String id : panel.getPseudoPlacementIds()) {
+            panel.addPseudoPlacement(panel.createPseudoPlacement(id));
         }
         panel.setDirty(false);
         return panel;

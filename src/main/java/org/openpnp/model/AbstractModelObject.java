@@ -20,6 +20,7 @@
 package org.openpnp.model;
 
 import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeListenerProxy;
 import java.beans.PropertyChangeSupport;
 
 import org.pmw.tinylog.Logger;
@@ -49,9 +50,28 @@ public abstract class AbstractModelObject {
     public void dispose() {
        Logger.trace(String.format("Disposing of %s @%08x", this.getClass().getSimpleName(), this.hashCode()));
        for (PropertyChangeListener listener : propertyChangeSupport.getPropertyChangeListeners()) {
-            Logger.warn("Removing listener " + listener);
-            propertyChangeSupport.removePropertyChangeListener(listener);
+           if (listener instanceof PropertyChangeListenerProxy) {
+               PropertyChangeListenerProxy proxy = (PropertyChangeListenerProxy) listener;
+               Logger.warn(String.format("    +-- Removing listener %s @%08x", proxy.getListener(), proxy.getListener().hashCode()));
+           }
+           else {
+               Logger.warn(String.format("    +-- Removing listener %s @%08x", listener, listener.hashCode()));
+           }
+           propertyChangeSupport.removePropertyChangeListener(listener);
         }
+    }
+    
+    public void dumpListeners() {
+        Logger.trace(String.format("Dump of %s @%08x listeners:", this.getClass().getSimpleName(), this.hashCode()));
+        for (PropertyChangeListener listener : propertyChangeSupport.getPropertyChangeListeners()) {
+            if (listener instanceof PropertyChangeListenerProxy) {
+                PropertyChangeListenerProxy proxy = (PropertyChangeListenerProxy) listener;
+                Logger.trace(String.format("    +-- prop:%s %s @%08x", proxy.getPropertyName(), proxy.getListener(), proxy.getListener().hashCode()));
+            }
+            else {
+                Logger.trace(String.format("    +-- %s @%08x", listener, listener.hashCode()));
+            }
+        }        
     }
 
     protected void firePropertyChange(String propertyName, Object oldValue, Object newValue) {

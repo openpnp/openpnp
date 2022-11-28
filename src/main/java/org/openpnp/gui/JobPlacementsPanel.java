@@ -33,6 +33,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.prefs.Preferences;
 import java.util.regex.PatternSyntaxException;
 
 import javax.swing.AbstractAction;
@@ -67,12 +68,17 @@ import org.openpnp.events.PlacementSelectedEvent;
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.support.ActionGroup;
 import org.openpnp.gui.support.CustomBooleanRenderer;
+import org.openpnp.gui.support.CustomAlignmentRenderer;
+import org.openpnp.gui.support.MonospacedFontTableCellRenderer;
 import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.IdentifiableListCellRenderer;
 import org.openpnp.gui.support.IdentifiableTableCellRenderer;
+import org.openpnp.gui.support.LengthCellValue;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.PartsComboBoxModel;
+import org.openpnp.gui.support.RotationCellValue;
+import org.openpnp.gui.support.TableUtils;
 import org.openpnp.gui.tablemodel.PlacementsTableModel;
 import org.openpnp.gui.tablemodel.PlacementsTableModel.Status;
 import org.openpnp.model.Board;
@@ -112,6 +118,7 @@ public class JobPlacementsPanel extends JPanel {
     private boolean topLevel;
     private boolean singleInstance;
     private ActionGroup editFeederActionGroup;
+    private Preferences prefs = Preferences.userNodeForPackage(JobPlacementsPanel.class);
 
 
     private static Color typeColorFiducial = new Color(157, 188, 255);
@@ -189,6 +196,14 @@ public class JobPlacementsPanel extends JPanel {
         table.setDefaultRenderer(PlacementsTableModel.Status.class, new StatusRenderer());
         table.setDefaultRenderer(Placement.Type.class, new TypeRenderer());
         table.setDefaultRenderer(Boolean.class, new CustomBooleanRenderer());
+        table.setDefaultRenderer(LengthCellValue.class, new MonospacedFontTableCellRenderer());
+        table.setDefaultRenderer(RotationCellValue.class, new MonospacedFontTableCellRenderer());
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_NEXT_COLUMN);
+        
+        TableUtils.setColumnAlignment(tableModel, table);
+        
+        TableUtils.installColumnWidthSavers(table, prefs, "JobPanel.jobPlacementsTable.columnWidth");
+        
         tableModel.setJobPlacementsPanel(this);
         table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
             @Override
@@ -380,7 +395,7 @@ public class JobPlacementsPanel extends JPanel {
         Logger.trace("DefinitionStructureChangedEvent = " + event);
         if (event.source != this && boardOrPanelLocation != null && 
                 boardOrPanelLocation.getPlacementsHolder() != null &&
-                event.definition == boardOrPanelLocation.getPlacementsHolder().getDefinition() &&
+                /*event.definition == boardOrPanelLocation.getPlacementsHolder().getDefinition() &&*/
                 event.changedName.equals("placements")) {
             SwingUtilities.invokeLater(() -> {
                 refresh();
@@ -472,17 +487,15 @@ public class JobPlacementsPanel extends JPanel {
     public void setBoardOrPanelLocation(PlacementsHolderLocation<?> boardOrPanelLocation) {
         this.boardOrPanelLocation = boardOrPanelLocation;
         if (boardOrPanelLocation == null) {
-            tableModel.setFiducialLocatableLocation(null, false);
+            tableModel.setPlacementsHolderLocation(null, false);
             topLevelSingleInstanceActionGroup.setEnabled(false);
         }
         else {
             topLevel = boardOrPanelLocation != null && 
                     boardOrPanelLocation.getParent() == jobPanel.getJob().getRootPanelLocation();
-            Logger.trace("topLevel = " + topLevel);
             singleInstance = boardOrPanelLocation != null && 
                     1 == jobPanel.getJob().instanceCount(boardOrPanelLocation.getPlacementsHolder());
-            Logger.trace("singleInstance = " + singleInstance);
-            tableModel.setFiducialLocatableLocation(boardOrPanelLocation, topLevel && singleInstance);
+            tableModel.setPlacementsHolderLocation(boardOrPanelLocation, topLevel && singleInstance);
             topLevelSingleInstanceActionGroup.setEnabled(topLevel && singleInstance);
 
             updateRowFilter();
@@ -506,7 +519,7 @@ public class JobPlacementsPanel extends JPanel {
         int[] selectedRows = table.getSelectedRows();
         for (int selectedRow : selectedRows) {
             selectedRow = table.convertRowIndexToModel(selectedRow);
-            placements.add(boardOrPanelLocation.getPlacementsHolder().getPlacements().get(selectedRow));
+            placements.add(tableModel.getRowObjectAt(selectedRow));
         }
         return placements;
     }

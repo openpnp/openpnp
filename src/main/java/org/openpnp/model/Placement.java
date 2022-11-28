@@ -182,10 +182,4 @@ public class Placement extends Abstract2DLocatable<Placement> {
         return String.format("id %s, location %s, side %s, part %s, type %s", id, getLocation(), side,
                 part, type);
     }
-    
-    @Override
-    public void propertyChange(PropertyChangeEvent evt) {
-//        Logger.trace(String.format("PropertyChangeEvent handled by Placement %s @%08x = %s", id, this.hashCode(), evt));
-        super.propertyChange(evt);
-    }
 }

@@ -19,13 +19,8 @@
 
 package org.openpnp.model;
 
-import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.lang.reflect.InvocationTargetException;
-
-import org.apache.commons.beanutils.BeanUtils;
 import org.openpnp.spi.Definable;
-import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 
@@ -175,26 +170,6 @@ public abstract class Abstract2DLocatable<T extends Abstract2DLocatable<T>> exte
         firePropertyChange("location", oldValue, location);
     }
 
-    public T getDefinition() {
-        return definition;
-    }
-    
-    public void setDefinition(T definedBy) {
-        T oldValue = this.definition;
-        this.definition = definedBy;
-        firePropertyChange("definedBy", oldValue, definedBy);
-        if (oldValue != null) {
-            oldValue.removePropertyChangeListener(this);
-        }
-        if (definedBy != null && definedBy != this) {
-            definedBy.addPropertyChangeListener(this);
-        }
-    }
-    
-    public boolean isDefinedBy(Object potentialDefinition) {
-        return this.definition == potentialDefinition;
-    };
-
     /**
      * @return the identifier of this Abstract2DLocatable
      */
@@ -212,6 +187,26 @@ public abstract class Abstract2DLocatable<T extends Abstract2DLocatable<T>> exte
         firePropertyChange("id", oldValue, id);
     }
 
+    public T getDefinition() {
+        return definition;
+    }
+    
+    public void setDefinition(T definition) {
+        T oldValue = this.definition;
+        this.definition = definition;
+        firePropertyChange("definition", oldValue, definition);
+        if (oldValue != null) {
+            oldValue.removePropertyChangeListener(this);
+        }
+        if (definition != null && definition != this) {
+            definition.addPropertyChangeListener(this);
+        }
+    }
+    
+    public boolean isDefinition(Object potentialDefinition) {
+        return this.definition == potentialDefinition;
+    };
+
     /**
      * 
      * @return true if this Abstract2DLocatable has been modified
@@ -228,33 +223,5 @@ public abstract class Abstract2DLocatable<T extends Abstract2DLocatable<T>> exte
         boolean oldValue = this.dirty;
         this.dirty = dirty;
         firePropertyChange("dirty", oldValue, dirty);
-    }
-
-    /**
-     * Called by property change listeners for which this Abstract2DLocatable has been registered
-     */
-    @Override
-    public void propertyChange(PropertyChangeEvent evt) {
-        if (evt.getSource() != Abstract2DLocatable.this || !evt.getPropertyName().equals("dirty")) {
-            dirty = true;
-            if (Abstract2DLocatable.this != definition && evt.getSource() == definition) {
-                //The definition has changed so try to update this to match
-                try {
-                    Logger.trace(String.format("Setting %s %s @%08x property %s = %s", 
-                            this.getClass().getSimpleName(), this.getId(), this.hashCode(), 
-                            evt.getPropertyName(), evt.getNewValue()));
-                    BeanUtils.setProperty(this, evt.getPropertyName(), evt.getNewValue());
-                }
-                catch (IllegalAccessException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                }
-                catch (InvocationTargetException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                }
-            }
-        }
-        
     }
 }

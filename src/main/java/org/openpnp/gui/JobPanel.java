@@ -29,6 +29,9 @@ import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 import java.awt.geom.AffineTransform;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -45,6 +48,7 @@ import javax.swing.Action;
 import javax.swing.DefaultCellEditor;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JDialog;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
@@ -78,11 +82,18 @@ import org.openpnp.gui.importer.BoardImporter;
 import org.openpnp.gui.processes.MultiPlacementBoardLocationProcess;
 import org.openpnp.gui.support.ActionGroup;
 import org.openpnp.gui.support.CustomBooleanRenderer;
+import org.openpnp.gui.support.CustomAlignmentRenderer;
+import org.openpnp.gui.support.MonospacedFontTableCellRenderer;
+import org.openpnp.gui.support.MonospacedFontWithAffineStatusTableCellRenderer;
 import org.openpnp.gui.support.CustomPlacementsHolderRenderer;
 import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.Icons;
+import org.openpnp.gui.support.LengthCellValue;
 import org.openpnp.gui.support.MessageBoxes;
+import org.openpnp.gui.support.RotationCellValue;
+import org.openpnp.gui.support.TableUtils;
 import org.openpnp.gui.tablemodel.PlacementsHolderLocationsTableModel;
+import org.openpnp.gui.viewers.PlacementsHolderLocationViewer;
 import org.openpnp.model.Board;
 import org.openpnp.model.Abstract2DLocatable.Side;
 import org.openpnp.model.Configuration.TablesLinked;
@@ -104,6 +115,7 @@ import org.openpnp.spi.JobProcessor.TextStatusListener;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
 import org.openpnp.spi.MotionPlanner;
+import org.openpnp.util.IdentifiableList;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 import org.pmw.tinylog.Logger;
@@ -135,6 +147,8 @@ public class JobPanel extends JPanel {
     private JTable jobTable;
     private JSplitPane splitPane;
 
+    private PlacementsHolderLocationViewer jobViewer;
+    
     private ActionGroup singleSelectionActionGroup;
     private ActionGroup multiSelectionActionGroup;
     private ActionGroup singleTopLevelSelectionActionGroup;
@@ -219,7 +233,7 @@ public class JobPanel extends JPanel {
             }
         };
 
-        //We want to filter out the first row because it is the root panel which is just a holder 
+        //Filter out the first row because it is the root panel which is just a holder 
         //for all the real boards and panels of the job
         RowFilter<Object, Object> notFirstRow = new RowFilter<Object, Object>() {
             public boolean include(Entry<? extends Object, ? extends Object> entry) {
@@ -228,15 +242,34 @@ public class JobPanel extends JPanel {
         jobTable.setAutoCreateRowSorter(true);
         ((TableRowSorter<? extends TableModel>) jobTable.getRowSorter()).setRowFilter(notFirstRow);
         
+        jobTable.getTableHeader().setDefaultRenderer(new MultisortTableHeaderCellRenderer());
         jobTable.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         jobTable.setDefaultEditor(Side.class, new DefaultCellEditor(sidesComboBox));
         jobTable.setDefaultRenderer(Boolean.class, new CustomBooleanRenderer());
         jobTable.getColumnModel().getColumn(0).setCellRenderer(new CustomPlacementsHolderRenderer());
+        jobTable.setDefaultRenderer(LengthCellValue.class, new MonospacedFontWithAffineStatusTableCellRenderer());
+        jobTable.setDefaultRenderer(RotationCellValue.class, new MonospacedFontWithAffineStatusTableCellRenderer());
+        jobTable.getColumnModel().getColumn(2).setCellRenderer(new MonospacedFontTableCellRenderer());
+        jobTable.getColumnModel().getColumn(3).setCellRenderer(new MonospacedFontTableCellRenderer());
+        jobTable.setAutoResizeMode(JTable.AUTO_RESIZE_NEXT_COLUMN);
+        
+        TableUtils.setColumnAlignment(jobTableModel, jobTable);
+        
+        TableUtils.installColumnWidthSavers(jobTable, prefs, "JobPanel.jobTable.columnWidth");
+        
         jobTable.getModel().addTableModelListener(new TableModelListener() {
             @Override
             public void tableChanged(TableModelEvent e) {
                 SwingUtilities.invokeLater(() -> {
                     jobPlacementsPanel.refresh();
+                    if (jobViewer != null) {
+                        if (e.getColumn() == TableModelEvent.ALL_COLUMNS) {
+                            jobViewer.regenerate();
+                        }
+                        else {
+                            jobViewer.refresh();
+                        }
+                    }
                 });
             }
         });
@@ -408,7 +441,12 @@ public class JobPanel extends JPanel {
         JButton btnFiducialCheck = new JButton(fiducialCheckAction);
         toolBarBoards.add(btnFiducialCheck);
         btnFiducialCheck.setHideActionText(true);
+        
         toolBarBoards.addSeparator();
+        
+        JButton btnViewer = new JButton(viewerAction);
+        btnViewer.setHideActionText(true);
+        toolBarBoards.add(btnViewer);
 
         pnlBoards.add(new JScrollPane(jobTable));
 
@@ -466,7 +504,7 @@ public class JobPanel extends JPanel {
         updateJobActions();
     }
     
-    public JTable getFiducialLocatableLocationsTable() {
+    public JTable getPlacementsHolderLocationsTable() {
         return jobTable;
     }
 
@@ -476,13 +514,13 @@ public class JobPanel extends JPanel {
             return;
         }
         SwingUtilities.invokeLater(() -> {
-            selectFiducialLocatableLocation(event.placementsHolderLocation);
+            selectPlacementsHolderLocation(event.placementsHolderLocation);
         });
     }
 
     @Subscribe
     public void panelStructureChanged(DefinitionStructureChangedEvent event) {
-        Logger.trace("panelStructureChanged DefinitionStructureChangedEvent = " + event);
+//        Logger.trace("panelStructureChanged DefinitionStructureChangedEvent = " + event);
         for (PanelLocation panelLocation : job.getPanelLocations()) {
             if (event.source != this && panelLocation.getPanel() != null && 
                     event.definition == panelLocation.getPanel().getDefinition() && 
@@ -494,10 +532,13 @@ public class JobPanel extends JPanel {
                 break;
             }
         }
+        if (jobViewer != null) {
+            jobViewer.regenerate();
+        }
         job.getRootPanelLocation().dump("");
     }
 
-    public void selectFiducialLocatableLocation(PlacementsHolderLocation<?> placementsHolderLocation) {
+    public void selectPlacementsHolderLocation(PlacementsHolderLocation<?> placementsHolderLocation) {
         if (placementsHolderLocation == null) {
             jobTable.getSelectionModel().clearSelection();
         }
@@ -534,6 +575,9 @@ public class JobPanel extends JPanel {
         updateTitle();
         updateJobActions();
         getJobPlacementsPanel().updateActivePlacements();
+        if (jobViewer != null) {
+            jobViewer.setPlacementsHolder(job.getRootPanelLocation().getPlacementsHolder());
+        }
         Configuration.get().getBus().post(new JobLoadedEvent(job));
     }
 
@@ -587,6 +631,9 @@ public class JobPanel extends JPanel {
 
     public void refresh() {
         jobTableModel.fireTableDataChanged();
+        if (jobViewer != null) {
+            jobViewer.refresh();
+        }
     }
 
     public void refreshSelectedRow() {
@@ -600,6 +647,9 @@ public class JobPanel extends JPanel {
             }
         }
         jobTableModel.fireTableRowsUpdated(index, endIndex-1);
+        if (jobViewer != null) {
+            jobViewer.refresh();
+        }
     }
 
     public PlacementsHolderLocation<?> getSelection() {
@@ -627,12 +677,6 @@ public class JobPanel extends JPanel {
      * @return
      */
     public boolean checkForModifications() {
-//        if (!checkForPanelModifications()) {
-//            return false;
-//        }
-//        if (!checkForBoardModifications()) {
-//            return false;
-//        }
         if (!checkForJobModifications()) {
             return false;
         }
@@ -655,58 +699,6 @@ public class JobPanel extends JPanel {
         }
         return true;
     }
-
-//    private boolean checkForBoardModifications() {
-//        for (Board board : configuration.getBoards()) {
-//            if (board.isDirty()) {
-//                int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-//                        "Do you want to save your changes to " + board.getFile().getName() + "?" //$NON-NLS-1$ //$NON-NLS-2$
-//                                + "\n" + "If you don't save, your changes will be lost.", //$NON-NLS-1$ //$NON-NLS-2$
-//                        "Save " + board.getFile().getName() + "?", //$NON-NLS-1$ //$NON-NLS-2$
-//                        JOptionPane.YES_NO_CANCEL_OPTION);
-//                if (result == JOptionPane.YES_OPTION) {
-//                    try {
-//                        configuration.saveBoard(board);
-//                    }
-//                    catch (Exception e) {
-//                        MessageBoxes.errorBox(getTopLevelAncestor(), "Board Save Error", //$NON-NLS-1$
-//                                e.getMessage());
-//                        return false;
-//                    }
-//                }
-//                else if (result == JOptionPane.CANCEL_OPTION) {
-//                    return false;
-//                }
-//            }
-//        }
-//        return true;
-//    }
-//
-//    private boolean checkForPanelModifications() {
-//        for (Panel panel : configuration.getPanels()) {
-//            if (panel.isDirty()) {
-//                int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-//                        "Do you want to save your changes to " + panel.getFile().getName() + "?" //$NON-NLS-1$ //$NON-NLS-2$
-//                                + "\n" + "If you don't save, your changes will be lost.", //$NON-NLS-1$ //$NON-NLS-2$
-//                        "Save " + panel.getFile().getName() + "?", //$NON-NLS-1$ //$NON-NLS-2$
-//                        JOptionPane.YES_NO_CANCEL_OPTION);
-//                if (result == JOptionPane.YES_OPTION) {
-//                    try {
-//                        configuration.savePanel(panel);
-//                    }
-//                    catch (Exception e) {
-//                        MessageBoxes.errorBox(getTopLevelAncestor(), "Panel Save Error", //$NON-NLS-1$
-//                                e.getMessage());
-//                        return false;
-//                    }
-//                }
-//                else if (result == JOptionPane.CANCEL_OPTION) {
-//                    return false;
-//                }
-//            }
-//        }
-//        return true;
-//    }
 
     private boolean saveJob() {
         if (getJob().getFile() == null) {
@@ -822,6 +814,9 @@ public class JobPanel extends JPanel {
         String title = String.format("OpenPnP - %s%s", job.isDirty() ? "*" : "", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                 (job.getFile() == null ? UNTITLED_JOB_FILENAME : job.getFile().getName()));
         mainFrame.setTitle(title);
+        if (jobViewer != null) {
+            jobViewer.setTitle(title);
+        }
     }
     
     private boolean checkJobStopped() {
@@ -841,7 +836,17 @@ public class JobPanel extends JPanel {
                     "Please select a board in the Jobs tab to import into."); //$NON-NLS-1$
             return;
         }
-
+        if (getSelection() instanceof PanelLocation) {
+            MessageBoxes.errorBox(getTopLevelAncestor(), "Import Failed", //$NON-NLS-1$
+                    "Can't import into a panel."); //$NON-NLS-1$
+            return;
+        }
+        if (job.instanceCount(getSelection().getPlacementsHolder()) != 1) {
+            MessageBoxes.errorBox(getTopLevelAncestor(), "Import Failed", //$NON-NLS-1$
+                    "Can't import into a board that occurs more than once in the job. Go to the "
+                    + "Boards tab and perform the import there."); //$NON-NLS-1$
+            return;
+        }
         BoardImporter boardImporter;
         try {
             boardImporter = boardImporterClass.newInstance();
@@ -854,9 +859,50 @@ public class JobPanel extends JPanel {
         try {
             Board importedBoard = boardImporter.importBoard((Frame) getTopLevelAncestor());
             if (importedBoard != null) {
-                Board existingBoard = (Board) ((BoardLocation) getSelection()).getBoard();
+                Board existingBoard = ((BoardLocation) getSelection()).getBoard().getDefinition();
+                IdentifiableList<Placement> existingPlacements = existingBoard.getPlacements();
+                int importOption = 1;
+                if (!existingPlacements.isEmpty()) {
+                    //Option 0: Merge imported placements with existing placements - existing 
+                    //          placements with Ids matching those in the imported set are updated,
+                    //          existing placements with Ids that don't match any in the imported 
+                    //          set are left unchanged, and placements in the imported set that 
+                    //          don't match any in the existing set are added 
+                    //Option 1: Import after deleting all existing placements
+                    //Option 2: Cancel the import
+                    Object[] options = {"Merge new with existing",
+                            "Replace existing with new",
+                            "Cancel"};
+                    importOption = JOptionPane.showOptionDialog((Frame) getTopLevelAncestor(),
+                            "The Selected Board Already Has Existing Placements",
+                            "What do you want to do?",
+                            JOptionPane.YES_NO_CANCEL_OPTION,
+                            JOptionPane.QUESTION_MESSAGE,
+                            null,
+                            options,
+                            options[2]);
+                    if (importOption == 2) {
+                        return;
+                    }
+                }
+                if (importOption == 1) {
+                    existingBoard.removeAllPlacements();
+                }
+                
+                
                 for (Placement placement : importedBoard.getPlacements()) {
-                    existingBoard.addPlacement(placement);
+                    if (importOption == 0 && (existingPlacements.get(placement.getId()) != null)) {
+                        Placement existingPlacement = existingPlacements.get(placement.getId());
+                        existingPlacement.setPart(placement.getPart());
+                        existingPlacement.setSide(placement.getSide());
+                        existingPlacement.setLocation(placement.getLocation());
+                        existingPlacement.setComments(placement.getComments());
+                    }
+                    else {
+                        Placement newPlacement = new Placement(placement);
+                        newPlacement.setDefinition(newPlacement);
+                        existingBoard.addPlacement(newPlacement);
+                    }
                 }
                 for (BoardPad pad : importedBoard.getSolderPastePads()) {
                     // TODO: This is a temporary hack until we redesign the
@@ -868,8 +914,13 @@ public class JobPanel extends JPanel {
                             .convertToUnits(getSelection().getGlobalLocation().getUnits()));
                     existingBoard.addSolderPastePad(pad);
                 }
+                importedBoard.dispose();
+                
                 jobPlacementsPanel.setBoardOrPanelLocation((BoardLocation) getSelection());
                 mainFrame.getFeedersTab().updateView();
+                Configuration.get().getBus()
+                .post(new DefinitionStructureChangedEvent(existingBoard, "placements", JobPanel.this));
+
             }
         }
         catch (Exception e) {
@@ -1463,9 +1514,9 @@ public class JobPanel extends JPanel {
                  * not a part of another panel.
                  */
                 if (placementsHolderLocation.getParent() == job.getRootPanelLocation()) {
-                    AffineTransform tx = placementsHolderLocation.getLocalToParentTransform();
+                    AffineTransform tx = placementsHolderLocation.getLocalToGlobalTransform();
                     placementsHolderLocation.setLocation(location);
-                    placementsHolderLocation.setLocalToParentTransform(tx);
+                    placementsHolderLocation.setLocalToGlobalTransform(tx);
                 }
                 refreshSelectedRow();
                 
@@ -1479,6 +1530,35 @@ public class JobPanel extends JPanel {
                 
                 Helpers.selectObjectTableRow(jobTable, placementsHolderLocation);
             });
+        }
+    };
+
+    public final Action viewerAction = new AbstractAction() {
+        {
+            putValue(SMALL_ICON, Icons.colorTrue);
+            putValue(NAME, Translations.getString("JobPanel.Action.Job.Board.ViewJob")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION,
+                    Translations.getString("JobPanel.Action.Job.Board.ViewJob.Description")); //$NON-NLS-1$
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            if (jobViewer == null) {
+                jobViewer = new PlacementsHolderLocationViewer(
+                        job.getRootPanelLocation(), true,
+                        (phl, colName) -> jobTableModel.
+                        fireDecendantsCellUpdated((PlacementsHolderLocation<?>) phl, jobTableModel.getColumnIndex(colName)));
+                jobViewer.addWindowListener(new WindowAdapter() {
+                    @Override
+                    public void windowClosing(WindowEvent e) {
+                        jobViewer = null;
+                    }
+                });
+            }
+            else {
+                jobViewer.setExtendedState(Frame.NORMAL);
+            }
+            jobViewer.setVisible(true);
         }
     };
 
@@ -1512,6 +1592,9 @@ public class JobPanel extends JPanel {
             }
             refresh();
             Helpers.selectObjectTableRows(jobTable, selections);
+            if (jobViewer != null) {
+                jobViewer.refresh();
+            }
         }
     };
 
@@ -1580,6 +1663,9 @@ public class JobPanel extends JPanel {
                 }
             }
             jobPlacementsPanel.refresh();
+            if (jobViewer != null) {
+                jobViewer.regenerate();
+            }
         }
     };
     
