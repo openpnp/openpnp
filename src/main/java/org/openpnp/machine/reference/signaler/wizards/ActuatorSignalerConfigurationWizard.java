@@ -63,20 +63,19 @@ public class ActuatorSignalerConfigurationWizard extends AbstractConfigurationWi
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
-        lblNewLabel = new JLabel(Translations.getString("ActuatorSignalerConfigurationWizard.ActuatorLabel"
-        ));
+        lblNewLabel = new JLabel(Translations.getString("ActuatorSignalerConfigurationWizard.ActuatorLabel")); //$NON-NLS-1$
         contentPanel.add(lblNewLabel, "2, 2, right, default");
         
         actuator = new JComboBox();
         contentPanel.add(actuator, "4, 2, fill, default");
         
-        lblNewLabel_1 = new JLabel(Translations.getString("ActuatorSignalerConfigurationWizard.JobStateLabel"));
+        lblNewLabel_1 = new JLabel(Translations.getString("ActuatorSignalerConfigurationWizard.JobStateLabel")); //$NON-NLS-1$
         contentPanel.add(lblNewLabel_1, "2, 4, right, default");
         
         jobState = new JComboBox();
         contentPanel.add(jobState, "4, 4, fill, default");
         
-        lblNewLabel_2 = new JLabel(Translations.getString("ActuatorSignalerConfigurationWizard.MachineStateLabel"));
+        lblNewLabel_2 = new JLabel(Translations.getString("ActuatorSignalerConfigurationWizard.MachineStateLabel")); //$NON-NLS-1$
         contentPanel.add(lblNewLabel_2, "2, 6, right, default");
         
         machineState = new JComboBox();

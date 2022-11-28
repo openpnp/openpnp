@@ -61,7 +61,7 @@ public class AbstractReferenceDriverConfigurationWizard extends AbstractConfigur
         
         panelController = new JPanel();
         panelController.setBorder(new TitledBorder(null, Translations.getString(
-                "AbstractReferenceDriverConfigurationWizard.ControllerPanel.Border.title"),
+                "AbstractReferenceDriverConfigurationWizard.ControllerPanel.Border.title"), //$NON-NLS-1$
                 TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panelController);
         panelController.setLayout(new FormLayout(new ColumnSpec[] {
@@ -76,7 +76,7 @@ public class AbstractReferenceDriverConfigurationWizard extends AbstractConfigur
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
         lblName = new JLabel(Translations.getString(
-                "AbstractReferenceDriverConfigurationWizard.ControllerPanel.NameLabel.text"));
+                "AbstractReferenceDriverConfigurationWizard.ControllerPanel.NameLabel.text")); //$NON-NLS-1$
         panelController.add(lblName, "2, 2, right, default");
         
         driverName = new JTextField();
@@ -84,10 +84,10 @@ public class AbstractReferenceDriverConfigurationWizard extends AbstractConfigur
         driverName.setColumns(20);
         
         lblSyncInitialLocation = new JLabel(Translations.getString(
-                "AbstractReferenceDriverConfigurationWizard.ControllerPanel.SyncInitialLocationLabel.text"));
+                "AbstractReferenceDriverConfigurationWizard.ControllerPanel.SyncInitialLocationLabel.text")); //$NON-NLS-1$
         panelController.add(lblSyncInitialLocation, "2, 4, right, default");
         lblSyncInitialLocation.setToolTipText(Translations.getString(
-                "AbstractReferenceDriverConfigurationWizard.ControllerPanel.SyncInitialLocationLabel.toolTipText"));
+                "AbstractReferenceDriverConfigurationWizard.ControllerPanel.SyncInitialLocationLabel.toolTipText")); //$NON-NLS-1$
         
         syncInitialLocation = new JCheckBox("");
         panelController.add(syncInitialLocation, "4, 4");
@@ -95,7 +95,7 @@ public class AbstractReferenceDriverConfigurationWizard extends AbstractConfigur
         //Selector code
         JPanel panelComms = new JPanel();
         panelComms.setBorder(new TitledBorder(null, Translations.getString(
-                "AbstractReferenceDriverConfigurationWizard.CommunicationMethodPanel.Border.title"),
+                "AbstractReferenceDriverConfigurationWizard.CommunicationMethodPanel.Border.title"), //$NON-NLS-1$
                 TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panelComms);
         panelComms.setLayout(new FormLayout(new ColumnSpec[] {
@@ -121,22 +121,22 @@ public class AbstractReferenceDriverConfigurationWizard extends AbstractConfigur
         });
         
         lblCommunicationsType = new JLabel(Translations.getString(
-                "AbstractReferenceDriverConfigurationWizard.CommunicationMethodPanel.CommunicationTypeLabel.text"
+                "AbstractReferenceDriverConfigurationWizard.CommunicationMethodPanel.CommunicationTypeLabel.text" //$NON-NLS-1$
         ));
         panelComms.add(lblCommunicationsType, "2, 2, right, default");
         panelComms.add(communicationsType, "4, 2, fill, default");
 
         JLabel lblConnectionKeepAlive = new JLabel(Translations.getString(
-                "AbstractReferenceDriverConfigurationWizard.CommunicationMethodPanel.KeepAliveLabel.text"));
+                "AbstractReferenceDriverConfigurationWizard.CommunicationMethodPanel.KeepAliveLabel.text")); //$NON-NLS-1$
         panelComms.add(lblConnectionKeepAlive, "2, 4, right, default");
         
         connectionKeepAlive = new JCheckBox("");
         panelComms.add(connectionKeepAlive, "4, 4");
         
         lblLineendings = new JLabel(Translations.getString(
-                "AbstractReferenceDriverConfigurationWizard.CommunicationMethodPanel.LineEndingsLabel.text"));
+                "AbstractReferenceDriverConfigurationWizard.CommunicationMethodPanel.LineEndingsLabel.text")); //$NON-NLS-1$
         lblLineendings.setToolTipText(Translations.getString(
-                "AbstractReferenceDriverConfigurationWizard.CommunicationMethodPanel.LineEndingsLabel.toolTipText"
+                "AbstractReferenceDriverConfigurationWizard.CommunicationMethodPanel.LineEndingsLabel.toolTipText" //$NON-NLS-1$
         ));
         panelComms.add(lblLineendings, "2, 6, right, default");
         
@@ -146,7 +146,7 @@ public class AbstractReferenceDriverConfigurationWizard extends AbstractConfigur
         //Serial config code
         panelSerial = new JPanel();
         panelSerial.setBorder(new TitledBorder(null, Translations.getString(
-                "AbstractReferenceDriverConfigurationWizard.CommunicationMethodPanel.SerialPortLabel.text"),
+                "AbstractReferenceDriverConfigurationWizard.CommunicationMethodPanel.SerialPortLabel.text"), //$NON-NLS-1$
                 TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panelSerial);
         panelSerial.setLayout(new FormLayout(new ColumnSpec[] {
@@ -173,14 +173,14 @@ public class AbstractReferenceDriverConfigurationWizard extends AbstractConfigur
                 FormSpecs.DEFAULT_ROWSPEC,}));
 
         JLabel lblPortName = new JLabel(Translations.getString(
-                "AbstractReferenceDriverConfigurationWizard.CommunicationMethodPanel.PortLabel.text"));
+                "AbstractReferenceDriverConfigurationWizard.CommunicationMethodPanel.PortLabel.text")); //$NON-NLS-1$
         panelSerial.add(lblPortName, "2, 2, right, default");
 
         comboBoxPort = new JComboBox();
         panelSerial.add(comboBoxPort, "4, 2, fill, default");
 
         JLabel lblBaudRate = new JLabel(Translations.getString(
-                "AbstractReferenceDriverConfigurationWizard.CommunicationMethodPanel.BaudLabel.text"));
+                "AbstractReferenceDriverConfigurationWizard.CommunicationMethodPanel.BaudLabel.text")); //$NON-NLS-1$
         panelSerial.add(lblBaudRate, "2, 4, right, default");
 
         comboBoxBaud = new JComboBox();
@@ -208,42 +208,42 @@ public class AbstractReferenceDriverConfigurationWizard extends AbstractConfigur
         comboBoxBaud.addItem(new Integer(921600));
 
         JLabel lblParity = new JLabel(Translations.getString(
-                "AbstractReferenceDriverConfigurationWizard.CommunicationMethodPanel.ParityLabel.text"));
+                "AbstractReferenceDriverConfigurationWizard.CommunicationMethodPanel.ParityLabel.text")); //$NON-NLS-1$
         panelSerial.add(lblParity, "2, 6, right, default");
 
         parityComboBox = new JComboBox(SerialPortCommunications.Parity.values());
         panelSerial.add(parityComboBox, "4, 6, fill, default");
 
         JLabel lblDataBits = new JLabel(Translations.getString(
-                "AbstractReferenceDriverConfigurationWizard.CommunicationMethodPanel.DataBitsLabel.text"));
+                "AbstractReferenceDriverConfigurationWizard.CommunicationMethodPanel.DataBitsLabel.text")); //$NON-NLS-1$
         panelSerial.add(lblDataBits, "2, 8, right, default");
 
         dataBitsComboBox = new JComboBox(SerialPortCommunications.DataBits.values());
         panelSerial.add(dataBitsComboBox, "4, 8, fill, default");
 
         JLabel lblStopBits = new JLabel(Translations.getString(
-                "AbstractReferenceDriverConfigurationWizard.CommunicationMethodPanel.StopBitsLabel.text"));
+                "AbstractReferenceDriverConfigurationWizard.CommunicationMethodPanel.StopBitsLabel.text")); //$NON-NLS-1$
         panelSerial.add(lblStopBits, "2, 10, right, default");
 
         stopBitsComboBox = new JComboBox(SerialPortCommunications.StopBits.values());
         panelSerial.add(stopBitsComboBox, "4, 10, fill, default");
 
         JLabel lblFlowControl = new JLabel(Translations.getString(
-                "AbstractReferenceDriverConfigurationWizard.CommunicationMethodPanel.FlowControlLabel.text"));
+                "AbstractReferenceDriverConfigurationWizard.CommunicationMethodPanel.FlowControlLabel.text")); //$NON-NLS-1$
         panelSerial.add(lblFlowControl, "2, 12, right, default");
 
         flowControlComboBox = new JComboBox(SerialPortCommunications.FlowControl.values());
         panelSerial.add(flowControlComboBox, "4, 12, fill, default");
 
         JLabel lblSetDtr = new JLabel(Translations.getString(
-                "AbstractReferenceDriverConfigurationWizard.CommunicationMethodPanel.SetDTRLabel.text"));
+                "AbstractReferenceDriverConfigurationWizard.CommunicationMethodPanel.SetDTRLabel.text")); //$NON-NLS-1$
         panelSerial.add(lblSetDtr, "2, 14");
 
         setDtrCheckbox = new JCheckBox("");
         panelSerial.add(setDtrCheckbox, "4, 14");
 
         JLabel lblSetRts = new JLabel(Translations.getString(
-                "AbstractReferenceDriverConfigurationWizard.CommunicationMethodPanel.SetRTSLabel.text"));
+                "AbstractReferenceDriverConfigurationWizard.CommunicationMethodPanel.SetRTSLabel.text")); //$NON-NLS-1$
         panelSerial.add(lblSetRts, "2, 16");
 
         setRtsCheckbox = new JCheckBox("");
@@ -269,7 +269,7 @@ public class AbstractReferenceDriverConfigurationWizard extends AbstractConfigur
         // TCP config code
         panelTcp = new JPanel();
         panelTcp.setBorder(new TitledBorder(null, Translations.getString(
-                "AbstractReferenceDriverConfigurationWizard.TCPPanel.Border.title"),
+                "AbstractReferenceDriverConfigurationWizard.TCPPanel.Border.title"), //$NON-NLS-1$
                 TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panelTcp);
         panelTcp.setLayout(new FormLayout(new ColumnSpec[] {
@@ -284,9 +284,9 @@ public class AbstractReferenceDriverConfigurationWizard extends AbstractConfigur
                 FormSpecs.DEFAULT_ROWSPEC,}));
 
         JLabel lblIpAddress = new JLabel(Translations.getString(
-                "AbstractReferenceDriverConfigurationWizard.TCPPanel.IPAddressLabel.text"));
+                "AbstractReferenceDriverConfigurationWizard.TCPPanel.IPAddressLabel.text")); //$NON-NLS-1$
         lblIpAddress.setToolTipText(Translations.getString(
-                "AbstractReferenceDriverConfigurationWizard.TCPPanel.IPAddressLabel.toolTipText"));
+                "AbstractReferenceDriverConfigurationWizard.TCPPanel.IPAddressLabel.toolTipText")); //$NON-NLS-1$
         panelTcp.add(lblIpAddress, "2, 2, right, default");
 
         ipAddressTextField = new JTextField(17);
@@ -294,7 +294,7 @@ public class AbstractReferenceDriverConfigurationWizard extends AbstractConfigur
         ipAddressTextField.setColumns(10);
 
         JLabel lblPort = new JLabel(Translations.getString(
-                "AbstractReferenceDriverConfigurationWizard.TCPPanel.PortLabel.text"));
+                "AbstractReferenceDriverConfigurationWizard.TCPPanel.PortLabel.text")); //$NON-NLS-1$
         panelTcp.add(lblPort, "2, 4, right, default");
 
         portTextField = new JTextField(17);

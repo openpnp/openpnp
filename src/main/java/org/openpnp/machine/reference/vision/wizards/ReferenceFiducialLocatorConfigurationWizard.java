@@ -45,7 +45,7 @@ public class ReferenceFiducialLocatorConfigurationWizard extends AbstractConfigu
 
         JPanel panel = new JPanel();
         panel.setBorder(new TitledBorder(null, Translations.getString(
-                "ReferenceFiducialLocatorConfigurationWizard.GeneralPanel.Border.title"),
+                "ReferenceFiducialLocatorConfigurationWizard.GeneralPanel.Border.title"), //$NON-NLS-1$
                 TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panel);
         panel.setLayout(new FormLayout(new ColumnSpec[] {
@@ -68,7 +68,7 @@ public class ReferenceFiducialLocatorConfigurationWizard extends AbstractConfigu
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
         JLabel lblVisionSettings = new JLabel(Translations.getString(
-                "ReferenceFiducialLocatorConfigurationWizard.GeneralPanel.VisionSettingsLabel.text"));
+                "ReferenceFiducialLocatorConfigurationWizard.GeneralPanel.VisionSettingsLabel.text")); //$NON-NLS-1$
         panel.add(lblVisionSettings, "2, 2, right, default");
         
         visionSettings = new JComboBox(new VisionSettingsComboBoxModel(FiducialVisionSettings.class));
@@ -82,28 +82,28 @@ public class ReferenceFiducialLocatorConfigurationWizard extends AbstractConfigu
         panel.add(visionSettings, "4, 2, 3, 1, fill, default");
 
         JLabel lblRepeatFiducialRecognition = new JLabel(Translations.getString(
-                "ReferenceFiducialLocatorConfigurationWizard.GeneralPanel.RepeatRecognitionLabel.text"));
+                "ReferenceFiducialLocatorConfigurationWizard.GeneralPanel.RepeatRecognitionLabel.text")); //$NON-NLS-1$
         panel.add(lblRepeatFiducialRecognition, "2, 4");
         
         textFieldRepeatFiducialRecognition = new JTextField();
         textFieldRepeatFiducialRecognition.setToolTipText(Translations.getString(
-                "ReferenceFiducialLocatorConfigurationWizard.GeneralPanel.RepeatRecognitionTextField.toolTipText"));
+                "ReferenceFiducialLocatorConfigurationWizard.GeneralPanel.RepeatRecognitionTextField.toolTipText")); //$NON-NLS-1$
         panel.add(textFieldRepeatFiducialRecognition, "4, 4");
         textFieldRepeatFiducialRecognition.setColumns(2);
 
         JLabel lblEnabledAveraging = new JLabel(Translations.getString(
-                "ReferenceFiducialLocatorConfigurationWizard.GeneralPanel.AverageMatchesLabel.text"));
+                "ReferenceFiducialLocatorConfigurationWizard.GeneralPanel.AverageMatchesLabel.text")); //$NON-NLS-1$
         lblEnabledAveraging.setToolTipText(Translations.getString(
-                "ReferenceFiducialLocatorConfigurationWizard.GeneralPanel.AverageMatchesLabel.toolTipText"));
+                "ReferenceFiducialLocatorConfigurationWizard.GeneralPanel.AverageMatchesLabel.toolTipText")); //$NON-NLS-1$
         panel.add(lblEnabledAveraging, "2, 6");
 
         enabledAveragingCheckbox = new JCheckBox("");
         panel.add(enabledAveragingCheckbox, "4, 6");
         
         JLabel lblMaxDistance = new JLabel(Translations.getString(
-                "ReferenceFiducialLocatorConfigurationWizard.GeneralPanel.MaxDistanceLabel.text"));
+                "ReferenceFiducialLocatorConfigurationWizard.GeneralPanel.MaxDistanceLabel.text")); //$NON-NLS-1$
         lblMaxDistance.setToolTipText(Translations.getString(
-                "ReferenceFiducialLocatorConfigurationWizard.GeneralPanel.MaxDistanceLabel.toolTipText"));
+                "ReferenceFiducialLocatorConfigurationWizard.GeneralPanel.MaxDistanceLabel.toolTipText")); //$NON-NLS-1$
         panel.add(lblMaxDistance, "2, 8, right, default");
         
         maxDistance = new JTextField();
@@ -146,7 +146,7 @@ public class ReferenceFiducialLocatorConfigurationWizard extends AbstractConfigu
 
     @Override
     public String getWizardName() {
-        return Translations.getString("ReferenceFiducialLocatorConfigurationWizard.wizardName");
+        return Translations.getString("ReferenceFiducialLocatorConfigurationWizard.wizardName"); //$NON-NLS-1$
     }
 
     @Override

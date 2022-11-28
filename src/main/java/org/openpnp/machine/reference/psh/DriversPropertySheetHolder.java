@@ -35,9 +35,9 @@ public class DriversPropertySheetHolder extends SimplePropertySheetHolder {
     public Action newDriverAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.add);
-            putValue(NAME, Translations.getString("DriversPropertySheetHolder.Action.NewDriver"));
+            putValue(NAME, Translations.getString("DriversPropertySheetHolder.Action.NewDriver")); //$NON-NLS-1$
             putValue(SHORT_DESCRIPTION, Translations.getString(
-                    "DriversPropertySheetHolder.Action.NewDriver.Description"));
+                    "DriversPropertySheetHolder.Action.NewDriver.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -45,8 +45,8 @@ public class DriversPropertySheetHolder extends SimplePropertySheetHolder {
             Configuration configuration = Configuration.get();
             ClassSelectionDialog<Driver> dialog = new ClassSelectionDialog<>(MainFrame.get(),
                     Translations.getString(
-                            "DriversPropertySheetHolder.SelectionDialog.title"),
-                    Translations.getString("DriversPropertySheetHolder.SelectionDialog.description"),
+                            "DriversPropertySheetHolder.SelectionDialog.title"), //$NON-NLS-1$
+                    Translations.getString("DriversPropertySheetHolder.SelectionDialog.description"), //$NON-NLS-1$
                     configuration.getMachine().getCompatibleDriverClasses());
             dialog.setVisible(true);
             Class<? extends Driver> driverClass = dialog.getSelectedClass();

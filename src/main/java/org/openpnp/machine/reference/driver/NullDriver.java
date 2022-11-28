@@ -277,8 +277,8 @@ public class NullDriver extends AbstractDriver {
         if (solutions.isTargeting(Milestone.Connect)) {
             solutions.add(new Solutions.Issue(
                     this,
-                    Translations.getString("NullDriver.Issue"),
-                    Translations.getString("NullDriver.Solution"),Severity.Fundamental,
+                    Translations.getString("NullDriver.Issue"), //$NON-NLS-1$
+                    Translations.getString("NullDriver.Solution"), Severity.Fundamental, //$NON-NLS-1$
                     "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Driver-Setup#automatic-conversion-of-the-nulldriver") {
 
                 @Override

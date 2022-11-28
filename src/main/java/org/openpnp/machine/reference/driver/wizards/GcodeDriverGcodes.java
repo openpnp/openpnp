@@ -279,15 +279,15 @@ public class GcodeDriverGcodes extends AbstractConfigurationWizard {
     public final Action exportProfileAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.export);
-            putValue(NAME, Translations.getString("GcodeDriverGcodes.Action.Export"));
-            putValue(SHORT_DESCRIPTION, Translations.getString("GcodeDriverGcodes.Action.Export.Description"));
+            putValue(NAME, Translations.getString("GcodeDriverGcodes.Action.Export")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("GcodeDriverGcodes.Action.Export.Description")); //$NON-NLS-1$
         }
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
             try {
                 FileDialog fileDialog = new FileDialog(MainFrame.get(), Translations.getString(
-                        "GcodeDriverGcodes.SaveFileDialog.title"), FileDialog.SAVE);
+                        "GcodeDriverGcodes.SaveFileDialog.title"), FileDialog.SAVE); //$NON-NLS-1$
                 fileDialog.setFilenameFilter(new FilenameFilter() {
                     @Override
                     public boolean accept(File dir, String name) {
@@ -326,15 +326,15 @@ public class GcodeDriverGcodes extends AbstractConfigurationWizard {
     public final Action importProfileAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.importt);
-            putValue(NAME, Translations.getString("GcodeDriverGcodes.Action.Import"));
-            putValue(SHORT_DESCRIPTION, Translations.getString("GcodeDriverGcodes.Action.Import.Description"));
+            putValue(NAME, Translations.getString("GcodeDriverGcodes.Action.Import")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("GcodeDriverGcodes.Action.Import.Description")); //$NON-NLS-1$
         }
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
             try {
                 FileDialog fileDialog = new FileDialog(MainFrame.get(), Translations.getString(
-                        "GcodeDriverGcodes.OpenFileDialog.title"), FileDialog.LOAD);
+                        "GcodeDriverGcodes.OpenFileDialog.title"), FileDialog.LOAD); //$NON-NLS-1$
                 fileDialog.setFilenameFilter(new FilenameFilter() {
                     @Override
                     public boolean accept(File dir, String name) {
@@ -358,8 +358,8 @@ public class GcodeDriverGcodes extends AbstractConfigurationWizard {
     public final Action copyProfileToClipboardAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.copy);
-            putValue(NAME, Translations.getString("GcodeDriverGcodes.Action.CopyProfile"));
-            putValue(SHORT_DESCRIPTION, Translations.getString("GcodeDriverGcodes.Action.CopyProfile.Description"));
+            putValue(NAME, Translations.getString("GcodeDriverGcodes.Action.CopyProfile")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("GcodeDriverGcodes.Action.CopyProfile.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -371,8 +371,8 @@ public class GcodeDriverGcodes extends AbstractConfigurationWizard {
                 StringSelection stringSelection = new StringSelection(w.toString());
                 Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
                 clipboard.setContents(stringSelection, null);
-                MessageBoxes.infoBox(Translations.getString("CommonPhrases.copiedGcode"),
-                        Translations.getString("CommonPhrases.copiedGcodeToClipboard"));
+                MessageBoxes.infoBox(Translations.getString("CommonPhrases.copiedGcode"), //$NON-NLS-1$
+                        Translations.getString("CommonPhrases.copiedGcodeToClipboard")); //$NON-NLS-1$
             }
             catch (Exception e) {
                 MessageBoxes.errorBox(MainFrame.get(), "Copy Failed", e);
@@ -383,8 +383,8 @@ public class GcodeDriverGcodes extends AbstractConfigurationWizard {
     public final Action pasteProfileFromClipboardAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.paste);
-            putValue(NAME, Translations.getString("GcodeDriverGcodes.Action.PasteProfile"));
-            putValue(SHORT_DESCRIPTION, Translations.getString("GcodeDriverGcodes.Action.PasteProfile.Description"));
+            putValue(NAME, Translations.getString("GcodeDriverGcodes.Action.PasteProfile")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("GcodeDriverGcodes.Action.PasteProfile.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -396,8 +396,8 @@ public class GcodeDriverGcodes extends AbstractConfigurationWizard {
                 StringReader r = new StringReader(s);
                 GcodeDriver d = ser.read(GcodeDriver.class, s);
                 // copySettings(d, driver);
-                MessageBoxes.infoBox(Translations.getString("CommonPhrases.pastedGcode"),
-                        Translations.getString("CommonPhrases.pastedGcodeFromClipboard"));
+                MessageBoxes.infoBox(Translations.getString("CommonPhrases.pastedGcode"), //$NON-NLS-1$
+                        Translations.getString("CommonPhrases.pastedGcodeFromClipboard")); //$NON-NLS-1$
             }
             catch (Exception e) {
                 MessageBoxes.errorBox(MainFrame.get(), "Paste Failed", e);
@@ -407,8 +407,8 @@ public class GcodeDriverGcodes extends AbstractConfigurationWizard {
     public final Action resetToDefaultAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.delete);
-            putValue(NAME, Translations.getString("GcodeDriverGcodes.Action.ResetToDefaults"));
-            putValue(SHORT_DESCRIPTION, Translations.getString("GcodeDriverGcodes.Action.ResetToDefaults.Description"));
+            putValue(NAME, Translations.getString("GcodeDriverGcodes.Action.ResetToDefaults")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("GcodeDriverGcodes.Action.ResetToDefaults.Description")); //$NON-NLS-1$
         }
 
         @Override

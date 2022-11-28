@@ -143,7 +143,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
 
         panelPart = new JPanel();
         panelPart.setBorder(new TitledBorder(null, Translations.getString(
-                "ReferenceStripFeederConfigurationWizard.PanelPart.Border.title"),
+                "ReferenceStripFeederConfigurationWizard.PanelPart.Border.title"), //$NON-NLS-1$
                 TitledBorder.LEADING, TitledBorder.TOP, null));
         contentPanel.add(panelPart);
         panelPart.setLayout(new FormLayout(new ColumnSpec[] {
@@ -171,7 +171,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
             // in WindowBuilder but doesn't happen during normal run.
         }
 
-        lblPart = new JLabel(Translations.getString("ReferenceStripFeederConfigurationWizard.PartLabel.text"));
+        lblPart = new JLabel(Translations.getString("ReferenceStripFeederConfigurationWizard.PartLabel.text")); //$NON-NLS-1$
         panelPart.add(lblPart, "2, 2, right, default");
 
         comboBoxPart = new JComboBox();
@@ -189,7 +189,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         panelPart.add(lblPartInfo,"8, 2, left, default");
         
         lblRotationInTape = new JLabel(Translations.getString(
-                "ReferenceStripFeederConfigurationWizard.RotationInTapeLabel.text"));
+                "ReferenceStripFeederConfigurationWizard.RotationInTapeLabel.text")); //$NON-NLS-1$
         lblRotationInTape.setToolTipText("<html>\n<p>The <strong>Rotation in Tape</strong> setting must be interpreted relative to the tape's orientation, <br/>\nregardless of how the feeder/tape is oriented on the machine. </p>\n<ol>\n<li>\n<p>Look at the <strong>neutral</strong> upright orientation of the part package/footprint <br/>\nas drawn inside your E-CAD <strong>library</strong>.</p>\n</li>\n<li>\n<p>Note how pin 1, polarity, cathode etc. are oriented.  <br/>\nThis is your 0° for the part.</p>\n</li>\n<li>\n<p>Look at the tape so that the sprocket holes are at the top. <br/>\nThis is your 0° tape orientation (per EIA-481 industry standard).</p>\n</li>\n<li>\n<p>Determine how the part is rotated inside the tape pocket, <em>relative</em> from  <br/>\nits upright orientation in (1).  Positive rotation goes counter-clockwise.<br/>\nThis is your <strong>Rotation in Tape</strong>.</p>\n</li>\n</ol>\n</html>");
         panelPart.add(lblRotationInTape, "2, 4, left, default");
 
@@ -198,7 +198,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         textFieldLocationRotation.setColumns(4);
 
         lblRetryCount = new JLabel(Translations.getString(
-                "ReferenceStripFeederConfigurationWizard.FeedRetryCountLabel.text"));
+                "ReferenceStripFeederConfigurationWizard.FeedRetryCountLabel.text")); //$NON-NLS-1$
         panelPart.add(lblRetryCount, "2, 6, right, default");
 
         retryCountTf = new JTextField();
@@ -207,7 +207,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         retryCountTf.setColumns(3);
         
         lblPickRetryCount = new JLabel(Translations.getString(
-                "ReferenceStripFeederConfigurationWizard.PickRetryCountLabel.text"));
+                "ReferenceStripFeederConfigurationWizard.PickRetryCountLabel.text")); //$NON-NLS-1$
         panelPart.add(lblPickRetryCount, "2, 8, right, default");
         
         pickRetryCount = new JTextField();
@@ -218,8 +218,8 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         panelTapeSettings = new JPanel();
         contentPanel.add(panelTapeSettings);
         panelTapeSettings.setBorder(new TitledBorder(null,
-                Translations.getString("ReferenceStripFeederConfigurationWizard.PanelTapeSettings.Border.title"
-                ), TitledBorder.LEADING, TitledBorder.TOP, null));
+                Translations.getString("ReferenceStripFeederConfigurationWizard.PanelTapeSettings.Border.title"), //$NON-NLS-1$
+                TitledBorder.LEADING, TitledBorder.TOP, null));
         panelTapeSettings.setLayout(new FormLayout(
                 new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
@@ -237,14 +237,14 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         panelTapeSettings.add(btnAutoSetup, "2, 2, 11, 1");
 
         lblTapeType = new JLabel(Translations.getString(
-                "ReferenceStripFeederConfigurationWizard.TapeTypeLabel.text"));
+                "ReferenceStripFeederConfigurationWizard.TapeTypeLabel.text")); //$NON-NLS-1$
         panelTapeSettings.add(lblTapeType, "2, 4, right, default");
 
         comboBoxTapeType = new JComboBox(TapeType.values());
         panelTapeSettings.add(comboBoxTapeType, "4, 4, fill, default");
 
         JLabel lblTapeWidth = new JLabel(Translations.getString(
-                "ReferenceStripFeederConfigurationWizard.TapeWidthLabel.text"));
+                "ReferenceStripFeederConfigurationWizard.TapeWidthLabel.text")); //$NON-NLS-1$
         panelTapeSettings.add(lblTapeWidth, "8, 4, right, default");
 
         textFieldTapeWidth = new JTextField();
@@ -252,7 +252,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         textFieldTapeWidth.setColumns(5);
 
         lblPartPitch = new JLabel(Translations.getString(
-                "ReferenceStripFeederConfigurationWizard.PartPitchLabel.text"));
+                "ReferenceStripFeederConfigurationWizard.PartPitchLabel.text")); //$NON-NLS-1$
         panelTapeSettings.add(lblPartPitch, "2, 6, right, default");
 
         textFieldPartPitch = new JTextField();
@@ -260,7 +260,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         textFieldPartPitch.setColumns(5);
 
         lblFeedCount = new JLabel(Translations.getString(
-                "ReferenceStripFeederConfigurationWizard.FeedCountLabel.text"));
+                "ReferenceStripFeederConfigurationWizard.FeedCountLabel.text")); //$NON-NLS-1$
         panelTapeSettings.add(lblFeedCount, "8, 6, right, default");
 
         textFieldFeedCount = new JTextField();
@@ -268,7 +268,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         textFieldFeedCount.setColumns(10);
 
         btnResetFeedCount = new JButton(new AbstractAction(Translations.getString(
-                "ReferenceStripFeederConfigurationWizard.ResetFeedCountButton.text")) {
+                "ReferenceStripFeederConfigurationWizard.ResetFeedCountButton.text")) { //$NON-NLS-1$
             @Override
             public void actionPerformed(ActionEvent e) {
                 textFieldFeedCount.setText("0");
@@ -278,15 +278,15 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         panelTapeSettings.add(btnResetFeedCount, "12, 6");
 
         lblMaxFeedCount = new JLabel(Translations.getString(
-                "ReferenceStripFeederConfigurationWizard.MaxFeedCountLabel.text"));
+                "ReferenceStripFeederConfigurationWizard.MaxFeedCountLabel.text")); //$NON-NLS-1$
         panelTapeSettings.add(lblMaxFeedCount,"8, 8, right, default");
         textFieldMaxFeedCount = new JTextField();
         panelTapeSettings.add(textFieldMaxFeedCount,"10,8");
         textFieldMaxFeedCount.setColumns(10);
         textFieldMaxFeedCount.setToolTipText(Translations.getString(
-                "ReferenceStripFeederConfigurationWizard.MaxFeedCountTextField.toolTipText"));
+                "ReferenceStripFeederConfigurationWizard.MaxFeedCountTextField.toolTipText")); //$NON-NLS-1$
         btnMaxFeedCount = new JButton(new AbstractAction(Translations.getString(
-                "ReferenceStripFeederConfigurationWizard.AutoSetMaxFeedCountButton.text")) {
+                "ReferenceStripFeederConfigurationWizard.AutoSetMaxFeedCountButton.text")) { //$NON-NLS-1$
         	@Override
         	public void actionPerformed(ActionEvent e) {
         		Location h0 = feeder.getReferenceHoleLocation();
@@ -298,12 +298,12 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         	}
         });
         btnMaxFeedCount.setToolTipText(Translations.getString(
-                "ReferenceStripFeederConfigurationWizard.AutoSetMaxFeedCountButton.toolTipText"));
+                "ReferenceStripFeederConfigurationWizard.AutoSetMaxFeedCountButton.toolTipText")); //$NON-NLS-1$
         panelTapeSettings.add(btnMaxFeedCount,"12,8");
         
         JPanel panelVision = new JPanel();
         panelVision.setBorder(new TitledBorder(null, Translations.getString(
-                "ReferenceStripFeederConfigurationWizard.PanelVision.Border.title"),
+                "ReferenceStripFeederConfigurationWizard.PanelVision.Border.title"), //$NON-NLS-1$
                 TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panelVision);
         panelVision.setLayout(new FormLayout(
@@ -313,14 +313,14 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
 
         lblUseVision = new JLabel(Translations.getString(
-                "ReferenceStripFeederConfigurationWizard.PanelVision.UseVisionLabel.text"));
+                "ReferenceStripFeederConfigurationWizard.PanelVision.UseVisionLabel.text")); //$NON-NLS-1$
         panelVision.add(lblUseVision, "2, 2");
 
         chckbxUseVision = new JCheckBox("");
         panelVision.add(chckbxUseVision, "4, 2");
 
         JButton btnEditPipeline = new JButton(Translations.getString(
-                "ReferenceStripFeederConfigurationWizard.PanelVision.EditPipelineButton.text"));
+                "ReferenceStripFeederConfigurationWizard.PanelVision.EditPipelineButton.text")); //$NON-NLS-1$
         btnEditPipeline.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 UiUtils.messageBoxOnException(() -> {
@@ -331,7 +331,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         panelVision.add(btnEditPipeline, "2, 4");
 
         JButton btnResetPipeline = new JButton(Translations.getString(
-                "ReferenceStripFeederConfigurationWizard.PanelVision.ResetPipelineButton.text"));
+                "ReferenceStripFeederConfigurationWizard.PanelVision.ResetPipelineButton.text")); //$NON-NLS-1$
         btnResetPipeline.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 resetPipeline();
@@ -342,7 +342,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         panelLocations = new JPanel();
         contentPanel.add(panelLocations);
         panelLocations.setBorder(new TitledBorder(null, Translations.getString(
-                "ReferenceStripFeederConfigurationWizard.PanelLocations.Border.title"),
+                "ReferenceStripFeederConfigurationWizard.PanelLocations.Border.title"), //$NON-NLS-1$
                 TitledBorder.LEADING, TitledBorder.TOP, null, null));
         panelLocations.setLayout(new FormLayout(
                 new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
@@ -364,9 +364,9 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         panelLocations.add(lblZ_1, "8, 2");
 
         JLabel lblFeedStartLocation = new JLabel(Translations.getString(
-                "ReferenceStripFeederConfigurationWizard.PanelLocations.ReferenceHoleLocationLabel.text"));
+                "ReferenceStripFeederConfigurationWizard.PanelLocations.ReferenceHoleLocationLabel.text")); //$NON-NLS-1$
         lblFeedStartLocation.setToolTipText(Translations.getString(
-                "ReferenceStripFeederConfigurationWizard.PanelLocations.ReferenceHoleLocationLabel.toolTipText"));
+                "ReferenceStripFeederConfigurationWizard.PanelLocations.ReferenceHoleLocationLabel.toolTipText")); //$NON-NLS-1$
         panelLocations.add(lblFeedStartLocation, "2, 4, right, default");
 
         textFieldFeedStartX = new JTextField();
@@ -386,9 +386,9 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         panelLocations.add(locationButtonsPanelFeedStart, "10, 4");
 
         JLabel lblFeedEndLocation = new JLabel(Translations.getString(
-                "ReferenceStripFeederConfigurationWizard.PanelLocations.NextHoleLocationLabel.text"));
+                "ReferenceStripFeederConfigurationWizard.PanelLocations.NextHoleLocationLabel.text")); //$NON-NLS-1$
         lblFeedEndLocation.setToolTipText(Translations.getString(
-                "ReferenceStripFeederConfigurationWizard.PanelLocations.NextHoleLocationLabel.toolTipText"));
+                "ReferenceStripFeederConfigurationWizard.PanelLocations.NextHoleLocationLabel.toolTipText")); //$NON-NLS-1$
         panelLocations.add(lblFeedEndLocation, "2, 6, right, default");
 
         textFieldFeedEndX = new JTextField();
@@ -489,7 +489,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
     }
     
     private Action autoSetup = new AbstractAction(Translations.getString(
-            "ReferenceStripFeederConfigurationWizard.Action.AutoSetup")) {
+            "ReferenceStripFeederConfigurationWizard.Action.AutoSetup")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent e) {
             try {
@@ -552,7 +552,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
     };
 
     private Action autoSetupCancel = new AbstractAction(Translations.getString(
-            "ReferenceStripFeederConfigurationWizard.Action.AutoSetupCancel")) {
+            "ReferenceStripFeederConfigurationWizard.Action.AutoSetupCancel")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent e) {
             btnAutoSetup.setAction(autoSetup);

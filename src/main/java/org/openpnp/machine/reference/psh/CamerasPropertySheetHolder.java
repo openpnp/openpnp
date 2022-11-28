@@ -38,9 +38,9 @@ public class CamerasPropertySheetHolder extends SimplePropertySheetHolder {
     public Action newCameraAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.add);
-            putValue(NAME, Translations.getString("CamerasPropertySheetHolder.Action.NewCamera"));
+            putValue(NAME, Translations.getString("CamerasPropertySheetHolder.Action.NewCamera")); //$NON-NLS-1$
             putValue(SHORT_DESCRIPTION, Translations.getString(
-                    "CamerasPropertySheetHolder.Action.NewCamera.Description"));
+                    "CamerasPropertySheetHolder.Action.NewCamera.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -48,9 +48,9 @@ public class CamerasPropertySheetHolder extends SimplePropertySheetHolder {
             Configuration configuration = Configuration.get();
             ClassSelectionDialog<Camera> dialog = new ClassSelectionDialog<>(MainFrame.get(),
                     Translations.getString(
-                            "CamerasPropertySheetHolder.SelectionDialog.title"),
+                            "CamerasPropertySheetHolder.SelectionDialog.title"), //$NON-NLS-1$
                     Translations.getString(
-                            "CamerasPropertySheetHolder.SelectionDialog.description"),
+                            "CamerasPropertySheetHolder.SelectionDialog.description"), //$NON-NLS-1$
                     configuration.getMachine().getCompatibleCameraClasses());
             dialog.setVisible(true);
             Class<? extends Camera> cameraClass = dialog.getSelectedClass();
