@@ -22,6 +22,8 @@ If you would like to add a new feature to OpenPnP that changes core or reference
 
 All pull requests will be reviewed by the maintainers and will either be merged or comments will be provided as to why it's not being merged. You can submit new changes to the pull request as needed if the review uncovers issues.
 
+Note, be sure to use the `test` branch as your base and submit pull requests against `test` (this can be changed after the fact, but it might introduce conflicts, if you started out from the wrong base).
+
 ## Granularity
 
 Try to send as little as possible in a given pull request. A single small feature, a single bug fix, etc. The smaller a pull request is the easier it is to integrate into the project and the less likely it is to contain a looked over problem. If you are changing base classes expect significant discussion as to why the change is needed.
