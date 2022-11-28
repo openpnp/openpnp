@@ -77,7 +77,7 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
         
         panel = new JPanel();
         panel.setBorder(new TitledBorder(null, Translations.getString(
-                "ReferenceNozzleTipConfigurationWizard.PropertiesPanel.Border.title"),
+                "ReferenceNozzleTipConfigurationWizard.PropertiesPanel.Border.title"), //$NON-NLS-1$
                 TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panel);
         panel.setLayout(new FormLayout(new ColumnSpec[] {
@@ -90,7 +90,7 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
         lblName = new JLabel(Translations.getString(
-                "ReferenceNozzleTipConfigurationWizard.PropertiesPanel.NameLabel.text"));
+                "ReferenceNozzleTipConfigurationWizard.PropertiesPanel.NameLabel.text")); //$NON-NLS-1$
         panel.add(lblName, "2, 2, right, default");
         
         nameTf = new JTextField();
@@ -99,7 +99,7 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
         
         panelDwellTime = new JPanel();
         panelDwellTime.setBorder(new TitledBorder(null, Translations.getString(
-                "ReferenceNozzleTipConfigurationWizard.DwellTimesPanel.Border.title"),
+                "ReferenceNozzleTipConfigurationWizard.DwellTimesPanel.Border.title"), //$NON-NLS-1$
                 TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panelDwellTime);
         panelDwellTime.setLayout(new FormLayout(new ColumnSpec[] {
@@ -118,7 +118,7 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
                 FormSpecs.DEFAULT_ROWSPEC,}));
           
         lblPickDwellTime = new JLabel(Translations.getString(
-                "ReferenceNozzleTipConfigurationWizard.DwellTimesPanel.PickDwellTimeLabel.text"));
+                "ReferenceNozzleTipConfigurationWizard.DwellTimesPanel.PickDwellTimeLabel.text")); //$NON-NLS-1$
         panelDwellTime.add(lblPickDwellTime, "2, 2, right, default");
         
         pickDwellTf = new JTextField();
@@ -126,7 +126,7 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
         pickDwellTf.setColumns(10);
         
         lblPlaceDwellTime = new JLabel(Translations.getString(
-                "ReferenceNozzleTipConfigurationWizard.DwellTimesPanel.PlaceDwellTimeLabel.text"));
+                "ReferenceNozzleTipConfigurationWizard.DwellTimesPanel.PlaceDwellTimeLabel.text")); //$NON-NLS-1$
         panelDwellTime.add(lblPlaceDwellTime, "2, 4, right, default");
         
         placeDwellTf = new JTextField();
@@ -135,12 +135,12 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
         
         CellConstraints cc = new CellConstraints();
         lblDwellTime = new JLabel(Translations.getString(
-                "ReferenceNozzleTipConfigurationWizard.DwellTimesPanel.DwellTimeLabel.text"));
+                "ReferenceNozzleTipConfigurationWizard.DwellTimesPanel.DwellTimeLabel.text")); //$NON-NLS-1$
         panelDwellTime.add(lblDwellTime, cc.xywh(2, 6, 5, 1));
 
         panelPushAndDrag = new JPanel();
         panelPushAndDrag.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"),
-                Translations.getString("ReferenceNozzleTipConfigurationWizard.PushAndDragPanel.Border.title"),
+                Translations.getString("ReferenceNozzleTipConfigurationWizard.PushAndDragPanel.Border.title"), //$NON-NLS-1$
                 TitledBorder.LEADING, TitledBorder.TOP, null));
         contentPanel.add(panelPushAndDrag);
         panelPushAndDrag.setLayout(new FormLayout(new ColumnSpec[] {
@@ -165,9 +165,9 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
         lblLowDiameter = new JLabel(Translations.getString(
-                "ReferenceNozzleTipConfigurationWizard.PushAndDragPanel.OutsideDiameterLabel.text"));
+                "ReferenceNozzleTipConfigurationWizard.PushAndDragPanel.OutsideDiameterLabel.text")); //$NON-NLS-1$
         lblLowDiameter.setToolTipText(Translations.getString(
-                "ReferenceNozzleTipConfigurationWizard.PushAndDragPanel.OutsideDiameterLabel.toolTipText"));
+                "ReferenceNozzleTipConfigurationWizard.PushAndDragPanel.OutsideDiameterLabel.toolTipText")); //$NON-NLS-1$
         panelPushAndDrag.add(lblLowDiameter, "2, 4, right, default");
         
         textFieldLowDiameter = new JTextField();
@@ -175,9 +175,9 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
         textFieldLowDiameter.setColumns(10);
         
         lblPushAndDragAllowed = new JLabel(Translations.getString(
-                "ReferenceNozzleTipConfigurationWizard.PushAndDragPanel.PushAndDragAllowedLabel.text"));
+                "ReferenceNozzleTipConfigurationWizard.PushAndDragPanel.PushAndDragAllowedLabel.text")); //$NON-NLS-1$
         lblPushAndDragAllowed.setToolTipText(Translations.getString(
-                "ReferenceNozzleTipConfigurationWizard.PushAndDragPanel.PushAndDragAllowedLabel.toolTipText"));
+                "ReferenceNozzleTipConfigurationWizard.PushAndDragPanel.PushAndDragAllowedLabel.toolTipText")); //$NON-NLS-1$
         panelPushAndDrag.add(lblPushAndDragAllowed, "2, 2, right, default");
         
         chckbxPushAndDragAllowed = new JCheckBox("");
@@ -186,7 +186,7 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
         panelPartDimensions= new JPanel();
         panelPartDimensions.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"),
                 Translations.getString(
-                        "ReferenceNozzleTipConfigurationWizard.PartDimensionsPanel.Border.title"),
+                        "ReferenceNozzleTipConfigurationWizard.PartDimensionsPanel.Border.title"), //$NON-NLS-1$
                 TitledBorder.LEADING, TitledBorder.TOP, null));
         contentPanel.add(panelPartDimensions);
 
@@ -216,9 +216,9 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
         lblMinPartDiameter = new JLabel(Translations.getString(
-                "ReferenceNozzleTipConfigurationWizard.PartDimensionsPanel.MinPartDiameterLabel.text"));
+                "ReferenceNozzleTipConfigurationWizard.PartDimensionsPanel.MinPartDiameterLabel.text")); //$NON-NLS-1$
         lblMinPartDiameter.setToolTipText(Translations.getString(
-                "ReferenceNozzleTipConfigurationWizard.PartDimensionsPanel.MinPartDiameterLabel.toolTipText"));
+                "ReferenceNozzleTipConfigurationWizard.PartDimensionsPanel.MinPartDiameterLabel.toolTipText")); //$NON-NLS-1$
         panelPartDimensions.add(lblMinPartDiameter, "2, 2, right, default");
         
         minPartDiameter = new JTextField();
@@ -226,9 +226,9 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
         minPartDiameter.setColumns(10);
 
         lblMaxPartDiameter = new JLabel(Translations.getString(
-                "ReferenceNozzleTipConfigurationWizard.PartDimensionsPanel.MaxPartDiameterLabel.text"));
+                "ReferenceNozzleTipConfigurationWizard.PartDimensionsPanel.MaxPartDiameterLabel.text")); //$NON-NLS-1$
         lblMaxPartDiameter.setToolTipText(Translations.getString(
-                "ReferenceNozzleTipConfigurationWizard.PartDimensionsPanel.MaxPartDiameterLabel.toolTipText"));
+                "ReferenceNozzleTipConfigurationWizard.PartDimensionsPanel.MaxPartDiameterLabel.toolTipText")); //$NON-NLS-1$
         panelPartDimensions.add(lblMaxPartDiameter, "2, 4, right, default");
 
         maxPartDiameter = new JTextField();
@@ -236,9 +236,9 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
         maxPartDiameter.setColumns(10);
 
         lblMaxPartHeight = new JLabel(Translations.getString(
-                "ReferenceNozzleTipConfigurationWizard.PartDimensionsPanel.MaxPartHeightLabel.text"));
+                "ReferenceNozzleTipConfigurationWizard.PartDimensionsPanel.MaxPartHeightLabel.text")); //$NON-NLS-1$
         lblMaxPartHeight.setToolTipText(Translations.getString(
-                "ReferenceNozzleTipConfigurationWizard.PartDimensionsPanel.MaxPartHeightLabel.toolTipText"));
+                "ReferenceNozzleTipConfigurationWizard.PartDimensionsPanel.MaxPartHeightLabel.toolTipText")); //$NON-NLS-1$
         panelPartDimensions.add(lblMaxPartHeight, "2, 6, right, default");
 
         maxPartHeight = new JTextField();
@@ -246,9 +246,9 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
         maxPartHeight.setColumns(10);
         
         lblMaxPickTolerance = new JLabel(Translations.getString(
-                "ReferenceNozzleTipConfigurationWizard.PartDimensionsPanel.MaxPickToleranceLabel.text"));
+                "ReferenceNozzleTipConfigurationWizard.PartDimensionsPanel.MaxPickToleranceLabel.text")); //$NON-NLS-1$
         lblMaxPickTolerance.setToolTipText(Translations.getString(
-                "ReferenceNozzleTipConfigurationWizard.PartDimensionsPanel.MaxPickToleranceLabel.toolTipText"));
+                "ReferenceNozzleTipConfigurationWizard.PartDimensionsPanel.MaxPickToleranceLabel.toolTipText")); //$NON-NLS-1$
         panelPartDimensions.add(lblMaxPickTolerance, "2, 8, right, default");
         
         maxPickTolerance = new JTextField();

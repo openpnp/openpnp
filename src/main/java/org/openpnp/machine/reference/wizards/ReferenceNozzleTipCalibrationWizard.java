@@ -105,7 +105,7 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
 
         panelTop = new JPanel();
         panelTop.setBorder(new TitledBorder(null, Translations.getString(
-                "ReferenceNozzleTipCalibrationWizard.TopPanel.Border.title"),
+                "ReferenceNozzleTipCalibrationWizard.TopPanel.Border.title"), //$NON-NLS-1$
                 TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panelTop);
         panelTop.setLayout(new FormLayout(new ColumnSpec[] {
@@ -130,7 +130,7 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
                         FormSpecs.DEFAULT_ROWSPEC,}));
 
         calibrationEnabledCheckbox = new JCheckBox(Translations.getString(
-                "ReferenceNozzleTipCalibrationWizard.TopPanel.CalibrationEnabledChkBox.text"));
+                "ReferenceNozzleTipCalibrationWizard.TopPanel.CalibrationEnabledChkBox.text")); //$NON-NLS-1$
         panelTop.add(calibrationEnabledCheckbox, "2, 2, right, default");
 
 
@@ -139,37 +139,37 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
         buttonCenterTool.setHideActionText(true);
 
         lblCalibrate = new JLabel(Translations.getString(
-                "ReferenceNozzleTipCalibrationWizard.TopPanel.CalibrationLabel.text"));
+                "ReferenceNozzleTipCalibrationWizard.TopPanel.CalibrationLabel.text")); //$NON-NLS-1$
         panelTop.add(lblCalibrate, "2, 4, right, default");
 
         btnCalibrate = new JButton(Translations.getString(
-                "ReferenceNozzleTipCalibrationWizard.TopPanel.CalibrateButton.text"));
+                "ReferenceNozzleTipCalibrationWizard.TopPanel.CalibrateButton.text")); //$NON-NLS-1$
         panelTop.add(btnCalibrate, "4, 4");
 
         btnReset = new JButton(Translations.getString(
-                "ReferenceNozzleTipCalibrationWizard.TopPanel.ResetButton.text"));
+                "ReferenceNozzleTipCalibrationWizard.TopPanel.ResetButton.text")); //$NON-NLS-1$
         panelTop.add(btnReset, "6, 4");
 
         btnCalibrateCamera = new JButton(Translations.getString(
-                "ReferenceNozzleTipCalibrationWizard.TopPanel.CalibrateCameraButton.text"));
+                "ReferenceNozzleTipCalibrationWizard.TopPanel.CalibrateCameraButton.text")); //$NON-NLS-1$
         panelTop.add(btnCalibrateCamera, "8, 4");
         btnCalibrateCamera.setToolTipText(Translations.getString(
-                "ReferenceNozzleTipCalibrationWizard.TopPanel.CalibrateCameraButton.toolTipText"));
+                "ReferenceNozzleTipCalibrationWizard.TopPanel.CalibrateCameraButton.toolTipText")); //$NON-NLS-1$
 
         lblRecalibration = new JLabel(Translations.getString(
-                "ReferenceNozzleTipCalibrationWizard.TopPanel.RecalibrationLabel.text"));
+                "ReferenceNozzleTipCalibrationWizard.TopPanel.RecalibrationLabel.text")); //$NON-NLS-1$
         panelTop.add(lblRecalibration, "2, 6, right, default");
         lblRecalibration.setToolTipText(Translations.getString(
-                "ReferenceNozzleTipCalibrationWizard.TopPanel.RecalibrationLabel.toolTipText"));
+                "ReferenceNozzleTipCalibrationWizard.TopPanel.RecalibrationLabel.toolTipText")); //$NON-NLS-1$
 
         recalibrationCb = new JComboBox(ReferenceNozzleTipCalibration.RecalibrationTrigger.values());
         panelTop.add(recalibrationCb, "4, 6, 3, 1");
 
         lblFailHoming = new JLabel(Translations.getString(
-                "ReferenceNozzleTipCalibrationWizard.TopPanel.FailHomingLabel.text"));
+                "ReferenceNozzleTipCalibrationWizard.TopPanel.FailHomingLabel.text")); //$NON-NLS-1$
         panelTop.add(lblFailHoming, "2, 8, right, default");
         lblFailHoming.setToolTipText(Translations.getString(
-                "ReferenceNozzleTipCalibrationWizard.TopPanel.FailHomingLabel.toolTipText"));
+                "ReferenceNozzleTipCalibrationWizard.TopPanel.FailHomingLabel.toolTipText")); //$NON-NLS-1$
 
         failHoming = new JCheckBox("");
         panelTop.add(failHoming, "4, 8");
@@ -202,7 +202,7 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
 
         panelCalibration = new JPanel();
         panelCalibration.setBorder(new TitledBorder(null, Translations.getString(
-                "ReferenceNozzleTipCalibrationWizard.CalibrationPanel.Border.title"),
+                "ReferenceNozzleTipCalibrationWizard.CalibrationPanel.Border.title"), //$NON-NLS-1$
                 TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panelCalibration);
         panelCalibration.setLayout(new FormLayout(new ColumnSpec[] {
@@ -232,14 +232,14 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
 
 
         lblCalibrationInfo = new JLabel(Translations.getString(
-                "ReferenceNozzleTipCalibrationWizard.CalibrationPanel.StatusLabel.text"));
+                "ReferenceNozzleTipCalibrationWizard.CalibrationPanel.StatusLabel.text")); //$NON-NLS-1$
         panelCalibration.add(lblCalibrationInfo, "2, 2, right, default");
 
         calibrationStatus = new JLabel(getCalibrationStatus());
         panelCalibration.add(calibrationStatus, "4, 2, 3, 1, left, default");
 
         lblAngleIncrements = new JLabel(Translations.getString(
-                "ReferenceNozzleTipCalibrationWizard.CalibrationPanel.AngleIncrementsLabel.text"));
+                "ReferenceNozzleTipCalibrationWizard.CalibrationPanel.AngleIncrementsLabel.text")); //$NON-NLS-1$
         panelCalibration.add(lblAngleIncrements, "2, 4, right, default");
 
         angleIncrementsTf = new JTextField();
@@ -247,9 +247,9 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
         angleIncrementsTf.setColumns(3);
 
         lblAllowMisdectects = new JLabel(Translations.getString(
-                "ReferenceNozzleTipCalibrationWizard.CalibrationPanel.AllowMisDetectsLabel.text"));
+                "ReferenceNozzleTipCalibrationWizard.CalibrationPanel.AllowMisDetectsLabel.text")); //$NON-NLS-1$
         lblAllowMisdectects.setToolTipText(Translations.getString(
-                "ReferenceNozzleTipCalibrationWizard.CalibrationPanel.AllowMisDetectsLabel.toolTipText"));
+                "ReferenceNozzleTipCalibrationWizard.CalibrationPanel.AllowMisDetectsLabel.toolTipText")); //$NON-NLS-1$
         panelCalibration.add(lblAllowMisdectects, "6, 4, right, default");
 
         allowMisdetectsTf = new JTextField();
@@ -257,7 +257,7 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
         allowMisdetectsTf.setColumns(3);
 
         lblOffsetThreshold = new JLabel(Translations.getString(
-                "ReferenceNozzleTipCalibrationWizard.CalibrationPanel.OffsetThresholdLabel.text"));
+                "ReferenceNozzleTipCalibrationWizard.CalibrationPanel.OffsetThresholdLabel.text")); //$NON-NLS-1$
         panelCalibration.add(lblOffsetThreshold, "2, 6, right, default");
 
         offsetThresholdTf = new JTextField();
@@ -265,9 +265,9 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
         offsetThresholdTf.setColumns(10);
 
         lblCalibrationZOffset = new JLabel(Translations.getString(
-                "ReferenceNozzleTipCalibrationWizard.CalibrationPanel.CalibrationZOffsetLabel.text"));
+                "ReferenceNozzleTipCalibrationWizard.CalibrationPanel.CalibrationZOffsetLabel.text")); //$NON-NLS-1$
         lblCalibrationZOffset.setToolTipText(Translations.getString(
-                "ReferenceNozzleTipCalibrationWizard.CalibrationPanel.CalibrationZOffsetLabel.toolTipText"));
+                "ReferenceNozzleTipCalibrationWizard.CalibrationPanel.CalibrationZOffsetLabel.toolTipText")); //$NON-NLS-1$
         panelCalibration.add(lblCalibrationZOffset, "6, 6, right, default");
 
         calibrationZOffsetTf = new JTextField();
@@ -275,9 +275,9 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
         calibrationZOffsetTf.setColumns(10);
 
         lblNozzleTipDiameter = new JLabel(Translations.getString(
-                "ReferenceNozzleTipCalibrationWizard.CalibrationPanel.VisionDiameterLabel.text"));
+                "ReferenceNozzleTipCalibrationWizard.CalibrationPanel.VisionDiameterLabel.text")); //$NON-NLS-1$
         lblNozzleTipDiameter.setToolTipText(Translations.getString(
-                "ReferenceNozzleTipCalibrationWizard.CalibrationPanel.VisionDiameterLabel.toolTipText"));
+                "ReferenceNozzleTipCalibrationWizard.CalibrationPanel.VisionDiameterLabel.toolTipText")); //$NON-NLS-1$
         panelCalibration.add(lblNozzleTipDiameter, "2, 8, right, default");
 
         calibrationTipDiameter = new JTextField();
@@ -285,15 +285,15 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
         calibrationTipDiameter.setColumns(10);
 
         lblNewLabel = new JLabel(Translations.getString(
-                "ReferenceNozzleTipCalibrationWizard.CalibrationPanel.PipelineLabel.text"));
+                "ReferenceNozzleTipCalibrationWizard.CalibrationPanel.PipelineLabel.text")); //$NON-NLS-1$
         panelCalibration.add(lblNewLabel, "2, 12, right, default");
 
         btnEditPipeline = new JButton(Translations.getString(
-                "ReferenceNozzleTipCalibrationWizard.CalibrationPanel.EditPipelineButton.text"));
+                "ReferenceNozzleTipCalibrationWizard.CalibrationPanel.EditPipelineButton.text")); //$NON-NLS-1$
         panelCalibration.add(btnEditPipeline, "4, 12");
 
         btnResetPipeline = new JButton(Translations.getString(
-                "ReferenceNozzleTipCalibrationWizard.CalibrationPanel.ResetPipelineButton.text"));
+                "ReferenceNozzleTipCalibrationWizard.CalibrationPanel.ResetPipelineButton.text")); //$NON-NLS-1$
         panelCalibration.add(btnResetPipeline, "6, 12");
         btnResetPipeline.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -327,7 +327,7 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
 
         panelBackground = new JPanel();
         panelBackground.setBorder(new TitledBorder(null, Translations.getString(
-                "ReferenceNozzleTipCalibrationWizard.BackgroundCalibrationPanel.Border.title"
+                "ReferenceNozzleTipCalibrationWizard.BackgroundCalibrationPanel.Border.title" //$NON-NLS-1$
         ), TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panelBackground);
         panelBackground.setLayout(new FormLayout(new ColumnSpec[] {
@@ -362,7 +362,7 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
                         FormSpecs.DEFAULT_ROWSPEC,}));
 
         lblMethod = new JLabel(Translations.getString(
-                "ReferenceNozzleTipCalibrationWizard.BackgroundCalibrationPanel.MethodLabel.title"));
+                "ReferenceNozzleTipCalibrationWizard.BackgroundCalibrationPanel.MethodLabel.title")); //$NON-NLS-1$
         panelBackground.add(lblMethod, "2, 2, right, default");
 
         backgroundCalibrationMethod = new JComboBox(BackgroundCalibrationMethod.values());
@@ -377,9 +377,9 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
         panelBackground.add(lblBlowup, "10, 2");
 
         lblDetailSize = new JLabel(Translations.getString(
-                "ReferenceNozzleTipCalibrationWizard.BackgroundCalibrationPanel.MinDetailSizeLabel.title"));
+                "ReferenceNozzleTipCalibrationWizard.BackgroundCalibrationPanel.MinDetailSizeLabel.title")); //$NON-NLS-1$
         lblDetailSize.setToolTipText(Translations.getString(
-                "ReferenceNozzleTipCalibrationWizard.BackgroundCalibrationPanel.MinDetailSizeLabel.toolTipText"
+                "ReferenceNozzleTipCalibrationWizard.BackgroundCalibrationPanel.MinDetailSizeLabel.toolTipText" //$NON-NLS-1$
         ));
         panelBackground.add(lblDetailSize, "2, 4, right, default");
 
@@ -388,19 +388,19 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
         minimumDetailSize.setColumns(10);
 
         lblMinimum = new JLabel(Translations.getString(
-                "ReferenceNozzleTipCalibrationWizard.BackgroundCalibrationPanel.MinimumLabel.text"));
+                "ReferenceNozzleTipCalibrationWizard.BackgroundCalibrationPanel.MinimumLabel.text")); //$NON-NLS-1$
         panelBackground.add(lblMinimum, "4, 8, center, default");
 
         lblMaximum = new JLabel(Translations.getString(
-                "ReferenceNozzleTipCalibrationWizard.BackgroundCalibrationPanel.MaximumLabel.text"));
+                "ReferenceNozzleTipCalibrationWizard.BackgroundCalibrationPanel.MaximumLabel.text")); //$NON-NLS-1$
         panelBackground.add(lblMaximum, "6, 8, center, default");
 
         lblTolerance = new JLabel(Translations.getString(
-                "ReferenceNozzleTipCalibrationWizard.BackgroundCalibrationPanel.ToleranceLabel.text"));
+                "ReferenceNozzleTipCalibrationWizard.BackgroundCalibrationPanel.ToleranceLabel.text")); //$NON-NLS-1$
         panelBackground.add(lblTolerance, "8, 8, center, default");
 
         lblHue = new JLabel(Translations.getString(
-                "ReferenceNozzleTipCalibrationWizard.BackgroundCalibrationPanel.HueLabel.text"));
+                "ReferenceNozzleTipCalibrationWizard.BackgroundCalibrationPanel.HueLabel.text")); //$NON-NLS-1$
         lblHue.setToolTipText("Base Color, Hue in the HSV color model");
         panelBackground.add(lblHue, "2, 10, right, default");
 
@@ -419,9 +419,9 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
         backgroundTolHue.setColumns(10);
 
         lblSaturation = new JLabel(Translations.getString(
-                "ReferenceNozzleTipCalibrationWizard.BackgroundCalibrationPanel.SaturationLabel.text"));
+                "ReferenceNozzleTipCalibrationWizard.BackgroundCalibrationPanel.SaturationLabel.text")); //$NON-NLS-1$
         lblSaturation.setToolTipText(Translations.getString(
-                "ReferenceNozzleTipCalibrationWizard.BackgroundCalibrationPanel.SaturationLabel.toolTipText"));
+                "ReferenceNozzleTipCalibrationWizard.BackgroundCalibrationPanel.SaturationLabel.toolTipText")); //$NON-NLS-1$
         panelBackground.add(lblSaturation, "2, 12, right, default");
 
         backgroundMinSaturation = new JTextField();
@@ -439,9 +439,9 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
         backgroundTolSaturation.setColumns(10);
 
         lblBrightness = new JLabel(Translations.getString(
-                "ReferenceNozzleTipCalibrationWizard.BackgroundCalibrationPanel.ValueLabel.text"));
+                "ReferenceNozzleTipCalibrationWizard.BackgroundCalibrationPanel.ValueLabel.text")); //$NON-NLS-1$
         lblBrightness.setToolTipText(Translations.getString(
-                "ReferenceNozzleTipCalibrationWizard.BackgroundCalibrationPanel.ValueLabel.toolTipText"));
+                "ReferenceNozzleTipCalibrationWizard.BackgroundCalibrationPanel.ValueLabel.toolTipText")); //$NON-NLS-1$
         panelBackground.add(lblBrightness, "2, 14, right, default");
 
         backgroundMinValue = new JTextField();
@@ -462,11 +462,11 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
         panelBackground.add(hsvIndicator, "4, 16, 3, 3");
 
         backgroundDiagnostics = new JLabel(Translations.getString(
-                "ReferenceNozzleTipCalibrationWizard.BackgroundCalibrationPanel.BackgroundDiagnosticsLabel.text"));
+                "ReferenceNozzleTipCalibrationWizard.BackgroundCalibrationPanel.BackgroundDiagnosticsLabel.text")); //$NON-NLS-1$
         panelBackground.add(backgroundDiagnostics, "8, 16, 3, 1");
 
         btnShowProblems = new JButton(Translations.getString(
-                "ReferenceNozzleTipCalibrationWizard.BackgroundCalibrationPanel.ShowProblemsButton.text"));
+                "ReferenceNozzleTipCalibrationWizard.BackgroundCalibrationPanel.ShowProblemsButton.text")); //$NON-NLS-1$
         btnShowProblems.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent arg0) {
                 showBackgroundProblems(nozzleTip);
@@ -517,10 +517,10 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
 
     @SuppressWarnings("serial")
     private Action positionToolAction = new AbstractAction(Translations.getString(
-            "ReferenceNozzleTipCalibrationWizard.Action.PositionTool"), Icons.centerTool) {
+            "ReferenceNozzleTipCalibrationWizard.Action.PositionTool"), Icons.centerTool) { //$NON-NLS-1$
         {
             putValue(Action.SHORT_DESCRIPTION, Translations.getString(
-                    "ReferenceNozzleTipCalibrationWizard.Action.PositionTool.Description"));
+                    "ReferenceNozzleTipCalibrationWizard.Action.PositionTool.Description")); //$NON-NLS-1$
         }
 
         @Override

@@ -73,37 +73,37 @@ public class Solutions extends AbstractTableModel {
     private boolean showDismissed;
 
     public enum Milestone implements Subject, Named {
-        Welcome(Translations.getString("Solutions.Milestone.Welcome.name"),
+        Welcome(Translations.getString("Solutions.Milestone.Welcome.name"), //$NON-NLS-1$
                 "welcome",
-                Translations.getString("Solutions.Milestone.Welcome.description")),
+                Translations.getString("Solutions.Milestone.Welcome.description")), //$NON-NLS-1$
 
-        Connect(Translations.getString("Solutions.Milestone.Connect.name"),
+        Connect(Translations.getString("Solutions.Milestone.Connect.name"), //$NON-NLS-1$
                 "connect",
-                Translations.getString("Solutions.Milestone.Connect.description")),
+                Translations.getString("Solutions.Milestone.Connect.description")), //$NON-NLS-1$
 
-        Basics(Translations.getString("Solutions.Milestone.Basics.name"),
+        Basics(Translations.getString("Solutions.Milestone.Basics.name"), //$NON-NLS-1$
                 "basics",
-                Translations.getString("Solutions.Milestone.Basics.description")),
+                Translations.getString("Solutions.Milestone.Basics.description")), //$NON-NLS-1$
 
-        Kinematics(Translations.getString("Solutions.Milestone.Kinematics.name"),
+        Kinematics(Translations.getString("Solutions.Milestone.Kinematics.name"), //$NON-NLS-1$
                 "kinematics",
-                Translations.getString("Solutions.Milestone.Kinematics.description")),
+                Translations.getString("Solutions.Milestone.Kinematics.description")), //$NON-NLS-1$
 
-        Vision(Translations.getString("Solutions.Milestone.Vision.name"),
+        Vision(Translations.getString("Solutions.Milestone.Vision.name"), //$NON-NLS-1$
                 "vision",
-                Translations.getString("Solutions.Milestone.Vision.description")),
+                Translations.getString("Solutions.Milestone.Vision.description")), //$NON-NLS-1$
 
-        Calibration(Translations.getString("Solutions.Milestone.Calibration.name"),
+        Calibration(Translations.getString("Solutions.Milestone.Calibration.name"), //$NON-NLS-1$
                 "calibration",
-                Translations.getString("Solutions.Milestone.Calibration.description")),
+                Translations.getString("Solutions.Milestone.Calibration.description")), //$NON-NLS-1$
 
-        Production(Translations.getString("Solutions.Milestone.Production.name"),
+        Production(Translations.getString("Solutions.Milestone.Production.name"), //$NON-NLS-1$
                 "production",
-                Translations.getString("Solutions.Milestone.Production.description")),
+                Translations.getString("Solutions.Milestone.Production.description")), //$NON-NLS-1$
 
-        Advanced(Translations.getString("Solutions.Milestone.Advanced.name"),
+        Advanced(Translations.getString("Solutions.Milestone.Advanced.name"), //$NON-NLS-1$
                 "advanced",
-                Translations.getString("Solutions.Milestone.Advanced.description"));
+                Translations.getString("Solutions.Milestone.Advanced.description")); //$NON-NLS-1$
 
         final private String name;
         final private String tag;
@@ -727,11 +727,11 @@ public class Solutions extends AbstractTableModel {
     }
 
     private String[] columnNames = new String[] {
-            Translations.getString("Solutions.Model.ColumnName.subject"),
-            Translations.getString("Solutions.Model.ColumnName.severity"),
-            Translations.getString("Solutions.Model.ColumnName.issue"),
-            Translations.getString("Solutions.Model.ColumnName.solution"),
-            Translations.getString("Solutions.Model.ColumnName.state")};
+            Translations.getString("Solutions.Model.ColumnName.subject"), //$NON-NLS-1$
+            Translations.getString("Solutions.Model.ColumnName.severity"), //$NON-NLS-1$
+            Translations.getString("Solutions.Model.ColumnName.issue"), //$NON-NLS-1$
+            Translations.getString("Solutions.Model.ColumnName.solution"), //$NON-NLS-1$
+            Translations.getString("Solutions.Model.ColumnName.state")}; //$NON-NLS-1$
     private Class[] columnTypes = new Class[] {Subject.class, Severity.class, String.class, String.class, State.class};
 
     @Override

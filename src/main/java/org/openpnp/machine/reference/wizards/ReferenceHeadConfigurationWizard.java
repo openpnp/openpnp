@@ -65,7 +65,7 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
 
         JPanel panel = new JPanel();
         panel.setBorder(new TitledBorder(null, Translations.getString(
-                "ReferenceHeadConfigurationWizard.LocationsPanel.Border.title"),
+                "ReferenceHeadConfigurationWizard.LocationsPanel.Border.title"), //$NON-NLS-1$
                 TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panel);
         panel.setLayout(new FormLayout(new ColumnSpec[] {
@@ -98,7 +98,7 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
         panel.add(lblY, "6, 2, center, default");
 
         JLabel lblHomingFiducial = new JLabel(Translations.getString(
-                "ReferenceHeadConfigurationWizard.LocationsPanel.HomingFiducialLabel.text"));
+                "ReferenceHeadConfigurationWizard.LocationsPanel.HomingFiducialLabel.text")); //$NON-NLS-1$
         panel.add(lblHomingFiducial, "2, 4, right, default");
 
         homingFiducialX = new JTextField();
@@ -115,7 +115,7 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
         panel.add(homeLocation, "10, 4, left, fill");
 
         JLabel lblHomingMethod = new JLabel(Translations.getString(
-                "ReferenceHeadConfigurationWizard.LocationsPanel.HomingMethodLabel.text"));
+                "ReferenceHeadConfigurationWizard.LocationsPanel.HomingMethodLabel.text")); //$NON-NLS-1$
         panel.add(lblHomingMethod, "2, 6, right, default");
 
         visualHomingMethod = new JComboBox(VisualHomingMethod.values());
@@ -137,16 +137,16 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
                         FormSpecs.DEFAULT_ROWSPEC,}));
 
         btnHomingTest = new JButton(Translations.getString(
-                "ReferenceHeadConfigurationWizard.LocationsPanel.VisualTestButton.text"));
+                "ReferenceHeadConfigurationWizard.LocationsPanel.VisualTestButton.text")); //$NON-NLS-1$
         panel_1.add(btnHomingTest, "1, 1, fill, default");
         btnHomingTest.setToolTipText(Translations.getString(
-                "ReferenceHeadConfigurationWizard.LocationsPanel.VisualTestButton.toolTipText"));
+                "ReferenceHeadConfigurationWizard.LocationsPanel.VisualTestButton.toolTipText")); //$NON-NLS-1$
 
         btnVisualHome = new JButton(Translations.getString(
-                "ReferenceHeadConfigurationWizard.LocationsPanel.VisualHomeButton.text"));
+                "ReferenceHeadConfigurationWizard.LocationsPanel.VisualHomeButton.text")); //$NON-NLS-1$
         panel_1.add(btnVisualHome, "3, 1");
         btnVisualHome.setToolTipText(Translations.getString(
-                "ReferenceHeadConfigurationWizard.LocationsPanel.VisualHomeButton.toolTipText"));
+                "ReferenceHeadConfigurationWizard.LocationsPanel.VisualHomeButton.toolTipText")); //$NON-NLS-1$
         btnVisualHome.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 UiUtils.submitUiMachineTask(() -> head.visualHome(head.getMachine(), true));
@@ -159,12 +159,12 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
         });
 
         JLabel lblWarningChangingThese = new JLabel(Translations.getString(
-                "ReferenceHeadConfigurationWizard.LocationsPanel.WarningChangingLabel.text"));
+                "ReferenceHeadConfigurationWizard.LocationsPanel.WarningChangingLabel.text")); //$NON-NLS-1$
         lblWarningChangingThese.setForeground(Color.BLACK);
         panel.add(lblWarningChangingThese, "4, 8, 7, 1");
 
         JLabel lblParkLocation = new JLabel(Translations.getString(
-                "ReferenceHeadConfigurationWizard.LocationsPanel.ParkLocationLabel.text"));
+                "ReferenceHeadConfigurationWizard.LocationsPanel.ParkLocationLabel.text")); //$NON-NLS-1$
         panel.add(lblParkLocation, "2, 10, right, default");
 
         parkX = new JTextField();
@@ -181,7 +181,7 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
         
         JPanel panelCalibration = new JPanel();
         panelCalibration.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"),
-                Translations.getString("ReferenceHeadConfigurationWizard.CalibrationRigPanel.Border.title"),
+                Translations.getString("ReferenceHeadConfigurationWizard.CalibrationRigPanel.Border.title"), //$NON-NLS-1$
                 TitledBorder.LEADING, TitledBorder.TOP,
                 null, new Color(0, 0, 0)));
         contentPanel.add(panelCalibration);
@@ -220,15 +220,15 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
         panelCalibration.add(lblZ_1, "8, 2, center, default");
         
         lblDiameter = new JLabel(Translations.getString(
-                "ReferenceHeadConfigurationWizard.CalibrationRigPanel.DiameterLabel.text"));
+                "ReferenceHeadConfigurationWizard.CalibrationRigPanel.DiameterLabel.text")); //$NON-NLS-1$
         lblDiameter.setToolTipText(Translations.getString(
-                "ReferenceHeadConfigurationWizard.CalibrationRigPanel.DiameterLabel.toolTipText"));
+                "ReferenceHeadConfigurationWizard.CalibrationRigPanel.DiameterLabel.toolTipText")); //$NON-NLS-1$
         panelCalibration.add(lblDiameter, "10, 2, center, default");
 
         lblCalibrationPrimary = new JLabel(Translations.getString(
-                "ReferenceHeadConfigurationWizard.CalibrationRigPanel.PrimaryFiducialLabel.text"));
+                "ReferenceHeadConfigurationWizard.CalibrationRigPanel.PrimaryFiducialLabel.text")); //$NON-NLS-1$
         lblCalibrationPrimary.setToolTipText(Translations.getString(
-                "ReferenceHeadConfigurationWizard.CalibrationRigPanel.PrimaryFiducialLabel.toolTipText"));
+                "ReferenceHeadConfigurationWizard.CalibrationRigPanel.PrimaryFiducialLabel.toolTipText")); //$NON-NLS-1$
         panelCalibration.add(lblCalibrationPrimary, "2, 4, right, default");
         
         calibrationPrimaryX = new JTextField();
@@ -251,9 +251,9 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
         panelCalibration.add(calibrationPrimaryLocation, "12, 4, left, fill");
         
         lblCalibrationSecondary = new JLabel(Translations.getString(
-                "ReferenceHeadConfigurationWizard.CalibrationRigPanel.SecondaryFiducialLabel.text"));
+                "ReferenceHeadConfigurationWizard.CalibrationRigPanel.SecondaryFiducialLabel.text")); //$NON-NLS-1$
         lblCalibrationSecondary.setToolTipText(Translations.getString(
-                "ReferenceHeadConfigurationWizard.CalibrationRigPanel.SecondaryFiducialLabel.toolTipText"));
+                "ReferenceHeadConfigurationWizard.CalibrationRigPanel.SecondaryFiducialLabel.toolTipText")); //$NON-NLS-1$
         panelCalibration.add(lblCalibrationSecondary, "2, 6, right, default");
         
         calibrationSecondaryX = new JTextField();
@@ -276,7 +276,7 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
         panelCalibration.add(calibrationSecondaryLocation, "12, 6, left, fill");
         
         lblTestObject = new JLabel(Translations.getString(
-                "ReferenceHeadConfigurationWizard.CalibrationRigPanel.TestObjectLabel.text"));
+                "ReferenceHeadConfigurationWizard.CalibrationRigPanel.TestObjectLabel.text")); //$NON-NLS-1$
         panelCalibration.add(lblTestObject, "2, 8, right, default");
         
         calibrationTestObjectDiameter = new JTextField();
@@ -285,7 +285,7 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
 
         JPanel panel_2 = new JPanel();
         panel_2.setBorder(new TitledBorder(null, Translations.getString(
-                "ReferenceHeadConfigurationWizard.ZProbePanel.Border.title"),
+                "ReferenceHeadConfigurationWizard.ZProbePanel.Border.title"), //$NON-NLS-1$
                 TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panel_2);
         panel_2.setLayout(new FormLayout(new ColumnSpec[] {
@@ -298,7 +298,7 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
                         FormSpecs.DEFAULT_ROWSPEC,}));
 
         JLabel lblNewLabel_4 = new JLabel(Translations.getString(
-                "ReferenceHeadConfigurationWizard.ZProbePanel.ZProbeActuatorLabel.text"));
+                "ReferenceHeadConfigurationWizard.ZProbePanel.ZProbeActuatorLabel.text")); //$NON-NLS-1$
         panel_2.add(lblNewLabel_4, "2, 2, right, default");
 
         comboBoxZProbeActuator = new JComboBox();
@@ -307,7 +307,7 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
 
         JPanel panel_3 = new JPanel();
         panel_3.setBorder(new TitledBorder(null, Translations.getString(
-                "ReferenceHeadConfigurationWizard.PumpPanel.Border.title"),
+                "ReferenceHeadConfigurationWizard.PumpPanel.Border.title"), //$NON-NLS-1$
                 TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panel_3);
         panel_3.setLayout(new FormLayout(new ColumnSpec[] {
@@ -320,7 +320,7 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
                         FormSpecs.DEFAULT_ROWSPEC,}));
 
         JLabel lblVacuumPumpActuator = new JLabel(Translations.getString(
-                "ReferenceHeadConfigurationWizard.PumpPanel.VacuumPumpActuatorLabel.text"));
+                "ReferenceHeadConfigurationWizard.PumpPanel.VacuumPumpActuatorLabel.text")); //$NON-NLS-1$
         panel_3.add(lblVacuumPumpActuator, "2, 2, 2, 1, right, default");
 
         comboBoxPumpActuator = new JComboBox();

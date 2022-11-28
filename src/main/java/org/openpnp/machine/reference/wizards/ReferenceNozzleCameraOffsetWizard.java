@@ -51,7 +51,7 @@ public class ReferenceNozzleCameraOffsetWizard extends AbstractConfigurationWiza
 
         JPanel instructionPanel = new JPanel();
         instructionPanel.setBorder(new TitledBorder(null, Translations.getString(
-                "ReferenceNozzleCameraOffsetWizard.InstructionPanel.Border.title"),
+                "ReferenceNozzleCameraOffsetWizard.InstructionPanel.Border.title"), //$NON-NLS-1$
                 TitledBorder.LEADING, TitledBorder.TOP, null, null));
 
         instructionPanel.setLayout(new FormLayout(new ColumnSpec[] {
@@ -100,13 +100,13 @@ public class ReferenceNozzleCameraOffsetWizard extends AbstractConfigurationWiza
         );
 
         JLabel introductionLabel = new JLabel(Translations.getString(
-                "ReferenceNozzleCameraOffsetWizard.InstructionPanel.IntroductionLabel.text"));
+                "ReferenceNozzleCameraOffsetWizard.InstructionPanel.IntroductionLabel.text")); //$NON-NLS-1$
         instructionPanel.add(introductionLabel, "2, 2, fill, default");
         
         JButton adviceUrlButton = new JButton();
         adviceUrlButton.setAction(openAdviceUrl);
         adviceUrlButton.setText(Translations.getString(
-                "ReferenceNozzleCameraOffsetWizard.InstructionPanel.AdviceUrlButton.text"));
+                "ReferenceNozzleCameraOffsetWizard.InstructionPanel.AdviceUrlButton.text")); //$NON-NLS-1$
         adviceUrlButton.setHorizontalAlignment(SwingConstants.LEFT);
         adviceUrlButton.setBorder(BorderFactory.createEmptyBorder(0, 1, 1, 1));
         adviceUrlButton.setContentAreaFilled(false);
@@ -117,7 +117,7 @@ public class ReferenceNozzleCameraOffsetWizard extends AbstractConfigurationWiza
         instructionPanel.add(adviceUrlButton, "2, 4");
             
         JLabel step1Label = new JLabel(Translations.getString(
-                "ReferenceNozzleCameraOffsetWizard.InstructionPanel.Step1Label.text"));
+                "ReferenceNozzleCameraOffsetWizard.InstructionPanel.Step1Label.text")); //$NON-NLS-1$
         instructionPanel.add(step1Label, "2, 7");
 
         // We need to know through which camera we are doing the wizard, only relevant if there is more than one
@@ -136,42 +136,42 @@ public class ReferenceNozzleCameraOffsetWizard extends AbstractConfigurationWiza
         instructionPanel.add(camerasComboBox, "2, 9");
 
         JLabel step2Label = new JLabel(Translations.getString(
-                "ReferenceNozzleCameraOffsetWizard.InstructionPanel.Step2Label.text"));
+                "ReferenceNozzleCameraOffsetWizard.InstructionPanel.Step2Label.text")); //$NON-NLS-1$
         instructionPanel.add(step2Label, "2, 11");
 
         JLabel step3Label = new JLabel(Translations.getString(
-                "ReferenceNozzleCameraOffsetWizard.InstructionPanel.Step3Label.text"));
+                "ReferenceNozzleCameraOffsetWizard.InstructionPanel.Step3Label.text")); //$NON-NLS-1$
         instructionPanel.add(step3Label, "2, 13");
 
         JLabel step4Label = new JLabel(Translations.getString(
-                "ReferenceNozzleCameraOffsetWizard.InstructionPanel.Step4Label.text"));
+                "ReferenceNozzleCameraOffsetWizard.InstructionPanel.Step4Label.text")); //$NON-NLS-1$
         instructionPanel.add(step4Label, "2, 15");
 
         JLabel step5Label = new JLabel(Translations.getString(
-                "ReferenceNozzleCameraOffsetWizard.InstructionPanel.Step5Label.text"));
+                "ReferenceNozzleCameraOffsetWizard.InstructionPanel.Step5Label.text")); //$NON-NLS-1$
         instructionPanel.add(step5Label, "2, 17");
         
         JLabel step6Label = new JLabel(Translations.getString(
-                "ReferenceNozzleCameraOffsetWizard.InstructionPanel.Step6Label.text"));
+                "ReferenceNozzleCameraOffsetWizard.InstructionPanel.Step6Label.text")); //$NON-NLS-1$
         instructionPanel.add(step6Label, "2, 19");
         
         JPanel panel = new JPanel();
         instructionPanel.add(panel, "2, 21, left, fill");
         
         JLabel lblIncludeZ = new JLabel(Translations.getString(
-                "ReferenceNozzleCameraOffsetWizard.InstructionPanel.IncludeZLabel.text"));
+                "ReferenceNozzleCameraOffsetWizard.InstructionPanel.IncludeZLabel.text")); //$NON-NLS-1$
         panel.add(lblIncludeZ);
         
         chckbxIncludeZ = new JCheckBox("");
         panel.add(chckbxIncludeZ);
         
         JLabel step7Label = new JLabel(Translations.getString(
-                "ReferenceNozzleCameraOffsetWizard.InstructionPanel.Step7Label.text"));
+                "ReferenceNozzleCameraOffsetWizard.InstructionPanel.Step7Label.text")); //$NON-NLS-1$
         instructionPanel.add(step7Label, "2, 23");
         
         JPanel nozzleMarkPositionPanel = new JPanel();
         nozzleMarkPositionPanel.setBorder(new TitledBorder(null, Translations.getString(
-                "ReferenceNozzleCameraOffsetWizard.NozzleMarkPositionPanel.Border.title"),
+                "ReferenceNozzleCameraOffsetWizard.NozzleMarkPositionPanel.Border.title"), //$NON-NLS-1$
                 TitledBorder.LEADING, TitledBorder.TOP, null, null));
 
         nozzleMarkPositionPanel.setLayout(new FormLayout(new ColumnSpec[] {
@@ -214,22 +214,22 @@ public class ReferenceNozzleCameraOffsetWizard extends AbstractConfigurationWiza
         instructionPanel.add(nozzleMarkPositionPanel, "2, 25");
 
         JButton measureButton = new JButton(Translations.getString(
-                "ReferenceNozzleCameraOffsetWizard.InstructionPanel.MeasureButton.text"));
+                "ReferenceNozzleCameraOffsetWizard.InstructionPanel.MeasureButton.text")); //$NON-NLS-1$
         measureButton.setAction(storePositionAction);
         instructionPanel.add(measureButton, "2, 27");
 
         JLabel step8Label = new JLabel(Translations.getString(
-                "ReferenceNozzleCameraOffsetWizard.InstructionPanel.Step8Label.text"));
+                "ReferenceNozzleCameraOffsetWizard.InstructionPanel.Step8Label.text")); //$NON-NLS-1$
         instructionPanel.add(step8Label, "2, 29");
 
         JButton applyNozzleOffsetButton = new JButton(Translations.getString(
-                "ReferenceNozzleCameraOffsetWizard.InstructionPanel.CalculateNozzleOffsetButton.text"));
+                "ReferenceNozzleCameraOffsetWizard.InstructionPanel.CalculateNozzleOffsetButton.text")); //$NON-NLS-1$
         applyNozzleOffsetButton.setAction(applyNozzleOffsetAction);
         instructionPanel.add(applyNozzleOffsetButton, "2, 31");
 
         JPanel nozzleOffsetPanel = new JPanel();
         nozzleOffsetPanel.setBorder(new TitledBorder(null, Translations.getString(
-                "ReferenceNozzleCameraOffsetWizard.NozzleOffsetPanel.Border.title"),
+                "ReferenceNozzleCameraOffsetWizard.NozzleOffsetPanel.Border.title"), //$NON-NLS-1$
                 TitledBorder.LEADING, TitledBorder.TOP, null, null));
         nozzleOffsetPanel.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -277,11 +277,11 @@ public class ReferenceNozzleCameraOffsetWizard extends AbstractConfigurationWiza
         contentPanel.add(instructionPanel);
                 
                         JLabel step9Label = new JLabel(Translations.getString(
-                                "ReferenceNozzleCameraOffsetWizard.InstructionPanel.Step9Label.text"));
+                                "ReferenceNozzleCameraOffsetWizard.InstructionPanel.Step9Label.text")); //$NON-NLS-1$
                         instructionPanel.add(step9Label, "2, 35");
                 
                         JLabel step10Label = new JLabel(Translations.getString(
-                                "ReferenceNozzleCameraOffsetWizard.InstructionPanel.Step10Label.text"));
+                                "ReferenceNozzleCameraOffsetWizard.InstructionPanel.Step10Label.text")); //$NON-NLS-1$
                         instructionPanel.add(step10Label, "2, 37");
                         initDataBindings();
     }
@@ -300,7 +300,7 @@ public class ReferenceNozzleCameraOffsetWizard extends AbstractConfigurationWiza
     };
 
     private Action storePositionAction = new AbstractAction(Translations.getString(
-            "ReferenceNozzleCameraOffsetWizard.Action.StorePosition")) {
+            "ReferenceNozzleCameraOffsetWizard.Action.StorePosition")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent e) {
             nozzleMarkLocation.setLocation(nozzle.getLocation().subtract(nozzle.getHeadOffsets()));
@@ -308,7 +308,7 @@ public class ReferenceNozzleCameraOffsetWizard extends AbstractConfigurationWiza
     };
 
     private Action applyNozzleOffsetAction = new AbstractAction(Translations.getString(
-            "ReferenceNozzleCameraOffsetWizard.Action.ApplyNozzleOffset")) {
+            "ReferenceNozzleCameraOffsetWizard.Action.ApplyNozzleOffset")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent e) {
             CameraItem selectedCameraItem = (CameraItem) camerasComboBox.getSelectedItem();

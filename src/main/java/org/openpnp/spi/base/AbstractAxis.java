@@ -151,7 +151,7 @@ public abstract class AbstractAxis extends AbstractModelObject implements Axis {
         {
             putValue(SMALL_ICON, Icons.delete);
             putValue(NAME, "Delete Axis");
-            putValue(SHORT_DESCRIPTION, Translations.getString("AbstractAxis.Action.Delete.Description"));
+            putValue(SHORT_DESCRIPTION, Translations.getString("AbstractAxis.Action.Delete.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -185,7 +185,7 @@ public abstract class AbstractAxis extends AbstractModelObject implements Axis {
         {
             putValue(SMALL_ICON, Icons.arrowUp);
             putValue(NAME, "Permutate Up");
-            putValue(SHORT_DESCRIPTION, Translations.getString("AbstractAxis.Action.PermutateUp.Description"));
+            putValue(SHORT_DESCRIPTION, Translations.getString("AbstractAxis.Action.PermutateUp.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -199,7 +199,7 @@ public abstract class AbstractAxis extends AbstractModelObject implements Axis {
         {
             putValue(SMALL_ICON, Icons.arrowDown);
             putValue(NAME, "Permutate Down");
-            putValue(SHORT_DESCRIPTION, Translations.getString("AbstractAxis.Action.PermutateDown.Description"));
+            putValue(SHORT_DESCRIPTION, Translations.getString("AbstractAxis.Action.PermutateDown.Description")); //$NON-NLS-1$
         }
 
         @Override

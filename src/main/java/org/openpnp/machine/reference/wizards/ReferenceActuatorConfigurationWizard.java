@@ -55,7 +55,7 @@ public class ReferenceActuatorConfigurationWizard extends AbstractActuatorConfig
     protected void createUi(AbstractMachine machine) {
         panelProperties = new JPanel();
         panelProperties.setBorder(new TitledBorder(null, Translations.getString(
-                "ReferenceActuatorConfigurationWizard.PropertiesPanel.Border.title"),
+                "ReferenceActuatorConfigurationWizard.PropertiesPanel.Border.title"), //$NON-NLS-1$
                 TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panelProperties);
         panelProperties.setLayout(new FormLayout(new ColumnSpec[] {
@@ -70,14 +70,14 @@ public class ReferenceActuatorConfigurationWizard extends AbstractActuatorConfig
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
         lblDriver = new JLabel(Translations.getString(
-                "ReferenceActuatorConfigurationWizard.PropertiesPanel.DriverLabel.text"));
+                "ReferenceActuatorConfigurationWizard.PropertiesPanel.DriverLabel.text")); //$NON-NLS-1$
         panelProperties.add(lblDriver, "2, 2, right, default");
         
         driver = new JComboBox(new DriversComboBoxModel(machine, true));
         panelProperties.add(driver, "4, 2, fill, default");
         
         lblName = new JLabel(Translations.getString(
-                "ReferenceActuatorConfigurationWizard.PropertiesPanel.NameLabel.text"));
+                "ReferenceActuatorConfigurationWizard.PropertiesPanel.NameLabel.text")); //$NON-NLS-1$
         panelProperties.add(lblName, "2, 4, right, default");
         
         nameTf = new JTextField();

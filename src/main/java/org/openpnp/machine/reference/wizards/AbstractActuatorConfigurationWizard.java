@@ -121,8 +121,8 @@ public abstract class AbstractActuatorConfigurationWizard extends AbstractConfig
         panelOffsets = new JPanel();
         headMountablePanel.add(panelOffsets);
         panelOffsets.setBorder(new TitledBorder(null,
-                Translations.getString("AbstractActuatorConfigurationWizard.CoordinateSystemPanel.Border.title"
-                ), TitledBorder.LEADING, TitledBorder.TOP, null));
+                Translations.getString("AbstractActuatorConfigurationWizard.CoordinateSystemPanel.Border.title"), //$NON-NLS-1$
+                TitledBorder.LEADING, TitledBorder.TOP, null));
         panelOffsets.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("max(70dlu;default)"),
@@ -154,11 +154,11 @@ public abstract class AbstractActuatorConfigurationWizard extends AbstractConfig
         panelOffsets.add(lblZ, "8, 2");
 
         lblRotation = new JLabel(Translations.getString(
-                "AbstractActuatorConfigurationWizard.CoordinateSystemPanel.RotationLabel.text"));
+                "AbstractActuatorConfigurationWizard.CoordinateSystemPanel.RotationLabel.text")); //$NON-NLS-1$
         panelOffsets.add(lblRotation, "10, 2, left, default");
 
         lblAxis = new JLabel(Translations.getString(
-                "AbstractActuatorConfigurationWizard.CoordinateSystemPanel.AxisLabel.text"));
+                "AbstractActuatorConfigurationWizard.CoordinateSystemPanel.AxisLabel.text")); //$NON-NLS-1$
         panelOffsets.add(lblAxis, "2, 4, right, default");
 
         axisX = new JComboBox(new AxesComboBoxModel(machine, AbstractAxis.class, Axis.Type.X, true));
@@ -174,7 +174,7 @@ public abstract class AbstractActuatorConfigurationWizard extends AbstractConfig
         panelOffsets.add(axisRotation, "10, 4, fill, default");
 
         lblOffset = new JLabel(Translations.getString(
-                "AbstractActuatorConfigurationWizard.CoordinateSystemPanel.OffsetLabel.text"));
+                "AbstractActuatorConfigurationWizard.CoordinateSystemPanel.OffsetLabel.text")); //$NON-NLS-1$
         panelOffsets.add(lblOffset, "2, 6, right, default");
 
         locationX = new JTextField();
@@ -194,9 +194,9 @@ public abstract class AbstractActuatorConfigurationWizard extends AbstractConfig
         locationRotation.setColumns(10);
         
         lblAxisInterlock = new JLabel(Translations.getString(
-                "AbstractActuatorConfigurationWizard.CoordinateSystemPanel.AxisInterlockLabel.text"));
+                "AbstractActuatorConfigurationWizard.CoordinateSystemPanel.AxisInterlockLabel.text")); //$NON-NLS-1$
         lblAxisInterlock.setToolTipText(Translations.getString(
-                "AbstractActuatorConfigurationWizard.CoordinateSystemPanel.AxisInterlockLabel.toolTipText"));
+                "AbstractActuatorConfigurationWizard.CoordinateSystemPanel.AxisInterlockLabel.toolTipText")); //$NON-NLS-1$
         panelOffsets.add(lblAxisInterlock, "2, 8, right, default");
         
         interlockActuator = new JCheckBox("");
@@ -210,7 +210,7 @@ public abstract class AbstractActuatorConfigurationWizard extends AbstractConfig
         panelSafeZ = new JPanel();
         headMountablePanel.add(panelSafeZ);
         panelSafeZ.setBorder(new TitledBorder(null, Translations.getString(
-                "AbstractActuatorConfigurationWizard.SafeZPanel.Border.title"),
+                "AbstractActuatorConfigurationWizard.SafeZPanel.Border.title"), //$NON-NLS-1$
                 TitledBorder.LEADING, TitledBorder.TOP, null, null));
         panelSafeZ.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -222,7 +222,7 @@ public abstract class AbstractActuatorConfigurationWizard extends AbstractConfig
                 FormSpecs.DEFAULT_ROWSPEC,}));
 
         lblSafeZ = new JLabel(Translations.getString(
-                "AbstractActuatorConfigurationWizard.SafeZPanel.SafeZLabel.text"));
+                "AbstractActuatorConfigurationWizard.SafeZPanel.SafeZLabel.text")); //$NON-NLS-1$
         panelSafeZ.add(lblSafeZ, "2, 2, right, default");
 
         textFieldSafeZ = new JTextField();
@@ -233,7 +233,7 @@ public abstract class AbstractActuatorConfigurationWizard extends AbstractConfig
         panelCoordination = new JPanel();
         contentPanel.add(panelCoordination);
         panelCoordination.setBorder(new TitledBorder(null, Translations.getString(
-                "AbstractActuatorConfigurationWizard.CoordinationPanel.Border.title"
+                "AbstractActuatorConfigurationWizard.CoordinationPanel.Border.title" //$NON-NLS-1$
         ), TitledBorder.LEADING, TitledBorder.TOP, null, null));
         panelCoordination.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -249,27 +249,27 @@ public abstract class AbstractActuatorConfigurationWizard extends AbstractConfig
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
         lblBeforeActuation = new JLabel(Translations.getString(
-                "AbstractActuatorConfigurationWizard.CoordinationPanel.BeforeActuationLabel.text"));
+                "AbstractActuatorConfigurationWizard.CoordinationPanel.BeforeActuationLabel.text")); //$NON-NLS-1$
         lblBeforeActuation.setToolTipText(Translations.getString(
-                "AbstractActuatorConfigurationWizard.CoordinationPanel.BeforeActuationLabel.toolTipText"));
+                "AbstractActuatorConfigurationWizard.CoordinationPanel.BeforeActuationLabel.toolTipText")); //$NON-NLS-1$
         panelCoordination.add(lblBeforeActuation, "2, 2, right, default");
         
         coordinatedBeforeActuate = new JCheckBox("");
         panelCoordination.add(coordinatedBeforeActuate, "4, 2, center, bottom");
         
         lblAfterActuation = new JLabel(Translations.getString(
-                "AbstractActuatorConfigurationWizard.CoordinationPanel.AfterActuationLabel.text"));
+                "AbstractActuatorConfigurationWizard.CoordinationPanel.AfterActuationLabel.text")); //$NON-NLS-1$
         lblAfterActuation.setToolTipText(Translations.getString(
-                "AbstractActuatorConfigurationWizard.CoordinationPanel.AfterActuationLabel.toolTipText"));
+                "AbstractActuatorConfigurationWizard.CoordinationPanel.AfterActuationLabel.toolTipText")); //$NON-NLS-1$
         panelCoordination.add(lblAfterActuation, "2, 4, right, default");
         
         coordinatedAfterActuate = new JCheckBox("");
         panelCoordination.add(coordinatedAfterActuate, "4, 4");
         
         lblBeforeRead = new JLabel(Translations.getString(
-                "AbstractActuatorConfigurationWizard.CoordinationPanel.BeforeReadLabel.text"));
+                "AbstractActuatorConfigurationWizard.CoordinationPanel.BeforeReadLabel.text")); //$NON-NLS-1$
         lblBeforeRead.setToolTipText(Translations.getString(
-                "AbstractActuatorConfigurationWizard.CoordinationPanel.BeforeReadLabel.toolTipText"));
+                "AbstractActuatorConfigurationWizard.CoordinationPanel.BeforeReadLabel.toolTipText")); //$NON-NLS-1$
         panelCoordination.add(lblBeforeRead, "2, 6, right, default");
         
         coordinatedBeforeRead = new JCheckBox("");
@@ -277,7 +277,7 @@ public abstract class AbstractActuatorConfigurationWizard extends AbstractConfig
         
         generalPanel = new JPanel();
         generalPanel.setBorder(new TitledBorder(null, Translations.getString(
-                "AbstractActuatorConfigurationWizard.GeneralPanel.Border.title"),
+                "AbstractActuatorConfigurationWizard.GeneralPanel.Border.title"), //$NON-NLS-1$
                 TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(generalPanel);
         generalPanel.setLayout(new FormLayout(new ColumnSpec[] {
@@ -307,9 +307,9 @@ public abstract class AbstractActuatorConfigurationWizard extends AbstractConfig
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
         lblValueType = new JLabel(Translations.getString(
-                "AbstractActuatorConfigurationWizard.GeneralPanel.ValueTypeLabel.text"));
+                "AbstractActuatorConfigurationWizard.GeneralPanel.ValueTypeLabel.text")); //$NON-NLS-1$
         lblValueType.setToolTipText(Translations.getString(
-                "AbstractActuatorConfigurationWizard.GeneralPanel.ValueTypeLabel.toolTipText"));
+                "AbstractActuatorConfigurationWizard.GeneralPanel.ValueTypeLabel.toolTipText")); //$NON-NLS-1$
         generalPanel.add(lblValueType, "2, 2, right, default");
         
         valueType = new JComboBox(Actuator.ActuatorValueType.values());
@@ -322,7 +322,7 @@ public abstract class AbstractActuatorConfigurationWizard extends AbstractConfig
         generalPanel.add(valueType, "4, 2, fill, default");
         
         lblOnDouble = new JLabel(Translations.getString(
-                "AbstractActuatorConfigurationWizard.GeneralPanel.OnValueLabel.text"));
+                "AbstractActuatorConfigurationWizard.GeneralPanel.OnValueLabel.text")); //$NON-NLS-1$
         generalPanel.add(lblOnDouble, "2, 4, right, default");
         
         defaultOnDouble = new JTextField();
@@ -330,7 +330,7 @@ public abstract class AbstractActuatorConfigurationWizard extends AbstractConfig
         defaultOnDouble.setColumns(10);
         
         lblOffDouble = new JLabel(Translations.getString(
-                "AbstractActuatorConfigurationWizard.GeneralPanel.OffValueLabel.text"));
+                "AbstractActuatorConfigurationWizard.GeneralPanel.OffValueLabel.text")); //$NON-NLS-1$
         generalPanel.add(lblOffDouble, "6, 4, right, default");
         
         defaultOffDouble = new JTextField();
@@ -338,7 +338,7 @@ public abstract class AbstractActuatorConfigurationWizard extends AbstractConfig
         defaultOffDouble.setColumns(10);
         
         lblOnString = new JLabel(Translations.getString(
-                "AbstractActuatorConfigurationWizard.GeneralPanel.OnValueLabel.text"));
+                "AbstractActuatorConfigurationWizard.GeneralPanel.OnValueLabel.text")); //$NON-NLS-1$
         generalPanel.add(lblOnString, "2, 5, right, default");
         
         defaultOnString = new JTextField();
@@ -346,7 +346,7 @@ public abstract class AbstractActuatorConfigurationWizard extends AbstractConfig
         defaultOnString.setColumns(10);
         
         lblOffString = new JLabel(Translations.getString(
-                "AbstractActuatorConfigurationWizard.GeneralPanel.OffValueLabel.text"));
+                "AbstractActuatorConfigurationWizard.GeneralPanel.OffValueLabel.text")); //$NON-NLS-1$
         generalPanel.add(lblOffString, "6, 5, right, default");
         
         defaultOffString = new JTextField();
@@ -354,26 +354,26 @@ public abstract class AbstractActuatorConfigurationWizard extends AbstractConfig
         defaultOffString.setColumns(10);
         
         lblMachineState = new JLabel(Translations.getString(
-                "AbstractActuatorConfigurationWizard.GeneralPanel.MachineStateLabel.text"));
+                "AbstractActuatorConfigurationWizard.GeneralPanel.MachineStateLabel.text")); //$NON-NLS-1$
         generalPanel.add(lblMachineState, "2, 9, right, default");
         
         lblEnableActuation = new JLabel(Translations.getString(
-                "AbstractActuatorConfigurationWizard.GeneralPanel.EnabledLabel.text"));
+                "AbstractActuatorConfigurationWizard.GeneralPanel.EnabledLabel.text")); //$NON-NLS-1$
         generalPanel.add(lblEnableActuation, "4, 9, center, default");
         
         lblHomingActuation = new JLabel(Translations.getString(
-                "AbstractActuatorConfigurationWizard.GeneralPanel.HomedLabel.text"));
+                "AbstractActuatorConfigurationWizard.GeneralPanel.HomedLabel.text")); //$NON-NLS-1$
         lblHomingActuation.setToolTipText("");
         generalPanel.add(lblHomingActuation, "6, 9, center, default");
         
         lblDisableActuation = new JLabel(Translations.getString(
-                "AbstractActuatorConfigurationWizard.GeneralPanel.DisabledLabel.text"));
+                "AbstractActuatorConfigurationWizard.GeneralPanel.DisabledLabel.text")); //$NON-NLS-1$
         generalPanel.add(lblDisableActuation, "8, 9, center, default");
         
         lblMachineStateActuation = new JLabel(Translations.getString(
-                "AbstractActuatorConfigurationWizard.GeneralPanel.ActuationLabel.text"));
+                "AbstractActuatorConfigurationWizard.GeneralPanel.ActuationLabel.text")); //$NON-NLS-1$
         lblMachineStateActuation.setToolTipText(Translations.getString(
-                "AbstractActuatorConfigurationWizard.GeneralPanel.ActuationLabel.toolTipText"));
+                "AbstractActuatorConfigurationWizard.GeneralPanel.ActuationLabel.toolTipText")); //$NON-NLS-1$
         generalPanel.add(lblMachineStateActuation, "2, 11, right, default");
         
         enabledActuation = new JComboBox(ReferenceActuator.MachineStateActuation.values());
@@ -386,7 +386,7 @@ public abstract class AbstractActuatorConfigurationWizard extends AbstractConfig
         generalPanel.add(disabledActuation, "8, 11, fill, default");
         
         lblIndex = new JLabel(Translations.getString(
-                "AbstractActuatorConfigurationWizard.GeneralPanel.IndexLabel.text"));
+                "AbstractActuatorConfigurationWizard.GeneralPanel.IndexLabel.text")); //$NON-NLS-1$
         generalPanel.add(lblIndex, "2, 15, right, default");
         
         indexTextField = new JTextField();

@@ -76,7 +76,7 @@ public class ReferenceNozzleVacuumWizard extends AbstractConfigurationWizard {
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
         label = new JLabel(Translations.getString(
-                "ReferenceNozzleVacuumWizard.ContentPanel.VacuumActuatorLabel.text"));
+                "ReferenceNozzleVacuumWizard.ContentPanel.VacuumActuatorLabel.text")); //$NON-NLS-1$
         panel.add(label, "2, 2, right, center");
         
         vacuumComboBoxActuator = new JComboBox();
@@ -84,7 +84,7 @@ public class ReferenceNozzleVacuumWizard extends AbstractConfigurationWizard {
         vacuumComboBoxActuator.setModel(new ActuatorsComboBoxModel(nozzle.getHead()));
         panel.add(vacuumComboBoxActuator, "4, 2");
         label = new JLabel(Translations.getString(
-                "ReferenceNozzleVacuumWizard.ContentPanel.BlowOffActuatorLabel.text"));
+                "ReferenceNozzleVacuumWizard.ContentPanel.BlowOffActuatorLabel.text")); //$NON-NLS-1$
         panel.add(label, "2, 4, right, center");
 
         blowOffComboBoxActuator = new JComboBox();
@@ -92,7 +92,7 @@ public class ReferenceNozzleVacuumWizard extends AbstractConfigurationWizard {
         blowOffComboBoxActuator.setModel(new ActuatorsComboBoxModel(nozzle.getHead()));
         panel.add(blowOffComboBoxActuator, "4, 4");
         lblSensingActuator = new JLabel(Translations.getString(
-                "ReferenceNozzleVacuumWizard.ContentPanel.SensingActuatorLabel.text"));
+                "ReferenceNozzleVacuumWizard.ContentPanel.SensingActuatorLabel.text")); //$NON-NLS-1$
         panel.add(lblSensingActuator, "2, 6, right, default");
 
         vacuumSenseActuator = new JComboBox(new ActuatorsComboBoxModel(nozzle.getHead()));
