@@ -147,7 +147,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         JPanel panel_1 = new JPanel();
         panel.add(panel_1, BorderLayout.EAST);
 
-        JLabel lblSearch = new JLabel(Translations.getString("FeedersPanel.SearchLabel.text"));
+        JLabel lblSearch = new JLabel(Translations.getString("FeedersPanel.SearchLabel.text")); //$NON-NLS-1$
         panel_1.add(lblSearch);
 
         searchTextField = new JTextField();
@@ -473,16 +473,16 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 
         String title;
         if (part == null) {
-            title = Translations.getString("FeedersPanel.SelectFeederImplementationDialog.Select.title");
+            title = Translations.getString("FeedersPanel.SelectFeederImplementationDialog.Select.title"); //$NON-NLS-1$
         }
         else {
-            title = Translations.getString("FeedersPanel.SelectFeederImplementationDialog.SelectFor.title"
-            ) + " " + part.getId() + "...";
+            title = Translations.getString("FeedersPanel.SelectFeederImplementationDialog.SelectFor.title" //$NON-NLS-1$
+            ) + " " + part.getId() + "..."; //$NON-NLS-1$ //$NON-NLS-1$
         }
         ClassSelectionDialog<Feeder> dialog =
                 new ClassSelectionDialog<>(JOptionPane.getFrameForComponent(FeedersPanel.this),
                         title, Translations.getString(
-                                "FeedersPanel.SelectFeederImplementationDialog.Description"),
+                                "FeedersPanel.SelectFeederImplementationDialog.Description"), //$NON-NLS-1$
                         configuration.getMachine().getCompatibleFeederClasses());
         dialog.setVisible(true);
         Class<? extends Feeder> feederClass = dialog.getSelectedClass();
@@ -527,8 +527,8 @@ public class FeedersPanel extends JPanel implements WizardContainer {
     public Action newFeederAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.add);
-            putValue(NAME, Translations.getString("FeedersPanel.Action.NewFeeder"));
-            putValue(SHORT_DESCRIPTION, Translations.getString("FeedersPanel.Action.NewFeeder.Description"));
+            putValue(NAME, Translations.getString("FeedersPanel.Action.NewFeeder")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("FeedersPanel.Action.NewFeeder.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -540,8 +540,8 @@ public class FeedersPanel extends JPanel implements WizardContainer {
     public Action deleteFeederAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.delete);
-            putValue(NAME, Translations.getString("FeedersPanel.Action.DeleteFeeder"));
-            putValue(SHORT_DESCRIPTION, Translations.getString("FeedersPanel.Action.DeleteFeeder.Description"));
+            putValue(NAME, Translations.getString("FeedersPanel.Action.DeleteFeeder")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("FeedersPanel.Action.DeleteFeeder.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -557,9 +557,9 @@ public class FeedersPanel extends JPanel implements WizardContainer {
             }
             
             int ret = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                    Translations.getString("DialogMessages.ConfirmDelete.text") + " " + formattedIds + "?",
-                    Translations.getString("DialogMessages.ConfirmDelete.title") + " " +
-                            selections.size() + " " + Translations.getString("CommonWords.feeders") + "?",
+                    Translations.getString("DialogMessages.ConfirmDelete.text") + " " + formattedIds + "?", //$NON-NLS-1$ //$NON-NLS-1$ //$NON-NLS-1$
+                    Translations.getString("DialogMessages.ConfirmDelete.title") + " " + //$NON-NLS-1$ //$NON-NLS-1$
+                            selections.size() + " " + Translations.getString("CommonWords.feeders") + "?", //$NON-NLS-1$ //$NON-NLS-1$ //$NON-NLS-1$
                     JOptionPane.YES_NO_OPTION);
             if (ret == JOptionPane.YES_OPTION) {
                 for (Feeder feeder : selections) {
@@ -573,8 +573,8 @@ public class FeedersPanel extends JPanel implements WizardContainer {
     public Action feedFeederAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.feed);
-            putValue(NAME, Translations.getString("FeedersPanel.Action.FeedFeeder"));
-            putValue(SHORT_DESCRIPTION, Translations.getString("FeedersPanel.Action.FeedFeeder.Description"));
+            putValue(NAME, Translations.getString("FeedersPanel.Action.FeedFeeder")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("FeedersPanel.Action.FeedFeeder.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -590,8 +590,8 @@ public class FeedersPanel extends JPanel implements WizardContainer {
     public Action pickFeederAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.pick);
-            putValue(NAME, Translations.getString("FeedersPanel.Action.PickFeeder"));
-            putValue(SHORT_DESCRIPTION, Translations.getString("FeedersPanel.Action.PickFeeder.Description"));
+            putValue(NAME, Translations.getString("FeedersPanel.Action.PickFeeder")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("FeedersPanel.Action.PickFeeder.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -758,8 +758,8 @@ public class FeedersPanel extends JPanel implements WizardContainer {
     public Action moveCameraToPickLocation = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.centerCameraOnFeeder);
-            putValue(NAME, Translations.getString("FeedersPanel.Action.MoveCameraToPick"));
-            putValue(SHORT_DESCRIPTION,Translations.getString("FeedersPanel.Action.MoveCameraToPick.Description"));
+            putValue(NAME, Translations.getString("FeedersPanel.Action.MoveCameraToPick")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION,Translations.getString("FeedersPanel.Action.MoveCameraToPick.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -785,8 +785,8 @@ public class FeedersPanel extends JPanel implements WizardContainer {
     public Action moveToolToPickLocation = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.centerNozzleOnFeeder);
-            putValue(NAME, Translations.getString("FeedersPanel.Action.MoveToolToPick"));
-            putValue(SHORT_DESCRIPTION,Translations.getString("FeedersPanel.Action.MoveToolToPick.Description"));
+            putValue(NAME, Translations.getString("FeedersPanel.Action.MoveToolToPick")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION,Translations.getString("FeedersPanel.Action.MoveToolToPick.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -804,8 +804,8 @@ public class FeedersPanel extends JPanel implements WizardContainer {
     
     public final Action setEnabledAction = new AbstractAction() {
         {
-            putValue(NAME, Translations.getString("FeedersPanel.Action.SetEnabled"));
-            putValue(SHORT_DESCRIPTION, Translations.getString("FeedersPanel.Action.SetEnabled.Description"));
+            putValue(NAME, Translations.getString("FeedersPanel.Action.SetEnabled")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("FeedersPanel.Action.SetEnabled.Description")); //$NON-NLS-1$
         }
 
         @Override

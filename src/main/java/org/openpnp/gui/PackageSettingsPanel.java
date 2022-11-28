@@ -58,7 +58,7 @@ public class PackageSettingsPanel extends JPanel {
         
         vacuumBlowOffPanel = new JPanel();
         vacuumBlowOffPanel.setBorder(new TitledBorder(null, Translations.getString(
-                "PackageSettingsPanel.Border.title"),
+                "PackageSettingsPanel.Border.title"), //$NON-NLS-1$
                 TitledBorder.LEADING, TitledBorder.TOP, null, null));
         add(vacuumBlowOffPanel);
         vacuumBlowOffPanel.setLayout(new FormLayout(new ColumnSpec[] {
@@ -72,14 +72,14 @@ public class PackageSettingsPanel extends JPanel {
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
-        lblNewLabel = new JLabel(Translations.getString("PackageSettingsPanel.VacuumLevelLabel.text"));
+        lblNewLabel = new JLabel(Translations.getString("PackageSettingsPanel.VacuumLevelLabel.text")); //$NON-NLS-1$
         vacuumBlowOffPanel.add(lblNewLabel, "2, 2, right, default");
         
         vacuumLevel = new JTextField();
         vacuumBlowOffPanel.add(vacuumLevel, "4, 2, left, default");
         vacuumLevel.setColumns(10);
         
-        lblBlowOffLevel = new JLabel(Translations.getString("PackageSettingsPanel.BlowOffLevelLabel.text"));
+        lblBlowOffLevel = new JLabel(Translations.getString("PackageSettingsPanel.BlowOffLevelLabel.text")); //$NON-NLS-1$
         vacuumBlowOffPanel.add(lblBlowOffLevel, "2, 4, right, default");
         
         blowOffLevel = new JTextField();

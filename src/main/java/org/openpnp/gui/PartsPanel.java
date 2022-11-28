@@ -129,7 +129,7 @@ public class PartsPanel extends JPanel implements WizardContainer {
         JPanel panel_1 = new JPanel();
         toolbarAndSearch.add(panel_1, BorderLayout.EAST);
 
-        JLabel lblSearch = new JLabel(Translations.getString("PartsPanel.SearchLabel.text"));
+        JLabel lblSearch = new JLabel(Translations.getString("PartsPanel.SearchLabel.text")); //$NON-NLS-1$
         panel_1.add(lblSearch);
 
         searchTextField = new JTextField();
@@ -274,8 +274,8 @@ public class PartsPanel extends JPanel implements WizardContainer {
     public final Action newPartAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.add);
-            putValue(NAME, Translations.getString("PartsPanel.Action.NewPart"));
-            putValue(SHORT_DESCRIPTION, Translations.getString("PartsPanel.Action.NewPart.Description"));
+            putValue(NAME, Translations.getString("PartsPanel.Action.NewPart")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("PartsPanel.Action.NewPart.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -308,8 +308,8 @@ public class PartsPanel extends JPanel implements WizardContainer {
     public final Action deletePartAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.delete);
-            putValue(NAME, Translations.getString("PartsPanel.Action.DeletePart"));
-            putValue(SHORT_DESCRIPTION, Translations.getString("PartsPanel.Action.DeletePart.Description"));
+            putValue(NAME, Translations.getString("PartsPanel.Action.DeletePart")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("PartsPanel.Action.DeletePart.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -325,9 +325,9 @@ public class PartsPanel extends JPanel implements WizardContainer {
             }
             
             int ret = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                    Translations.getString("DialogMessages.ConfirmDelete.text") + " " + formattedIds + "?",
-                    Translations.getString("DialogMessages.ConfirmDelete.title") + " " + selections.size() + " " + Translations.getString(
-                                    "CommonWords.parts") + "?", JOptionPane.YES_NO_OPTION);
+                    Translations.getString("DialogMessages.ConfirmDelete.text") + " " + formattedIds + "?", //$NON-NLS-1$ //$NON-NLS-1$ //$NON-NLS-1$
+                    Translations.getString("DialogMessages.ConfirmDelete.title") + " " + selections.size() + " " + Translations.getString( //$NON-NLS-1$ //$NON-NLS-1$ //$NON-NLS-1$
+                                    "CommonWords.parts") + "?", JOptionPane.YES_NO_OPTION); //$NON-NLS-1$ //$NON-NLS-1$
             if (ret == JOptionPane.YES_OPTION) {
                 for (Part part : selections) {
                     Configuration.get().removePart(part);
@@ -339,8 +339,8 @@ public class PartsPanel extends JPanel implements WizardContainer {
     public final Action pickPartAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.pick);
-            putValue(NAME, Translations.getString("PartsPanel.Action.PickPart"));
-            putValue(SHORT_DESCRIPTION, Translations.getString("PartsPanel.Action.PickPart.Description"));
+            putValue(NAME, Translations.getString("PartsPanel.Action.PickPart")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("PartsPanel.Action.PickPart.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -366,8 +366,8 @@ public class PartsPanel extends JPanel implements WizardContainer {
     public final Action copyPartToClipboardAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.copy);
-            putValue(NAME, Translations.getString("PartsPanel.Action.CopyPartToClipboard"));
-            putValue(SHORT_DESCRIPTION, Translations.getString("PartsPanel.Action.CopyPartToClipboard.Description"));
+            putValue(NAME, Translations.getString("PartsPanel.Action.CopyPartToClipboard")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("PartsPanel.Action.CopyPartToClipboard.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -393,8 +393,8 @@ public class PartsPanel extends JPanel implements WizardContainer {
     public final Action pastePartToClipboardAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.paste);
-            putValue(NAME, Translations.getString("PartsPanel.Action.PastePartFromClipboard"));
-            putValue(SHORT_DESCRIPTION, Translations.getString("PartsPanel.Action.PastePartFromClipboard.Description"));
+            putValue(NAME, Translations.getString("PartsPanel.Action.PastePartFromClipboard")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("PartsPanel.Action.PastePartFromClipboard.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -451,7 +451,7 @@ public class PartsPanel extends JPanel implements WizardContainer {
         tabbedPane.removeAll();
 
         if (selectedPart != null) {
-            tabbedPane.add(Translations.getString("PartsPanel.SettingsTab.title"),
+            tabbedPane.add(Translations.getString("PartsPanel.SettingsTab.title"), //$NON-NLS-1$
                     new JScrollPane(new PartSettingsPanel(selectedPart)));
 
             for (PartAlignment partAlignment : Configuration.get().getMachine().getPartAlignments()) {

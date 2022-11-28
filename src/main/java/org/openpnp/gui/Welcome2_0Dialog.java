@@ -49,7 +49,7 @@ public class Welcome2_0Dialog extends JDialog {
 
     public Welcome2_0Dialog(Frame frame) {
         super(frame, true);
-        setTitle(Translations.getString("WelcomeDialog.title"));
+        setTitle(Translations.getString("WelcomeDialog.title")); //$NON-NLS-1$
         setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
         setBounds(100, 100, 648, 434);
         getContentPane().setLayout(new BorderLayout());
@@ -57,7 +57,7 @@ public class Welcome2_0Dialog extends JDialog {
         getContentPane().add(contentPanel, BorderLayout.CENTER);
         contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
         JLabel lblOpenpnp = new JLabel(
-                Translations.getString("WelcomeDialog.title"));
+                Translations.getString("WelcomeDialog.title")); //$NON-NLS-1$
         lblOpenpnp.setAlignmentX(Component.CENTER_ALIGNMENT);
         lblOpenpnp.setFont(new Font("Lucida Grande", Font.BOLD, 32));
         contentPanel.add(lblOpenpnp);

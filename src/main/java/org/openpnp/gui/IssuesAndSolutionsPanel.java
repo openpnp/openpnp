@@ -129,9 +129,9 @@ public class IssuesAndSolutionsPanel extends JPanel {
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,}));
 
-        JLabel lblMilestone = new JLabel(Translations.getString("IssuesAndSolutionsPanel.MilestoneLabel.text"));
+        JLabel lblMilestone = new JLabel(Translations.getString("IssuesAndSolutionsPanel.MilestoneLabel.text")); //$NON-NLS-1$
         lblMilestone.setFont(lblMilestone.getFont().deriveFont(lblMilestone.getFont().getStyle() | Font.BOLD));
-        lblMilestone.setToolTipText(Translations.getString("IssuesAndSolutionsPanel.MilestoneLabel.toolTipText"));
+        lblMilestone.setToolTipText(Translations.getString("IssuesAndSolutionsPanel.MilestoneLabel.toolTipText")); //$NON-NLS-1$
         toolbar.add(lblMilestone, "4, 3, right, default");
 
         targetMilestone = new JLabel(" - ");
@@ -268,8 +268,8 @@ public class IssuesAndSolutionsPanel extends JPanel {
         JButton btnFindSolutions = new JButton(findSolutionsAction);
         toolbar.add(btnFindSolutions, "2, 3, 1, 3, fill, fill");
         
-        JLabel lblSolved = new JLabel(Translations.getString("IssuesAndSolutionsPanel.IncludeSolvedLabel.text"));
-        lblSolved.setToolTipText(Translations.getString("IssuesAndSolutionsPanel.IncludeSolvedLabel.toolTipText"));
+        JLabel lblSolved = new JLabel(Translations.getString("IssuesAndSolutionsPanel.IncludeSolvedLabel.text")); //$NON-NLS-1$
+        lblSolved.setToolTipText(Translations.getString("IssuesAndSolutionsPanel.IncludeSolvedLabel.toolTipText")); //$NON-NLS-1$
         toolbar.add(lblSolved, "9, 3, right, default");
         
         showSolved = new JCheckBox("");
@@ -280,9 +280,9 @@ public class IssuesAndSolutionsPanel extends JPanel {
         });
         toolbar.add(showSolved, "11, 3");
         
-        JLabel lblDismissed = new JLabel(Translations.getString("IssuesAndSolutionsPanel.IncludeDismissedLabel.text"));
+        JLabel lblDismissed = new JLabel(Translations.getString("IssuesAndSolutionsPanel.IncludeDismissedLabel.text")); //$NON-NLS-1$
         lblDismissed.setToolTipText(Translations.getString(
-                "IssuesAndSolutionsPanel.IncludeDismissedLabel.toolTipText"));
+                "IssuesAndSolutionsPanel.IncludeDismissedLabel.toolTipText")); //$NON-NLS-1$
         toolbar.add(lblDismissed, "15, 3, right, default");
         
         showDismissed = new JCheckBox("");
@@ -302,7 +302,7 @@ public class IssuesAndSolutionsPanel extends JPanel {
         label_1 = new JLabel(" - ");
         toolbar.add(label_1, "4, 5, 16, 1");
 
-        labelWarn = new JLabel(Translations.getString("IssuesAndSolutionsPanel.WarnLabel.text"));
+        labelWarn = new JLabel(Translations.getString("IssuesAndSolutionsPanel.WarnLabel.text")); //$NON-NLS-1$
         labelWarn.setBorder(UIManager.getBorder("ToolTip.border"));
         labelWarn.setBackground(UIManager.getColor("ToolTip.background"));
         toolbar.add(labelWarn, "2, 7, 22, 1, left, default");
@@ -388,13 +388,13 @@ public class IssuesAndSolutionsPanel extends JPanel {
                     color = saturate(color);
                     //"<html>Issues &amp; Solutions <span style=\"color:#"
                     tabs.setTitleAt(index, Translations.getString(
-                            "MainFrame.RightComponent.tabs.IssuesAndSolutionsHtml")
-                            +String.format("%02x%02x%02x", color.getRed(), color.getGreen(), color.getBlue())
-                            +";\">&#"+(indicatorUnicode)+";</span></html>");
+                            "MainFrame.RightComponent.tabs.IssuesAndSolutionsHtml") //$NON-NLS-1$
+                            +String.format("%02x%02x%02x", color.getRed(), color.getGreen(), color.getBlue()) //$NON-NLS-1$
+                            +";\">&#"+(indicatorUnicode)+";</span></html>"); //$NON-NLS-1$ //$NON-NLS-1$
                 }
                 else {
                     tabs.setTitleAt(index, Translations.getString(
-                            "MainFrame.RightComponent.tabs.IssuesAndSolutions"));
+                            "MainFrame.RightComponent.tabs.IssuesAndSolutions")); //$NON-NLS-1$
                 }
             }
         }
@@ -431,11 +431,11 @@ public class IssuesAndSolutionsPanel extends JPanel {
     }
 
     private Action findSolutionsAction =
-            new AbstractAction(Translations.getString("IssuesAndSolutionsPanel.Action.FindSolution"),
+            new AbstractAction(Translations.getString("IssuesAndSolutionsPanel.Action.FindSolution"), //$NON-NLS-1$
                     Icons.solutions) {
         {
             putValue(Action.SHORT_DESCRIPTION, Translations.getString(
-                    "IssuesAndSolutionsPanel.Action.FindSolution.Description"));
+                    "IssuesAndSolutionsPanel.Action.FindSolution.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -445,11 +445,11 @@ public class IssuesAndSolutionsPanel extends JPanel {
     };
 
     private Action acceptSolutionAction =
-            new AbstractAction(Translations.getString("IssuesAndSolutionsPanel.Action.AcceptSolution"),
+            new AbstractAction(Translations.getString("IssuesAndSolutionsPanel.Action.AcceptSolution"), //$NON-NLS-1$
                     Icons.accept) {
         {
             putValue(Action.SHORT_DESCRIPTION, Translations.getString(
-                    "IssuesAndSolutionsPanel.Action.AcceptSolution.Description"));
+                    "IssuesAndSolutionsPanel.Action.AcceptSolution.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -475,10 +475,10 @@ public class IssuesAndSolutionsPanel extends JPanel {
     };
 
     private Action dismissSolutionAction = new AbstractAction(Translations.getString(
-                    "IssuesAndSolutionsPanel.Action.DismissSolution"), Icons.dismiss) {
+                    "IssuesAndSolutionsPanel.Action.DismissSolution"), Icons.dismiss) { //$NON-NLS-1$
         {
             putValue(Action.SHORT_DESCRIPTION, Translations.getString(
-                    "IssuesAndSolutionsPanel.Action.DismissSolution.Description"));
+                    "IssuesAndSolutionsPanel.Action.DismissSolution.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -495,10 +495,10 @@ public class IssuesAndSolutionsPanel extends JPanel {
     };
 
     private Action reopenSolutionAction = new AbstractAction(Translations.getString(
-            "IssuesAndSolutionsPanel.Action.ReopenSolution"), Icons.undo) {
+            "IssuesAndSolutionsPanel.Action.ReopenSolution"), Icons.undo) { //$NON-NLS-1$
         {
             putValue(Action.SHORT_DESCRIPTION, Translations.getString(
-                    "IssuesAndSolutionsPanel.Action.ReopenSolution.Description"));
+                    "IssuesAndSolutionsPanel.Action.ReopenSolution.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -518,7 +518,7 @@ public class IssuesAndSolutionsPanel extends JPanel {
             new AbstractAction("", Icons.info) {
         {
             putValue(Action.SHORT_DESCRIPTION, Translations.getString(
-                    "IssuesAndSolutionsPanel.Action.Info.Description"));
+                    "IssuesAndSolutionsPanel.Action.Info.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -539,7 +539,7 @@ public class IssuesAndSolutionsPanel extends JPanel {
             new AbstractAction("", Icons.info) {
         {
             putValue(Action.SHORT_DESCRIPTION, Translations.getString(
-                    "IssuesAndSolutionsPanel.Action.InfoMilestone.Description"));
+                    "IssuesAndSolutionsPanel.Action.InfoMilestone.Description")); //$NON-NLS-1$
         }
 
         @Override

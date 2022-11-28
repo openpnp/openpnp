@@ -96,7 +96,7 @@ public class JobPlacementsPanel extends JPanel {
     }
     private void createUi() {
         setBorder(new TitledBorder(null,
-                Translations.getString("JobPlacementsPanel.Border.title"),
+                Translations.getString("JobPlacementsPanel.Border.title"), //$NON-NLS-1$
                 TitledBorder.LEADING, TitledBorder.TOP, null, null));
         
         Configuration configuration = Configuration.get();
@@ -291,7 +291,7 @@ public class JobPlacementsPanel extends JPanel {
         JPanel panel_1 = new JPanel();
         panel.add(panel_1, BorderLayout.EAST);
 
-        JLabel lblNewLabel = new JLabel(Translations.getString("JobPlacementsPanel.SearchLabel.text"));
+        JLabel lblNewLabel = new JLabel(Translations.getString("JobPlacementsPanel.SearchLabel.text")); //$NON-NLS-1$
         panel_1.add(lblNewLabel);
 
         searchTextField = new JTextField();
@@ -433,23 +433,23 @@ public class JobPlacementsPanel extends JPanel {
     public final Action newAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.add);
-            putValue(NAME, Translations.getString("JobPlacementsPanel.NewPlacement.Name"));
+            putValue(NAME, Translations.getString("JobPlacementsPanel.NewPlacement.Name")); //$NON-NLS-1$
             putValue(SHORT_DESCRIPTION, Translations.getString(
-                    "JobPlacementsPanel.NewPlacement.ShortDescription"));
+                    "JobPlacementsPanel.NewPlacement.ShortDescription")); //$NON-NLS-1$
         }
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
             if (Configuration.get().getParts().size() == 0) {
                 MessageBoxes.errorBox(getTopLevelAncestor(), Translations.getString(
-                        "JobPlacementsPanel.NewPlacement.ErrorMessageBox.title"),
+                        "JobPlacementsPanel.NewPlacement.ErrorMessageBox.title"), //$NON-NLS-1$
                         Translations.getString(
-                                "JobPlacementsPanel.NewPlacement.ErrorMessageBox.NoPartsMessage"));
+                                "JobPlacementsPanel.NewPlacement.ErrorMessageBox.NoPartsMessage")); //$NON-NLS-1$
                 return;
             }
 
             String id = JOptionPane.showInputDialog(getTopLevelAncestor(),
-                    Translations.getString("JobPlacementsPanel.NewPlacement.InputDialog.enterIdMessage"));
+                    Translations.getString("JobPlacementsPanel.NewPlacement.InputDialog.enterIdMessage")); //$NON-NLS-1$
             if (id == null) {
                 return;
             }
@@ -458,9 +458,9 @@ public class JobPlacementsPanel extends JPanel {
             for(Placement compareplacement : boardLocation.getBoard().getPlacements()) {
             	if (compareplacement.getId().equals(id)) {
             		MessageBoxes.errorBox(getTopLevelAncestor(), Translations.getString(
-                                    "JobPlacementsPanel.NewPlacement.ErrorMessageBox.title"),
+                                    "JobPlacementsPanel.NewPlacement.ErrorMessageBox.title"), //$NON-NLS-1$
                             Translations.getString(
-                                    "JobPlacementsPanel.NewPlacement.ErrorMessageBox.IdAlreadyExistsMessage"));
+                                    "JobPlacementsPanel.NewPlacement.ErrorMessageBox.IdAlreadyExistsMessage")); //$NON-NLS-1$
                     return;
             	}
             }
@@ -482,8 +482,8 @@ public class JobPlacementsPanel extends JPanel {
     public final Action removeAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.delete);
-            putValue(NAME, Translations.getString("JobPlacementsPanel.RemovePlacement.Name"));
-            putValue(SHORT_DESCRIPTION, Translations.getString("JobPlacementsPanel.RemovePlacement.ShortDescription"));
+            putValue(NAME, Translations.getString("JobPlacementsPanel.RemovePlacement.Name")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("JobPlacementsPanel.RemovePlacement.ShortDescription")); //$NON-NLS-1$
         }
 
         @Override
@@ -499,9 +499,9 @@ public class JobPlacementsPanel extends JPanel {
     public final Action moveCameraToPlacementLocation = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.centerCamera);
-            putValue(NAME, Translations.getString("JobPlacementsPanel.PositionCameraAtPlacement.Name"));
+            putValue(NAME, Translations.getString("JobPlacementsPanel.PositionCameraAtPlacement.Name")); //$NON-NLS-1$
             putValue(SHORT_DESCRIPTION, Translations.getString(
-                    "JobPlacementsPanel.PositionCameraAtPlacement.ShortDescription"));
+                    "JobPlacementsPanel.PositionCameraAtPlacement.ShortDescription")); //$NON-NLS-1$
         }
 
         @Override
@@ -524,9 +524,9 @@ public class JobPlacementsPanel extends JPanel {
     public final Action moveCameraToPlacementLocationNext = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.centerCameraMoveNext);
-            putValue(NAME, Translations.getString("JobPlacementsPanel.PositionCameraAtNextPlacement.Name"));
+            putValue(NAME, Translations.getString("JobPlacementsPanel.PositionCameraAtNextPlacement.Name")); //$NON-NLS-1$
             putValue(SHORT_DESCRIPTION, Translations.getString(
-                            "JobPlacementsPanel.PositionCameraAtNextPlacement.ShortDescription"));
+                            "JobPlacementsPanel.PositionCameraAtNextPlacement.ShortDescription")); //$NON-NLS-1$
         }
 
         @Override
@@ -555,9 +555,9 @@ public class JobPlacementsPanel extends JPanel {
     public final Action moveToolToPlacementLocation = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.centerTool);
-            putValue(NAME, Translations.getString("JobPlacementsPanel.PositionToolAtPlacement.Name"));
+            putValue(NAME, Translations.getString("JobPlacementsPanel.PositionToolAtPlacement.Name")); //$NON-NLS-1$
             putValue(SHORT_DESCRIPTION, Translations.getString(
-                    "JobPlacementsPanel.PositionToolAtPlacement.ShortDescription"));
+                    "JobPlacementsPanel.PositionToolAtPlacement.ShortDescription")); //$NON-NLS-1$
         }
 
         @Override
@@ -577,9 +577,9 @@ public class JobPlacementsPanel extends JPanel {
         {
             putValue(SMALL_ICON, Icons.captureCamera);
             putValue(NAME, Translations.getString(
-                    "JobPlacementsPanel.CaptureCameraPlacementLocation.Name"));
+                    "JobPlacementsPanel.CaptureCameraPlacementLocation.Name")); //$NON-NLS-1$
             putValue(SHORT_DESCRIPTION, Translations.getString(
-                    "JobPlacementsPanel.CaptureCameraPlacementLocation.ShortDescription"));
+                    "JobPlacementsPanel.CaptureCameraPlacementLocation.ShortDescription")); //$NON-NLS-1$
         }
 
         @Override
@@ -598,9 +598,9 @@ public class JobPlacementsPanel extends JPanel {
     public final Action captureToolPlacementLocation = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.captureTool);
-            putValue(NAME, Translations.getString("JobPlacementsPanel.CaptureToolPlacementLocation.Name"));
+            putValue(NAME, Translations.getString("JobPlacementsPanel.CaptureToolPlacementLocation.Name")); //$NON-NLS-1$
             putValue(SHORT_DESCRIPTION, Translations.getString(
-                    "JobPlacementsPanel.CaptureToolPlacementLocation.ShortDescription"));
+                    "JobPlacementsPanel.CaptureToolPlacementLocation.ShortDescription")); //$NON-NLS-1$
         }
 
         @Override
@@ -618,9 +618,9 @@ public class JobPlacementsPanel extends JPanel {
     public final Action editPlacementFeederAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.editFeeder);
-            putValue(NAME, Translations.getString("JobPlacementsPanel.EditPlacementFeeder.Name"));
+            putValue(NAME, Translations.getString("JobPlacementsPanel.EditPlacementFeeder.Name")); //$NON-NLS-1$
             putValue(SHORT_DESCRIPTION, Translations.getString(
-                    "JobPlacementsPanel.EditPlacementFeeder.ShortDescription"));
+                    "JobPlacementsPanel.EditPlacementFeeder.ShortDescription")); //$NON-NLS-1$
         }
 
         @Override
@@ -632,9 +632,9 @@ public class JobPlacementsPanel extends JPanel {
 
     public final Action setTypeAction = new AbstractAction() {
         {
-            putValue(NAME, Translations.getString("JobPlacementsPanel.SetType.Name"));
+            putValue(NAME, Translations.getString("JobPlacementsPanel.SetType.Name")); //$NON-NLS-1$
             putValue(SHORT_DESCRIPTION, Translations.getString(
-                    "JobPlacementsPanel.SetType.ShortDescription"));
+                    "JobPlacementsPanel.SetType.ShortDescription")); //$NON-NLS-1$
         }
 
         @Override
@@ -662,8 +662,8 @@ public class JobPlacementsPanel extends JPanel {
 
     public final Action setSideAction = new AbstractAction() {
         {
-            putValue(NAME, Translations.getString("JobPlacementsPanel.SetSide.Name"));
-            putValue(SHORT_DESCRIPTION, Translations.getString("JobPlacementsPanel.SetSide.ShortDescription"));
+            putValue(NAME, Translations.getString("JobPlacementsPanel.SetSide.Name")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("JobPlacementsPanel.SetSide.ShortDescription")); //$NON-NLS-1$
         }
 
         @Override
@@ -691,8 +691,8 @@ public class JobPlacementsPanel extends JPanel {
     
     public final Action setErrorHandlingAction = new AbstractAction() {
         {
-            putValue(NAME, Translations.getString("JobPlacementsPanel.SetErrorHandling.Name"));
-            putValue(SHORT_DESCRIPTION, Translations.getString("JobPlacementsPanel.SetErrorHandling.ShortDescription"));
+            putValue(NAME, Translations.getString("JobPlacementsPanel.SetErrorHandling.Name")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("JobPlacementsPanel.SetErrorHandling.ShortDescription")); //$NON-NLS-1$
         }
 
         @Override
@@ -720,8 +720,8 @@ public class JobPlacementsPanel extends JPanel {
     
     public final Action setPlacedAction = new AbstractAction() {
         {
-            putValue(NAME, Translations.getString("JobPlacementsPanel.SetPlaced.Name"));
-            putValue(SHORT_DESCRIPTION, Translations.getString("JobPlacementsPanel.SetPlaced.ShortDescription"));
+            putValue(NAME, Translations.getString("JobPlacementsPanel.SetPlaced.Name")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("JobPlacementsPanel.SetPlaced.ShortDescription")); //$NON-NLS-1$
         }
 
         @Override
@@ -750,8 +750,8 @@ public class JobPlacementsPanel extends JPanel {
 
     public final Action setEnabledAction = new AbstractAction() {
         {
-            putValue(NAME, Translations.getString("JobPlacementsPanel.SetEnabled.Name"));
-            putValue(SHORT_DESCRIPTION, Translations.getString("JobPlacementsPanel.SetEnabled.ShortDescription"));
+            putValue(NAME, Translations.getString("JobPlacementsPanel.SetEnabled.Name")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("JobPlacementsPanel.SetEnabled.ShortDescription")); //$NON-NLS-1$
         }
 
         @Override
@@ -819,31 +819,31 @@ public class JobPlacementsPanel extends JPanel {
                 setBorder(new LineBorder(getBackground()));
                 setForeground(Color.black);
                 setBackground(statusColorReady);
-                setText(Translations.getString("JobPlacementsPanel.StatusRenderer.StatusReady"));
+                setText(Translations.getString("JobPlacementsPanel.StatusRenderer.StatusReady")); //$NON-NLS-1$
             }
             else if (status == Status.MissingFeeder) {
                 setBorder(new LineBorder(getBackground()));
                 setForeground(Color.black);
                 setBackground(statusColorError);
-                setText(Translations.getString("JobPlacementsPanel.StatusRenderer.StatusMissingFeeder"));
+                setText(Translations.getString("JobPlacementsPanel.StatusRenderer.StatusMissingFeeder")); //$NON-NLS-1$
             }
             else if (status == Status.ZeroPartHeight) {
                 setBorder(new LineBorder(getBackground()));
                 setForeground(Color.black);
                 setBackground(statusColorWarning);
-                setText(Translations.getString("JobPlacementsPanel.StatusRenderer.StatusPartHeight"));
+                setText(Translations.getString("JobPlacementsPanel.StatusRenderer.StatusPartHeight")); //$NON-NLS-1$
             }
             else if (status == Status.MissingPart) {
                 setBorder(new LineBorder(getBackground()));
                 setForeground(Color.black);
                 setBackground(statusColorError);
-                setText(Translations.getString("JobPlacementsPanel.StatusRenderer.StatusMissingPart"));
+                setText(Translations.getString("JobPlacementsPanel.StatusRenderer.StatusMissingPart")); //$NON-NLS-1$
             }
             else if (status == Status.Disabled) {
                 setBorder(new LineBorder(getBackground()));
                 setForeground(Color.black);
                 setBackground(statusColorDisabled);
-                setText(Translations.getString("JobPlacementsPanel.StatusRenderer.StatusDisabled"));
+                setText(Translations.getString("JobPlacementsPanel.StatusRenderer.StatusDisabled")); //$NON-NLS-1$
             }
             else {
                 setBorder(new LineBorder(getBackground()));
