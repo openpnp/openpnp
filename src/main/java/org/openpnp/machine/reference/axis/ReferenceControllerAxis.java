@@ -470,7 +470,7 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
                 new PropertySheetWizardAdapter(getConfigurationWizard()),
                 new PropertySheetWizardAdapter(new BacklashCompensationConfigurationWizard(this),
                         Translations.getString(
-                                "ReferenceControllerAxis.BacklashCompensationConfigurationWizard.title")),
+                                "ReferenceControllerAxis.BacklashCompensationConfigurationWizard.title")), //$NON-NLS-1$
         };
     }
 

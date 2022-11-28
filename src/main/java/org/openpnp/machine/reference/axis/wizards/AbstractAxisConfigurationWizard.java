@@ -52,7 +52,7 @@ public abstract class AbstractAxisConfigurationWizard extends AbstractConfigurat
         this.axis = axis;
         panelProperties = new JPanel();
         panelProperties.setBorder(new TitledBorder(null, Translations.getString(
-                "AbstractAxisConfigurationWizard.PropertiesPanel.Border.title"
+                "AbstractAxisConfigurationWizard.PropertiesPanel.Border.title" //$NON-NLS-1$
         ), TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panelProperties);
         panelProperties.setLayout(new FormLayout(new ColumnSpec[] {
@@ -67,14 +67,14 @@ public abstract class AbstractAxisConfigurationWizard extends AbstractConfigurat
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
         lblType = new JLabel(Translations.getString(
-                "AbstractAxisConfigurationWizard.PropertiesPanel.TypeLabel.text"));
+                "AbstractAxisConfigurationWizard.PropertiesPanel.TypeLabel.text")); //$NON-NLS-1$
         panelProperties.add(lblType, "2, 2, right, default");
         
         type = new JComboBox(Axis.Type.values());
         panelProperties.add(type, "4, 2, fill, default");
         
         lblName = new JLabel(Translations.getString(
-                "AbstractAxisConfigurationWizard.PropertiesPanel.NameLabel.text"));
+                "AbstractAxisConfigurationWizard.PropertiesPanel.NameLabel.text")); //$NON-NLS-1$
         panelProperties.add(lblName, "2, 4, right, default");
         
         name = new JTextField();

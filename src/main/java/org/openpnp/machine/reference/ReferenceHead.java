@@ -121,11 +121,11 @@ public class ReferenceHead extends AbstractHead {
     public PropertySheetHolder[] getChildPropertySheetHolders() {
         ArrayList<PropertySheetHolder> children = new ArrayList<>();
         children.add(new NozzlesPropertySheetHolder(this, Translations.getString(
-                "ReferenceHead.NozzlesPropertySheetHolder.title"), getNozzles(), null));
+                "ReferenceHead.NozzlesPropertySheetHolder.title"), getNozzles(), null)); //$NON-NLS-1$
         children.add(new CamerasPropertySheetHolder(this, Translations.getString(
-                "ReferenceHead.CamerasPropertySheetHolder.title"), getCameras(), null));
+                "ReferenceHead.CamerasPropertySheetHolder.title"), getCameras(), null)); //$NON-NLS-1$
         children.add(new ActuatorsPropertySheetHolder(this, Translations.getString(
-                "ReferenceHead.ActuatorsPropertySheetHolder.title"), getActuators(), null));
+                "ReferenceHead.ActuatorsPropertySheetHolder.title"), getActuators(), null)); //$NON-NLS-1$
         return children.toArray(new PropertySheetHolder[] {});
     }
 

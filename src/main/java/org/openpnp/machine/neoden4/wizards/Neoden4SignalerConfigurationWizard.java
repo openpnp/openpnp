@@ -57,7 +57,7 @@ public class Neoden4SignalerConfigurationWizard  extends AbstractConfigurationWi
     }
     
     private Action testErrorAction = new AbstractAction(Translations.getString(
-            "Neoden4SignalerConfigurationWizard.Action.TestErrorSound")) {
+            "Neoden4SignalerConfigurationWizard.Action.TestErrorSound")) { //$NON-NLS-1$
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
         	signaler.signalJobProcessorState(State.ERROR);
@@ -66,7 +66,7 @@ public class Neoden4SignalerConfigurationWizard  extends AbstractConfigurationWi
 
     
     private Action testFinishedAction = new AbstractAction(Translations.getString(
-            "Neoden4SignalerConfigurationWizard.Action.TestFinishedSound")) {
+            "Neoden4SignalerConfigurationWizard.Action.TestFinishedSound")) { //$NON-NLS-1$
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
         	signaler.signalJobProcessorState(State.FINISHED);

@@ -63,7 +63,7 @@ public class ImageCameraConfigurationWizard extends AbstractConfigurationWizard 
         panelGeneral = new JPanel();
         contentPanel.add(panelGeneral);
         panelGeneral.setBorder(new TitledBorder(null,
-                Translations.getString("ImageCameraConfigurationWizard.GeneralPanel.Border.title"),
+                Translations.getString("ImageCameraConfigurationWizard.GeneralPanel.Border.title"), //$NON-NLS-1$
                 TitledBorder.LEADING, TitledBorder.TOP, null));
         panelGeneral.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -107,7 +107,7 @@ public class ImageCameraConfigurationWizard extends AbstractConfigurationWizard 
                 panelGeneral.add(lblHeight, "6, 2, center, default");
         
         lblDimension = new JLabel(Translations.getString(
-                "ImageCameraConfigurationWizard.GeneralPanel.PixelDimensionLabel.text"));
+                "ImageCameraConfigurationWizard.GeneralPanel.PixelDimensionLabel.text")); //$NON-NLS-1$
         panelGeneral.add(lblDimension, "2, 4, right, default");
 
         width = new JTextField();
@@ -122,10 +122,10 @@ public class ImageCameraConfigurationWizard extends AbstractConfigurationWizard 
         panelGeneral.add(label_1, "10, 4");
         
         lblUnitsPerPixel = new JLabel(Translations.getString(
-                "ImageCameraConfigurationWizard.GeneralPanel.UnitsPerPixelLabel.text"));
+                "ImageCameraConfigurationWizard.GeneralPanel.UnitsPerPixelLabel.text")); //$NON-NLS-1$
         panelGeneral.add(lblUnitsPerPixel, "2, 6, right, default");
         lblUnitsPerPixel.setToolTipText(Translations.getString(
-                "ImageCameraConfigurationWizard.GeneralPanel.UnitsPerPixelLabel.toolTipText"));
+                "ImageCameraConfigurationWizard.GeneralPanel.UnitsPerPixelLabel.toolTipText")); //$NON-NLS-1$
         
         imageUnitsPerPixelX = new JTextField();
         panelGeneral.add(imageUnitsPerPixelX, "4, 6");
@@ -136,9 +136,9 @@ public class ImageCameraConfigurationWizard extends AbstractConfigurationWizard 
         imageUnitsPerPixelY.setColumns(10);
 
         lblRotation = new JLabel(Translations.getString(
-                "ImageCameraConfigurationWizard.GeneralPanel.ZRotationLabel.text"));
+                "ImageCameraConfigurationWizard.GeneralPanel.ZRotationLabel.text")); //$NON-NLS-1$
         lblRotation.setToolTipText(Translations.getString(
-                "ImageCameraConfigurationWizard.GeneralPanel.ZRotationLabel.toolTipText"));
+                "ImageCameraConfigurationWizard.GeneralPanel.ZRotationLabel.toolTipText")); //$NON-NLS-1$
         panelGeneral.add(lblRotation, "2, 8, right, default");
 
         simulatedRotation = new JTextField();
@@ -146,9 +146,9 @@ public class ImageCameraConfigurationWizard extends AbstractConfigurationWizard 
         simulatedRotation.setColumns(10);
         
         lblYaw = new JLabel(Translations.getString(
-                "ImageCameraConfigurationWizard.GeneralPanel.YRotationLabel.text"));
+                "ImageCameraConfigurationWizard.GeneralPanel.YRotationLabel.text")); //$NON-NLS-1$
         lblYaw.setToolTipText(Translations.getString(
-                "ImageCameraConfigurationWizard.GeneralPanel.YRotationLabel.toolTipText"));
+                "ImageCameraConfigurationWizard.GeneralPanel.YRotationLabel.toolTipText")); //$NON-NLS-1$
         panelGeneral.add(lblYaw, "2, 10, right, default");
         
         simulatedYRotation = new JTextField();
@@ -156,7 +156,7 @@ public class ImageCameraConfigurationWizard extends AbstractConfigurationWizard 
         simulatedYRotation.setColumns(10);
         
         lblScale = new JLabel(Translations.getString(
-                "ImageCameraConfigurationWizard.GeneralPanel.ViewingScaleLabel.text"));
+                "ImageCameraConfigurationWizard.GeneralPanel.ViewingScaleLabel.text")); //$NON-NLS-1$
         panelGeneral.add(lblScale, "2, 12, right, default");
         
         simulatedScale = new JTextField();
@@ -164,9 +164,9 @@ public class ImageCameraConfigurationWizard extends AbstractConfigurationWizard 
         simulatedScale.setColumns(10);
         
         lblDistortion = new JLabel(Translations.getString(
-                "ImageCameraConfigurationWizard.GeneralPanel.DistortionLabel.text"));
+                "ImageCameraConfigurationWizard.GeneralPanel.DistortionLabel.text")); //$NON-NLS-1$
         lblDistortion.setToolTipText(Translations.getString(
-                "ImageCameraConfigurationWizard.GeneralPanel.DistortionLabel.toolTipText"));
+                "ImageCameraConfigurationWizard.GeneralPanel.DistortionLabel.toolTipText")); //$NON-NLS-1$
         panelGeneral.add(lblDistortion, "2, 14, right, default");
         
         simulatedDistortion = new JTextField();
@@ -175,9 +175,9 @@ public class ImageCameraConfigurationWizard extends AbstractConfigurationWizard 
 
 
         lblCameraFlipped = new JLabel(Translations.getString(
-                "ImageCameraConfigurationWizard.GeneralPanel.MirroredViewLabel.text"));
+                "ImageCameraConfigurationWizard.GeneralPanel.MirroredViewLabel.text")); //$NON-NLS-1$
         lblCameraFlipped.setToolTipText(Translations.getString(
-                "ImageCameraConfigurationWizard.GeneralPanel.MirroredViewLabel.toolTipText"));
+                "ImageCameraConfigurationWizard.GeneralPanel.MirroredViewLabel.toolTipText")); //$NON-NLS-1$
         panelGeneral.add(lblCameraFlipped, "2, 16, right, default");
 
         simulatedFlipped = new JCheckBox("");
@@ -187,7 +187,7 @@ public class ImageCameraConfigurationWizard extends AbstractConfigurationWizard 
         panelGeneral.add(label, "8, 16");
 
         lblSourceUrl = new JLabel(Translations.getString(
-                "ImageCameraConfigurationWizard.GeneralPanel.SourceUrlLabel.text"));
+                "ImageCameraConfigurationWizard.GeneralPanel.SourceUrlLabel.text")); //$NON-NLS-1$
         panelGeneral.add(lblSourceUrl, "2, 20, right, default");
 
         textFieldSourceUrl = new JTextField();
@@ -200,7 +200,7 @@ public class ImageCameraConfigurationWizard extends AbstractConfigurationWizard 
         panelExtra = new JPanel();
         contentPanel.add(panelExtra);
         panelExtra.setBorder(new TitledBorder(null, Translations.getString(
-                "ImageCameraConfigurationWizard.GeneralPanel.ExtraPanel.Border.title"),
+                "ImageCameraConfigurationWizard.GeneralPanel.ExtraPanel.Border.title"), //$NON-NLS-1$
                 TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
         panelExtra.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -228,9 +228,9 @@ public class ImageCameraConfigurationWizard extends AbstractConfigurationWizard 
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
         lblFocalLength = new JLabel(Translations.getString(
-                "ImageCameraConfigurationWizard.GeneralPanel.ExtraPanel.FocalLengthLabel.text"));
+                "ImageCameraConfigurationWizard.GeneralPanel.ExtraPanel.FocalLengthLabel.text")); //$NON-NLS-1$
         lblFocalLength.setToolTipText(Translations.getString(
-                "ImageCameraConfigurationWizard.GeneralPanel.ExtraPanel.FocalLengthLabel.toolTipText"));
+                "ImageCameraConfigurationWizard.GeneralPanel.ExtraPanel.FocalLengthLabel.toolTipText")); //$NON-NLS-1$
         panelExtra.add(lblFocalLength, "2, 2, right, default");
         
         focalLength = new JTextField();
@@ -238,9 +238,9 @@ public class ImageCameraConfigurationWizard extends AbstractConfigurationWizard 
         focalLength.setColumns(10);
         
         lblSensorDiagonal = new JLabel(Translations.getString(
-                "ImageCameraConfigurationWizard.GeneralPanel.ExtraPanel.SensorDiagonalLabel.text"));
+                "ImageCameraConfigurationWizard.GeneralPanel.ExtraPanel.SensorDiagonalLabel.text")); //$NON-NLS-1$
         lblSensorDiagonal.setToolTipText(Translations.getString(
-                "ImageCameraConfigurationWizard.GeneralPanel.ExtraPanel.SensorDiagonalLabel.toolTipText"));
+                "ImageCameraConfigurationWizard.GeneralPanel.ExtraPanel.SensorDiagonalLabel.toolTipText")); //$NON-NLS-1$
         panelExtra.add(lblSensorDiagonal, "6, 2, right, default");
         
         sensorDiagonal = new JTextField();
@@ -256,7 +256,7 @@ public class ImageCameraConfigurationWizard extends AbstractConfigurationWizard 
         panelExtra.add(lblZ, "8, 6, center, default");
         
         lblPrimaryFiducial = new JLabel(Translations.getString(
-                "ImageCameraConfigurationWizard.GeneralPanel.ExtraPanel.PrimaryFiducialLabel.text"));
+                "ImageCameraConfigurationWizard.GeneralPanel.ExtraPanel.PrimaryFiducialLabel.text")); //$NON-NLS-1$
         panelExtra.add(lblPrimaryFiducial, "2, 8, right, default");
         
         primaryFiducialX = new JTextField();
@@ -272,7 +272,7 @@ public class ImageCameraConfigurationWizard extends AbstractConfigurationWizard 
         primaryFiducialZ.setColumns(10);
         
         lblSecondaryFiducial = new JLabel(Translations.getString(
-                "ImageCameraConfigurationWizard.GeneralPanel.ExtraPanel.SecondaryFiducialLabel.text"));
+                "ImageCameraConfigurationWizard.GeneralPanel.ExtraPanel.SecondaryFiducialLabel.text")); //$NON-NLS-1$
         panelExtra.add(lblSecondaryFiducial, "2, 10, right, default");
         
         secondaryFiducialX = new JTextField();
@@ -348,9 +348,9 @@ public class ImageCameraConfigurationWizard extends AbstractConfigurationWizard 
 
     private Action browseAction = new AbstractAction() {
         {
-            putValue(NAME, Translations.getString("ImageCameraConfigurationWizard.Action.Browse"));
+            putValue(NAME, Translations.getString("ImageCameraConfigurationWizard.Action.Browse")); //$NON-NLS-1$
             putValue(SHORT_DESCRIPTION, Translations.getString(
-                    "ImageCameraConfigurationWizard.Action.Browse.Description"));
+                    "ImageCameraConfigurationWizard.Action.Browse.Description")); //$NON-NLS-1$
         }
 
         public void actionPerformed(ActionEvent e) {
