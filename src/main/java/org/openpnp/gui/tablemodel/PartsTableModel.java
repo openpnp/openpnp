@@ -37,15 +37,15 @@ import org.openpnp.model.Part;
 @SuppressWarnings("serial")
 public class PartsTableModel extends AbstractObjectTableModel implements PropertyChangeListener {
     private String[] columnNames =
-            new String[] {Translations.getString("PartsTableModel.ColumnName.ID"),
-                    Translations.getString("PartsTableModel.ColumnName.Description"),
-                    Translations.getString("PartsTableModel.ColumnName.Height"),
-                    Translations.getString("PartsTableModel.ColumnName.Package"),
-                    Translations.getString("PartsTableModel.ColumnName.SpeedPercent"),
-                    Translations.getString("PartsTableModel.ColumnName.BottomVision"),
-                    Translations.getString("PartsTableModel.ColumnName.FiducialVision"),
-                    Translations.getString("PartsTableModel.ColumnName.Placements"),
-                    Translations.getString("PartsTableModel.ColumnName.Feeders")
+            new String[] {Translations.getString("PartsTableModel.ColumnName.ID"), //$NON-NLS-1$
+                    Translations.getString("PartsTableModel.ColumnName.Description"), //$NON-NLS-1$
+                    Translations.getString("PartsTableModel.ColumnName.Height"), //$NON-NLS-1$
+                    Translations.getString("PartsTableModel.ColumnName.Package"), //$NON-NLS-1$
+                    Translations.getString("PartsTableModel.ColumnName.SpeedPercent"), //$NON-NLS-1$
+                    Translations.getString("PartsTableModel.ColumnName.BottomVision"), //$NON-NLS-1$
+                    Translations.getString("PartsTableModel.ColumnName.FiducialVision"), //$NON-NLS-1$
+                    Translations.getString("PartsTableModel.ColumnName.Placements"), //$NON-NLS-1$
+                    Translations.getString("PartsTableModel.ColumnName.Feeders") //$NON-NLS-1$
     };
     private Class[] columnTypes = new Class[] {String.class, String.class, LengthCellValue.class,
             Package.class, String.class, BottomVisionSettings.class, FiducialVisionSettings.class, Integer.class, Integer.class};
