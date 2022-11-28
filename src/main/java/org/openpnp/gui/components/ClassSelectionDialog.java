@@ -121,7 +121,7 @@ public class ClassSelectionDialog<T> extends JDialog {
     }
 
     private final Action selectAction = new AbstractAction(Translations.getString(
-            "ClassSelectionDialog.Action.Accept")) {
+            "ClassSelectionDialog.Action.Accept")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
             selectedClass = ((ClassListItem<T>) list.getSelectedValue()).getTheClass();
@@ -130,7 +130,7 @@ public class ClassSelectionDialog<T> extends JDialog {
     };
 
     private final Action cancelAction = new AbstractAction(Translations.getString(
-            "ClassSelectionDialog.Action.Cancel")) {
+            "ClassSelectionDialog.Action.Cancel")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
             setVisible(false);
