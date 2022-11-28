@@ -64,7 +64,7 @@ public class ReferenceCameraWhiteBalanceConfigurationWizard extends AbstractConf
 
         panelColorBalance = new JPanel();
         panelColorBalance.setBorder(new TitledBorder(null, Translations.getString(
-                "ReferenceCameraWhiteBalanceConfigurationWizard.ColorBalancePanel.Border.title"),
+                "ReferenceCameraWhiteBalanceConfigurationWizard.ColorBalancePanel.Border.title"), //$NON-NLS-1$
                 TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
         contentPanel.add(panelColorBalance);
         panelColorBalance.setLayout(new FormLayout(new ColumnSpec[] {
@@ -114,7 +114,7 @@ public class ReferenceCameraWhiteBalanceConfigurationWizard extends AbstractConf
 
         
         lblRedBalance = new JLabel(Translations.getString(
-                "ReferenceCameraWhiteBalanceConfigurationWizard.ColorBalancePanel.RedBalanceLabel.text"));
+                "ReferenceCameraWhiteBalanceConfigurationWizard.ColorBalancePanel.RedBalanceLabel.text")); //$NON-NLS-1$
         panelColorBalance.add(lblRedBalance, "2, 2, right, default");
         
         redBalance = new JSlider();
@@ -125,7 +125,7 @@ public class ReferenceCameraWhiteBalanceConfigurationWizard extends AbstractConf
         panelColorBalance.add(redBalance, "4, 2, fill, default");
         
         lblGreenBalance = new JLabel(Translations.getString(
-                "ReferenceCameraWhiteBalanceConfigurationWizard.ColorBalancePanel.GreenBalanceLabel.text"));
+                "ReferenceCameraWhiteBalanceConfigurationWizard.ColorBalancePanel.GreenBalanceLabel.text")); //$NON-NLS-1$
         panelColorBalance.add(lblGreenBalance, "2, 4, right, default");
         
         greenBalance = new JSlider();
@@ -136,7 +136,7 @@ public class ReferenceCameraWhiteBalanceConfigurationWizard extends AbstractConf
         panelColorBalance.add(greenBalance, "4, 4, fill, default");
         
         lblBlueBalance = new JLabel(Translations.getString(
-                "ReferenceCameraWhiteBalanceConfigurationWizard.ColorBalancePanel.BlueBalanceLabel.text"));
+                "ReferenceCameraWhiteBalanceConfigurationWizard.ColorBalancePanel.BlueBalanceLabel.text")); //$NON-NLS-1$
         panelColorBalance.add(lblBlueBalance, "2, 6, right, default");
         
         blueBalance = new JSlider();
@@ -147,7 +147,7 @@ public class ReferenceCameraWhiteBalanceConfigurationWizard extends AbstractConf
         panelColorBalance.add(blueBalance, "4, 6, fill, default");
         
         lblRedGamma = new JLabel(Translations.getString(
-                "ReferenceCameraWhiteBalanceConfigurationWizard.ColorBalancePanel.RedGammaLabel.text"));
+                "ReferenceCameraWhiteBalanceConfigurationWizard.ColorBalancePanel.RedGammaLabel.text")); //$NON-NLS-1$
         panelColorBalance.add(lblRedGamma, "2, 10, right, default");
         
         redGammaPercent = new JSlider();
@@ -158,7 +158,7 @@ public class ReferenceCameraWhiteBalanceConfigurationWizard extends AbstractConf
         panelColorBalance.add(redGammaPercent, "4, 10, fill, default");
         
         lblGreenGamma = new JLabel(Translations.getString(
-                "ReferenceCameraWhiteBalanceConfigurationWizard.ColorBalancePanel.GreenGammaLabel.text"));
+                "ReferenceCameraWhiteBalanceConfigurationWizard.ColorBalancePanel.GreenGammaLabel.text")); //$NON-NLS-1$
         panelColorBalance.add(lblGreenGamma, "2, 12, right, default");
         
         greenGammaPercent = new JSlider();
@@ -169,7 +169,7 @@ public class ReferenceCameraWhiteBalanceConfigurationWizard extends AbstractConf
         panelColorBalance.add(greenGammaPercent, "4, 12, fill, default");
         
         lblBlueGamma = new JLabel(Translations.getString(
-                "ReferenceCameraWhiteBalanceConfigurationWizard.ColorBalancePanel.BlueGammaLabel.text"));
+                "ReferenceCameraWhiteBalanceConfigurationWizard.ColorBalancePanel.BlueGammaLabel.text")); //$NON-NLS-1$
         panelColorBalance.add(lblBlueGamma, "2, 14, right, default");
         
         blueGammaPercent = new JSlider();
@@ -184,11 +184,11 @@ public class ReferenceCameraWhiteBalanceConfigurationWizard extends AbstractConf
         panelColorBalance.add(colorGraph, "4, 18, 1, 15, left, fill");
         
         lblOutput = new JLabel(Translations.getString(
-                "ReferenceCameraWhiteBalanceConfigurationWizard.ColorBalancePanel.OutputLevelLabel.text"));
+                "ReferenceCameraWhiteBalanceConfigurationWizard.ColorBalancePanel.OutputLevelLabel.text")); //$NON-NLS-1$
         panelColorBalance.add(lblOutput, "2, 18, 1, 15, right, default");
         
         lblAutoWhitebalance = new JLabel(Translations.getString(
-                "ReferenceCameraWhiteBalanceConfigurationWizard.ColorBalancePanel.AutoWhiteBalanceLabel.text"));
+                "ReferenceCameraWhiteBalanceConfigurationWizard.ColorBalancePanel.AutoWhiteBalanceLabel.text")); //$NON-NLS-1$
         panelColorBalance.add(lblAutoWhitebalance, "6, 18, center, default");
         
         btnAutowhitebalance = new JButton(autoWhiteBalanceAction);
@@ -207,7 +207,7 @@ public class ReferenceCameraWhiteBalanceConfigurationWizard extends AbstractConf
         panelColorBalance.add(btnReset, "6, 32");
         
         lblInputLevel = new JLabel(Translations.getString(
-                "ReferenceCameraWhiteBalanceConfigurationWizard.ColorBalancePanel.InputLevelLabel.text"));
+                "ReferenceCameraWhiteBalanceConfigurationWizard.ColorBalancePanel.InputLevelLabel.text")); //$NON-NLS-1$
         panelColorBalance.add(lblInputLevel, "4, 34, center, default");
         initDataBindings();
     }
@@ -219,9 +219,9 @@ public class ReferenceCameraWhiteBalanceConfigurationWizard extends AbstractConf
     private final Action autoWhiteBalanceAction = new AbstractAction() {
         {
             putValue(NAME, Translations.getString(
-                    "ReferenceCameraWhiteBalanceConfigurationWizard.Action.AutoWhiteBalance"));
+                    "ReferenceCameraWhiteBalanceConfigurationWizard.Action.AutoWhiteBalance")); //$NON-NLS-1$
             putValue(SHORT_DESCRIPTION, Translations.getString(
-                    "ReferenceCameraWhiteBalanceConfigurationWizard.Action.AutoWhiteBalance.Description"));
+                    "ReferenceCameraWhiteBalanceConfigurationWizard.Action.AutoWhiteBalance.Description")); //$NON-NLS-1$
         }
 
         public void actionPerformed(ActionEvent e) {
@@ -235,9 +235,9 @@ public class ReferenceCameraWhiteBalanceConfigurationWizard extends AbstractConf
     private final Action autoWhiteBalanceBrightAction = new AbstractAction() {
         {
             putValue(NAME, Translations.getString(
-                    "ReferenceCameraWhiteBalanceConfigurationWizard.Action.Brightest"));
+                    "ReferenceCameraWhiteBalanceConfigurationWizard.Action.Brightest")); //$NON-NLS-1$
             putValue(SHORT_DESCRIPTION, Translations.getString(
-                    "ReferenceCameraWhiteBalanceConfigurationWizard.Action.Brightest.Description"));
+                    "ReferenceCameraWhiteBalanceConfigurationWizard.Action.Brightest.Description")); //$NON-NLS-1$
         }
 
         public void actionPerformed(ActionEvent e) {
@@ -251,9 +251,9 @@ public class ReferenceCameraWhiteBalanceConfigurationWizard extends AbstractConf
     private final Action autoWhiteBalanceRoughMapAction = new AbstractAction() {
         {
             putValue(NAME, Translations.getString(
-                    "ReferenceCameraWhiteBalanceConfigurationWizard.Action.MappedRoughly"));
+                    "ReferenceCameraWhiteBalanceConfigurationWizard.Action.MappedRoughly")); //$NON-NLS-1$
             putValue(SHORT_DESCRIPTION, Translations.getString(
-                    "ReferenceCameraWhiteBalanceConfigurationWizard.Action.MappedRoughly.Description"));
+                    "ReferenceCameraWhiteBalanceConfigurationWizard.Action.MappedRoughly.Description")); //$NON-NLS-1$
         }
 
         public void actionPerformed(ActionEvent e) {
@@ -268,9 +268,9 @@ public class ReferenceCameraWhiteBalanceConfigurationWizard extends AbstractConf
     private final Action autoWhiteBalanceFineMapAction = new AbstractAction() {
         {
             putValue(NAME, Translations.getString(
-                    "ReferenceCameraWhiteBalanceConfigurationWizard.Action.MappedFinely"));
+                    "ReferenceCameraWhiteBalanceConfigurationWizard.Action.MappedFinely")); //$NON-NLS-1$
             putValue(SHORT_DESCRIPTION, Translations.getString(
-                    "ReferenceCameraWhiteBalanceConfigurationWizard.Action.MappedFinely.Description"));
+                    "ReferenceCameraWhiteBalanceConfigurationWizard.Action.MappedFinely.Description")); //$NON-NLS-1$
         }
 
         public void actionPerformed(ActionEvent e) {
@@ -284,9 +284,9 @@ public class ReferenceCameraWhiteBalanceConfigurationWizard extends AbstractConf
     private final Action resetAction = new AbstractAction() {
         {
             putValue(NAME, Translations.getString(
-                    "ReferenceCameraWhiteBalanceConfigurationWizard.Action.Reset"));
+                    "ReferenceCameraWhiteBalanceConfigurationWizard.Action.Reset")); //$NON-NLS-1$
             putValue(SHORT_DESCRIPTION, Translations.getString(
-                    "ReferenceCameraWhiteBalanceConfigurationWizard.Action.Reset.Description"));
+                    "ReferenceCameraWhiteBalanceConfigurationWizard.Action.Reset.Description")); //$NON-NLS-1$
         }
 
         public void actionPerformed(ActionEvent e) {

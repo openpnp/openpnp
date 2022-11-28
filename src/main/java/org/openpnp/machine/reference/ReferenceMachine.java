@@ -341,24 +341,24 @@ public class ReferenceMachine extends AbstractMachine {
     public PropertySheetHolder[] getChildPropertySheetHolders() {
         ArrayList<PropertySheetHolder> children = new ArrayList<>();
         children.add(new AxesPropertySheetHolder(this, Translations.getString(
-                "ReferenceMachine.PropertySheetHolder.Axes.title"), getAxes(), null));
+                "ReferenceMachine.PropertySheetHolder.Axes.title"), getAxes(), null)); //$NON-NLS-1$
         children.add(new SignalersPropertySheetHolder(this, Translations.getString(
-                "ReferenceMachine.PropertySheetHolder.Signalers.title"), getSignalers(), null));
+                "ReferenceMachine.PropertySheetHolder.Signalers.title"), getSignalers(), null)); //$NON-NLS-1$
         children.add(new SimplePropertySheetHolder(Translations.getString(
-                "ReferenceMachine.PropertySheetHolder.Feeders.title"), getFeeders()));
+                "ReferenceMachine.PropertySheetHolder.Feeders.title"), getFeeders())); //$NON-NLS-1$
         children.add(new SimplePropertySheetHolder(Translations.getString(
-                "ReferenceMachine.PropertySheetHolder.Heads.title"), getHeads()));
+                "ReferenceMachine.PropertySheetHolder.Heads.title"), getHeads())); //$NON-NLS-1$
         children.add(new NozzleTipsPropertySheetHolder(Translations.getString(
-                "ReferenceMachine.PropertySheetHolder.NozzleTips.title"),
+                "ReferenceMachine.PropertySheetHolder.NozzleTips.title"), //$NON-NLS-1$
                 getNozzleTips(), null));
         children.add(new CamerasPropertySheetHolder(null, Translations.getString(
-                "ReferenceMachine.PropertySheetHolder.Cameras.title"), getCameras(), null));
+                "ReferenceMachine.PropertySheetHolder.Cameras.title"), getCameras(), null)); //$NON-NLS-1$
         children.add(new ActuatorsPropertySheetHolder(null, Translations.getString(
-                "ReferenceMachine.PropertySheetHolder.Actuators.title"), getActuators(), null));
+                "ReferenceMachine.PropertySheetHolder.Actuators.title"), getActuators(), null)); //$NON-NLS-1$
         children.add(new DriversPropertySheetHolder(this, Translations.getString(
-                "ReferenceMachine.PropertySheetHolder.Drivers.title"), getDrivers(), null));
+                "ReferenceMachine.PropertySheetHolder.Drivers.title"), getDrivers(), null)); //$NON-NLS-1$
         children.add(new SimplePropertySheetHolder(Translations.getString(
-                "ReferenceMachine.PropertySheetHolder.JobProcessors.title"), Arrays.asList(getPnpJobProcessor())));
+                "ReferenceMachine.PropertySheetHolder.JobProcessors.title"), Arrays.asList(getPnpJobProcessor()))); //$NON-NLS-1$
 
         List<PropertySheetHolder> vision = new ArrayList<>();
         for (PartAlignment alignment : getPartAlignments()) {
@@ -366,7 +366,7 @@ public class ReferenceMachine extends AbstractMachine {
         }
         vision.add(getFiducialLocator());
         children.add(new SimplePropertySheetHolder(Translations.getString(
-                "ReferenceMachine.PropertySheetHolder.Vision.title"), vision));
+                "ReferenceMachine.PropertySheetHolder.Vision.title"), vision)); //$NON-NLS-1$
         return children.toArray(new PropertySheetHolder[] {});
     }
 

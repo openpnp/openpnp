@@ -682,8 +682,8 @@ public class ImageCamera extends ReferenceCamera {
         if (solutions.isTargeting(Milestone.Connect)) {
             solutions.add(new Solutions.Issue(
                     this,
-                    Translations.getString("ImageCamera.Issue"),
-                    Translations.getString("ImageCamera.Solution"),
+                    Translations.getString("ImageCamera.Issue"), //$NON-NLS-1$
+                    Translations.getString("ImageCamera.Solution"), //$NON-NLS-1$
                     Severity.Fundamental,
                     "https://github.com/openpnp/openpnp/wiki/OpenPnpCaptureCamera") {
 

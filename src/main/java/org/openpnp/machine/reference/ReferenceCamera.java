@@ -1226,38 +1226,38 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
         PropertySheet[] sheets = new PropertySheet[] {
                 new PropertySheetWizardAdapter(WizardUtils.configurationWizardFactory(CameraConfigurationWizard.class,
                         this.getId(), this), Translations.getString(
-                                "ReferenceCamera.CameraConfigurationWizard.tab.title")),
+                                "ReferenceCamera.CameraConfigurationWizard.tab.title")), //$NON-NLS-1$
                 new PropertySheetWizardAdapter(WizardUtils.configurationWizardFactory(
                         CameraVisionConfigurationWizard.class, this.getId(), this), Translations.getString(
-                                "ReferenceCamera.CameraVisionConfigurationWizard.tab.title")),
+                                "ReferenceCamera.CameraVisionConfigurationWizard.tab.title")), //$NON-NLS-1$
                 new PropertySheetWizardAdapter(getConfigurationWizard(), Translations.getString(
-                        "ReferenceCamera.DeviceSettings.tab.title")),
+                        "ReferenceCamera.DeviceSettings.tab.title")), //$NON-NLS-1$
                 new PropertySheetWizardAdapter(WizardUtils.configurationWizardFactory(
                         ReferenceCameraWhiteBalanceConfigurationWizard.class, this.getId(), this),
                         Translations.getString(
-                                "ReferenceCamera.ReferenceCameraWhiteBalanceConfigurationWizard.tab.title")),
+                                "ReferenceCamera.ReferenceCameraWhiteBalanceConfigurationWizard.tab.title")), //$NON-NLS-1$
                 new PropertySheetWizardAdapter(WizardUtils.configurationWizardFactory(
                         ReferenceCameraPositionConfigurationWizard.class, this.getId(), getMachine(), this),
                         Translations.getString(
-                                "ReferenceCamera.ReferenceCameraPositionConfigurationWizard.tab.title")),
+                                "ReferenceCamera.ReferenceCameraPositionConfigurationWizard.tab.title")), //$NON-NLS-1$
                 new PropertySheetWizardAdapter(WizardUtils.configurationWizardFactory(
                         ReferenceCameraCalibrationConfigurationWizard.class, this.getId(), this),
                         Translations.getString(
-                                "ReferenceCamera.ReferenceCameraCalibrationConfigurationWizard.tab.title")),
+                                "ReferenceCamera.ReferenceCameraCalibrationConfigurationWizard.tab.title")), //$NON-NLS-1$
                 new PropertySheetWizardAdapter(WizardUtils.configurationWizardFactory(
                         ReferenceCameraTransformsConfigurationWizard.class, this.getId(), this),
                         Translations.getString(
-                                "ReferenceCamera.ReferenceCameraTransformsConfigurationWizard.tab.title")),
+                                "ReferenceCamera.ReferenceCameraTransformsConfigurationWizard.tab.title")), //$NON-NLS-1$
                 new PropertySheetWizardAdapter(WizardUtils.configurationWizardFactory(
                         ReferenceCameraCalibrationWizard.class, this.getId(), this),
                         Translations.getString(
-                                "ReferenceCamera.ReferenceCameraCalibrationWizard.tab.title"))
+                                "ReferenceCamera.ReferenceCameraCalibrationWizard.tab.title")) //$NON-NLS-1$
         };
         if (getFocusSensingMethod() != FocusSensingMethod.None) {
                 sheets = Collect.concat(sheets, new PropertySheet[] {
                         new PropertySheetWizardAdapter(getFocusProvider().getConfigurationWizard(this),
                                 Translations.getString(
-                                        "ReferenceCamera.FocusProvider.ConfigurationWizard.tab.title")),
+                                        "ReferenceCamera.FocusProvider.ConfigurationWizard.tab.title")), //$NON-NLS-1$
                 });
         }
         return sheets;
@@ -1268,18 +1268,18 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
         return new Action[] { deleteAction };
     }
     
-    public Action deleteAction = new AbstractAction(Translations.getString("ReferenceCamera.Action.Delete")) {
+    public Action deleteAction = new AbstractAction(Translations.getString("ReferenceCamera.Action.Delete")) { //$NON-NLS-1$
         {
             putValue(SMALL_ICON, Icons.delete);
-            putValue(NAME, Translations.getString("ReferenceCamera.Action.Delete"));
-            putValue(SHORT_DESCRIPTION, Translations.getString("ReferenceCamera.Action.Delete.Description"));
+            putValue(NAME, Translations.getString("ReferenceCamera.Action.Delete")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("ReferenceCamera.Action.Delete.Description")); //$NON-NLS-1$
         }
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
             int ret = JOptionPane.showConfirmDialog(MainFrame.get(),
-                    Translations.getString("DialogMessages.ConfirmDelete.text") + " " + getName() + "?",
-                    Translations.getString("DialogMessages.ConfirmDelete.title") + " " + getName() + "?",
+                    Translations.getString("DialogMessages.ConfirmDelete.text") + " " + getName() + "?", //$NON-NLS-1$ //$NON-NLS-1$ //$NON-NLS-1$
+                    Translations.getString("DialogMessages.ConfirmDelete.title") + " " + getName() + "?", //$NON-NLS-1$ //$NON-NLS-1$ //$NON-NLS-1$
                     JOptionPane.YES_NO_OPTION);
             if (ret == JOptionPane.YES_OPTION) {
                 if (getHead() != null) {

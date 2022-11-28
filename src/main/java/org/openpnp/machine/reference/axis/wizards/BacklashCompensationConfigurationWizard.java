@@ -100,11 +100,11 @@ public class BacklashCompensationConfigurationWizard extends AbstractConfigurati
     }
 
     private Action backlashCalibrateAction = new AbstractAction(Translations.getString(
-            "BacklashCompensationConfigurationWizard.Action.Calibrate"),
+            "BacklashCompensationConfigurationWizard.Action.Calibrate"), //$NON-NLS-1$
             Icons.axisCartesian) {
         {
             putValue(Action.SHORT_DESCRIPTION, Translations.getString(
-                    "BacklashCompensationConfigurationWizard.Action.Calibrate.Description"));
+                    "BacklashCompensationConfigurationWizard.Action.Calibrate.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -135,7 +135,7 @@ public class BacklashCompensationConfigurationWizard extends AbstractConfigurati
         panelBacklashDiagnostics = new JPanel();
         panelBacklashDiagnostics.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"),
                 Translations.getString(
-                        "BacklashCompensationConfigurationWizard.BacklashDiagnosticsPanel.Border.title"),
+                        "BacklashCompensationConfigurationWizard.BacklashDiagnosticsPanel.Border.title"), //$NON-NLS-1$
                 TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
         contentPanel.add(panelBacklashDiagnostics);
         panelBacklashDiagnostics.setLayout(new FormLayout(new ColumnSpec[] {
@@ -164,10 +164,10 @@ public class BacklashCompensationConfigurationWizard extends AbstractConfigurati
                         RowSpec.decode("default:grow"),}));
 
         lblBacklashCompensation = new JLabel(Translations.getString(
-                "BacklashCompensationConfigurationWizard.BacklashDiagnosticsPanel.CompensationMethodLabel.text"));
+                "BacklashCompensationConfigurationWizard.BacklashDiagnosticsPanel.CompensationMethodLabel.text")); //$NON-NLS-1$
         panelBacklashDiagnostics.add(lblBacklashCompensation, "2, 2, right, default");
         lblBacklashCompensation.setToolTipText(Translations.getString(
-                "BacklashCompensationConfigurationWizard.BacklashDiagnosticsPanel.CompensationMethodLabel.toolTipText"
+                "BacklashCompensationConfigurationWizard.BacklashDiagnosticsPanel.CompensationMethodLabel.toolTipText" //$NON-NLS-1$
         ));
 
         backlashCompensationMethod = new JComboBox(BacklashCompensationMethod.values());
@@ -179,9 +179,9 @@ public class BacklashCompensationConfigurationWizard extends AbstractConfigurati
         });
 
         lblAcceptableTolerance = new JLabel(Translations.getString(
-                "BacklashCompensationConfigurationWizard.BacklashDiagnosticsPanel.ToleranceLabel.text"));
+                "BacklashCompensationConfigurationWizard.BacklashDiagnosticsPanel.ToleranceLabel.text")); //$NON-NLS-1$
         lblAcceptableTolerance.setToolTipText(Translations.getString(
-                "BacklashCompensationConfigurationWizard.BacklashDiagnosticsPanel.ToleranceLabel.toolTipText"));
+                "BacklashCompensationConfigurationWizard.BacklashDiagnosticsPanel.ToleranceLabel.toolTipText")); //$NON-NLS-1$
         panelBacklashDiagnostics.add(lblAcceptableTolerance, "6, 2, right, default");
 
         acceptableTolerance = new JTextField();
@@ -199,7 +199,7 @@ public class BacklashCompensationConfigurationWizard extends AbstractConfigurati
         backlashOffset.setColumns(10);
 
         lblSneakupDistance = new JLabel(Translations.getString(
-                "BacklashCompensationConfigurationWizard.BacklashDiagnosticsPanel.SneakUpDistanceLabel.text"));
+                "BacklashCompensationConfigurationWizard.BacklashDiagnosticsPanel.SneakUpDistanceLabel.text")); //$NON-NLS-1$
         panelBacklashDiagnostics.add(lblSneakupDistance, "6, 4, right, default");
 
         sneakUpOffset = new JTextField();
@@ -207,7 +207,7 @@ public class BacklashCompensationConfigurationWizard extends AbstractConfigurati
         sneakUpOffset.setColumns(10);
 
         lblBacklashSpeedFactor = new JLabel(Translations.getString(
-                "BacklashCompensationConfigurationWizard.BacklashDiagnosticsPanel.SpeedFactorLabel.text"));
+                "BacklashCompensationConfigurationWizard.BacklashDiagnosticsPanel.SpeedFactorLabel.text")); //$NON-NLS-1$
         panelBacklashDiagnostics.add(lblBacklashSpeedFactor, "2, 6, right, default");
 
         backlashSpeedFactor = new JTextField();
@@ -215,7 +215,7 @@ public class BacklashCompensationConfigurationWizard extends AbstractConfigurati
         backlashSpeedFactor.setColumns(10);
 
         lblStepTest = new JLabel(Translations.getString(
-                "BacklashCompensationConfigurationWizard.BacklashDiagnosticsPanel.StepTestLabel.text"));
+                "BacklashCompensationConfigurationWizard.BacklashDiagnosticsPanel.StepTestLabel.text")); //$NON-NLS-1$
         panelBacklashDiagnostics.add(lblStepTest, "2, 8, right, default");
 
         stepTestGraph = new SimpleGraphView();
@@ -224,7 +224,7 @@ public class BacklashCompensationConfigurationWizard extends AbstractConfigurati
         panelBacklashDiagnostics.add(stepTestGraph, "4, 8, 7, 1, fill, fill");
 
         lblBacklashDistanceTest = new JLabel(Translations.getString(
-                "BacklashCompensationConfigurationWizard.BacklashDiagnosticsPanel.DistanceTestLabel.text"));
+                "BacklashCompensationConfigurationWizard.BacklashDiagnosticsPanel.DistanceTestLabel.text")); //$NON-NLS-1$
         panelBacklashDiagnostics.add(lblBacklashDistanceTest, "2, 10, right, default");
 
         backlashDistanceTestGraph = new SimpleGraphView();
@@ -233,7 +233,7 @@ public class BacklashCompensationConfigurationWizard extends AbstractConfigurati
         panelBacklashDiagnostics.add(backlashDistanceTestGraph, "4, 10, 7, 1, fill, fill");
 
         lblBacklashSpeedTest = new JLabel(Translations.getString(
-                "BacklashCompensationConfigurationWizard.BacklashDiagnosticsPanel.SpeedTestLabel.text"));
+                "BacklashCompensationConfigurationWizard.BacklashDiagnosticsPanel.SpeedTestLabel.text")); //$NON-NLS-1$
         panelBacklashDiagnostics.add(lblBacklashSpeedTest, "2, 12, right, default");
 
         backlashSpeedTestGraph = new SimpleGraphView();

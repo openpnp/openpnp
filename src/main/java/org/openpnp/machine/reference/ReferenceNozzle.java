@@ -851,13 +851,13 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         return new PropertySheet[] {
                 new PropertySheetWizardAdapter(getConfigurationWizard()),
                 new PropertySheetWizardAdapter(new ReferenceNozzleCompatibleNozzleTipsWizard(this),
-                        Translations.getString("ReferenceNozzle.PropertySheetHolder.NozzleTips.title")),
+                        Translations.getString("ReferenceNozzle.PropertySheetHolder.NozzleTips.title")), //$NON-NLS-1$
                 new PropertySheetWizardAdapter(new ReferenceNozzleVacuumWizard(this),
-                        Translations.getString("ReferenceNozzle.PropertySheetHolder.Vacuum.title")),
+                        Translations.getString("ReferenceNozzle.PropertySheetHolder.Vacuum.title")), //$NON-NLS-1$
                 new PropertySheetWizardAdapter(new ReferenceNozzleToolChangerWizard(this),
-                        Translations.getString("ReferenceNozzle.PropertySheetHolder.ToolChanger.title")),
+                        Translations.getString("ReferenceNozzle.PropertySheetHolder.ToolChanger.title")), //$NON-NLS-1$
                 new PropertySheetWizardAdapter(new ReferenceNozzleCameraOffsetWizard(this),
-                        Translations.getString("ReferenceNozzle.PropertySheetHolder.OffsetWizard.title")),
+                        Translations.getString("ReferenceNozzle.PropertySheetHolder.OffsetWizard.title")), //$NON-NLS-1$
         };
     }
 
@@ -869,8 +869,8 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     public Action deleteAction = new AbstractAction("Delete Nozzle") {
         {
             putValue(SMALL_ICON, Icons.nozzleRemove);
-            putValue(NAME, Translations.getString("ReferenceNozzle.Action.Delete"));
-            putValue(SHORT_DESCRIPTION, Translations.getString("ReferenceNozzle.Action.Delete.Description"));
+            putValue(NAME, Translations.getString("ReferenceNozzle.Action.Delete")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("ReferenceNozzle.Action.Delete.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -880,8 +880,8 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
                 return;
             }
             int ret = JOptionPane.showConfirmDialog(MainFrame.get(),
-                    Translations.getString("DialogMessages.ConfirmDelete.text") + " " + getName() + "?",
-                    Translations.getString("DialogMessages.ConfirmDelete.title") + " " + getName() + "?",
+                    Translations.getString("DialogMessages.ConfirmDelete.text") + " " + getName() + "?", //$NON-NLS-1$ //$NON-NLS-1$ //$NON-NLS-1$
+                    Translations.getString("DialogMessages.ConfirmDelete.title") + " " + getName() + "?", //$NON-NLS-1$ //$NON-NLS-1$ //$NON-NLS-1$
                     JOptionPane.YES_NO_OPTION);
             if (ret == JOptionPane.YES_OPTION) {
                 getHead().removeNozzle(ReferenceNozzle.this);

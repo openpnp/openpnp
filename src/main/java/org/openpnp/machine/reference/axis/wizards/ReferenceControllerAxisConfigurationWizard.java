@@ -116,7 +116,7 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
     private Action captureSoftLimitLowAction = new AbstractAction(null, Icons.captureAxisLow) {
         {
             putValue(Action.SHORT_DESCRIPTION, Translations.getString(
-                    "ReferenceControllerAxisConfigurationWizard.Action.CaptureSoftLimitLow.Description"));
+                    "ReferenceControllerAxisConfigurationWizard.Action.CaptureSoftLimitLow.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -134,7 +134,7 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
     private Action captureSoftLimitHighAction = new AbstractAction(null, Icons.captureAxisHigh) {
         {
             putValue(Action.SHORT_DESCRIPTION, Translations.getString(
-                    "ReferenceControllerAxisConfigurationWizard.Action.CaptureSoftLimitHigh.Description"));
+                    "ReferenceControllerAxisConfigurationWizard.Action.CaptureSoftLimitHigh.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -152,7 +152,7 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
     private Action positionSoftLimitLowAction = new AbstractAction(null, Icons.positionAxisLow) {
         {
             putValue(Action.SHORT_DESCRIPTION, Translations.getString(
-                    "ReferenceControllerAxisConfigurationWizard.Action.PositionSoftLimitLow.Description"));
+                    "ReferenceControllerAxisConfigurationWizard.Action.PositionSoftLimitLow.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -168,7 +168,7 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
     private Action positionSoftLimitHighAction = new AbstractAction(null, Icons.positionAxisHigh) {
         {
             putValue(Action.SHORT_DESCRIPTION, Translations.getString(
-                    "ReferenceControllerAxisConfigurationWizard.Action.PositionSoftLimitHigh.Description"));
+                    "ReferenceControllerAxisConfigurationWizard.Action.PositionSoftLimitHigh.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -185,7 +185,7 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
     private Action captureSafeZoneLowAction = new AbstractAction(null, Icons.captureAxisLow) {
         {
             putValue(Action.SHORT_DESCRIPTION, Translations.getString(
-                    "ReferenceControllerAxisConfigurationWizard.Action.CaptureSafeZoneLow.Description"));
+                    "ReferenceControllerAxisConfigurationWizard.Action.CaptureSafeZoneLow.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -203,7 +203,7 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
     private Action captureSafeZoneHighAction = new AbstractAction(null, Icons.captureAxisHigh) {
         {
             putValue(Action.SHORT_DESCRIPTION, Translations.getString(
-                    "ReferenceControllerAxisConfigurationWizard.Action.CaptureSafeZoneHigh.Description"));
+                    "ReferenceControllerAxisConfigurationWizard.Action.CaptureSafeZoneHigh.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -221,7 +221,7 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
     private Action positionSafeZoneLowAction = new AbstractAction(null, Icons.positionAxisLow) {
         {
             putValue(Action.SHORT_DESCRIPTION, Translations.getString(
-                    "ReferenceControllerAxisConfigurationWizard.Action.PositionSafeZoneLow.Description"));
+                    "ReferenceControllerAxisConfigurationWizard.Action.PositionSafeZoneLow.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -237,7 +237,7 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
     private Action positionSafeZoneHighAction = new AbstractAction(null, Icons.positionAxisHigh) {
         {
             putValue(Action.SHORT_DESCRIPTION, Translations.getString(
-                    "ReferenceControllerAxisConfigurationWizard.Action.PositionSafeZoneHigh.Description"));
+                    "ReferenceControllerAxisConfigurationWizard.Action.PositionSafeZoneHigh.Description")); //$NON-NLS-1$
         }
 
         @Override

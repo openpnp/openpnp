@@ -50,8 +50,8 @@ public class Neoden4Signaler extends AbstractSignaler implements Runnable {
 
 						SwingUtilities.invokeLater(new Runnable() {
 							public void run() {
-								MessageBoxes.infoBox(Translations.getString("CommonPhrases.clickOkToConfirm"								), Translations.getString(
-										"CommonPhrases.jobError"));
+								MessageBoxes.infoBox(Translations.getString("CommonPhrases.clickOkToConfirm"), //$NON-NLS-1$
+										Translations.getString("CommonPhrases.jobError")); //$NON-NLS-1$
 								playError = false;
 								lastPlayError = false;
 							}
@@ -69,8 +69,8 @@ public class Neoden4Signaler extends AbstractSignaler implements Runnable {
 
 						SwingUtilities.invokeLater(new Runnable() {
 							public void run() {
-								MessageBoxes.infoBox(Translations.getString("CommonPhrases.clickOkToConfirm"
-								), Translations.getString("CommonPhrases.jobSuccess"));
+								MessageBoxes.infoBox(Translations.getString("CommonPhrases.clickOkToConfirm"), //$NON-NLS-1$
+										Translations.getString("CommonPhrases.jobSuccess")); //$NON-NLS-1$
 								playSuccess = false;
 								lastPlaySuccess = false;
 							}

@@ -84,7 +84,7 @@ public class SimulatedUpCameraConfigurationWizard extends AbstractConfigurationW
         panelGeneral = new JPanel();
         contentPanel.add(panelGeneral);
         panelGeneral.setBorder(new TitledBorder(null, Translations.getString(
-                "SimulatedUpCameraConfigurationWizard.GeneralPanel.Border.title"),
+                "SimulatedUpCameraConfigurationWizard.GeneralPanel.Border.title"), //$NON-NLS-1$
                 TitledBorder.LEADING, TitledBorder.TOP, null));
         panelGeneral.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -131,13 +131,13 @@ public class SimulatedUpCameraConfigurationWizard extends AbstractConfigurationW
         panelGeneral.add(lblZ, "8, 2, center, default");
         
         lblRotation = new JLabel(Translations.getString(
-                "SimulatedUpCameraConfigurationWizard.GeneralPanel.RotationLabel.text"));
+                "SimulatedUpCameraConfigurationWizard.GeneralPanel.RotationLabel.text")); //$NON-NLS-1$
         panelGeneral.add(lblRotation, "10, 2, center, default");
         
         lblNewLabel = new JLabel(Translations.getString(
-                "SimulatedUpCameraConfigurationWizard.GeneralPanel.CameraLocationLabel.text"));
+                "SimulatedUpCameraConfigurationWizard.GeneralPanel.CameraLocationLabel.text")); //$NON-NLS-1$
         lblNewLabel.setToolTipText(Translations.getString(
-                "SimulatedUpCameraConfigurationWizard.GeneralPanel.CameraLocationLabel.toolTipText"));
+                "SimulatedUpCameraConfigurationWizard.GeneralPanel.CameraLocationLabel.toolTipText")); //$NON-NLS-1$
         panelGeneral.add(lblNewLabel, "2, 4, right, default");
         
         simulatedLocationX = new JTextField();
@@ -157,7 +157,7 @@ public class SimulatedUpCameraConfigurationWizard extends AbstractConfigurationW
         simulatedLocationRotation.setColumns(10);
         
         lblCameraDimension = new JLabel(Translations.getString(
-                "SimulatedUpCameraConfigurationWizard.GeneralPanel.PixelDimensionLabel.text"));
+                "SimulatedUpCameraConfigurationWizard.GeneralPanel.PixelDimensionLabel.text")); //$NON-NLS-1$
         panelGeneral.add(lblCameraDimension, "2, 6, right, default");
         
         width = new JTextField();
@@ -169,9 +169,9 @@ public class SimulatedUpCameraConfigurationWizard extends AbstractConfigurationW
         height.setColumns(10);
         
         lblUnitsPerPixel = new JLabel(Translations.getString(
-                "SimulatedUpCameraConfigurationWizard.GeneralPanel.UnitsPerPixelLabel.text"));
+                "SimulatedUpCameraConfigurationWizard.GeneralPanel.UnitsPerPixelLabel.text")); //$NON-NLS-1$
         lblUnitsPerPixel.setToolTipText(Translations.getString(
-                "SimulatedUpCameraConfigurationWizard.GeneralPanel.UnitsPerPixelLabel.toolTipText"));
+                "SimulatedUpCameraConfigurationWizard.GeneralPanel.UnitsPerPixelLabel.toolTipText")); //$NON-NLS-1$
         panelGeneral.add(lblUnitsPerPixel, "2, 8, right, default");
         
         simulatedUnitsPerPixelX = new JTextField();
@@ -184,7 +184,7 @@ public class SimulatedUpCameraConfigurationWizard extends AbstractConfigurationW
         simulatedUnitsPerPixelY.setColumns(10);
         
         lblFocalLength = new JLabel(Translations.getString(
-                "SimulatedUpCameraConfigurationWizard.GeneralPanel.FocalLengthLabel.text"));
+                "SimulatedUpCameraConfigurationWizard.GeneralPanel.FocalLengthLabel.text")); //$NON-NLS-1$
         panelGeneral.add(lblFocalLength, "2, 10, right, default");
         
         focalLength = new JTextField();
@@ -192,7 +192,7 @@ public class SimulatedUpCameraConfigurationWizard extends AbstractConfigurationW
         focalLength.setColumns(10);
         
         lblSensorDiagonal = new JLabel(Translations.getString(
-                "SimulatedUpCameraConfigurationWizard.GeneralPanel.SensorDiagonalLabel.text"));
+                "SimulatedUpCameraConfigurationWizard.GeneralPanel.SensorDiagonalLabel.text")); //$NON-NLS-1$
         panelGeneral.add(lblSensorDiagonal, "2, 12, right, default");
         
         sensorDiagonal = new JTextField();
@@ -200,9 +200,9 @@ public class SimulatedUpCameraConfigurationWizard extends AbstractConfigurationW
         sensorDiagonal.setColumns(10);
         
         lblErrorOffsets = new JLabel(Translations.getString(
-                "SimulatedUpCameraConfigurationWizard.GeneralPanel.PickErrorOffsetsLabel.text"));
+                "SimulatedUpCameraConfigurationWizard.GeneralPanel.PickErrorOffsetsLabel.text")); //$NON-NLS-1$
         lblErrorOffsets.setToolTipText(Translations.getString(
-                "SimulatedUpCameraConfigurationWizard.GeneralPanel.PickErrorOffsetsLabel.toolTipText"));
+                "SimulatedUpCameraConfigurationWizard.GeneralPanel.PickErrorOffsetsLabel.toolTipText")); //$NON-NLS-1$
         panelGeneral.add(lblErrorOffsets, "2, 16, right, default");
         
         errorOffsetsX = new JTextField();
@@ -222,18 +222,18 @@ public class SimulatedUpCameraConfigurationWizard extends AbstractConfigurationW
         errorOffsetsRotation.setColumns(10);
         
         lblCameraFlipped = new JLabel(Translations.getString(
-                "SimulatedUpCameraConfigurationWizard.GeneralPanel.MirroredViewLabel.text"));
+                "SimulatedUpCameraConfigurationWizard.GeneralPanel.MirroredViewLabel.text")); //$NON-NLS-1$
         lblCameraFlipped.setToolTipText(Translations.getString(
-                "SimulatedUpCameraConfigurationWizard.GeneralPanel.MirroredViewLabel.toolTipText"));
+                "SimulatedUpCameraConfigurationWizard.GeneralPanel.MirroredViewLabel.toolTipText")); //$NON-NLS-1$
         panelGeneral.add(lblCameraFlipped, "2, 20, right, default");
         
         simulatedFlipped = new JCheckBox("");
         panelGeneral.add(simulatedFlipped, "4, 20");
         
         lblFocalBlur = new JLabel(Translations.getString(
-                "SimulatedUpCameraConfigurationWizard.GeneralPanel.FocalBlurLabel.text"));
+                "SimulatedUpCameraConfigurationWizard.GeneralPanel.FocalBlurLabel.text")); //$NON-NLS-1$
         lblFocalBlur.setToolTipText(Translations.getString(
-                "SimulatedUpCameraConfigurationWizard.GeneralPanel.FocalBlurLabel.toolTipText"));
+                "SimulatedUpCameraConfigurationWizard.GeneralPanel.FocalBlurLabel.toolTipText")); //$NON-NLS-1$
         panelGeneral.add(lblFocalBlur, "2, 22, right, default");
         
         simulateFocalBlur = new JCheckBox("");
