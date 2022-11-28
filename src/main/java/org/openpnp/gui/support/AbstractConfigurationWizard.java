@@ -178,7 +178,7 @@ public abstract class AbstractConfigurationWizard extends JPanel implements Wiza
     }
 
     protected Action applyAction = new AbstractAction(Translations.getString(
-            "AbstractConfigurationWizard.Action.Apply")) {
+            "AbstractConfigurationWizard.Action.Apply")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
             saveToModel();
@@ -187,7 +187,7 @@ public abstract class AbstractConfigurationWizard extends JPanel implements Wiza
     };
 
     protected Action resetAction = new AbstractAction(Translations.getString(
-            "AbstractConfigurationWizard.Action.Reset")) {
+            "AbstractConfigurationWizard.Action.Reset")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
             loadFromModel();

@@ -81,13 +81,13 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
     private final static String uppFormat = "%.8f";
 
     private final static String basicCalibrationInstructions = Translations.getString(
-            "CameraConfigurationWizard.basicCalibrationInstructions");
+            "CameraConfigurationWizard.basicCalibrationInstructions"); //$NON-NLS-1$
 
     private final static String downLookingCalibrationInstructions = Translations.getString(
-            "CameraConfigurationWizard.downLookingCalibrationInstructions");
+            "CameraConfigurationWizard.downLookingCalibrationInstructions"); //$NON-NLS-1$
 
     private final static String upLookingCalibrationInstructions = Translations.getString(
-            "CameraConfigurationWizard.upLookingCalibrationInstructions");
+            "CameraConfigurationWizard.upLookingCalibrationInstructions"); //$NON-NLS-1$
 
     protected Location measurementLocation;
 
@@ -98,7 +98,7 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
 
         panel = new JPanel();
         panel.setBorder(new TitledBorder(null, Translations.getString(
-                "CameraConfigurationWizard.PropertiesPanel.Border.title"),
+                "CameraConfigurationWizard.PropertiesPanel.Border.title"), //$NON-NLS-1$
                 TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panel);
         panel.setLayout(new FormLayout(new ColumnSpec[] {
@@ -122,14 +122,14 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
 
-        lblName = new JLabel(Translations.getString("CameraConfigurationWizard.PropertiesPanel.NameLabel.text"));
+        lblName = new JLabel(Translations.getString("CameraConfigurationWizard.PropertiesPanel.NameLabel.text")); //$NON-NLS-1$
         panel.add(lblName, "2, 2, right, default");
 
         nameTf = new JTextField();
         panel.add(nameTf, "4, 2");
         nameTf.setColumns(10);
 
-        lblLooking = new JLabel(Translations.getString("CameraConfigurationWizard.PropertiesPanel.LookingLabel.text"));
+        lblLooking = new JLabel(Translations.getString("CameraConfigurationWizard.PropertiesPanel.LookingLabel.text")); //$NON-NLS-1$
         panel.add(lblLooking, "2, 4, right, default");
 
         lookingCb = new JComboBox(Camera.Looking.values());
@@ -141,7 +141,7 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
         panel.add(lookingCb, "4, 4");
 
         lblPreviewFps = new JLabel(Translations.getString(
-                "CameraConfigurationWizard.PropertiesPanel.PreviewFPSLabel.text"));
+                "CameraConfigurationWizard.PropertiesPanel.PreviewFPSLabel.text")); //$NON-NLS-1$
         panel.add(lblPreviewFps, "2, 6, right, default");
 
         previewFps = new JTextField();
@@ -149,34 +149,34 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
         previewFps.setColumns(10);
 
         lblSuspendDuringTasks = new JLabel(Translations.getString(
-                "CameraConfigurationWizard.PropertiesPanel.SuspendDuringTasksLabel.text"));
+                "CameraConfigurationWizard.PropertiesPanel.SuspendDuringTasksLabel.text")); //$NON-NLS-1$
         lblSuspendDuringTasks.setToolTipText(Translations.getString(
-                "CameraConfigurationWizard.PropertiesPanel.SuspendDuringTasksLabel.toolTipText"));
+                "CameraConfigurationWizard.PropertiesPanel.SuspendDuringTasksLabel.toolTipText")); //$NON-NLS-1$
         panel.add(lblSuspendDuringTasks, "6, 6, right, default");
 
         suspendPreviewInTasks = new JCheckBox("");
         panel.add(suspendPreviewInTasks, "8, 6");
 
         lblAutoVisible = new JLabel(Translations.getString(
-                "CameraConfigurationWizard.PropertiesPanel.AutoCameraViewLabel.text"));
+                "CameraConfigurationWizard.PropertiesPanel.AutoCameraViewLabel.text")); //$NON-NLS-1$
         lblAutoVisible.setToolTipText(Translations.getString(
-                "CameraConfigurationWizard.PropertiesPanel.AutoCameraViewLabel.toolTipText"));
+                "CameraConfigurationWizard.PropertiesPanel.AutoCameraViewLabel.toolTipText")); //$NON-NLS-1$
         panel.add(lblAutoVisible, "2, 8, right, default");
 
         autoVisible = new JCheckBox("");
         panel.add(autoVisible, "4, 8");
         
         lblShowMultiview = new JLabel(Translations.getString(
-                "CameraConfigurationWizard.PropertiesPanel.ShowInMultiCameraViewLabel.text"));
+                "CameraConfigurationWizard.PropertiesPanel.ShowInMultiCameraViewLabel.text")); //$NON-NLS-1$
         lblShowMultiview.setToolTipText(Translations.getString(
-                "CameraConfigurationWizard.PropertiesPanel.ShowInMultiCameraViewLabel.toolTipText"));
+                "CameraConfigurationWizard.PropertiesPanel.ShowInMultiCameraViewLabel.toolTipText")); //$NON-NLS-1$
         panel.add(lblShowMultiview, "6, 8, right, default");
         
         shownInMultiCameraView = new JCheckBox("");
         panel.add(shownInMultiCameraView, "8, 8");
         
         lblFocusSensing = new JLabel(Translations.getString(
-                "CameraConfigurationWizard.PropertiesPanel.FocusSensingLabel.text"));
+                "CameraConfigurationWizard.PropertiesPanel.FocusSensingLabel.text")); //$NON-NLS-1$
         panel.add(lblFocusSensing, "2, 10, right, default");
         
         focusSensingMethod = new JComboBox(FocusSensingMethod.values());
@@ -188,7 +188,7 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
         panel.add(focusSensingMethod, "4, 10, fill, default");
         panelLight = new JPanel();
         panelLight.setBorder(new TitledBorder(null, Translations.getString(
-                "CameraConfigurationWizard.LightPanel.Border.title"),
+                "CameraConfigurationWizard.LightPanel.Border.title"), //$NON-NLS-1$
                 TitledBorder.LEADING, TitledBorder.TOP,null, null));
         contentPanel.add(panelLight);
         panelLight.setLayout(new FormLayout(
@@ -204,7 +204,7 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
 
         lblLightingActuator = new JLabel(Translations.getString(
-                "CameraConfigurationWizard.LightPanel.LightActuatorLabel.text"));
+                "CameraConfigurationWizard.LightPanel.LightActuatorLabel.text")); //$NON-NLS-1$
         panelLight.add(lblLightingActuator, "2, 2, right, default");
 
         lightActuator = new JComboBox();
@@ -212,53 +212,53 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
         lightActuator.setMaximumRowCount(12);
 
         lblAllowMachineActuators = new JLabel(Translations.getString(
-                "CameraConfigurationWizard.LightPanel.AllowMachineActuatorsLabel.text"));
+                "CameraConfigurationWizard.LightPanel.AllowMachineActuatorsLabel.text")); //$NON-NLS-1$
         panelLight.add(lblAllowMachineActuators, "6, 2, right, default");
         lblAllowMachineActuators.setToolTipText(Translations.getString(
-                "CameraConfigurationWizard.LightPanel.AllowMachineActuatorsLabel.toolTipText"));
+                "CameraConfigurationWizard.LightPanel.AllowMachineActuatorsLabel.toolTipText")); //$NON-NLS-1$
 
         allowMachineActuators = new JCheckBox("");
         panelLight.add(allowMachineActuators, "8, 2");
         allowMachineActuators.setToolTipText(Translations.getString(
-                "CameraConfigurationWizard.LightPanel.AllowMachineActuatorsChkBox.toolTipText"));
+                "CameraConfigurationWizard.LightPanel.AllowMachineActuatorsChkBox.toolTipText")); //$NON-NLS-1$
 
-        lblOn = new JLabel(Translations.getString("CameraConfigurationWizard.LightPanel.OnLabel.text"));
+        lblOn = new JLabel(Translations.getString("CameraConfigurationWizard.LightPanel.OnLabel.text")); //$NON-NLS-1$
         panelLight.add(lblOn, "4, 6, left, default");
 
-        lblOff = new JLabel(Translations.getString("CameraConfigurationWizard.LightPanel.OFFLabel.text"));
+        lblOff = new JLabel(Translations.getString("CameraConfigurationWizard.LightPanel.OFFLabel.text")); //$NON-NLS-1$
         panelLight.add(lblOff, "8, 6");
 
         lblBeforeCapture = new JLabel(Translations.getString(
-                "CameraConfigurationWizard.LightPanel.BeforeCaptureLabel.text"));
+                "CameraConfigurationWizard.LightPanel.BeforeCaptureLabel.text")); //$NON-NLS-1$
         lblBeforeCapture.setToolTipText(Translations.getString(
-                "CameraConfigurationWizard.LightPanel.BeforeCaptureLabel.toolTipText"));
+                "CameraConfigurationWizard.LightPanel.BeforeCaptureLabel.toolTipText")); //$NON-NLS-1$
         panelLight.add(lblBeforeCapture, "2, 8, right, default");
 
         beforeCaptureLightOn = new JCheckBox("");
         panelLight.add(beforeCaptureLightOn, "4, 8");
 
         lblAfterCapture = new JLabel(Translations.getString(
-                "CameraConfigurationWizard.LightPanel.AfterCaptureLabel.text"));
+                "CameraConfigurationWizard.LightPanel.AfterCaptureLabel.text")); //$NON-NLS-1$
         lblAfterCapture.setToolTipText(Translations.getString(
-                "CameraConfigurationWizard.LightPanel.AfterCaptureLabel.toolTipText"));
+                "CameraConfigurationWizard.LightPanel.AfterCaptureLabel.toolTipText")); //$NON-NLS-1$
         panelLight.add(lblAfterCapture, "6, 8, right, default");
 
         afterCaptureLightOff = new JCheckBox("");
         panelLight.add(afterCaptureLightOff, "8, 8");
 
         lblUserActionLight = new JLabel(Translations.getString(
-                "CameraConfigurationWizard.LightPanel.UserCameraActionLabel.text"));
+                "CameraConfigurationWizard.LightPanel.UserCameraActionLabel.text")); //$NON-NLS-1$
         panelLight.add(lblUserActionLight, "2, 10, right, default");
         lblUserActionLight.setToolTipText(Translations.getString(
-                "CameraConfigurationWizard.LightPanel.UserCameraActionLabel.toolTipText"));
+                "CameraConfigurationWizard.LightPanel.UserCameraActionLabel.toolTipText")); //$NON-NLS-1$
 
         userActionLightOn = new JCheckBox("");
         panelLight.add(userActionLightOn, "4, 10");
 
         lblAntiglare = new JLabel(Translations.getString(
-                "CameraConfigurationWizard.LightPanel.AntiGlareLabel.text"));
+                "CameraConfigurationWizard.LightPanel.AntiGlareLabel.text")); //$NON-NLS-1$
         lblAntiglare.setToolTipText(Translations.getString(
-                "CameraConfigurationWizard.LightPanel.AntiGlareLabel.toolTipText"));
+                "CameraConfigurationWizard.LightPanel.AntiGlareLabel.toolTipText")); //$NON-NLS-1$
         panelLight.add(lblAntiglare, "6, 10, right, default");
 
         antiGlareLightOff = new JCheckBox("");
@@ -272,7 +272,7 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
         panelUpp = new JPanel();
         contentPanel.add(panelUpp);
         panelUpp.setBorder(new TitledBorder(null, Translations.getString(
-                "CameraConfigurationWizard.UnitsPerPixelPanel.Border.title"),
+                "CameraConfigurationWizard.UnitsPerPixelPanel.Border.title"), //$NON-NLS-1$
                 TitledBorder.LEADING, TitledBorder.TOP, null));
         panelUpp.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -308,7 +308,7 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
                 FormSpecs.RELATED_GAP_ROWSPEC,}));
 
         lbldCalibration = new JLabel(Translations.getString(
-                "CameraConfigurationWizard.UnitsPerPixelPanel.3DCalibrationLabel.text"));
+                "CameraConfigurationWizard.UnitsPerPixelPanel.3DCalibrationLabel.text")); //$NON-NLS-1$
         panelUpp.add(lbldCalibration, "2, 2, right, default");
 
         enableUnitsPerPixel3D = new JCheckBox("");
@@ -320,7 +320,7 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
         panelUpp.add(enableUnitsPerPixel3D, "4, 2");
         
         advancedCalWarning = new JLabel(Translations.getString(
-                "CameraConfigurationWizard.UnitsPerPixelPanel.AdvancedCalibrationActiveLabel.text"));
+                "CameraConfigurationWizard.UnitsPerPixelPanel.AdvancedCalibrationActiveLabel.text")); //$NON-NLS-1$
         advancedCalWarning.setForeground(Color.RED);
         panelUpp.add(advancedCalWarning, "6, 2, 9, 1, right, default");
 
@@ -334,13 +334,13 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
         panelUpp.add(lblZ, "8, 4, center, default");
 
         lblCameraZ = new JLabel(Translations.getString(
-                "CameraConfigurationWizard.UnitsPerPixelPanel.CameraZLabel.text"));
+                "CameraConfigurationWizard.UnitsPerPixelPanel.CameraZLabel.text")); //$NON-NLS-1$
         panelUpp.add(lblCameraZ, "10, 4, center, default");
 
         lblCalibrationObject = new JLabel(Translations.getString(
-                "CameraConfigurationWizard.UnitsPerPixelPanel.ObjectDimensionsLabel.text"));
+                "CameraConfigurationWizard.UnitsPerPixelPanel.ObjectDimensionsLabel.text")); //$NON-NLS-1$
         lblCalibrationObject.setToolTipText(Translations.getString(
-                "CameraConfigurationWizard.UnitsPerPixelPanel.ObjectDimensionsLabel.toolTipText"));
+                "CameraConfigurationWizard.UnitsPerPixelPanel.ObjectDimensionsLabel.toolTipText")); //$NON-NLS-1$
         panelUpp.add(lblCalibrationObject, "2, 6, right, default");
 
         textFieldWidth = new JTextField();
@@ -359,7 +359,7 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
         textFieldThickness.setColumns(8);
 
         lblPrimaryUpp = new JLabel(Translations.getString(
-                "CameraConfigurationWizard.UnitsPerPixelPanel.UnitsPerPixelLabel.text"));
+                "CameraConfigurationWizard.UnitsPerPixelPanel.UnitsPerPixelLabel.text")); //$NON-NLS-1$
         panelUpp.add(lblPrimaryUpp, "2, 8, right, default");
 
         textFieldPrimaryUppX = new JTextField();
@@ -387,7 +387,7 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
         cancelMeasure1Action.setEnabled(false);
 
         lblSecondaryUpp = new JLabel(Translations.getString(
-                "CameraConfigurationWizard.UnitsPerPixelPanel.SecondaryUnitsPerPixelLabel.text"));
+                "CameraConfigurationWizard.UnitsPerPixelPanel.SecondaryUnitsPerPixelLabel.text")); //$NON-NLS-1$
         panelUpp.add(lblSecondaryUpp, "2, 10, right, default");
 
         textFieldSecondaryUppX = new JTextField();
@@ -415,13 +415,13 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
         panelUpp.add(btnCancelMeasure2, "14, 10");
 
         lblDefaultWorkingPlane = new JLabel(Translations.getString(
-                "CameraConfigurationWizard.UnitsPerPixelPanel.DefaultWorkingPlaneLabel.text"));
+                "CameraConfigurationWizard.UnitsPerPixelPanel.DefaultWorkingPlaneLabel.text")); //$NON-NLS-1$
         panelUpp.add(lblDefaultWorkingPlane, "2, 12, right, default");
 
         textFieldDefaultZ = new JTextField();
         panelUpp.add(textFieldDefaultZ, "8, 12");
         textFieldDefaultZ.setToolTipText(Translations.getString(
-                "CameraConfigurationWizard.UnitsPerPixelPanel.DefaultZTextField.toolTipText"));
+                "CameraConfigurationWizard.UnitsPerPixelPanel.DefaultZTextField.toolTipText")); //$NON-NLS-1$
         textFieldDefaultZ.setColumns(8);
 
         btnCaptureToolZ = new JButton(captureToolZAction);
@@ -431,7 +431,7 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
         panelCal.setName("Units Per Pixel Calibration Tool");
         panelCal.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"),
                 Translations.getString(
-                        "CameraConfigurationWizard.CalibrateInstructionsPanel.Border.title"),
+                        "CameraConfigurationWizard.CalibrateInstructionsPanel.Border.title"), //$NON-NLS-1$
                 TitledBorder.LEADING, TitledBorder.TOP, null));
         panelUpp.add(panelCal, "2, 14, 13, 1, fill, fill");
         panelCal.setLayout(new FormLayout(new ColumnSpec[] {
@@ -631,7 +631,7 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
     };
 
     private Action measure1Action = new AbstractAction(Translations.getString(
-            "CameraConfigurationWizard.Action.Measure1")) {
+            "CameraConfigurationWizard.Action.Measure1")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
             btnMeasure1.setAction(confirmMeasure1Action);
@@ -648,7 +648,7 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
     };
 
     private Action confirmMeasure1Action = new AbstractAction(Translations.getString(
-            "CameraConfigurationWizard.Action.ConfirmMeasure1")) {
+            "CameraConfigurationWizard.Action.ConfirmMeasure1")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
             btnMeasure1.setAction(measure1Action);
@@ -659,7 +659,7 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
     };
 
     private Action cancelMeasure1Action = new AbstractAction(Translations.getString(
-            "CameraConfigurationWizard.Action.CancelMeasure1")) {
+            "CameraConfigurationWizard.Action.CancelMeasure1")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
             btnMeasure1.setAction(measure1Action);
@@ -673,7 +673,7 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
     };
 
     private Action measure2Action = new AbstractAction(Translations.getString(
-            "CameraConfigurationWizard.Action.Measure2")) {
+            "CameraConfigurationWizard.Action.Measure2")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
             btnMeasure2.setAction(confirmMeasure2Action);
@@ -691,7 +691,7 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
     };
 
     private Action confirmMeasure2Action = new AbstractAction(Translations.getString(
-            "CameraConfigurationWizard.Action.ConfirmMeasure2")) {
+            "CameraConfigurationWizard.Action.ConfirmMeasure2")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
             btnMeasure2.setAction(measure2Action);
@@ -702,7 +702,7 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
     };
 
     private Action cancelMeasure2Action = new AbstractAction(Translations.getString(
-            "CameraConfigurationWizard.Action.CancelMeasure2")) {
+            "CameraConfigurationWizard.Action.CancelMeasure2")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
             btnMeasure2.setAction(measure2Action);

@@ -12,8 +12,8 @@ import org.openpnp.model.Configuration;
 public class VisionSettingsTableModel extends AbstractObjectTableModel implements PropertyChangeListener {
 
     private String[] columnNames = new String[]{
-            Translations.getString("VisionSettingsTableModel.ColumnName.Name"),
-            Translations.getString("VisionSettingsTableModel.ColumnName.AssignedTo")
+            Translations.getString("VisionSettingsTableModel.ColumnName.Name"), //$NON-NLS-1$
+            Translations.getString("VisionSettingsTableModel.ColumnName.AssignedTo") //$NON-NLS-1$
     };
     private Class[] columnTypes = new Class[] {String.class, String.class};
 

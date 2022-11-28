@@ -41,18 +41,18 @@ public class PlacementsTableModel extends AbstractObjectTableModel {
 
     private String[] columnNames =
             new String[] {
-                    Translations.getString("PlacementsTableModel.ColumnName.Enabled"),
-                    Translations.getString("PlacementsTableModel.ColumnName.ID"),
-                    Translations.getString("PlacementsTableModel.ColumnName.Part"),
-                    Translations.getString("PlacementsTableModel.ColumnName.Side"),
-                    "X",
-                    "Y",
-                    Translations.getString("PlacementsTableModel.ColumnName.Rotation"),
-                    Translations.getString("PlacementsTableModel.ColumnName.Type"),
-                    Translations.getString("PlacementsTableModel.ColumnName.Placed"),
-                    Translations.getString("PlacementsTableModel.ColumnName.Status"),
-                    Translations.getString("PlacementsTableModel.ColumnName.ErrorHandling"),
-                    Translations.getString("PlacementsTableModel.ColumnName.Comments"
+                    Translations.getString("PlacementsTableModel.ColumnName.Enabled"), //$NON-NLS-1$
+                    Translations.getString("PlacementsTableModel.ColumnName.ID"), //$NON-NLS-1$
+                    Translations.getString("PlacementsTableModel.ColumnName.Part"), //$NON-NLS-1$
+                    Translations.getString("PlacementsTableModel.ColumnName.Side"), //$NON-NLS-1$
+                    "X", //$NON-NLS-1$
+                    "Y", //$NON-NLS-1$
+                    Translations.getString("PlacementsTableModel.ColumnName.Rotation"), //$NON-NLS-1$
+                    Translations.getString("PlacementsTableModel.ColumnName.Type"), //$NON-NLS-1$
+                    Translations.getString("PlacementsTableModel.ColumnName.Placed"), //$NON-NLS-1$
+                    Translations.getString("PlacementsTableModel.ColumnName.Status"), //$NON-NLS-1$
+                    Translations.getString("PlacementsTableModel.ColumnName.ErrorHandling"), //$NON-NLS-1$
+                    Translations.getString("PlacementsTableModel.ColumnName.Comments" //$NON-NLS-1$
                     )};
 
     private Class[] columnTypes = new Class[] {Boolean.class, PartCellValue.class, Part.class, Side.class,
