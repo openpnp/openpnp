@@ -10,7 +10,7 @@ jobs:
     name: Java ${{ matrix.java }}
     strategy:
       matrix:
-        java: [8, 9, 10, 11, 12, 13, 14, 15]
+        java: [8, 9, 11, 12, 13, 14, 15]
 
     steps:
       - name: Checkout Repo

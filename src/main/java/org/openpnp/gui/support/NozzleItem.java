@@ -24,7 +24,7 @@ import org.openpnp.spi.Nozzle;
 public class NozzleItem extends HeadMountableItem {
 
     public NozzleItem(Nozzle nozzle) {
-    	super(nozzle);
+        super(nozzle);
     }
 
     public Nozzle getNozzle() {
@@ -33,10 +33,11 @@ public class NozzleItem extends HeadMountableItem {
 
     @Override
     public String toString() {
-    	Nozzle nozzle = (Nozzle)hm;
-    	
-        return String.format("Nozzle: %s - %s %s", nozzle.getName(),
-        		nozzle.getNozzleTip() != null ? nozzle.getNozzleTip().getName() : "No Nozzle Tip", 
-        		nozzle.getHead() != null ? String.format("(Head: %s)", nozzle.getHead().getName()) : "");
+        Nozzle nozzle = (Nozzle)hm;
+
+        return String.format("Nozzle: %s - %s%s %s", nozzle.getName(),
+                nozzle.getNozzleTip() != null ? nozzle.getNozzleTip().getName() : "No Nozzle Tip", 
+                nozzle.getPart() != null ? String.format(" - %s", nozzle.getPart().getId()) : "", 
+                nozzle.getHead() != null ? String.format("(Head: %s)", nozzle.getHead().getName()) : "");
     }
 }
