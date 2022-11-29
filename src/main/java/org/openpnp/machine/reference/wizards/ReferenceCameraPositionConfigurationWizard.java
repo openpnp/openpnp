@@ -7,6 +7,7 @@ import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
 
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
+import org.openpnp.Translations;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.components.LocationButtonsPanel;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
@@ -64,7 +65,8 @@ public class ReferenceCameraPositionConfigurationWizard extends AbstractConfigur
         panelOffsets = new JPanel();
         contentPanel.add(panelOffsets);
         panelOffsets.setBorder(new TitledBorder(null,
-                "Coordinate System", TitledBorder.LEADING, TitledBorder.TOP, null));
+                Translations.getString("ReferenceCameraPositionConfigurationWizard.OffsetsPanel.Border.title"), //$NON-NLS-1$
+                TitledBorder.LEADING, TitledBorder.TOP, null));
         panelOffsets.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("max(70dlu;default)"),
@@ -97,10 +99,12 @@ public class ReferenceCameraPositionConfigurationWizard extends AbstractConfigur
         JLabel olblZ = new JLabel("Z");
         panelOffsets.add(olblZ, "8, 2");
         
-        lblRotation = new JLabel("Rotation");
+        lblRotation = new JLabel(Translations.getString(
+                "ReferenceCameraPositionConfigurationWizard.OffsetsPanel.RotationLabel.text")); //$NON-NLS-1$
         panelOffsets.add(lblRotation, "10, 2");
         
-        lblAxis = new JLabel("Axis");
+        lblAxis = new JLabel(Translations.getString(
+                "ReferenceCameraPositionConfigurationWizard.OffsetsPanel.AxisLabel.text")); //$NON-NLS-1$
         panelOffsets.add(lblAxis, "2, 4, right, default");
         
         axisX = new JComboBox(new AxesComboBoxModel(machine, AbstractAxis.class, Axis.Type.X, true));
@@ -115,7 +119,8 @@ public class ReferenceCameraPositionConfigurationWizard extends AbstractConfigur
         axisRotation = new JComboBox(new AxesComboBoxModel(machine, AbstractAxis.class, Axis.Type.Rotation, true));
         panelOffsets.add(axisRotation, "10, 4, fill, default");
         
-        lblOffset = new JLabel("Offset");
+        lblOffset = new JLabel(Translations.getString(
+                "ReferenceCameraPositionConfigurationWizard.OffsetsPanel.OffsetLabel.text")); //$NON-NLS-1$
         panelOffsets.add(lblOffset, "2, 6, right, default");
 
 
@@ -135,7 +140,8 @@ public class ReferenceCameraPositionConfigurationWizard extends AbstractConfigur
         panelOffsets.add(textFieldOffRotation, "10, 6, fill, default");
         textFieldOffRotation.setColumns(10);
 
-        JLabel lblSafeZ = new JLabel("Safe Z");
+        JLabel lblSafeZ = new JLabel(Translations.getString(
+                "ReferenceCameraPositionConfigurationWizard.SafeZPanel.SafeZLabel.text")); //$NON-NLS-1$
         panelOffsets.add(lblSafeZ, "2, 10, right, default");
 
         textFieldSafeZ = new JTextField();
@@ -144,8 +150,9 @@ public class ReferenceCameraPositionConfigurationWizard extends AbstractConfigur
         textFieldSafeZ.setColumns(10);
 
         panelLocation = new JPanel();
-        panelLocation.setBorder(new TitledBorder(null, "Location", TitledBorder.LEADING,
-                TitledBorder.TOP, null, null));
+        panelLocation.setBorder(new TitledBorder(null, Translations.getString(
+                "ReferenceCameraPositionConfigurationWizard.LocationPanel.Border.title"), //$NON-NLS-1$
+                TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panelLocation);
         panelLocation.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -177,10 +184,11 @@ public class ReferenceCameraPositionConfigurationWizard extends AbstractConfigur
         lblZ = new JLabel("Z");
         panelLocation.add(lblZ, "8, 2");
 
-        lblRotation_1 = new JLabel("Rotation");
+        lblRotation_1 = new JLabel(Translations.getString(
+                "ReferenceCameraPositionConfigurationWizard.LocationPanel.RotationLabel.text")); //$NON-NLS-1$
         panelLocation.add(lblRotation_1, "10, 2");
         
-        lblLocation = new JLabel("Location");
+        lblLocation = new JLabel(Translations.getString("ReferenceCameraPositionConfigurationWizard.LocationPanel.LocationLabel.text")); //$NON-NLS-1$
         panelLocation.add(lblLocation, "2, 4, right, default");
 
         textFieldLocationX = new JTextField();
@@ -199,8 +207,8 @@ public class ReferenceCameraPositionConfigurationWizard extends AbstractConfigur
         panelLocation.add(textFieldLocationRotation, "10, 4, fill, default");
         textFieldLocationRotation.setColumns(10);
         
-        lblRoamingRadius = new JLabel("Roaming Radius");
-        lblRoamingRadius.setToolTipText("<html>\r\n<p>The maximum <em>nominal</em> roaming radius over the camera<br/>\r\nwhich also indicates the largest part diagonal that can be<br/>\r\nsupported.</p>\r\n<br/>\r\n<p>If set to zero, this switches off multi-shot vision<br/> \r\n(see package <strong>Vision Compositing</strong>).</p> \r\n<br/>\r\n<p>During bottom vision, the nozzle movement will be <br/>\r\nrestricted, taking into consideration the following:</p>\r\n<ul>\r\n<li>The distance of the nozzle from the camera <br/>\r\ncenter.</li>\r\n<li>How much the part footprint is portruding <br/>\r\nfrom there (approximated by octogonal hull).</li>\r\n</ul>\r\n<p>Inside the roaming radius, the nozzle will also be <br/>\r\nfreely moved at camera Z, i.e. without going to Safe Z.</p> \r\n<p>Note, this is the <em>nominal</em> radius, i.e. there must be<br/>\r\nextra space available for pick offsets and other <br/>\r\ndeviations.</p>\r\n<br/>\r\n<p><strong color=\"red\">Caution:</strong> the roaming radius is not enforced \r\nwhen jogging.</p>\r\n</html>");
+        lblRoamingRadius = new JLabel(Translations.getString("ReferenceCameraPositionConfigurationWizard.LocationPanel.RoamingRadiusLabel.text")); //$NON-NLS-1$
+        lblRoamingRadius.setToolTipText(Translations.getString("ReferenceCameraPositionConfigurationWizard.LocationPanel.RoamingRadiusLabel.toolTipText")); //$NON-NLS-1$
         panelLocation.add(lblRoamingRadius, "2, 6, right, default");
         
         roamingRadius = new JTextField();
