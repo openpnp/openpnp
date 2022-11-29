@@ -44,6 +44,7 @@ import org.jdesktop.beansbinding.AutoBinding;
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.jdesktop.beansbinding.BeanProperty;
 import org.jdesktop.beansbinding.Bindings;
+import org.openpnp.Translations;
 import org.jdesktop.beansbinding.Converter;
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.components.CameraView;
@@ -89,7 +90,7 @@ public class PackageVisionPanel extends JPanel {
         JPanel propertiesPanel = new JPanel();
         add(propertiesPanel, BorderLayout.NORTH);
         propertiesPanel.setBorder(
-                new TitledBorder(null, "Settings",
+                new TitledBorder(null, Translations.getString("PackageVisionPanel.SettingsPanel.Boprder.title"), //$NON-NLS-1$
                         TitledBorder.LEADING, TitledBorder.TOP, null));
         propertiesPanel.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -116,13 +117,13 @@ public class PackageVisionPanel extends JPanel {
                         FormSpecs.RELATED_GAP_ROWSPEC,
                         FormSpecs.DEFAULT_ROWSPEC,}));
 
-        JLabel lblUnits = new JLabel("Units");
+        JLabel lblUnits = new JLabel(Translations.getString("PackageVisionPanel.SettingsPanel.UnitsLabel.text")); //$NON-NLS-1$
         propertiesPanel.add(lblUnits, "2, 2, right, default");
 
         unitsCombo = new JComboBox(LengthUnit.values());
         propertiesPanel.add(unitsCombo, "4, 2, left, default");
 
-        JLabel lblGenerate = new JLabel("Generate");
+        JLabel lblGenerate = new JLabel(Translations.getString("PackageVisionPanel.SettingsPanel.GenerateLabel.text")); //$NON-NLS-1$
         propertiesPanel.add(lblGenerate, "8, 2, right, default");
 
         JPanel panelGenerate = new JPanel();
@@ -139,53 +140,53 @@ public class PackageVisionPanel extends JPanel {
         JButton generateBga = new JButton(generateBgaAction);
         panelGenerate.add(generateBga);
 
-        JLabel lblBodyWidth = new JLabel("Body Width");
+        JLabel lblBodyWidth = new JLabel(Translations.getString("PackageVisionPanel.SettingsPanel.BodyWidthLabel.text")); //$NON-NLS-1$
         propertiesPanel.add(lblBodyWidth, "2, 4, right, default");
 
         bodyWidthTf = new JTextField();
         propertiesPanel.add(bodyWidthTf, "4, 4, left, default");
         bodyWidthTf.setColumns(10);
 
-        JLabel lblDimension = new JLabel("Outside dimension");
-        lblDimension.setToolTipText("<html>\nOverall outside dimension of the footprint <br/>\nFor Dual this is the width, for Quad width and height (it is calculated for BGE).\n</html>");
+        JLabel lblDimension = new JLabel(Translations.getString("PackageVisionPanel.SettingsPanel.OutsideDimensionLabel.text")); //$NON-NLS-1$
+        lblDimension.setToolTipText(Translations.getString("PackageVisionPanel.SettingsPanel.OutsideDimensionLabel.toolTipText")); //$NON-NLS-1$
         propertiesPanel.add(lblDimension, "8, 4, right, default");
 
         outerDimension = new JTextField();
         propertiesPanel.add(outerDimension, "10, 4, fill, default");
         outerDimension.setColumns(10);
 
-        JLabel lblInnerDim = new JLabel("Inside dimension");
-        lblInnerDim.setToolTipText("The inner dimension between the pads. For BGA this the area where balls are left out.");
+        JLabel lblInnerDim = new JLabel(Translations.getString("PackageVisionPanel.SettingsPanel.InsideDimensionLabel.text")); //$NON-NLS-1$
+        lblInnerDim.setToolTipText(Translations.getString("PackageVisionPanel.SettingsPanel.InsideDimensionLabel.toolTipText")); //$NON-NLS-1$
         propertiesPanel.add(lblInnerDim, "12, 4, right, default");
 
         innerDimension = new JTextField();
         propertiesPanel.add(innerDimension, "14, 4, fill, default");
         innerDimension.setColumns(10);
 
-        JLabel lblBodyHeight = new JLabel("Body Length");
+        JLabel lblBodyHeight = new JLabel(Translations.getString("PackageVisionPanel.SettingsPanel.BodyLengthLabel.text")); //$NON-NLS-1$
         propertiesPanel.add(lblBodyHeight, "2, 6, right, default");
 
         bodyHeightTf = new JTextField();
         propertiesPanel.add(bodyHeightTf, "4, 6, left, default");
         bodyHeightTf.setColumns(10);
 
-        JLabel lblPadCount = new JLabel("Pad Count");
-        lblPadCount.setToolTipText("<html>\nOverall count of the pads. <br/>\n<ul>\n<li>Dual: Multiples of 2. </li>\n<li>Quad: Multiples of 4. </li>\n<li>BGA: Square number (including those left out on the inside). </li>\n</ul>\n</html>");
+        JLabel lblPadCount = new JLabel(Translations.getString("PackageVisionPanel.SettingsPanel.PadCountLabel.text")); //$NON-NLS-1$
+        lblPadCount.setToolTipText(Translations.getString("PackageVisionPanel.SettingsPanel.PadCountLabel.toolTipText")); //$NON-NLS-1$
         propertiesPanel.add(lblPadCount, "8, 6, right, default");
 
         padCount = new JTextField();
         propertiesPanel.add(padCount, "10, 6, fill, default");
         padCount.setColumns(10);
 
-        JLabel lblPadPitch = new JLabel("Pad Pitch");
+        JLabel lblPadPitch = new JLabel(Translations.getString("PackageVisionPanel.SettingsPanel.PadPitchLabel.text")); //$NON-NLS-1$
         propertiesPanel.add(lblPadPitch, "12, 6, right, default");
 
         padPitch = new JTextField();
         propertiesPanel.add(padPitch, "14, 6, fill, default");
         padPitch.setColumns(10);
 
-        JLabel lblPadAcross = new JLabel("Pad Across");
-        lblPadAcross.setToolTipText("The size of pads, in the direction of the pitch. ");
+        JLabel lblPadAcross = new JLabel(Translations.getString("PackageVisionPanel.SettingsPanel.PadAcrossLabel.text")); //$NON-NLS-1$
+        lblPadAcross.setToolTipText(Translations.getString("PackageVisionPanel.SettingsPanel.PadAcrossLabel.toolTipText")); //$NON-NLS-1$
         propertiesPanel.add(lblPadAcross, "8, 8, right, default");
 
         padAcross = new JTextField();
@@ -193,7 +194,7 @@ public class PackageVisionPanel extends JPanel {
         padAcross.setColumns(10);
 
         JLabel lblRound = new JLabel("% Roundness");
-        lblRound.setToolTipText("Roundness of the pad in percent of its smaller dimension. If negative, only the inner side will be rounded.");
+        lblRound.setToolTipText(Translations.getString("PackageVisionPanel.SettingsPanel.RoundnessLabel.toolTipText")); //$NON-NLS-1$
         propertiesPanel.add(lblRound, "12, 8, right, default");
 
         padRoundness = new JTextField();
@@ -202,8 +203,8 @@ public class PackageVisionPanel extends JPanel {
 
         JPanel tablePanel = new JPanel();
         add(tablePanel, BorderLayout.CENTER);
-        tablePanel.setBorder(
-                new TitledBorder(null, "Pads", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        tablePanel.setBorder(new TitledBorder(null, Translations.getString(
+                "PackageVisionPanel.PadsPanel.Border.title"), TitledBorder.LEADING, TitledBorder.TOP, null, null)); //$NON-NLS-1$
 
         table = new AutoSelectTextTable(tableModel);
         table.setAutoCreateRowSorter(true);
@@ -279,8 +280,9 @@ public class PackageVisionPanel extends JPanel {
     public final Action newAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.add);
-            putValue(NAME, "New Pad...");
-            putValue(SHORT_DESCRIPTION, "Create a new pad, specifying it's ID.");
+            putValue(NAME, Translations.getString("PackageVisionPanel.PadsPanel.Action.NewPad")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString(
+                    "PackageVisionPanel.PadsPanel.Action.NewPad.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -301,15 +303,18 @@ public class PackageVisionPanel extends JPanel {
     public final Action deleteAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.delete);
-            putValue(NAME, "Delete Pad");
-            putValue(SHORT_DESCRIPTION, "Delete the currently selected pad.");
+            putValue(NAME, Translations.getString("PackageVisionPanel.PadsPanel.Action.DeletePad")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString(
+                    "PackageVisionPanel.PadsPanel.Action.DeletePad.Description")); //$NON-NLS-1$
         }
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
             int ret = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                    "Are you sure you want to delete " + getSelectedPad().getName() + "?",
-                    "Delete " + getSelectedPad().getName() + "?", JOptionPane.YES_NO_OPTION);
+                    Translations.getString("DialogMessages.ConfirmDelete.text") //$NON-NLS-1$
+                            + " " + getSelectedPad().getName() + "?", //$NON-NLS-1$ //$NON-NLS-2$
+                    Translations.getString("DialogMessages.ConfirmDelete.title") //$NON-NLS-1$ //$NON-NLS-2$
+                            + " " + getSelectedPad().getName() + "?", JOptionPane.YES_NO_OPTION); //$NON-NLS-1$ //$NON-NLS-2$
             if (ret == JOptionPane.YES_OPTION) {
                 footprint.removePad(getSelectedPad());
                 tableModel.fireTableDataChanged();
