@@ -34,6 +34,7 @@ import javax.swing.UIManager;
 import javax.swing.border.TitledBorder;
 
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
+import org.openpnp.Translations;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.components.LocationButtonsPanel;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
@@ -65,8 +66,9 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
     private void createUi() {
 
         JPanel panel = new JPanel();
-        panel.setBorder(new TitledBorder(null, "Locations", TitledBorder.LEADING, TitledBorder.TOP,
-                null, null));
+        panel.setBorder(new TitledBorder(null, Translations.getString(
+                "ReferenceHeadConfigurationWizard.LocationsPanel.Border.title"), //$NON-NLS-1$
+                TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panel);
         panel.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -97,7 +99,8 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
         JLabel lblY = new JLabel("Y");
         panel.add(lblY, "6, 2, center, default");
 
-        JLabel lblHomingFiducial = new JLabel("Homing Fiducial");
+        JLabel lblHomingFiducial = new JLabel(Translations.getString(
+                "ReferenceHeadConfigurationWizard.LocationsPanel.HomingFiducialLabel.text")); //$NON-NLS-1$
         panel.add(lblHomingFiducial, "2, 4, right, default");
 
         homingFiducialX = new JTextField();
@@ -113,7 +116,8 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
         homeLocation.setShowToolButtons(false); 
         panel.add(homeLocation, "10, 4, left, fill");
 
-        JLabel lblHomingMethod = new JLabel("Homing Method");
+        JLabel lblHomingMethod = new JLabel(Translations.getString(
+                "ReferenceHeadConfigurationWizard.LocationsPanel.HomingMethodLabel.text")); //$NON-NLS-1$
         panel.add(lblHomingMethod, "2, 6, right, default");
 
         visualHomingMethod = new JComboBox(VisualHomingMethod.values());
@@ -134,13 +138,17 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
                 new RowSpec[] {
                         FormSpecs.DEFAULT_ROWSPEC,}));
 
-        btnHomingTest = new JButton("Visual Test");
+        btnHomingTest = new JButton(Translations.getString(
+                "ReferenceHeadConfigurationWizard.LocationsPanel.VisualTestButton.text")); //$NON-NLS-1$
         panel_1.add(btnHomingTest, "1, 1, fill, default");
-        btnHomingTest.setToolTipText("Test the visual homing fiducial locator without affecting the machine coordinate system.");
+        btnHomingTest.setToolTipText(Translations.getString(
+                "ReferenceHeadConfigurationWizard.LocationsPanel.VisualTestButton.toolTipText")); //$NON-NLS-1$
 
-        btnVisualHome = new JButton("Visual Home");
+        btnVisualHome = new JButton(Translations.getString(
+                "ReferenceHeadConfigurationWizard.LocationsPanel.VisualHomeButton.text")); //$NON-NLS-1$
         panel_1.add(btnVisualHome, "3, 1");
-        btnVisualHome.setToolTipText("Perform visual homing.");
+        btnVisualHome.setToolTipText(Translations.getString(
+                "ReferenceHeadConfigurationWizard.LocationsPanel.VisualHomeButton.toolTipText")); //$NON-NLS-1$
         btnVisualHome.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 UiUtils.submitUiMachineTask(() -> head.visualHome(head.getMachine(), true));
@@ -152,11 +160,13 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
             }
         });
 
-        JLabel lblWarningChangingThese = new JLabel("<html><p>\r\n<strong>Important Notice</strong>: the homing fiducial should be mounted \r\nand configured early in the build process, before you start capturing a large number of\r\nlocations for the Machine Setup (nozzle tip changer, feeders etc.) \r\n</p>\r\n<p style=\"color:red\">Each time the above settings are changed or the fiducial physically moved, all the already captured locations in the Machine Setup will be broken. </p></html>");
+        JLabel lblWarningChangingThese = new JLabel(Translations.getString(
+                "ReferenceHeadConfigurationWizard.LocationsPanel.WarningChangingLabel.text")); //$NON-NLS-1$
         lblWarningChangingThese.setForeground(Color.BLACK);
         panel.add(lblWarningChangingThese, "4, 8, 7, 1");
 
-        JLabel lblParkLocation = new JLabel("Park Location");
+        JLabel lblParkLocation = new JLabel(Translations.getString(
+                "ReferenceHeadConfigurationWizard.LocationsPanel.ParkLocationLabel.text")); //$NON-NLS-1$
         panel.add(lblParkLocation, "2, 10, right, default");
 
         parkX = new JTextField();
@@ -172,7 +182,10 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
         panel.add(parkLocation, "10, 10, left, fill");
         
         JPanel panelCalibration = new JPanel();
-        panelCalibration.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "Calibration Rig", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+        panelCalibration.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"),
+                Translations.getString("ReferenceHeadConfigurationWizard.CalibrationRigPanel.Border.title"), //$NON-NLS-1$
+                TitledBorder.LEADING, TitledBorder.TOP,
+                null, new Color(0, 0, 0)));
         contentPanel.add(panelCalibration);
         panelCalibration.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -208,12 +221,16 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
         lblZ_1 = new JLabel("Z");
         panelCalibration.add(lblZ_1, "8, 2, center, default");
         
-        lblDiameter = new JLabel("Diameter");
-        lblDiameter.setToolTipText("Diameter of the fiducial.");
+        lblDiameter = new JLabel(Translations.getString(
+                "ReferenceHeadConfigurationWizard.CalibrationRigPanel.DiameterLabel.text")); //$NON-NLS-1$
+        lblDiameter.setToolTipText(Translations.getString(
+                "ReferenceHeadConfigurationWizard.CalibrationRigPanel.DiameterLabel.toolTipText")); //$NON-NLS-1$
         panelCalibration.add(lblDiameter, "10, 2, center, default");
 
-        lblCalibrationPrimary = new JLabel("Primary Fiducial");
-        lblCalibrationPrimary.setToolTipText("Calibration primary fiducial location. Must be placed at PCB surface Z height. ");
+        lblCalibrationPrimary = new JLabel(Translations.getString(
+                "ReferenceHeadConfigurationWizard.CalibrationRigPanel.PrimaryFiducialLabel.text")); //$NON-NLS-1$
+        lblCalibrationPrimary.setToolTipText(Translations.getString(
+                "ReferenceHeadConfigurationWizard.CalibrationRigPanel.PrimaryFiducialLabel.toolTipText")); //$NON-NLS-1$
         panelCalibration.add(lblCalibrationPrimary, "2, 4, right, default");
         
         calibrationPrimaryX = new JTextField();
@@ -235,8 +252,10 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
         calibrationPrimaryLocation = new LocationButtonsPanel(calibrationPrimaryX, calibrationPrimaryY, calibrationPrimaryZ, (JTextField) null);
         panelCalibration.add(calibrationPrimaryLocation, "12, 4, left, fill");
         
-        lblCalibrationSecondary = new JLabel("Secondary Fiducial");
-        lblCalibrationSecondary.setToolTipText("Calibration secondary fiducial location. Must be placed at different Z height than the primary fiducial. ");
+        lblCalibrationSecondary = new JLabel(Translations.getString(
+                "ReferenceHeadConfigurationWizard.CalibrationRigPanel.SecondaryFiducialLabel.text")); //$NON-NLS-1$
+        lblCalibrationSecondary.setToolTipText(Translations.getString(
+                "ReferenceHeadConfigurationWizard.CalibrationRigPanel.SecondaryFiducialLabel.toolTipText")); //$NON-NLS-1$
         panelCalibration.add(lblCalibrationSecondary, "2, 6, right, default");
         
         calibrationSecondaryX = new JTextField();
@@ -258,7 +277,8 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
         calibrationSecondaryLocation = new LocationButtonsPanel(calibrationSecondaryX, calibrationSecondaryY, calibrationSecondaryZ, (JTextField) null);
         panelCalibration.add(calibrationSecondaryLocation, "12, 6, left, fill");
         
-        lblTestObject = new JLabel("Test Object");
+        lblTestObject = new JLabel(Translations.getString(
+                "ReferenceHeadConfigurationWizard.CalibrationRigPanel.TestObjectLabel.text")); //$NON-NLS-1$
         panelCalibration.add(lblTestObject, "2, 8, right, default");
         
         calibrationTestObjectDiameter = new JTextField();
@@ -266,7 +286,9 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
         calibrationTestObjectDiameter.setColumns(10);
 
         JPanel panel_2 = new JPanel();
-        panel_2.setBorder(new TitledBorder(null, "Z Probe", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        panel_2.setBorder(new TitledBorder(null, Translations.getString(
+                "ReferenceHeadConfigurationWizard.ZProbePanel.Border.title"), //$NON-NLS-1$
+                TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panel_2);
         panel_2.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -277,7 +299,8 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
                         FormSpecs.RELATED_GAP_ROWSPEC,
                         FormSpecs.DEFAULT_ROWSPEC,}));
 
-        JLabel lblNewLabel_4 = new JLabel("Z Probe Actuator");
+        JLabel lblNewLabel_4 = new JLabel(Translations.getString(
+                "ReferenceHeadConfigurationWizard.ZProbePanel.ZProbeActuatorLabel.text")); //$NON-NLS-1$
         panel_2.add(lblNewLabel_4, "2, 2, right, default");
 
         comboBoxZProbeActuator = new JComboBox();
@@ -285,7 +308,9 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
         panel_2.add(comboBoxZProbeActuator, "4, 2");
 
         JPanel panel_3 = new JPanel();
-        panel_3.setBorder(new TitledBorder(null, "Pump", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        panel_3.setBorder(new TitledBorder(null, Translations.getString(
+                "ReferenceHeadConfigurationWizard.PumpPanel.Border.title"), //$NON-NLS-1$
+                TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panel_3);
         panel_3.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -302,22 +327,27 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
 
-        JLabel lblVacuumPumpActuator = new JLabel("Vacuum Pump Actuator");
+        JLabel lblVacuumPumpActuator = new JLabel(Translations.getString(
+                "ReferenceHeadConfigurationWizard.PumpPanel.VacuumPumpActuatorLabel.text")); //$NON-NLS-1$
         panel_3.add(lblVacuumPumpActuator, "2, 2, right, default");
 
         comboBoxPumpActuator = new JComboBox();
         comboBoxPumpActuator.setModel(new ActuatorsComboBoxModel(head));
         panel_3.add(comboBoxPumpActuator, "4, 2, 3, 1, fill, default");
         
-        lblPumpControl = new JLabel("Pump Control");
-        lblPumpControl.setToolTipText("<html>\r\n<p>Determine how the pump on/off state is controlled:</p>\r\n<ul>\r\n<li><strong>None</strong>: the pump is controlled manually or outside of OpenPnP.<br/>\r\nUse this for a controller-side hysteresis control, for instance.</li>\r\n<li><strong>PartOn</strong>: the pump is switched on when a part is about to be <br/>\r\npicked, it is switched off when no part is on any nozzle.</li>\r\n<li><strong>TaskDuration</strong>: the pump is switched on when a part is about<br/>\r\nto be picked, it is only switched off when queued tasks (e.g. <br/>\r\nthe running job) is finished, given no part is on any nozzle.</li>\r\n<li><strong>KeepRunning</strong>: the pump is switched on when a part is about<br/>\r\nto be picked, it is kept running until explicitly switched off, <br/>\r\nor until the machine is being disabled.</li>\r\n</ul>\r\n</html>");
+        lblPumpControl = new JLabel(
+                Translations.getString("ReferenceHeadConfigurationWizard.PumpPanel.VacuumPumpControlLabel.text")); //$NON-NLS-1$
+        lblPumpControl.setToolTipText(
+                Translations.getString("ReferenceHeadConfigurationWizard.PumpPanel.VacuumPumpControlLabel.toolTipText")); //$NON-NLS-1$
         panel_3.add(lblPumpControl, "2, 4, right, default");
         
         vacuumPumpControl = new JComboBox(AbstractHead.VacuumPumpControl.values());
         panel_3.add(vacuumPumpControl, "4, 4, 3, 1, fill, default");
         
-        lblPumpStartTime = new JLabel("Pump On Wait [ms]");
-        lblPumpStartTime.setToolTipText("When switching on the pump, wait this time for it to reach proper pressure.");
+        lblPumpStartTime = new JLabel(
+                Translations.getString("ReferenceHeadConfigurationWizard.PumpPanel.VacuumPumpStartTimeLabel.text")); //$NON-NLS-1$
+        lblPumpStartTime.setToolTipText(
+                Translations.getString("ReferenceHeadConfigurationWizard.PumpPanel.VacuumPumpStartTimeLabel.toolTipText")); //$NON-NLS-1$
         panel_3.add(lblPumpStartTime, "2, 6, right, default");
         
         pumpOnWaitMilliseconds = new JTextField();
