@@ -431,7 +431,7 @@ public class MainFrame extends JFrame {
         buttonGroup.add(menuItem);
         mnLanguage.add(menuItem);
 
-        menuItem = new JCheckBoxMenuItem(new LanguageSelectionAction(new Locale("zh_CN")));
+        menuItem = new JCheckBoxMenuItem(new LanguageSelectionAction(new Locale("zh", "CN")));
         buttonGroup.add(menuItem);
         mnLanguage.add(menuItem);
 
@@ -667,16 +667,24 @@ public class MainFrame extends JFrame {
                     }
                 });
 
-        tabs.addTab("Job", null, jobPanel, null); //$NON-NLS-1$
-        tabs.addTab("Parts", null, partsPanel, null); //$NON-NLS-1$
-        tabs.addTab("Packages", null, packagesPanel, null); //$NON-NLS-1$
-        tabs.addTab("Vision", null, visionSettingsPanel, null); //$NON-NLS-1$
-        tabs.addTab("Feeders", null, feedersPanel, null); //$NON-NLS-1$
-        tabs.addTab("Machine Setup", null, machineSetupPanel, null); //$NON-NLS-1$
-        tabs.addTab("Issues & Solutions", null, issuesAndSolutionsPanel, null); //$NON-NLS-1$
+        tabs.addTab(Translations.getString("MainFrame.RightComponent.tabs.Job"), //$NON-NLS-1$
+                null, jobPanel, null);
+        tabs.addTab(Translations.getString("MainFrame.RightComponent.tabs.Parts"), //$NON-NLS-1$
+                null, partsPanel, null);
+        tabs.addTab(Translations.getString("MainFrame.RightComponent.tabs.Packages" //$NON-NLS-1$
+        ),null, packagesPanel, null);
+        tabs.addTab(Translations.getString("MainFrame.RightComponent.tabs.Vision"), //$NON-NLS-1$
+                null, visionSettingsPanel, null);
+        tabs.addTab(Translations.getString("MainFrame.RightComponent.tabs.Feeders"), //$NON-NLS-1$
+                null, feedersPanel, null); //$NON-NLS-1$
+        tabs.addTab(Translations.getString("MainFrame.RightComponent.tabs.MachineSetup"), //$NON-NLS-1$
+                null, machineSetupPanel, null);
+        tabs.addTab(Translations.getString("MainFrame.RightComponent.tabs.IssuesAndSolutions"), //$NON-NLS-1$
+                null, issuesAndSolutionsPanel, null);
 
         LogPanel logPanel = new LogPanel();
-        tabs.addTab("Log", null, logPanel, null); //$NON-NLS-1$
+        tabs.addTab(Translations.getString("MainFrame.RightComponent.tabs.Log"),
+                null, logPanel, null); //$NON-NLS-1$
 
         panelStatusAndDros = new JPanel();
         panelStatusAndDros.setBorder(null);
@@ -696,7 +704,7 @@ public class MainFrame extends JFrame {
         
         
         // Placement Information
-        lblPlacements = new JLabel(" Placements: 0 / 0 Total | 0 / 0 Selected Board "); //$NON-NLS-1$
+        lblPlacements = new JLabel(Translations.getString("MainFrame.StatusPanel.PlacementsLabel.initial.text")); //$NON-NLS-1$
         lblPlacements.setBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
         panelStatusAndDros.add(lblPlacements, "4, 1"); //$NON-NLS-1$
         
@@ -719,8 +727,10 @@ public class MainFrame extends JFrame {
         droLbl.setBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
         panelStatusAndDros.add(droLbl, "8, 1"); //$NON-NLS-1$
 
-        cameraPanel.setBorder(new TitledBorder(null, "Cameras", TitledBorder.LEADING, //$NON-NLS-1$
-                TitledBorder.TOP, null, null));
+        cameraPanel.setBorder(new TitledBorder(null,
+                Translations.getString("MainFrame.CameraPanel.Border.title"), //$NON-NLS-1$
+                TitledBorder.LEADING,
+                TitledBorder.TOP, null, null)); //$NON-NLS-1$
         panelCameraAndInstructions.add(cameraPanel, BorderLayout.CENTER);
 
         registerBoardImporters();
@@ -1026,7 +1036,9 @@ public class MainFrame extends JFrame {
     
     public void setPlacementCompletionStatus(int totalPlacementsCompleted, int totalPlacements, int boardPlacementsCompleted, int boardPlacements) {
         SwingUtilities.invokeLater(() -> {
-            lblPlacements.setText(String.format(" Placements: %d / %d Total | %d / %d Selected Board ", totalPlacementsCompleted, totalPlacements, boardPlacementsCompleted, boardPlacements));
+            lblPlacements.setText(String.format(Translations.getString(
+                    "MainFrame.StatusPanel.PlacementsLabel.initial.format.text"), //$NON-NLS-1$
+                    totalPlacementsCompleted, totalPlacements, boardPlacementsCompleted, boardPlacements));
         	prgbrPlacements.setValue((int)(((float)totalPlacementsCompleted / (float)totalPlacements) * 100.0f));
         });
     }
@@ -1086,8 +1098,8 @@ public class MainFrame extends JFrame {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             configuration.setSystemUnits(LengthUnit.Inches);
-          MessageBoxes.infoBox("Notice", //$NON-NLS-1$
-                  "Please restart OpenPnP for the changes to take effect."); //$NON-NLS-1$
+            MessageBoxes.infoBox(Translations.getString("CommonWords.notice"), //$NON-NLS-1$
+                  Translations.getString("CommonPhrases.restartToTakeEffect")); //$NON-NLS-1$
       }
     };
 
@@ -1099,8 +1111,8 @@ public class MainFrame extends JFrame {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             configuration.setSystemUnits(LengthUnit.Millimeters);
-            MessageBoxes.infoBox("Notice", //$NON-NLS-1$
-                    "Please restart OpenPnP for the changes to take effect."); //$NON-NLS-1$
+            MessageBoxes.infoBox(Translations.getString("CommonWords.notice"), //$NON-NLS-1$
+                    Translations.getString("CommonPhrases.restartToTakeEffect")); //$NON-NLS-1$
         }
     };
 
@@ -1131,8 +1143,8 @@ public class MainFrame extends JFrame {
             else {
                 prefs.putBoolean(PREF_WINDOW_STYLE_MULTIPLE, false);
             }
-            MessageBoxes.infoBox("Windows Style Changed", //$NON-NLS-1$
-                    "Window style has been changed. Please restart OpenPnP to see the changes."); //$NON-NLS-1$
+            MessageBoxes.infoBox(Translations.getString("CommonPhrases.windowsStyleChanged"), //$NON-NLS-1$
+                    Translations.getString("CommonPhrases.windowsStyleChangedRestartToTakeEffect")); //$NON-NLS-1$
         }
     };
 
@@ -1274,7 +1286,7 @@ public class MainFrame extends JFrame {
         }
     };
     
-    public final Action undoAction = new AbstractAction(Translations.getString("Menu.Edit.Undo")) {
+    public final Action undoAction = new AbstractAction(Translations.getString("Menu.Edit.Undo")) { //$NON-NLS-1$
         {
             putValue(MNEMONIC_KEY, KeyEvent.VK_Z);
             putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke('Z',
@@ -1292,7 +1304,7 @@ public class MainFrame extends JFrame {
         }
     };
     
-    public final Action redoAction = new AbstractAction(Translations.getString("Menu.Edit.Redo")) {
+    public final Action redoAction = new AbstractAction(Translations.getString("Menu.Edit.Redo")) { //$NON-NLS-1$
         {
 //            putValue(MNEMONIC_KEY, KeyEvent.VK_Y);
             putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke('Z',
@@ -1323,9 +1335,9 @@ public class MainFrame extends JFrame {
         }
         
         public void actionPerformed(ActionEvent arg0) {
-          configuration.setLocale(locale);
-          MessageBoxes.infoBox("Notice", //$NON-NLS-1$
-                  "Please restart OpenPnP for the changes to take effect."); //$NON-NLS-1$
+            configuration.setLocale(locale);
+            MessageBoxes.infoBox(Translations.getString("CommonWords.notice"), //$NON-NLS-1$
+                    Translations.getString("CommonPhrases.restartToTakeEffect")); //$NON-NLS-1$
       }
     }
     

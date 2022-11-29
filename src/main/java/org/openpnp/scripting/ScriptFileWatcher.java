@@ -79,7 +79,7 @@ public class ScriptFileWatcher {
         this.menu = menu;
         // Add a separator and the Refresh Scripts and Open Scripts Directory items
         menu.addSeparator();
-        menu.add(new AbstractAction(Translations.getString("Scripting.Action.Refresh")) {
+        menu.add(new AbstractAction(Translations.getString("Scripting.Action.Refresh")) { //$NON-NLS-1$
             {
                 putValue(MNEMONIC_KEY, KeyEvent.VK_R);
             }
@@ -89,7 +89,7 @@ public class ScriptFileWatcher {
                 synchronizeMenu(menu, scripting.getScriptsDirectory());
             }
         });
-        menu.add(new AbstractAction(Translations.getString("Scripting.Action.OpenScriptsDirectory")) {
+        menu.add(new AbstractAction(Translations.getString("Scripting.Action.OpenScriptsDirectory")) { //$NON-NLS-1$
             {
                 putValue(MNEMONIC_KEY, KeyEvent.VK_O);
             }

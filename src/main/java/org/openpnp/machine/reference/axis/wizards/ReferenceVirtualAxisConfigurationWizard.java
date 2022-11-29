@@ -26,6 +26,7 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.machine.reference.axis.ReferenceVirtualAxis;
@@ -44,7 +45,9 @@ public class ReferenceVirtualAxisConfigurationWizard extends AbstractAxisConfigu
     public ReferenceVirtualAxisConfigurationWizard(ReferenceVirtualAxis axis) {
         super(axis);
         panelTransformation = new JPanel();
-        panelTransformation.setBorder(new TitledBorder(null, "Virtual Axis", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        panelTransformation.setBorder(new TitledBorder(null, Translations.getString(
+                "ReferenceVirtualAxisConfigurationWizard.TransformationPanel.Border.title" //$NON-NLS-1$
+        ), TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panelTransformation);
         panelTransformation.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -69,7 +72,8 @@ public class ReferenceVirtualAxisConfigurationWizard extends AbstractAxisConfigu
                         FormSpecs.RELATED_GAP_ROWSPEC,
                         RowSpec.decode("bottom:default:grow"),}));
 
-        JLabel lblHomeCoordinate = new JLabel("Home / Safe Z");
+        JLabel lblHomeCoordinate = new JLabel(Translations.getString(
+                "ReferenceVirtualAxisConfigurationWizard.TransformationPanel.HomeSafeZLabel.text")); //$NON-NLS-1$
         panelTransformation.add(lblHomeCoordinate, "2, 2, right, default");
 
         homeCoordinate = new JTextField();

@@ -49,6 +49,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import org.opencv.core.Mat;
+import org.openpnp.Translations;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.MessageBoxes;
@@ -340,12 +341,12 @@ public abstract class PipelineControls extends JPanel {
                 FormSpecs.DEFAULT_COLSPEC,},
             dynamicRowspec(rows)));
 
-        JLabel lblPipeline = new JLabel("Pipeline");
+        JLabel lblPipeline = new JLabel(Translations.getString("PipelinePanel.PipelineLabel.title")); //$NON-NLS-1$
         lblPipeline.setEnabled(isEnabled());
         panel.add(lblPipeline, "2, 2, right, default");
 
-        btnEdit = new JButton("Edit");
-        btnEdit.setToolTipText("Edit the pipeline in the Pipeline Editor");
+        btnEdit = new JButton(Translations.getString("PipelinePanel.EditButton.title")); //$NON-NLS-1$
+        btnEdit.setToolTipText(Translations.getString("PipelinePanel.EditButton.toolTipText")); //$NON-NLS-1$
         btnEdit.setEnabled(isEnabled());
         btnEdit.setVisible(editable);
         btnEdit.addActionListener(new ActionListener() {
@@ -355,8 +356,8 @@ public abstract class PipelineControls extends JPanel {
         });
         panel.add(btnEdit, "4, 2, default, fill");
 
-        btnReset = new JButton("Reset");
-        btnReset.setToolTipText("Reset the pipeline to the default.");
+        btnReset = new JButton(Translations.getString("PipelinePanel.ResetButton.text")); //$NON-NLS-1$
+        btnReset.setToolTipText(Translations.getString("PipelinePanel.ResetButton.toolTipText")); //$NON-NLS-1$
         btnReset.setEnabled(isEnabled());
         btnReset.setVisible(resetable);
         btnReset.addActionListener(new ActionListener() {
@@ -426,7 +427,7 @@ public abstract class PipelineControls extends JPanel {
         {
             putValue(SMALL_ICON, Icons.copy);
             //putValue(NAME, "Copy pipeline to clipboard");
-            putValue(SHORT_DESCRIPTION, "Copy the pipeline to the clipboard in text format.");
+            putValue(SHORT_DESCRIPTION, Translations.getString("PipelinePanel.Action.CopyPipeline.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -438,7 +439,8 @@ public abstract class PipelineControls extends JPanel {
                 clipboard.setContents(stringSelection, null);
             }
             catch (Exception e) {
-                MessageBoxes.errorBox(getTopLevelAncestor(), "Copy failed", e);
+                MessageBoxes.errorBox(getTopLevelAncestor(), Translations.getString(
+                        "PipelinePanel.Action.CopyPipeline.errorMessage"), e); //$NON-NLS-1$
             }
         }
     };
@@ -447,16 +449,15 @@ public abstract class PipelineControls extends JPanel {
         {
             putValue(SMALL_ICON, Icons.paste);
             //putValue(NAME, "Create pipeline from clipboard");
-            putValue(SHORT_DESCRIPTION,
-                    "Create a new pipeline from a definition on the clipboard.");
+            putValue(SHORT_DESCRIPTION, Translations.getString("PipelinePanel.Action.PastePipeline.Description")); //$NON-NLS-1$
         }
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
             try {
                 int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                        "This will replace the Pipeline with the one on the clipboard.\n\nAre you sure?", null,
-                        JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+                        Translations.getString("PipelinePanel.Action.PasteConfirmDialog.message"), //$NON-NLS-1$
+                        null, JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
                 if (result == JOptionPane.YES_OPTION) {
                     Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
                     String s = (String) clipboard.getData(DataFlavor.stringFlavor);
@@ -467,7 +468,8 @@ public abstract class PipelineControls extends JPanel {
                 }
             }
             catch (Exception e) {
-                MessageBoxes.errorBox(getTopLevelAncestor(), "Paste failed", e);
+                MessageBoxes.errorBox(getTopLevelAncestor(), Translations.getString(
+                        "PipelinePanel.Action.PastePipeline.errorMessage"), e); //$NON-NLS-1$
             }
         }
     };

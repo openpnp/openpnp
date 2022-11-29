@@ -41,6 +41,7 @@ import org.opencv.core.RotatedRect;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 import org.openpnp.ConfigurationListener;
+import org.openpnp.Translations;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
@@ -1214,18 +1215,40 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
     @Override
     public PropertySheet[] getPropertySheets() {
         PropertySheet[] sheets = new PropertySheet[] {
-                new PropertySheetWizardAdapter(WizardUtils.configurationWizardFactory(CameraConfigurationWizard.class, this.getId(), this), "General Configuration"),
-                new PropertySheetWizardAdapter(WizardUtils.configurationWizardFactory(CameraVisionConfigurationWizard.class, this.getId(), this), "Camera Settling"),
-                new PropertySheetWizardAdapter(getConfigurationWizard(), "Device Settings"),
-                new PropertySheetWizardAdapter(WizardUtils.configurationWizardFactory(ReferenceCameraWhiteBalanceConfigurationWizard.class, this.getId(), this), "White Balance"),
-                new PropertySheetWizardAdapter(WizardUtils.configurationWizardFactory(ReferenceCameraPositionConfigurationWizard.class, this.getId(), getMachine(), this), "Position"),
-                new PropertySheetWizardAdapter(WizardUtils.configurationWizardFactory(ReferenceCameraCalibrationConfigurationWizard.class, this.getId(), this), "Lens Calibration"),
-                new PropertySheetWizardAdapter(WizardUtils.configurationWizardFactory(ReferenceCameraTransformsConfigurationWizard.class, this.getId(), this), "Image Transforms"),
-                new PropertySheetWizardAdapter(WizardUtils.configurationWizardFactory(ReferenceCameraCalibrationWizard.class, this.getId(), this), "Advanced Calibration")
+                new PropertySheetWizardAdapter(WizardUtils.configurationWizardFactory(CameraConfigurationWizard.class,
+                        this.getId(), this), Translations.getString(
+                                "ReferenceCamera.CameraConfigurationWizard.tab.title")), //$NON-NLS-1$
+                new PropertySheetWizardAdapter(WizardUtils.configurationWizardFactory(
+                        CameraVisionConfigurationWizard.class, this.getId(), this), Translations.getString(
+                                "ReferenceCamera.CameraVisionConfigurationWizard.tab.title")), //$NON-NLS-1$
+                new PropertySheetWizardAdapter(getConfigurationWizard(), Translations.getString(
+                        "ReferenceCamera.DeviceSettings.tab.title")), //$NON-NLS-1$
+                new PropertySheetWizardAdapter(WizardUtils.configurationWizardFactory(
+                        ReferenceCameraWhiteBalanceConfigurationWizard.class, this.getId(), this),
+                        Translations.getString(
+                                "ReferenceCamera.ReferenceCameraWhiteBalanceConfigurationWizard.tab.title")), //$NON-NLS-1$
+                new PropertySheetWizardAdapter(WizardUtils.configurationWizardFactory(
+                        ReferenceCameraPositionConfigurationWizard.class, this.getId(), getMachine(), this),
+                        Translations.getString(
+                                "ReferenceCamera.ReferenceCameraPositionConfigurationWizard.tab.title")), //$NON-NLS-1$
+                new PropertySheetWizardAdapter(WizardUtils.configurationWizardFactory(
+                        ReferenceCameraCalibrationConfigurationWizard.class, this.getId(), this),
+                        Translations.getString(
+                                "ReferenceCamera.ReferenceCameraCalibrationConfigurationWizard.tab.title")), //$NON-NLS-1$
+                new PropertySheetWizardAdapter(WizardUtils.configurationWizardFactory(
+                        ReferenceCameraTransformsConfigurationWizard.class, this.getId(), this),
+                        Translations.getString(
+                                "ReferenceCamera.ReferenceCameraTransformsConfigurationWizard.tab.title")), //$NON-NLS-1$
+                new PropertySheetWizardAdapter(WizardUtils.configurationWizardFactory(
+                        ReferenceCameraCalibrationWizard.class, this.getId(), this),
+                        Translations.getString(
+                                "ReferenceCamera.ReferenceCameraCalibrationWizard.tab.title")) //$NON-NLS-1$
         };
         if (getFocusSensingMethod() != FocusSensingMethod.None) {
                 sheets = Collect.concat(sheets, new PropertySheet[] {
-                        new PropertySheetWizardAdapter(getFocusProvider().getConfigurationWizard(this), "Auto Focus"),
+                        new PropertySheetWizardAdapter(getFocusProvider().getConfigurationWizard(this),
+                                Translations.getString(
+                                        "ReferenceCamera.FocusProvider.ConfigurationWizard.tab.title")), //$NON-NLS-1$
                 });
         }
         return sheets;
@@ -1236,18 +1259,19 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
         return new Action[] { deleteAction };
     }
     
-    public Action deleteAction = new AbstractAction("Delete Camera") {
+    public Action deleteAction = new AbstractAction(Translations.getString("ReferenceCamera.Action.Delete")) { //$NON-NLS-1$
         {
             putValue(SMALL_ICON, Icons.delete);
-            putValue(NAME, "Delete Camera");
-            putValue(SHORT_DESCRIPTION, "Delete the currently selected camera.");
+            putValue(NAME, Translations.getString("ReferenceCamera.Action.Delete")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("ReferenceCamera.Action.Delete.Description")); //$NON-NLS-1$
         }
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
             int ret = JOptionPane.showConfirmDialog(MainFrame.get(),
-                    "Are you sure you want to delete " + getName() + "?",
-                    "Delete " + getName() + "?", JOptionPane.YES_NO_OPTION);
+                    Translations.getString("DialogMessages.ConfirmDelete.text") + " " + getName() + "?", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                    Translations.getString("DialogMessages.ConfirmDelete.title") + " " + getName() + "?", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                    JOptionPane.YES_NO_OPTION);
             if (ret == JOptionPane.YES_OPTION) {
                 if (getHead() != null) {
                     getHead().removeCamera(ReferenceCamera.this);
