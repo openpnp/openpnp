@@ -36,7 +36,7 @@ The basic steps to set everything up are:
 
 1. Make sure to set the correct numeric code for the Bottom camera. It should be different from the Top.
 
-1. Let [[Issues and Solutions]] help you create the G-Code for the Switcher actuator. Enter:
+1. Let [[Issues and Solutions]] help you create the G-Code `ACTUATE_DOUBLE_COMMAND` for the Switcher actuator. Enter:
 
    `M{IntegerValue} ; actuate camera switcher`
 
