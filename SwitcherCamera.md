@@ -34,9 +34,11 @@ The basic steps to set everything up are:
 
 1. Make sure to set the correct numeric code for the Bottom camera. It should be different from the Top.
 
-1. Let [[Issues and Solutions]] help you create the G-Code for the Switcher actuator.
+1. Let [[Issues and Solutions]] help you create the G-Code for the Switcher actuator. Enter:
 
-   ![Actuator G-Code](https://user-images.githubusercontent.com/9963310/204854952-1a611011-893c-4af6-9cc2-5b5e19f20bac.png)
+   `M{IntegerValue} ; actuate camera switcher`
+
+   ![Actuator G-Code](https://user-images.githubusercontent.com/9963310/204856344-99e53fe2-b8ff-4495-a949-6fc36081f0e6.png)
 
 
 To switch between cameras double click on the camera in the camera view. Note that this will capture a screenshot in your OpenPnP configuration directory. This process will be improved soon.
