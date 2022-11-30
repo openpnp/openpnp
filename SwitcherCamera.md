@@ -10,16 +10,20 @@ SwitcherCamera lets you have multiple virtual cameras sharing the same physical 
 
 The most common configuration for SwitcherCamera will be a single capture device using the OpenPnpCaptureCamera as a source, and two SwitcherCameras - one for Top and one for Bottom. The Top and Bottom SwitcherCameras will send a command to switch back and forth.
 
-Please see the [Video Demonstration](https://www.youtube.com/watch?v=gFXqbMJM2wM) for details on a standard configuration. The basic steps to set everything up are:
+The basic steps to set everything up are:
 
-![Screen Shot 2019-06-12 at 10 58 51 PM](https://user-images.githubusercontent.com/1182323/59403014-83449000-8d66-11e9-841e-40ee3717dc00.png)
-
+1. Create an Actuator that will switch between the Top and Bottom camera. Set its **Value Type** to **Double**. 
+   ![Switcher Actuator](https://user-images.githubusercontent.com/9963310/204848779-615e803c-6281-4e91-a138-dab82888963a.png)
 1. Create the [[OpenPnpCaptureCamera]] as a normal camera and set it up to capture images from your capture hardware.
-2. Create an Actuator that will switch between the Top and Bottom camera. Note down the commands you'll need to send to switch. Commonly this will be two M or G-Codes.
-3. Create the Top SwitcherCamera. Under Device Settings, choose the source camera and the the actuator.
-4. Fill in the actuator value with the numeric code that you will send to enable that camera. For instance, if the command M819 enables your Top camera, fill in 819.
-5. Create the Bottom SwitcherCamera similarly to the Top. Make sure to set the correct numeric code for the Bottom camera. It should be different than the one for Top.
-6. In GcodeDriver settings, configure the ACTUATE_DOUBLE_COMMAND for the actuator. Generally it will be something like `M{IntegerValue}` which will send M followed by the numeric code you entered.
+   ![Capture Device](https://user-images.githubusercontent.com/9963310/204850391-48b45cd0-402f-4f00-93d5-4abbec962522.png)
+1. Make sure to set **Preview FPS** to 0. Disable **Show in multiple camera view?**.
+1. Create the Bottom SwitcherCamera. Under Device Settings, choose the source camera and the the actuator. 
+   ![Bottom Switcher](https://user-images.githubusercontent.com/9963310/204848021-1d12a6ce-8312-4371-b231-9acadd5718c9.png)
+1. Fill in the actuator value with the numeric code that you will send to enable that camera. For instance, if the command M810 enables your Bottom camera, fill in 810.
+1. Make sure to set Preview FPS to 0. Enable **Suspend During Tasks?**.
+1. Create the Top SwitcherCamera similarly to the Top. 
+1. Make sure to set the correct numeric code for the Bottom camera. It should be different from the Top.
+1. Let [[Issues and Solutions]] help you create the G-Code for the Switcher actuator.
 
 To switch between cameras double click on the camera in the camera view. Note that this will capture a screenshot in your OpenPnP configuration directory. This process will be improved soon.
 
