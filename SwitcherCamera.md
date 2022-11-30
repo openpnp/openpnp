@@ -1,10 +1,12 @@
 SwitcherCamera lets you have multiple virtual cameras sharing the same physical capture hardware. This is common in commercial desktop pick and place machines where a single USB capture card captures images from multiple analog cameras. A serial command is used to switch between the two streams.
 
-* [Video Demonstration](https://www.youtube.com/watch?v=gFXqbMJM2wM) 
-   
-   Note: the above video is outdated. In newer OpenPnP versions, each switched camera view will always only show images that come from the right perspective, i.e. if the camera is currently not the switched-to camera, the view is frozen on the last frame before the switch. 
-* [Related Issue](https://github.com/openpnp/openpnp/issues/851)
+ 
 
+* Note: the following video is outdated. In newer OpenPnP versions, each switched camera view will always only show images that come from the right analog camera, i.e. if the camera is currently not the switched-to camera, the view is frozen on the last frame captured _before_ the switching.
+
+   [Video Demonstration](https://www.youtube.com/watch?v=gFXqbMJM2wM) 
+   
+* [Related Issue](https://github.com/openpnp/openpnp/issues/851)
 
 ## Configuration
 
@@ -41,7 +43,7 @@ The basic steps to set everything up are:
    ![Actuator G-Code](https://user-images.githubusercontent.com/9963310/204856344-99e53fe2-b8ff-4495-a949-6fc36081f0e6.png)
 
 
-To switch between cameras double click on the camera in the camera view. Note that this will capture a screenshot in your OpenPnP configuration directory. This process will be improved soon.
+To switch between cameras double click on the camera in the camera view. Note that this will capture a screenshot in your OpenPnP configuration directory. 
 
 OpenPnP will automatically switch between the two cameras for vision operations without capturing a screenshot.
 
