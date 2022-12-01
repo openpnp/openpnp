@@ -37,6 +37,13 @@ If you want to use an own directory, for example if you are using different bran
 * Choose the Arguments tab
 * In the section VM arguments add: -DconfigDir=yourdirectory
 
+## Java Properties Encoding in UTF-8
+
+In Eclipse got to Windows / Preferences / General / Content Type / Text / Java Properties File and set Default encoding to `UTF-8`:
+
+![UTF-8 setting](https://user-images.githubusercontent.com/9963310/205128585-a3a652f0-099f-414f-918c-04ac4b1171d8.png)
+
+This is needed to support translations in different languages. 
 
 ## Additional steps if you want to contribute
 1. Ensure you have the automatic code formatter for eclipse activated. See the [coding style-section in the developers guide to download a preconfigured settings file](https://github.com/openpnp/openpnp/wiki/Developers-Guide#coding-style).
