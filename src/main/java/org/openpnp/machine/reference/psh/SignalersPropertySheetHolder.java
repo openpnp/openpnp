@@ -7,6 +7,7 @@ import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.Icon;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.ClassSelectionDialog;
 import org.openpnp.gui.support.Icons;
@@ -35,14 +36,16 @@ public class SignalersPropertySheetHolder extends SimplePropertySheetHolder {
         {
             putValue(SMALL_ICON, Icons.add);
             putValue(NAME, "New Signaler...");
-            putValue(SHORT_DESCRIPTION, "Create a new signaler.");
+            putValue(SHORT_DESCRIPTION, Translations.getString(
+                    "SignalersPropertySheetHolder.Action.NewSignaler.Description")); //$NON-NLS-1$
         }
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
             Configuration configuration = Configuration.get();
             ClassSelectionDialog<Signaler> dialog = new ClassSelectionDialog<>(MainFrame.get(),
-                    "Select Nozzle...", "Please select a Signaler implemention from the list below.",
+                    Translations.getString("SignalersPropertySheetHolder.SelectionDialog.title"), //$NON-NLS-1$
+                    Translations.getString("SignalersPropertySheetHolder.SelectionDialog.description"), //$NON-NLS-1$
                     configuration.getMachine().getCompatibleSignalerClasses());
             dialog.setVisible(true);
             Class<? extends Signaler> cls = dialog.getSelectedClass();

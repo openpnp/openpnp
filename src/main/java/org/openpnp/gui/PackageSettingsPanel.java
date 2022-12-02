@@ -19,26 +19,16 @@
 
 package org.openpnp.gui;
 
-import java.awt.BorderLayout;
-
 import javax.swing.JPanel;
 import javax.swing.BoxLayout;
-import javax.swing.JComboBox;
 import javax.swing.border.TitledBorder;
 
 import org.jdesktop.beansbinding.AutoBinding;
 import org.jdesktop.beansbinding.BeanProperty;
-import org.jdesktop.beansbinding.BindingListener;
 import org.jdesktop.beansbinding.Bindings;
-import org.jdesktop.beansbinding.Converter;
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
+import org.openpnp.Translations;
 import org.openpnp.gui.components.ComponentDecorators;
-import org.openpnp.gui.support.DoubleConverter;
-import org.openpnp.gui.support.JBindings;
-import org.openpnp.gui.support.JBindings.WrappedBinding;
-import org.openpnp.model.Configuration;
-import org.openpnp.model.Footprint;
-import org.openpnp.model.LengthUnit;
 
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -67,7 +57,9 @@ public class PackageSettingsPanel extends JPanel {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         
         vacuumBlowOffPanel = new JPanel();
-        vacuumBlowOffPanel.setBorder(new TitledBorder(null, "Vacuum & Blow Off", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        vacuumBlowOffPanel.setBorder(new TitledBorder(null, Translations.getString(
+                "PackageSettingsPanel.Border.title"), //$NON-NLS-1$
+                TitledBorder.LEADING, TitledBorder.TOP, null, null));
         add(vacuumBlowOffPanel);
         vacuumBlowOffPanel.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -80,14 +72,14 @@ public class PackageSettingsPanel extends JPanel {
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
-        lblNewLabel = new JLabel("Vacuum Level");
+        lblNewLabel = new JLabel(Translations.getString("PackageSettingsPanel.VacuumLevelLabel.text")); //$NON-NLS-1$
         vacuumBlowOffPanel.add(lblNewLabel, "2, 2, right, default");
         
         vacuumLevel = new JTextField();
         vacuumBlowOffPanel.add(vacuumLevel, "4, 2, left, default");
         vacuumLevel.setColumns(10);
         
-        lblBlowOffLevel = new JLabel("Blow Off Level");
+        lblBlowOffLevel = new JLabel(Translations.getString("PackageSettingsPanel.BlowOffLevelLabel.text")); //$NON-NLS-1$
         vacuumBlowOffPanel.add(lblBlowOffLevel, "2, 4, right, default");
         
         blowOffLevel = new JTextField();

@@ -24,6 +24,7 @@ import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.openpnp.Translations;
 import org.openpnp.model.BottomVisionSettings;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.FiducialVisionSettings;
@@ -33,7 +34,13 @@ import org.openpnp.model.Package;
 public class PackagesTableModel extends AbstractObjectTableModel implements PropertyChangeListener {
     final private Configuration configuration;
 
-    private String[] columnNames = new String[] {"ID", "Description", "Tape Specification", "BottomVision", "FiducialVision"};
+    private String[] columnNames = new String[] {
+            Translations.getString("PackagesTableModel.ColumnName.ID"), //$NON-NLS-1$
+            Translations.getString("PackagesTableModel.ColumnName.Description"), //$NON-NLS-1$
+            Translations.getString("PackagesTableModel.ColumnName.TapeSpecification"), //$NON-NLS-1$
+            Translations.getString("PackagesTableModel.ColumnName.BottomVision"), //$NON-NLS-1$
+            Translations.getString("PackagesTableModel.ColumnName.FiducialVision") //$NON-NLS-1$
+    };
     private Class[] columnTypes = new Class[] {String.class, String.class, String.class, BottomVisionSettings.class, FiducialVisionSettings.class};
     private List<Package> packages;
 

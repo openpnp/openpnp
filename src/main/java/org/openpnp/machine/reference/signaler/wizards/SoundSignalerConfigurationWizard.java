@@ -21,6 +21,7 @@ package org.openpnp.machine.reference.signaler.wizards;
 
 import javax.swing.JCheckBox;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.machine.reference.signaler.SoundSignaler;
 
@@ -49,10 +50,12 @@ public class SoundSignalerConfigurationWizard extends AbstractConfigurationWizar
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
-        chckbxError = new JCheckBox("Play sound on error?");
+        chckbxError = new JCheckBox(Translations.getString(
+                "SoundSignalerConfigurationWizard.PlaySoundOnErrorChkBox.text")); //$NON-NLS-1$
         contentPanel.add(chckbxError, "2, 2");
         
-        chckbxSuccess = new JCheckBox("Play sound on completion?");
+        chckbxSuccess = new JCheckBox(Translations.getString(
+                "SoundSignalerConfigurationWizard.PlaySoundOnCompletionChkBox.text")); //$NON-NLS-1$
         contentPanel.add(chckbxSuccess, "2, 4");
     }
 
