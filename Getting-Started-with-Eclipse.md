@@ -25,6 +25,36 @@
 * <sup>1</sup> It is possible to later change so your clone is pointing to your fork at Github.
 * <sup>2</sup> You cannot directly push your changes to OpenPnP, it must go through your own fork.
 
+### Designing UI Elements
+To edit user interface Wizards etc. you need to install a graphical UI designer like WindowBuilder.
+
+Follow the video:
+- [Eclipse WindowBuilder Setup](https://youtu.be/bOiI6bGpINY)
+
+## Translations in Eclipse
+
+### Java Properties Encoding in UTF-8
+
+To support translations in different languages and scriptures in Eclipse, go to Windows / Preferences / General / Content Type / Text / Java Properties File and set Default encoding to `UTF-8`:
+
+![UTF-8 setting](https://user-images.githubusercontent.com/9963310/205128585-a3a652f0-099f-414f-918c-04ac4b1171d8.png)
+
+### Translate in WindowBuilder
+
+The WindowBuilder designer has built-in localization support, so you can directly select the language in the drop-down (click on arrow-down, see below) and then set and preview texts like labels and tooltips transparently in the graphical designer. WindowBuilder will automatically generate the translation key, add missing translation entries and texts to the Java properties files.
+
+![select language](https://user-images.githubusercontent.com/9963310/205491644-3687cbe9-cf98-44cb-ba7c-e9da8e5e1981.png)
+
+You can also just click on the drop-down button to get a global tabular editor for all the text strings of OpenPnP:
+
+![image](https://user-images.githubusercontent.com/9963310/205493808-56053e4d-a22c-439f-8f89-5e00ba5b499c.png)
+
+### Externalize other Strings
+
+Some text strings in the source code might be outside the scope of WindowBuilder's designer. To make these source code texts available for translation, you can use menu **Source / Externalize Strings...**. The dialog will contain all the new Strings. It must be configured for the central OpenPnP resource bundle. 
+
+**TODO: explain and solve _how_.**
+
 ### Working with different configuration directories
 
 When launching OpenPNP from within Eclipse IDE it will use your default configuration directory.
@@ -36,14 +66,6 @@ If you want to use an own directory, for example if you are using different bran
 * Select your Main Java Application settings
 * Choose the Arguments tab
 * In the section VM arguments add: -DconfigDir=yourdirectory
-
-## Java Properties Encoding in UTF-8
-
-In Eclipse got to Windows / Preferences / General / Content Type / Text / Java Properties File and set Default encoding to `UTF-8`:
-
-![UTF-8 setting](https://user-images.githubusercontent.com/9963310/205128585-a3a652f0-099f-414f-918c-04ac4b1171d8.png)
-
-This is needed to support translations in different languages. 
 
 ## Additional steps if you want to contribute
 1. Ensure you have the automatic code formatter for eclipse activated. See the [coding style-section in the developers guide to download a preconfigured settings file](https://github.com/openpnp/openpnp/wiki/Developers-Guide#coding-style).
