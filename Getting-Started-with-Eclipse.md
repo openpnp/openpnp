@@ -51,9 +51,39 @@ You can also just click on the drop-down button to get a global tabular editor f
 
 ### Externalize other Strings
 
-Some text strings in the source code might be outside the scope of WindowBuilder's designer. To make these source code texts available for translation, you can use menu **Source / Externalize Strings...**. The dialog will contain all the new Strings. It must be configured for the central OpenPnP resource bundle. 
+Some text strings in the source code might be outside the scope of WindowBuilder's designer. To make these source code texts available for translation, you can use menu **Source / Externalize Strings...**. 
 
-**TODO: explain and solve _how_.**
+Press **Configure...** to check whether the configuration is correct, if not, make it so:
+
+![image](https://user-images.githubusercontent.com/9963310/205495114-7d3b7c41-15a7-41ea-8614-17a38d60d195.png)
+
+#### Externalize Strings Dialog
+
+The dialog lists all the yet untreated strings found in the source code. Select an entry to position to the code.
+
+**CAUTION:** it is very, _very_ important to understand the nature of a string. If it is a string that has is used for a _computation purpose_ rather than as a _human readable_ text, you must select it and press the **Ignore** button. If in doubt, or if the string has _both_ a human readable and computation meaning, select the string and press **Ignore**, as in the following example. Multi-selection is possible. An `x` sign must appear on the left:
+
+![image](https://user-images.githubusercontent.com/9963310/205495428-20cae7e7-2ed9-49e2-8edb-9c7f2a2e51a0.png)
+
+Only if the string is clearly intended as a **text to only be read by a human**, you can leave it checked. Make sure to set a speaking **Key**, so that the meaning of the text is still understandable for developers. The externalized string will be removed from the source code, so the **Key** is all that is left for understanding it:
+
+![image](https://user-images.githubusercontent.com/9963310/205496316-33658b56-931a-4aed-85ee-b42118d8e964.png)
+
+Yes, composing all these keys well is hard work! Leaving just the proposed numbers is unacceptable (pull requests with these will not be accepted). 
+
+#### Preview Changes
+
+After having carefully assessed each string, press **Next** to review the changes. 
+
+Strings that are not externalized will be marked with the `//$NON-NLS-x$` pattern (if there are multiple strings on one line, `x` is denoting the position): 
+
+![image](https://user-images.githubusercontent.com/9963310/205496468-06466ef8-5b4a-41d4-8413-700785ada917.png)
+
+String that are externalized are replaced with the `Translations.getString()` call, using the defined key:
+
+![image](https://user-images.githubusercontent.com/9963310/205496447-8f6da8ca-22fb-4f72-8ce4-d2a2f5a90fa2.png)
+
+The externalized key=string pair is automatically added to the `translations.properties` file. 
 
 ### Working with different configuration directories
 
