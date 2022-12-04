@@ -45,9 +45,11 @@ The WindowBuilder designer has built-in localization support, so you can directl
 
 ![select language](https://user-images.githubusercontent.com/9963310/205491644-3687cbe9-cf98-44cb-ba7c-e9da8e5e1981.png)
 
-You can also just click on the drop-down button to get a global tabular editor for all the text strings of OpenPnP:
+You can also click on the center of the drop-down button to get a tabular editor for all the text strings:
 
 ![image](https://user-images.githubusercontent.com/9963310/205493808-56053e4d-a22c-439f-8f89-5e00ba5b499c.png)
+
+The default table contains all the strings in OpenPnP. Select the "Show strings only for current form" checkbox, to just translate the current form.
 
 ### Externalize other Strings
 
@@ -56,6 +58,12 @@ Some text strings in the source code might be outside the scope of WindowBuilder
 Press **Configure...** to check whether the configuration is correct, if not, make it so:
 
 ![image](https://user-images.githubusercontent.com/9963310/205495114-7d3b7c41-15a7-41ea-8614-17a38d60d195.png)
+
+**CAUTION:** if this dialog does not accept the **Properties file location and name** as show here, you must cancel the dialogs and first remove an Exclusion pattern from the `openpnp/src/main/resources` path in the project properties:
+
+![image](https://user-images.githubusercontent.com/9963310/205499213-172562d4-751b-4d4f-8113-9852f7b8748d.png)
+
+This exclusion pattern is apparently mistakenly (?) added in the maven project conversion. See [Eclipse/m2e bug](https://bugs.eclipse.org/bugs/show_bug.cgi?id=369296), and [follow up here](https://github.com/eclipse-m2e/m2e-core/issues/139).
 
 #### Externalize Strings Dialog
 
