@@ -404,30 +404,31 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
             PartSettingsHolder partSettingsHolder) throws Exception {
         org.openpnp.model.Package pkg = null;
         Footprint footprint = null;
-        if (partSettingsHolder != null) {
-            if (partSettingsHolder instanceof Part) {
-                pkg = ((Part) partSettingsHolder).getPackage();
-            }
-            else if (partSettingsHolder instanceof org.openpnp.model.Package) {
-                pkg = (org.openpnp.model.Package) partSettingsHolder;
-            }
-            if (pkg == null) {
-                throw new Exception(
-                        String.format("%s %s does not have a valid package associated.", partSettingsHolder.getClass().getSimpleName(), partSettingsHolder.getShortName()));
-            }
+        if (partSettingsHolder instanceof Part) {
+            pkg = ((Part) partSettingsHolder).getPackage();
+        }
+        else if (partSettingsHolder instanceof org.openpnp.model.Package) {
+            pkg = (org.openpnp.model.Package) partSettingsHolder;
+        }
+        if (pkg == null) {
+            // If we're editing non-specific vision settings, i.e. when we are not on the Parts or Packages tab,
+            // use the FIDUCIAL-HOME as the stand-in package for pipeline editing. Defaults to a 1mm circular fiducial
+            // if it does not exist yet.
+            pkg = VisionUtils.readyHomingFiducialWithDiameter(new Length(1, LengthUnit.Millimeters), false)
+                    .getPackage();
+        }
 
-            footprint = pkg.getFootprint();
-            if (footprint == null) {
-                throw new Exception(String.format(
-                        "Package %s does not have a valid footprint. See https://github.com/openpnp/openpnp/wiki/Fiducials.",
-                        pkg.getId()));
-            }
+        footprint = pkg.getFootprint();
+        if (footprint == null) {
+            throw new Exception(String.format(
+                    "Package %s does not have a valid footprint. See https://github.com/openpnp/openpnp/wiki/Fiducials.",
+                    pkg.getId()));
+        }
 
-            if (footprint.getShape() == null) {
-                throw new Exception(String.format(
-                        "Package %s has an invalid or empty footprint.  See https://github.com/openpnp/openpnp/wiki/Fiducials.",
-                        pkg.getId()));
-            }
+        if (footprint.getShape() == null) {
+            throw new Exception(String.format(
+                    "Package %s has an invalid or empty footprint.  See https://github.com/openpnp/openpnp/wiki/Fiducials.",
+                    pkg.getId()));
         }
         pipeline.setProperty("camera", camera);
         pipeline.setProperty("part", partSettingsHolder);
