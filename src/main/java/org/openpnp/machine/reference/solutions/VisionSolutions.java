@@ -57,6 +57,7 @@ import org.openpnp.model.Footprint.Pad;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.model.Package;
 import org.openpnp.model.Part;
 import org.openpnp.model.Solutions;
 import org.openpnp.model.Solutions.Milestone;
@@ -1076,7 +1077,7 @@ public class VisionSolutions implements Solutions.Subject {
                     else {
                         head.setHomingFiducialLocation(oldFiducialLocation);
                         head.setVisualHomingMethod(VisualHomingMethod.None);
-                        setHomingFiducialDiameter(oldFiducialDiameter);
+                        VisionUtils.readyHomingFiducialWithDiameter(oldFiducialDiameter, true);
                         super.setState(state);
                     }
                 }
@@ -1608,7 +1609,7 @@ public class VisionSolutions implements Solutions.Subject {
      */
     public void calibrateVisualHoming(ReferenceHead head, ReferenceCamera defaultCamera, Length fiducialDiameter) throws Exception {
         // Make sure we got the homing fiducial set up properly.
-        setHomingFiducialDiameter(fiducialDiameter);
+        VisionUtils.readyHomingFiducialWithDiameter(fiducialDiameter, true);
         // Set rough location as homing fiducial location.
         Location homingFiducialLocation = defaultCamera.getLocation();
         head.setHomingFiducialLocation(homingFiducialLocation);
@@ -1621,51 +1622,6 @@ public class VisionSolutions implements Solutions.Subject {
         head.setHomingFiducialLocation(homingFiducialLocation);
     }
 
-    /**
-     * @param fiducialDiameter
-     * @throws IOException 
-     */
-    public void setHomingFiducialDiameter(Length fiducialDiameter) throws IOException {
-        Configuration configuration = Configuration.get();
-        org.openpnp.model.Package pkg = configuration.getPackage("FIDUCIAL-HOME");
-        if (pkg == null) {
-            pkg = new org.openpnp.model.Package("FIDUCIAL-HOME");
-            configuration.addPackage(pkg);
-        }
-        Footprint footprint = new Footprint();
-        footprint.setUnits(fiducialDiameter.getUnits());
-        Pad pad = new Pad();
-        pad.setName("FID");
-        pad.setWidth(fiducialDiameter.getValue());
-        pad.setHeight(fiducialDiameter.getValue());
-        pad.setRoundness(100.0);
-        footprint.addPad(pad);
-        pkg.setFootprint(footprint);
-        Part part = configuration.getPart("FIDUCIAL-HOME");
-        if (part == null) {
-            part = new Part("FIDUCIAL-HOME");
-            configuration.addPart(part);
-        }
-        part.setPackage(pkg);
-        ReferenceFiducialLocator fiducialLocator = ReferenceFiducialLocator.getDefault();
-        FiducialVisionSettings visionSettings = fiducialLocator.getInheritedVisionSettings(part);
-        if (visionSettings.getUsedFiducialVisionIn().size() == 1 
-                && visionSettings.getUsedFiducialVisionIn().get(0) == part) {
-            // Already a special setting on the part. Modify it.
-        }
-        else {
-            FiducialVisionSettings newSettings = new FiducialVisionSettings();
-            newSettings.setValues(visionSettings);
-            newSettings.setName(part.getShortName());
-            part.setFiducialVisionSettings(newSettings);
-            Configuration.get().addVisionSettings(newSettings);
-            visionSettings = newSettings;
-        }
-        String xml = IOUtils.toString(ReferenceBottomVision.class
-                .getResource("ReferenceFiducialLocator-DefaultPipeline.xml"));
-        CvPipeline pipeline = new CvPipeline(xml);
-        visionSettings.setPipeline(pipeline);
-    }
 
     public Length getHomingFiducialDiameter() {
         Configuration configuration = Configuration.get();
