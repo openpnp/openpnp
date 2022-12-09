@@ -318,7 +318,7 @@ public class MachineControlsPanel extends JPanel {
 
     public class HomeAction extends AbstractAction {
         public HomeAction() {
-            super(Translations.getString("MachineControls.Action.Home"), Icons.home);
+            super(Translations.getString("MachineControls.Action.Home"), Icons.home); //$NON-NLS-1$
             putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke(KeyEvent.VK_BACK_QUOTE,
                     Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
         }

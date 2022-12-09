@@ -29,6 +29,7 @@ import org.openpnp.machine.reference.camera.wizards.SwitcherCameraConfigurationW
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
+import org.openpnp.spi.Machine;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractActuator;
 import org.simpleframework.xml.Attribute;
@@ -48,11 +49,40 @@ public class SwitcherCamera extends ReferenceCamera {
     
     @Attribute(required=false)
     private long actuatorDelayMillis = 500;
+
+    private boolean switching = false;
     
     private static Map<Integer, Camera> switchers = new HashMap<>();
     
     protected int getCaptureTryCount() {
         return 1;
+    }
+
+    @Override
+    public void notifyCapture() {
+        if (switching) {
+            // While switching, do not notifyCapture(), it would potentially create 
+            // endless recursion. The notifyCapture() will still be done by 
+            // setLastTransformedImage() when the capture that is the initiator of the 
+            // present switching is done.
+            return;
+        }
+        // If we're in a machine task already, take the opportunity to switch the camera over, if necessary.
+        // Note if we'd just let the notified camera thread do the actuator switching, it would timeout and 
+        // produce an ugly error frame, because our machine thread is likely still running.
+        Machine machine = Configuration.get().getMachine();
+        if (machine.isTask(Thread.currentThread())) {
+            synchronized (switchers) {
+                if (switchers.get(switcher) != this) {
+                    // Need to switch the camera over, provoke by capturing. 
+                    captureTransformed();
+                    // Note, captureTransformed() will do another notifyCapture() for us when the 
+                    // frame was captured, this time no switching needed. 
+                    return;
+                }
+            }
+        }
+        super.notifyCapture();
     }
 
     @Override
@@ -63,15 +93,27 @@ public class SwitcherCamera extends ReferenceCamera {
         synchronized (switchers) {
             if (switchers.get(switcher) != this) {
                 try {
+                    // Flag the transition to prevent endless recursion through notifyCapture()
+                    // which is called by the switching actuator through fireHeadActivity().
+                    switching = true;
+                    // The switching is subject to fail, so make the state indeterminate.
+                    switchers.put(switcher, null);
                     // Make sure this happens within a machine task, but wait for it.
                     Camera switchedCamera = Configuration.get().getMachine().execute(() -> {
                             getActuator().actuate(actuatorDoubleValue);
                             return this;
-                        }, true, 0); // execute only if the Machine is enabled and with zero timeout if it is busy.
+                        }, 
+                        true,                   // Execute only if the Machine is enabled. 
+                        actuatorDelayMillis,    // Max wait for machine to be idle.
+                        actuatorDelayMillis     // Max wait for it to finish, which prevents deadlock through static SwitcherCamera.switchers. 
+                                                // Note, because of the switcher actuator and machine task involvement, deadlocks cannot be excluded 
+                                                // in general .
+                    );
                     if (this != switchedCamera) {
                         return null;
                     }
                     Thread.sleep(actuatorDelayMillis);
+                    // Succeeded, set the new state.
                     switchers.put(switcher, this);
                 }
                 catch (TimeoutException e) {
@@ -81,6 +123,9 @@ public class SwitcherCamera extends ReferenceCamera {
                 catch (Exception e) {
                     e.printStackTrace();
                     return null;
+                }
+                finally {
+                    switching = false;
                 }
             }
         }

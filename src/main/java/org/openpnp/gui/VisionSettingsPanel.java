@@ -32,6 +32,7 @@ import javax.swing.RowFilter;
 import javax.swing.SwingUtilities;
 import javax.swing.table.TableRowSorter;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.Icons;
@@ -141,7 +142,7 @@ public class VisionSettingsPanel extends JPanel implements WizardContainer {
         JPanel filterPanel = new JPanel();
         toolbarPanel.add(filterPanel, BorderLayout.EAST);
         
-        JLabel lblFilterType = new JLabel("Type");
+        JLabel lblFilterType = new JLabel(Translations.getString("VisionSettingsPanel.TypeLabel.text")); //$NON-NLS-1$
         filterPanel.add(lblFilterType);
         
         visionTypeFilter = new JComboBox(VisionTypeFilter.values());
@@ -186,8 +187,8 @@ public class VisionSettingsPanel extends JPanel implements WizardContainer {
     public final Action newSettingsAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.add);
-            putValue(NAME, "New Settings");
-            putValue(SHORT_DESCRIPTION, "Create a new Bottom Vision Settings.");
+            putValue(NAME, Translations.getString("VisionSettingsPanel.Action.NewSettings")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("VisionSettingsPanel.Action.NewSettings.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -202,8 +203,9 @@ public class VisionSettingsPanel extends JPanel implements WizardContainer {
     public final Action deleteSettingsAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.delete);
-            putValue(NAME, "Delete Settings");
-            putValue(SHORT_DESCRIPTION, "Delete the currently selected settings.");
+            putValue(NAME, Translations.getString("VisionSettingsPanel.Action.DeleteSettings")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString(
+                    "VisionSettingsPanel.Action.DeleteSettings.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -217,8 +219,9 @@ public class VisionSettingsPanel extends JPanel implements WizardContainer {
 
             if (!usedIn.isEmpty()) {
                 String errorNames = new AbstractVisionSettings.ListConverter(false).convertForward(usedIn);
-                MessageBoxes.errorBox(getTopLevelAncestor(), "Error",
-                        "The selection cannot be deleted. It is used by " + errorNames + ".");
+                MessageBoxes.errorBox(getTopLevelAncestor(), Translations.getString("CommonWords.error"), //$NON-NLS-1$
+                        Translations.getString("CommonPhrases.selectionCannotBeDeletedUsedBy") //$NON-NLS-1$
+                                + " " + errorNames + "."); //$NON-NLS-1$ //$NON-NLS-2$
                 return;
             }
 
@@ -231,8 +234,12 @@ public class VisionSettingsPanel extends JPanel implements WizardContainer {
             }
 
             int ret = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                    "Are you sure you want to delete " + formattedNames + "?",
-                    "Delete " + selections.size() + " vision settings?", JOptionPane.YES_NO_OPTION);
+                    Translations.getString("DialogMessages.ConfirmDelete.text") //$NON-NLS-1$
+                            + " " + formattedNames + "?", //$NON-NLS-1$ //$NON-NLS-2$
+                    Translations.getString("DialogMessages.ConfirmDelete.title") //$NON-NLS-1$
+                            + " " + selections.size() + " " + Translations.getString("CommonPhrases.visionSettings") //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                            + "?", //$NON-NLS-1$
+                    JOptionPane.YES_NO_OPTION);
             if (ret == JOptionPane.YES_OPTION) {
                 for (AbstractVisionSettings visionSettings : selections) {
                     Configuration.get().removeVisionSettings(visionSettings);
@@ -244,9 +251,9 @@ public class VisionSettingsPanel extends JPanel implements WizardContainer {
     public final Action copyPackageToClipboardAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.copy);
-            putValue(NAME, "Copy Vision Settings to Clipboard");
-            putValue(SHORT_DESCRIPTION,
-                    "Copy the currently selected vision settings to the clipboard in text format.");
+            putValue(NAME, Translations.getString("VisionSettingsPanel.Action.CopySettingsToClipboard")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString(
+                    "VisionSettingsPanel.Action.CopySettingsToClipboard.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -274,8 +281,9 @@ public class VisionSettingsPanel extends JPanel implements WizardContainer {
     public final Action pastePackageToClipboardAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.paste);
-            putValue(NAME, "Create Vision Settings from Clipboard");
-            putValue(SHORT_DESCRIPTION, "Create a new vision setting from a definition on the clipboard.");
+            putValue(NAME, Translations.getString("VisionSettingsPanel.Action.CreateSettingsFromClipboard")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString(
+                    "VisionSettingsPanel.Action.CreateSettingsFromClipboard.Description")); //$NON-NLS-1$
         }
 
         @Override

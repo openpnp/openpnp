@@ -1433,7 +1433,7 @@ public class CameraView extends JComponent implements CameraListener {
      * Capture the current image (unscaled, unmodified) and write it to disk.
      */
     private void captureSnapshot() {
-        UiUtils.messageBoxOnException(() -> {
+        UiUtils.submitUiMachineTask(() -> {
             File dir = new File(Configuration.get().getConfigurationDirectory(), "snapshots");
             dir.mkdirs();
             DateFormat df = new SimpleDateFormat("YYYY-MM-dd_HH.mm.ss.SSS");

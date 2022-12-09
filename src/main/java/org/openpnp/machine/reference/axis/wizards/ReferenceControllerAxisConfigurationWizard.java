@@ -40,6 +40,7 @@ import javax.swing.border.TitledBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.DriversComboBoxModel;
@@ -114,8 +115,8 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
 
     private Action captureSoftLimitLowAction = new AbstractAction(null, Icons.captureAxisLow) {
         {
-            putValue(Action.SHORT_DESCRIPTION,
-                    "Capture the current axis position as the low soft-limit.");
+            putValue(Action.SHORT_DESCRIPTION, Translations.getString(
+                    "ReferenceControllerAxisConfigurationWizard.Action.CaptureSoftLimitLow.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -132,8 +133,8 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
 
     private Action captureSoftLimitHighAction = new AbstractAction(null, Icons.captureAxisHigh) {
         {
-            putValue(Action.SHORT_DESCRIPTION,
-                    "Capture the current axis position as the high soft-limit.");
+            putValue(Action.SHORT_DESCRIPTION, Translations.getString(
+                    "ReferenceControllerAxisConfigurationWizard.Action.CaptureSoftLimitHigh.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -150,8 +151,8 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
 
     private Action positionSoftLimitLowAction = new AbstractAction(null, Icons.positionAxisLow) {
         {
-            putValue(Action.SHORT_DESCRIPTION,
-                    "Position the axis to the low soft-limit coordinate.");
+            putValue(Action.SHORT_DESCRIPTION, Translations.getString(
+                    "ReferenceControllerAxisConfigurationWizard.Action.PositionSoftLimitLow.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -166,8 +167,8 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
 
     private Action positionSoftLimitHighAction = new AbstractAction(null, Icons.positionAxisHigh) {
         {
-            putValue(Action.SHORT_DESCRIPTION,
-                    "Position the axis to the high soft-limit coordinate.");
+            putValue(Action.SHORT_DESCRIPTION, Translations.getString(
+                    "ReferenceControllerAxisConfigurationWizard.Action.PositionSoftLimitHigh.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -183,8 +184,8 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
 
     private Action captureSafeZoneLowAction = new AbstractAction(null, Icons.captureAxisLow) {
         {
-            putValue(Action.SHORT_DESCRIPTION,
-                    "Capture the current axis position as the lower limit of the safe zone.");
+            putValue(Action.SHORT_DESCRIPTION, Translations.getString(
+                    "ReferenceControllerAxisConfigurationWizard.Action.CaptureSafeZoneLow.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -201,8 +202,8 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
 
     private Action captureSafeZoneHighAction = new AbstractAction(null, Icons.captureAxisHigh) {
         {
-            putValue(Action.SHORT_DESCRIPTION,
-                    "Capture the current axis position as the upper limit of the safe zone.");
+            putValue(Action.SHORT_DESCRIPTION, Translations.getString(
+                    "ReferenceControllerAxisConfigurationWizard.Action.CaptureSafeZoneHigh.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -219,8 +220,8 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
 
     private Action positionSafeZoneLowAction = new AbstractAction(null, Icons.positionAxisLow) {
         {
-            putValue(Action.SHORT_DESCRIPTION,
-                    "Position the axis to the lower limit of the safe zone.");
+            putValue(Action.SHORT_DESCRIPTION, Translations.getString(
+                    "ReferenceControllerAxisConfigurationWizard.Action.PositionSafeZoneLow.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -235,8 +236,8 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
 
     private Action positionSafeZoneHighAction = new AbstractAction(null, Icons.positionAxisHigh) {
         {
-            putValue(Action.SHORT_DESCRIPTION,
-                    "Position the axis to the higher limit of the safe zone.");
+            putValue(Action.SHORT_DESCRIPTION, Translations.getString(
+                    "ReferenceControllerAxisConfigurationWizard.Action.PositionSafeZoneHigh.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -255,7 +256,9 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
         super(axis);
 
         panelControllerSettings = new JPanel();
-        panelControllerSettings.setBorder(new TitledBorder(null, "Controller Settings", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        panelControllerSettings.setBorder(new TitledBorder(null, Translations.getString(
+                "ReferenceControllerAxisConfigurationWizard.ControllerSettingsPanel.Border.title"),
+                TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panelControllerSettings);
         panelControllerSettings.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -288,7 +291,9 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 RowSpec.decode("default:grow"),}));
 
-        lblDriver = new JLabel("Driver");
+        lblDriver = new JLabel(Translations.getString(
+                "ReferenceControllerAxisConfigurationWizard.ControllerSettingsPanel.DriverLabel.text"
+        ));
         panelControllerSettings.add(lblDriver, "2, 2, right, default");
 
         driver = new JComboBox(new DriversComboBoxModel((AbstractMachine) Configuration.get().getMachine(), true));
@@ -299,15 +304,19 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
         });
         panelControllerSettings.add(driver, "4, 2, fill, default");
 
-        lblDesignator = new JLabel("Axis Letter");
-        lblDesignator.setToolTipText("The axis letter (X, Y, Z etc.) as used by the Controller.");
+        lblDesignator = new JLabel(Translations.getString(
+                "ReferenceControllerAxisConfigurationWizard.ControllerSettingsPanel.AxisLetterLabel.text"));
+        lblDesignator.setToolTipText(Translations.getString(
+                "ReferenceControllerAxisConfigurationWizard.ControllerSettingsPanel.AxisLetterLabel.toolTipText"));
         panelControllerSettings.add(lblDesignator, "2, 4, right, default");
 
         letter = new JTextField();
         panelControllerSettings.add(letter, "4, 4, fill, default");
         letter.setColumns(10);
 
-        lblInvertLinearrotational = new JLabel("Switch Linear ↔ Rotational?");
+        lblInvertLinearrotational = new JLabel(Translations.getString(
+                "ReferenceControllerAxisConfigurationWizard.ControllerSettingsPanel.SwitchLinearRotationalLabel.text"
+        ));
         lblInvertLinearrotational.setToolTipText("<html>\r\n<p>It is important that OpenPnP understands whether an Axis is linear or rotational in <br/>\r\nthe controller. </p> \r\n<p>Most of the times this is already determined by the Axis Type, i.e. X, Y, Z are linear <br/>\r\nand Rotation is rotational. But sometimes you may run out of proper axes on the <br/>\r\ncontroller and then have to use a linear controller axis for a rotational OpenPnP axis <br/>\r\nor vice versa.</p>\r\n<p>If you cannot configure your controller to switch this meaning, it is important to enable <br/>\r\nthe Switch Linear ↔ Rotational checkbox.</p>\r\n<p>This is relevant in computing proper limits for feed-rate, acceleration and jerk in mixed<br/>\r\naxes moves, as only the motion of linear axes is taken into consideration for the limts in \\br/>\r\nstandard G-Code.</p>\r\n</html>");
         panelControllerSettings.add(lblInvertLinearrotational, "2, 6, right, default");
 
@@ -315,14 +324,16 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
         invertLinearRotational.setToolTipText("");
         panelControllerSettings.add(invertLinearRotational, "4, 6");
 
-        JLabel lblHomeCoordinate = new JLabel("Home Coordinate");
+        JLabel lblHomeCoordinate = new JLabel(Translations.getString(
+                "ReferenceControllerAxisConfigurationWizard.ControllerSettingsPanel.HomeCoordinateLabel.text"));
         panelControllerSettings.add(lblHomeCoordinate, "2, 8, right, default");
 
         homeCoordinate = new JTextField();
         panelControllerSettings.add(homeCoordinate, "4, 8, fill, default");
         homeCoordinate.setColumns(10);
 
-        lblResolution = new JLabel("Resolution [Driver Units]");
+        lblResolution = new JLabel(Translations.getString(
+                "ReferenceControllerAxisConfigurationWizard.ControllerSettingsPanel.ResolutionLabel.text"));
         lblResolution.setToolTipText("<html><strong>Resolution</strong> of this axis. Coordinates will be rounded to the nearest multiple when it comes<br/>\r\nto comparing them, i.e. a move is only executed, if they differ after being rounded.<br/>\r\nIdeally, this is set to the micro-step (or similar) physical resolution of the axis, or a practicle  integral<br/>\r\nmultiple thereof. The <strong>Resolution</strong> is the reciprocal of the <strong>Steps / Unit</strong>, that is often configured<br/>\r\nin controllers.<br/>\r\n<br/>\r\nFor the GcodeDriver, make sure the resolution can be expressed with the format in the <br/>\r\n<code>MOVE_TO_COMMAND</code>. Default is 0.0001 which corresponds to the %.4f (four fractional digits)<br/>\r\nformat in the <code>MOVE_TO_COMMAND</code>.<br/>\r\n<br/>\r\nNote, the <strong>Resolution</strong> is given in Driver (not System) units.\r\n</html>");
         panelControllerSettings.add(lblResolution, "2, 12, right, default");
 
@@ -361,7 +372,8 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
             }
         });
         
-        lblStepsUnit = new JLabel("Steps / Unit");
+        lblStepsUnit = new JLabel(Translations.getString(
+                "ReferenceControllerAxisConfigurationWizard.ControllerSettingsPanel.StepsUnitLabel.text"));
         lblStepsUnit.setToolTipText("<html><strong>Steps per Unit</strong> are the reciprocal of the <strong>Resolution</strong>.<br/>\r\nThese are often found in the controller configuration, therefore you can enter them here to<br/>\r\nautomatically calculate the <strong>Resolution</strong>.</html>");
         panelControllerSettings.add(lblStepsUnit, "6, 12, right, default");
         
@@ -400,8 +412,10 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
             }
         });
 
-        lblLimitRotation = new JLabel("Limit to Range");
-        lblLimitRotation.setToolTipText("Limit the rotation to -180° ... +180° or the custom Soft-Limits if enabled.");
+        lblLimitRotation = new JLabel(Translations.getString(
+                "ReferenceControllerAxisConfigurationWizard.ControllerSettingsPanel.LimitToRangeLabel.text"));
+        lblLimitRotation.setToolTipText(Translations.getString(
+                "ReferenceControllerAxisConfigurationWizard.ControllerSettingsPanel.LimitToRangeLabel.toolTipText"));
         panelControllerSettings.add(lblLimitRotation, "2, 14, right, default");
 
         limitRotation = new JCheckBox("");
@@ -412,14 +426,16 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
         });
         panelControllerSettings.add(limitRotation, "4, 14");
 
-        lblWrapAroundRotation = new JLabel("Wrap Around");
+        lblWrapAroundRotation = new JLabel(Translations.getString(
+                "ReferenceControllerAxisConfigurationWizard.ControllerSettingsPanel.WrapAroundLabel.text"));
         lblWrapAroundRotation.setToolTipText("<html>Always rotate the axis the shorter way around. E.g. if it is at 270° and is commanded <br/>\r\nto go to 0° it will instead go to 360°.<br/>\r\nIf this is combined with Limit to ±180°, the axis is reset to its wrap-around coordinate <br/>\r\nusing a driver Global Offset command. With the GcodeDriver you must configure the<br/> <code>SET_GLOBAL_OFFSETS_COMMAND</code> or this will not work.\r\n</html>\r\n");
         panelControllerSettings.add(lblWrapAroundRotation, "2, 16, right, default");
 
         wrapAroundRotation = new JCheckBox("");
         panelControllerSettings.add(wrapAroundRotation, "4, 16");
 
-        lblPremoveCommand = new JLabel("Pre-Move Command");
+        lblPremoveCommand = new JLabel(Translations.getString(
+                "ReferenceControllerAxisConfigurationWizard.ControllerSettingsPanel.PreMoveCommandLabel.text"));
         panelControllerSettings.add(lblPremoveCommand, "2, 20, right, top");
 
         scrollPane = new JScrollPane();
@@ -430,7 +446,8 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
         scrollPane.setViewportView(preMoveCommand);
 
         panelKinematics = new JPanel();
-        panelKinematics.setBorder(new TitledBorder(null, "Kinematic Settings", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        panelKinematics.setBorder(new TitledBorder(null, Translations.getString(
+                "ReferenceControllerAxisConfigurationWizard.KinematicsPanel.Border.title"), TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panelKinematics);
         panelKinematics.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -463,14 +480,16 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
 
-        lblSoftLimitLow = new JLabel("Soft Limit Low");
+        lblSoftLimitLow = new JLabel(Translations.getString(
+                "ReferenceControllerAxisConfigurationWizard.KinematicsPanel.SoftLimitLowLabel.text"));
         panelKinematics.add(lblSoftLimitLow, "2, 2, right, default");
 
         softLimitLow = new JTextField();
         panelKinematics.add(softLimitLow, "4, 2, fill, default");
         softLimitLow.setColumns(10);
 
-        softLimitLowEnabled = new JCheckBox("Enabled?");
+        softLimitLowEnabled = new JCheckBox(Translations.getString(
+                "ReferenceControllerAxisConfigurationWizard.KinematicsPanel.SoftLimitLowEnabledLabel.text"));
         panelKinematics.add(softLimitLowEnabled, "6, 2");
 
         btnPositionSoftLimitLow = new JButton(positionSoftLimitLowAction);
@@ -479,14 +498,16 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
         btnCaptureSoftLimitLow = new JButton(captureSoftLimitLowAction);
         panelKinematics.add(btnCaptureSoftLimitLow, "10, 2");
 
-        lblSafeZoneLow = new JLabel("Safe Zone Low");
+        lblSafeZoneLow = new JLabel(Translations.getString(
+                "ReferenceControllerAxisConfigurationWizard.KinematicsPanel.SafeZoneLowLabel.text"));
         panelKinematics.add(lblSafeZoneLow, "2, 4, right, default");
 
         safeZoneLow = new JTextField();
         panelKinematics.add(safeZoneLow, "4, 4, fill, default");
         safeZoneLow.setColumns(10);
 
-        safeZoneLowEnabled = new JCheckBox("Enabled?");
+        safeZoneLowEnabled = new JCheckBox(Translations.getString(
+                "ReferenceControllerAxisConfigurationWizard.KinematicsPanel.SafeZoneLowEnabledLabel.text"));
         panelKinematics.add(safeZoneLowEnabled, "6, 4");
 
         btnPositionSafeZoneLow = new JButton(positionSafeZoneLowAction);
@@ -495,14 +516,16 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
         btnCaptureSafeZoneLow = new JButton(captureSafeZoneLowAction);
         panelKinematics.add(btnCaptureSafeZoneLow, "10, 4");
 
-        lblSafeZoneHigh = new JLabel("Safe Zone High");
+        lblSafeZoneHigh = new JLabel(Translations.getString(
+                "ReferenceControllerAxisConfigurationWizard.KinematicsPanel.SafeZoneHighLabel.text"));
         panelKinematics.add(lblSafeZoneHigh, "2, 6, right, default");
 
         safeZoneHigh = new JTextField();
         panelKinematics.add(safeZoneHigh, "4, 6, fill, default");
         safeZoneHigh.setColumns(10);
 
-        safeZoneHighEnabled = new JCheckBox("Enabled?");
+        safeZoneHighEnabled = new JCheckBox(Translations.getString(
+                "ReferenceControllerAxisConfigurationWizard.KinematicsPanel.SafeZoneHighEnabledLabel.text"));
         panelKinematics.add(safeZoneHighEnabled, "6, 6");
 
         btnPositionSafeZoneHigh = new JButton(positionSafeZoneHighAction);
@@ -511,14 +534,16 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
         btnCaptureSafeZoneHigh = new JButton(captureSafeZoneHighAction);
         panelKinematics.add(btnCaptureSafeZoneHigh, "10, 6");
 
-        lblSoftLimitHigh = new JLabel("Soft Limit High");
+        lblSoftLimitHigh = new JLabel(Translations.getString(
+                "ReferenceControllerAxisConfigurationWizard.KinematicsPanel.SoftLimitHighLabel.text"));
         panelKinematics.add(lblSoftLimitHigh, "2, 8, right, default");
 
         softLimitHigh = new JTextField();
         panelKinematics.add(softLimitHigh, "4, 8, fill, default");
         softLimitHigh.setColumns(10);
 
-        softLimitHighEnabled = new JCheckBox("Enabled?");
+        softLimitHighEnabled = new JCheckBox(Translations.getString(
+                "ReferenceControllerAxisConfigurationWizard.KinematicsPanel.SoftLimitHighEnabledLabel.text"));
         panelKinematics.add(softLimitHighEnabled, "6, 8");
 
         btnPositionSoftLimitHigh = new JButton(positionSoftLimitHighAction);
@@ -527,7 +552,8 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
         btnCaptureSoftLimitHigh = new JButton(captureSoftLimitHighAction);
         panelKinematics.add(btnCaptureSoftLimitHigh, "10, 8");
 
-        lblFeedrates = new JLabel("Feed Rate [/s]");
+        lblFeedrates = new JLabel(Translations.getString(
+                "ReferenceControllerAxisConfigurationWizard.KinematicsPanel.FeedRateLabel.text"));
         panelKinematics.add(lblFeedrates, "2, 12, right, default");
 
         feedRatePerSecond = new JTextField();
@@ -565,7 +591,8 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
             }
         });
 
-        lblFeedRatePerMinText = new JLabel("Feed Rate [/min]");
+        lblFeedRatePerMinText = new JLabel(Translations.getString(
+                "ReferenceControllerAxisConfigurationWizard.KinematicsPanel.FeedRatePerMinLabel.text"));
         panelKinematics.add(lblFeedRatePerMinText, "6, 12, right, default");
 
         feedRatePerMin = new JTextField();
@@ -603,14 +630,16 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
             }
         });
 
-        lblAccelerations = new JLabel("Acceleration [/s²]");
+        lblAccelerations = new JLabel(Translations.getString(
+                "ReferenceControllerAxisConfigurationWizard.KinematicsPanel.AccelerationLabel.text"));
         panelKinematics.add(lblAccelerations, "2, 14, right, default");
 
         accelerationPerSecond2 = new JTextField();
         panelKinematics.add(accelerationPerSecond2, "4, 14, fill, default");
         accelerationPerSecond2.setColumns(10);
 
-        lblJerks = new JLabel("Jerk [/s³]");
+        lblJerks = new JLabel(Translations.getString(
+                "ReferenceControllerAxisConfigurationWizard.KinematicsPanel.JerkLabel.text"));
         panelKinematics.add(lblJerks, "2, 16, right, default");
 
         jerkPerSecond3 = new JTextField();

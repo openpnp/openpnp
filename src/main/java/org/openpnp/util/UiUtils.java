@@ -189,7 +189,11 @@ public class UiUtils {
             final Thrunnable actionThrunnable) {
     
         messageBoxOnException(() -> {
-            if (Configuration.get().getMachine().isEnabled()) {
+            if (moveBeforeActionDescription == null) {
+                // No motion given.
+                actionThrunnable.thrun();
+            }
+            else if (Configuration.get().getMachine().isEnabled()) {
                 // We need to move there, ask the user to confirm.
                 int result;
                 if (allowWithoutMove) {

@@ -1,6 +1,33 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2022-12-02
+
+## UI translation improvements
+
+User interface (UI) text strings were externalized in most parts of OpenPnP to be translated
+to other languages. Russian language translations were provided. Thanks to VSSavin.
+
+Users/translators are invited to contribute translate in their language. :-D
+
+See also:
+https://github.com/openpnp/openpnp/wiki/Getting-Started-with-Eclipse#translations-in-eclipse
+
+# 2022-07-12
+
+## Vision Compositing - Multi-Shot Bottom Vision
+
+Adds Vision Compositing, i.e. multi-shot bottom vision, where multiple corners of a part can
+be aligned individually and then combined into the whole-part alignment. Features:
+
+- Align packages that are larger than the camera view.
+- Align packages that are not rectangular in their hull shape.
+- Align on corners facing inwards.
+- Improve accuracy by detecting in the camera center, avoiding optical errors.
+
+See also:
+https://github.com/openpnp/openpnp/wiki/Vision-Compositing
+
 # 2022-06-10
 
 ## ReferenceStripFeeder Rotation in Tape
@@ -11,6 +38,7 @@ in tape is determined from that baseline. This was already the case for other fe
 
 Formerly, ReferenceStripFeeder had the tape 0° orientation with the sprocket holes on the
 left. The Wiki documentation, reflecting the EIA-481 industry standard was actually wrong.
+Existing feeders are automatically updated to the new orientation.
 
 See also:
 https://github.com/openpnp/openpnp/wiki/ReferenceStripFeeder#rotation-in-tape

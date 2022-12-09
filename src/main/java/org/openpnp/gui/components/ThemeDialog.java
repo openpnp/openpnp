@@ -62,7 +62,7 @@ public class ThemeDialog {
     protected JDialog createDialog(final Window parent) {
         JDialog dialog = new JDialog(parent);
         //dialog.setIconImage(IconLoader.createFrameIcon(getIcon(), dialog));
-        dialog.setTitle(Translations.getString("Theme.Title"));
+        dialog.setTitle(Translations.getString("Theme.Title")); //$NON-NLS-1$
 
         JPanel contentPane = new JPanel(new BorderLayout());
         themePanel.updateThemesList(null);
@@ -91,7 +91,7 @@ public class ThemeDialog {
     }
 
     protected Component createButtonPanel() {
-        JButton ok = new JButton(Translations.getString("Theme.Save"));
+        JButton ok = new JButton(Translations.getString("Theme.Save")); //$NON-NLS-1$
         ok.setDefaultCapable(true);
         ok.addActionListener(e -> {
             ThemeInfo theme = themePanel.setTheme();
@@ -106,7 +106,7 @@ public class ThemeDialog {
             dialog.dispatchEvent(new WindowEvent(dialog, WindowEvent.WINDOW_CLOSING));
         });
 
-        JButton cancel = new JButton(Translations.getString("Theme.Cancel"));
+        JButton cancel = new JButton(Translations.getString("Theme.Cancel")); //$NON-NLS-1$
         cancel.addActionListener(e -> {
             if (oldTheme != null) {
                 themePanel.setTheme(oldTheme, oldFontSize, oldAlternateRows);
@@ -115,7 +115,7 @@ public class ThemeDialog {
             dialog.doLayout();
             dialog.dispatchEvent(new WindowEvent(dialog, WindowEvent.WINDOW_CLOSING));
         });
-        JButton apply = new JButton(Translations.getString("Theme.Apply"));
+        JButton apply = new JButton(Translations.getString("Theme.Apply")); //$NON-NLS-1$
         apply.addActionListener(e -> {
             themePanel.setTheme();
             dialog.pack();

@@ -406,6 +406,22 @@ public class CvPipeline implements AutoCloseable {
         }
     }
 
+    @Override
+    public boolean equals(Object other) {
+        if (other == this) {
+            return true;
+        }
+        else if (other instanceof CvPipeline) {
+            try {
+                return toXmlString().equals(((CvPipeline) other).toXmlString());
+            }
+            catch (Exception e) {
+                //ignore
+            }
+        }
+        return false;
+    }
+
     private String generateUniqueName() {
         for (int i = 0;; i++) {
             String name = "" + i;

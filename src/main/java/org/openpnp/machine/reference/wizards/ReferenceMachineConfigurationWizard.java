@@ -9,6 +9,7 @@ import javax.swing.SwingConstants;
 import javax.swing.border.TitledBorder;
 
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
+import org.openpnp.Translations;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.components.LocationButtonsPanel;
@@ -47,8 +48,9 @@ public class ReferenceMachineConfigurationWizard extends AbstractConfigurationWi
 
         JPanel panelGeneral = new JPanel();
         contentPanel.add(panelGeneral);
-        panelGeneral.setBorder(new TitledBorder(null, "General", TitledBorder.LEADING,
-                TitledBorder.TOP, null, null));
+        panelGeneral.setBorder(new TitledBorder(null, Translations.getString(
+                "ReferenceMachineConfigurationWizard.PanelGeneral.Border.title"), //$NON-NLS-1$
+                TitledBorder.LEADING, TitledBorder.TOP, null, null));
         panelGeneral.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("max(70dlu;default)"),
@@ -76,32 +78,38 @@ public class ReferenceMachineConfigurationWizard extends AbstractConfigurationWi
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
-        JLabel lblHomeAfterEnabled = new JLabel("Home after enabled?");
+        JLabel lblHomeAfterEnabled = new JLabel(Translations.getString(
+                "ReferenceMachineConfigurationWizard.PanelGeneral.HomeAfterEnabledLabel.text")); //$NON-NLS-1$
         panelGeneral.add(lblHomeAfterEnabled, "2, 2, right, default");
         
         checkBoxHomeAfterEnabled = new JCheckBox("");
         panelGeneral.add(checkBoxHomeAfterEnabled, "4, 2");
         
-        JLabel lblParkAfterHomed = new JLabel("Park after homed?");
+        JLabel lblParkAfterHomed = new JLabel(Translations.getString(
+                "ReferenceMachineConfigurationWizard.PanelGeneral.ParkAfterHomedLabel.text")); //$NON-NLS-1$
         panelGeneral.add(lblParkAfterHomed, "2, 4, right, default");
         
         parkAfterHomed = new JCheckBox("");
         panelGeneral.add(parkAfterHomed, "4, 4");
         
-        JLabel lblParkAllAtSafeZ = new JLabel("Park all at Safe Z?");
-        lblParkAllAtSafeZ.setToolTipText("When the Z Park button is pressed, move all tools mounted on the same head to safe Z.");
+        JLabel lblParkAllAtSafeZ = new JLabel(Translations.getString(
+                "ReferenceMachineConfigurationWizard.PanelGeneral.ParkAllAtSafeZLabel.text")); //$NON-NLS-1$
+        lblParkAllAtSafeZ.setToolTipText(Translations.getString(
+                "ReferenceMachineConfigurationWizard.PanelGeneral.ParkAllAtSafeZLabel.toolTipText")); //$NON-NLS-1$
         panelGeneral.add(lblParkAllAtSafeZ, "2, 6, right, default");
         
         safeZPark = new JCheckBox("");
         panelGeneral.add(safeZPark, "4, 6");
         
-        JLabel lblAutoToolSelect = new JLabel("Auto tool select?");
+        JLabel lblAutoToolSelect = new JLabel(Translations.getString(
+                "ReferenceMachineConfigurationWizard.PanelGeneral.AutoToolSelectLabel.text")); //$NON-NLS-1$
         panelGeneral.add(lblAutoToolSelect, "2, 10, right, default");
         
         autoToolSelect = new JCheckBox("");
         panelGeneral.add(autoToolSelect, "4, 10");
         
-        JLabel lblNewLabel = new JLabel("Unsafe Z Roaming");
+        JLabel lblNewLabel = new JLabel(Translations.getString(
+                "ReferenceMachineConfigurationWizard.PanelGeneral.UnsafeZRoamingLabel.text")); //$NON-NLS-1$
         lblNewLabel.setToolTipText("<html>Maximum allowable roaming distance at unsafe Z.<br/><br/>\r\nVirtual Z axes (typically on cameras) are invisible, therefore it can easily be overlooked<br/>\r\nthat you are at unsafe Z. When you later press the <strong>Move tool to camera location</strong><br/>\r\nbutton, an unexpected Z down-move will result, potentially crashing the tool.<br/>\r\nThe maximum allowable roaming distance at unsafe Z therefore limits the jogging area<br/>\r\nwithin which an unsafe virtual Z is kept, it should be enough to fine-adjust a captured<br/>\r\nlocation. Jogging further away will automatically move the virtual axis to Safe Z.\r\n</html>");
         panelGeneral.add(lblNewLabel, "2, 12, right, default");
         
@@ -109,7 +117,8 @@ public class ReferenceMachineConfigurationWizard extends AbstractConfigurationWi
         panelGeneral.add(unsafeZRoamingDistance, "4, 12, fill, default");
         unsafeZRoamingDistance.setColumns(10);
         
-        JLabel lblMotionPlanning = new JLabel("Motion Planning");
+        JLabel lblMotionPlanning = new JLabel(Translations.getString(
+                "ReferenceMachineConfigurationWizard.PanelGeneral.MotionPlanningLabel.text")); //$NON-NLS-1$
         panelGeneral.add(lblMotionPlanning, "2, 16, right, default");
 
         Object[] classNames = machine.getCompatibleMotionPlannerClasses().stream()
@@ -124,8 +133,9 @@ public class ReferenceMachineConfigurationWizard extends AbstractConfigurationWi
         panelGeneral.add(poolScriptingEngines, "4, 18");
 
                 JPanel panelLocations = new JPanel();
-        panelLocations.setBorder(new TitledBorder(null, "Locations", TitledBorder.LEADING,
-                TitledBorder.TOP, null, null));
+        panelLocations.setBorder(new TitledBorder(null, Translations.getString(
+                "ReferenceMachineConfigurationWizard.PanelLocations.Border.title"), //$NON-NLS-1$
+                TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panelLocations);
         panelLocations.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -158,11 +168,13 @@ public class ReferenceMachineConfigurationWizard extends AbstractConfigurationWi
         panelLocations.add(lblZ, "8, 2");
         lblZ.setHorizontalAlignment(SwingConstants.CENTER);
         
-                JLabel lblRotation = new JLabel("Rotation");
+                JLabel lblRotation = new JLabel(Translations.getString(
+                        "ReferenceMachineConfigurationWizard.PanelLocations.RotationLabel.text")); //$NON-NLS-1$
         panelLocations.add(lblRotation, "10, 2");
         lblRotation.setHorizontalAlignment(SwingConstants.CENTER);
         
-                JLabel lblDiscardPoint = new JLabel("Discard Location");
+                JLabel lblDiscardPoint = new JLabel(Translations.getString(
+                        "ReferenceMachineConfigurationWizard.PanelLocations.DiscardLocationLabel.text")); //$NON-NLS-1$
         panelLocations.add(lblDiscardPoint, "2, 4");
         
                 discardXTf = new JTextField();

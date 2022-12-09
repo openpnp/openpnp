@@ -24,6 +24,7 @@ import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.support.LengthCellValue;
 import org.openpnp.gui.support.PercentConverter;
 import org.openpnp.model.BottomVisionSettings;
@@ -36,7 +37,16 @@ import org.openpnp.model.Part;
 @SuppressWarnings("serial")
 public class PartsTableModel extends AbstractObjectTableModel implements PropertyChangeListener {
     private String[] columnNames =
-            new String[] {"ID", "Description", "Height", "Package", "Speed %", "BottomVision", "FiducialVision", "Placements", "Feeders"};
+            new String[] {Translations.getString("PartsTableModel.ColumnName.ID"), //$NON-NLS-1$
+                    Translations.getString("PartsTableModel.ColumnName.Description"), //$NON-NLS-1$
+                    Translations.getString("PartsTableModel.ColumnName.Height"), //$NON-NLS-1$
+                    Translations.getString("PartsTableModel.ColumnName.Package"), //$NON-NLS-1$
+                    Translations.getString("PartsTableModel.ColumnName.SpeedPercent"), //$NON-NLS-1$
+                    Translations.getString("PartsTableModel.ColumnName.BottomVision"), //$NON-NLS-1$
+                    Translations.getString("PartsTableModel.ColumnName.FiducialVision"), //$NON-NLS-1$
+                    Translations.getString("PartsTableModel.ColumnName.Placements"), //$NON-NLS-1$
+                    Translations.getString("PartsTableModel.ColumnName.Feeders") //$NON-NLS-1$
+    };
     private Class[] columnTypes = new Class[] {String.class, String.class, LengthCellValue.class,
             Package.class, String.class, BottomVisionSettings.class, FiducialVisionSettings.class, Integer.class, Integer.class};
     private List<Part> parts;

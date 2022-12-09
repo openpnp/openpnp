@@ -39,6 +39,7 @@ import org.openpnp.machine.reference.camera.AbstractSettlingCamera.SettleMethod;
 import org.openpnp.machine.reference.camera.OpenPnpCaptureCamera;
 import org.openpnp.machine.reference.camera.OpenPnpCaptureCamera.CapturePropertyHolder;
 import org.openpnp.machine.reference.camera.ReferenceCamera;
+import org.openpnp.machine.reference.camera.SwitcherCamera;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
@@ -68,10 +69,30 @@ public class CameraSolutions implements Solutions.Subject  {
         if (solutions.isTargeting(Milestone.Basics)) {
             ActuatorSolutions.findActuateIssues(solutions, camera, camera.getLightActuator(), "camera light",
                 "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Camera-Lighting");
+            if (camera instanceof SwitcherCamera) {
+                ActuatorSolutions.findActuateIssues(solutions, camera, ((SwitcherCamera)camera).getActuator(), "camera switcher",
+                    "https://github.com/openpnp/openpnp/wiki/SwitcherCamera#configuration");
+            }
         }
         if (solutions.isTargeting(Milestone.Vision)) {
             final double previewFps = camera.getPreviewFps();
-            if (previewFps > 15) {
+            if (camera instanceof SwitcherCamera && previewFps != 0) {
+                solutions.add(new Solutions.Issue(
+                        camera, 
+                        "SwitcherCamera Preview FPS must be zero, to prevent constant switching.", 
+                        "Set to 0 FPS.", 
+                        Severity.Error,
+                        "https://github.com/openpnp/openpnp/wiki/SwitcherCamera#configuration") {
+
+
+                    @Override
+                    public void setState(Solutions.State state) throws Exception {
+                        camera.setPreviewFps((state == Solutions.State.Solved) ? 0.0 : previewFps);
+                        super.setState(state);
+                    }
+                });
+            }
+            else if (previewFps > 15) {
                 solutions.add(new Solutions.Issue(
                         camera, 
                         "A high Preview FPS value might create undue CPU load.", 
@@ -90,9 +111,10 @@ public class CameraSolutions implements Solutions.Subject  {
             if (! camera.isSuspendPreviewInTasks()) {
                 solutions.add(new Solutions.Issue(
                         camera, 
-                        "It is recommended to suspend camera preview during machine tasks / Jobs.", 
+                        ((camera instanceof SwitcherCamera) ? "For a SwitcherCamera it is mandatory" : "It is recommended")
+                        +" to suspend camera preview during machine tasks / Jobs.", 
                         "Enable Suspend during tasks.", 
-                        Severity.Suggestion,
+                        ((camera instanceof SwitcherCamera) ? Severity.Error : Severity.Suggestion),
                         "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-General-Camera-Setup#general-configuration") {
 
                     @Override

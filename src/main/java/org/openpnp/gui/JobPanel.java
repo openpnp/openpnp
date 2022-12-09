@@ -290,8 +290,8 @@ public class JobPanel extends JPanel {
 
         JPanel pnlBoards = new JPanel();
         pnlBoards.setBorder(new TitledBorder(null,
-                Translations.getString("JobPanel.Tab.Boards"),
-                TitledBorder.LEADING, TitledBorder.TOP, null)); //$NON-NLS-1$
+                Translations.getString("JobPanel.Tab.Boards"), //$NON-NLS-1$
+                TitledBorder.LEADING, TitledBorder.TOP, null));
         pnlBoards.setLayout(new BorderLayout(0, 0));
 
         JToolBar toolBarBoards = new JToolBar();
@@ -1442,8 +1442,8 @@ public class JobPanel extends JPanel {
     
     public final Action setEnabledAction = new AbstractAction() {
         {
-            putValue(NAME, "Set Enabled");
-            putValue(SHORT_DESCRIPTION, "Set board(s) enabled to...");
+            putValue(NAME, Translations.getString("JobPanel.Action.Job.Board.SetEnabled")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("JobPanel.Action.Job.Board.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -1470,8 +1470,8 @@ public class JobPanel extends JPanel {
 
     public final Action setCheckFidsAction = new AbstractAction() {
         {
-            putValue(NAME, "Set Check Fids");
-            putValue(SHORT_DESCRIPTION, "Set check fids to...");
+            putValue(NAME, Translations.getString("JobPanel.Action.Job.Board.SetCheckFids")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("JobPanel.Action.Job.Board.SetCheckFids.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -1498,8 +1498,8 @@ public class JobPanel extends JPanel {
     
     public final Action setSideAction = new AbstractAction() {
         {
-            putValue(NAME, "Set Side");
-            putValue(SHORT_DESCRIPTION, "Set board side(s) to...");
+            putValue(NAME, Translations.getString("JobPanel.Action.Job.Board.SetSide")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("JobPanel.Action.Job.Board.SetSide.Description")); //$NON-NLS-1$
         }
 
         @Override

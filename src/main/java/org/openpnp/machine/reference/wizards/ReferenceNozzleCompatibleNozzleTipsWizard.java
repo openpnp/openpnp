@@ -27,6 +27,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.table.AbstractTableModel;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.model.Configuration;
@@ -76,7 +77,14 @@ public class ReferenceNozzleCompatibleNozzleTipsWizard extends AbstractConfigura
     }
 
         class NozzleTipsTableModel extends AbstractTableModel {
-        private String[] columnNames = new String[] { "Nozzle Tip", "Compatible?", "Loaded?" };
+            private String[] columnNames = new String[]{
+                    Translations.getString(
+                            "ReferenceNozzleCompatibleNozzleTipsWizard.NozzleTipsTableModel.ColumnName.NozzleTip"), //$NON-NLS-1$
+                    Translations.getString(
+                            "ReferenceNozzleCompatibleNozzleTipsWizard.NozzleTipsTableModel.ColumnName.Compatible"), //$NON-NLS-1$
+                    Translations.getString(
+                            "ReferenceNozzleCompatibleNozzleTipsWizard.NozzleTipsTableModel.ColumnName.Loaded" //$NON-NLS-1$
+                    )};
         private Class[] columnClasses = new Class[] { String.class, Boolean.class, Boolean.class };
         private List<NozzleTip> nozzleTips;
 

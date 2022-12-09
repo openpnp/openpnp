@@ -9,6 +9,7 @@ import javax.swing.Action;
 import javax.swing.Icon;
 import javax.swing.JOptionPane;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
@@ -171,18 +172,19 @@ public abstract class AbstractDriver extends AbstractModelObject implements Driv
     }
 
     @SuppressWarnings("serial")
-    public Action deleteAction = new AbstractAction("Delete Driver") {
+    public Action deleteAction = new AbstractAction(Translations.getString("AbstractDriver.Action.DeleteDriver")) { //$NON-NLS-1$
         {
             putValue(SMALL_ICON, Icons.delete);
-            putValue(NAME, "Delete Driver");
-            putValue(SHORT_DESCRIPTION, "Delete the currently selected driver.");
+            putValue(NAME, Translations.getString("AbstractDriver.Action.DeleteDriver")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("AbstractDriver.Action.DeleteDriver.Description")); //$NON-NLS-1$
         }
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
             int ret = JOptionPane.showConfirmDialog(MainFrame.get(),
-                    "Are you sure you want to delete " + getName() + "?",
-                    "Delete " + getName() + "?", JOptionPane.YES_NO_OPTION);
+                    Translations.getString("DialogMessages.ConfirmDelete.text") + " " + getName() + "?", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                    Translations.getString("DialogMessages.ConfirmDelete.title") + " " + getName() + "?", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                    JOptionPane.YES_NO_OPTION);
             if (ret == JOptionPane.YES_OPTION) {
                 Configuration.get().getMachine().removeDriver(AbstractDriver.this);
             }
@@ -193,8 +195,8 @@ public abstract class AbstractDriver extends AbstractModelObject implements Driv
     public Action permutateUpAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.arrowUp);
-            putValue(NAME, "Permutate Up");
-            putValue(SHORT_DESCRIPTION, "Move the currently selected driver one position up.");
+            putValue(NAME, Translations.getString("AbstractDriver.Action.PermutateUpDriver")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("AbstractDriver.Action.PermutateUpDriver.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -207,8 +209,9 @@ public abstract class AbstractDriver extends AbstractModelObject implements Driv
     public Action permutateDownAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.arrowDown);
-            putValue(NAME, "Permutate Down");
-            putValue(SHORT_DESCRIPTION, "Move the currently selected driver one position down.");
+            putValue(NAME, Translations.getString("AbstractDriver.Action.PermutateDownDriver")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString(
+                    "AbstractDriver.Action.PermutateDownDriver.Description")); //$NON-NLS-1$
         }
 
         @Override

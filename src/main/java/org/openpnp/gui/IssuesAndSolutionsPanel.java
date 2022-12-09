@@ -60,6 +60,7 @@ import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.jdesktop.beansbinding.BeanProperty;
 import org.jdesktop.beansbinding.Bindings;
 import org.openpnp.ConfigurationListener;
+import org.openpnp.Translations;
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.components.IssuePanel;
 import org.openpnp.gui.support.ActionGroup;
@@ -128,9 +129,9 @@ public class IssuesAndSolutionsPanel extends JPanel {
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,}));
 
-        JLabel lblMilestone = new JLabel("Milestone");
+        JLabel lblMilestone = new JLabel(Translations.getString("IssuesAndSolutionsPanel.MilestoneLabel.text")); //$NON-NLS-1$
         lblMilestone.setFont(lblMilestone.getFont().deriveFont(lblMilestone.getFont().getStyle() | Font.BOLD));
-        lblMilestone.setToolTipText("<html>\r\nThe target milestone for the machine configuration.<br/>\r\nThe milestone filters and sometimes influences proposed solutions<br/>\r\nto ensure that basic machine operation is achieved, before more advanced,<br/>\r\nmore complex <em>and more difficult</em> solutions are targeted.\r\n</html>\r\n");
+        lblMilestone.setToolTipText(Translations.getString("IssuesAndSolutionsPanel.MilestoneLabel.toolTipText")); //$NON-NLS-1$
         toolbar.add(lblMilestone, "4, 3, right, default");
 
         targetMilestone = new JLabel(" - ");
@@ -267,8 +268,8 @@ public class IssuesAndSolutionsPanel extends JPanel {
         JButton btnFindSolutions = new JButton(findSolutionsAction);
         toolbar.add(btnFindSolutions, "2, 3, 1, 3, fill, fill");
         
-        JLabel lblSolved = new JLabel("Include Solved?");
-        lblSolved.setToolTipText("<html>Include already solved solutions, if they can be revisited.<br/>\r\nSome solutions can only be accepted once, these will not reappear.</html>");
+        JLabel lblSolved = new JLabel(Translations.getString("IssuesAndSolutionsPanel.IncludeSolvedLabel.text")); //$NON-NLS-1$
+        lblSolved.setToolTipText(Translations.getString("IssuesAndSolutionsPanel.IncludeSolvedLabel.toolTipText")); //$NON-NLS-1$
         toolbar.add(lblSolved, "9, 3, right, default");
         
         showSolved = new JCheckBox("");
@@ -279,8 +280,9 @@ public class IssuesAndSolutionsPanel extends JPanel {
         });
         toolbar.add(showSolved, "11, 3");
         
-        JLabel lblDismissed = new JLabel("Include Dismissed?");
-        lblDismissed.setToolTipText("<html>Include already dismissed solutions.</html>");
+        JLabel lblDismissed = new JLabel(Translations.getString("IssuesAndSolutionsPanel.IncludeDismissedLabel.text")); //$NON-NLS-1$
+        lblDismissed.setToolTipText(Translations.getString(
+                "IssuesAndSolutionsPanel.IncludeDismissedLabel.toolTipText")); //$NON-NLS-1$
         toolbar.add(lblDismissed, "15, 3, right, default");
         
         showDismissed = new JCheckBox("");
@@ -300,7 +302,7 @@ public class IssuesAndSolutionsPanel extends JPanel {
         label_1 = new JLabel(" - ");
         toolbar.add(label_1, "4, 5, 16, 1");
 
-        labelWarn = new JLabel(" After each round of solving issues, please run Find Issues & Solutions again to catch dependent issues. ");
+        labelWarn = new JLabel(Translations.getString("IssuesAndSolutionsPanel.WarnLabel.text")); //$NON-NLS-1$
         labelWarn.setBorder(UIManager.getBorder("ToolTip.border"));
         labelWarn.setBackground(UIManager.getColor("ToolTip.background"));
         toolbar.add(labelWarn, "2, 7, 22, 1, left, default");
@@ -384,12 +386,15 @@ public class IssuesAndSolutionsPanel extends JPanel {
                     int indicatorUnicode = 0x2B24;
                     Color color = maxSeverity.color;
                     color = saturate(color);
-                    tabs.setTitleAt(index, "<html>Issues &amp; Solutions <span style=\"color:#"
-                            +String.format("%02x%02x%02x", color.getRed(), color.getGreen(), color.getBlue())
-                            +";\">&#"+(indicatorUnicode)+";</span></html>");
+                    //"<html>Issues &amp; Solutions <span style=\"color:#"
+                    tabs.setTitleAt(index, Translations.getString(
+                            "MainFrame.RightComponent.tabs.IssuesAndSolutionsHtml") //$NON-NLS-1$
+                            +String.format("%02x%02x%02x", color.getRed(), color.getGreen(), color.getBlue()) //$NON-NLS-1$
+                            +";\">&#"+(indicatorUnicode)+";</span></html>"); //$NON-NLS-1$ //$NON-NLS-2$
                 }
                 else {
-                    tabs.setTitleAt(index, "Issues & Solutions");
+                    tabs.setTitleAt(index, Translations.getString(
+                            "MainFrame.RightComponent.tabs.IssuesAndSolutions")); //$NON-NLS-1$
                 }
             }
         }
@@ -426,10 +431,11 @@ public class IssuesAndSolutionsPanel extends JPanel {
     }
 
     private Action findSolutionsAction =
-            new AbstractAction("Find Issues & Solutions", Icons.solutions) {
+            new AbstractAction(Translations.getString("IssuesAndSolutionsPanel.Action.FindSolution"), //$NON-NLS-1$
+                    Icons.solutions) {
         {
-            putValue(Action.SHORT_DESCRIPTION,
-                    "<html>Find Issues and Solutions for your machine.</html>");
+            putValue(Action.SHORT_DESCRIPTION, Translations.getString(
+                    "IssuesAndSolutionsPanel.Action.FindSolution.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -439,10 +445,11 @@ public class IssuesAndSolutionsPanel extends JPanel {
     };
 
     private Action acceptSolutionAction =
-            new AbstractAction("Accept", Icons.accept) {
+            new AbstractAction(Translations.getString("IssuesAndSolutionsPanel.Action.AcceptSolution"), //$NON-NLS-1$
+                    Icons.accept) {
         {
-            putValue(Action.SHORT_DESCRIPTION,
-                    "<html>Accept the solutions and apply any changes.</html>");
+            putValue(Action.SHORT_DESCRIPTION, Translations.getString(
+                    "IssuesAndSolutionsPanel.Action.AcceptSolution.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -467,11 +474,11 @@ public class IssuesAndSolutionsPanel extends JPanel {
         }
     };
 
-    private Action dismissSolutionAction =
-            new AbstractAction("Dismiss", Icons.dismiss) {
+    private Action dismissSolutionAction = new AbstractAction(Translations.getString(
+                    "IssuesAndSolutionsPanel.Action.DismissSolution"), Icons.dismiss) { //$NON-NLS-1$
         {
-            putValue(Action.SHORT_DESCRIPTION,
-                    "<html>Dismiss the solutions. If the solution has just applied any changes before (with no Find Solutions between), <strong>undo</strong> them.</html>");
+            putValue(Action.SHORT_DESCRIPTION, Translations.getString(
+                    "IssuesAndSolutionsPanel.Action.DismissSolution.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -485,12 +492,13 @@ public class IssuesAndSolutionsPanel extends JPanel {
                 }
             });
         }
-    };    
-    private Action reopenSolutionAction =
-            new AbstractAction("Reopen", Icons.undo) {
+    };
+
+    private Action reopenSolutionAction = new AbstractAction(Translations.getString(
+            "IssuesAndSolutionsPanel.Action.ReopenSolution"), Icons.undo) { //$NON-NLS-1$
         {
-            putValue(Action.SHORT_DESCRIPTION,
-                    "<html>Reopen the solution. If the solution has just applied any changes before (with no Find Solutions between), <strong>undo</strong> them.</html>");
+            putValue(Action.SHORT_DESCRIPTION, Translations.getString(
+                    "IssuesAndSolutionsPanel.Action.ReopenSolution.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -509,8 +517,8 @@ public class IssuesAndSolutionsPanel extends JPanel {
     private Action infoAction =
             new AbstractAction("", Icons.info) {
         {
-            putValue(Action.SHORT_DESCRIPTION,
-                    "<html>Open the Wiki page with instructions related to the issue and possible solutions.</html>");
+            putValue(Action.SHORT_DESCRIPTION, Translations.getString(
+                    "IssuesAndSolutionsPanel.Action.Info.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -530,8 +538,8 @@ public class IssuesAndSolutionsPanel extends JPanel {
     private Action infoMilestoneAction =
             new AbstractAction("", Icons.info) {
         {
-            putValue(Action.SHORT_DESCRIPTION,
-                    "<html>Open the Wiki page about Issues & Solutions and Milestones.</html>");
+            putValue(Action.SHORT_DESCRIPTION, Translations.getString(
+                    "IssuesAndSolutionsPanel.Action.InfoMilestone.Description")); //$NON-NLS-1$
         }
 
         @Override

@@ -29,6 +29,7 @@ import java.util.Set;
 import javax.swing.Action;
 
 import org.openpnp.ConfigurationListener;
+import org.openpnp.Translations;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.neoden4.NeoDen4Driver;
@@ -354,23 +355,33 @@ public class ReferenceMachine extends AbstractMachine {
     @Override
     public PropertySheetHolder[] getChildPropertySheetHolders() {
         ArrayList<PropertySheetHolder> children = new ArrayList<>();
-        children.add(new AxesPropertySheetHolder(this, "Axes", getAxes(), null));
-        children.add(new SignalersPropertySheetHolder(this, "Signalers", getSignalers(), null));
-        children.add(new SimplePropertySheetHolder("Feeders", getFeeders()));
-        children.add(new SimplePropertySheetHolder("Heads", getHeads()));
-        children.add(new NozzleTipsPropertySheetHolder("Nozzle Tips", getNozzleTips(), null));
-        children.add(new CamerasPropertySheetHolder(null, "Cameras", getCameras(), null));
-        children.add(new ActuatorsPropertySheetHolder(null, "Actuators", getActuators(), null));
-        children.add(new DriversPropertySheetHolder(this, "Drivers", getDrivers(), null));
-        children.add(new SimplePropertySheetHolder("Job Processors",
-                Arrays.asList(getPnpJobProcessor())));
+        children.add(new AxesPropertySheetHolder(this, Translations.getString(
+                "ReferenceMachine.PropertySheetHolder.Axes.title"), getAxes(), null)); //$NON-NLS-1$
+        children.add(new SignalersPropertySheetHolder(this, Translations.getString(
+                "ReferenceMachine.PropertySheetHolder.Signalers.title"), getSignalers(), null)); //$NON-NLS-1$
+        children.add(new SimplePropertySheetHolder(Translations.getString(
+                "ReferenceMachine.PropertySheetHolder.Feeders.title"), getFeeders())); //$NON-NLS-1$
+        children.add(new SimplePropertySheetHolder(Translations.getString(
+                "ReferenceMachine.PropertySheetHolder.Heads.title"), getHeads())); //$NON-NLS-1$
+        children.add(new NozzleTipsPropertySheetHolder(Translations.getString(
+                "ReferenceMachine.PropertySheetHolder.NozzleTips.title"), //$NON-NLS-1$
+                getNozzleTips(), null));
+        children.add(new CamerasPropertySheetHolder(null, Translations.getString(
+                "ReferenceMachine.PropertySheetHolder.Cameras.title"), getCameras(), null)); //$NON-NLS-1$
+        children.add(new ActuatorsPropertySheetHolder(null, Translations.getString(
+                "ReferenceMachine.PropertySheetHolder.Actuators.title"), getActuators(), null)); //$NON-NLS-1$
+        children.add(new DriversPropertySheetHolder(this, Translations.getString(
+                "ReferenceMachine.PropertySheetHolder.Drivers.title"), getDrivers(), null)); //$NON-NLS-1$
+        children.add(new SimplePropertySheetHolder(Translations.getString(
+                "ReferenceMachine.PropertySheetHolder.JobProcessors.title"), Arrays.asList(getPnpJobProcessor()))); //$NON-NLS-1$
 
         List<PropertySheetHolder> vision = new ArrayList<>();
         for (PartAlignment alignment : getPartAlignments()) {
             vision.add(alignment);
         }
         vision.add(getFiducialLocator());
-        children.add(new SimplePropertySheetHolder("Vision", vision));
+        children.add(new SimplePropertySheetHolder(Translations.getString(
+                "ReferenceMachine.PropertySheetHolder.Vision.title"), vision)); //$NON-NLS-1$
         return children.toArray(new PropertySheetHolder[] {});
     }
 
