@@ -17,6 +17,7 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.IntegerConverter;
@@ -42,8 +43,9 @@ public class GcodeDriverConsole extends AbstractConfigurationWizard {
         historyCursor = 0;
 
         JPanel gcodeConsole = new JPanel();
-        gcodeConsole.setBorder(new TitledBorder(null,
-                "Gcode console", TitledBorder.LEADING, TitledBorder.TOP, null));
+        gcodeConsole.setBorder(new TitledBorder(null, Translations.getString(
+                "GcodeDriverConsole.GCodeConsolePanel.Border.title"),
+                TitledBorder.LEADING, TitledBorder.TOP, null));
         contentPanel.add(gcodeConsole);
 
         gcodeConsole.setLayout(new FormLayout(new ColumnSpec[] {
@@ -71,7 +73,7 @@ public class GcodeDriverConsole extends AbstractConfigurationWizard {
         textAreaConsole.setRows(5);
         scrollPane.setViewportView(textAreaConsole);
 
-        lblCmdLine = new JLabel("Command line:");
+        lblCmdLine = new JLabel(Translations.getString("GcodeDriverConsole.GCodeConsolePanel.CommandLineLabel.text"));
         gcodeConsole.add(lblCmdLine, "2, 4");
 
         cmdLineTextField = new JTextField();
@@ -114,7 +116,8 @@ public class GcodeDriverConsole extends AbstractConfigurationWizard {
         sendGcodeConCmdBtn = new JButton(sendGcodeConCmdAction);
         gcodeConsole.add(sendGcodeConCmdBtn, "6, 4");
         
-        forceUpperCaseChk = new JCheckBox("Force Upper Case");
+        forceUpperCaseChk = new JCheckBox(Translations.getString(
+                "GcodeDriverConsole.GCodeConsolePanel.ForceUpperCaseLabel.text"));
         forceUpperCaseChk.setSelected(true);
         gcodeConsole.add(forceUpperCaseChk, "2, 6");
 
@@ -193,7 +196,8 @@ public class GcodeDriverConsole extends AbstractConfigurationWizard {
         }
     }
 
-    private Action sendGcodeConCmdAction = new AbstractAction("Send") {
+    private Action sendGcodeConCmdAction = new AbstractAction(Translations.getString(
+            "GcodeDriverConsole.GCodeConsolePanel.SendButton.text")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent e) {
             sendGcodeConCmd();

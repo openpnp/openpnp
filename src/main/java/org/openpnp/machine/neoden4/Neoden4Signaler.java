@@ -2,6 +2,7 @@ package org.openpnp.machine.neoden4;
 
 import javax.swing.SwingUtilities;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.neoden4.wizards.Neoden4SignalerConfigurationWizard;
@@ -49,7 +50,8 @@ public class Neoden4Signaler extends AbstractSignaler implements Runnable {
 
 						SwingUtilities.invokeLater(new Runnable() {
 							public void run() {
-								MessageBoxes.infoBox("Click ok to confirm", "Job error!");
+								MessageBoxes.infoBox(Translations.getString("CommonPhrases.clickOkToConfirm"), //$NON-NLS-1$
+										Translations.getString("CommonPhrases.jobError")); //$NON-NLS-1$
 								playError = false;
 								lastPlayError = false;
 							}
@@ -67,7 +69,8 @@ public class Neoden4Signaler extends AbstractSignaler implements Runnable {
 
 						SwingUtilities.invokeLater(new Runnable() {
 							public void run() {
-								MessageBoxes.infoBox("Click ok to confirm", "Job success!");
+								MessageBoxes.infoBox(Translations.getString("CommonPhrases.clickOkToConfirm"), //$NON-NLS-1$
+										Translations.getString("CommonPhrases.jobSuccess")); //$NON-NLS-1$
 								playSuccess = false;
 								lastPlaySuccess = false;
 							}

@@ -7,6 +7,7 @@ import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.Icon;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.ClassSelectionDialog;
 import org.openpnp.gui.support.Icons;
@@ -34,15 +35,18 @@ public class DriversPropertySheetHolder extends SimplePropertySheetHolder {
     public Action newDriverAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.add);
-            putValue(NAME, "New Driver...");
-            putValue(SHORT_DESCRIPTION, "Create a new driver.");
+            putValue(NAME, Translations.getString("DriversPropertySheetHolder.Action.NewDriver")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString(
+                    "DriversPropertySheetHolder.Action.NewDriver.Description")); //$NON-NLS-1$
         }
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
             Configuration configuration = Configuration.get();
             ClassSelectionDialog<Driver> dialog = new ClassSelectionDialog<>(MainFrame.get(),
-                    "Select Driver...", "Please select a Driver implemention from the list below.",
+                    Translations.getString(
+                            "DriversPropertySheetHolder.SelectionDialog.title"), //$NON-NLS-1$
+                    Translations.getString("DriversPropertySheetHolder.SelectionDialog.description"), //$NON-NLS-1$
                     configuration.getMachine().getCompatibleDriverClasses());
             dialog.setVisible(true);
             Class<? extends Driver> driverClass = dialog.getSelectedClass();

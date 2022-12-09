@@ -58,6 +58,7 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableRowSorter;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.support.ActionGroup;
 import org.openpnp.gui.support.Helpers;
@@ -128,7 +129,7 @@ public class PartsPanel extends JPanel implements WizardContainer {
         JPanel panel_1 = new JPanel();
         toolbarAndSearch.add(panel_1, BorderLayout.EAST);
 
-        JLabel lblSearch = new JLabel("Search");
+        JLabel lblSearch = new JLabel(Translations.getString("PartsPanel.SearchLabel.text")); //$NON-NLS-1$
         panel_1.add(lblSearch);
 
         searchTextField = new JTextField();
@@ -273,8 +274,8 @@ public class PartsPanel extends JPanel implements WizardContainer {
     public final Action newPartAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.add);
-            putValue(NAME, "New Part...");
-            putValue(SHORT_DESCRIPTION, "Create a new part, specifying it's ID.");
+            putValue(NAME, Translations.getString("PartsPanel.Action.NewPart")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("PartsPanel.Action.NewPart.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -307,8 +308,8 @@ public class PartsPanel extends JPanel implements WizardContainer {
     public final Action deletePartAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.delete);
-            putValue(NAME, "Delete Part");
-            putValue(SHORT_DESCRIPTION, "Delete the currently selected part.");
+            putValue(NAME, Translations.getString("PartsPanel.Action.DeletePart")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("PartsPanel.Action.DeletePart.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -324,8 +325,9 @@ public class PartsPanel extends JPanel implements WizardContainer {
             }
             
             int ret = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                    "Are you sure you want to delete " + formattedIds + "?",
-                    "Delete " + selections.size() + " parts?", JOptionPane.YES_NO_OPTION);
+                    Translations.getString("DialogMessages.ConfirmDelete.text") + " " + formattedIds + "?", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                    Translations.getString("DialogMessages.ConfirmDelete.title") + " " + selections.size() + " " + Translations.getString( //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                                    "CommonWords.parts") + "?", JOptionPane.YES_NO_OPTION); //$NON-NLS-1$ //$NON-NLS-2$
             if (ret == JOptionPane.YES_OPTION) {
                 for (Part part : selections) {
                     Configuration.get().removePart(part);
@@ -337,8 +339,8 @@ public class PartsPanel extends JPanel implements WizardContainer {
     public final Action pickPartAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.pick);
-            putValue(NAME, "Pick Part");
-            putValue(SHORT_DESCRIPTION, "Pick the selected part from the first available feeder.");
+            putValue(NAME, Translations.getString("PartsPanel.Action.PickPart")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("PartsPanel.Action.PickPart.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -364,9 +366,8 @@ public class PartsPanel extends JPanel implements WizardContainer {
     public final Action copyPartToClipboardAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.copy);
-            putValue(NAME, "Copy Part to Clipboard");
-            putValue(SHORT_DESCRIPTION,
-                    "Copy the currently selected part to the clipboard in text format.");
+            putValue(NAME, Translations.getString("PartsPanel.Action.CopyPartToClipboard")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("PartsPanel.Action.CopyPartToClipboard.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -392,8 +393,8 @@ public class PartsPanel extends JPanel implements WizardContainer {
     public final Action pastePartToClipboardAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.paste);
-            putValue(NAME, "Create Part from Clipboard");
-            putValue(SHORT_DESCRIPTION, "Create a new part from a definition on the clipboard.");
+            putValue(NAME, Translations.getString("PartsPanel.Action.PastePartFromClipboard")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("PartsPanel.Action.PastePartFromClipboard.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -450,7 +451,8 @@ public class PartsPanel extends JPanel implements WizardContainer {
         tabbedPane.removeAll();
 
         if (selectedPart != null) {
-            tabbedPane.add("Settings", new JScrollPane(new PartSettingsPanel(selectedPart)));
+            tabbedPane.add(Translations.getString("PartsPanel.SettingsTab.title"), //$NON-NLS-1$
+                    new JScrollPane(new PartSettingsPanel(selectedPart)));
 
             for (PartAlignment partAlignment : Configuration.get().getMachine().getPartAlignments()) {
                 Wizard wizard = partAlignment.getPartConfigurationWizard(selectedPart);

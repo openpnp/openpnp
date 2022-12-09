@@ -2,26 +2,35 @@ package org.openpnp.util;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.io.IOUtils;
+import org.openpnp.machine.reference.vision.ReferenceBottomVision;
+import org.openpnp.machine.reference.vision.ReferenceFiducialLocator;
 import org.openpnp.model.Area;
 import org.openpnp.model.AreaUnit;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.FiducialVisionSettings;
+import org.openpnp.model.Footprint;
 import org.openpnp.model.Length;
 import org.openpnp.model.Location;
+import org.openpnp.model.Package;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
 import org.openpnp.model.Point;
+import org.openpnp.model.Footprint.Pad;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PartAlignment;
 import org.openpnp.spi.PartAlignment.PartAlignmentOffset;
+import org.openpnp.vision.pipeline.CvPipeline;
 
 import com.google.zxing.BinaryBitmap;
 import com.google.zxing.MultiFormatReader;
@@ -318,5 +327,67 @@ public class VisionUtils {
             }
         }
         return histogram;
+    }
+
+    /**
+     * Ready the FIDUCIAL-HOME, either by returning the existing part or creating a new
+     * part with the given circular fiducialDiameter.
+     * 
+     * @param fiducialDiameter 
+     * @param overwrite If the FIDUCIAL-HOME already exists, overwrite it and make sure it has the given fiducialDiameter
+     * and circular shape.
+     * @return The FIDUCIAL-HOME part.
+     * @throws Exception 
+     */
+    static public Part readyHomingFiducialWithDiameter(Length fiducialDiameter, boolean overwrite) throws Exception {
+        Configuration configuration = Configuration.get();
+        Part part = configuration.getPart("FIDUCIAL-HOME");
+        if (part == null) {
+            part = new Part("FIDUCIAL-HOME");
+            configuration.addPart(part);
+        }
+        else if (!overwrite) {
+            return part;
+        }
+        org.openpnp.model.Package pkg = configuration.getPackage("FIDUCIAL-HOME");
+        if (pkg == null) {
+            pkg = new org.openpnp.model.Package("FIDUCIAL-HOME");
+            configuration.addPackage(pkg);
+        }
+        part.setPackage(pkg);
+        Footprint footprint = new Footprint();
+        footprint.setUnits(fiducialDiameter.getUnits());
+        Pad pad = new Pad();
+        pad.setName("FID");
+        pad.setWidth(fiducialDiameter.getValue());
+        pad.setHeight(fiducialDiameter.getValue());
+        pad.setRoundness(100.0);
+        footprint.addPad(pad);
+        pkg.setFootprint(footprint);
+        ReferenceFiducialLocator fiducialLocator = ReferenceFiducialLocator.getDefault();
+        String xmlPipeline = IOUtils.toString(ReferenceBottomVision.class
+                .getResource("ReferenceFiducialLocator-DefaultPipeline.xml"));
+        CvPipeline pipeline = new CvPipeline(xmlPipeline);
+        FiducialVisionSettings visionSettings = fiducialLocator.getInheritedVisionSettings(part);
+        if (pipeline.equals(visionSettings.getPipeline())) {
+            // Already the right vision settings.
+        }
+        else {
+            if (visionSettings.getUsedFiducialVisionIn().size() == 1 
+                    && visionSettings.getUsedFiducialVisionIn().get(0) == part) {
+                // Already a special setting on the part. Modify it.
+            }
+            else {
+                // Needs new settings (likely means the default was changed by the user).
+                FiducialVisionSettings newSettings = new FiducialVisionSettings();
+                newSettings.setValues(visionSettings);
+                newSettings.setName(part.getShortName());
+                part.setFiducialVisionSettings(newSettings);
+                Configuration.get().addVisionSettings(newSettings);
+                visionSettings = newSettings;
+            }
+            visionSettings.setPipeline(pipeline);
+        }
+        return part;
     }
 }

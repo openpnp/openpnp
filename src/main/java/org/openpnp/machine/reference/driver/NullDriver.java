@@ -21,6 +21,7 @@ package org.openpnp.machine.reference.driver;
 
 import java.io.IOException;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceMachine;
@@ -275,10 +276,9 @@ public class NullDriver extends AbstractDriver {
         super.findIssues(solutions);
         if (solutions.isTargeting(Milestone.Connect)) {
             solutions.add(new Solutions.Issue(
-                    this, 
-                    "The simulation NullDriver can replaced with a GcodeDriver to drive a real controller.", 
-                    "Replace with GcodeDriver.", 
-                    Severity.Fundamental,
+                    this,
+                    Translations.getString("NullDriver.Issue"), //$NON-NLS-1$
+                    Translations.getString("NullDriver.Solution"), Severity.Fundamental, //$NON-NLS-1$
                     "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Driver-Setup#automatic-conversion-of-the-nulldriver") {
 
                 @Override

@@ -290,7 +290,9 @@ public class JogControlsPanel extends JPanel {
         add(tabbedPane_1);
 
         JPanel panelControls = new JPanel();
-        tabbedPane_1.addTab("Jog", null, panelControls, null); //$NON-NLS-1$
+        //tabbedPane_1.addTab("Jog", null, panelControls, null); //$NON-NLS-1$
+        tabbedPane_1.addTab(Translations.getString("JogControlsPanel.Tab.Jog"), //$NON-NLS-1$
+                null, panelControls, null);
         panelControls.setLayout(new FormLayout(
                 new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
@@ -317,7 +319,7 @@ public class JogControlsPanel extends JPanel {
         // so the dialog looks right while editing.
         homeButton.setIcon(Icons.home);
         homeButton.setHideActionText(true);
-        homeButton.setToolTipText(Translations.getString("JogControlsPanel.homeButton.toolTipText")); //$NON-NLS-1$ //$NON-NLS-1$
+        homeButton.setToolTipText(Translations.getString("JogControlsPanel.homeButton.toolTipText")); //$NON-NLS-1$ //$NON-NLS-2$
         panelControls.add(homeButton, "2, 2"); //$NON-NLS-1$
 
         JLabel lblXy = new JLabel("X/Y"); //$NON-NLS-1$
@@ -377,7 +379,7 @@ public class JogControlsPanel extends JPanel {
         JButton positionNozzleBtn = new JButton(machineControlsPanel.targetToolAction);
         positionNozzleBtn.setIcon(Icons.centerTool);
         positionNozzleBtn.setHideActionText(true);
-        positionNozzleBtn.setToolTipText(Translations.getString("JogControlsPanel.Action.positionSelectedNozzle"));
+        positionNozzleBtn.setToolTipText(Translations.getString("JogControlsPanel.Action.positionSelectedNozzle")); //$NON-NLS-1$
         panelControls.add(positionNozzleBtn, "22, 4"); //$NON-NLS-1$
 
         JButton buttonStartStop = new JButton(machineControlsPanel.startStopMachineAction);
@@ -412,7 +414,7 @@ public class JogControlsPanel extends JPanel {
         JButton positionCameraBtn = new JButton(machineControlsPanel.targetCameraAction);
         positionCameraBtn.setIcon(Icons.centerCamera);
         positionCameraBtn.setHideActionText(true);
-        positionCameraBtn.setToolTipText(Translations.getString("JogControlsPanel.Action.positionCamera"));
+        positionCameraBtn.setToolTipText(Translations.getString("JogControlsPanel.Action.positionCamera")); //$NON-NLS-1$
         panelControls.add(positionCameraBtn, "22, 8"); //$NON-NLS-1$
 
         JLabel lblC = new JLabel("C"); //$NON-NLS-1$
@@ -450,15 +452,19 @@ public class JogControlsPanel extends JPanel {
         panelSpecial.add(btnRecycle);
 
         panelActuators = new JPanel();
-        tabbedPane_1.addTab(Translations.getString("JogControlsPanel.Tab.Actuators"), null, panelActuators, null); //$NON-NLS-1$
+        tabbedPane_1.addTab(Translations.getString("JogControlsPanel.Tab.Actuators"), //$NON-NLS-1$
+                null, panelActuators, null);
         panelActuators.setLayout(new WrapLayout(WrapLayout.LEFT));
 
         JPanel panelSafety = new JPanel();
-        tabbedPane_1.addTab(Translations.getString("JogControlsPanel.Tab.Safety"), null, panelSafety, null); //$NON-NLS-1$
+        tabbedPane_1.addTab(Translations.getString("JogControlsPanel.Tab.Safety"), //$NON-NLS-1$
+                null, panelSafety, null);
         panelSafety.setLayout(new FlowLayout(FlowLayout.LEFT, 5, 5));
 
-        boardProtectionOverrideCheck = new JCheckBox(Translations.getString("JogControlsPanel.Label.OverrideBoardProtection")); //$NON-NLS-1$
-        boardProtectionOverrideCheck.setToolTipText(Translations.getString("JogControlsPanel.Label.OverrideBoardProtection.Description")); //$NON-NLS-1$
+        boardProtectionOverrideCheck = new JCheckBox(
+                Translations.getString("JogControlsPanel.Label.OverrideBoardProtection")); //$NON-NLS-1$
+        boardProtectionOverrideCheck.setToolTipText(
+                Translations.getString("JogControlsPanel.Label.OverrideBoardProtection.Description")); //$NON-NLS-1$
         panelSafety.add(boardProtectionOverrideCheck, "1, 1"); //$NON-NLS-1$
     }
 

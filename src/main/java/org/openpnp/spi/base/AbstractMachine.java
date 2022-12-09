@@ -1,5 +1,7 @@
 package org.openpnp.spi.base;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -44,6 +46,7 @@ import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.ElementMap;
 import org.simpleframework.xml.core.Commit;
 
+import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.FutureCallback;
 
 public abstract class AbstractMachine extends AbstractModelObject implements Machine {
@@ -539,6 +542,10 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
         return submit(callable, callback, false);
     }
 
+    private synchronized boolean isQueueEmpty() {
+        return executor == null || executor.isShutdown() || executor.getQueue().isEmpty();
+    }
+
     @Override
     public <T> Future<T> submit(final Callable<T> callable, final FutureCallback<T> callback,
             final boolean ignoreEnabled) {
@@ -551,9 +558,10 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
 
         Callable<T> wrapper = new Callable<T>() {
             public T call() throws Exception {
+                Exception exception = null;
                 try {
                     boolean isBusy = isBusy();
-                    // TODO: this should also lock drivers
+                    // Note, this also locks drivers (busy).
                     setTaskThread(Thread.currentThread());
 
                     if (!isBusy) {
@@ -563,7 +571,6 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
 
                     // Call the task, storing the result and exception if any
                     T result = null;
-                    Exception exception = null;
                     try {
                         if (!ignoreEnabled && !isEnabled()) {
                             throw new Exception("Machine has not been started.");
@@ -596,9 +603,21 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
                         }
                     }
 
-                    // If there was an error cancel all pending tasks.
+                    // If there was an exception, cancel all pending tasks.
                     if (exception != null) {
-                        executor.shutdownNow();
+                        synchronized (this) {
+                            if (executor != null) {
+                                // Remove all pending tasks from the queue. Note, we no longer use executor.shutdownNow() here,
+                                // as this introduces a potential race conditions where a new task submitted could be run in 
+                                // parallel with this task still finishing up. Furthermore, this task may still need to function 
+                                // nominally in its onSuccess(), onFailure(), and fireMachineBusy(false)
+                                // handlers, i.e. it must not be subject to any Thread.interrupt() calls causing InterruptedException. 
+                                // After finishing up, there will still be a call to executor.shutdownNow() (see further below).
+                                for (Runnable runnable : new ArrayList<>(executor.getQueue())) {
+                                    executor.remove(runnable);
+                                }
+                            }
+                        }
                     }
 
                     // If a callback was supplied, call it with the results
@@ -621,10 +640,18 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
                 finally {
                     // If no more tasks are scheduled notify listeners that
                     // the machine is no longer busy
-                    if (executor.getQueue().isEmpty()) {
-                        // TODO: this should also unlock drivers
+                    if (isQueueEmpty()) {
+                        Logger.trace("Machine entering idle state.");
                         fireMachineBusy(false);
+                        // Note, this also unlocks drivers (idle).
                         setTaskThread(null);
+                    }
+                    if (exception != null) {
+                        synchronized (this) {
+                            if (executor != null) {
+                                executor.shutdownNow();
+                            }
+                        }
                     }
                 }
             }
@@ -634,7 +661,7 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
     }
 
     @Override
-    public <T> T execute(final Callable<T> callable, final boolean onlyIfEnabled, final long timeout) 
+    public <T> T execute(final Callable<T> callable, final boolean onlyIfEnabled, final long busyTimeout, final long executeTimeout) 
             throws Exception {
         if (onlyIfEnabled && !isEnabled()) {
             // Ignore the task if the machine is not enabled.
@@ -648,7 +675,7 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
         else {
             // Otherwise, submit a machine task and wait for its completion.
             try {
-                long t1 = System.currentTimeMillis() + timeout;
+                long t1 = System.currentTimeMillis() + busyTimeout;
                 while (isBusy()) {
                     if (System.currentTimeMillis() >= t1) {
                         throw new TimeoutException("Machine still busy after timeout expired, task rejected.");
@@ -656,7 +683,13 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
                     Thread.yield();
                 }
                 Future<T> future = submit(callable, null, false);
-                return future.get();
+                if (executeTimeout < 0) {
+                    // no timeout
+                    return future.get();
+                }
+                else {
+                    return future.get(executeTimeout, TimeUnit.MILLISECONDS);
+                }
             }
             catch (ExecutionException e) {
                 if (e.getCause() instanceof Exception) {

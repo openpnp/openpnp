@@ -38,6 +38,7 @@ import javax.swing.border.EmptyBorder;
 
 import org.apache.commons.io.FileUtils;
 import org.openpnp.Main;
+import org.openpnp.Translations;
 import org.openpnp.gui.components.MarkupTextPane;
 
 @SuppressWarnings("serial")
@@ -48,14 +49,15 @@ public class Welcome2_0Dialog extends JDialog {
 
     public Welcome2_0Dialog(Frame frame) {
         super(frame, true);
-        setTitle("Welcome to OpenPnP 2.0");
+        setTitle(Translations.getString("WelcomeDialog.title")); //$NON-NLS-1$
         setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
         setBounds(100, 100, 648, 434);
         getContentPane().setLayout(new BorderLayout());
         contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
         getContentPane().add(contentPanel, BorderLayout.CENTER);
         contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
-        JLabel lblOpenpnp = new JLabel("Welcome to OpenPnP 2.0");
+        JLabel lblOpenpnp = new JLabel(
+                Translations.getString("WelcomeDialog.title")); //$NON-NLS-1$
         lblOpenpnp.setAlignmentX(Component.CENTER_ALIGNMENT);
         lblOpenpnp.setFont(new Font("Lucida Grande", Font.BOLD, 32));
         contentPanel.add(lblOpenpnp);

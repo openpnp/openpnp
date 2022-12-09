@@ -7,6 +7,7 @@ import javax.swing.Action;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.machine.neoden4.Neoden4Signaler;
 import org.openpnp.spi.base.AbstractJobProcessor.State;
@@ -38,14 +39,16 @@ public class Neoden4SignalerConfigurationWizard  extends AbstractConfigurationWi
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
-        chckbxError = new JCheckBox("Play sound on error?");
+        chckbxError = new JCheckBox(Translations.getString(
+                "Neoden4SignalerConfigurationWizard.PlaySoundOnErrorChkBox.text"));
         contentPanel.add(chckbxError, "2, 2");
         
         JButton testError = new JButton();
         testError.setAction(testErrorAction);
         contentPanel.add(testError, "4, 2");
         
-        chckbxSuccess = new JCheckBox("Play sound on completion?");
+        chckbxSuccess = new JCheckBox(Translations.getString(
+                "Neoden4SignalerConfigurationWizard.PlaySoundOnCompletionChkBox.text"));
         contentPanel.add(chckbxSuccess, "2, 4");
 
         JButton testFinished = new JButton();
@@ -53,7 +56,8 @@ public class Neoden4SignalerConfigurationWizard  extends AbstractConfigurationWi
         contentPanel.add(testFinished, "4, 4");
     }
     
-    private Action testErrorAction = new AbstractAction("Test error sound") {
+    private Action testErrorAction = new AbstractAction(Translations.getString(
+            "Neoden4SignalerConfigurationWizard.Action.TestErrorSound")) { //$NON-NLS-1$
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
         	signaler.signalJobProcessorState(State.ERROR);
@@ -61,7 +65,8 @@ public class Neoden4SignalerConfigurationWizard  extends AbstractConfigurationWi
     };
 
     
-    private Action testFinishedAction = new AbstractAction("Test finished sound") {
+    private Action testFinishedAction = new AbstractAction(Translations.getString(
+            "Neoden4SignalerConfigurationWizard.Action.TestFinishedSound")) { //$NON-NLS-1$
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
         	signaler.signalJobProcessorState(State.FINISHED);

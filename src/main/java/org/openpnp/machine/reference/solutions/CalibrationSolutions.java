@@ -402,10 +402,11 @@ public class CalibrationSolutions implements Solutions.Subject {
                                     + "<table>"
                                     + "<tr><td align=\"right\">Detected Nozzle Head Offsets:</td>"
                                     + "<td>"+nozzle.getHeadOffsets()+"</td></tr>"
-                                    + "<tr><td align=\"right\">Previous Nozzle Head Offsets:</td>"
-                                    + "<td>"+oldNozzleOffsets+"</td></tr>"
-                                    + "<tr><td align=\"right\">Difference:</td>"
-                                    + "<td>"+nozzle.getHeadOffsets().subtract(oldNozzleOffsets)+"</td></tr>"
+                                    + (oldNozzleOffsets == null ? "" : 
+                                        "<tr><td align=\"right\">Previous Nozzle Head Offsets:</td>"
+                                        + "<td>"+oldNozzleOffsets+"</td></tr>"
+                                        + "<tr><td align=\"right\">Difference:</td>"
+                                        + "<td>"+nozzle.getHeadOffsets().subtract(oldNozzleOffsets)+"</td></tr>")
                                     + "</table>" 
                                     : "")
                             + "</html>";

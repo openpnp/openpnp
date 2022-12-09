@@ -7,6 +7,7 @@ import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.Icon;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.MessageBoxes;
@@ -30,8 +31,9 @@ public class NozzleTipsPropertySheetHolder extends SimplePropertySheetHolder {
     public Action newAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.nozzleTipAdd);
-            putValue(NAME, "New Nozzle Tip...");
-            putValue(SHORT_DESCRIPTION, "Create a new nozzle tip.");
+            putValue(NAME, Translations.getString("NozzleTipsPropertySheetHolder.Action.NewNozzleTip")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString(
+                    "NozzleTipsPropertySheetHolder.Action.NewNozzleTip.Description")); //$NON-NLS-1$
         }
 
         @Override
