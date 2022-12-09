@@ -661,7 +661,7 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
     }
 
     @Override
-    public <T> T execute(final Callable<T> callable, final boolean onlyIfEnabled, final long timeout) 
+    public <T> T execute(final Callable<T> callable, final boolean onlyIfEnabled, final long busyTimeout, final long executeTimeout) 
             throws Exception {
         if (onlyIfEnabled && !isEnabled()) {
             // Ignore the task if the machine is not enabled.
@@ -675,7 +675,7 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
         else {
             // Otherwise, submit a machine task and wait for its completion.
             try {
-                long t1 = System.currentTimeMillis() + timeout;
+                long t1 = System.currentTimeMillis() + busyTimeout;
                 while (isBusy()) {
                     if (System.currentTimeMillis() >= t1) {
                         throw new TimeoutException("Machine still busy after timeout expired, task rejected.");
@@ -683,7 +683,13 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
                     Thread.yield();
                 }
                 Future<T> future = submit(callable, null, false);
-                return future.get();
+                if (executeTimeout < 0) {
+                    // no timeout
+                    return future.get();
+                }
+                else {
+                    return future.get(executeTimeout, TimeUnit.MILLISECONDS);
+                }
             }
             catch (ExecutionException e) {
                 if (e.getCause() instanceof Exception) {
