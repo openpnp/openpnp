@@ -277,16 +277,25 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
      * @param onlyIfEnabled True if the task must only be executed if the machine is enabled.
      * @param busyTimeout If the machine is busy executing other submitted task, the execution 
      * will be rejected when the timeout (in milliseconds) expires, throwing a TimeoutException. 
-     * This will typically happen, when a long-running operation like a Job is pending.  
+     * This will typically happen, when a long-running operation like a Job is pending.
+     * @param executeTimeout If the execution takes longer than this time (in milliseconds) the 
+     * method throws a TimeoutException. Note the callable will still continue after that.    
      * @return
      * @throws Exception
      */
-    public <T> T execute(Callable<T> callable, boolean onlyIfEnabled, long busyTimeout) throws Exception;
+    public <T> T execute(Callable<T> callable, boolean onlyIfEnabled, long busyTimeout, long executeTimeout) throws Exception;
+
+    /**
+     * Calls {@link #execute(Callable, boolean, long, long)} with default busy timeout. 
+     */
+    public default <T> T execute(Callable<T> callable, boolean onlyIfEnabled, long busyTimeout) throws Exception {
+        return execute(callable, onlyIfEnabled, busyTimeout, -1);
+    }
 
     public long DEFAULT_TASK_BUSY_TIMEOUT_MS = 1000;
 
     /**
-     * Calls {@link #execute(Callable, boolean, long)} with default busy timeout. 
+     * Calls {@link #execute(Callable, boolean, long, long)} with default busy timeout. 
      * 
      * @param <T>
      * @param callable
@@ -298,7 +307,8 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
     }
 
     /**
-     * Same as execute() but the task is only executed if the Machine is enabled. 
+     * Same as {@link #execute(Callable, boolean, long, long)} but the task is only executed 
+     * if the Machine is enabled. 
      * 
      * @param <T>
      * @param callable
