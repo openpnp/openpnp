@@ -91,7 +91,6 @@ public interface Definable<T> extends PropertyChangeListener {
                 }
             }
         }
-        
     }
     
 }

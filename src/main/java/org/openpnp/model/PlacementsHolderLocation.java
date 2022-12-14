@@ -127,7 +127,7 @@ public abstract class PlacementsHolderLocation<T extends PlacementsHolderLocatio
     /**
      * Sets the side of the PlacementsHolder that is facing the top side of its most distant
      * ancestor (which is usually the machine)
-     * @param side - the side that is to be facing top side of its most distant ancestor
+     * @param side - the side that is to be facing the top side of its most distant ancestor
      */
     public void setGlobalSide(Side side) {
         Side oldValue = this.side;
@@ -331,14 +331,20 @@ public abstract class PlacementsHolderLocation<T extends PlacementsHolderLocatio
      */
     public void setLocation(Location location) {
         Location oldValue = getLocation();
-        super.setLocation(location);
         // If the location is changing, it is not possible for the transform to still be valid, so
         //clear it.
-        if (!getLocation().equals(oldValue)) {
+        if (!location.equals(oldValue)) {
             setLocalToParentTransform(null);
         }
+        super.setLocation(location);
     }
 
+    /**
+     * 
+     * @return the status of the placements transform. Either NotSet - meaning the transform has not
+     * been set, or GloballySet - meaning the transform is inheriting its value from an ancestor, or 
+     * LocallySet - meaning the transform has been directly set
+     */
     public PlacementsTransformStatus getPlacementsTransformStatus() {
         if (placementsTransformStatus == PlacementsTransformStatus.LocallySet) {
             return placementsTransformStatus;
@@ -349,6 +355,12 @@ public abstract class PlacementsHolderLocation<T extends PlacementsHolderLocatio
         return PlacementsTransformStatus.NotSet;
     }
     
+    /**
+     * Sets the placements transform status
+     * @param placementsTransformStatus - the status to set. Either NotSet - meaning the transform
+     * has not been set, or GloballySet - meaning the transform is inheriting its value from an 
+     * ancestor, or LocallySet - meaning the transform has been directly set
+     */
     public void setPlacementsTransformStatus(PlacementsTransformStatus placementsTransformStatus) {
         Object oldValue = this.placementsTransformStatus;
         this.placementsTransformStatus = placementsTransformStatus;

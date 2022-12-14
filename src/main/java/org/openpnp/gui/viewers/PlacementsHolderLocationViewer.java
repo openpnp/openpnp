@@ -40,8 +40,6 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
 import java.awt.event.MouseWheelEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.awt.font.FontRenderContext;
 import java.awt.font.TextLayout;
 import java.awt.geom.AffineTransform;
@@ -53,6 +51,7 @@ import java.awt.geom.Rectangle2D;
 import java.awt.geom.Rectangle2D.Double;
 import java.awt.image.BufferedImage;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
 import javax.swing.JPanel;
@@ -64,8 +63,6 @@ import javax.swing.JLabel;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.JCheckBox;
 import javax.swing.JCheckBoxMenuItem;
-import javax.swing.JFrame;
-
 import java.awt.Cursor;
 import java.awt.Dimension;
 
@@ -73,7 +70,6 @@ import javax.swing.SwingConstants;
 import javax.swing.border.EtchedBorder;
 import javax.swing.JScrollPane;
 
-import org.openpnp.gui.MainFrame;
 import org.openpnp.model.Abstract2DLocatable.Side;
 import org.openpnp.model.Board;
 import org.openpnp.model.BoardLocation;
@@ -93,11 +89,11 @@ import javax.swing.JButton;
 
 
 @SuppressWarnings("serial")
-public class PlacementsHolderLocationViewer extends JFrame {
+public class PlacementsHolderLocationViewer extends JPanel {
     private static final double SCREEN_PPI = Toolkit.getDefaultToolkit().getScreenResolution();
     private static final double INCHES_PER_MAJOR_DIVISION = 0.75;
     private static final double PIXELS_PER_MAJOR_DIVISION = SCREEN_PPI * INCHES_PER_MAJOR_DIVISION;
-    private static final double PIXEL_GAP = 20;
+    private static final double PIXEL_GAP = SCREEN_PPI * 0.125;
     private static final double ZOOM_PER_WHEEL_TICK = Math.pow(2, 1.0/4); //4 ticks to double
     private static final int HORIZONTAL_SCALE_HEIGHT = 25;
     private static final int VERTICAL_SCALE_WIDTH = 45;
@@ -112,8 +108,6 @@ public class PlacementsHolderLocationViewer extends JFrame {
     private Color profileTopColor = new Color(0, 128, 128);  //Teal for Top
     private Color profileBottomColor = new Color(0, 0, 200); //Blue for Bottom
 
-    private JPanel contentPane;
-    
     private BufferedImage placementsHolderImage;
     private BufferedImage horizontalScaleImage;
     private BufferedImage verticalScaleImage;
@@ -155,15 +149,24 @@ public class PlacementsHolderLocationViewer extends JFrame {
     private int displayDecimals;
     
     private boolean viewFromTop = true;
-    private boolean showReticle = true;
+    private boolean showReticle = false;
     protected boolean showPlacements = false;
     protected boolean showFiducials = false;
     protected boolean showOrigins = false;
     protected boolean showLocations = true;
     protected boolean showChildrenOnly = true;
+    private PlacementsHolderLocation<?> arrayRoot;
+    private List<PlacementsHolderLocation<?>> newArrayMembers;
+    private JButton btnViewingSide;
+    private JButton btnShowChildrenOnly;
+    private JCheckBox chckbxReticle;
+    private JCheckBox chckbxLocations;
+    private JCheckBox chckbxOrigins;
+    private JCheckBox chckbxFiducials;
+    private JCheckBox chckbxPlacements;
 
     /**
-     * Create the frame.
+     * Create the Panel.
      */
     public PlacementsHolderLocationViewer(PlacementsHolderLocation<?> placementsHolderLocation, boolean isJob, BiConsumer<PlacementsHolderLocation<?>, String> refreshTableModel) {
         this.placementsHolderLocation = placementsHolderLocation;
@@ -192,54 +195,22 @@ public class PlacementsHolderLocationViewer extends JFrame {
         
         units = Configuration.get().getSystemUnits();
         
-        addWindowListener(new WindowAdapter( ) {
-
-            @Override
-            public void windowClosing(WindowEvent e) {
-                cancel();
-            }
-        });
-
-        setBounds(100, 100, 800, 600);
-        if (isJob) {
-            setTitle(MainFrame.get().getTitle());
-        }
-        else {
-            if (placementsHolder instanceof Board) {
-                setTitle("Board Viewer - " + placementsHolder.getFile().getName());
-            }
-            else {
-                setTitle("Panel Viewer - " + placementsHolder.getFile().getName());
-            }
-        }
-        contentPane = new JPanel();
-        contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
-        setContentPane(contentPane);
-        contentPane.setLayout(new BorderLayout(0, 0));
+        setBorder(new EmptyBorder(5, 5, 5, 5));
+        setLayout(new BorderLayout(0, 0));
         
         JPanel panel = new JPanel();
         panel.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
-        contentPane.add(panel, BorderLayout.EAST);
+        add(panel, BorderLayout.EAST);
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         
-        JButton btnViewingSide = new JButton();
+        btnViewingSide = new JButton();
         panel.add(btnViewingSide);
         btnViewingSide.setText("Viewing From Top");
         btnViewingSide.setEnabled(!isJob);
         btnViewingSide.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                viewFromTop = !viewFromTop;
-                if (viewFromTop) {
-                    btnViewingSide.setText("Viewing From Top");
-                    placementsHolderLocation.setSide(Side.Top);
-                }
-                else {
-                    btnViewingSide.setText("Viewing From Bottom");
-                    placementsHolderLocation.setSide(Side.Bottom);
-                }
-                regenerate();
-                drawingPanel.repaint();
+                setViewFromTop(!isViewFromTop());
             }
         });
         
@@ -250,7 +221,7 @@ public class PlacementsHolderLocationViewer extends JFrame {
         lblNewLabel.setForeground(lblNewLabel.getBackground());
         panel.add(lblNewLabel);
         
-        JButton btnShowChildrenOnly = new JButton();
+        btnShowChildrenOnly = new JButton();
         if (showChildrenOnly) {
             btnShowChildrenOnly.setText("Viewing Children Only");
         }
@@ -260,15 +231,7 @@ public class PlacementsHolderLocationViewer extends JFrame {
         btnShowChildrenOnly.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                showChildrenOnly = !showChildrenOnly;
-                if (showChildrenOnly) {
-                    btnShowChildrenOnly.setText("Viewing Children Only");
-                }
-                else {
-                    btnShowChildrenOnly.setText("Viewing All Descendants");
-                }
-                regenerate();
-                drawingPanel.repaint();
+                setShowChildrenOnly(!isShowChildrenOnly());
             }
         });
         btnShowChildrenOnly.setVisible(placementsHolderLocation instanceof PanelLocation);
@@ -277,65 +240,55 @@ public class PlacementsHolderLocationViewer extends JFrame {
         Component verticalStrut = Box.createVerticalStrut(15);
         panel.add(verticalStrut);
         
-        JCheckBox chckbxReticle = new JCheckBox("Reticle");
+        chckbxReticle = new JCheckBox("Reticle");
         panel.add(chckbxReticle);
         chckbxReticle.setSelected(showReticle);
         chckbxReticle.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                showReticle = chckbxReticle.isSelected();
-                renderPlacementsHolderImage();
-                drawingPanel.repaint();
+                setShowReticle(chckbxReticle.isSelected());
             }});
         
-        JCheckBox chckbxLocations = new JCheckBox("Board/Panel Locations");
+        chckbxLocations = new JCheckBox("Board/Panel Locations");
         panel.add(chckbxLocations);
         chckbxLocations.setSelected(showLocations);
         chckbxLocations.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                showLocations = chckbxLocations.isSelected();
-                renderPlacementsHolderImage();
-                drawingPanel.repaint();
+                setShowLocations(chckbxLocations.isSelected());
             }});
         
-        JCheckBox chckbxOrigins = new JCheckBox("Board/Panel Origins");
+        chckbxOrigins = new JCheckBox("Board/Panel Origins");
         panel.add(chckbxOrigins);
         chckbxOrigins.setSelected(showOrigins);
         chckbxOrigins.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                showOrigins = chckbxOrigins.isSelected();
-                renderPlacementsHolderImage();
-                drawingPanel.repaint();
+                setShowOrigins(chckbxOrigins.isSelected());
             }});
         
-        JCheckBox chckbxFiducials = new JCheckBox("Fiducials");
+        chckbxFiducials = new JCheckBox("Fiducials");
         panel.add(chckbxFiducials);
         chckbxFiducials.setSelected(showFiducials);
         chckbxFiducials.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                showFiducials = chckbxFiducials.isSelected();
-                renderPlacementsHolderImage();
-                drawingPanel.repaint();
+                setShowFiducials(chckbxFiducials.isSelected());
             }});
         
-        JCheckBox chckbxPlacements = new JCheckBox("Placements");
+        chckbxPlacements = new JCheckBox("Placements");
         panel.add(chckbxPlacements);
         chckbxPlacements.setSelected(showPlacements);
         chckbxPlacements.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                showPlacements = chckbxPlacements.isSelected();
-                renderPlacementsHolderImage();
-                drawingPanel.repaint();
+                setShowPlacements(chckbxPlacements.isSelected());
             }});
         
         scrollPane = new JScrollPane();
         scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER);
         scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-        contentPane.add(scrollPane, BorderLayout.CENTER);
+        add(scrollPane, BorderLayout.CENTER);
         
         drawingPanel = new DrawingPanel();
         scrollPane.setViewportView(drawingPanel);
@@ -444,18 +397,19 @@ public class PlacementsHolderLocationViewer extends JFrame {
     }
 
     public void setPlacementsHolder(PlacementsHolder<?> placementsHolder) {
+        if (placementsHolder == null) {
+            return;
+        }
         this.placementsHolder = placementsHolder;
         if (placementsHolder instanceof Board) {
             placementsHolderLocation = new BoardLocation((Board) placementsHolder);
         }
         else if (placementsHolder instanceof Panel) {
             placementsHolderLocation = new PanelLocation((Panel) placementsHolder);
+            PanelLocation.setParentsOfAllDescendants((PanelLocation) placementsHolderLocation);
         }
         else {
             throw new UnsupportedOperationException("Viewing of " + placementsHolder.getClass().getSimpleName() + " types is not currently supported");
-        }
-        if (!viewFromTop) {
-            placementsHolderLocation.setGlobalSide(Side.Bottom);
         }
         regenerate();
     }
@@ -673,6 +627,9 @@ public class PlacementsHolderLocationViewer extends JFrame {
 
     public void generateGraphicalObjects(PlacementsHolderLocation<?> placementsHolderLocation) {
         
+        if (placementsHolderLocation == null || placementsHolderLocation.getPlacementsHolder() == null) {
+            return;
+        }
         AffineTransform at = placementsHolderLocation.getLocalToGlobalTransform();
         GeometricPath2D profile = placementsHolderLocation.getPlacementsHolder().getProfile().convertToUnits(units);
         profile.transform(at);
@@ -729,13 +686,25 @@ public class PlacementsHolderLocationViewer extends JFrame {
             for (Area profile : profileMap.keySet() ) {
                 if (profile.intersects(viewableClippingBounds)) {
                     PlacementsHolderLocation<?> phl = profileMap.get(profile);
+                    if (phl == arrayRoot) {
+                        offScr.setStroke(new BasicStroke(2, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_ROUND,
+                                0, new float[]{(float) (PIXEL_GAP * 0.25)}, 0));
+                    }
+                    else if (newArrayMembers != null && newArrayMembers.contains(phl)) {
+                        offScr.setStroke(new BasicStroke(2, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_ROUND,
+                                  0, new float[]{(float) (PIXEL_GAP * 0.5)}, 0));
+                    }
+                    else {
+                        offScr.setStroke(new BasicStroke(2, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_ROUND));
+                    }
                     Shape profileShape = objectToViewTransform.createTransformedShape(profile);
                     if (!phl.isLocallyEnabled()) {
                         offScr.setPaint(gp1);
                         offScr.fill(profileShape);
                     }
                     offScr.setPaint(originalPaint);
-                    if (phl.getGlobalSide() == Side.Top) {
+                    if ((phl.getGlobalSide() == Side.Top && viewFromTop) || 
+                            (phl.getGlobalSide() == Side.Bottom && !viewFromTop)) {
                         offScr.setColor(profileTopColor);
                     }
                     else {
@@ -757,13 +726,11 @@ public class PlacementsHolderLocationViewer extends JFrame {
             if (showOrigins) {
                 overlayOriginMarks(offScr);
             }
-            if (showReticle) {
-                overlayReticle(offScr);
-            }
-            
             if (isJob) {
+                //Show the machine's origin
                 overlayOriginMark(offScr, placementsHolderLocation);
             }
+            overlayReticle(offScr);
             
             offScr.dispose();
         }
@@ -775,23 +742,21 @@ public class PlacementsHolderLocationViewer extends JFrame {
         for (Area profileArea : profileMap.keySet()) {
             PlacementsHolderLocation<?> placementsHolderLocation = profileMap.get(profileArea);
             if (placementsHolderLocation != null) {
-                Location location = placementsHolderLocation.getGlobalLocation().convertToUnits(units);
-                if (placementsHolderLocation == this.placementsHolderLocation && 
-                        placementsHolderLocation.getGlobalSide() == Side.Bottom) {
-                    double xOffset = placementsHolder.getDimensions().getLengthX().convertToUnits(units).getValue();
-                    
-                    location = location.add(new Location(units, xOffset, 0, 0, 0)).rotateXyCenterPoint(location, -location.getRotation());
+                Location offset = Location.origin;
+                if ((viewFromTop && placementsHolderLocation.getGlobalSide() == Side.Bottom) ||
+                        (!viewFromTop && placementsHolderLocation.getGlobalSide() == Side.Top)) {
+                    offset = offset.add(new Location(units, placementsHolderLocation.getPlacementsHolder().getDimensions().getLengthX().convertToUnits(units).getValue(), 0, 0, 0));
                 }
+                Location location = Utils2D.calculateBoardPlacementLocation(placementsHolderLocation, offset);
                 overlayLocationMark(offScr, d, location);
             }
         }
     }
     
     private void overlayLocationMark(Graphics2D offScr, double size, Location location) {
-        double sign = viewFromTop ? 1.0 : -1.0;
         AffineTransform at = new AffineTransform(objectToViewTransform);
         at.translate(location.getX(), location.getY());
-        at.rotate(sign * Math.toRadians(location.getRotation()));
+        at.rotate(Math.toRadians(location.getRotation()));
         Shape line = new Line2D.Double(0, 0, 0, size);
         offScr.setColor(Color.CYAN);
         offScr.draw(at.createTransformedShape(line));
@@ -810,12 +775,11 @@ public class PlacementsHolderLocationViewer extends JFrame {
     }
     
     private void overlayOriginMark(Graphics2D offScr, PlacementsHolderLocation<?> phl) {
-        double sign = viewFromTop ? 1.0 : -1.0;
         Location location = Utils2D.calculateBoardPlacementLocation(phl, Location.origin.convertToUnits(units));
         AffineTransform at = new AffineTransform(objectToViewTransform);
         at.translate(location.getX(), location.getY());
         at.rotate(Math.toRadians(location.getRotation()));
-        at.scale(phl.getGlobalSide() == Side.Top ? sign : -sign, 1);
+        at.scale(phl.getGlobalSide() == Side.Top ? 1 : -1, 1);
         double d = PIXEL_GAP/(0.75*scaleFactor);
         offScr.setStroke(new BasicStroke(1, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_ROUND));
         offScr.setColor(Color.CYAN);
@@ -844,8 +808,11 @@ public class PlacementsHolderLocationViewer extends JFrame {
         for (Area profileArea : profileMap.keySet()) {
             PlacementsHolderLocation<?> placementsHolderLocation = profileMap.get(profileArea);
             for (Placement placement : placementsHolderLocation.getPlacementsHolder().getPlacements()) {
-                if (placement.getType() == Placement.Type.Placement && placement.getSide() == placementsHolderLocation.getGlobalSide()) {
-                    Location location = Utils2D.calculateBoardPlacementLocation(placementsHolderLocation, placement).convertToUnits(units);
+                if (placement.getType() == Placement.Type.Placement && 
+                        ((viewFromTop && placement.getSide() == placementsHolderLocation.getGlobalSide()) || 
+                        (!viewFromTop && placement.getSide() != placementsHolderLocation.getGlobalSide()))) {
+                    Location localLocation = placement.getLocation().multiply(1, 1, 1, viewFromTop ? 1 : -1);
+                    Location location = Utils2D.calculateBoardPlacementLocation(placementsHolderLocation, localLocation);
                     overlayLocationMark(offScr, d, location);
                 }
             }
@@ -853,24 +820,30 @@ public class PlacementsHolderLocationViewer extends JFrame {
     }
     
     private void overlayFiducialMarks(Graphics2D offScr) {
-        double sign = viewFromTop ? 1.0 : -1.0;
-        offScr.setStroke(new BasicStroke(1, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_ROUND));
-        offScr.setColor(copperColor);
-        Shape fid = new Ellipse2D.Double(-0.5, -0.5, 1, 1);
         for (Area profileArea : profileMap.keySet()) {
             PlacementsHolderLocation<?> placementsHolderLocation = profileMap.get(profileArea);
             for (Placement placement : placementsHolderLocation.getPlacementsHolder().getPlacements()) {
-                if (placement.getType() == Placement.Type.Fiducial && placement.getSide() == placementsHolderLocation.getGlobalSide()) {
-                    Location location = Utils2D.calculateBoardPlacementLocation(placementsHolderLocation, placement).convertToUnits(units);
-                    AffineTransform at = new AffineTransform(objectToViewTransform);
-                    at.translate(location.getX(), location.getY());
-                    at.rotate(sign * Math.toRadians(location.getRotation()));
-                    offScr.fill(at.createTransformedShape(fid));
+                if (placement.getType() == Placement.Type.Fiducial && 
+                        ((viewFromTop && placement.getSide() == placementsHolderLocation.getGlobalSide()) || 
+                        (!viewFromTop && placement.getSide() != placementsHolderLocation.getGlobalSide()))) {
+                    Location localLocation = placement.getLocation().multiply(1, 1, 1, viewFromTop ? 1 : -1);
+                    Location location = Utils2D.calculateBoardPlacementLocation(placementsHolderLocation, localLocation);
+                    overlayFiducialMark(offScr, 1, location);
                 }
             }
         }
     }
     
+    private void overlayFiducialMark(Graphics2D offScr, double size, Location location) {
+        AffineTransform at = new AffineTransform(objectToViewTransform);
+        at.translate(location.getX(), location.getY());
+        at.rotate(Math.toRadians(location.getRotation()));
+        offScr.setColor(copperColor);
+        Shape fid = new Ellipse2D.Double(-0.5*size, -0.5*size, size, size);
+        offScr.fill(at.createTransformedShape(fid));
+    }
+    
+
     private void overlayReticle(Graphics2D offScr) {
         double unitScaling = 1;
         String displayUnits;
@@ -1099,24 +1072,12 @@ public class PlacementsHolderLocationViewer extends JFrame {
         offScr.dispose();
     }
 
-    protected void cancel() {
+    public void cancel() {
     }
     
     public class LabeledPopupMenu extends JPopupMenu {
         private String originalLabelText = null;
         private final JLabel label;
-
-        private String replaceHTMLEntities(String text) {
-//            if (-1 != text.indexOf("<") ||
-//                -1 != text.indexOf(">") ||
-//                -1 != text.indexOf("&"))
-//            {
-//                text = text.replaceAll("&", "&amp;");
-//                text = text.replaceAll("<", "&lt;");
-//                text = text.replaceAll(">", "&gt;");
-//            }
-            return text;
-        }
 
         public LabeledPopupMenu() {
             super();
@@ -1127,7 +1088,7 @@ public class PlacementsHolderLocationViewer extends JFrame {
             super();
             originalLabelText = label;
             this.label = new JLabel("<html><b>" +
-                replaceHTMLEntities(label) + "</b></html>");
+                label + "</b></html>");
             this.label.setHorizontalAlignment(SwingConstants.CENTER);
             add(this.label);
             addSeparator();
@@ -1138,7 +1099,7 @@ public class PlacementsHolderLocationViewer extends JFrame {
             if (null == label) return;
             originalLabelText = text;
             label.setText("<html><b>" +
-                replaceHTMLEntities(text) +
+                text +
                 "</b></html>");
         }
 
@@ -1190,4 +1151,102 @@ public class PlacementsHolderLocationViewer extends JFrame {
         }
     }
 
+    public boolean isViewFromTop() {
+        return viewFromTop;
+    }
+
+    public void setViewFromTop(boolean viewFromTop) {
+        this.viewFromTop = viewFromTop;
+        if (viewFromTop) {
+            btnViewingSide.setText("Viewing From Top");
+        }
+        else {
+            btnViewingSide.setText("Viewing From Bottom");
+        }
+        regenerate();
+        drawingPanel.repaint();
+    }
+
+    public boolean isShowReticle() {
+        return showReticle;
+    }
+
+    public void setShowReticle(boolean showReticle) {
+        this.showReticle = showReticle;
+        chckbxReticle.setSelected(showReticle);
+        renderPlacementsHolderImage();
+        drawingPanel.repaint();
+    }
+
+    public boolean isShowPlacements() {
+        return showPlacements;
+    }
+
+    public void setShowPlacements(boolean showPlacements) {
+        this.showPlacements = showPlacements;
+        chckbxPlacements.setSelected(showPlacements);
+        renderPlacementsHolderImage();
+        drawingPanel.repaint();
+    }
+
+    public boolean isShowFiducials() {
+        return showFiducials;
+    }
+
+    public void setShowFiducials(boolean showFiducials) {
+        this.showFiducials = showFiducials;
+        chckbxFiducials.setSelected(showFiducials);
+        renderPlacementsHolderImage();
+        drawingPanel.repaint();
+    }
+
+    public boolean isShowOrigins() {
+        return showOrigins;
+    }
+
+    public void setShowOrigins(boolean showOrigins) {
+        this.showOrigins = showOrigins;
+        chckbxOrigins.setSelected(showOrigins);
+        renderPlacementsHolderImage();
+        drawingPanel.repaint();
+    }
+
+    public boolean isShowLocations() {
+        return showLocations;
+    }
+
+    public void setShowLocations(boolean showLocations) {
+        this.showLocations = showLocations;
+        chckbxLocations.setSelected(showLocations);
+        renderPlacementsHolderImage();
+        drawingPanel.repaint();
+    }
+
+    public boolean isShowChildrenOnly() {
+        return showChildrenOnly;
+    }
+
+    public void setShowChildrenOnly(boolean showChildrenOnly) {
+        this.showChildrenOnly = showChildrenOnly;
+        if (showChildrenOnly) {
+            btnShowChildrenOnly.setText("Viewing Children Only");
+        }
+        else {
+            btnShowChildrenOnly.setText("Viewing All Descendants");
+        }
+        regenerate();
+        drawingPanel.repaint();
+    }
+
+    public void setArrayRoot(PlacementsHolderLocation<?> arrayRoot) {
+        this.arrayRoot = arrayRoot;
+        renderPlacementsHolderImage();
+        drawingPanel.repaint();
+    }
+    
+    public void setNewArrayMembers(List<PlacementsHolderLocation<?>> newArrayMembers) {
+        this.newArrayMembers = newArrayMembers;
+        renderPlacementsHolderImage();
+        drawingPanel.repaint();
+    }
 }

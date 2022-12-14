@@ -19,7 +19,6 @@
 
 package org.openpnp.model;
 
-import java.awt.geom.Path2D;
 import java.awt.geom.Rectangle2D;
 import java.beans.PropertyChangeListener;
 import java.io.File;
@@ -56,6 +55,9 @@ public abstract class PlacementsHolder<T extends PlacementsHolder<T>>
     @ElementList(required = false)
     protected IdentifiableList<Placement> placements = new IdentifiableList<>();
 
+    /**
+     * The physical outline of this PlacementsHolder
+     */
     @Element(required = false)
     protected GeometricPath2D profile = null;
     
@@ -150,6 +152,11 @@ public abstract class PlacementsHolder<T extends PlacementsHolder<T>>
         firePropertyChange("dimensions", oldValue, dimensions);
     }
 
+    /**
+     * Gets the profile (physical outline) of this PlacementsHolder. If no profile has been defined,
+     * a rectangle is returned based on the set dimensions.
+     * @return - the profile
+     */
     public GeometricPath2D getProfile() {
         if (profile != null) {
             return profile;
@@ -161,6 +168,10 @@ public abstract class PlacementsHolder<T extends PlacementsHolder<T>>
         }
     }
 
+    /**
+     * Sets the profile (physical outline) of this PlacementsHolder.
+     * @param profile - the profile of this PlacementsHolder
+     */
     public void setProfile(GeometricPath2D profile) {
         this.profile = profile;
     }
@@ -181,6 +192,11 @@ public abstract class PlacementsHolder<T extends PlacementsHolder<T>>
         this.placements = placements;
     }
 
+    /**
+     * Gets the specified placement.
+     * @param index - the index of the placement to get
+     * @return the placement
+     */
     public Placement getPlacement(int index) {
         return placements.get(index);
     }
@@ -188,7 +204,8 @@ public abstract class PlacementsHolder<T extends PlacementsHolder<T>>
     /**
      * Sets the placement at the specified index
      * @param index - the index of the placement to set
-     * @param placement - the placement to set
+     * @param placement - the placement to set or null to remove the placement at the specified 
+     * index
      */
     public void setPlacement(int index, Placement placement) {
         Logger.trace(String.format("Setting placement on %s @%08X: index = %d, %s", this.getClass().getSimpleName(), this.hashCode(), index, placement));
@@ -204,7 +221,6 @@ public abstract class PlacementsHolder<T extends PlacementsHolder<T>>
             }
             fireIndexedPropertyChange("placement", index, null, placement);
             placement.addPropertyChangeListener(this);
-//            placement.getDefinition().addPropertyChangeListener(placement);
         }
         else {
             if (index >= 0 && index < placements.size()) {

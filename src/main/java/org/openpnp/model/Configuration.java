@@ -682,8 +682,8 @@ public class Configuration extends AbstractModelObject {
     }
 
     /**
-     * Adds the specified panel to the configuration
-     * @param panel - the panel to be added
+     * Adds the specified Panel definition to the configuration
+     * @param panel - the Panel definition to be added
      */
     public void addPanel(Panel panel) {
         LinkedHashMap<File, Panel> oldValue = new LinkedHashMap<>(panels);
@@ -693,8 +693,8 @@ public class Configuration extends AbstractModelObject {
     }
     
     /**
-     * Loads a Panel into the configuration if it is not already loaded
-     * @param file - the file containing the Panel
+     * Loads a Panel definition into the configuration if it is not already loaded
+     * @param file - the file containing the Panel definition
      * @throws Exception if the specified file does not exist or does not contain a valid Panel
      */
     public void addPanel(File file) throws Exception {
@@ -710,10 +710,10 @@ public class Configuration extends AbstractModelObject {
     }
     
     /**
-     * Removes the specified Panel from the configuration.  If the Panel has been flagged as being
-     * modified, a dialog is presented to confirm if the operator desires to save the Panel to the 
-     * file system before it is removed.
-     * @param panel - the Panel to remove
+     * Removes the specified Panel definition from the configuration.  If the Panel definition has 
+     * been flagged as being modified, a dialog is presented to confirm if the operator desires to 
+     * save the Panel definition to the file system before it is removed.
+     * @param panel - the Panel definition to remove
      */
     public void removePanel(Panel panel) {
         confirmSaveOfModified(panel);
@@ -723,12 +723,12 @@ public class Configuration extends AbstractModelObject {
     }
     
     /**
-     * Returns the Panel contained in the specified file. If the Panel is already loaded in the 
-     * configuration, it is found and returned. If it is not already loaded into the configuration, 
-     * the specified file is read and loaded into the configuration.  If the specified file does not
-     * exist, a new empty Panel is created and saved into the specified file and loaded into the
-     * configuration.
-     * @param file - the file containing the Panel
+     * Returns the Panel definition contained in the specified file. If the Panel definition is 
+     * already loaded in the configuration, it is found and returned. If it is not already loaded 
+     * into the configuration, the specified file is read and loaded into the configuration.  If the
+     * specified file does not exist, a new empty Panel definition is created and saved into the 
+     * specified file and then is loaded into the configuration.
+     * @param file - the file containing the Panel definition
      * @throws Exception if the specified file exists but does not contain a valid Panel
      */
     public Panel getPanel(File file) throws Exception {
@@ -754,8 +754,8 @@ public class Configuration extends AbstractModelObject {
     }
     
     /**
-     * Adds the specified Board to the configuration
-     * @param board - the Board to be added
+     * Adds the specified Board definition to the configuration
+     * @param board - the Board definition to be added
      */
     public void addBoard(Board board) {
         LinkedHashMap<File, Board> oldValue = new LinkedHashMap<>(boards);
@@ -764,8 +764,8 @@ public class Configuration extends AbstractModelObject {
     }
     
     /**
-     * Loads a Board to the configuration if it is not already loaded
-     * @param file - the file containing the Board
+     * Loads a Board definition into the configuration if it is not already loaded
+     * @param file - the file containing the Board definition
      * @throws Exception if the specified file does not exist or does not contain a valid Board
      */
     public void addBoard(File file) throws Exception {
@@ -780,9 +780,9 @@ public class Configuration extends AbstractModelObject {
     }
     
     /**
-     * Removes the specified Board from the configuration. If the Board has been flagged as being
-     * modified, a dialog is presented to confirm if the operator desires to save the Board to the 
-     * file system before it is removed.
+     * Removes the specified Board definition from the configuration. If the Board definition has 
+     * been flagged as being modified, a dialog is presented to confirm if the operator desires to 
+     * save the Board definition to the file system before it is removed.
      * @param board - the Board to remove
      */
     public void removeBoard(Board board) {

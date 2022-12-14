@@ -82,7 +82,7 @@ import org.openpnp.gui.support.RotationCellValue;
 import org.openpnp.gui.support.TableUtils;
 import org.openpnp.gui.tablemodel.PlacementsHolderLocationsTableModel;
 import org.openpnp.gui.tablemodel.PlacementsHolderPlacementsTableModel;
-import org.openpnp.gui.viewers.PlacementsHolderLocationViewer;
+import org.openpnp.gui.viewers.PlacementsHolderLocationViewerDialog;
 import org.openpnp.model.Board;
 import org.openpnp.model.Abstract2DLocatable.Side;
 import org.openpnp.model.BoardLocation;
@@ -131,7 +131,7 @@ public class PanelDefinitionPanel extends JPanel implements PropertyChangeListen
     private Panel panel;
     private PanelsPanel panelsPanel;
     
-    private PlacementsHolderLocationViewer panelViewerDialog;
+    private PlacementsHolderLocationViewerDialog panelViewer;
 
     private JSplitPane splitPane;
     private MainFrame frame;
@@ -260,14 +260,15 @@ public class PanelDefinitionPanel extends JPanel implements PropertyChangeListen
         childrenTable.getModel().addTableModelListener(new TableModelListener() {
             @Override
             public void tableChanged(TableModelEvent e) {
+                Logger.trace("TableModelEvent = " + e);
                 SwingUtilities.invokeLater(() -> {
                     fiducialTableModel.fireTableDataChanged();
-                    if (panelViewerDialog != null) {
+                    if (panelViewer != null) {
                         if (e.getColumn() == TableModelEvent.ALL_COLUMNS) {
-                            panelViewerDialog.regenerate();
+                            panelViewer.regenerate();
                         }
                         else {
-                            panelViewerDialog.refresh();
+                            panelViewer.refresh();
                         }
                     }
                 });
@@ -387,7 +388,18 @@ public class PanelDefinitionPanel extends JPanel implements PropertyChangeListen
         btnUseChildFiducial.setHideActionText(true);
         toolBarFiducials.add(btnUseChildFiducial);
         
-        fiducialTableModel = new PlacementsHolderPlacementsTableModel();
+        fiducialTableModel = new PlacementsHolderPlacementsTableModel() {
+            @Override
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                if (!super.isCellEditable(rowIndex, columnIndex)) {
+                    return false;
+                }
+                if (getRowObjectAt(rowIndex).getId().contains(PanelLocation.ID_DELIMITTER) && columnIndex > 0) {
+                    return false;
+                }
+                return true;
+            }
+        };
         fiducialTableSorter = new TableRowSorter<>(fiducialTableModel);
         
         fiducialTable = new AutoSelectTextTable(fiducialTableModel);
@@ -440,6 +452,22 @@ public class PanelDefinitionPanel extends JPanel implements PropertyChangeListen
                                 rootPanelLocation, PanelDefinitionPanel.this));
                     }
                 }
+            }
+        });
+
+        fiducialTable.getModel().addTableModelListener(new TableModelListener() {
+            @Override
+            public void tableChanged(TableModelEvent e) {
+                SwingUtilities.invokeLater(() -> {
+                    if (panelViewer != null) {
+                        if (e.getType() == TableModelEvent.UPDATE) {
+                            panelViewer.refresh();
+                        }
+                        else {
+                            panelViewer.regenerate();
+                        }
+                    }
+                });
             }
         });
 
@@ -497,6 +525,9 @@ public class PanelDefinitionPanel extends JPanel implements PropertyChangeListen
         viewerAction.setEnabled(panel != null);
         addFiducialAction.setEnabled(panel != null);
         useChildFiducialAction.setEnabled(panel != null);
+        if (panelViewer != null) {
+            panelViewer.setPlacementsHolder(panel);
+        }
     }
     
     public void refresh() {
@@ -857,7 +888,7 @@ public class PanelDefinitionPanel extends JPanel implements PropertyChangeListen
         @Override
         public void actionPerformed(ActionEvent arg0) {
             PlacementsHolderLocation<?> child = getChildrenSelection();
-            PanelArrayBuilderDialog dlg = new PanelArrayBuilderDialog(rootPanelLocation, child);
+            PanelArrayBuilderDialog dlg = new PanelArrayBuilderDialog(rootPanelLocation, child, () -> refresh());
             dlg.setVisible(true);
             
             Configuration.get().getBus()
@@ -876,21 +907,21 @@ public class PanelDefinitionPanel extends JPanel implements PropertyChangeListen
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            if (panelViewerDialog == null) {
-                panelViewerDialog = new PlacementsHolderLocationViewer(
+            if (panelViewer == null) {
+                panelViewer = new PlacementsHolderLocationViewerDialog(
                         rootPanelLocation, false,
                         (phl, colName) -> childrenTableModel.fireDecendantsCellUpdated((PlacementsHolderLocation<?>) phl, childrenTableModel.getColumnIndex(colName)));
-                panelViewerDialog.addWindowListener(new WindowAdapter() {
+                panelViewer.addWindowListener(new WindowAdapter() {
                     @Override
                     public void windowClosing(WindowEvent e) {
-                        panelViewerDialog = null;
+                        panelViewer = null;
                     }
                 });
             }
             else {
-                panelViewerDialog.setExtendedState(Frame.NORMAL);
+                panelViewer.setExtendedState(Frame.NORMAL);
             }
-            panelViewerDialog.setVisible(true);
+            panelViewer.setVisible(true);
         }
     };
 

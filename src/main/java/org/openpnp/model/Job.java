@@ -59,7 +59,7 @@ public class Job extends AbstractModelObject implements PropertyChangeListener {
     private ArrayList<BoardLocation> boardLocations = new ArrayList<>();
 
     @Element(required = false)
-    private Panel rootPanel = new Panel("root");
+    private Panel rootPanel = new Panel();
     
     @ElementMap(required = false)
     private Map<String, Boolean> placed = new HashMap<>();
@@ -89,7 +89,8 @@ public class Job extends AbstractModelObject implements PropertyChangeListener {
     @Commit
     private void commit() {
          if (panels != null && !panels.isEmpty()) {
-            //Convert deprecated list of Panels to list of PanelLocations
+            //Convert deprecated list of Panels to list of PanelLocations - note that the legacy 
+            //panelization only ever allowed one panel so we only need to handle that case here
              
             //We need to create a new panel, populate it with the boards in the job, add the new 
             //panel to the configuration, and then add a panelLocation to the job's rootPanel that 
@@ -201,6 +202,8 @@ public class Job extends AbstractModelObject implements PropertyChangeListener {
     @Persist
     private void persist() {
         version = LATEST_VERSION;
+        
+        //Remove the deprecated list of Panels 
         panels = null;
     }
     

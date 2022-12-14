@@ -93,7 +93,7 @@ import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.RotationCellValue;
 import org.openpnp.gui.support.TableUtils;
 import org.openpnp.gui.tablemodel.PlacementsHolderLocationsTableModel;
-import org.openpnp.gui.viewers.PlacementsHolderLocationViewer;
+import org.openpnp.gui.viewers.PlacementsHolderLocationViewerDialog;
 import org.openpnp.model.Board;
 import org.openpnp.model.Abstract2DLocatable.Side;
 import org.openpnp.model.Configuration.TablesLinked;
@@ -147,7 +147,7 @@ public class JobPanel extends JPanel {
     private JTable jobTable;
     private JSplitPane splitPane;
 
-    private PlacementsHolderLocationViewer jobViewer;
+    private PlacementsHolderLocationViewerDialog jobViewer;
     
     private ActionGroup singleSelectionActionGroup;
     private ActionGroup multiSelectionActionGroup;
@@ -1544,7 +1544,7 @@ public class JobPanel extends JPanel {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             if (jobViewer == null) {
-                jobViewer = new PlacementsHolderLocationViewer(
+                jobViewer = new PlacementsHolderLocationViewerDialog(
                         job.getRootPanelLocation(), true,
                         (phl, colName) -> jobTableModel.
                         fireDecendantsCellUpdated((PlacementsHolderLocation<?>) phl, jobTableModel.getColumnIndex(colName)));

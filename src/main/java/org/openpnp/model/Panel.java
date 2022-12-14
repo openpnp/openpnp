@@ -40,7 +40,7 @@ import org.simpleframework.xml.core.Commit;
 import org.simpleframework.xml.core.Persist;
 
 /**
- * A Panel is a PlacementsHolder that can also hold multiple Board and/or Panel Locations
+ * A Panel is a PlacementsHolder whose main purpose is to hold multiple Board and/or Panel Locations
  */
 @Root(name = "openpnp-panel")
 public class Panel extends PlacementsHolder<Panel> implements PropertyChangeListener {
@@ -86,6 +86,9 @@ public class Panel extends PlacementsHolder<Panel> implements PropertyChangeList
     
     protected transient IdentifiableList<Placement> pseudoPlacements = new IdentifiableList<>();
     
+    /**
+     * Runs just after de-serialization
+     */
     @Commit
     protected void commit() {
         //Convert deprecated elements
@@ -101,6 +104,9 @@ public class Panel extends PlacementsHolder<Panel> implements PropertyChangeList
         
     }
     
+    /**
+     * Runs just before serialization
+     */
     @Persist
     private void persist() {
         version = LATEST_VERSION;
@@ -121,13 +127,19 @@ public class Panel extends PlacementsHolder<Panel> implements PropertyChangeList
         }
     }
     
+    /**
+     * Default constructor
+     */
     public Panel() {
         super();
     }
 
+    /**
+     * Constructs a new Panel 
+     * @param file - the file where this Panel will be stored
+     */
     public Panel(File file) {
-        super();
-        this.version = LATEST_VERSION;
+        this();
         setFile(file);
     }
 
@@ -158,11 +170,10 @@ public class Panel extends PlacementsHolder<Panel> implements PropertyChangeList
         }
     }
     
-    public Panel(String id) {
-        super();
-        this.version = LATEST_VERSION;
-    }
-
+    /**
+     * Removes all the property change listeners associated with this panel. Should be called if
+     * this panel instance is no longer needed.
+     */
     @Override
     public void dispose() {
         for (PlacementsHolderLocation<?> child : getChildren()) {
@@ -176,23 +187,46 @@ public class Panel extends PlacementsHolder<Panel> implements PropertyChangeList
         super.dispose();
     }
     
+    /**
+     * 
+     * @return a list of all the panel's children
+     */
     public List<PlacementsHolderLocation<?>> getChildren() {
         return children;
     }
     
+    /**
+     * Sets the children of this panel
+     * @param children - a list of PlacementsHolderLocations that are the children of this panel
+     */
     public void setChildren(IdentifiableList<PlacementsHolderLocation<?>> children) {
         Object oldValue = this.children;
         this.children = children;
         firePropertyChange("children", oldValue, children);
     }
     
+    /**
+     * Gets the specified child of this panel
+     * @param index - the index of the child
+     * @return the child
+     */
     public PlacementsHolderLocation<?> getChild(int index) {
         return children.get(index);
     }
     
+    /**
+     * Sets the child at the specified index. This method should only be called from a panel 
+     * definition's property change listener when an indexed property change event has been fired
+     * that adds, modifies, or deletes a child 
+     * @param index - the index of the child to set
+     * @param child - the child to add or modify, set to null to delete the child
+     * @throws UnsupportedOperationException if called on a panel definition or if the specified 
+     * child is neither a BoardLocation nor a PanelLocation
+     */
     public void setChild(int index, PlacementsHolderLocation<?> child) {
         if (this == this.definition) {
-            throw new UnsupportedOperationException("Can not use setChild method to add/remove children from a Panel definition, use addChild or removeChild instead.");
+            throw new UnsupportedOperationException("Can not use setChild method to add/remove "
+                    + "children from a Panel definition - use addChild or removeChild instead.");
         }
         if (child != null) {
             if (child instanceof BoardLocation) {
@@ -229,10 +263,13 @@ public class Panel extends PlacementsHolder<Panel> implements PropertyChangeList
         }
     }
     
+    /**
+     * Adds a child to this panel
+     * @param child - the child to add
+     * @throws UnsupportedOperationException if the specified child is neither a BoardLocation nor 
+     * a PanelLocation
+     */
     public void addChild(PlacementsHolderLocation<?> child) {
-//        if (this != this.definition) {
-//            throw new UnsupportedOperationException("This method should only be called on a Panel definition.");
-//        }
         if (child != null) {
             String childId = child.getId();
             if (childId == null || children.get(childId) != null) {
@@ -253,6 +290,11 @@ public class Panel extends PlacementsHolder<Panel> implements PropertyChangeList
         }
     }
     
+    /**
+     * Removes a child from this panel. This method should only be called on panel definitions.
+     * @param child - the child to remove
+     * @throws UnsupportedOperationException if called on a non-panel definition
+     */
     public void removeChild(PlacementsHolderLocation<?> child) {
         if (this != this.definition) {
             throw new UnsupportedOperationException("This method should only be called on a Panel definition.");
@@ -264,7 +306,6 @@ public class Panel extends PlacementsHolder<Panel> implements PropertyChangeList
                 for (Placement pseudoPlacement : oldPseudoPlacements) {
                     if (pseudoPlacement.getId().startsWith(child.getId() + PlacementsHolderLocation.ID_DELIMITTER)) {
                         removePseudoPlacement(pseudoPlacement);
-//                        child.removePropertyChangeListener(pseudoPlacement);
                     }
                 }
                 children.remove(index);
@@ -275,10 +316,9 @@ public class Panel extends PlacementsHolder<Panel> implements PropertyChangeList
         }
     }
     
-//    public void removeChild(int index) {
-//        setChild(index, null);
-//    }
-    
+    /**
+     * Removes all children from this panel
+     */
     public void removeAllChildren() {
         List<PlacementsHolderLocation<?>> oldValue = children;
         for (PlacementsHolderLocation<?> child : oldValue) {
@@ -286,36 +326,75 @@ public class Panel extends PlacementsHolder<Panel> implements PropertyChangeList
         }
     }
     
+    /**
+     * Gets the list of pseudo-placement ids for this panel. A pseudo-placement is a copy of a 
+     * placement or fiducial located on one of the panel's descendants that is only used for panel
+     * alignment.
+     * @return - the list of pseudo-placement ids
+     */
     public List<String> getPseudoPlacementIds() {
         return pseudoPlacementIds;
     }
 
+    /**
+     * Sets the list of pseudo-placement ids for this panel. A pseudo-placement is a copy of a 
+     * placement or fiducial located on one of the panel's descendants that is only used for panel
+     * alignment. 
+     * @param pseudoPlacementIds - the list of pseudo-placement ids
+     */
     public void setPseudoPlacementIds(ArrayList<String> pseudoPlacementIds) {
         Object oldValue = new ArrayList<>(this.pseudoPlacementIds);
         this.pseudoPlacementIds = pseudoPlacementIds;
         firePropertyChange("pseudoPlacementIds", oldValue, pseudoPlacementIds);
     }
     
+    /**
+     * Gets the list of pseudo-placements for this panel. A pseudo-placement is a copy of a 
+     * placement or fiducial located on one of the panel's descendants that is only used for panel
+     * alignment. 
+     * @return - the list of pseudo-placements
+     */
     public List<Placement> getPseudoPlacements() {
         return pseudoPlacements;
     }
     
+    /**
+     * Sets the list of pseudo-placements for this panel. A pseudo-placement is a copy of a 
+     * placement or fiducial located on one of the panel's descendants that is only used for panel 
+     * alignment.
+     * @param pseudoPlacements - the list of pseudo-placements
+     */
     public void setPseudoPlacements(IdentifiableList<Placement> pseudoPlacements) {
         Object oldValue = this.pseudoPlacements;
         this.pseudoPlacements = pseudoPlacements;
         firePropertyChange("pseudoPlacements", oldValue, pseudoPlacements);
     }
     
+    /**
+     * Gets the specified pseudo-placement. A pseudo-placement is a copy of a placement or fiducial
+     * located on one of the panel's descendants that is only used for panel alignment.
+     * @param index - specifies the pseudo-placement to get
+     * @return the pseudo-placement
+     */
     public Placement getPseudoPlacement(int index) {
-        if (index < 0 || index >= pseudoPlacements.size()) {
-            Logger.trace("OhOh!");
-        }
         return pseudoPlacements.get(index);
     }
     
+    /**
+     * Sets the pseudo-placement at the specified index. A pseudo-placement is a copy of a placement
+     * or fiducial located on one of the panel's descendants that is only used for panel alignment.
+     * This method should only be called from a panel definition's property change listener when an
+     * indexed property change event has been fired that adds, modifies, or deletes a 
+     * pseudo-placement. 
+     * @param index - the index of the pseudo-placement to set
+     * @param pseudoPlacement - the pseudo-placement to add or modify, set to null to delete the 
+     * pseudo-placement
+     * @throws UnsupportedOperationException if called on a panel definition
+     */
     public void setPseudoPlacement(int index, Placement pseudoPlacement) {
         if (this == this.definition) {
-            throw new UnsupportedOperationException("Use addPseudoPlacement to add a PseudoPlacement to a panel definition");
+            throw new UnsupportedOperationException("Use addPseudoPlacement to add a "
+                    + "PseudoPlacement to a panel definition");
         }
         if (pseudoPlacement != null) {
             pseudoPlacement = new Placement(pseudoPlacement);
@@ -339,6 +418,13 @@ public class Panel extends PlacementsHolder<Panel> implements PropertyChangeList
         }
     }
     
+    /**
+     * Adds a pseudo-placement to the panel. A pseudo-placement is a copy of a placement or fiducial
+     * located on one of the panel's descendants that is only used for panel alignment. This method
+     * should only be called on panel definitions.
+     * @param pseudoPlacement - the pseudo-placement to add
+     * @throws UnsupportedOperationException if called on a non-panel definition
+     */
     public void addPseudoPlacement(Placement pseudoPlacement) {
         if (this != this.definition) {
             throw new UnsupportedOperationException("Can only add new pseudoPlacements to a panel definition");
@@ -354,6 +440,13 @@ public class Panel extends PlacementsHolder<Panel> implements PropertyChangeList
         }
     }
 
+    /**
+     * Removes a pseudo-placement to the panel. A pseudo-placement is a copy of a placement or 
+     * fiducial located on one of the panel's descendants that is only used for panel alignment.
+     * This method should only be called on panel definitions.
+     * @param pseudoPlacement - the pseudo-placement to remove
+     * @throws UnsupportedOperationException if called on a non-panel definition
+     */
     public void removePseudoPlacement(Placement pseudoPlacement) {
         if (this != this.definition) {
             throw new UnsupportedOperationException("Can only remove pseudoPlacements from a panel definition");
@@ -389,6 +482,14 @@ public class Panel extends PlacementsHolder<Panel> implements PropertyChangeList
         pseudoPlacement.dispose();
     }
     
+    /**
+     * Creates a pseudo-placement given the pseudo-placement's id. A pseudo-placement is a copy of a
+     * placement or fiducial located on one of the panel's descendants that is only used for panel
+     * alignment. This method should only be called on panel definitions.
+     * @param pseudoPlacementId - the id of the pseudo-placement to create
+     * @return - the pseudo-placement
+     * @throws UnsupportedOperationException if called on a non-panel definition
+     */
     public Placement createPseudoPlacement(String pseudoPlacementId) {
         if (this != this.definition) {
             throw new UnsupportedOperationException("Can only create pseudoPlacements for a panel definition");
@@ -400,13 +501,14 @@ public class Panel extends PlacementsHolder<Panel> implements PropertyChangeList
                 if (evt instanceof IndexedPropertyChangeEvent) {
                     Pair<PlacementsHolderLocation<?>, Placement> pair2 = getDescendantPlacement(this.id);
                     if (evt.getNewValue() == null && pair2 == null) {
-                        Logger.trace("IndexedPropertyChangeEvent handled by PseudoPlacement " + this.id + " " + evt.getSource() + " " + evt.getPropertyName() + " " + evt.getNewValue());
+                        Logger.trace("IndexedPropertyChangeEvent handled by PseudoPlacement " + this.id + ", Source =" + evt.getSource() + ", Property =" + evt.getPropertyName() + ", Old Value=" + evt.getOldValue() + ", New Value=" + evt.getNewValue());
                         removePseudoPlacement(this);
                     }
                 }
                 else {
-                    Logger.trace("PropertyChangeEvent handled by PseudoPlacement " + this.id + " " + evt.getSource() + " " + evt.getPropertyName() + " " + evt.getNewValue());
+                    Logger.trace("PropertyChangeEvent handled by PseudoPlacement " + this.id + ", Source=" + evt.getSource() + ", Property=" + evt.getPropertyName() + ", Old Value=" + evt.getOldValue() + ", New Value=" + evt.getNewValue());
                     if (evt.getPropertyName().equals("id") && evt.getSource() != this) {
+                        Logger.trace("   Updating Id");
                         String searchStr = (String) evt.getOldValue();
                         String[] idParts = this.id.split(PlacementsHolderLocation.ID_DELIMITTER);
                         for (int i=0; i<idParts.length; i++) {
@@ -437,10 +539,7 @@ public class Panel extends PlacementsHolder<Panel> implements PropertyChangeList
                         }
                         Logger.warn("Unable to find matching id!!!!!!!!!!!!!!!!");
                     }
-                    else {
-                        if (evt.getPropertyName().equals("id")) {
-                            Logger.trace("hu?");
-                        }
+                    else if ((evt.getPropertyName().equals("location") || evt.getPropertyName().equals("side")) && evt.getSource() != this){
                         Pair<PlacementsHolderLocation<?>, Placement> pair = Panel.this.definition.getDescendantPlacement(pseudoPlacementId);
                         Location location = Utils2D.calculateBoardPlacementLocation(pair.first, pair.second).derive(null, null, 0.0, null);
                         Side side = pair.second.getSide().flip(pair.first.getGlobalSide() == Side.Bottom);
@@ -452,8 +551,12 @@ public class Panel extends PlacementsHolder<Panel> implements PropertyChangeList
                         else if (side == Side.Bottom) {
                             location = location.invert(false, false, false, true);
                         }
+                        Logger.trace("   Updating location from " + getLocation() + " to " + location + " and side");
                         setLocation(location);
                         setSide(side);
+                    }
+                    else {
+                        super.propertyChange(evt);
                     }
                 }
             }
@@ -498,14 +601,27 @@ public class Panel extends PlacementsHolder<Panel> implements PropertyChangeList
             }
             next = next.parent;
         }
+        pseudoPlacement.addPropertyChangeListener(pseudoPlacement);
         
         return pseudoPlacement;
     }
     
+    /**
+     * Gets a unique Id for a placement based on its location in the panel's family hierarchy
+     * @param placementsParentLocation - the placement's parent PlacementsHolderLocation
+     * @param placement - the placement
+     * @return - the unique Id
+     */
     public String getDescendantPlacementUniqueId(PlacementsHolderLocation<?> placementsParentLocation, Placement placement) {
         return placementsParentLocation.getUniqueId() + PlacementsHolderLocation.ID_DELIMITTER + placement.getId();
     }
     
+    /**
+     * Gets a placement's parent PlacementsHolderLocation and the placement itself given the 
+     * placement's unique Id. Essentially the inverse of getDescendantPlacementUniqueId 
+     * @param placementUniqueId - the placement's unique Id
+     * @return - the placement's parent along with the actual placement
+     */
     public Pair<PlacementsHolderLocation<?>, Placement> getDescendantPlacement(String placementUniqueId) {
         for (PlacementsHolderLocation<?> child : children) {
             if (placementUniqueId.startsWith(child.getId())) {
@@ -528,14 +644,19 @@ public class Panel extends PlacementsHolder<Panel> implements PropertyChangeList
         return null;
     }
     
-    public boolean isDescendant(PlacementsHolder<?> placementsHolder) {
+    /**
+     * Checks to see if a placementsHolder is a descendant of this panel
+     * @param potentialDescendant - the potential descendant to check
+     * @return - true if potentialDescendant is a descendant of this panel
+     */
+    public boolean isDescendant(PlacementsHolder<?> potentialDescendant) {
         List<PlacementsHolderLocation<?>> descendants = getDescendants();
         for (PlacementsHolderLocation<?> descendantLocation : descendants) {
-            if (descendantLocation.getPlacementsHolder() == placementsHolder) {
+            if (descendantLocation.getPlacementsHolder() == potentialDescendant) {
                 return true;
             }
             if (descendantLocation.getPlacementsHolder() instanceof Panel) {
-                if (((Panel) descendantLocation.getPlacementsHolder()).isDefinition(placementsHolder)) {
+                if (((Panel) descendantLocation.getPlacementsHolder()).isDefinition(potentialDescendant)) {
                     return true;
                 }
             }
@@ -543,6 +664,10 @@ public class Panel extends PlacementsHolder<Panel> implements PropertyChangeList
         return false;
     }
     
+    /**
+     * Returns a flattened list of all descendants of this panel
+     * @return - the list of all descendants
+     */
     public List<PlacementsHolderLocation<?>> getDescendants() {
         List<PlacementsHolderLocation<?>> retList = new ArrayList<>();
         for (PlacementsHolderLocation<?> child : children) {
@@ -554,6 +679,10 @@ public class Panel extends PlacementsHolder<Panel> implements PropertyChangeList
         return Collections.unmodifiableList(retList);
     }
 
+    /**
+     * Returns a flattened list of all BoardLocations that are descendants of this panel
+     * @return - the list of all BoardLocations
+     */
     public List<BoardLocation> getDescendantBoardLocations() {
         List<BoardLocation> retList = new ArrayList<>();
         for (PlacementsHolderLocation<?> child : children) {
@@ -567,6 +696,10 @@ public class Panel extends PlacementsHolder<Panel> implements PropertyChangeList
         return Collections.unmodifiableList(retList);
     }
 
+    /**
+     * Returns a flattened list of all PanleLocations that are descendants of this panel
+     * @return - the list of all PanelLocations
+     */
     public List<PanelLocation> getDescendantPanelLocations() {
         List<PanelLocation> retList = new ArrayList<>();
         for (PlacementsHolderLocation<?> child : children) {
@@ -578,14 +711,28 @@ public class Panel extends PlacementsHolder<Panel> implements PropertyChangeList
         return Collections.unmodifiableList(retList);
     }
 
+    /**
+     * 
+     * @return true if fiducials should be used to align this panel during a job
+     */
     public boolean isCheckFiducials() {
         return this.checkFids;
     }
 
+    /**
+     * 
+     * @return the version number of this panel
+     */
     public Double getVersion() {
         return version;
     }
     
+    /**
+     * Counts the number of instances of a specified PlacementsHolder that occur within the panel's 
+     * family hierarchy
+     * @param placementsHolder - the 
+     * @return the count
+     */
     public int getInstanceCount(PlacementsHolder<?> placementsHolder) {
         int instanceCount = 0;
         for (PlacementsHolderLocation<?> child : children) {

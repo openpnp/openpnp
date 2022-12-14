@@ -279,7 +279,7 @@ public class ChildFiducialSelectorDialog extends JDialog {
 
     public void addSelectedItemsToPanel() {
         for (Placement fiducial : getSelections()) {
-            panelLocation.getPanel().getDefinition().addPseudoPlacement(fiducial);
+            panelLocation.getPanel().getDefinition().addPseudoPlacement(panelLocation.getPanel().getDefinition().createPseudoPlacement(fiducial.getId()));
         }
         close();
     }
@@ -305,6 +305,7 @@ public class ChildFiducialSelectorDialog extends JDialog {
                 String id = (uniqueId != null ? uniqueId + PlacementsHolderLocation.ID_DELIMITTER : "") + placement.getId();
                 
                 Placement pseudoPlacement = new Placement(placement);
+                pseudoPlacement.removePropertyChangeListener(pseudoPlacement);
                 pseudoPlacement.setDefinition(pseudoPlacement);
                 pseudoPlacement.setEnabled(true);
                 pseudoPlacement.setLocation(Utils2D.calculateBoardPlacementLocation(child, 
@@ -313,6 +314,7 @@ public class ChildFiducialSelectorDialog extends JDialog {
                 pseudoPlacement.setSide(placement.getSide().
                         flip(child.getGlobalSide() == Side.Bottom));
                 pseudoPlacement.setComments("Pseudo-placement for panel alignment only");
+                pseudoPlacement.addPropertyChangeListener(pseudoPlacement);
                 allPseudoPlacements.add(pseudoPlacement);
             }
             if (child instanceof PanelLocation) {

@@ -213,6 +213,7 @@ public class Utils2D {
     
     public static Location calculateBoardPlacementLocation(PlacementsHolderLocation<?> bl, Location location) {
         Placement p = new Placement("dummy");
+        p.removePropertyChangeListener(p);
         p.setLocation(location);
         return calculateBoardPlacementLocation(bl, p);
     }
@@ -232,11 +233,8 @@ public class Utils2D {
         }
         else if (locatable instanceof PlacementsHolderLocation) {
             PlacementsHolderLocation<?> placementsHolderLocation = (PlacementsHolderLocation<?>) locatable;
-            Placement dummy = new Placement("dummy") {
-                public void propertyChange(PropertyChangeEvent evt) {
-                    //do nothing
-                }
-            };
+            Placement dummy = new Placement("dummy");
+            dummy.removePropertyChangeListener(dummy);
             if (placementsHolderLocation.getGlobalSide() == Side.Bottom) {
                 Location dims = placementsHolderLocation.getPlacementsHolder().getDimensions();
                 dummy.setLocation(dims.derive(null, 0.0, 0.0, 0.0));

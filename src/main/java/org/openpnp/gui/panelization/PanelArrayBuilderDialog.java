@@ -19,31 +19,19 @@
 
 package org.openpnp.gui.panelization;
 
-import java.awt.BasicStroke;
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
-import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.FlowLayout;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.awt.RenderingHints;
-import java.awt.Shape;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.awt.geom.AffineTransform;
-import java.awt.geom.Ellipse2D;
-import java.awt.geom.Path2D;
-import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
-
 import javax.swing.ButtonGroup;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
@@ -57,13 +45,11 @@ import javax.swing.JSpinner;
 import javax.swing.JTextField;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.border.EmptyBorder;
-import javax.swing.border.TitledBorder;
-
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.LengthConverter;
-import org.openpnp.model.Abstract2DLocatable;
+import org.openpnp.gui.viewers.PlacementsHolderLocationViewer;
 import org.openpnp.model.Board;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
@@ -72,7 +58,6 @@ import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Panel;
 import org.openpnp.model.PanelLocation;
-import org.openpnp.model.Placement;
 import org.openpnp.model.PlacementsHolderLocation;
 import org.openpnp.util.BeanUtils;
 import org.openpnp.util.Utils2D;
@@ -100,6 +85,7 @@ public class PanelArrayBuilderDialog extends JDialog {
     private JPanel panelControls;
     private PanelLocation panelLocation;
     private PlacementsHolderLocation<?> rootChildLocation;
+    private Runnable refresh;
     protected BufferedImage panelImage;
     private int columnCount = 1;
     private int rowCount = 1;
@@ -113,9 +99,7 @@ public class PanelArrayBuilderDialog extends JDialog {
     private Length centerY = new Length(0, LengthUnit.Millimeters);
     private boolean increaseProportionally = false;
     private boolean panelReferenceFrame = true;
-    private JPanel panelLayout;
-
-    private Rectangle2D bounds;
+    private PlacementsHolderLocationViewer panelLayout;
 
     private String rootChildId;
 
@@ -126,9 +110,10 @@ public class PanelArrayBuilderDialog extends JDialog {
     /**
      * Create the dialog.
      */
-    public PanelArrayBuilderDialog(PanelLocation panelLocation, PlacementsHolderLocation<?> rootChildLocation) {
+    public PanelArrayBuilderDialog(PanelLocation panelLocation, PlacementsHolderLocation<?> rootChildLocation, Runnable refresh) {
         this.panelLocation = panelLocation;
         this.rootChildLocation = rootChildLocation;
+        this.refresh = refresh;
         this.rootChildId  = rootChildLocation.getId();
         this.dirtyState = panelLocation.isDirty();
         windowCloseListener = new WindowAdapter( ) {
@@ -136,11 +121,12 @@ public class PanelArrayBuilderDialog extends JDialog {
             @Override
             public void windowClosing(WindowEvent e) {
                 cancel();
-            }};
+            }
+        };
         addWindowListener(windowCloseListener);
         setModalityType(ModalityType.APPLICATION_MODAL);
         setTitle("Panel Array Generator");
-        setBounds(100, 100, 600, 480);
+        setBounds(100, 100, 800, 600);
         getContentPane().setLayout(new BorderLayout());
         contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
         getContentPane().add(contentPanel, BorderLayout.CENTER);
@@ -496,21 +482,10 @@ public class PanelArrayBuilderDialog extends JDialog {
                 }
             }
             {
-                panelLayout = new JPanel() {
-                    @Override
-                    public void paintComponent(Graphics g) {
-                        renderPanelImage(this);
-                        if (panelImage != null) {
-                            Graphics2D g2 = (Graphics2D) g;
-                            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                            g2.drawImage(panelImage, 0, 0, this);
-                        }
-                        else {
-                            super.paintComponent(g);
-                        }
-                    }
-                };
-                panelLayout.setBorder(new TitledBorder(null, "Array Layout", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+                panelLayout = new PlacementsHolderLocationViewer(panelLocation, false, (a, b) -> refresh.run());
+                panelLayout.setArrayRoot(rootChildLocation);
+                panelLayout.setShowLocations(false);
+                panelLayout.setShowReticle(false);
                 panel.add(panelLayout, BorderLayout.CENTER);
             }
         }
@@ -565,6 +540,7 @@ public class PanelArrayBuilderDialog extends JDialog {
         if (panelLocation.isDirty() != dirtyState) {
             panelLocation.setDirty(dirtyState);
         }
+        refresh.run();
     }
 
     /**
@@ -831,223 +807,9 @@ public class PanelArrayBuilderDialog extends JDialog {
                 }
                 break;
         }
-        panelLayout.repaint();
+        panelLayout.setNewArrayMembers(newChildren);
+        refresh.run();
+        panelLayout.regenerate();
     }
-    
-    protected void renderPanelImage(JPanel jPanel) {
-        computeBounds();
-        int borderPixels = 2*jPanel.getBorder().getBorderInsets(jPanel).top;
-        Dimension currentSize = jPanel.getSize();
-        Location panelDimensions = panelLocation.getPanel().getDimensions().convertToUnits(systemUnit);
-        double scale = Math.min((currentSize.width - 2*borderPixels)/bounds.getWidth(), 
-                (currentSize.height - 2*borderPixels)/bounds.getHeight());
         
-        panelImage = new BufferedImage(currentSize.width, currentSize.height, BufferedImage.TYPE_4BYTE_ABGR);
-        Graphics2D offScr = (Graphics2D) panelImage.getGraphics();
-        offScr.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-        
-        Color backGround = jPanel.getBackground();
-        Color copperColor = new Color(250, 160, 27);
-        Color maskColor = new Color(151, 49, 176);
-        Color profileColor = new Color(181, 167, 177);
-        Color rootProfileColor = Color.GREEN;
-        Color copyProfileColor = Color.RED;
-        Color boardColor = new Color(189, 196, 199);
-        Color silkColor = Color.WHITE;
-        Color refColor = Color.RED;
-        Color altRefColor = Color.CYAN;
-        
-        offScr.setColor(backGround);
-        offScr.fillRect(0, 0, currentSize.width, currentSize.height);
-        offScr.translate(borderPixels, borderPixels);
-        offScr.scale(scale, scale);
-
-        AffineTransform at = new AffineTransform();
-        at.translate(-bounds.getMinX(), bounds.getMinY() + (currentSize.getHeight()- 2*borderPixels)/scale);
-        at.scale(1, -1);
-
-        Shape panelOutline = new Rectangle2D.Double(0, 0, panelDimensions.getX(), panelDimensions.getY());
-        
-        Shape transformedShape = at.createTransformedShape(panelOutline);
-        offScr.setColor(maskColor);
-        offScr.fill(transformedShape);
-        offScr.setColor(profileColor);
-        offScr.setStroke(new BasicStroke((float) (2.0/scale), BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
-        offScr.draw(transformedShape);
-        
-        int markerSize = (int) (Math.max(bounds.getHeight(), bounds.getWidth()) * 0.05);
-        
-        drawLocationMarker(offScr, at, markerSize, refColor, altRefColor);
-        drawCoordinateFrameMarker(offScr, at, markerSize, refColor, altRefColor, true);
-        
-        for (PlacementsHolderLocation<?> child : panelLocation.getChildren()) {
-            Location loc = child.getLocation().convertToUnits(systemUnit);
-            Location dims = child.getPlacementsHolder().getDimensions().convertToUnits(systemUnit);
-            AffineTransform at2 = new AffineTransform(at);
-            at2.translate(loc.getX(), loc.getY());
-            at2.rotate(Math.toRadians(loc.getRotation()));
-            
-            Shape childOutline = new Rectangle2D.Double(0, 0, dims.getX(), dims.getY());
-            
-            transformedShape = at2.createTransformedShape(childOutline);
-            if (child != rootChildLocation) {
-                if (newChildren.contains(child)) {
-                    offScr.setColor(copyProfileColor);
-                }
-                else {
-                    offScr.setColor(maskColor);
-                    offScr.fill(transformedShape);
-                    offScr.setColor(profileColor);
-                }
-            }
-            else {
-                offScr.setColor(maskColor);
-                offScr.fill(transformedShape);
-                offScr.setColor(rootProfileColor);
-            }
-            offScr.setStroke(new BasicStroke((float) (2.0/scale), BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
-            offScr.draw(transformedShape);
-        }
-        
-        for (PlacementsHolderLocation<?> child : panelLocation.getChildren()) {
-            Location loc = child.getLocation().convertToUnits(systemUnit);
-            Location dims = child.getPlacementsHolder().getDimensions().convertToUnits(systemUnit);
-            AffineTransform at2 = new AffineTransform(at);
-            at2.translate(loc.getX(), loc.getY());
-            at2.rotate(Math.toRadians(loc.getRotation()));
-            
-            drawLocationMarker(offScr, at2, markerSize, refColor, altRefColor);
-            if (child.getGlobalSide() == Abstract2DLocatable.Side.Bottom) {
-                at2.translate(dims.getX(), 0);
-                drawCoordinateFrameMarker(offScr, at2, markerSize, refColor, altRefColor, false);
-            }
-            else {
-                drawCoordinateFrameMarker(offScr, at2, markerSize, refColor, altRefColor, true);
-            }
-        }
-        
-        for (Placement fid : panelLocation.getPanel().getPlacements()) {
-            if (fid.getSide() == panelLocation.getGlobalSide()) {
-                Location loc = fid.getLocation().convertToUnits(systemUnit);
-                AffineTransform at2 = new AffineTransform(at);
-                at2.translate(loc.getX(), loc.getY());
-                
-                Shape fidOutline = new Ellipse2D.Double(-1.0, -1.0, 2.0, 2.0);
-                transformedShape = at2.createTransformedShape(fidOutline);
-                offScr.setColor(boardColor);
-                offScr.fill(transformedShape);
-                fidOutline = new Ellipse2D.Double(-0.5, -0.5, 1.0, 1.0);
-                transformedShape = at2.createTransformedShape(fidOutline);
-                offScr.setColor(copperColor);
-                offScr.fill(transformedShape);
-            }
-        }
-
-        offScr.dispose();
-    }
-
-    private void computeBounds() {
-        Location panelDimensions = panelLocation.getPanel().getDimensions().convertToUnits(systemUnit);
-
-        Shape panelOutline = new Rectangle2D.Double(0, 0, panelDimensions.getX(), panelDimensions.getY());
-        bounds = panelOutline.getBounds2D();
-        
-        for (PlacementsHolderLocation<?> child : panelLocation.getChildren()) {
-            Location loc = child.getLocation().convertToUnits(systemUnit);
-            Location dims = child.getPlacementsHolder().getDimensions().convertToUnits(systemUnit);
-            AffineTransform at2 = new AffineTransform();
-            at2.translate(loc.getX(), loc.getY());
-            at2.rotate(Math.toRadians(loc.getRotation()));
-            
-            Shape childOutline = new Rectangle2D.Double(0, 0, dims.getX(), dims.getY());
-            Shape transformedShape = at2.createTransformedShape(childOutline);
-
-            bounds.add(transformedShape.getBounds2D());
-            
-        }
-        
-        for (Placement fid : panelLocation.getPanel().getPlacements()) {
-            if (fid.getSide() == panelLocation.getGlobalSide()) {
-                Location loc = fid.getLocation().convertToUnits(systemUnit);
-                AffineTransform at2 = new AffineTransform();
-                at2.translate(loc.getX(), loc.getY());
-                
-                Shape fidOutline = new Ellipse2D.Double(-1.0, -1.0, 2.0, 2.0);
-                Shape transformedShape = at2.createTransformedShape(fidOutline);
-                bounds.add(transformedShape.getBounds2D());
-            }
-        }
-    }
-    
-    private void drawLocationMarker(Graphics2D offScr, AffineTransform at2, int size, Color xColor,
-            Color yColor) {
-        double offset = 0.2;
-        offScr.setStroke(new BasicStroke((float) (size/50.0), BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
-        offScr.setColor(xColor);
-        Path2D path = new Path2D.Double();
-        path.moveTo(offset, offset);
-        path.lineTo(size*0.4, offset);
-        offScr.draw(at2.createTransformedShape(path));
-        path = new Path2D.Double();
-        path.moveTo(offset, -offset);
-        path.lineTo(size*0.4, -offset);
-        offScr.draw(at2.createTransformedShape(path));
-        
-        path = new Path2D.Double();
-        path.moveTo(-offset, offset);
-        path.lineTo(-size*0.4, offset);
-        offScr.draw(at2.createTransformedShape(path));
-        path = new Path2D.Double();
-        path.moveTo(-offset, -offset);
-        path.lineTo(-size*0.4, -offset);
-        offScr.draw(at2.createTransformedShape(path));
-
-        path = new Path2D.Double();
-        path.moveTo(offset, -offset);
-        path.lineTo(offset, -size*0.4);
-        offScr.draw(at2.createTransformedShape(path));
-        path = new Path2D.Double();
-        path.moveTo(-offset, -offset);
-        path.lineTo(-offset, -size*0.4);
-        offScr.draw(at2.createTransformedShape(path));
-
-        offScr.setColor(yColor);
-        path = new Path2D.Double();
-        path.moveTo(offset, offset);
-        path.lineTo(offset, size*0.4);
-        offScr.draw(at2.createTransformedShape(path));
-        path = new Path2D.Double();
-        path.moveTo(-offset, offset);
-        path.lineTo(-offset, size*0.4);
-        offScr.draw(at2.createTransformedShape(path));
-
-    }
-    
-    private void drawOriginMarker(Graphics2D offScr, AffineTransform at2, int size, Color xColor,
-            Color yColor) {
-    }
-    
-    private void drawCoordinateFrameMarker(Graphics2D offScr, AffineTransform at2, int size, Color xColor,
-            Color yColor, boolean rightHanded) {
-        int sign = rightHanded ? +1 : -1;
-        Path2D xArrow = new Path2D.Double();
-        xArrow.moveTo(0, 0);
-        xArrow.lineTo(sign*size, 0);
-        xArrow.lineTo(sign*size*0.9, size*0.1);
-        xArrow.moveTo(sign*size, 0);
-        xArrow.lineTo(sign*size*0.9, -size*0.1);
-        Path2D yArrow = new Path2D.Double();
-        yArrow.moveTo(0, 0);
-        yArrow.lineTo(0, size);
-        yArrow.lineTo(size*0.1, size*0.9);
-        yArrow.moveTo(0, size);
-        yArrow.lineTo(-size*0.1, size*0.9);
-        offScr.setStroke(new BasicStroke((float) (size/20.0), BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
-        offScr.setColor(xColor);
-        offScr.draw(at2.createTransformedShape(xArrow));
-        offScr.setColor(yColor);
-        offScr.draw(at2.createTransformedShape(yArrow));
-    }
-    
 }

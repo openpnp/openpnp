@@ -61,6 +61,8 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.event.TableModelEvent;
+import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableRowSorter;
 
@@ -82,7 +84,7 @@ import org.openpnp.gui.support.RotationCellValue;
 import org.openpnp.gui.support.TableUtils;
 import org.openpnp.gui.tablemodel.PlacementsHolderPlacementsTableModel;
 import org.openpnp.gui.tablemodel.PlacementsTableModel.Status;
-import org.openpnp.gui.viewers.PlacementsHolderLocationViewer;
+import org.openpnp.gui.viewers.PlacementsHolderLocationViewerDialog;
 import org.openpnp.model.Abstract2DLocatable.Side;
 import org.openpnp.model.Board;
 import org.openpnp.model.BoardLocation;
@@ -112,7 +114,7 @@ public class BoardPlacementsPanel extends JPanel {
     private BoardsPanel boardsPanel;
     private Board board;
     private Preferences prefs = Preferences.userNodeForPackage(BoardPlacementsPanel.class);
-    protected PlacementsHolderLocationViewer boardViewer;
+    protected PlacementsHolderLocationViewerDialog boardViewer;
     private JButton btnImport;
     private List<Class<? extends BoardImporter>> boardImporters;
     
@@ -239,6 +241,22 @@ public class BoardPlacementsPanel extends JPanel {
             }
         });
         
+        table.getModel().addTableModelListener(new TableModelListener() {
+            @Override
+            public void tableChanged(TableModelEvent e) {
+                SwingUtilities.invokeLater(() -> {
+                    if (boardViewer != null) {
+                        if (e.getType() == TableModelEvent.UPDATE) {
+                            boardViewer.refresh();
+                        }
+                        else {
+                            boardViewer.regenerate();
+                        }
+                    }
+                });
+            }
+        });
+
         JPopupMenu popupMenu = new JPopupMenu();
 
         JMenu setTypeMenu = new JMenu(setTypeAction);
@@ -614,7 +632,7 @@ public class BoardPlacementsPanel extends JPanel {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             if (boardViewer == null) {
-                boardViewer = new PlacementsHolderLocationViewer(
+                boardViewer = new PlacementsHolderLocationViewerDialog(
                         new BoardLocation(board), false,
                         null);
                 boardViewer.addWindowListener(new WindowAdapter() {

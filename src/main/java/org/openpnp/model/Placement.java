@@ -179,7 +179,7 @@ public class Placement extends Abstract2DLocatable<Placement> {
 
     @Override
     public String toString() {
-        return String.format("id %s, location %s, side %s, part %s, type %s", id, getLocation(), side,
+        return String.format("Placement %s, location=%s, side=%s, part=%s, type=%s", id, getLocation(), side,
                 part, type);
     }
 }
