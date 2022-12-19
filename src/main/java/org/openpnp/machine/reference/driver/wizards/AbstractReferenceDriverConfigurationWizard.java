@@ -187,9 +187,13 @@ public class AbstractReferenceDriverConfigurationWizard extends AbstractConfigur
         panelSerial.add(comboBoxBaud, "4, 4, fill, default");
 
         comboBoxBaud.addItem(new Integer(110));
+        comboBoxBaud.addItem(new Integer(134));
+        comboBoxBaud.addItem(new Integer(150));
+        comboBoxBaud.addItem(new Integer(200));
         comboBoxBaud.addItem(new Integer(300));
         comboBoxBaud.addItem(new Integer(600));
         comboBoxBaud.addItem(new Integer(1200));
+        comboBoxBaud.addItem(new Integer(1800));
         comboBoxBaud.addItem(new Integer(2400));
         comboBoxBaud.addItem(new Integer(4800));
         comboBoxBaud.addItem(new Integer(9600));
@@ -198,14 +202,27 @@ public class AbstractReferenceDriverConfigurationWizard extends AbstractConfigur
         comboBoxBaud.addItem(new Integer(38400));
         comboBoxBaud.addItem(new Integer(56000));
         comboBoxBaud.addItem(new Integer(57600));
+        comboBoxBaud.addItem(new Integer(76800));
         comboBoxBaud.addItem(new Integer(115200));
         comboBoxBaud.addItem(new Integer(128000));
         comboBoxBaud.addItem(new Integer(153600));
         comboBoxBaud.addItem(new Integer(230400));
         comboBoxBaud.addItem(new Integer(250000));
         comboBoxBaud.addItem(new Integer(256000));
+        comboBoxBaud.addItem(new Integer(307200));
         comboBoxBaud.addItem(new Integer(460800));
+        comboBoxBaud.addItem(new Integer(500000));
+        comboBoxBaud.addItem(new Integer(576000));
+        comboBoxBaud.addItem(new Integer(614400));
         comboBoxBaud.addItem(new Integer(921600));
+        comboBoxBaud.addItem(new Integer(1000000));
+        comboBoxBaud.addItem(new Integer(1152000));
+        comboBoxBaud.addItem(new Integer(1500000));
+        comboBoxBaud.addItem(new Integer(2000000));
+        comboBoxBaud.addItem(new Integer(2500000));
+        comboBoxBaud.addItem(new Integer(3000000));
+        comboBoxBaud.addItem(new Integer(3500000));
+        comboBoxBaud.addItem(new Integer(4000000));
 
         JLabel lblParity = new JLabel(Translations.getString(
                 "AbstractReferenceDriverConfigurationWizard.CommunicationMethodPanel.ParityLabel.text")); //$NON-NLS-1$
