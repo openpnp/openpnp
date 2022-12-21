@@ -60,6 +60,9 @@ import org.pmw.tinylog.Logger;
 public class CameraSolutions implements Solutions.Subject  {
     ReferenceCamera camera;
 
+    final static long EXPOSURE_ADAPT_MILLISECONDS = 700;
+    final static int EXPOSURE_ADJUST_MAX_STEPS = 32;
+
     public CameraSolutions(ReferenceCamera camera) {
         this.camera = camera;
     }
@@ -76,23 +79,7 @@ public class CameraSolutions implements Solutions.Subject  {
         }
         if (solutions.isTargeting(Milestone.Vision)) {
             final double previewFps = camera.getPreviewFps();
-            if (camera instanceof SwitcherCamera && previewFps != 0) {
-                solutions.add(new Solutions.Issue(
-                        camera, 
-                        "SwitcherCamera Preview FPS must be zero, to prevent constant switching.", 
-                        "Set to 0 FPS.", 
-                        Severity.Error,
-                        "https://github.com/openpnp/openpnp/wiki/SwitcherCamera#configuration") {
-
-
-                    @Override
-                    public void setState(Solutions.State state) throws Exception {
-                        camera.setPreviewFps((state == Solutions.State.Solved) ? 0.0 : previewFps);
-                        super.setState(state);
-                    }
-                });
-            }
-            else if (previewFps > 15) {
+            if (previewFps > 15) {
                 solutions.add(new Solutions.Issue(
                         camera, 
                         "A high Preview FPS value might create undue CPU load.", 
@@ -288,12 +275,13 @@ public class CameraSolutions implements Solutions.Subject  {
                 final CapturePropertyHolder exposureProperty = pnpCamera.getExposure();
                 propertiesOK = addCapturePropertyAutoSolution(solutions, 
                         "exposure", exposureProperty, 
-                        "set to a static exposure. The camera should look at a representative, rather bright subject when you press Accept",
+                        "set to a static exposure value that will be calibrated with this solution. "
+                        + "The camera should look at a representative, rather bright subject when you press Accept",
                         (Solutions.Issue issue) -> {
-                            final long adaptMilliseconds = 700;
                             final State oldState = issue.getState();
                             UiUtils.submitUiMachineTask(() -> {
-                                setStaticExposure(pnpCamera, exposureProperty, adaptMilliseconds);
+                                setStaticExposure(pnpCamera, exposureProperty, 
+                                        EXPOSURE_ADAPT_MILLISECONDS, EXPOSURE_ADJUST_MAX_STEPS);
                                 return true;
                             },
                                     (result) -> {
@@ -384,7 +372,7 @@ public class CameraSolutions implements Solutions.Subject  {
     }
 
     protected void setStaticExposure(OpenPnpCaptureCamera camera,
-            final CapturePropertyHolder exposureProperty, final long adaptMilliseconds)
+            final CapturePropertyHolder exposureProperty, final long adaptMilliseconds, int maxSteps)
             throws Exception, InterruptedException {
         CameraView cameraView = MainFrame.get().getCameraViews().ensureCameraVisible(camera); 
         // Capture a reference image.
@@ -400,9 +388,12 @@ public class CameraSolutions implements Solutions.Subject  {
         Thread.sleep(adaptMilliseconds); // sleep more for initial auto exposure
         int bestValue = exposureProperty.getDefault();
         long bestDiff = Long.MAX_VALUE;
-        for (int value = exposureProperty.getMin(); 
-                value <=  exposureProperty.getMax();
-                value++) {
+        int expMin = exposureProperty.getMin();
+        int expMax = exposureProperty.getMax();
+        int expStep = Math.max((expMax - expMin) / (maxSteps-1), 1);
+        for (int value = expMin; 
+                value <=  expMax;
+                value += expStep) {
             exposureProperty.setValue(value);
             Thread.sleep(adaptMilliseconds);
             BufferedImage frame = camera.lightSettleAndCapture();
@@ -475,7 +466,7 @@ public class CameraSolutions implements Solutions.Subject  {
             String valueName, Integer suggestedValue, 
             String uri) {
         final int wantedValue = (suggestedValue != null ? suggestedValue : property.getDefault());
-        if (property.getValue() != wantedValue) {
+        if (property.getValue() != wantedValue || property.isAuto()) {
             final boolean oldAuto = property.isAuto();
             final int oldValue = property.getValue();
             solutions.add(new Solutions.Issue(
