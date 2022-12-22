@@ -289,7 +289,7 @@ Do not forget to use [[Issues and Solutions]] to generate new G-code fragments a
 #### Configure Coordinated Peeling
 On the `ReferencePushPullFeeder` use the new **Rotation** column to configure the peeling coordinates. 
 
-For a typical configuration, the **Additive** switch needs to be enabled, so the peeling motion is _additive/relative_ to the starting point. The starting point is the peeler axis coordinate, right before the feed actuation. If **Additive** is enabled, you cannot use bidirectional motion, obviously (it would go back), you need to define the feed articulation using the forward-going way-points only, i.e., be sure to disable all the ↑ column check-boxes. If the five way-points are not enough, please report to the [discussion group](http://groups.google.com/group/openpnp). 
+For a typical configuration, the **Additive** switch needs to be enabled, so the peeling motion is _additive/relative_ to the starting point. The starting point is the peeler axis coordinate, right before the feed actuation. If **Additive** is enabled, you cannot use the same way-points back and forth, obviously (it would go back), you need to define the feed articulation using the forward-going way-points only, i.e., be sure to disable all the ↑ column check-boxes. If the five way-points are not enough, please report to the [discussion group](http://groups.google.com/group/openpnp). 
 
 Some feeders need multi-actuation, for instance if the part pitch in the tape is larger than the maximum tape feed that can be done by the mechanical motion. To enable multi-actuation together with additive rotation, you can enable the ↑↓ column check-boxes. But you still should **not** enable the ↑ column ones.
 
