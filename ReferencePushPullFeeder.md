@@ -1,6 +1,6 @@
 ## What is it?
 
-In short, the ReferencePushPullFeeder can use both electronic and/or elaborate 5-point mechanical motion to advance the tape. Many feeder designs requiring electronic or mechanical actuation (lever, knob, push, drag, etc. pp.) are supported. The actuation can be independent of the pick motion and aside from electronical actuation, it can perform a "hook and pull" articulation, therefore it supports 2mm pitch tapes (e.g. with 0402/0201 parts) where the tape is only advanced on every second feed. The feeder features OCR/QR-Code part label recognition, optimized vision calibration, elaborate auto-learning, one-click auto-setup, OCR/QR-Code based feeders-in-a-row discovery and more.
+In short, the ReferencePushPullFeeder can use both electronic and/or elaborate 5-point mechanical motion to advance the tape. Many feeder designs requiring electronic or mechanical actuation (lever, knob, push, drag, etc. pp.) are supported. The actuation can be independent of the pick motion and aside from electronical actuation, it can perform a "hook and pull" articulation (levers, drag feeding, etc.), therefore it supports 2mm pitch tapes (e.g. with 0402/0201 parts) where the tape is only advanced on every second feed. The feeder features OCR/QR-Code part label recognition, optimized vision calibration, elaborate auto-learning, one-click auto-setup, OCR/QR-Code based feeders-in-a-row discovery and more.
 
 ![Example Feeder in Action](https://user-images.githubusercontent.com/9963310/94424926-54387480-018b-11eb-96b1-963e69c14e50.gif)
 
