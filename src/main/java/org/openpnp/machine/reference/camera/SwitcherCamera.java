@@ -107,7 +107,7 @@ public class SwitcherCamera extends ReferenceCamera {
             return null;
         }
         try {
-            if (switchingLock.tryLock(actuatorDelayMillis, TimeUnit.MILLISECONDS)) {
+            if (switchingLock.tryLock(actuatorDelayMillis*4, TimeUnit.MILLISECONDS)) {
                 try {
                     if (switchers.get(switcher) != this) {
                         // The switching is subject to fail, so make the state indeterminate.
@@ -120,8 +120,7 @@ public class SwitcherCamera extends ReferenceCamera {
                                 true,                   // Execute only if the Machine is enabled. 
                                 actuatorDelayMillis,    // Max wait for machine to be idle.
                                 actuatorDelayMillis     // Max wait for it to finish, which prevents deadlock through static SwitcherCamera.switchers. 
-                                // Note, because of the switcher actuator and machine task involvement, deadlocks cannot be excluded 
-                                // in general .
+                                // Note, because of the switcher actuator and machine task involvement, deadlocks cannot be excluded in general .
                                 );
                         if (this != switchedCamera) {
                             return null;
