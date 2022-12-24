@@ -1554,6 +1554,7 @@ public class VisionSolutions implements Solutions.Subject {
         Location fiducialLocation = head.getCalibrationPrimaryFiducialLocation();
         return fiducialLocation.getLengthX().isInitialized()
                && fiducialLocation.getLengthY().isInitialized()
+               && head.getCalibrationPrimaryFiducialDiameter() != null
                && head.getCalibrationPrimaryFiducialDiameter().isInitialized();
     }
 
@@ -1576,6 +1577,7 @@ public class VisionSolutions implements Solutions.Subject {
         Location fiducialLocation = head.getCalibrationSecondaryFiducialLocation();
         return fiducialLocation.getLengthX().isInitialized()
                && fiducialLocation.getLengthY().isInitialized()
+               && head.getCalibrationSecondaryFiducialDiameter() != null
                && head.getCalibrationSecondaryFiducialDiameter().isInitialized();
     }
 

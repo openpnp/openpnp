@@ -22,7 +22,10 @@ package org.openpnp.machine.reference.camera;
 import java.awt.image.BufferedImage;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.camera.wizards.SwitcherCameraConfigurationWizard;
@@ -32,6 +35,7 @@ import org.openpnp.spi.Camera;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractActuator;
+import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 
 public class SwitcherCamera extends ReferenceCamera {
@@ -50,8 +54,7 @@ public class SwitcherCamera extends ReferenceCamera {
     @Attribute(required=false)
     private long actuatorDelayMillis = 500;
 
-    private boolean switching = false;
-    
+    private static ReentrantLock switchingLock = new ReentrantLock();
     private static Map<Integer, Camera> switchers = new HashMap<>();
     
     protected int getCaptureTryCount() {
@@ -60,29 +63,42 @@ public class SwitcherCamera extends ReferenceCamera {
 
     @Override
     public void notifyCapture() {
-        if (switching) {
-            // While switching, do not notifyCapture(), it would potentially create 
-            // endless recursion. The notifyCapture() will still be done by 
-            // setLastTransformedImage() when the capture that is the initiator of the 
-            // present switching is done.
-            return;
-        }
-        // If we're in a machine task already, take the opportunity to switch the camera over, if necessary.
-        // Note if we'd just let the notified camera thread do the actuator switching, it would timeout and 
-        // produce an ugly error frame, because our machine thread is likely still running.
-        Machine machine = Configuration.get().getMachine();
-        if (machine.isTask(Thread.currentThread())) {
-            synchronized (switchers) {
-                if (switchers.get(switcher) != this) {
-                    // Need to switch the camera over, provoke by capturing. 
-                    captureTransformed();
-                    // Note, captureTransformed() will do another notifyCapture() for us when the 
-                    // frame was captured, this time no switching needed. 
+        if (switchingLock.tryLock()) {
+            // Got the switching lock immediately.
+            try {
+                if (switchingLock.getHoldCount() > 1) {
+                    // Prevent reentrance. See the end of this function for comments. 
                     return;
                 }
+                if (switchers.get(switcher) != this) {
+                    // If we're in a machine task already, take the opportunity to switch the camera over, if necessary.
+                    // Note if we'd just let the notified camera thread do the actuator switching, it would timeout and 
+                    // produce an ugly error frame, because our machine thread is likely still running.
+                    Machine machine = Configuration.get().getMachine();
+                    if (machine.isTask(Thread.currentThread())) {
+                        // Need to switch the camera over, provoke by capturing. 
+                        captureTransformed();
+                        // Note, captureTransformed() will do another notifyCapture() for us when the 
+                        // frame was captured. Therefore return without super call.
+                        return;
+                    }
+                }
+                // Do the actual notify.
+                super.notifyCapture();
+            }
+            finally {
+                // Never forget to unlock.
+                switchingLock.unlock();
             }
         }
-        super.notifyCapture();
+        // When we do not get the switching lock immediately and non-reentrantly, swallow the notifyCapture(), 
+        // it would potentially create endless recursion. The notifyCapture() will later be done by setLastTransformedImage() 
+        // when the current holder of the lock is done. 
+        // Note that notifications from functional (machine task) captures will always already own the (reentrant) 
+        // switchingLock from internalCapture() and therefore never be in this situation. Conversely, for mere "refresh" 
+        // captures it is ok to drop frames, even for different cameras.
+
+        // Therefore return without super call.
     }
 
     @Override
@@ -90,50 +106,58 @@ public class SwitcherCamera extends ReferenceCamera {
         if (!ensureOpen()) {
             return null;
         }
-        synchronized (switchers) {
-            if (switchers.get(switcher) != this) {
+        try {
+            if (switchingLock.tryLock(actuatorDelayMillis*4, TimeUnit.MILLISECONDS)) {
                 try {
-                    // Flag the transition to prevent endless recursion through notifyCapture()
-                    // which is called by the switching actuator through fireHeadActivity().
-                    switching = true;
-                    // The switching is subject to fail, so make the state indeterminate.
-                    switchers.put(switcher, null);
-                    // Make sure this happens within a machine task, but wait for it.
-                    Camera switchedCamera = Configuration.get().getMachine().execute(() -> {
+                    if (switchers.get(switcher) != this) {
+                        // The switching is subject to fail, so make the state indeterminate.
+                        switchers.put(switcher, null);
+                        // Make sure actuator switching happens within a machine task, but wait for it.
+                        Camera switchedCamera = Configuration.get().getMachine().execute(() -> {
                             getActuator().actuate(actuatorDoubleValue);
                             return this;
                         }, 
-                        true,                   // Execute only if the Machine is enabled. 
-                        actuatorDelayMillis,    // Max wait for machine to be idle.
-                        actuatorDelayMillis     // Max wait for it to finish, which prevents deadlock through static SwitcherCamera.switchers. 
-                                                // Note, because of the switcher actuator and machine task involvement, deadlocks cannot be excluded 
-                                                // in general .
-                    );
-                    if (this != switchedCamera) {
-                        return null;
+                                true,                   // Execute only if the Machine is enabled. 
+                                actuatorDelayMillis,    // Max wait for machine to be idle.
+                                actuatorDelayMillis     // Max wait for it to finish, which prevents deadlock through static SwitcherCamera.switchers. 
+                                // Note, because of the switcher actuator and machine task involvement, deadlocks cannot be excluded in general .
+                                );
+                        if (this != switchedCamera) {
+                            return null;
+                        }
+                        Thread.sleep(actuatorDelayMillis);
+                        // Succeeded, set the new state.
+                        switchers.put(switcher, this);
                     }
-                    Thread.sleep(actuatorDelayMillis);
-                    // Succeeded, set the new state.
-                    switchers.put(switcher, this);
+                    // Note, the target camera is actually a capture device with multiple analog cameras connected via multiplexer. 
+                    // Each analog camera can have a different lens attached and may be subject to different mounting imperfections, 
+                    // therefore each SwitcherCamera must have its own set of lens calibration and transforms. 
+                    // The target camera device however must not apply any calibration or transform, hence the raw capture.  
+                    return getCamera().captureRaw();
                 }
                 catch (TimeoutException e) {
                     // If the machine is busy we can't switch, so we should return a null image.
+                    Logger.debug("SwitcherCamera "+getName()+" failed to actuate "+getActuator().getName()+" with timeout.");
                     return null;
                 }
                 catch (Exception e) {
-                    e.printStackTrace();
+                    Logger.warn(e, "SwitcherCamera "+getName()+" failed to actuate "+getActuator().getName()+" with exception.");
                     return null;
                 }
                 finally {
-                    switching = false;
+                    // Never forget to unlock.
+                    switchingLock.unlock();
                 }
             }
+            else {
+                Logger.debug("SwitcherCamera "+getName()+" failed to obtain switcher lock within timeout.");
+                return null;
+            }
         }
-        // Note, the target camera is actually a capture device with multiple analog cameras connected via multiplexer. 
-        // Each analog camera can have a different lens attached and may be subject to different mounting imperfections, 
-        // therefore each SwitcherCamera must have its own set of lens calibration and transforms. 
-        // The target camera device however must not apply any calibration or transform, hence the raw capture.  
-        return getCamera().captureRaw();
+        catch (InterruptedException e) {
+            Logger.debug("SwitcherCamera "+getName()+" was interrupted trying to obtain switcher lock.");
+            return null;
+        }
     }
 
     @Override
@@ -141,13 +165,23 @@ public class SwitcherCamera extends ReferenceCamera {
         if (!isOpen()) {
             return false;
         }
-        synchronized (switchers) {
-            if (switchers.get(switcher) != this) {
-                // Always assume an off-switched camera has a new frame.
-                return true;
+        if (switchingLock.tryLock()) {
+            // Got the switching lock immediately.
+            try {
+                Camera switchedCamera = switchers.get(switcher);
+                if (switchedCamera != this && switchedCamera != null) {
+                    // Always assume an off-switched camera has a new frame.
+                    return false;
+                }
+                return getCamera().hasNewFrame();
+            }
+            finally {
+                // Never forget to unlock.
+                switchingLock.unlock();
             }
         }
-        return getCamera().hasNewFrame();
+        // Always assume a camera that is currently switching has no new frame (yet).
+        return false;
     }
 
     @Override
