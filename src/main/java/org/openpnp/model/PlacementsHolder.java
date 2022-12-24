@@ -24,7 +24,6 @@ import java.beans.PropertyChangeListener;
 import java.io.File;
 import org.openpnp.spi.Definable;
 import org.openpnp.util.IdentifiableList;
-import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
@@ -173,7 +172,9 @@ public abstract class PlacementsHolder<T extends PlacementsHolder<T>>
      * @param profile - the profile of this PlacementsHolder
      */
     public void setProfile(GeometricPath2D profile) {
+        Object oldValue = this.profile;
         this.profile = profile;
+        firePropertyChange("profile", oldValue, dimensions);
     }
 
     /**
@@ -189,7 +190,9 @@ public abstract class PlacementsHolder<T extends PlacementsHolder<T>>
      * @param placements - the list of placements to set
      */
     public void setPlacements(IdentifiableList<Placement> placements) {
+        Object oldValue = this.placements;
         this.placements = placements;
+        firePropertyChange("placements", oldValue, placements);
     }
 
     /**
@@ -208,7 +211,6 @@ public abstract class PlacementsHolder<T extends PlacementsHolder<T>>
      * index
      */
     public void setPlacement(int index, Placement placement) {
-        Logger.trace(String.format("Setting placement on %s @%08X: index = %d, %s", this.getClass().getSimpleName(), this.hashCode(), index, placement));
         if (placement != null) {
             if (index >= placements.size()) {
                 placements.add(placement);
@@ -239,7 +241,6 @@ public abstract class PlacementsHolder<T extends PlacementsHolder<T>>
      */
     public void addPlacement(Placement placement) {
         if (placement != null) {
-            Logger.trace(String.format("Adding placement to %s @%08X: %s", this.getClass().getSimpleName(), this.hashCode(), placement));
             placements.add(placement);
             fireIndexedPropertyChange("placement", placements.indexOf(placement), null, placement);
             placement.addPropertyChangeListener(this);

@@ -66,10 +66,12 @@ import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableRowSorter;
 
+import org.openpnp.Translations;
 import org.openpnp.events.DefinitionStructureChangedEvent;
 import org.openpnp.events.PlacementSelectedEvent;
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.importer.BoardImporter;
+import org.openpnp.gui.importer.SolderPasteGerberImporter;
 import org.openpnp.gui.support.ActionGroup;
 import org.openpnp.gui.support.CustomBooleanRenderer;
 import org.openpnp.gui.support.MonospacedFontTableCellRenderer;
@@ -97,6 +99,8 @@ import org.openpnp.model.Placement;
 import org.openpnp.model.Placement.ErrorHandling;
 import org.openpnp.model.Placement.Type;
 import org.openpnp.util.IdentifiableList;
+import org.pmw.tinylog.Logger;
+
 import com.google.common.eventbus.Subscribe;
 
 import io.github.classgraph.ClassGraph;
@@ -116,20 +120,54 @@ public class BoardPlacementsPanel extends JPanel {
     private Preferences prefs = Preferences.userNodeForPackage(BoardPlacementsPanel.class);
     protected PlacementsHolderLocationViewerDialog boardViewer;
     private JButton btnImport;
-    private List<Class<? extends BoardImporter>> boardImporters;
+    private List<BoardImporter> boardImporters;
+    private Configuration configuration;
     
     private static Color typeColorFiducial = new Color(157, 188, 255);
     private static Color typeColorPlacement = new Color(255, 255, 255);
     
     public BoardPlacementsPanel(BoardsPanel boardsPanel) {
     	this.boardsPanel = boardsPanel;
+    	boardImporters = scanForBoardImporters();
         createUi();
     }
     
+    /**
+     * Scans the importer's package for BoardImporters
+     * @return the list of BoardImporters that were found
+     */
+    @SuppressWarnings("unchecked")
+    private List<BoardImporter> scanForBoardImporters() {
+        List<BoardImporter> boardImporters = new ArrayList<>();
+        try (ScanResult scanResult = new ClassGraph().enableClassInfo()
+                .acceptPackages(BoardImporter.class.getPackageName()).scan()) {
+            ClassInfoList importerClassInfoList = scanResult.
+                    getClassesImplementing(BoardImporter.class.getCanonicalName());
+            for (ClassInfo boardImporterInfo : importerClassInfoList) {
+                BoardImporter boardImporter;
+                try {
+                    boardImporter = ((Class<? extends BoardImporter>) boardImporterInfo.loadClass()).getDeclaredConstructor().newInstance();
+                }
+                catch (Exception e) {
+                    throw new Error(e);
+                }
+                
+                //For now, skip the solder paste importer
+                Logger.trace(boardImporter.getClass());
+                if (boardImporter.getClass() == SolderPasteGerberImporter.class) {
+                    continue;
+                }
+                
+                boardImporters.add(boardImporter);
+            }
+        }
+        return boardImporters;
+    }
+    
     private void createUi() {
-        setBorder(new TitledBorder(null, "Placements", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        setBorder(new TitledBorder(null, Translations.getString("BoardPanel.BoardPlacements.Placements"), TitledBorder.LEADING, TitledBorder.TOP, null, null));
         
-        Configuration configuration = Configuration.get();
+        configuration = Configuration.get();
         
         singleSelectionActionGroup = new ActionGroup(removeAction, 
                 setTypeAction, setSideAction, setErrorHandlingAction, setEnabledAction);
@@ -181,7 +219,7 @@ public class BoardPlacementsPanel extends JPanel {
                 }
 
                 boolean updateLinkedTables = MainFrame.get().getTabs().getSelectedComponent() == MainFrame.get().getBoardsTab() 
-                        && Configuration.get().getTablesLinked() == TablesLinked.Linked;
+                        && configuration.getTablesLinked() == TablesLinked.Linked;
                 
                 if (getSelections().size() > 1) {
                     // multi select
@@ -195,13 +233,13 @@ public class BoardPlacementsPanel extends JPanel {
                     MainFrame mainFrame = MainFrame.get();
                     Component selectedComponent = mainFrame.getTabs().getSelectedComponent();
                     if (updateLinkedTables) {
-                        Configuration.get().getBus().post(new PlacementSelectedEvent(getSelection(),
+                        configuration.getBus().post(new PlacementSelectedEvent(getSelection(),
                                 new BoardLocation(board), BoardPlacementsPanel.this));
                     }
                     if (getSelection() != null
                             && (selectedComponent == mainFrame.getJobTab() ||
                                     selectedComponent == mainFrame.getBoardsTab())
-                            && Configuration.get().getTablesLinked() == TablesLinked.Linked) {
+                            && configuration.getTablesLinked() == TablesLinked.Linked) {
                         Part selectedPart = getSelection().getPart();
                         mainFrame.getPartsTab().selectPartInTable(selectedPart);
                         mainFrame.getPackagesTab().selectPackageInTable(selectedPart.getPackage());
@@ -301,16 +339,6 @@ public class BoardPlacementsPanel extends JPanel {
         btnRemovePlacement.setHideActionText(true);
         toolBarPlacements.add(btnRemovePlacement);
 
-        boardImporters = new ArrayList<>();
-        try (ScanResult scanResult = new ClassGraph().enableClassInfo()
-                .acceptPackages(BoardImporter.class.getPackageName()).scan()) {
-            ClassInfoList importerClassInfoList = scanResult.
-                    getClassesImplementing(BoardImporter.class.getCanonicalName());
-            for (ClassInfo boardImporterInfo : importerClassInfoList) {
-                boardImporters.add((Class<? extends BoardImporter>) (boardImporterInfo.loadClass()));
-            }
-        }
-        
         toolBarPlacements.addSeparator();
         btnImport = new JButton(importAction);
         btnImport.setHideActionText(true);
@@ -327,7 +355,7 @@ public class BoardPlacementsPanel extends JPanel {
         JPanel panel_1 = new JPanel();
         panel.add(panel_1, BorderLayout.EAST);
 
-        JLabel lblNewLabel = new JLabel("Search");
+        JLabel lblNewLabel = new JLabel(Translations.getString("BoardPanel.BoardPlacements.Placements.Search"));
         panel_1.add(lblNewLabel);
 
         searchTextField = new JTextField();
@@ -350,12 +378,11 @@ public class BoardPlacementsPanel extends JPanel {
         panel_1.add(searchTextField);
         searchTextField.setColumns(15);
 
-        Configuration.get().getBus().register(this);
+        configuration.getBus().register(this);
     }
     
     @Subscribe
     public void boardDefinitionStructureChanged(DefinitionStructureChangedEvent event) {
-//        Logger.trace("boardDefinitionStructureChanged DefinitionStructureChangedEvent = " + event);
         if (board != null && 
                 event.definition == board) {
             SwingUtilities.invokeLater(() -> {
@@ -438,23 +465,27 @@ public class BoardPlacementsPanel extends JPanel {
         return placements;
     }
 
+    public List<BoardImporter> getBoardImporters() {
+        return boardImporters;
+    }
+
     public final Action newAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.add);
-            putValue(NAME, "New Placement");
-            putValue(SHORT_DESCRIPTION, "Create a new placement and add it to the board.");
+            putValue(NAME, Translations.getString("BoardPanel.BoardPlacements.Action.NewPlacement"));
+            putValue(SHORT_DESCRIPTION, Translations.getString("BoardPanel.BoardPlacements.Action.NewPlacement.Description"));
         }
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            if (Configuration.get().getParts().size() == 0) {
-                MessageBoxes.errorBox(getTopLevelAncestor(), "Error",
-                        "There are currently no parts defined in the system. Please create at least one part before creating a placement.");
+            if (configuration.getParts().size() == 0) {
+                MessageBoxes.errorBox(getTopLevelAncestor(), Translations.getString("General.Error"),
+                        Translations.getString("BoardPanel.BoardPlacements.NewPlacement.ErrorMessageBox.NoPartsMessage"));
                 return;
             }
 
             String id = JOptionPane.showInputDialog(getTopLevelAncestor(),
-                    "Please enter an ID for the new placement.");
+                    Translations.getString("BoardPanel.BoardPlacements.NewPlacement.InputDialog.enterIdMessage"));
             if (id == null) {
                 return;
             }
@@ -462,23 +493,23 @@ public class BoardPlacementsPanel extends JPanel {
             // Check if the new placement ID is unique
             for(Placement compareplacement : board.getPlacements()) {
                 if (compareplacement.getId().equals(id)) {
-                    MessageBoxes.errorBox(getTopLevelAncestor(), "Error",
-                            "The ID for the new placement already exists");
+                    MessageBoxes.errorBox(getTopLevelAncestor(), Translations.getString("General.Error"),
+                            Translations.getString("BoardPanel.BoardPlacements.NewPlacement.ErrorMessageBox.IdAlreadyExistsMessage"));
                     return;
                 }
             }
             
             Placement placement = new Placement(id);
 
-            placement.setPart(Configuration.get().getParts().get(0));
-            placement.setLocation(new Location(Configuration.get().getSystemUnits()));
+            placement.setPart(configuration.getParts().get(0));
+            placement.setLocation(new Location(configuration.getSystemUnits()));
             placement.setSide(Side.Top);
 
             board.addPlacement(placement);
             tableModel.fireTableDataChanged();
             Helpers.selectLastTableRow(table);
 
-            Configuration.get().getBus()
+            configuration.getBus()
                 .post(new DefinitionStructureChangedEvent(board, "placements", BoardPlacementsPanel.this));
         }
     };
@@ -486,8 +517,8 @@ public class BoardPlacementsPanel extends JPanel {
     public final Action removeAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.delete);
-            putValue(NAME, "Remove Placement(s)");
-            putValue(SHORT_DESCRIPTION, "Remove the currently selected placement(s).");
+            putValue(NAME, Translations.getString("BoardPanel.BoardPlacements.Action.RemovePlacement"));
+            putValue(SHORT_DESCRIPTION, Translations.getString("BoardPanel.BoardPlacements.Action.RemovePlacement.Description"));
         }
 
         @Override
@@ -497,15 +528,15 @@ public class BoardPlacementsPanel extends JPanel {
             }
             tableModel.fireTableDataChanged();
 
-            Configuration.get().getBus()
+            configuration.getBus()
                 .post(new DefinitionStructureChangedEvent(board, "placements", BoardPlacementsPanel.this));
         }
     };
 
     public void importBoard(Class<? extends BoardImporter> boardImporterClass) {
         if (boardsPanel.getSelection() == null) {
-            MessageBoxes.errorBox(getTopLevelAncestor(), "Import Failed", //$NON-NLS-1$
-                    "Please select a board to import into."); //$NON-NLS-1$
+            MessageBoxes.errorBox(getTopLevelAncestor(), Translations.getString("BoardPanel.BoardPlacements.Importer.Fail"), //$NON-NLS-1$
+                    Translations.getString("BoardPanel.BoardPlacements.Importer.Fail.Message")); //$NON-NLS-1$
             return;
         }
         
@@ -514,7 +545,7 @@ public class BoardPlacementsPanel extends JPanel {
             boardImporter = boardImporterClass.newInstance();
         }
         catch (Exception e) {
-            MessageBoxes.errorBox(getTopLevelAncestor(), "Import Failed", e); //$NON-NLS-1$
+            MessageBoxes.errorBox(getTopLevelAncestor(), Translations.getString("BoardPanel.BoardPlacements.Importer.Fail"), e); //$NON-NLS-1$
             return;
         }
 
@@ -531,18 +562,19 @@ public class BoardPlacementsPanel extends JPanel {
                     //          don't match any in the existing set are added 
                     //Option 1: Import after deleting all existing placements
                     //Option 2: Cancel the import
-                    Object[] options = {"Merge new with existing",
-                            "Replace existing with new",
-                            "Cancel"};
+                    Object[] options = {
+                            Translations.getString("BoardPanel.BoardPlacements.Importer.OptionsBox.Merge"),
+                            Translations.getString("BoardPanel.BoardPlacements.Importer.OptionsBox.Replace"),
+                            Translations.getString("General.Cancel")};
                     importOption = JOptionPane.showOptionDialog((Frame) getTopLevelAncestor(),
-                            "The Selected Board Already Has Existing Placements",
-                            "What do you want to do?",
+                            Translations.getString("BoardPanel.BoardPlacements.Importer.OptionsBox.Question"),
+                            Translations.getString("BoardPanel.BoardPlacements.Importer.OptionsBox.Title"),
                             JOptionPane.YES_NO_CANCEL_OPTION,
                             JOptionPane.QUESTION_MESSAGE,
                             null,
                             options,
                             options[2]);
-                    if (importOption == 2) {
+                    if (importOption == 2 || importOption == JOptionPane.CLOSED_OPTION) {
                         return;
                     }
                 }
@@ -576,34 +608,27 @@ public class BoardPlacementsPanel extends JPanel {
                 
                 importedBoard.dispose();
                 
-                Configuration.get().getBus()
+                configuration.getBus()
                     .post(new DefinitionStructureChangedEvent(board, "placements", BoardPlacementsPanel.this));
             }
         }
         catch (Exception e) {
-            MessageBoxes.errorBox(getTopLevelAncestor(), "Import Failed", e); //$NON-NLS-1$
+            MessageBoxes.errorBox(getTopLevelAncestor(), Translations.getString("BoardPanel.BoardPlacements.Importer.Fail"), e); //$NON-NLS-1$
         }
     }
 
     public final Action importAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.importt);
-            putValue(NAME, "Import Placements");
-            putValue(SHORT_DESCRIPTION, "Import placements from CAD files");
+            putValue(NAME, Translations.getString("BoardPanel.BoardPlacements.Action.Import"));
+            putValue(SHORT_DESCRIPTION, Translations.getString("BoardPanel.BoardPlacements.Action.Import.Description"));
         }
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
             JPopupMenu menu = new JPopupMenu();
-            for (Class<? extends BoardImporter> bi : boardImporters) {
-                final BoardImporter boardImporter;
-                try {
-                    boardImporter = bi.newInstance();
-                }
-                catch (Exception ex) {
-                    throw new Error(ex);
-                }
-
+            for (BoardImporter bi : boardImporters) {
+                final BoardImporter boardImporter = bi;
                 menu.add(new JMenuItem(new AbstractAction() {
                     {
                         putValue(NAME, boardImporter.getImporterName());
@@ -613,7 +638,7 @@ public class BoardPlacementsPanel extends JPanel {
 
                     @Override
                     public void actionPerformed(ActionEvent e) {
-                        importBoard(bi);
+                        importBoard(boardImporter.getClass());
                         refresh();
                     }
                 }));
@@ -625,8 +650,8 @@ public class BoardPlacementsPanel extends JPanel {
     public final Action viewerAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.colorTrue);
-            putValue(NAME, "View Board"); //$NON-NLS-1$
-            putValue(SHORT_DESCRIPTION, "View a graphical representation of the selected board."); //$NON-NLS-1$
+            putValue(NAME, Translations.getString("BoardPanel.BoardPlacements.Action.View")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("BoardPanel.BoardPlacements.Action.View.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -634,7 +659,7 @@ public class BoardPlacementsPanel extends JPanel {
             if (boardViewer == null) {
                 boardViewer = new PlacementsHolderLocationViewerDialog(
                         new BoardLocation(board), false,
-                        null);
+                        (a,b) -> tableModel.fireTableDataChanged());
                 boardViewer.addWindowListener(new WindowAdapter() {
                     @Override
                     public void windowClosing(WindowEvent e) {
@@ -651,8 +676,8 @@ public class BoardPlacementsPanel extends JPanel {
 
     public final Action setTypeAction = new AbstractAction() {
         {
-            putValue(NAME, "Set Type");
-            putValue(SHORT_DESCRIPTION, "Set placement type(s) to...");
+            putValue(NAME, Translations.getString("BoardPanel.BoardPlacements.Action.SetType"));
+            putValue(SHORT_DESCRIPTION, Translations.getString("BoardPanel.BoardPlacements.Action.SetType.Description"));
         }
 
         @Override
@@ -664,8 +689,9 @@ public class BoardPlacementsPanel extends JPanel {
 
         public SetTypeAction(Placement.Type type) {
             this.type = type;
-            putValue(NAME, type.toString());
-            putValue(SHORT_DESCRIPTION, "Set placement type(s) to " + type.toString());
+            putValue(NAME, Translations.getString("Placement.Type." + type.toString()));
+            putValue(SHORT_DESCRIPTION, Translations.getString("BoardPanel.BoardPlacements.Action.SetType.ToolTip") +
+                    " " + Translations.getString("Placement.Type." + type.toString()));
         }
 
         @Override
@@ -679,8 +705,8 @@ public class BoardPlacementsPanel extends JPanel {
 
     public final Action setSideAction = new AbstractAction() {
         {
-            putValue(NAME, "Set Side");
-            putValue(SHORT_DESCRIPTION, "Set placement side(s) to...");
+            putValue(NAME, Translations.getString("BoardPanel.BoardPlacements.Action.SetSide"));
+            putValue(SHORT_DESCRIPTION, Translations.getString("BoardPanel.BoardPlacements.Action.SetSide.Description"));
         }
 
         @Override
@@ -692,8 +718,9 @@ public class BoardPlacementsPanel extends JPanel {
 
         public SetSideAction(Side side) {
             this.side = side;
-            putValue(NAME, side.toString());
-            putValue(SHORT_DESCRIPTION, "Set placement side(s) to " + side.toString());
+            putValue(NAME, Translations.getString("Placement.Side." + side.toString()));
+            putValue(SHORT_DESCRIPTION, Translations.getString("BoardPanel.BoardPlacements.Action.SetSide.ToolTip") +
+                    " " + Translations.getString("Placement.Side." + side.toString()));
         }
 
         @Override
@@ -707,8 +734,8 @@ public class BoardPlacementsPanel extends JPanel {
     
     public final Action setErrorHandlingAction = new AbstractAction() {
         {
-            putValue(NAME, "Set Error Handling");
-            putValue(SHORT_DESCRIPTION, "Set placement error handling(s) to...");
+            putValue(NAME, Translations.getString("BoardPanel.BoardPlacements.Action.SetErrorHandling"));
+            putValue(SHORT_DESCRIPTION, Translations.getString("BoardPanel.BoardPlacements.Action.SetErrorHandling.Description"));
         }
 
         @Override
@@ -720,8 +747,9 @@ public class BoardPlacementsPanel extends JPanel {
 
         public SetErrorHandlingAction(Placement.ErrorHandling errorHandling) {
             this.errorHandling = errorHandling;
-            putValue(NAME, errorHandling.toString());
-            putValue(SHORT_DESCRIPTION, "Set placement error handling(s) to " + errorHandling.toString());
+            putValue(NAME, Translations.getString("Placement.ErrorHandling." + errorHandling.toString()));
+            putValue(SHORT_DESCRIPTION, Translations.getString("BoardPanel.BoardPlacements.Action.SetErrorHandling.ToolTip") +
+                    " " + Translations.getString("Placement.ErrorHandling." + errorHandling.toString()));
         }
 
         @Override
@@ -735,8 +763,8 @@ public class BoardPlacementsPanel extends JPanel {
     
     public final Action setEnabledAction = new AbstractAction() {
         {
-            putValue(NAME, "Set Enabled");
-            putValue(SHORT_DESCRIPTION, "Set placement enabled to...");
+            putValue(NAME, Translations.getString("BoardPanel.BoardPlacements.Action.SetEnabled"));
+            putValue(SHORT_DESCRIPTION, Translations.getString("BoardPanel.BoardPlacements.Action.SetEnabled.Description"));
         }
 
         @Override
@@ -749,9 +777,10 @@ public class BoardPlacementsPanel extends JPanel {
 
         public SetEnabledAction(Boolean enabled) {
             this.enabled = enabled;
-            String name = enabled ? "Enabled" : "Disabled";
+            String name = enabled ? Translations.getString("General.Enabled") : Translations.getString("General.Disabled");
             putValue(NAME, name);
-            putValue(SHORT_DESCRIPTION, "Set placement enabled to " + name);
+            putValue(SHORT_DESCRIPTION, Translations.getString("BoardPanel.BoardPlacements.Action.SetEnabled.ToolTip") + 
+                    " " + name);
         }
 
         @Override
@@ -770,7 +799,7 @@ public class BoardPlacementsPanel extends JPanel {
                 return;
             }
             Type type = (Type) value;
-            setText(type.name());
+            setText(Translations.getString("Placement.Type." + type.name()));
         }
 
         @Override

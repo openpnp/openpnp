@@ -50,6 +50,7 @@ import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.geom.Rectangle2D.Double;
 import java.awt.image.BufferedImage;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -70,11 +71,14 @@ import javax.swing.SwingConstants;
 import javax.swing.border.EtchedBorder;
 import javax.swing.JScrollPane;
 
+import org.openpnp.Translations;
+import org.openpnp.gui.components.LabeledPopupMenu;
 import org.openpnp.model.Abstract2DLocatable.Side;
 import org.openpnp.model.Board;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.GeometricPath2D;
+import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Panel;
@@ -83,6 +87,8 @@ import org.openpnp.model.Placement;
 import org.openpnp.model.PlacementsHolder;
 import org.openpnp.model.PlacementsHolderLocation;
 import org.openpnp.util.Utils2D;
+import org.pmw.tinylog.Logger;
+
 import java.awt.Component;
 import javax.swing.Box;
 import javax.swing.JButton;
@@ -93,7 +99,7 @@ public class PlacementsHolderLocationViewer extends JPanel {
     private static final double SCREEN_PPI = Toolkit.getDefaultToolkit().getScreenResolution();
     private static final double INCHES_PER_MAJOR_DIVISION = 0.75;
     private static final double PIXELS_PER_MAJOR_DIVISION = SCREEN_PPI * INCHES_PER_MAJOR_DIVISION;
-    private static final double PIXEL_GAP = SCREEN_PPI * 0.125;
+    private static final double EDGE_GAP = SCREEN_PPI * 0.125;
     private static final double ZOOM_PER_WHEEL_TICK = Math.pow(2, 1.0/4); //4 ticks to double
     private static final int HORIZONTAL_SCALE_HEIGHT = 25;
     private static final int VERTICAL_SCALE_WIDTH = 45;
@@ -107,7 +113,11 @@ public class PlacementsHolderLocationViewer extends JPanel {
     private Color transparentColor = new Color(255, 255, 255, 0);
     private Color profileTopColor = new Color(0, 128, 128);  //Teal for Top
     private Color profileBottomColor = new Color(0, 0, 200); //Blue for Bottom
-
+    private Color placementEnabledColor = Color.WHITE;
+    private Color placementDisabledColor = Color.DARK_GRAY;
+    private Color fiducialEnabledColor = copperColor;
+    private Color fiducialDisabledColor = Color.DARK_GRAY;
+    
     private BufferedImage placementsHolderImage;
     private BufferedImage horizontalScaleImage;
     private BufferedImage verticalScaleImage;
@@ -130,6 +140,8 @@ public class PlacementsHolderLocationViewer extends JPanel {
     private LengthUnit units;
     private Rectangle2D graphicsBounds;
     private Map<Area, PlacementsHolderLocation<?>> profileMap;
+    private Map<Area, Placement> placementMap;
+    private Map<Placement, Area> placementInverseMap;
     private Double defaultViewableBounds;
     private Double viewableBounds;
     private double scaleFactor;
@@ -144,7 +156,7 @@ public class PlacementsHolderLocationViewer extends JPanel {
     private Cursor savedCursor;
     private double unitsPerDivision;
     private double unitsPerTick;
-    private String displayUnit = "mm";
+    private String displayUnit = "mm"; //$NON-NLS-1$
     private double displayMultiplier;
     private int displayDecimals;
     
@@ -168,7 +180,8 @@ public class PlacementsHolderLocationViewer extends JPanel {
     /**
      * Create the Panel.
      */
-    public PlacementsHolderLocationViewer(PlacementsHolderLocation<?> placementsHolderLocation, boolean isJob, BiConsumer<PlacementsHolderLocation<?>, String> refreshTableModel) {
+    public PlacementsHolderLocationViewer(PlacementsHolderLocation<?> placementsHolderLocation, 
+            boolean isJob, BiConsumer<PlacementsHolderLocation<?>, String> refreshTableModel) {
         this.placementsHolderLocation = placementsHolderLocation;
         this.refreshTableModel = refreshTableModel;
         this.isJob = isJob;
@@ -190,7 +203,8 @@ public class PlacementsHolderLocationViewer extends JPanel {
             showChildrenOnly = !isJob;
         }
         else {
-            throw new UnsupportedOperationException("Viewing of " + placementsHolder.getClass().getSimpleName() + " types is not currently supported");
+            throw new UnsupportedOperationException("Viewing of "  //$NON-NLS-1$
+                    + placementsHolder.getClass().getSimpleName() + " types is not currently supported"); //$NON-NLS-1$
         }
         
         units = Configuration.get().getSystemUnits();
@@ -205,7 +219,7 @@ public class PlacementsHolderLocationViewer extends JPanel {
         
         btnViewingSide = new JButton();
         panel.add(btnViewingSide);
-        btnViewingSide.setText("Viewing From Top");
+        btnViewingSide.setText(Translations.getString("PlacementsHolderLocationViewer.ViewingSide.Top")); //$NON-NLS-1$
         btnViewingSide.setEnabled(!isJob);
         btnViewingSide.addActionListener(new ActionListener() {
             @Override
@@ -217,16 +231,18 @@ public class PlacementsHolderLocationViewer extends JPanel {
         //This dummy label is invisible but forces the container width to be at least wide enough
         //to display it. The intent is to keep the panel width from changing whenever the text in 
         //btnViewingSide and/or btnShowChildrenOnly changes.
-        JLabel lblNewLabel = new JLabel("This is just some wide dummy text");
+        JLabel lblNewLabel = new JLabel("This is just some wide dummy text"); //$NON-NLS-1$
         lblNewLabel.setForeground(lblNewLabel.getBackground());
         panel.add(lblNewLabel);
         
         btnShowChildrenOnly = new JButton();
         if (showChildrenOnly) {
-            btnShowChildrenOnly.setText("Viewing Children Only");
+            btnShowChildrenOnly.setText(
+                    Translations.getString("PlacementsHolderLocationViewer.ViewingOption.ChildrenOnly")); //$NON-NLS-1$
         }
         else {
-            btnShowChildrenOnly.setText("Viewing All Descendants");
+            btnShowChildrenOnly.setText(
+                    Translations.getString("PlacementsHolderLocationViewer.ViewingOption.AllDescendants")); //$NON-NLS-1$
         }
         btnShowChildrenOnly.addActionListener(new ActionListener() {
             @Override
@@ -240,7 +256,8 @@ public class PlacementsHolderLocationViewer extends JPanel {
         Component verticalStrut = Box.createVerticalStrut(15);
         panel.add(verticalStrut);
         
-        chckbxReticle = new JCheckBox("Reticle");
+        chckbxReticle = new JCheckBox(
+                Translations.getString("PlacementsHolderLocationViewer.ViewingOption.Reticle")); //$NON-NLS-1$
         panel.add(chckbxReticle);
         chckbxReticle.setSelected(showReticle);
         chckbxReticle.addActionListener(new ActionListener() {
@@ -249,7 +266,8 @@ public class PlacementsHolderLocationViewer extends JPanel {
                 setShowReticle(chckbxReticle.isSelected());
             }});
         
-        chckbxLocations = new JCheckBox("Board/Panel Locations");
+        chckbxLocations = new JCheckBox(
+                Translations.getString("PlacementsHolderLocationViewer.ViewingOption.Locations")); //$NON-NLS-1$
         panel.add(chckbxLocations);
         chckbxLocations.setSelected(showLocations);
         chckbxLocations.addActionListener(new ActionListener() {
@@ -258,7 +276,8 @@ public class PlacementsHolderLocationViewer extends JPanel {
                 setShowLocations(chckbxLocations.isSelected());
             }});
         
-        chckbxOrigins = new JCheckBox("Board/Panel Origins");
+        chckbxOrigins = new JCheckBox(
+                Translations.getString("PlacementsHolderLocationViewer.ViewingOption.Origins")); //$NON-NLS-1$
         panel.add(chckbxOrigins);
         chckbxOrigins.setSelected(showOrigins);
         chckbxOrigins.addActionListener(new ActionListener() {
@@ -267,7 +286,8 @@ public class PlacementsHolderLocationViewer extends JPanel {
                 setShowOrigins(chckbxOrigins.isSelected());
             }});
         
-        chckbxFiducials = new JCheckBox("Fiducials");
+        chckbxFiducials = new JCheckBox(
+                Translations.getString("PlacementsHolderLocationViewer.ViewingOption.Fiducials")); //$NON-NLS-1$
         panel.add(chckbxFiducials);
         chckbxFiducials.setSelected(showFiducials);
         chckbxFiducials.addActionListener(new ActionListener() {
@@ -276,7 +296,8 @@ public class PlacementsHolderLocationViewer extends JPanel {
                 setShowFiducials(chckbxFiducials.isSelected());
             }});
         
-        chckbxPlacements = new JCheckBox("Placements");
+        chckbxPlacements = new JCheckBox(
+                Translations.getString("PlacementsHolderLocationViewer.ViewingOption.Placements")); //$NON-NLS-1$
         panel.add(chckbxPlacements);
         chckbxPlacements.setSelected(showPlacements);
         chckbxPlacements.addActionListener(new ActionListener() {
@@ -409,7 +430,9 @@ public class PlacementsHolderLocationViewer extends JPanel {
             PanelLocation.setParentsOfAllDescendants((PanelLocation) placementsHolderLocation);
         }
         else {
-            throw new UnsupportedOperationException("Viewing of " + placementsHolder.getClass().getSimpleName() + " types is not currently supported");
+            throw new UnsupportedOperationException("Viewing of " + //$NON-NLS-1$
+                    placementsHolder.getClass().getSimpleName() + 
+                    " types is not currently supported"); //$NON-NLS-1$
         }
         regenerate();
     }
@@ -454,8 +477,8 @@ public class PlacementsHolderLocationViewer extends JPanel {
         Dimension currentSize = getDisplayPanelSize();
         if (currentSize.width > 0 && currentSize.height > 0) {
             scrollingBounds = new Rectangle.Double(0, 0, currentSize.width, currentSize.height);
-            viewPortBounds = new Rectangle.Double(PIXEL_GAP, PIXEL_GAP, 
-                    currentSize.width - 2*PIXEL_GAP, currentSize.height - 2*PIXEL_GAP);
+            viewPortBounds = new Rectangle.Double(EDGE_GAP, EDGE_GAP, 
+                    currentSize.width - 2*EDGE_GAP, currentSize.height - 2*EDGE_GAP);
             aspectRatio = viewPortBounds.width / viewPortBounds.height;
         }
     }
@@ -605,7 +628,7 @@ public class PlacementsHolderLocationViewer extends JPanel {
         objectToViewTransform.translate(-xOffset-viewableBounds.getX(), -viewableBounds.getY());
 
         objectToScreenTransform = new AffineTransform();
-        objectToScreenTransform.translate(PIXEL_GAP, (int) scrollingBounds.height - PIXEL_GAP);
+        objectToScreenTransform.translate(EDGE_GAP, (int) scrollingBounds.height - EDGE_GAP);
         objectToScreenTransform.scale(1, -1);
         objectToScreenTransform.concatenate(objectToViewTransform);
 
@@ -615,12 +638,12 @@ public class PlacementsHolderLocationViewer extends JPanel {
 
         screenToObjectTransform = new AffineTransform(viewToObjectTransform);
         screenToObjectTransform.scale(1, -1);
-        screenToObjectTransform.translate(-PIXEL_GAP, -((int) scrollingBounds.height - PIXEL_GAP));
+        screenToObjectTransform.translate(-EDGE_GAP, -((int) scrollingBounds.height - EDGE_GAP));
         
-        viewableClippingBounds = new Rectangle.Double(viewableBounds.getX() - PIXEL_GAP/scaleFactor,
-                viewableBounds.getY() - PIXEL_GAP/scaleFactor,
-                viewableBounds.getWidth() + 2*PIXEL_GAP/scaleFactor,
-                viewableBounds.getHeight() + 2*PIXEL_GAP/scaleFactor);
+        viewableClippingBounds = new Rectangle.Double(viewableBounds.getX() - EDGE_GAP/scaleFactor,
+                viewableBounds.getY() - EDGE_GAP/scaleFactor,
+                viewableBounds.getWidth() + 2*EDGE_GAP/scaleFactor,
+                viewableBounds.getHeight() + 2*EDGE_GAP/scaleFactor);
         
         renderPlacementsHolderImage();
     }
@@ -636,6 +659,8 @@ public class PlacementsHolderLocationViewer extends JPanel {
         boolean atRoot = placementsHolderLocation == this.placementsHolderLocation;
         if (atRoot) {
             profileMap = new HashMap<>();
+            placementMap = new HashMap<>();
+            placementInverseMap = new HashMap<>();
             if (isJob) {
                 //include (0,0) as this is the machine origin
                 graphicsBounds = new Rectangle2D.Double(); 
@@ -654,6 +679,26 @@ public class PlacementsHolderLocationViewer extends JPanel {
             for (Placement placement : placementsHolderLocation.getPlacementsHolder().getPlacements()) {
                 Location loc = Utils2D.calculateBoardPlacementLocation(placementsHolderLocation, placement).convertToUnits(units);
                 graphicsBounds.add(new Point2D.Double(loc.getX(), loc.getY()));
+                
+                AffineTransform at2 = new AffineTransform();
+                at2.translate(loc.getX(), loc.getY());
+                at2.rotate(Math.toRadians(loc.getRotation()));
+                double d = (new Length(1, LengthUnit.Millimeters)).convertToUnits(units).getValue() * 0.5;
+                //In the future, we probably should use the actual shape of the footprint here - will
+                //probably wait until we can import Gerber files and get the true footprint from there
+                if (placement.getType() == Placement.Type.Placement) {
+                    Area area = new Area(
+                            at2.createTransformedShape(new Rectangle2D.Double(-d, -d, 2*d, 2*d)));
+                    placementMap.put(area, placement);
+                    placementInverseMap.put(placement, area);
+                }
+                else if (placement.getType() == Placement.Type.Fiducial){
+                    Area area = new Area(
+                            at2.createTransformedShape(new Ellipse2D.Double(-d, -d, 2*d, 2*d)));
+                    placementMap.put(area, placement);
+                    placementInverseMap.put(placement, area);
+                }
+                
             }
             profileMap.put(new Area(profile), placementsHolderLocation);
         }
@@ -673,12 +718,15 @@ public class PlacementsHolderLocationViewer extends JPanel {
             offScr.setColor(Color.BLACK);
             offScr.fillRect(0, 0, (int) scrollingBounds.width, (int) scrollingBounds.height);
             
-            offScr.translate(PIXEL_GAP, (int) scrollingBounds.height - PIXEL_GAP);
+            offScr.translate(EDGE_GAP, (int) scrollingBounds.height - EDGE_GAP);
             offScr.scale(1, -1);
             
             offScr.setStroke(new BasicStroke(2, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_ROUND));
 
+            //Save the original Paint so it can be restored when needed
             Paint originalPaint = offScr.getPaint();
+            
+            //Create a striped pattern to fill disabled Boards and Panels
             GradientPaint gp1 = new GradientPaint(5, 5, 
                     new Color(255, 0, 0, 128), 8, 8, new Color(0, 0, 0, 128), true);
             
@@ -686,13 +734,37 @@ public class PlacementsHolderLocationViewer extends JPanel {
             for (Area profile : profileMap.keySet() ) {
                 if (profile.intersects(viewableClippingBounds)) {
                     PlacementsHolderLocation<?> phl = profileMap.get(profile);
+                    
+                    if (showPlacements || showFiducials) {
+                        offScr.setStroke(new BasicStroke(2, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_ROUND));
+                        PlacementsHolder<?> ph = phl.getPlacementsHolder();
+                        for (Placement placement : ph.getPlacements()) {
+                            if ((viewFromTop && placement.getSide() == phl.getGlobalSide()) ||
+                                    (!viewFromTop && placement.getSide() != phl.getGlobalSide())) {
+                                if (showPlacements && placement.getType() == Placement.Type.Placement) {
+                                    Area area = placementInverseMap.get(placement);
+                                    offScr.setColor(placement.isEnabled() ? placementEnabledColor : placementDisabledColor);
+                                    Shape placementShape = objectToViewTransform.createTransformedShape(area);
+                                    offScr.draw(placementShape);
+                                }
+                                else if (showFiducials && placement.getType() == Placement.Type.Fiducial) {
+                                    Area area = placementInverseMap.get(placement);
+                                    offScr.setColor(placement.isEnabled() ? fiducialEnabledColor : fiducialDisabledColor);
+                                    Shape placementShape = objectToViewTransform.createTransformedShape(area);
+                                    offScr.fill(placementShape);
+                                }
+                            }
+                        }
+                    }
+                    
+
                     if (phl == arrayRoot) {
                         offScr.setStroke(new BasicStroke(2, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_ROUND,
-                                0, new float[]{(float) (PIXEL_GAP * 0.25)}, 0));
+                                0, new float[]{(float) (EDGE_GAP * 0.75)}, 0));
                     }
                     else if (newArrayMembers != null && newArrayMembers.contains(phl)) {
                         offScr.setStroke(new BasicStroke(2, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_ROUND,
-                                  0, new float[]{(float) (PIXEL_GAP * 0.5)}, 0));
+                                  0, new float[]{(float) (EDGE_GAP * 0.25)}, 0));
                     }
                     else {
                         offScr.setStroke(new BasicStroke(2, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_ROUND));
@@ -737,7 +809,7 @@ public class PlacementsHolderLocationViewer extends JPanel {
     }
     
     private void overlayLocationMarks(Graphics2D offScr) {
-        double d = PIXEL_GAP/(1.0*scaleFactor);
+        double d = EDGE_GAP/(1.0*scaleFactor);
         offScr.setStroke(new BasicStroke(1, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_ROUND));
         for (Area profileArea : profileMap.keySet()) {
             PlacementsHolderLocation<?> placementsHolderLocation = profileMap.get(profileArea);
@@ -780,7 +852,7 @@ public class PlacementsHolderLocationViewer extends JPanel {
         at.translate(location.getX(), location.getY());
         at.rotate(Math.toRadians(location.getRotation()));
         at.scale(phl.getGlobalSide() == Side.Top ? 1 : -1, 1);
-        double d = PIXEL_GAP/(0.75*scaleFactor);
+        double d = EDGE_GAP/(0.75*scaleFactor);
         offScr.setStroke(new BasicStroke(1, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_ROUND));
         offScr.setColor(Color.CYAN);
         Shape line = new Line2D.Double(-d/10, -d/10, -d/10, d);
@@ -803,7 +875,7 @@ public class PlacementsHolderLocationViewer extends JPanel {
     }
     
     private void overlayPlacementMarks(Graphics2D offScr) {
-        double d = PIXEL_GAP/(2.0*scaleFactor);
+        double d = EDGE_GAP/(2.0*scaleFactor);
         offScr.setStroke(new BasicStroke(1, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_ROUND));
         for (Area profileArea : profileMap.keySet()) {
             PlacementsHolderLocation<?> placementsHolderLocation = profileMap.get(profileArea);
@@ -820,6 +892,7 @@ public class PlacementsHolderLocationViewer extends JPanel {
     }
     
     private void overlayFiducialMarks(Graphics2D offScr) {
+        double d = EDGE_GAP/(2.0*scaleFactor);
         for (Area profileArea : profileMap.keySet()) {
             PlacementsHolderLocation<?> placementsHolderLocation = profileMap.get(profileArea);
             for (Placement placement : placementsHolderLocation.getPlacementsHolder().getPlacements()) {
@@ -828,22 +901,12 @@ public class PlacementsHolderLocationViewer extends JPanel {
                         (!viewFromTop && placement.getSide() != placementsHolderLocation.getGlobalSide()))) {
                     Location localLocation = placement.getLocation().multiply(1, 1, 1, viewFromTop ? 1 : -1);
                     Location location = Utils2D.calculateBoardPlacementLocation(placementsHolderLocation, localLocation);
-                    overlayFiducialMark(offScr, 1, location);
+                    overlayLocationMark(offScr, d, location);
                 }
             }
         }
     }
     
-    private void overlayFiducialMark(Graphics2D offScr, double size, Location location) {
-        AffineTransform at = new AffineTransform(objectToViewTransform);
-        at.translate(location.getX(), location.getY());
-        at.rotate(Math.toRadians(location.getRotation()));
-        offScr.setColor(copperColor);
-        Shape fid = new Ellipse2D.Double(-0.5*size, -0.5*size, size, size);
-        offScr.fill(at.createTransformedShape(fid));
-    }
-    
-
     private void overlayReticle(Graphics2D offScr) {
         double unitScaling = 1;
         String displayUnits;
@@ -852,15 +915,15 @@ public class PlacementsHolderLocationViewer extends JPanel {
             case Centimeters:
             case Microns:
             case Meters:
-                displayUnits = "Metric";
+                displayUnits = "Metric"; //$NON-NLS-1$
                 break;
             case Feet:
             case Inches:
             case Mils:
-                displayUnits = "Imperial";
+                displayUnits = "Imperial"; //$NON-NLS-1$
                 break;
             default:
-                displayUnits = "Metric";
+                displayUnits = "Metric"; //$NON-NLS-1$
                 break;
         }
         
@@ -888,36 +951,36 @@ public class PlacementsHolderLocationViewer extends JPanel {
             unitsPerTick = unitsPerDivision / 10;
         }
         
-        if (displayUnits.equals("Metric")) {
+        if (displayUnits.equals("Metric")) { //$NON-NLS-1$
             if (unitsPerDivision > 1) {
-                displayUnit = "mm";
+                displayUnit = "mm"; //$NON-NLS-1$
                 displayMultiplier = 1;
                 displayDecimals = 0;
             }
             else if (unitsPerDivision > 0.1) {
-                displayUnit = "mm";
+                displayUnit = "mm"; //$NON-NLS-1$
                 displayMultiplier = 1;
                 displayDecimals = 1;
             }
             else {
-                displayUnit = "um";
+                displayUnit = "um"; //$NON-NLS-1$
                 displayMultiplier = 1000;
                 displayDecimals = 0;
             }
         }
         else {
             if (unitsPerDivision >= 1) {
-                displayUnit = "in";
+                displayUnit = "in"; //$NON-NLS-1$
                 displayMultiplier = 1;
                 displayDecimals = 0;
             }
             else if (unitsPerDivision >= 0.1) {
-                displayUnit = "in";
+                displayUnit = "in"; //$NON-NLS-1$
                 displayMultiplier = 1;
                 displayDecimals = 1;
             }
             else {
-                displayUnit = "mil";
+                displayUnit = "mil"; //$NON-NLS-1$
                 displayMultiplier = 1000;
                 displayDecimals = 0;
             }
@@ -935,7 +998,7 @@ public class PlacementsHolderLocationViewer extends JPanel {
         AffineTransform at = new AffineTransform(objectToViewTransform);
         at.scale(1/unitScaling, 1/unitScaling);
         
-        if (showReticle ) {
+        if (showReticle) {
             //Major vertical lines
             double x = xMin;
             while (x <= xMax) {
@@ -998,7 +1061,7 @@ public class PlacementsHolderLocationViewer extends JPanel {
         offScr.setColor(drawingPanelRowHeader.getBackground());
         offScr.fillRect(0, 0, VERTICAL_SCALE_WIDTH, (int) scrollingBounds.height);
         
-        offScr.translate(0, (int) scrollingBounds.height - PIXEL_GAP);
+        offScr.translate(0, (int) scrollingBounds.height - EDGE_GAP);
         offScr.scale(1, -1);
 
         offScr.setColor(foreGround);
@@ -1015,7 +1078,7 @@ public class PlacementsHolderLocationViewer extends JPanel {
             
             offScr.drawLine(VERTICAL_SCALE_WIDTH-SCALE_TICK_LENGTH, (int) tick.getY(), VERTICAL_SCALE_WIDTH, (int) tick.getY());
 
-            String text = String.format("%." + displayDecimals + "f", y*displayMultiplier);
+            String text = String.format("%." + displayDecimals + "f", y*displayMultiplier); //$NON-NLS-1$ //$NON-NLS-2$
             TextLayout textTl = new TextLayout(text, f, frc);
         
             AffineTransform transform = new AffineTransform();
@@ -1042,7 +1105,7 @@ public class PlacementsHolderLocationViewer extends JPanel {
         offScr.setColor(drawingPanelColumnHeader.getBackground());
         offScr.fillRect(0, 0, (int) scrollingBounds.width, HORIZONTAL_SCALE_HEIGHT);
         
-        offScr.translate(PIXEL_GAP, 0);
+        offScr.translate(EDGE_GAP, 0);
         offScr.scale(1, 1);
         
         offScr.setColor(foreGround);
@@ -1059,7 +1122,7 @@ public class PlacementsHolderLocationViewer extends JPanel {
             
             offScr.drawLine((int) tick.getX(), HORIZONTAL_SCALE_HEIGHT, (int) tick.getX(), HORIZONTAL_SCALE_HEIGHT-SCALE_TICK_LENGTH);
             
-            String text = String.format("%." + displayDecimals + "f", x*displayMultiplier);
+            String text = String.format("%." + displayDecimals + "f", x*displayMultiplier); //$NON-NLS-1$ //$NON-NLS-2$
             TextLayout textTl = new TextLayout(text, f, frc);
             AffineTransform transform = new AffineTransform();
             transform.translate(tick.getX()-textTl.getBounds().getWidth()/2, HORIZONTAL_SCALE_HEIGHT - 2 - textTl.getBounds().getHeight());
@@ -1075,80 +1138,147 @@ public class PlacementsHolderLocationViewer extends JPanel {
     public void cancel() {
     }
     
-    public class LabeledPopupMenu extends JPopupMenu {
-        private String originalLabelText = null;
-        private final JLabel label;
-
-        public LabeledPopupMenu() {
-            super();
-            this.label = null;
-        }
-
-        public LabeledPopupMenu(String label) {
-            super();
-            originalLabelText = label;
-            this.label = new JLabel("<html><b>" +
-                label + "</b></html>");
-            this.label.setHorizontalAlignment(SwingConstants.CENTER);
-            add(this.label);
-            addSeparator();
-        }
-
-        @Override 
-        public void setLabel(String text) {
-            if (null == label) return;
-            originalLabelText = text;
-            label.setText("<html><b>" +
-                text +
-                "</b></html>");
-        }
-
-        @Override 
-        public String getLabel() {
-            return originalLabelText;
-        }
-    }
-    
     private void displayPopupMenu(MouseEvent e) {
         Point point = e.getPoint();
         Point2D imagePoint = screenToObjectTransform.transform(point, null);
+        
+        //Find the deepest nested PlacementsHolder that contains the clicked-on point
         PlacementsHolderLocation<?> potentialPlacementsHolderLocation = null;
-        String uniqueId = "";
+        String uniqueId = ""; //$NON-NLS-1$
         for (Area a : profileMap.keySet()) {
             if (a.contains(imagePoint)) {
                 String potentialId = profileMap.get(a).getUniqueId();
-                if (potentialId != null && potentialId.length() > uniqueId.length()) {
+                if (potentialId == null) {
+                    potentialId = ""; //$NON-NLS-1$
+                }
+                if (potentialId.length() >= uniqueId.length()) {
                     uniqueId = potentialId;
                     potentialPlacementsHolderLocation = profileMap.get(a);
                 }
             }
         }
-        if (potentialPlacementsHolderLocation != null) {
-            final PlacementsHolderLocation<?> phl = potentialPlacementsHolderLocation;
-            JPopupMenu popUp = new LabeledPopupMenu(
-                   "<pre>Id:   " + uniqueId + 
-                   "<br>Name: " + phl.getPlacementsHolder().getName() + 
-                   "<br>Side: " + phl.getGlobalSide() + "</pre>");
-            JCheckBoxMenuItem cbmi = new JCheckBoxMenuItem("Enabled?");
-            cbmi.setSelected(phl.isLocallyEnabled());
-            cbmi.addActionListener(new ActionListener() {
-
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    phl.setLocallyEnabled(cbmi.isSelected());
-                    try {
-                        refreshTableModel.accept(phl, "Enabled?");
-                    }
-                    catch (Exception e1) {
-                        // TODO Auto-generated catch block
-                        e1.printStackTrace();
+        final PlacementsHolderLocation<?> phl = potentialPlacementsHolderLocation;
+        
+        //Check to see if a Placement contains the clicked-on point
+        Placement placement = null;
+        Side visibleSide;
+        if (showPlacements || showFiducials) {
+            Collection<Placement> placements;
+            if (phl != null) {
+                placements = phl.getPlacementsHolder().getPlacements();
+                visibleSide = phl.getGlobalSide().flip(!viewFromTop);
+            }
+            else {
+                placements = placementInverseMap.keySet();
+                visibleSide = Side.Top.flip(!viewFromTop);
+            }
+            for (Placement plmt : placements) {
+                if (plmt.getSide() == visibleSide  && 
+                        ((showPlacements && (plmt.getType() == Placement.Type.Placement)) ||
+                                (showFiducials && (plmt.getType() == Placement.Type.Fiducial)))) {
+                    if (placementInverseMap.get(plmt).contains(imagePoint)) {
+                        placement = plmt;
+                        break;
                     }
                 }
-                
-            });
-            popUp.add(cbmi);
-            popUp.show(drawingPanel, point.x, point.y);
+            }
         }
+        
+        boolean enablable = isJob || ((uniqueId.equals("") && placement != null)) || //$NON-NLS-1$
+                (phl != null && placementsHolder instanceof Panel &&
+                ((Panel) placementsHolder).getChildren().contains(phl));
+        
+        if (placement != null) {
+            displayPlacementPopupMenu(point, phl, uniqueId, placement, enablable);
+        }
+        else if (phl != null) {
+            displayPlacementsHolderLocationPopupMenu(point, phl, uniqueId, enablable);
+        }
+    }
+
+    private void displayPlacementPopupMenu(Point point, PlacementsHolderLocation<?> phl, String uniqueId, Placement placement, boolean enablable) {
+        final Placement plmt = placement;
+        String popupLabel = "<pre>" + //$NON-NLS-1$
+                "<b>" + //$NON-NLS-1$
+                (plmt.getType() == Placement.Type.Placement ?
+                        Translations.getString("PlacementsHolderLocationViewer.Placement.Type.Placement") : //$NON-NLS-1$
+                            Translations.getString("PlacementsHolderLocationViewer.Placement.Type.Fiducial")) + //$NON-NLS-1$
+                "</b><br>" + //$NON-NLS-1$
+               Translations.getString("PlacementsHolderLocationViewer.PopupMenu.Label.Id") + //$NON-NLS-1$
+                (uniqueId.contentEquals("") ? "" :  //$NON-NLS-1$ //$NON-NLS-2$
+                    uniqueId + PlacementsHolderLocation.ID_DELIMITTER) + //$NON-NLS-1$ //$NON-NLS-2$
+                plmt.getId() +
+                "<br>" + //$NON-NLS-1$
+                Translations.getString("PlacementsHolderLocationViewer.PopupMenu.Label.Part") + //$NON-NLS-1$
+                plmt.getPart().getId() + //$NON-NLS-1$
+                "<br>" + //$NON-NLS-1$
+                Translations.getString("PlacementsHolderLocationViewer.PopupMenu.Label.Side") + //$NON-NLS-1$
+                plmt.getSide() +
+                "</pre>"; //$NON-NLS-1$
+        LabeledPopupMenu popUp = new LabeledPopupMenu(popupLabel);
+        JCheckBoxMenuItem cbmi = new JCheckBoxMenuItem(
+                Translations.getString("PlacementsHolderLocationViewer.PopupMenu.Enabled")); //$NON-NLS-1$
+        cbmi.setSelected(plmt.isEnabled());
+        cbmi.addActionListener(new ActionListener() {
+    
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                plmt.setEnabled(cbmi.isSelected());
+                try {
+                    refreshTableModel.accept(phl, "Enabled?"); //$NON-NLS-1$
+                }
+                catch (Exception e1) {
+                    // TODO Auto-generated catch block
+                    e1.printStackTrace();
+                }
+            }
+            
+        });
+        cbmi.setEnabled(enablable);
+        popUp.add(cbmi);
+        popUp.show(drawingPanel, point.x, point.y);
+    }
+
+    private void displayPlacementsHolderLocationPopupMenu(Point point, PlacementsHolderLocation<?>phl, String uniqueId, boolean enablable) {
+        String popupLabel = "<pre>" + //$NON-NLS-1$
+                "<b>" + //$NON-NLS-1$
+                (phl instanceof BoardLocation ? 
+                        Translations.getString("PlacementsHolderLocationViewer.PopupMenu.Label.Board") : //$NON-NLS-1$
+                            Translations.getString("PlacementsHolderLocationViewer.PopupMenu.Label.Panel")) + //$NON-NLS-1$
+                "</b>" + //$NON-NLS-1$
+                (uniqueId.equals("") ? "" : //$NON-NLS-1$ //$NON-NLS-2$
+                    "<br>" + //$NON-NLS-1$
+                    Translations.getString("PlacementsHolderLocationViewer.PopupMenu.Label.Id") + //$NON-NLS-1$
+                    uniqueId) +
+                "<br>" + //$NON-NLS-1$
+                Translations.getString("PlacementsHolderLocationViewer.PopupMenu.Label.Name") + //$NON-NLS-1$
+                phl.getPlacementsHolder().getName() +
+                "<br>" + //$NON-NLS-1$
+                Translations.getString("PlacementsHolderLocationViewer.PopupMenu.Label.Side") + //$NON-NLS-1$
+                phl.getGlobalSide().flip(!viewFromTop) +
+                "</pre>"; //$NON-NLS-1$
+        LabeledPopupMenu popUp = new LabeledPopupMenu(popupLabel);
+        JCheckBoxMenuItem cbmi = new JCheckBoxMenuItem(
+                Translations.getString("PlacementsHolderLocationViewer.PopupMenu.Enabled")); //$NON-NLS-1$
+        cbmi.setSelected(phl.isLocallyEnabled());
+        cbmi.addActionListener(new ActionListener() {
+    
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                phl.setLocallyEnabled(cbmi.isSelected());
+                try {
+                    refreshTableModel.accept(phl, "Enabled?"); //$NON-NLS-1$
+                }
+                catch (Exception e1) {
+                    // TODO Auto-generated catch block
+                    e1.printStackTrace();
+                }
+            }
+            
+        });
+        cbmi.setEnabled(enablable);
+        popUp.add(cbmi);
+        popUp.show(drawingPanel, point.x, point.y);
     }
 
     public boolean isViewFromTop() {
@@ -1158,10 +1288,12 @@ public class PlacementsHolderLocationViewer extends JPanel {
     public void setViewFromTop(boolean viewFromTop) {
         this.viewFromTop = viewFromTop;
         if (viewFromTop) {
-            btnViewingSide.setText("Viewing From Top");
+            btnViewingSide.setText(
+                    Translations.getString("PlacementsHolderLocationViewer.ViewingSide.Top")); //$NON-NLS-1$
         }
         else {
-            btnViewingSide.setText("Viewing From Bottom");
+            btnViewingSide.setText(
+                    Translations.getString("PlacementsHolderLocationViewer.ViewingSide.Bottom")); //$NON-NLS-1$
         }
         regenerate();
         drawingPanel.repaint();
@@ -1229,10 +1361,12 @@ public class PlacementsHolderLocationViewer extends JPanel {
     public void setShowChildrenOnly(boolean showChildrenOnly) {
         this.showChildrenOnly = showChildrenOnly;
         if (showChildrenOnly) {
-            btnShowChildrenOnly.setText("Viewing Children Only");
+            btnShowChildrenOnly.setText(
+                    Translations.getString("PlacementsHolderLocationViewer.ViewingOption.ChildrenOnly")); //$NON-NLS-1$
         }
         else {
-            btnShowChildrenOnly.setText("Viewing All Descendants");
+            btnShowChildrenOnly.setText(
+                    Translations.getString("PlacementsHolderLocationViewer.ViewingOption.AllDescendants")); //$NON-NLS-1$
         }
         regenerate();
         drawingPanel.repaint();

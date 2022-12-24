@@ -21,10 +21,10 @@ package org.openpnp.gui.tablemodel;
 
 import java.util.List;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.support.LengthCellValue;
 import org.openpnp.gui.support.PartCellValue;
 import org.openpnp.gui.support.RotationCellValue;
-import org.openpnp.gui.tablemodel.PlacementsTableModel.Status;
 import org.openpnp.model.Abstract2DLocatable.Side;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
@@ -44,8 +44,15 @@ public class PlacementsHolderPlacementsTableModel extends AbstractObjectTableMod
     private PlacementsHolder<?> placementsHolder = null;
 
     private String[] columnNames =
-            new String[] {"Enabled", "ID", "Part", "Side", "X", "Y", "Rot.", "Type", 
-                    "Error Handling", "Comments"};
+            new String[] {Translations.getString("PlacementsHolderPlacementsTableModel.ColumnName.Enabled"), //$NON-NLS-1$
+                    Translations.getString("PlacementsHolderPlacementsTableModel.ColumnName.Id"), //$NON-NLS-1$
+                    Translations.getString("PlacementsHolderPlacementsTableModel.ColumnName.Part"), //$NON-NLS-1$
+                    Translations.getString("PlacementsHolderPlacementsTableModel.ColumnName.Side"), //$NON-NLS-1$
+                    "X", "Y", //$NON-NLS-1$ //$NON-NLS-2$
+                    Translations.getString("PlacementsHolderPlacementsTableModel.ColumnName.Rot"), //$NON-NLS-1$
+                    Translations.getString("PlacementsHolderPlacementsTableModel.ColumnName.Type"), //$NON-NLS-1$
+                    Translations.getString("PlacementsHolderPlacementsTableModel.ColumnName.ErrorHandling"), //$NON-NLS-1$
+                    Translations.getString("PlacementsHolderPlacementsTableModel.ColumnName.Comments")}; //$NON-NLS-1$
 
     @SuppressWarnings("rawtypes")
     private Class[] columnTypes = new Class[] {Boolean.class, PartCellValue.class, Part.class, 
@@ -257,12 +264,4 @@ public class PlacementsHolderPlacementsTableModel extends AbstractObjectTableMod
     public int[] getColumnWidthTypes() {
         return columnWidthTypes;
     }
-    
-//    @Override
-//    public void fireTableDataChanged() {
-//        if (placementsHolder != null) {
-//            placements = placementsHolder.getPlacements();
-//        }
-//        super.fireTableDataChanged();
-//    }
 }

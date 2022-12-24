@@ -46,6 +46,7 @@ import javax.swing.UIManager;
 import javax.swing.border.BevelBorder;
 import javax.swing.table.TableColumnModel;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.MultisortTableHeaderCellRenderer;
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.support.Helpers;
@@ -90,7 +91,8 @@ public class ChildFiducialSelectorDialog extends JDialog {
         allPseudoPlacements = new ArrayList<>();
         generateAllPseudoPlacementsList(panelLocation);
 
-        this.setTitle(panelLocation.getPanel().getName() + " - Select Child Fiducial(s)/Placement(s) For Panel Alignment");
+        this.setTitle(panelLocation.getPanel().getName() + 
+                Translations.getString("ChildFiducialSelectorDialog.Frame.Title")); //$NON-NLS-1$
         setModalityType(ModalityType.APPLICATION_MODAL);
         setBounds(100, 100, 800, 600);
         getContentPane().setLayout(new BorderLayout());
@@ -107,15 +109,10 @@ public class ChildFiducialSelectorDialog extends JDialog {
                 JTextArea txtrSelectOneOr = new JTextArea();
                 txtrSelectOneOr.setWrapStyleWord(true);
                 txtrSelectOneOr.setLineWrap(true);
-                txtrSelectOneOr.setBackground(UIManager.getColor("Label.background"));
-                txtrSelectOneOr.setFont(UIManager.getFont("Label.font"));
+                txtrSelectOneOr.setBackground(UIManager.getColor("Label.background")); //$NON-NLS-1$
+                txtrSelectOneOr.setFont(UIManager.getFont("Label.font")); //$NON-NLS-1$
                 txtrSelectOneOr.setText(
-                        "Select one or more child fiducials and/or placements from the list below "
-                        + "to use for panel alignment. Hold down the Control or Shift keys to "
-                        + "select multiple items. Click on the Auto Select button to automatically "
-                        + "select a good set. If one of the of the automatically chosen items is "
-                        + "undesirable such as being too large, disable it and re-click on the "
-                        + "Auto Select button.");
+                        Translations.getString("ChildFiducialSelectorDialog.TextArea.Instructions")); //$NON-NLS-1$
                 txtrSelectOneOr.setEditable(false);
                 instructionPanel.add(txtrSelectOneOr, BorderLayout.NORTH);
             }
@@ -123,15 +120,16 @@ public class ChildFiducialSelectorDialog extends JDialog {
             radioPanel.setLayout(new FlowLayout());
             instructionPanel.add(radioPanel, BorderLayout.SOUTH);
             {
-                JLabel lblNewLabel = new JLabel("Show ");
+                JLabel lblNewLabel = new JLabel(
+                        Translations.getString("ChildFiducialSelectorDialog.Label.Show")); //$NON-NLS-1$
                 radioPanel.add(lblNewLabel);
             }
             {
-                JCheckBox chckbxHullOnly = new JCheckBox("Hull Only");
+                JCheckBox chckbxHullOnly = new JCheckBox(
+                        Translations.getString("ChildFiducialSelectorDialog.CheckBox.HullOnly")); //$NON-NLS-1$
                 chckbxHullOnly.setSelected(true);
-                chckbxHullOnly.setToolTipText("Show only those fiducials/placements that are on "
-                        + "the outermost periphery of the panel (which are generally the best "
-                        + "ones to use for alignment purposes).");
+                chckbxHullOnly.setToolTipText(
+                        Translations.getString("ChildFiducialSelectorDialog.CheckBox.HullOnly.ToolTip")); //$NON-NLS-1$
                 chckbxHullOnly.addActionListener(new ActionListener() {
 
                     @Override
@@ -143,10 +141,11 @@ public class ChildFiducialSelectorDialog extends JDialog {
                 radioPanel.add(chckbxHullOnly);
             }
             {
-                fiducialsButton = new JRadioButton("Fiducials");
+                fiducialsButton = new JRadioButton(
+                        Translations.getString("ChildFiducialSelectorDialog.RadioButton.Fiducials")); //$NON-NLS-1$
                 fiducialsButton.setSelected(true);
-                fiducialsButton.setToolTipText("Use this selection if the plan is to use fiducials"
-                        + " to automatically align the panel.");
+                fiducialsButton.setToolTipText(
+                        Translations.getString("ChildFiducialSelectorDialog.RadioButton.Fiducials.ToolTip")); //$NON-NLS-1$
                 fiducialsButton.addActionListener(new ActionListener() {
 
                     @Override
@@ -158,9 +157,10 @@ public class ChildFiducialSelectorDialog extends JDialog {
                 radioPanel.add(fiducialsButton);
             }
             {
-                placementsButton = new JRadioButton("Placements");
-                placementsButton.setToolTipText("Use this selection if the plan is to manually "
-                        + "align the panel with multiple placements.");
+                placementsButton = new JRadioButton(
+                        Translations.getString("ChildFiducialSelectorDialog.RadioButton.Placements")); //$NON-NLS-1$
+                placementsButton.setToolTipText(
+                        Translations.getString("ChildFiducialSelectorDialog.RadioButton.Placements.ToolTip")); //$NON-NLS-1$
                 placementsButton.addActionListener(new ActionListener() {
 
                     @Override
@@ -172,7 +172,8 @@ public class ChildFiducialSelectorDialog extends JDialog {
                 radioPanel.add(placementsButton);
             }
             {
-                bothButton = new JRadioButton("Both");
+                bothButton = new JRadioButton(
+                        Translations.getString("ChildFiducialSelectorDialog.RadioButton.Both")); //$NON-NLS-1$
                 bothButton.addActionListener(new ActionListener() {
 
                     @Override
@@ -194,9 +195,10 @@ public class ChildFiducialSelectorDialog extends JDialog {
                 radioPanel.add(horizontalStrut);
             }
             {
-                JButton btnSelectGood = new JButton("Auto Select");
-                btnSelectGood.setToolTipText("Selects a good set of items to use for panel "
-                        + "alignment.");
+                JButton btnSelectGood = new JButton(
+                        Translations.getString("ChildFiducialSelectorDialog.Button.AutoSelect")); //$NON-NLS-1$
+                btnSelectGood.setToolTipText(
+                        Translations.getString("ChildFiducialSelectorDialog.Button.AutoSelect.ToolTip")); //$NON-NLS-1$
                 btnSelectGood.addActionListener(new ActionListener() {
 
                     @Override
@@ -239,24 +241,28 @@ public class ChildFiducialSelectorDialog extends JDialog {
                 panel.add(buttonPane, BorderLayout.SOUTH);
                 buttonPane.setLayout(new FlowLayout(FlowLayout.RIGHT));
                 {
-                    JButton okButton = new JButton("OK");
+                    JButton okButton = new JButton(
+                            Translations.getString("ChildFiducialSelectorDialog.Button.Ok")); //$NON-NLS-1$
                     okButton.addActionListener(new ActionListener() {
                         @Override
                         public void actionPerformed(ActionEvent e) {
                             addSelectedItemsToPanel();
                         }});
-                    okButton.setActionCommand("OK");
+                    okButton.setActionCommand(
+                            Translations.getString("ChildFiducialSelectorDialog.Button.Ok")); //$NON-NLS-1$
                     buttonPane.add(okButton);
                     getRootPane().setDefaultButton(okButton);
                 }
                 {
-                    JButton cancelButton = new JButton("Cancel");
+                    JButton cancelButton = new JButton(
+                            Translations.getString("ChildFiducialSelectorDialog.Button.Cancel")); //$NON-NLS-1$
                     cancelButton.addActionListener(new ActionListener() {
                         @Override
                         public void actionPerformed(ActionEvent e) {
                             close();
                         }});
-                    cancelButton.setActionCommand("Cancel");
+                    cancelButton.setActionCommand(
+                            Translations.getString("ChildFiducialSelectorDialog.Button.Cancel")); //$NON-NLS-1$
                     buttonPane.add(cancelButton);
                 }
             }
@@ -279,7 +285,8 @@ public class ChildFiducialSelectorDialog extends JDialog {
 
     public void addSelectedItemsToPanel() {
         for (Placement fiducial : getSelections()) {
-            panelLocation.getPanel().getDefinition().addPseudoPlacement(panelLocation.getPanel().getDefinition().createPseudoPlacement(fiducial.getId()));
+            panelLocation.getPanel().getDefinition().addPseudoPlacement(
+                    panelLocation.getPanel().getDefinition().createPseudoPlacement(fiducial.getId()));
         }
         close();
     }
@@ -302,7 +309,8 @@ public class ChildFiducialSelectorDialog extends JDialog {
         for (PlacementsHolderLocation<?> child : panelLocation.getChildren()) {
             String uniqueId = child.getUniqueId();
             for (Placement placement : child.getPlacementsHolder().getPlacements()) {
-                String id = (uniqueId != null ? uniqueId + PlacementsHolderLocation.ID_DELIMITTER : "") + placement.getId();
+                String id = (uniqueId != null ? uniqueId + PlacementsHolderLocation.ID_DELIMITTER : "") //$NON-NLS-1$
+                        + placement.getId();
                 
                 Placement pseudoPlacement = new Placement(placement);
                 pseudoPlacement.removePropertyChangeListener(pseudoPlacement);
@@ -313,7 +321,8 @@ public class ChildFiducialSelectorDialog extends JDialog {
                 pseudoPlacement.setId(id);
                 pseudoPlacement.setSide(placement.getSide().
                         flip(child.getGlobalSide() == Side.Bottom));
-                pseudoPlacement.setComments("Pseudo-placement for panel alignment only");
+                pseudoPlacement.setComments(
+                        Translations.getString("ChildFiducialSelectorDialog.PseudoPlacement.Comment")); //$NON-NLS-1$
                 pseudoPlacement.addPropertyChangeListener(pseudoPlacement);
                 allPseudoPlacements.add(pseudoPlacement);
             }

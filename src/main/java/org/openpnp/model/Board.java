@@ -42,7 +42,8 @@ public class Board extends PlacementsHolder<Board> implements PropertyChangeList
     private double version;    
 
     /**
-     * @deprecated Use PlacementsHolder.placements instead
+     * @deprecated Fiducials are now held in the placements List inherited from 
+     * {@link PlacementsHolder}
      */
     @Deprecated
     @ElementList(required = false)

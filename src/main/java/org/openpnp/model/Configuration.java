@@ -38,6 +38,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.prefs.Preferences;
 
@@ -49,6 +50,7 @@ import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.ThemeInfo;
 import org.openpnp.gui.components.ThemeSettingsPanel;
 import org.openpnp.gui.support.MessageBoxes;
+import org.openpnp.model.Abstract2DLocatable.Side;
 import org.openpnp.scripting.Scripting;
 import org.openpnp.spi.Machine;
 import org.openpnp.util.NanosecondTime;
@@ -688,7 +690,6 @@ public class Configuration extends AbstractModelObject {
     public void addPanel(Panel panel) {
         LinkedHashMap<File, Panel> oldValue = new LinkedHashMap<>(panels);
         panels.put(panel.getFile(), panel);
-        Logger.trace("panels = " + panels);
         firePropertyChange("panels", oldValue, panels);
     }
     
@@ -703,7 +704,6 @@ public class Configuration extends AbstractModelObject {
             return;
         }
         Panel panel = loadPanel(file);
-        Logger.trace(String.format("Loaded new Panel @%08x, defined by @%08x", panel.hashCode(), panel.getDefinition().hashCode()));
         LinkedHashMap<File, Panel> oldValue = new LinkedHashMap<>(panels);
         panels.put(file, panel);
         firePropertyChange("panels", oldValue, panels);
@@ -734,8 +734,6 @@ public class Configuration extends AbstractModelObject {
     public Panel getPanel(File file) throws Exception {
         if (!file.exists()) {
             Panel panel = new Panel(file);
-            Logger.trace(String.format("Created new Panel @%08x, defined by @%08x", 
-                    panel.hashCode(), panel.getDefinition().hashCode()));
             panel.setName(file.getName());
             Serializer serializer = createSerializer();
             serializer.write(panel, file);
@@ -745,8 +743,6 @@ public class Configuration extends AbstractModelObject {
             return panels.get(file);
         }
         Panel panel = loadPanel(file);
-        Logger.trace(String.format("Loaded new Panel @%08x, defined by @%08x", 
-                panel.hashCode(), panel.getDefinition().hashCode()));
         LinkedHashMap<File, Panel> oldValue = new LinkedHashMap<>(panels);
         panels.put(file, panel);
         firePropertyChange("panels", oldValue, panels);
@@ -1000,11 +996,12 @@ public class Configuration extends AbstractModelObject {
         Serializer serializer = createSerializer();
         Job job = serializer.read(Job.class, file);
         job.setFile(file);
+        convertLegacyJob(job);
         
         resolvePanel(job, job.getRootPanelLocation());
         restoreJobEnabledAndErrorHandlingSettings(job, job.getRootPanelLocation());
         
-        Logger.trace("Now a dump of the jobRootPanelLocation");
+        Logger.trace("Dump of the jobRootPanelLocation");
         job.getRootPanelLocation().dump("");
         
         job.setDirty(job.getVersion() == null);
@@ -1012,6 +1009,166 @@ public class Configuration extends AbstractModelObject {
         return job;
     }
 
+    /**
+     * Converts jobs with deprecated lists of panels and/or boards to the newer format. If a legacy
+     * panel is found, it is converted to a stand-alone panel and then is added to the job's new 
+     * root panel. If a legacy panel is not found, any boards found in the job's deprecated list of
+     * boards are moved to the job's new root panel. Note, it would be tempting to do all this in 
+     * the job's Commit method but that doesn't work because at the time it runs, the job's filename
+     * has not yet been set.
+     * @param job - the job to convert
+     * @throws Exception 
+     */
+    private static void convertLegacyJob(Job job) throws Exception {
+        if (job.panels != null && !job.panels.isEmpty()) {
+            Logger.info("The job file contains a legacy panel definition, it will be converted to the new format.");
+            backupLegacyJob(job);
+            //Convert deprecated list of Panels to list of PanelLocations - note that the legacy 
+            //panelization only ever allowed one panel so we only need to handle that case here.
+            
+            //We need to create a new panel, populate it with the boards in the job, add the new 
+            //panel to the configuration, and then add a panelLocation to the job's rootPanel that 
+            //references it.
+            
+            //First we need the root board location for the panel, this is the one that originally 
+            //set the origin of the legacy panel
+            BoardLocation rootBoardLocation = job.boardLocations.get(0);
+            
+            //We need to resolve the board so we can get its dimensions
+            Configuration configuration = Configuration.get();
+            try {
+                configuration.resolveBoard(job, rootBoardLocation);
+            }
+            catch (Exception e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+            
+            //Now create a file for the new panel, we'll just use the job's file name except 
+            //change it to end with ".panel.xml"
+            String jobFileName = job.getFile().getCanonicalPath();
+            String panelFileName = jobFileName.substring(0, jobFileName.indexOf(".job.xml")) + ".panel.xml";
+            Logger.info("A new file is being created to hold the panel definition: " + panelFileName);
+            File panelFile = new File(panelFileName);
+            
+            Panel panel = job.panels.get(0);
+            panel.setFile(panelFile);
+            panel.setName(panelFile.getName());
+            panel.setDefinition(panel);
+            panel.setDimensions(Location.origin);
+            
+            Location rootDims = rootBoardLocation.getBoard().getDimensions().
+                    convertToUnits(configuration.getSystemUnits());
+            
+            //We don't know the actual dimensions of the panel so we'll just set it to the bounding
+            //box of the array of boards
+            panel.setDimensions(Location.origin.deriveLengths(
+                    rootDims.getLengthX().add(panel.xGap).multiply(panel.columns).subtract(panel.xGap),
+                    rootDims.getLengthY().add(panel.yGap).multiply(panel.rows).subtract(panel.yGap),
+                    null, null));
+
+            //The panel fiducials for the bottom side need to moved to the bottom side and have
+            //their coordinates adjusted
+            if (rootBoardLocation.getGlobalSide() == Side.Bottom) {
+                for (Placement fiducial : panel.getPlacements()) {
+                    Location loc = fiducial.getLocation();
+                    loc = loc.deriveLengths(panel.getDimensions().getLengthX().subtract(loc.getLengthX()), null, null, null);
+                    fiducial.setLocation(loc);
+                    fiducial.setSide(Side.Bottom);
+                }
+            }
+            
+            double pcbStepX = rootDims.getLengthX().add(panel.xGap).getValue();
+            double pcbStepY = rootDims.getLengthY().add(panel.yGap).getValue();
+            
+            for (int j = 0; j < panel.rows; j++) {
+                for (int i = 0; i < panel.columns; i++) {
+                    // deep copy the existing rootPcb
+                    BoardLocation newPcb = new BoardLocation(rootBoardLocation);
+                    newPcb.setParent(null);
+                    newPcb.setDefinition(newPcb);
+                    newPcb.setGlobalSide(Side.Top);
+                    newPcb.getPlaced().clear();
+                    
+                    // Offset the sub PCB
+                    newPcb.setLocation(new Location(configuration.getSystemUnits(),
+                                    pcbStepX * i,
+                                    pcbStepY * j, 0, 0));
+                    
+                    panel.addChild(newPcb);
+                    
+                    String brdId = String.format("%s[%d,%d]", BoardLocation.ID_PREFIX, j+1, i+1);
+                    newPcb.setId(brdId);
+                    
+                    int boardNum = j*panel.columns + (rootBoardLocation.getGlobalSide() == Side.Top ? i : panel.columns - 1 - i);
+                    BoardLocation subBoard = job.boardLocations.get(boardNum);
+                    
+                    newPcb.setLocallyEnabled(subBoard.isLocallyEnabled());
+                    
+                    String keyRoot = PanelLocation.ID_PREFIX + "1" + 
+                            PlacementsHolderLocation.ID_DELIMITTER + newPcb.getUniqueId() + 
+                            PlacementsHolderLocation.ID_DELIMITTER;
+                    Map<String, Boolean> subBoardPlaced = subBoard.getPlaced();
+                    for (String key : subBoardPlaced.keySet()) {
+                        job.placedStatusMap.put(keyRoot + key, subBoardPlaced.get(key));
+                    }
+                }
+            }
+            boolean savedCheckFids = panel.isCheckFiducials();
+            
+            configuration.savePanel(panel);
+            configuration.addPanel(panel);
+            
+            PanelLocation panelLocation = new PanelLocation();
+            panelLocation.setFileName(panelFileName);
+            panelLocation.setGlobalLocation(rootBoardLocation.getGlobalLocation());
+            panelLocation.setGlobalSide(rootBoardLocation.getGlobalSide());
+            panelLocation.setCheckFiducials(savedCheckFids);
+            job.rootPanel.addChild(panelLocation);
+            Logger.info("The job file has been updated to use the new panel file.")
+            ;
+            job.dirty = true;
+            job.panels = null;
+            job.boardLocations = null;
+        }
+        else if (job.boardLocations != null){
+            Logger.info("A legacy job file has been detected, it is being updated to the new format.");
+            backupLegacyJob(job);
+            //Add board locations to the root panel
+            for (BoardLocation boardLocation : job.boardLocations) {
+                job.rootPanel.addChild(boardLocation);
+                
+                //Move the deprecated placement status from the boardLocation to the job
+                Map<String, Boolean> temp = boardLocation.getPlaced();
+                if (temp != null) {
+                    for (String placementId : temp.keySet()) {
+                        job.storePlacedStatus(boardLocation, placementId, temp.get(placementId));
+                    }
+                }
+            }
+            job.dirty = true;
+            job.panels = null;
+            job.boardLocations = null;
+        }
+        
+        job.rootPanelLocation.setPlacementsHolder(job.rootPanel);
+    }
+    
+    /**
+     * Creates a backup copy of the existing job.xml file with a .legacy.job.xml extension
+     * @param job - the job to backup
+     * @throws Exception
+     */
+    private static void backupLegacyJob(Job job) throws Exception {
+        File file = job.getFile();
+        String fileName = file.getName();
+        String backupFileName = fileName.substring(0, fileName.indexOf(".job.xml")) + ".legacy.job.xml";
+        File backupFile = new File(file.getParentFile(), backupFileName);
+        Files.copy(Paths.get(file.toURI()), Paths.get(backupFile.toURI()), 
+                StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.COPY_ATTRIBUTES);
+        Logger.info("A backup of the legacy job file has been copied here: " + backupFile.getCanonicalPath());
+    }
+    
     /**
      * Attempts to find the Board definition associated with the given BoardLocation, create a copy
      * of it, and then assign the copy to the given BoardLocation
@@ -1059,7 +1216,7 @@ public class Configuration extends AbstractModelObject {
         if (job != null && panelLocation == job.getRootPanelLocation()) {
             panel.setFile(job.getFile());
         }
-        else /*if (panel == null)*/ {
+        else {
             String panelFileName = panelLocation.getFileName();
             File panelFile = new File(panelFileName);
             if (!panelFile.exists() && panelLocation.getParent() != null) {
@@ -1076,7 +1233,6 @@ public class Configuration extends AbstractModelObject {
             }
             //Create a deep copy of the Panel definition and assign it to the PanelLocation
             panel = new Panel(getPanel(panelFile));
-            Logger.trace(String.format("Created new Panel @%08x, defined by @%08x", panel.hashCode(), panel.getDefinition().hashCode()));
             panelLocation.setPanel(panel);
         }
 
@@ -1133,26 +1289,26 @@ public class Configuration extends AbstractModelObject {
         if (panelLocation == job.getRootPanelLocation()) {
             //Clear everything when starting from the root panel so that we don't end up with a mix
             //of old and new settings
-            job.removeAllEnabled();
-            job.removeAllErrorHandling();
+            job.removeAllEnabledState();
+            job.removeAllErrorHandlingState();
         }
         if (panelLocation != null) {
             Panel panel = panelLocation.getPanel();
             if (panel != null) {
                 for (PlacementsHolderLocation<?> child : panel.getChildren()) {
                     if (child.isLocallyEnabled() != child.getDefinition().isLocallyEnabled()) {
-                        job.setEnabled(child, null, child.isLocallyEnabled());
+                        job.storeEnabledState(child, null, child.isLocallyEnabled());
                     }
                     if (child.isCheckFiducials() != child.getDefinition().isCheckFiducials()) {
-                        job.setCheckFiducials(child, child.isCheckFiducials());
+                        job.storeCheckFiducialsState(child, child.isCheckFiducials());
                     }
                     if (child instanceof BoardLocation || child instanceof PanelLocation) {
                         for (Placement placement : child.getPlacementsHolder().getPlacements()) {
                             if (placement.isEnabled() != ((Placement) placement.getDefinition()).isEnabled()) {
-                                job.setEnabled(child, placement, placement.isEnabled());
+                                job.storeEnabledState(child, placement, placement.isEnabled());
                             }
                             if (placement.getErrorHandling() != ((Placement) placement.getDefinition()).getErrorHandling()) {
-                                job.setErrorHandling(child, placement, placement.getErrorHandling());
+                                job.storeErrorHandlingState(child, placement, placement.getErrorHandling());
                             }
                         }
                         if (child instanceof PanelLocation) {
@@ -1178,13 +1334,13 @@ public class Configuration extends AbstractModelObject {
             Panel panel = panelLocation.getPanel();
             if (panel != null) {
                 for (PlacementsHolderLocation<?> child : panel.getChildren()) {
-                    child.setLocallyEnabled(job.getEnabled(child, null));
-                    child.setCheckFiducials(job.getCheckFiducials(child));
+                    child.setLocallyEnabled(job.retrieveEnabledState(child, null));
+                    child.setCheckFiducials(job.retrieveCheckFiducialsState(child));
                     if (child instanceof BoardLocation || child instanceof PanelLocation) {
                         if (child.getPlacementsHolder() != null) {
                             for (Placement placement : child.getPlacementsHolder().getPlacements()) {
-                                placement.setEnabled(job.getEnabled(child, placement));
-                                placement.setErrorHandling(job.getErrorHandling(child, placement));
+                                placement.setEnabled(job.retrieveEnabledState(child, placement));
+                                placement.setErrorHandling(job.retrieveErrorHandlingState(child, placement));
                             }
                         }
                         if (child instanceof PanelLocation) {

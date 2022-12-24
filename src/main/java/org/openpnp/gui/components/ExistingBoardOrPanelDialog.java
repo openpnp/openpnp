@@ -36,6 +36,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.model.Board;
 import org.openpnp.model.Configuration;
@@ -62,21 +63,21 @@ public class ExistingBoardOrPanelDialog extends JDialog {
      */
     public ExistingBoardOrPanelDialog(Configuration configuration, Class<?> type, String title) {
         if (type == Board.class) {
-            boardOrPanel = "board";
+            boardOrPanel = Translations.getString("ExistingBoardOrPanelDialog.boardOrPanel.Board"); //$NON-NLS-1$
             for (Board board : configuration.getBoards()) {
                 existingList.add(board.getFile());
             }
         }
         else if (type == Panel.class) {
-            boardOrPanel = "panel";
+            boardOrPanel = Translations.getString("ExistingBoardOrPanelDialog.boardOrPanel.Panel"); //$NON-NLS-1$
             for (Panel panel : configuration.getPanels()) {
                 existingList.add(panel.getFile());
             }
         }
         else {
-            throw new UnsupportedOperationException("Unsupported operation for class " + type);
+            throw new UnsupportedOperationException("Unsupported operation for class " + type); //$NON-NLS-1$
         }
-        fileExtension = "." + boardOrPanel + ".xml";
+        fileExtension = "." + boardOrPanel + ".xml"; //$NON-NLS-1$ //$NON-NLS-2$
         setTitle(title);
         setModalityType(ModalityType.APPLICATION_MODAL);
         setBounds(100, 100, 600, 400);
@@ -85,8 +86,10 @@ public class ExistingBoardOrPanelDialog extends JDialog {
         getContentPane().add(contentPanel, BorderLayout.CENTER);
         contentPanel.setLayout(new BorderLayout(0, 0));
         {
-            JLabel txtrSelectOneFile = new JLabel("Select a " + boardOrPanel + 
-                    " from the list below or click Browse to locate one in the file system");
+            JLabel txtrSelectOneFile = new JLabel(
+                    Translations.getString("ExistingBoardOrPanelDialog.Label.SelectOneFile.Leader") //$NON-NLS-1$
+                    + boardOrPanel
+                    + Translations.getString("ExistingBoardOrPanelDialog.Label.SelectOneFile.Trailer")); //$NON-NLS-1$
             contentPanel.add(txtrSelectOneFile, BorderLayout.NORTH);
         }
         {
@@ -102,8 +105,8 @@ public class ExistingBoardOrPanelDialog extends JDialog {
             buttonPane.setLayout(new FlowLayout(FlowLayout.RIGHT));
             getContentPane().add(buttonPane, BorderLayout.SOUTH);
             {
-                JButton okButton = new JButton("OK");
-                okButton.setActionCommand("OK");
+                JButton okButton = new JButton(
+                        Translations.getString("ExistingBoardOrPanelDialog.Button.Ok")); //$NON-NLS-1$
                 okButton.addActionListener(new ActionListener() {
 
                     @Override
@@ -115,8 +118,8 @@ public class ExistingBoardOrPanelDialog extends JDialog {
                 getRootPane().setDefaultButton(okButton);
             }
             {
-                JButton browseButton = new JButton("Browse");
-                browseButton.setActionCommand("Browse");
+                JButton browseButton = new JButton(
+                        Translations.getString("ExistingBoardOrPanelDialog.Button.Browse")); //$NON-NLS-1$
                 browseButton.addActionListener(new ActionListener() {
 
                     @Override
@@ -130,7 +133,7 @@ public class ExistingBoardOrPanelDialog extends JDialog {
                                 return name.toLowerCase().endsWith(fileExtension); //$NON-NLS-1$
                             }
                         });
-                        fileDialog.setFile("*" + fileExtension);
+                        fileDialog.setFile("*" + fileExtension); //$NON-NLS-1$
                         fileDialog.setVisible(true);
                         
                         if (fileDialog.getFile() == null) {
@@ -142,8 +145,9 @@ public class ExistingBoardOrPanelDialog extends JDialog {
                 buttonPane.add(browseButton);
             }
             {
-                JButton cancelButton = new JButton("Cancel");
-                cancelButton.setActionCommand("Cancel");
+                JButton cancelButton = new JButton(
+                        Translations.getString("ExistingBoardOrPanelDialog.Button.Cancel")); //$NON-NLS-1$
+                cancelButton.setActionCommand("Cancel"); //$NON-NLS-1$
                 cancelButton.addActionListener(new ActionListener() {
 
                     @Override

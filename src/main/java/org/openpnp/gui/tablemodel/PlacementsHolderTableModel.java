@@ -22,6 +22,7 @@ package org.openpnp.gui.tablemodel;
 import java.util.List;
 import java.util.function.Supplier;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.support.LengthCellValue;
 import org.openpnp.model.Board;
 import org.openpnp.model.Configuration;
@@ -34,7 +35,9 @@ import org.openpnp.model.Panel;
 public class PlacementsHolderTableModel extends AbstractObjectTableModel implements ColumnAlignable, ColumnWidthSaveable {
     private final Configuration configuration;
 
-    private String[] columnNames = new String[] {"PlacementsHolder Name", "Width", "Length"};
+    private String[] columnNames = new String[] {"PlacementsHolder Name", //$NON-NLS-1$
+            Translations.getString("PlacementsHolderTableModel.ColumnName.Width"), //$NON-NLS-1$
+            Translations.getString("PlacementsHolderTableModel.ColumnName.Length")}; //$NON-NLS-1$
 
     @SuppressWarnings("rawtypes")
     private Class[] columnTypes = new Class[] {String.class, LengthCellValue.class,
@@ -60,10 +63,10 @@ public class PlacementsHolderTableModel extends AbstractObjectTableModel impleme
     public String getColumnName(int column) {
         if (column == 0) {
             if (classType == Board.class) {
-                return "Board Name";
+                return Translations.getString("PlacementsHolderTableModel.ColumnName.BoardName"); //$NON-NLS-1$
             }
             else if (classType == Panel.class) {
-                return "Panel Name";
+                return Translations.getString("PlacementsHolderTableModel.ColumnName.PanelName"); //$NON-NLS-1$
             }
         }
         return columnNames[column];

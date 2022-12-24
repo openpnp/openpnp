@@ -20,7 +20,6 @@
 package org.openpnp.model;
 
 import java.awt.geom.AffineTransform;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -40,18 +39,35 @@ public class BoardLocation extends PlacementsHolderLocation<BoardLocation> {
 
     public static final String ID_PREFIX = "Brd";
     
+    /**
+     * @deprecated The file name of a BoardLocation is now carried by the fileName field inherited 
+     * from {@link PlacementsHolderLocation}
+     */
     @Deprecated
     @Attribute(required = false)
     private String boardFile;
 
+    /**
+     * @deprecated BoardLocations that are part of a Panel are now held by the {@link Panel}'s 
+     * children List. As such the BoardLocation no longer needs to identify the Panel to which it
+     * belongs.
+     */
     @Deprecated
     @Attribute(required = false)
     private String panelId; 
 
+    /**
+     * @deprecated The enabled state of a BoardLocation is now carried by the locallyEnabled
+     * field inherited from {@link PlacementsHolderLocation}
+     */
     @Deprecated
     @Attribute(required = false)
     private Boolean enabled; 
 
+    /**
+     * @deprecated The placed status for each Placement is now maintained by the placedStatusMap
+     * field of the {@link Job}
+     */
     @Deprecated
     @ElementMap(required = false)
     private Map<String, Boolean> placed = new HashMap<>();
@@ -103,6 +119,9 @@ public class BoardLocation extends PlacementsHolderLocation<BoardLocation> {
      */
     @Persist
     protected void persist() {
+        //Remove deprecated fields
+        boardFile = null;
+        enabled = null;
         placed = null;
     }
     

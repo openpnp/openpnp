@@ -112,7 +112,7 @@ public class BoardsPanel extends JPanel {
 
             @Override
             public void propertyChange(PropertyChangeEvent evt) {
-                Logger.trace("PropertyChangeEvent = " + evt);
+//                Logger.trace("PropertyChangeEvent = " + evt);
                 boardsTableModel.fireTableDataChanged();
             }});
         
@@ -135,8 +135,8 @@ public class BoardsPanel extends JPanel {
             }
         };
 
-        TableRowSorter<PlacementsHolderTableModel> panelsTableSorter = new TableRowSorter<>(boardsTableModel);
-        boardsTable.setRowSorter(panelsTableSorter);
+        TableRowSorter<PlacementsHolderTableModel> boardsTableSorter = new TableRowSorter<>(boardsTableModel);
+        boardsTable.setRowSorter(boardsTableSorter);
         boardsTable.getTableHeader().setDefaultRenderer(new MultisortTableHeaderCellRenderer());
         boardsTable.setDefaultRenderer(LengthCellValue.class, new MonospacedFontTableCellRenderer());
         boardsTable.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
@@ -150,7 +150,7 @@ public class BoardsPanel extends JPanel {
             @Override
             public void tableChanged(TableModelEvent e) {
                 SwingUtilities.invokeLater(() -> {
-                    boardPlacementsPanel.refresh();
+                    getBoardPlacementsPanel().refresh();
                 });
             }
         });
@@ -170,7 +170,7 @@ public class BoardsPanel extends JPanel {
                         if (selections.size() == 0) {
                             singleSelectionActionGroup.setEnabled(false);
                             multiSelectionActionGroup.setEnabled(false);
-                            boardPlacementsPanel.setBoard(null);
+                            getBoardPlacementsPanel().setBoard(null);
                             if (updateLinkedTables) {
                                 Configuration.get().getBus()
                                     .post(new PlacementsHolderSelectedEvent(null, BoardsPanel.this));
@@ -179,7 +179,7 @@ public class BoardsPanel extends JPanel {
                         else if (selections.size() == 1) {
                             multiSelectionActionGroup.setEnabled(false);
                             singleSelectionActionGroup.setEnabled(true);
-                            boardPlacementsPanel.setBoard(selections.get(0));
+                            getBoardPlacementsPanel().setBoard(selections.get(0));
                             if (updateLinkedTables) {
                                 Configuration.get().getBus()
                                     .post(new PlacementsHolderSelectedEvent(selections.get(0), BoardsPanel.this));
@@ -188,12 +188,13 @@ public class BoardsPanel extends JPanel {
                         else {
                             singleSelectionActionGroup.setEnabled(false);
                             multiSelectionActionGroup.setEnabled(true);
-                            boardPlacementsPanel.setBoard(null);
+                            getBoardPlacementsPanel().setBoard(null);
                             if (updateLinkedTables) {
                                 Configuration.get().getBus()
                                     .post(new PlacementsHolderSelectedEvent(null, BoardsPanel.this));
                             }
                         }
+                        MainFrame.get().updateMenuState(BoardsPanel.this);
                     }
                 });
 
@@ -250,7 +251,7 @@ public class BoardsPanel extends JPanel {
         splitPane.setRightComponent(pnlPlacements);
 
         boardPlacementsPanel = new BoardPlacementsPanel(this);
-        pnlPlacements.add(boardPlacementsPanel);
+        pnlPlacements.add(getBoardPlacementsPanel());
         
         add(splitPane);
 
@@ -273,13 +274,13 @@ public class BoardsPanel extends JPanel {
 
     @Subscribe
     public void placementSelected(PlacementSelectedEvent event) {
-        if (event.source == this || event.source == boardPlacementsPanel || event.placementsHolderLocation == null || !(event.placementsHolderLocation.getPlacementsHolder() instanceof Board)) {
+        if (event.source == this || event.source == getBoardPlacementsPanel() || event.placementsHolderLocation == null || !(event.placementsHolderLocation.getPlacementsHolder() instanceof Board)) {
             return;
         }
         Placement placement = event.placement == null ? null : (Placement) event.placement.getDefinition();
         SwingUtilities.invokeLater(() -> {
             selectBoard((Board) event.placementsHolderLocation.getPlacementsHolder().getDefinition());
-            boardPlacementsPanel.selectPlacement(placement);
+            getBoardPlacementsPanel().selectPlacement(placement);
         });
     }
 
@@ -419,6 +420,10 @@ public class BoardsPanel extends JPanel {
         return board;
     }
     
+    public BoardPlacementsPanel getBoardPlacementsPanel() {
+        return boardPlacementsPanel;
+    }
+
     public final Action removeBoardAction = new AbstractAction("Remove Board") { //$NON-NLS-1$
         {
             putValue(SMALL_ICON, Icons.delete);
@@ -431,10 +436,8 @@ public class BoardsPanel extends JPanel {
         public void actionPerformed(ActionEvent arg0) {
             for (Board selection : getSelections()) {
                 if (configuration.isInUse(selection)) {
-                    MessageBoxes.errorBox(BoardsPanel.this, "Error Removing Board", 
-                            "Could not remove " + selection.getName() + " because it is either "
-                                    + "being used by the current job or by a panel that is loaded "
-                                    + "in the current configuration.");
+                    MessageBoxes.errorBox(BoardsPanel.this, Translations.getString("BoardPanel.Action.RemoveBoard.ErrorBox.Title"),
+                            String.format(Translations.getString("BoardPanel.Action.RemoveBoard.ErrorBox.MessageFormat"), selection.getName()));
                 }
                 else {
                     configuration.removeBoard(selection);

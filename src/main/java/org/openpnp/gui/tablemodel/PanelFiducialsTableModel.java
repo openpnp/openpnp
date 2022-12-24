@@ -19,6 +19,7 @@
 
 package org.openpnp.gui.tablemodel;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.support.LengthCellValue;
 import org.openpnp.gui.support.PartCellValue;
 import org.openpnp.gui.support.RotationCellValue;
@@ -35,8 +36,14 @@ public class PanelFiducialsTableModel extends AbstractObjectTableModel implement
     private Panel panel;
 
     private String[] columnNames =
-            new String[] {"Enabled", "ID", "Part", "Side", "X", "Y", "Rot."};
-
+            new String[] {
+                    Translations.getString("PanelFiducialsTableModel.ColumnName.Enabled"), //$NON-NLS-1$
+                    Translations.getString("PanelFiducialsTableModel.ColumnName.Id"), //$NON-NLS-1$
+                    Translations.getString("PanelFiducialsTableModel.ColumnName.Part"), //$NON-NLS-1$
+                    Translations.getString("PanelFiducialsTableModel.ColumnName.Side"), //$NON-NLS-1$
+                    "X", "Y", //$NON-NLS-1$ //$NON-NLS-2$
+                    Translations.getString("PanelFiducialsTableModel.ColumnName.Rot")}; //$NON-NLS-1$
+    
     @SuppressWarnings("rawtypes")
     private Class[] columnTypes = new Class[] {Boolean.class, PartCellValue.class, Part.class,
             Side.class, LengthCellValue.class, LengthCellValue.class, RotationCellValue.class};

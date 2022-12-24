@@ -19,9 +19,6 @@
 
 package org.openpnp.model;
 
-import java.beans.PropertyChangeEvent;
-
-import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Version;
@@ -76,6 +73,7 @@ public class Placement extends Abstract2DLocatable<Placement> {
     @Attribute(required = false)
     private boolean enabled = true;
 
+    @SuppressWarnings("unused")
     private Placement() {
         super(new Location(LengthUnit.Millimeters));
     }
@@ -98,13 +96,11 @@ public class Placement extends Abstract2DLocatable<Placement> {
         this.type = Type.Placement;
     }
 
-    @SuppressWarnings("unused")
     @Persist
     private void persist() {
         partId = (part == null ? null : part.getId());
     }
 
-    @SuppressWarnings("unused")
     @Commit
     private void commit() {
         setLocation(getLocation());

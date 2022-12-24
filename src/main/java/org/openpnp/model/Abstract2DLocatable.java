@@ -20,6 +20,8 @@
 package org.openpnp.model;
 
 import java.beans.PropertyChangeListener;
+
+import org.openpnp.Translations;
 import org.openpnp.spi.Definable;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -55,6 +57,16 @@ public abstract class Abstract2DLocatable<T extends Abstract2DLocatable<T>> exte
             }
             else {
                 return this;
+            }
+        }
+        
+        @Override
+        public String toString() {
+            if (this.equals(Side.Top)) {
+                return Translations.getString("Abstract2DLocatable.Side.Top"); //$NON-NLS-1$
+            }
+            else {
+                return Translations.getString("Abstract2DLocatable.Side.Bottom"); //$NON-NLS-1$
             }
         }
     }
@@ -147,7 +159,7 @@ public abstract class Abstract2DLocatable<T extends Abstract2DLocatable<T>> exte
     public void setSide(Side side) {
         Object oldValue = this.side;
         this.side = side;
-        firePropertyChange("side", oldValue, side);
+        firePropertyChange("side", oldValue, side); //$NON-NLS-1$
     }
     
     /**
@@ -167,7 +179,7 @@ public abstract class Abstract2DLocatable<T extends Abstract2DLocatable<T>> exte
     public void setLocation(Location location) {
         Location oldValue = this.location;
         this.location = location;
-        firePropertyChange("location", oldValue, location);
+        firePropertyChange("location", oldValue, location); //$NON-NLS-1$
     }
 
     /**
@@ -184,7 +196,7 @@ public abstract class Abstract2DLocatable<T extends Abstract2DLocatable<T>> exte
     public void setId(String id) {
         String oldValue = this.id;
         this.id = id;
-        firePropertyChange("id", oldValue, id);
+        firePropertyChange("id", oldValue, id); //$NON-NLS-1$
     }
 
     public T getDefinition() {
@@ -194,7 +206,7 @@ public abstract class Abstract2DLocatable<T extends Abstract2DLocatable<T>> exte
     public void setDefinition(T definition) {
         T oldValue = this.definition;
         this.definition = definition;
-        firePropertyChange("definition", oldValue, definition);
+        firePropertyChange("definition", oldValue, definition); //$NON-NLS-1$
         if (oldValue != null) {
             oldValue.removePropertyChangeListener(this);
         }
@@ -222,6 +234,6 @@ public abstract class Abstract2DLocatable<T extends Abstract2DLocatable<T>> exte
     public void setDirty(boolean dirty) {
         boolean oldValue = this.dirty;
         this.dirty = dirty;
-        firePropertyChange("dirty", oldValue, dirty);
+        firePropertyChange("dirty", oldValue, dirty); //$NON-NLS-1$
     }
 }

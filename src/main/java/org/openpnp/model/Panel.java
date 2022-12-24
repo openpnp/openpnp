@@ -46,44 +46,91 @@ import org.simpleframework.xml.core.Persist;
 public class Panel extends PlacementsHolder<Panel> implements PropertyChangeListener {
     public static final Double LATEST_VERSION = 2.0;
     
+    /**
+     * The version number of the Panel
+     */
     @Attribute(required = false)
     private Double version = null;
     
+    /**
+     * @deprecated The Id is now carried by the {@link PanelLocation}
+     */
     @Deprecated
     @Element(required = false)
     public String id;
+    
+    /**
+     * @deprecated Panels are no longer define by rows and columns but rather by the location of
+     * their children
+     */
     @Deprecated
     @Element(required = false)
     public Integer columns = 1;
+    
+    /**
+     * @deprecated Panels are no longer define by rows and columns but rather by the location of
+     * their children
+     */
     @Deprecated
     @Element(required = false)
     public Integer rows = 1;
+    
+    /**
+     * @deprecated Panels are no longer define by rows and columns but rather by the location of
+     * their children
+     */
     @Deprecated
     @Element(required = false)
     public Length xGap;
+    
+    /**
+     * @deprecated Panels are no longer define by rows and columns but rather by the location of
+     * their children
+     */
     @Deprecated
     @Element(required = false)
     public Length yGap;
+    
+    /**
+     * @deprecated Panels can now have an unlimited number of Placements (fiducials) that each have
+     * their own Part 
+     */
     @Deprecated
     @Element(required=false)
     private String partId;
+
+    /**
+     * @deprecated the check fiducials flag is now carried by the {@link PanelLocation}
+     */
     @Deprecated
     @Element(required=false)
     private Boolean checkFids;
 
     /**
-     * @deprecated Use PlacementsHolder.placements instead
+     * @deprecated Fiducials are now held in the placements List inherited from {@link PlacementsHolder}
      */
     @Deprecated
     @ElementList(required = false)
     protected IdentifiableList<Placement> fiducials;
     
+    /**
+     * The list of children contained by this Panel
+     */
     @ElementList(required = false)
     protected IdentifiableList<PlacementsHolderLocation<?>> children = new IdentifiableList<>();
     
+    /**
+     * A list of Ids that point to placements (fiducials) on the Panel's children that are to be 
+     * used for panel alignment 
+     */
     @ElementList(required = false)
     protected ArrayList<String> pseudoPlacementIds = new ArrayList<>();
     
+    /**
+     * A list of Placements corresponding to those identified in {@link pseudoPlacementIds}. These
+     * placements are copies of those on the Panel's children and are only used for panel alignment, i.e, 
+     * they will never actually be placed.
+     */
     protected transient IdentifiableList<Placement> pseudoPlacements = new IdentifiableList<>();
     
     /**
@@ -430,7 +477,6 @@ public class Panel extends PlacementsHolder<Panel> implements PropertyChangeList
             throw new UnsupportedOperationException("Can only add new pseudoPlacements to a panel definition");
         }
         if (pseudoPlacement != null) {
-            Logger.trace(String.format("Adding pseudoPlacement to %s @%08x: %s @%08x", this.getClass().getSimpleName(), this.hashCode(), pseudoPlacement, pseudoPlacement.hashCode()));
             if (pseudoPlacements.get(pseudoPlacement.getId()) != null) {
                 removePseudoPlacement(pseudoPlacements.get(pseudoPlacement.getId()));
             }
@@ -501,14 +547,11 @@ public class Panel extends PlacementsHolder<Panel> implements PropertyChangeList
                 if (evt instanceof IndexedPropertyChangeEvent) {
                     Pair<PlacementsHolderLocation<?>, Placement> pair2 = getDescendantPlacement(this.id);
                     if (evt.getNewValue() == null && pair2 == null) {
-                        Logger.trace("IndexedPropertyChangeEvent handled by PseudoPlacement " + this.id + ", Source =" + evt.getSource() + ", Property =" + evt.getPropertyName() + ", Old Value=" + evt.getOldValue() + ", New Value=" + evt.getNewValue());
                         removePseudoPlacement(this);
                     }
                 }
                 else {
-                    Logger.trace("PropertyChangeEvent handled by PseudoPlacement " + this.id + ", Source=" + evt.getSource() + ", Property=" + evt.getPropertyName() + ", Old Value=" + evt.getOldValue() + ", New Value=" + evt.getNewValue());
                     if (evt.getPropertyName().equals("id") && evt.getSource() != this) {
-                        Logger.trace("   Updating Id");
                         String searchStr = (String) evt.getOldValue();
                         String[] idParts = this.id.split(PlacementsHolderLocation.ID_DELIMITTER);
                         for (int i=0; i<idParts.length; i++) {
@@ -537,7 +580,7 @@ public class Panel extends PlacementsHolder<Panel> implements PropertyChangeList
                                 }
                             }
                         }
-                        Logger.warn("Unable to find matching id!!!!!!!!!!!!!!!!");
+                        Logger.warn("Unable to find matching id!"); //Probably should throw an exception here
                     }
                     else if ((evt.getPropertyName().equals("location") || evt.getPropertyName().equals("side")) && evt.getSource() != this){
                         Pair<PlacementsHolderLocation<?>, Placement> pair = Panel.this.definition.getDescendantPlacement(pseudoPlacementId);
@@ -551,7 +594,6 @@ public class Panel extends PlacementsHolder<Panel> implements PropertyChangeList
                         else if (side == Side.Bottom) {
                             location = location.invert(false, false, false, true);
                         }
-                        Logger.trace("   Updating location from " + getLocation() + " to " + location + " and side");
                         setLocation(location);
                         setSide(side);
                     }
@@ -589,7 +631,6 @@ public class Panel extends PlacementsHolder<Panel> implements PropertyChangeList
             next.definition.addPropertyChangeListener("location", pseudoPlacement);
             next.definition.addPropertyChangeListener("side", pseudoPlacement);
             next.definition.addPropertyChangeListener("id", pseudoPlacement);
-            Logger.trace(String.format("Added property change listener %s @%08x to %s @%08x", pseudoPlacement.id, pseudoPlacement.hashCode(), next.definition.getClass().getSimpleName(), next.definition.hashCode()));
             if (next == pair.first) {
                 next.definition.placementsHolder.definition.addPropertyChangeListener("placement", pseudoPlacement);
             }
@@ -697,7 +738,7 @@ public class Panel extends PlacementsHolder<Panel> implements PropertyChangeList
     }
 
     /**
-     * Returns a flattened list of all PanleLocations that are descendants of this panel
+     * Returns a flattened list of all PanelLocations that are descendants of this panel
      * @return - the list of all PanelLocations
      */
     public List<PanelLocation> getDescendantPanelLocations() {

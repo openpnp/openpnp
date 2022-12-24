@@ -31,6 +31,9 @@ import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.core.Commit;
 import org.simpleframework.xml.core.Persist;
 
+/**
+ * Extends java.awt.geom.Area to be serializable and have length units
+ */
 public class GeometricArea extends java.awt.geom.Area {
     @Attribute
     protected LengthUnit units = LengthUnit.Millimeters;
@@ -44,24 +47,49 @@ public class GeometricArea extends java.awt.geom.Area {
     @ElementList
     protected ArrayList<Double> segmentPoints;
     
+    /**
+     * Default constructor which creates an empty area with units of Millimeters
+     */
     GeometricArea() {
         super();
     }
 
+    /**
+     * Constructs a GeometricArea with units of Millimeters from the specified Shape object. The 
+     * geometry is explicitly closed, if the Shape is not already closed. The fill rule (even-odd 
+     * or winding) specified by the geometry of the Shape is used to determine the resulting 
+     * enclosed area.
+     * @param shape - the Shape from which the area is constructed
+     */
     GeometricArea(Shape shape) {
         super(shape);
     }
 
+    /**
+     * Constructs a GeometricArea from the specified Shape object with the specified units. The 
+     * geometry is explicitly closed, if the Shape is not already closed. The fill rule (even-odd 
+     * or winding) specified by the geometry of the Shape is used to determine the resulting 
+     * enclosed area.
+     * @param shape - the Shape from which the area is constructed
+     * @param units - the units
+     */
     GeometricArea(Shape shape, LengthUnit units) {
         super(shape);
         this.units = units;
     }
 
+    /**
+     * Constructs a new copy of the specified GeometricArea
+     * @param geometricArea - the area to copy
+     */
     GeometricArea(GeometricArea geometricArea) {
         super(geometricArea);
         units = geometricArea.getUnits();
     }
 
+    /**
+     * Restores the area from the serializable elements immediately following their deserialization
+     */
     @Commit
     public void commit() {
         if (windingRule != null && segmentTypes != null && segmentPoints != null) {
@@ -99,6 +127,9 @@ public class GeometricArea extends java.awt.geom.Area {
         }
     }
     
+    /**
+     * Sets the serializable elements from the area just prior to serialization
+     */
     @Persist
     public void persist() {
         PathIterator pathIter = getPathIterator(null);
@@ -138,14 +169,27 @@ public class GeometricArea extends java.awt.geom.Area {
         }
     }
     
+    /**
+     * 
+     * @return the units of this
+     */
     public LengthUnit getUnits() {
         return units;
     }
 
+    /**
+     * Sets the units of this
+     * @param units - the units to set
+     */
     public void setUnits(LengthUnit units) {
         this.units = units;
     }
 
+    /**
+     * Returns a new GeometricArea converted to the specified units
+     * @param units - the units of the new path
+     * @return the new GeometricArea
+     */
     public GeometricArea convertToUnits(LengthUnit units) {
         double scale = (new Length(1, this.units)).divide(new Length(1, units));
         AffineTransform at = new AffineTransform();

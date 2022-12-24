@@ -26,61 +26,99 @@ import java.util.List;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.core.Commit;
 
+/**
+ * A container for a Panel that gives the panel a physical Location relative to its parent. It 
+ * also holds a coordinate transformation that is used to convert the panel's local coordinates to
+ * its parent's coordinates.  In addition, it contains information on where the Panel's definition 
+ * is stored in the file system.
+ */
 public class PanelLocation extends PlacementsHolderLocation<PanelLocation> {
     
     public static final String ID_PREFIX = "Pnl";
     
+    /**
+     * Default constructor
+     */
     public PanelLocation() {
         super();
     }
 
-    // Copy constructor needed for deep copy of object.
+    /**
+     * Contructs a deep copy of the specified PanelLocation.
+     * @param panelLocation - the PanelLocation to copy
+     */
     public PanelLocation(PanelLocation panelLocation) {
         super(panelLocation);
         if (panelLocation.getPanel() != null) {
-//            setPanel(panelLocation.getPanel());
             for (PlacementsHolderLocation<?> child : getChildren()) {
                 child.setParent(this);
             }
         }
     }
 
+    /**
+     * Constructs a new PanelLocation that contains the specified Panel
+     * @param panel - the Panel
+     */
     public PanelLocation(Panel panel) {
         this();
         setPanel(panel);
     }
 
-    @Commit
-    protected void commit() {
-        super.commit();
-    }
-    
+    /**
+     * 
+     * @return the Panel associated with this PanelLocation
+     */
     public Panel getPanel() {
         return (Panel) getPlacementsHolder();
     }
 
+    /**
+     * Sets the Panel associated with this PanelLocation
+     * @param panel - the Panel
+     */
     public void setPanel(Panel panel) {
         setPlacementsHolder(panel);
     }
 
+    /**
+     * 
+     * @return the file name where the Panel associated with this PanelLocation is stored
+     */
     public String getPanelFile() {
         return getFileName();
     }
 
+    /**
+     * Sets the file name where the Panel associated with this PanelLocation is stored
+     * @param panelFile
+     */
     public void setPanelFile(String panelFile) {
         setFileName(panelFile);
     }
 
+    /**
+     * Adds a child to the Panel associated with this PanelLocation
+     * @param child - the child to add
+     */
     public void addChild(PlacementsHolderLocation<?> child) {
         child.setParent(this);
         Panel panel = getPanel();
         panel.addChild(child);
     }
     
+    /**
+     * Removes a child from the Panel associated with this PanelLocation
+     * @param child - the child to remove
+     */
     public void removeChild(PlacementsHolderLocation<?> child) {
         getPanel().removeChild(child);
     }
     
+    /**
+     * 
+     * @return a list of the children contained by the Panel associated with this PanelLocation
+     */
     public List<PlacementsHolderLocation<?>> getChildren() {
         if (getPanel() == null) {
             return new ArrayList<>();
@@ -88,13 +126,10 @@ public class PanelLocation extends PlacementsHolderLocation<PanelLocation> {
         return getPanel().getChildren();
     }
     
-    public void flipSide() {
-        super.flipSide();
-        for (PlacementsHolderLocation<?> child : getChildren()) {
-            child.flipSide();
-        }
-    }
-    
+    /**
+     * Sets the AffineTransform that transforms coordinates expressed in the Panel's 
+     * reference frame to those expressed in the parent's reference frame
+     */
     public void setLocalToParentTransform(AffineTransform localToParentTransform) {
         super.setLocalToParentTransform(localToParentTransform);
         for (PlacementsHolderLocation<?> child : getChildren()) {
@@ -102,6 +137,11 @@ public class PanelLocation extends PlacementsHolderLocation<PanelLocation> {
         }
     }
     
+    /**
+     * Traverses the tree of descendants of the specified PanelLocation and sets the parent of each
+     * descendant
+     * @param panelLocation - the PanelLocation whose descendants should be set
+     */
     public static void setParentsOfAllDescendants(PanelLocation panelLocation) {
         for (PlacementsHolderLocation<?> child : panelLocation.getChildren() ) {
             child.setParent(panelLocation);
@@ -112,18 +152,18 @@ public class PanelLocation extends PlacementsHolderLocation<PanelLocation> {
     }
     
     /**
-     * Checks to see if a PlacementsHolderLocation is a decendant of this PanelLocation
-     * @param potentialDecendant - the PlacementsHolderLocation to check
-     * @return the direct parent of potentialDecendant or null if potentialDecendant is not a 
-     * decendant of this PanelLocation
+     * Checks to see if a PlacementsHolderLocation is a descendant of this PanelLocation
+     * @param potentialDescendant - the PlacementsHolderLocation to check
+     * @return the direct parent of potentialDescendant or null if potentialDescendant is not a 
+     * descendant of this PanelLocation
      */
-    public PanelLocation getParentOfDecendant(PlacementsHolderLocation<?> potentialDecendant) {
+    public PanelLocation getParentOfDescendant(PlacementsHolderLocation<?> potentialDescendant) {
         for (PlacementsHolderLocation<?> child : getChildren()) {
-            if (child == potentialDecendant) {
+            if (child == potentialDescendant) {
                 return this;
             }
             if (child instanceof PanelLocation) {
-                PanelLocation parent = getParentOfDecendant(child);
+                PanelLocation parent = getParentOfDescendant(child);
                 if (parent != null) {
                     return parent;
                 }
@@ -134,15 +174,14 @@ public class PanelLocation extends PlacementsHolderLocation<PanelLocation> {
 
     @Override
     public String toString() {
-        try {
         return String.format("PanelLocation %s @%08x defined by @%08x: (%s), location (%s), side (%s)", getId(), hashCode(), definition != null ? definition.hashCode() : 0, fileName, getLocation(), side);
-        }
-        catch(Exception ex) {
-            return "OhOh";
-        }
     }
         
 
+    /**
+     * Creates a formated dump of the PanelLocation and all of its descendants
+     * @param leader - prefix to indent the dump 
+     */
     public void dump(String leader) {
         PanelLocation parentPanelLocation = getParent();
         int parentHashCode = 0;

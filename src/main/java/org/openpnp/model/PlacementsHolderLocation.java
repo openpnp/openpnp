@@ -234,7 +234,7 @@ public abstract class PlacementsHolderLocation<T extends PlacementsHolderLocatio
 
     /**
      * Sets the state of this PlacementsHolderLocation's locallyEnabled flag
-     * @param enabled - the state to set the flag 
+     * @param enabledStateMap - the state to set the flag 
      */
     public void setLocallyEnabled(boolean enabled) {
         boolean oldValue = this.locallyEnabled;

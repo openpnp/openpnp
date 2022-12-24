@@ -24,6 +24,7 @@ import java.awt.event.WindowEvent;
 import java.util.function.BiConsumer;
 import javax.swing.JFrame;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.PlacementsHolder;
@@ -38,7 +39,8 @@ public class PlacementsHolderLocationViewerDialog extends JFrame {
     /**
      * Create the frame.
      */
-    public PlacementsHolderLocationViewerDialog(PlacementsHolderLocation<?> placementsHolderLocation, boolean isJob, BiConsumer<PlacementsHolderLocation<?>, String> refreshTableModel) {
+    public PlacementsHolderLocationViewerDialog(PlacementsHolderLocation<?> placementsHolderLocation, 
+            boolean isJob, BiConsumer<PlacementsHolderLocation<?>, String> refreshTableModel) {
         setBounds(100, 100, 800, 600);
         
         addWindowListener(new WindowAdapter( ) {
@@ -50,18 +52,20 @@ public class PlacementsHolderLocationViewerDialog extends JFrame {
         });
 
         if (isJob) {
-            setTitle(MainFrame.get().getTitle());
+            setTitle(Translations.getString("PlacementsHolderLocationViewer.TitleType.Job") + 
+                    " - " + MainFrame.get().getTitle());
+        }
+        else if (placementsHolderLocation instanceof BoardLocation) {
+            setTitle(Translations.getString("PlacementsHolderLocationViewer.TitleType.Board") + 
+                    " - " + placementsHolderLocation.getPlacementsHolder().getFile().getName());
         }
         else {
-            if (placementsHolderLocation instanceof BoardLocation) {
-                setTitle("Board Viewer - " + placementsHolderLocation.getPlacementsHolder().getFile().getName());
-            }
-            else {
-                setTitle("Panel Viewer - " + placementsHolderLocation.getPlacementsHolder().getFile().getName());
-            }
+            setTitle(Translations.getString("PlacementsHolderLocationViewer.TitleType.Panel") + 
+                    " - " + placementsHolderLocation.getPlacementsHolder().getFile().getName());
         }
         
-        contentPane = new PlacementsHolderLocationViewer(placementsHolderLocation, isJob, refreshTableModel);
+        contentPane = new PlacementsHolderLocationViewer(placementsHolderLocation, isJob, 
+                refreshTableModel);
         setContentPane(contentPane);
     }
 

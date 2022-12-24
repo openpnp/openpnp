@@ -41,7 +41,7 @@ public class BoardLocationsTableModel extends AbstractTableModel implements Colu
             Translations.getString("BoardLocationsTableModel.ColumnName.Width"), //$NON-NLS-1$
             Translations.getString("BoardLocationsTableModel.ColumnName.Length"), //$NON-NLS-1$
             Translations.getString("BoardLocationsTableModel.ColumnName.Side"), //$NON-NLS-1$
-            "X", "Y", "Z", //$NON-NLS-1$
+            "X", "Y", "Z", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
             Translations.getString("BoardLocationsTableModel.ColumnName.Rotation"), //$NON-NLS-1$
             Translations.getString("BoardLocationsTableModel.ColumnName.Enabled"), //$NON-NLS-1$
             Translations.getString("BoardLocationsTableModel.ColumnName.CheckFids" //$NON-NLS-1$

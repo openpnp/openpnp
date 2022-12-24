@@ -110,11 +110,10 @@ public class PanelsPanel extends JPanel {
         
         panelsTableModel = new PlacementsHolderTableModel(configuration, 
                 () -> configuration.getPanels(), Panel.class);
-        configuration.addPropertyChangeListener("panels", new PropertyChangeListener() {
+        configuration.addPropertyChangeListener("panels", new PropertyChangeListener() { //$NON-NLS-1$
 
             @Override
             public void propertyChange(PropertyChangeEvent evt) {
-                Logger.trace("PropertyChangeEvent = " + evt);
                 panelsTableModel.fireTableDataChanged();
             }});
         
@@ -146,7 +145,7 @@ public class PanelsPanel extends JPanel {
         
         TableUtils.setColumnAlignment(panelsTableModel, panelsTable);
         
-        TableUtils.installColumnWidthSavers(panelsTable, prefs, "PanelsPanel.panelsTable.columnWidth");
+        TableUtils.installColumnWidthSavers(panelsTable, prefs, "PanelsPanel.panelsTable.columnWidth"); //$NON-NLS-1$
         
         
         panelsTable.getModel().addTableModelListener(new TableModelListener() {
@@ -234,7 +233,7 @@ public class PanelsPanel extends JPanel {
 
         JPanel pnlPanels = new JPanel();
         pnlPanels.setBorder(new TitledBorder(null,
-                Translations.getString("PanelsPanel.Tab.Panels"),
+                Translations.getString("PanelsPanel.Tab.Panels"), //$NON-NLS-1$
                 TitledBorder.LEADING, TitledBorder.TOP, null)); //$NON-NLS-1$
         pnlPanels.setLayout(new BorderLayout(0, 0));
 
@@ -299,7 +298,8 @@ public class PanelsPanel extends JPanel {
 
     @Subscribe
     public void placementSelected(PlacementSelectedEvent event) {
-        if (event.source == this || event.source == panelDefinitionPanel || event.placementsHolderLocation == null || !(event.placementsHolderLocation.getPlacementsHolder() instanceof Panel)) {
+        if (event.source == this || event.source == panelDefinitionPanel || 
+                event.placementsHolderLocation == null || !(event.placementsHolderLocation.getPlacementsHolder() instanceof Panel)) {
             return;
         }
         Placement placement = event.placement == null ? null : (Placement) event.placement.getDefinition();
@@ -314,9 +314,7 @@ public class PanelsPanel extends JPanel {
             panelsTable.getSelectionModel().clearSelection();
             return;
         }
-//        Logger.trace(String.format("Attempting to select Panel @%08x defined by @%08x", panel.hashCode(), panel.getDefinition().hashCode()));
         for (int i = 0; i < panelsTableModel.getRowCount(); i++) {
-//            Logger.trace(String.format("...found Panel @%08x defined by @%08x", configuration.getPanels().get(i).hashCode(), configuration.getPanels().get(i).getDefinition().hashCode()));
             if (configuration.getPanels().get(i) == panel) {
                 int index = panelsTable.convertRowIndexToView(i);
                 panelsTable.getSelectionModel().setSelectionInterval(index, index);
@@ -375,14 +373,16 @@ public class PanelsPanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            FileDialog fileDialog = new FileDialog(frame, Translations.getString("PanelsPanel.Action.AddPanel.NewPanel.SaveDialog"), FileDialog.SAVE); //$NON-NLS-1$
+            FileDialog fileDialog = new FileDialog(frame, 
+                    Translations.getString("PanelsPanel.Action.AddPanel.NewPanel.SaveDialog"), //$NON-NLS-1$
+                    FileDialog.SAVE);
             fileDialog.setFilenameFilter(new FilenameFilter() {
                 @Override
                 public boolean accept(File dir, String name) {
                     return name.toLowerCase().endsWith(".panel.xml"); //$NON-NLS-1$
                 }
             });
-            fileDialog.setFile("*.panel.xml");
+            fileDialog.setFile("*.panel.xml"); //$NON-NLS-1$
             fileDialog.setVisible(true);
             try {
                 String filename = fileDialog.getFile();
@@ -401,7 +401,9 @@ public class PanelsPanel extends JPanel {
             }
             catch (Exception e) {
                 e.printStackTrace();
-                MessageBoxes.errorBox(frame, Translations.getString("PanelsPanel.Action.AddPanel.NewPanel.ErrorMessage"), e.getMessage()); //$NON-NLS-1$
+                MessageBoxes.errorBox(frame, 
+                        Translations.getString("PanelsPanel.Action.AddPanel.NewPanel.ErrorMessage"), //$NON-NLS-1$
+                        e.getMessage());
             }
         }
     };
@@ -422,7 +424,7 @@ public class PanelsPanel extends JPanel {
                     return name.toLowerCase().endsWith(".panel.xml"); //$NON-NLS-1$
                 }
             });
-            fileDialog.setFile("*.panel.xml");
+            fileDialog.setFile("*.panel.xml"); //$NON-NLS-1$
             fileDialog.setVisible(true);
             try {
                 if (fileDialog.getFile() == null) {
@@ -437,7 +439,9 @@ public class PanelsPanel extends JPanel {
             }
             catch (Exception e) {
                 e.printStackTrace();
-                MessageBoxes.errorBox(frame, Translations.getString("PanelsPanel.Action.AddPanel.ExistingPanel.ErrorMessage"), e.getMessage()); //$NON-NLS-1$
+                MessageBoxes.errorBox(frame, 
+                        Translations.getString("PanelsPanel.Action.AddPanel.ExistingPanel.ErrorMessage"), //$NON-NLS-1$
+                        e.getMessage());
             }
         }
     };
@@ -449,7 +453,7 @@ public class PanelsPanel extends JPanel {
         return panel;
     }
     
-    public final Action removePanelAction = new AbstractAction("Remove Panel") { //$NON-NLS-1$
+    public final Action removePanelAction = new AbstractAction() { //$NON-NLS-1$
         {
             putValue(SMALL_ICON, Icons.delete);
             putValue(NAME, Translations.getString("PanelsPanel.Action.RemovePanel")); //$NON-NLS-1$
@@ -461,10 +465,10 @@ public class PanelsPanel extends JPanel {
         public void actionPerformed(ActionEvent arg0) {
             for (Panel selection : getSelections()) {
                 if (configuration.isInUse(selection)) {
-                    MessageBoxes.errorBox(PanelsPanel.this, "Error Removing Panel", 
-                            "Could not remove " + selection.getName() + " because it is either "
-                                    + "being used by the current job or is a subpanel of "
-                                    + "another panel that is loaded in the current configuration.");
+                    MessageBoxes.errorBox(PanelsPanel.this, 
+                            Translations.getString("PanelsPanel.Action.RemovePanel.ErrorBox.Title"),  //$NON-NLS-1$
+                            String.format(Translations.getString("PanelsPanel.Action.RemovePanel.ErrorBox.Message"), //$NON-NLS-1$
+                                    selection.getName()));
                 }
                 else {
                     configuration.removePanel(selection);
@@ -485,14 +489,16 @@ public class PanelsPanel extends JPanel {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             Panel panelToCopy = getSelection();
-            FileDialog fileDialog = new FileDialog(frame, Translations.getString("PanelsPanel.Action.CopyPanel.SaveDialog"), FileDialog.SAVE); //$NON-NLS-1$
+            FileDialog fileDialog = new FileDialog(frame, 
+                    Translations.getString("PanelsPanel.Action.CopyPanel.SaveDialog"),  //$NON-NLS-1$
+                    FileDialog.SAVE);
             fileDialog.setFilenameFilter(new FilenameFilter() {
                 @Override
                 public boolean accept(File dir, String name) {
                     return name.toLowerCase().endsWith(".panel.xml"); //$NON-NLS-1$
                 }
             });
-            fileDialog.setFile("*.panel.xml");
+            fileDialog.setFile("*.panel.xml"); //$NON-NLS-1$
             fileDialog.setVisible(true);
             try {
                 String filename = fileDialog.getFile();
@@ -505,19 +511,19 @@ public class PanelsPanel extends JPanel {
                 File file = new File(new File(fileDialog.getDirectory()), filename);
 
                 Panel newPanel = new Panel(panelToCopy);
-                Logger.trace(String.format("Created new Panel @%08x, defined by @%08x", newPanel.hashCode(), newPanel.getDefinition().hashCode()));
                 newPanel.setFile(file);
                 newPanel.setName(file.getName());
                 newPanel.setDirty(false);
                 configuration.addPanel(newPanel);
                 configuration.savePanel(newPanel);
                 panelsTableModel.fireTableDataChanged();
-//                Helpers.selectLastTableRow(panelsTable);
                 selectPanel(newPanel);
             }
             catch (Exception e) {
                 e.printStackTrace();
-                MessageBoxes.errorBox(frame, Translations.getString("BoardPanel.Action.CopyBoard.ErrorMessage"), e.getMessage()); //$NON-NLS-1$
+                MessageBoxes.errorBox(frame, 
+                        Translations.getString("PanelsPanel.Action.CopyPanel.ErrorMessage"),  //$NON-NLS-1$
+                        e.getMessage());
             }
         }
     };

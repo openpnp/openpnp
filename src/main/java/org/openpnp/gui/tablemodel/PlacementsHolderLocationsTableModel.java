@@ -23,6 +23,8 @@ import java.util.List;
 import java.util.Locale;
 
 import javax.swing.event.TableModelEvent;
+
+import org.openpnp.Translations;
 import org.openpnp.gui.support.LengthCellValue;
 import org.openpnp.gui.support.RotationCellValue;
 import org.openpnp.model.Abstract2DLocatable.Side;
@@ -38,8 +40,16 @@ public class PlacementsHolderLocationsTableModel extends AbstractObjectTableMode
         implements ColumnAlignable, ColumnWidthSaveable {
     private final Configuration configuration;
 
-    private String[] columnNames = new String[] {"Board/Panel Id", "Name", "Width", "Length", 
-            "Side", "X", "Y", "Z", "Rot.", "Enabled?", "Check Fids?"};
+    private String[] columnNames = new String[] {
+            Translations.getString("PlacementsHolderLocationsTableModel.ColumnName.BoardPanelId"), //$NON-NLS-1$
+            Translations.getString("PlacementsHolderLocationsTableModel.ColumnName.Name"), //$NON-NLS-1$
+            Translations.getString("PlacementsHolderLocationsTableModel.ColumnName.Width"), //$NON-NLS-1$
+            Translations.getString("PlacementsHolderLocationsTableModel.ColumnName.Length"), //$NON-NLS-1$
+            Translations.getString("PlacementsHolderLocationsTableModel.ColumnName.Side"), //$NON-NLS-1$
+            "X", "Y", "Z",  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            Translations.getString("PlacementsHolderLocationsTableModel.ColumnName.Rot"), //$NON-NLS-1$
+            Translations.getString("PlacementsHolderLocationsTableModel.ColumnName.Enabled"), //$NON-NLS-1$
+            Translations.getString("PlacementsHolderLocationsTableModel.ColumnName.CheckFids")}; //$NON-NLS-1$
 
     @SuppressWarnings("rawtypes")
     private Class[] columnTypes = new Class[] {String.class, String.class, LengthCellValue.class,

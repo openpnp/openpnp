@@ -46,6 +46,7 @@ import javax.swing.JTextField;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.border.EmptyBorder;
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
+import org.openpnp.Translations;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.LengthConverter;
@@ -61,12 +62,29 @@ import org.openpnp.model.PanelLocation;
 import org.openpnp.model.PlacementsHolderLocation;
 import org.openpnp.util.BeanUtils;
 import org.openpnp.util.Utils2D;
+import javax.swing.SwingConstants;
+import java.awt.Component;
+import javax.swing.Box;
+import java.awt.GridLayout;
+import javax.swing.border.EtchedBorder;
 
 @SuppressWarnings("serial")
 public class PanelArrayBuilderDialog extends JDialog {
 
     private enum ArrayType {
         Rectangular, Circular;
+        
+        @Override
+        public String toString() {
+            switch (this) {
+                case Circular:
+                    return Translations.getString("PanelArrayBuilderDialog.ArrayType.Circular"); //$NON-NLS-1$
+                case Rectangular:
+                    return Translations.getString("PanelArrayBuilderDialog.ArrayType.Rectangular"); //$NON-NLS-1$
+                default:
+                    return Translations.getString("PanelArrayBuilderDialog.ArrayType.Unknown"); //$NON-NLS-1$
+            }
+        }
     }
     
     private LengthUnit systemUnit = Configuration.get().getSystemUnits();
@@ -110,7 +128,8 @@ public class PanelArrayBuilderDialog extends JDialog {
     /**
      * Create the dialog.
      */
-    public PanelArrayBuilderDialog(PanelLocation panelLocation, PlacementsHolderLocation<?> rootChildLocation, Runnable refresh) {
+    public PanelArrayBuilderDialog(PanelLocation panelLocation, 
+            PlacementsHolderLocation<?> rootChildLocation, Runnable refresh) {
         this.panelLocation = panelLocation;
         this.rootChildLocation = rootChildLocation;
         this.refresh = refresh;
@@ -125,34 +144,63 @@ public class PanelArrayBuilderDialog extends JDialog {
         };
         addWindowListener(windowCloseListener);
         setModalityType(ModalityType.APPLICATION_MODAL);
-        setTitle("Panel Array Generator");
+        setTitle(Translations.getString("PanelArrayBuilderDialog.Frame.Title")); //$NON-NLS-1$
         setBounds(100, 100, 800, 600);
         getContentPane().setLayout(new BorderLayout());
         contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
         getContentPane().add(contentPanel, BorderLayout.CENTER);
         contentPanel.setLayout(new BorderLayout(0, 0));
         {
-            JComboBox<ArrayType> comboBoxArrayType = new JComboBox<>();
-            comboBoxArrayType.setToolTipText("Selects the type of array to create");
-            comboBoxArrayType.setModel(new DefaultComboBoxModel<ArrayType>(ArrayType.values()));
-            comboBoxArrayType.addActionListener(new ActionListener() {
-
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    CardLayout cardLayout = (CardLayout)(panelControls.getLayout());
-                    arrayType = (ArrayType) comboBoxArrayType.getSelectedItem();
-                    switch (arrayType) {
-                        case Rectangular:
-                            cardLayout.show(panelControls, "Rectangular");
-                            break;
-                        case Circular:
-                            cardLayout.show(panelControls, "Circular");
-                            break;
-                    }
+            {
+                JPanel panel = new JPanel();
+                contentPanel.add(panel, BorderLayout.NORTH);
+                GridBagLayout gbl_panel = new GridBagLayout();
+                gbl_panel.columnWidths = new int[]{104, 198, 0};
+                gbl_panel.rowHeights = new int[] {5, 30, 5};
+                gbl_panel.columnWeights = new double[]{0.0, 0.0, Double.MIN_VALUE};
+                gbl_panel.rowWeights = new double[]{0.0, 0.0, 0.0};
+                panel.setLayout(gbl_panel);
+                {
+                    JLabel lblNewLabel_13 = new JLabel(
+                            Translations.getString("PanelArrayBuilderDialog.Label.ArrayType")); //$NON-NLS-1$
+                    GridBagConstraints gbc_lblNewLabel_13 = new GridBagConstraints();
+                    gbc_lblNewLabel_13.anchor = GridBagConstraints.EAST;
+                    gbc_lblNewLabel_13.fill = GridBagConstraints.VERTICAL;
+                    gbc_lblNewLabel_13.insets = new Insets(0, 0, 5, 5);
+                    gbc_lblNewLabel_13.gridx = 0;
+                    gbc_lblNewLabel_13.gridy = 1;
+                    panel.add(lblNewLabel_13, gbc_lblNewLabel_13);
                 }
-                
-            });
-            contentPanel.add(comboBoxArrayType, BorderLayout.NORTH);
+                JComboBox<ArrayType> comboBoxArrayType = new JComboBox<>();
+                GridBagConstraints gbc_comboBoxArrayType = new GridBagConstraints();
+                gbc_comboBoxArrayType.insets = new Insets(0, 0, 5, 0);
+                gbc_comboBoxArrayType.anchor = GridBagConstraints.NORTH;
+                gbc_comboBoxArrayType.fill = GridBagConstraints.HORIZONTAL;
+                gbc_comboBoxArrayType.gridx = 1;
+                gbc_comboBoxArrayType.gridy = 1;
+                panel.add(comboBoxArrayType, gbc_comboBoxArrayType);
+                comboBoxArrayType.setToolTipText(
+                        Translations.getString("PanelArrayBuilderDialog.ComboBoxArrayType.ToolTip")); //$NON-NLS-1$
+                comboBoxArrayType.setModel(new DefaultComboBoxModel<ArrayType>(ArrayType.values()));
+                comboBoxArrayType.addActionListener(new ActionListener() {
+
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        CardLayout cardLayout = (CardLayout)(panelControls.getLayout());
+                        arrayType = (ArrayType) comboBoxArrayType.getSelectedItem();
+                        switch (arrayType) {
+                            case Rectangular:
+                                cardLayout.show(panelControls, "Rectangular"); //$NON-NLS-1$
+                                break;
+                            case Circular:
+                                cardLayout.show(panelControls, "Circular"); //$NON-NLS-1$
+                                break;
+                        }
+                        generateArray();
+                    }
+                    
+                });
+            }
         }
         {
             JPanel panel = new JPanel();
@@ -160,11 +208,13 @@ public class PanelArrayBuilderDialog extends JDialog {
             panel.setLayout(new BorderLayout(0, 0));
             {
                 panelControls = new JPanel();
+                panelControls.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
                 panel.add(panelControls, BorderLayout.NORTH);
                 panelControls.setLayout(new CardLayout(0, 0));
                 {
                     JPanel panelRectangular = new JPanel();
-                    panelControls.add(panelRectangular, "Rectangular");
+                    panelControls.add(panelRectangular,
+                            "Rectangular"); //$NON-NLS-1$
                     GridBagLayout gbl_panelRectangular = new GridBagLayout();
                     gbl_panelRectangular.columnWidths = new int[]{0, 80, 80, 0, 0, 0, 0, 0};
                     gbl_panelRectangular.rowHeights = new int[]{0, 0, 0, 0, 0, 0, 0, 0, 0};
@@ -172,7 +222,8 @@ public class PanelArrayBuilderDialog extends JDialog {
                     gbl_panelRectangular.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
                     panelRectangular.setLayout(gbl_panelRectangular);
                     {
-                        JLabel lblNewLabel_2 = new JLabel("Columns (X)");
+                        JLabel lblNewLabel_2 = new JLabel(
+                                Translations.getString("PanelArrayBuilderDialog.Rectangular.Label.Columns")); //$NON-NLS-1$
                         GridBagConstraints gbc_lblNewLabel_2 = new GridBagConstraints();
                         gbc_lblNewLabel_2.insets = new Insets(0, 0, 5, 5);
                         gbc_lblNewLabel_2.gridx = 1;
@@ -180,7 +231,8 @@ public class PanelArrayBuilderDialog extends JDialog {
                         panelRectangular.add(lblNewLabel_2, gbc_lblNewLabel_2);
                     }
                     {
-                        JLabel lblNewLabel_1 = new JLabel("Rows (Y)");
+                        JLabel lblNewLabel_1 = new JLabel(
+                                Translations.getString("PanelArrayBuilderDialog.Rectangular.Label.Rows")); //$NON-NLS-1$
                         GridBagConstraints gbc_lblNewLabel_1 = new GridBagConstraints();
                         gbc_lblNewLabel_1.insets = new Insets(0, 0, 5, 5);
                         gbc_lblNewLabel_1.gridx = 2;
@@ -188,7 +240,8 @@ public class PanelArrayBuilderDialog extends JDialog {
                         panelRectangular.add(lblNewLabel_1, gbc_lblNewLabel_1);
                     }
                     {
-                        JLabel lblNewLabel = new JLabel("Count");
+                        JLabel lblNewLabel = new JLabel(
+                                Translations.getString("PanelArrayBuilderDialog.Rectangular.Label.Count")); //$NON-NLS-1$
                         GridBagConstraints gbc_lblNewLabel = new GridBagConstraints();
                         gbc_lblNewLabel.anchor = GridBagConstraints.EAST;
                         gbc_lblNewLabel.insets = new Insets(0, 0, 5, 5);
@@ -197,33 +250,36 @@ public class PanelArrayBuilderDialog extends JDialog {
                         panelRectangular.add(lblNewLabel, gbc_lblNewLabel);
                     }
                     {
-                        textFieldColumns = new JTextField();
-                        textFieldColumns.setToolTipText("Number of columns in the array");
-                        GridBagConstraints gbc_textFieldColumns = new GridBagConstraints();
-                        gbc_textFieldColumns.insets = new Insets(0, 0, 5, 5);
-                        gbc_textFieldColumns.fill = GridBagConstraints.HORIZONTAL;
-                        gbc_textFieldColumns.gridx = 1;
-                        gbc_textFieldColumns.gridy = 2;
-                        panelRectangular.add(textFieldColumns, gbc_textFieldColumns);
-                        textFieldColumns.setColumns(10);
-                        BeanUtils.bind(UpdateStrategy.READ_WRITE, this, "columnCount", textFieldColumns, "text", new IntegerConverter());
-                        ComponentDecorators.decorateWithAutoSelect(textFieldColumns);
+                        JSpinner spinnerColumns = new JSpinner();
+                        spinnerColumns.setToolTipText(
+                                Translations.getString("PanelArrayBuilderDialog.Rectangular.SpinnerColumns.ToolTip")); //$NON-NLS-1$
+                        spinnerColumns.setModel(new SpinnerNumberModel(1, 1, null, 1));
+                        GridBagConstraints gbc_spinnerColumns = new GridBagConstraints();
+                        gbc_spinnerColumns.fill = GridBagConstraints.HORIZONTAL;
+                        gbc_spinnerColumns.insets = new Insets(0, 0, 5, 5);
+                        gbc_spinnerColumns.gridx = 1;
+                        gbc_spinnerColumns.gridy = 2;
+                        panelRectangular.add(spinnerColumns, gbc_spinnerColumns);
+                        BeanUtils.bind(UpdateStrategy.READ_WRITE, this, "columnCount", //$NON-NLS-1$
+                                spinnerColumns, "value"); //$NON-NLS-1$
                     }
                     {
-                        textFieldRows = new JTextField();
-                        textFieldRows.setToolTipText("Number of rows in the array");
-                        GridBagConstraints gbc_textFieldRows = new GridBagConstraints();
-                        gbc_textFieldRows.insets = new Insets(0, 0, 5, 5);
-                        gbc_textFieldRows.fill = GridBagConstraints.HORIZONTAL;
-                        gbc_textFieldRows.gridx = 2;
-                        gbc_textFieldRows.gridy = 2;
-                        panelRectangular.add(textFieldRows, gbc_textFieldRows);
-                        textFieldRows.setColumns(10);
-                        BeanUtils.bind(UpdateStrategy.READ_WRITE, this, "rowCount", textFieldRows, "text", new IntegerConverter());
-                        ComponentDecorators.decorateWithAutoSelect(textFieldRows);
+                        JSpinner spinnerRows = new JSpinner();
+                        spinnerRows.setToolTipText(
+                                Translations.getString("PanelArrayBuilderDialog.Rectangular.SpinnerRows.ToolTip")); //$NON-NLS-1$
+                        spinnerRows.setModel(new SpinnerNumberModel(1, 1, null, 1));
+                        GridBagConstraints gbc_spinnerRows = new GridBagConstraints();
+                        gbc_spinnerRows.fill = GridBagConstraints.HORIZONTAL;
+                        gbc_spinnerRows.insets = new Insets(0, 0, 5, 5);
+                        gbc_spinnerRows.gridx = 2;
+                        gbc_spinnerRows.gridy = 2;
+                        panelRectangular.add(spinnerRows, gbc_spinnerRows);
+                        BeanUtils.bind(UpdateStrategy.READ_WRITE, this, "rowCount", //$NON-NLS-1$
+                                spinnerRows, "value"); //$NON-NLS-1$
                     }
                     {
-                        JLabel lblNewLabel_3 = new JLabel("Step");
+                        JLabel lblNewLabel_3 = new JLabel(
+                                Translations.getString("PanelArrayBuilderDialog.Rectangular.Label.Step")); //$NON-NLS-1$
                         GridBagConstraints gbc_lblNewLabel_3 = new GridBagConstraints();
                         gbc_lblNewLabel_3.anchor = GridBagConstraints.EAST;
                         gbc_lblNewLabel_3.insets = new Insets(0, 0, 5, 5);
@@ -233,7 +289,8 @@ public class PanelArrayBuilderDialog extends JDialog {
                     }
                     {
                         textFieldColumnSpacing = new JTextField();
-                        textFieldColumnSpacing.setToolTipText("The distance from a point in one column to the same point in the next column");
+                        textFieldColumnSpacing.setToolTipText(
+                                Translations.getString("PanelArrayBuilderDialog.Rectangular.TextFieldColumnSpacing.ToolTip")); //$NON-NLS-1$
                         GridBagConstraints gbc_textFieldColumnSpacing = new GridBagConstraints();
                         gbc_textFieldColumnSpacing.insets = new Insets(0, 0, 5, 5);
                         gbc_textFieldColumnSpacing.fill = GridBagConstraints.HORIZONTAL;
@@ -241,12 +298,14 @@ public class PanelArrayBuilderDialog extends JDialog {
                         gbc_textFieldColumnSpacing.gridy = 3;
                         panelRectangular.add(textFieldColumnSpacing, gbc_textFieldColumnSpacing);
                         textFieldColumnSpacing.setColumns(10);
-                        BeanUtils.bind(UpdateStrategy.READ_WRITE, this, "columnSpacing", textFieldColumnSpacing, "text", new LengthConverter());
+                        BeanUtils.bind(UpdateStrategy.READ_WRITE, this, "columnSpacing", //$NON-NLS-1$
+                                textFieldColumnSpacing, "text", new LengthConverter()); //$NON-NLS-1$
                         ComponentDecorators.decorateWithLengthConversion(textFieldColumnSpacing);
                     }
                     {
                         textFieldRowSpacing = new JTextField();
-                        textFieldRowSpacing.setToolTipText("The distance from a point in one row to the same point in the next row");
+                        textFieldRowSpacing.setToolTipText(
+                                Translations.getString("PanelArrayBuilderDialog.Rectangular.TextFieldRowSpacing.ToolTip")); //$NON-NLS-1$
                         GridBagConstraints gbc_textFieldRowSpacing = new GridBagConstraints();
                         gbc_textFieldRowSpacing.insets = new Insets(0, 0, 5, 5);
                         gbc_textFieldRowSpacing.fill = GridBagConstraints.HORIZONTAL;
@@ -254,11 +313,13 @@ public class PanelArrayBuilderDialog extends JDialog {
                         gbc_textFieldRowSpacing.gridy = 3;
                         panelRectangular.add(textFieldRowSpacing, gbc_textFieldRowSpacing);
                         textFieldRowSpacing.setColumns(10);
-                        BeanUtils.bind(UpdateStrategy.READ_WRITE, this, "rowSpacing", textFieldRowSpacing, "text", new LengthConverter());
+                        BeanUtils.bind(UpdateStrategy.READ_WRITE, this, "rowSpacing", //$NON-NLS-1$
+                                textFieldRowSpacing, "text", new LengthConverter()); //$NON-NLS-1$
                         ComponentDecorators.decorateWithLengthConversion(textFieldRowSpacing);
                     }
                     {
-                        JLabel lblNewLabel_6 = new JLabel("Alternate rows have");
+                        JLabel lblNewLabel_6 = new JLabel(
+                                Translations.getString("PanelArrayBuilderDialog.Rectangular.Label.AlternateRowsComboBox")); //$NON-NLS-1$
                         GridBagConstraints gbc_lblNewLabel_6 = new GridBagConstraints();
                         gbc_lblNewLabel_6.anchor = GridBagConstraints.EAST;
                         gbc_lblNewLabel_6.insets = new Insets(0, 0, 5, 5);
@@ -268,12 +329,13 @@ public class PanelArrayBuilderDialog extends JDialog {
                     }
                     {
                         String[] alternateOptions = new String[] {
-                                "the same number of columns as the first row", 
-                                "one more column than the first row", 
-                                "one less column than the first row"};
+                                Translations.getString("PanelArrayBuilderDialog.Rectangular.AlternateRowsComboBox.Option.SameNumberColumns"),  //$NON-NLS-1$
+                                Translations.getString("PanelArrayBuilderDialog.Rectangular.AlternateRowsComboBox.Option.OneMoreColumn"),  //$NON-NLS-1$
+                                Translations.getString("PanelArrayBuilderDialog.Rectangular.AlternateRowsComboBox.Option.OneLessColumn")}; //$NON-NLS-1$
 
                         JComboBox<String> comboBoxAlternateRows = new JComboBox<String>();
-                        comboBoxAlternateRows.setToolTipText("Selects the number of columns in the even rows of the array");
+                        comboBoxAlternateRows.setToolTipText(
+                                Translations.getString("PanelArrayBuilderDialog.Rectangular.AlternateRowsComboBox.ToolTip")); //$NON-NLS-1$
                         comboBoxAlternateRows.setModel(new DefaultComboBoxModel<String>(alternateOptions));
                         GridBagConstraints gbc_comboBoxAlternateRows = new GridBagConstraints();
                         gbc_comboBoxAlternateRows.gridwidth = 5;
@@ -300,7 +362,8 @@ public class PanelArrayBuilderDialog extends JDialog {
                             }});
                     }
                     {
-                        JLabel lblNewLabel_5 = new JLabel("Alternate rows have");
+                        JLabel lblNewLabel_5 = new JLabel(
+                                Translations.getString("PanelArrayBuilderDialog.Rectangular.Label.AlternateRowColumnOffset.Leader")); //$NON-NLS-1$
                         GridBagConstraints gbc_lblNewLabel_5 = new GridBagConstraints();
                         gbc_lblNewLabel_5.anchor = GridBagConstraints.EAST;
                         gbc_lblNewLabel_5.insets = new Insets(0, 0, 5, 5);
@@ -310,7 +373,8 @@ public class PanelArrayBuilderDialog extends JDialog {
                     }
                     {
                         textFieldAlternateOffset = new JTextField();
-                        textFieldAlternateOffset.setToolTipText("The amount to offset the columns of the alternate rows relative to the columns of the first row");
+                        textFieldAlternateOffset.setToolTipText(
+                                Translations.getString("PanelArrayBuilderDialog.Rectangular.TextFieldAlternateOffset.ToolTip")); //$NON-NLS-1$
                         GridBagConstraints gbc_textFieldAlternateOffset = new GridBagConstraints();
                         gbc_textFieldAlternateOffset.insets = new Insets(0, 0, 5, 5);
                         gbc_textFieldAlternateOffset.fill = GridBagConstraints.HORIZONTAL;
@@ -318,11 +382,13 @@ public class PanelArrayBuilderDialog extends JDialog {
                         gbc_textFieldAlternateOffset.gridy = 6;
                         panelRectangular.add(textFieldAlternateOffset, gbc_textFieldAlternateOffset);
                         textFieldAlternateOffset.setColumns(10);
-                        BeanUtils.bind(UpdateStrategy.READ_WRITE, this, "alternateOffset", textFieldAlternateOffset, "text", new LengthConverter());
+                        BeanUtils.bind(UpdateStrategy.READ_WRITE, this, "alternateOffset", //$NON-NLS-1$
+                                textFieldAlternateOffset, "text", new LengthConverter()); //$NON-NLS-1$
                         ComponentDecorators.decorateWithLengthConversion(textFieldAlternateOffset);
                     }
                     {
-                        JLabel lblNewLabel_8 = new JLabel("column offset relative to the first row");
+                        JLabel lblNewLabel_8 = new JLabel(
+                                Translations.getString("PanelArrayBuilderDialog.Rectangular.Label.AlternateRowColumnOffset.Trailer")); //$NON-NLS-1$
                         GridBagConstraints gbc_lblNewLabel_8 = new GridBagConstraints();
                         gbc_lblNewLabel_8.anchor = GridBagConstraints.WEST;
                         gbc_lblNewLabel_8.gridwidth = 4;
@@ -334,7 +400,7 @@ public class PanelArrayBuilderDialog extends JDialog {
                 }
                 {
                     JPanel panelCircular = new JPanel();
-                    panelControls.add(panelCircular, "Circular");
+                    panelControls.add(panelCircular, "Circular"); //$NON-NLS-1$
                     GridBagLayout gbl_panelCircular = new GridBagLayout();
                     gbl_panelCircular.columnWidths = new int[]{0, 80, 80, 0, 0, 0};
                     gbl_panelCircular.rowHeights = new int[]{0, 0, 0, 0, 0, 0, 0};
@@ -342,7 +408,7 @@ public class PanelArrayBuilderDialog extends JDialog {
                     gbl_panelCircular.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
                     panelCircular.setLayout(gbl_panelCircular);
                     {
-                        JLabel lblNewLabel_11 = new JLabel("X");
+                        JLabel lblNewLabel_11 = new JLabel("X"); //$NON-NLS-1$
                         GridBagConstraints gbc_lblNewLabel_11 = new GridBagConstraints();
                         gbc_lblNewLabel_11.insets = new Insets(0, 0, 5, 5);
                         gbc_lblNewLabel_11.gridx = 1;
@@ -350,7 +416,7 @@ public class PanelArrayBuilderDialog extends JDialog {
                         panelCircular.add(lblNewLabel_11, gbc_lblNewLabel_11);
                     }
                     {
-                        JLabel lblNewLabel_12 = new JLabel("Y");
+                        JLabel lblNewLabel_12 = new JLabel("Y"); //$NON-NLS-1$
                         GridBagConstraints gbc_lblNewLabel_12 = new GridBagConstraints();
                         gbc_lblNewLabel_12.insets = new Insets(0, 0, 5, 5);
                         gbc_lblNewLabel_12.gridx = 2;
@@ -358,7 +424,8 @@ public class PanelArrayBuilderDialog extends JDialog {
                         panelCircular.add(lblNewLabel_12, gbc_lblNewLabel_12);
                     }
                     {
-                        JLabel lblNewLabel_4 = new JLabel("Array Center");
+                        JLabel lblNewLabel_4 = new JLabel(
+                                Translations.getString("PanelArrayBuilderDialog.Circular.Label.ArrayCenter")); //$NON-NLS-1$
                         GridBagConstraints gbc_lblNewLabel_4 = new GridBagConstraints();
                         gbc_lblNewLabel_4.anchor = GridBagConstraints.EAST;
                         gbc_lblNewLabel_4.insets = new Insets(0, 0, 5, 5);
@@ -368,7 +435,8 @@ public class PanelArrayBuilderDialog extends JDialog {
                     }
                     {
                         textFieldCenterX = new JTextField();
-                        textFieldCenterX.setToolTipText("The X coordinate of the array center");
+                        textFieldCenterX.setToolTipText(
+                                Translations.getString("PanelArrayBuilderDialog.Circular.TextFieldCenterX.ToolTip")); //$NON-NLS-1$
                         GridBagConstraints gbc_textFieldCenterX = new GridBagConstraints();
                         gbc_textFieldCenterX.insets = new Insets(0, 0, 5, 5);
                         gbc_textFieldCenterX.fill = GridBagConstraints.HORIZONTAL;
@@ -376,12 +444,14 @@ public class PanelArrayBuilderDialog extends JDialog {
                         gbc_textFieldCenterX.gridy = 1;
                         panelCircular.add(textFieldCenterX, gbc_textFieldCenterX);
                         textFieldCenterX.setColumns(10);
-                        BeanUtils.bind(UpdateStrategy.READ_WRITE, this, "centerX", textFieldCenterX, "text", new LengthConverter());
+                        BeanUtils.bind(UpdateStrategy.READ_WRITE, this, "centerX", //$NON-NLS-1$
+                                textFieldCenterX, "text", new LengthConverter()); //$NON-NLS-1$
                         ComponentDecorators.decorateWithLengthConversion(textFieldCenterX);
                     }
                     {
                         textFieldCenterY = new JTextField();
-                        textFieldCenterY.setToolTipText("The Y coordinate of the array center");
+                        textFieldCenterY.setToolTipText(
+                                Translations.getString("PanelArrayBuilderDialog.Circular.TextFieldCenterY.ToolTip")); //$NON-NLS-1$
                         GridBagConstraints gbc_textFieldCenterY = new GridBagConstraints();
                         gbc_textFieldCenterY.insets = new Insets(0, 0, 5, 5);
                         gbc_textFieldCenterY.fill = GridBagConstraints.HORIZONTAL;
@@ -389,11 +459,13 @@ public class PanelArrayBuilderDialog extends JDialog {
                         gbc_textFieldCenterY.gridy = 1;
                         panelCircular.add(textFieldCenterY, gbc_textFieldCenterY);
                         textFieldCenterY.setColumns(10);
-                        BeanUtils.bind(UpdateStrategy.READ_WRITE, this, "centerY", textFieldCenterY, "text", new LengthConverter());
+                        BeanUtils.bind(UpdateStrategy.READ_WRITE, this, "centerY", //$NON-NLS-1$
+                                textFieldCenterY, "text", new LengthConverter()); //$NON-NLS-1$
                         ComponentDecorators.decorateWithLengthConversion(textFieldCenterY);
                     }
                     {
-                        JLabel lblNewLabel_10 = new JLabel("Relative to");
+                        JLabel lblNewLabel_10 = new JLabel(
+                                Translations.getString("PanelArrayBuilderDialog.Circular.Label.RelativeTo")); //$NON-NLS-1$
                         GridBagConstraints gbc_lblNewLabel_10 = new GridBagConstraints();
                         gbc_lblNewLabel_10.anchor = GridBagConstraints.EAST;
                         gbc_lblNewLabel_10.insets = new Insets(0, 0, 5, 5);
@@ -402,8 +474,10 @@ public class PanelArrayBuilderDialog extends JDialog {
                         panelCircular.add(lblNewLabel_10, gbc_lblNewLabel_10);
                     }
                     {
-                        JRadioButton rdbtnPanel = new JRadioButton("Panel");
-                        rdbtnPanel.setToolTipText("The Array Center coordinates are expressed in the Panel's reference frame");
+                        JRadioButton rdbtnPanel = new JRadioButton(
+                                Translations.getString("PanelArrayBuilderDialog.Circular.RadioButton.Panel")); //$NON-NLS-1$
+                        rdbtnPanel.setToolTipText(
+                                Translations.getString("PanelArrayBuilderDialog.Circular.RadioButton.Panel.ToolTip")); //$NON-NLS-1$
                         rdbtnPanel.setSelected(true);
                         buttonGroup.add(rdbtnPanel);
                         GridBagConstraints gbc_rdbtnPanel = new GridBagConstraints();
@@ -412,11 +486,14 @@ public class PanelArrayBuilderDialog extends JDialog {
                         gbc_rdbtnPanel.gridx = 1;
                         gbc_rdbtnPanel.gridy = 2;
                         panelCircular.add(rdbtnPanel, gbc_rdbtnPanel);
-                        BeanUtils.bind(UpdateStrategy.READ_WRITE, this, "panelReferenceFrame", rdbtnPanel, "selected");
+                        BeanUtils.bind(UpdateStrategy.READ_WRITE, this, "panelReferenceFrame", //$NON-NLS-1$
+                                rdbtnPanel, "selected"); //$NON-NLS-1$
                     }
                     {
-                        JRadioButton rdbtnRootChild = new JRadioButton("Root Child");
-                        rdbtnRootChild.setToolTipText("The Array Center Coordinates are expressed in the root child's reference frame");
+                        JRadioButton rdbtnRootChild = new JRadioButton(
+                                Translations.getString("PanelArrayBuilderDialog.Circular.RadioButton.RootChild")); //$NON-NLS-1$
+                        rdbtnRootChild.setToolTipText(
+                                Translations.getString("PanelArrayBuilderDialog.Circular.RadioButton.RootChild.ToolTip")); //$NON-NLS-1$
                         buttonGroup.add(rdbtnRootChild);
                         GridBagConstraints gbc_rdbtnRootChild = new GridBagConstraints();
                         gbc_rdbtnRootChild.anchor = GridBagConstraints.WEST;
@@ -426,7 +503,8 @@ public class PanelArrayBuilderDialog extends JDialog {
                         panelCircular.add(rdbtnRootChild, gbc_rdbtnRootChild);
                     }
                     {
-                        JLabel lblNewLabel_7 = new JLabel("Angular Steps");
+                        JLabel lblNewLabel_7 = new JLabel(
+                                Translations.getString("PanelArrayBuilderDialog.Circular.Label.AngularSteps")); //$NON-NLS-1$
                         GridBagConstraints gbc_lblNewLabel_7 = new GridBagConstraints();
                         gbc_lblNewLabel_7.anchor = GridBagConstraints.SOUTHEAST;
                         gbc_lblNewLabel_7.insets = new Insets(0, 0, 5, 5);
@@ -436,7 +514,8 @@ public class PanelArrayBuilderDialog extends JDialog {
                     }
                     {
                         JSpinner spinnerAngularSteps = new JSpinner();
-                        spinnerAngularSteps.setToolTipText("Number of copies to generate angularly around the Array Center");
+                        spinnerAngularSteps.setToolTipText(
+                                Translations.getString("PanelArrayBuilderDialog.Circular.SpinnerAngularSteps.ToolTip")); //$NON-NLS-1$
                         spinnerAngularSteps.setModel(new SpinnerNumberModel(1, 1, null, 1));
                         GridBagConstraints gbc_spinnerAngularSteps = new GridBagConstraints();
                         gbc_spinnerAngularSteps.fill = GridBagConstraints.HORIZONTAL;
@@ -444,11 +523,14 @@ public class PanelArrayBuilderDialog extends JDialog {
                         gbc_spinnerAngularSteps.gridx = 1;
                         gbc_spinnerAngularSteps.gridy = 4;
                         panelCircular.add(spinnerAngularSteps, gbc_spinnerAngularSteps);
-                        BeanUtils.bind(UpdateStrategy.READ_WRITE, this, "angularCount", spinnerAngularSteps, "value");
+                        BeanUtils.bind(UpdateStrategy.READ_WRITE, this, "angularCount", //$NON-NLS-1$
+                                spinnerAngularSteps, "value"); //$NON-NLS-1$
                     }
                     {
-                        JCheckBox chckbxAngleStepsIncrease = new JCheckBox("Increase proportionally with radius");
-                        chckbxAngleStepsIncrease.setToolTipText("When selected, the number of angular steps at each radial step is increased proportionally to its radius");
+                        JCheckBox chckbxAngleStepsIncrease = new JCheckBox(
+                                Translations.getString("PanelArrayBuilderDialog.Circular.CheckBox.IncreaseProportionallyWithRadius")); //$NON-NLS-1$
+                        chckbxAngleStepsIncrease.setToolTipText(
+                                Translations.getString("PanelArrayBuilderDialog.Circular.CheckBox.IncreaseProportionallyWithRadius.ToolTip")); //$NON-NLS-1$
                         GridBagConstraints gbc_chckbxAngleStepsIncrease = new GridBagConstraints();
                         gbc_chckbxAngleStepsIncrease.anchor = GridBagConstraints.WEST;
                         gbc_chckbxAngleStepsIncrease.gridwidth = 2;
@@ -456,10 +538,12 @@ public class PanelArrayBuilderDialog extends JDialog {
                         gbc_chckbxAngleStepsIncrease.gridx = 2;
                         gbc_chckbxAngleStepsIncrease.gridy = 4;
                         panelCircular.add(chckbxAngleStepsIncrease, gbc_chckbxAngleStepsIncrease);
-                        BeanUtils.bind(UpdateStrategy.READ_WRITE, this, "increaseProportionally", chckbxAngleStepsIncrease, "selected");
+                        BeanUtils.bind(UpdateStrategy.READ_WRITE, this, "increaseProportionally", //$NON-NLS-1$
+                                chckbxAngleStepsIncrease, "selected"); //$NON-NLS-1$
                     }
                     {
-                        JLabel lblNewLabel_9 = new JLabel("Radial Steps");
+                        JLabel lblNewLabel_9 = new JLabel(
+                                Translations.getString("PanelArrayBuilderDialog.Circular.Label.RadialSteps")); //$NON-NLS-1$
                         GridBagConstraints gbc_lblNewLabel_9 = new GridBagConstraints();
                         gbc_lblNewLabel_9.anchor = GridBagConstraints.EAST;
                         gbc_lblNewLabel_9.insets = new Insets(0, 0, 0, 5);
@@ -469,7 +553,8 @@ public class PanelArrayBuilderDialog extends JDialog {
                     }
                     {
                         JSpinner spinnerRadialSteps = new JSpinner();
-                        spinnerRadialSteps.setToolTipText("Number of copies to generate radially outward from the Array Center");
+                        spinnerRadialSteps.setToolTipText(
+                                Translations.getString("PanelArrayBuilderDialog.Circular.spinnerRadialSteps.ToolTip")); //$NON-NLS-1$
                         spinnerRadialSteps.setModel(new SpinnerNumberModel(1, 1, null, 1));
                         GridBagConstraints gbc_spinnerRadialSteps = new GridBagConstraints();
                         gbc_spinnerRadialSteps.fill = GridBagConstraints.HORIZONTAL;
@@ -477,7 +562,8 @@ public class PanelArrayBuilderDialog extends JDialog {
                         gbc_spinnerRadialSteps.gridx = 1;
                         gbc_spinnerRadialSteps.gridy = 5;
                         panelCircular.add(spinnerRadialSteps, gbc_spinnerRadialSteps);
-                        BeanUtils.bind(UpdateStrategy.READ_WRITE, this, "radialCount", spinnerRadialSteps, "value");
+                        BeanUtils.bind(UpdateStrategy.READ_WRITE, this, "radialCount", //$NON-NLS-1$
+                                spinnerRadialSteps, "value"); //$NON-NLS-1$
                     }
                 }
             }
@@ -494,8 +580,8 @@ public class PanelArrayBuilderDialog extends JDialog {
             buttonPane.setLayout(new FlowLayout(FlowLayout.RIGHT));
             getContentPane().add(buttonPane, BorderLayout.SOUTH);
             {
-                JButton okButton = new JButton("OK");
-                okButton.setActionCommand("OK");
+                JButton okButton = new JButton(
+                        Translations.getString("PanelArrayBuilderDialog.Button.Ok")); //$NON-NLS-1$
                 okButton.addActionListener(new ActionListener() {
 
                     @Override
@@ -511,8 +597,8 @@ public class PanelArrayBuilderDialog extends JDialog {
                 getRootPane().setDefaultButton(okButton);
             }
             {
-                JButton cancelButton = new JButton("Cancel");
-                cancelButton.setActionCommand("Cancel");
+                JButton cancelButton = new JButton(
+                        Translations.getString("PanelArrayBuilderDialog.Button.Cancel")); //$NON-NLS-1$
                 cancelButton.addActionListener(new ActionListener() {
 
                     @Override
@@ -735,7 +821,7 @@ public class PanelArrayBuilderDialog extends JDialog {
                     Length rowOffset = alternateOffset.abs().multiply((i % 2) == 0 ? 0 : -alternateRowColumnDelta);
                     for (int j=0; j<cCount; j++) {
                         if (i == 0 && j == 0 && (rowCount > 1 || cCount > 1)) {
-                            rootChildLocation.setId(String.format("%s[%d,%d]", rootChildId, i+1, j+1));
+                            rootChildLocation.setId(String.format("%s[%d,%d]", rootChildId, i+1, j+1)); //$NON-NLS-1$
                         }
                         else {
                             Location offset = new Location(systemUnit);
@@ -749,7 +835,7 @@ public class PanelArrayBuilderDialog extends JDialog {
                                 newChildLocation = new PanelLocation(new Panel(((PanelLocation) rootChildLocation).getPanel()));
                             }
                             newChildLocation.setCheckFiducials(rootChildLocation.isCheckFiducials());
-                            newChildLocation.setId(String.format("%s[%d,%d]", rootChildId, i+1, j+1));
+                            newChildLocation.setId(String.format("%s[%d,%d]", rootChildId, i+1, j+1)); //$NON-NLS-1$
                             newChildLocation.setLocation(rootChildLocation.getLocation().add(offset));
                             newChildren.add(newChildLocation);
                             panelLocation.addChild(newChildLocation);
@@ -777,7 +863,7 @@ public class PanelArrayBuilderDialog extends JDialog {
                     
                     for (int j=0; j<aCount; j++) {
                         if (i == 0 && j == 0 && (aCount > 1 || radialCount > 1)) {
-                            rootChildLocation.setId(String.format("%s[%d,%d]", rootChildId, i+1, j+1));
+                            rootChildLocation.setId(String.format("%s[%d,%d]", rootChildId, i+1, j+1)); //$NON-NLS-1$
                         }
                         else {
                             double angleDeg = initAngle + angleStep*j;
@@ -795,7 +881,7 @@ public class PanelArrayBuilderDialog extends JDialog {
                                 newChildLocation = new PanelLocation(new Panel(((PanelLocation) rootChildLocation).getPanel()));
                             }
                             newChildLocation.setCheckFiducials(rootChildLocation.isCheckFiducials());
-                            newChildLocation.setId(String.format("%s[%d,%d]", rootChildId, i+1, j+1));
+                            newChildLocation.setId(String.format("%s[%d,%d]", rootChildId, i+1, j+1)); //$NON-NLS-1$
                             newChildLocation.setLocation(loc);
                             newChildren.add(newChildLocation);
                             panelLocation.addChild(newChildLocation);

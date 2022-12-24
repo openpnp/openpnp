@@ -209,7 +209,7 @@ public class PlacementsTableModel extends AbstractObjectTableModel
             }
             else if (columnIndex == 8) {
                 jobPlacementsPanel.getJobPanel().getJob()
-                    .setPlaced(placementsHolderLocation, placement.getId(), (Boolean) aValue);
+                    .storePlacedStatus(placementsHolderLocation, placement.getId(), (Boolean) aValue);
                 jobPlacementsPanel.updateActivePlacements();
             }
             else if (columnIndex == 10) {
@@ -285,7 +285,7 @@ public class PlacementsTableModel extends AbstractObjectTableModel
                 // would be better if the information was updated out of band by a listener.
             	jobPlacementsPanel.updateActivePlacements();
             	return jobPlacementsPanel.getJobPanel().getJob()
-            	        .getPlaced(placementsHolderLocation, placement.getId());
+            	        .retrievePlacedStatus(placementsHolderLocation, placement.getId());
             case 9:
                 return getPlacementStatus(placement);
             case 10:

@@ -29,15 +29,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.openpnp.model.Abstract2DLocatable.Side;
 import org.openpnp.model.Placement.Type;
-import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.ElementMap;
 import org.simpleframework.xml.Root;
-import org.simpleframework.xml.core.Commit;
 import org.simpleframework.xml.core.Persist;
 
 /**
@@ -50,167 +47,69 @@ public class Job extends AbstractModelObject implements PropertyChangeListener {
     @Attribute(required = false)
     protected Double version = null;
     
+    /**
+     * @deprecated All Panels are now held as children of the job's rootPanel
+     */
     @Deprecated
     @ElementList(required = false)
-    protected ArrayList<Panel> panels = new ArrayList<>();
+    protected ArrayList<Panel> panels = null;
 
+    /**
+     * @deprecated All Boards are now held as children of the job's rootPanel
+     */
     @Deprecated
     @ElementList(required = false)
-    private ArrayList<BoardLocation> boardLocations = new ArrayList<>();
+    protected ArrayList<BoardLocation> boardLocations = null;
 
     @Element(required = false)
-    private Panel rootPanel = new Panel();
+    protected Panel rootPanel = new Panel();
     
     @ElementMap(required = false)
-    private Map<String, Boolean> placed = new HashMap<>();
+    protected Map<String, Boolean> placedStatusMap = new HashMap<>();
 
     @ElementMap(required = false)
-    private Map<String, Boolean> enabled = new HashMap<>();
+    protected Map<String, Boolean> enabledStateMap = new HashMap<>();
 
     @ElementMap(required = false)
-    private Map<String, Boolean> checkFiducials = new HashMap<>();
+    protected Map<String, Boolean> checkFiducialsStateMap = new HashMap<>();
 
     @ElementMap(required = false)
-    private Map<String, Placement.ErrorHandling> errorHandling = new HashMap<>();
+    protected Map<String, Placement.ErrorHandling> errorHandlingStateMap = new HashMap<>();
 
     
-    private transient File file;
-    private transient boolean dirty;
-    private transient final PanelLocation rootPanelLocation;
+    protected transient File file;
+    protected transient boolean dirty;
+    protected transient final PanelLocation rootPanelLocation;
     
     public Job() {
         rootPanelLocation = new PanelLocation(rootPanel);
         rootPanelLocation.setLocalToParentTransform(new AffineTransform());
         rootPanelLocation.setCheckFiducials(false);
-        Logger.trace(String.format("Created new Job Panel @%08x, defined by @%08x", rootPanelLocation.getPanel().hashCode(), rootPanelLocation.getPanel().getDefinition().hashCode()));
         addPropertyChangeListener(this);
     }
 
-    @Commit
-    private void commit() {
-         if (panels != null && !panels.isEmpty()) {
-            //Convert deprecated list of Panels to list of PanelLocations - note that the legacy 
-            //panelization only ever allowed one panel so we only need to handle that case here
-             
-            //We need to create a new panel, populate it with the boards in the job, add the new 
-            //panel to the configuration, and then add a panelLocation to the job's rootPanel that 
-            //references it
-            
-            //First we need the root board location for the panel, this is the one that originally 
-            //set the origin of the panel
-            BoardLocation rootBoardLocation = boardLocations.get(0);
-            
-            //Now create a file for the new panel, we'll just use the root board's file name except 
-            //change it to end with ".panel.xml"
-            String boardFileName = rootBoardLocation.getFileName();
-            String panelFileName = boardFileName.substring(0, boardFileName.indexOf(".board.xml")) + ".panel.xml";
-            File panelFile = new File(panelFileName);
-            
-            Panel panel = panels.get(0);
-            panel.setFile(panelFile);
-            panel.setName(panelFile.getName());
-            panel.setDefinition(panel);
-            panel.setDimensions(Location.origin);
-            
-            Configuration configuration = Configuration.get();
-            try {
-                configuration.resolveBoard(this, rootBoardLocation);
-            }
-            catch (Exception e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-            Location rootDims = rootBoardLocation.getBoard().getDimensions().
-                    convertToUnits(configuration.getSystemUnits());
-            
-            panel.setDimensions(Location.origin.deriveLengths(
-                    rootDims.getLengthX().add(panel.xGap).multiply(panel.columns).subtract(panel.xGap),
-                    rootDims.getLengthY().add(panel.yGap).multiply(panel.rows).subtract(panel.yGap),
-                    null, null));
-            
-            double pcbStepX = rootDims.getLengthX().add(panel.xGap).getValue();
-            double pcbStepY = rootDims.getLengthY().add(panel.yGap).getValue();
-            
-            for (int j = 0; j < panel.rows; j++) {
-                for (int i = 0; i < panel.columns; i++) {
-                    // deep copy the existing rootPcb
-                    BoardLocation newPcb = new BoardLocation(rootBoardLocation);
-                    newPcb.setParent(null);
-                    newPcb.setDefinition(newPcb);
-                    newPcb.setGlobalSide(Side.Top);
-                    newPcb.getPlaced().clear();
-                    
-                    // Offset the sub PCB
-                    newPcb.setLocation(new Location(configuration.getSystemUnits(),
-                                    pcbStepX * i,
-                                    pcbStepY * j, 0, 0));
-                    
-                    panel.addChild(newPcb);
-                    
-                    int boardNum = j*panel.columns + (rootBoardLocation.getGlobalSide() == Side.Top ? i : panel.columns - 1 - i);
-                    BoardLocation subBoard = boardLocations.get(boardNum);
-                    
-                    String keyRoot = PanelLocation.ID_PREFIX + "1" + PlacementsHolderLocation.ID_DELIMITTER + newPcb.getUniqueId();
-                    Map<String, Boolean> subBoardPlaced = subBoard.getPlaced();
-                    for (String key : subBoardPlaced.keySet()) {
-                        placed.put(keyRoot + key, subBoardPlaced.get(key));
-                    }
-                }
-            }
-            boolean savedCheckFids = panel.isCheckFiducials();
-            
-            try {
-                configuration.savePanel(panel);
-            }
-            catch (Exception e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-            configuration.addPanel(panel);
-            
-            PanelLocation panelLocation = new PanelLocation();
-            panelLocation.setFileName(panelFileName);
-            panelLocation.setGlobalLocation(rootBoardLocation.getGlobalLocation());
-            panelLocation.setGlobalSide(rootBoardLocation.getGlobalSide());
-            panelLocation.setCheckFiducials(savedCheckFids);
-            rootPanel.addChild(panelLocation);
-            
-            dirty = true;
-            panels = null;
-            boardLocations = null;
-        }
-        else if (boardLocations != null){
-            //Add board locations to the root panel
-            for (BoardLocation boardLocation : boardLocations) {
-                rootPanel.addChild(boardLocation);
-                
-                //Move the deprecated placement status from the boardLocation to the job
-                Map<String, Boolean> temp = boardLocation.getPlaced();
-                if (temp != null) {
-                    for (String placementId : temp.keySet()) {
-                        setPlaced(boardLocation, placementId, temp.get(placementId));
-                    }
-                }
-            }
-            boardLocations = null;
-            dirty = true;
-        }
-        
-        rootPanelLocation.setPlacementsHolder(rootPanel);
-    }
-    
     @Persist
     private void persist() {
         version = LATEST_VERSION;
         
-        //Remove the deprecated list of Panels 
+        //Remove the deprecated items 
         panels = null;
+        boardLocations = null;
     }
     
+    /**
+     *
+     * @return a flattened list of all BoardLocations held by the job
+     */
     public List<BoardLocation> getBoardLocations() {
-        return rootPanelLocation.getPanel().getDescendantBoardLocations();
+        return Collections.unmodifiableList(rootPanelLocation.getPanel().getDescendantBoardLocations());
+//        return rootPanelLocation.getPanel().getDescendantBoardLocations();
     }
 
+    /**
+    *
+    * @return a flattened list of all PanleLocations held by the job
+    */
     public List<PanelLocation> getPanelLocations() {
         List<PanelLocation> retList = new ArrayList<>();
         retList.add(rootPanelLocation);
@@ -218,6 +117,10 @@ public class Job extends AbstractModelObject implements PropertyChangeListener {
         return Collections.unmodifiableList(retList);
     }
 
+    /**
+    *
+    * @return a flattened list of all PanelLocations and BoardLocations held by the job
+    */
     public List<PlacementsHolderLocation<?>> getBoardAndPanelLocations() {
         List<PlacementsHolderLocation<?>> retList = new ArrayList<>();
         retList.add(rootPanelLocation);
@@ -225,46 +128,86 @@ public class Job extends AbstractModelObject implements PropertyChangeListener {
         return Collections.unmodifiableList(retList);
     }
     
+    /**
+     * Adds a BoardLocation or PanelLocation to the job
+     * @param boardOrPanelLocation - the BoardLocation or PanelLocation
+     */
     public void addBoardOrPanelLocation(PlacementsHolderLocation<?> boardOrPanelLocation) {
         rootPanelLocation.addChild(boardOrPanelLocation);
         boardOrPanelLocation.addPropertyChangeListener(this);
         firePropertyChange("rootPanelLocation", null, rootPanelLocation);
     }
 
+    /**
+     * Removes a BoardLocation or PanelLocation from the job
+     * @param boardOrPanelLocation - the BoardLocation or PanelLocation
+     */
     public void removeBoardOrPanelLocation(PlacementsHolderLocation<?> boardOrPanelLocation) {
         rootPanelLocation.removeChild(boardOrPanelLocation);
         boardOrPanelLocation.removePropertyChangeListener(this);
         firePropertyChange("rootPanelLocation", null, rootPanelLocation);
     }
 
+    /**
+     * Counts the number of instances of a Board or Panel that are held by the job
+     * @param boardOrPanel - the Board or Panel whose instances are to be counted
+     * @return - the count
+     */
     public int instanceCount(PlacementsHolder<?> boardOrPanel) {
         return rootPanelLocation.getPanel().getInstanceCount(boardOrPanel);
     }
     
+    /**
+     * Gets the file where the job is stored in the file system
+     * @return - the file
+     */
     public File getFile() {
         return file;
     }
 
+    /**
+     * Sets the file where the job is stored in the file system
+     * @param file - the file
+     */
     public void setFile(File file) {
         Object oldValue = this.file;
         this.file = file;
         firePropertyChange("file", oldValue, file);
     }
 
+    /**
+     * Checks to see if the Job has been modified
+     * @return - true if the Job has been modified
+     */
     public boolean isDirty() {
         return dirty;
     }
 
+    /**
+     * Set the flag that indicates if the Job has been modified
+     * @param dirty - the state to set the flag
+     */
     public void setDirty(boolean dirty) {
         boolean oldValue = this.dirty;
         this.dirty = dirty;
         firePropertyChange("dirty", oldValue, dirty);
     }
 
+    /**
+     * Gets the root PanelLocation of the Job. This contains all the BoardLocations and/or
+     * PanelLocations for the Job.
+     * @return - the root PanelLocation
+     */
     public PanelLocation getRootPanelLocation() {
         return rootPanelLocation;
     }
 
+    /**
+     * Gets the total number of Placements held by a PlacementsHolderLocation and it descendants
+     * that are facing up on the machine and are enabled.
+     * @param placementsHolderLocation - the PlacementsHolderLocation
+     * @return the total number of active placements
+     */
     public int getTotalActivePlacements(PlacementsHolderLocation<?> placementsHolderLocation) {
         if (placementsHolderLocation == null || placementsHolderLocation.getPlacementsHolder() == null ||
                 !placementsHolderLocation.isEnabled()) {
@@ -292,6 +235,12 @@ public class Job extends AbstractModelObject implements PropertyChangeListener {
         return counter;
     }
     
+    /**
+     * Gets the number of Placements held by a PlacementsHolderLocation and its descendants that are
+     * facing up on the machine, are enabled, and have not yet been placed.
+     * @param placementsHolderLocation - the PlacementsHolderLocation
+     * @return the number of active placements
+     */
     public int getActivePlacements(PlacementsHolderLocation<?> placementsHolderLocation) {
         if (placementsHolderLocation == null || placementsHolderLocation.getPlacementsHolder() == null ||
                 !placementsHolderLocation.isEnabled()) {
@@ -304,7 +253,7 @@ public class Job extends AbstractModelObject implements PropertyChangeListener {
                 if (placement.getSide() == placementsHolderLocation.getGlobalSide()
                         && placement.getType() == Type.Placement
                         && placement.isEnabled()
-                        && !getPlaced(placementsHolderLocation, placement.getId())) {
+                        && !retrievePlacedStatus(placementsHolderLocation, placement.getId())) {
                         counter++;
                 }
             }
@@ -320,132 +269,222 @@ public class Job extends AbstractModelObject implements PropertyChangeListener {
         return counter;
     }
 
-    public void setPlaced(PlacementsHolderLocation<?> placementsHolderLocation, String placementId, boolean placed) {
+    /**
+     * Stores the placed status of a Placement in a way that is uniquely identifiable to it   
+     * @param placementsHolderLocation - the PlacementsHolderLocation that contains the Placement
+     * @param placementId - the id of the Placement
+     * @param placed - the status to be stored
+     */
+    public void storePlacedStatus(PlacementsHolderLocation<?> placementsHolderLocation, String placementId, boolean placed) {
         String key = placementsHolderLocation.getUniqueId() + PlacementsHolderLocation.ID_DELIMITTER + placementId;
-        this.placed.put(key, placed);
-        firePropertyChange("placed", null, this.placed);
+        this.placedStatusMap.put(key, placed);
+        firePropertyChange("placed", null, this.placedStatusMap);
     }
 
-    public boolean getPlaced(PlacementsHolderLocation<?> placementsHolderLocation, String placementId) {
+    /**
+     * Retrieves the stored placed status of the Placement
+     * @param placementsHolderLocation - the PlacementsHolderLocation that contains the Placement
+     * @param placementId - the id of the Placement
+     * @return the placed status of the Placement if one has previously been stored, otherwise
+     * returns false
+     */
+    public boolean retrievePlacedStatus(PlacementsHolderLocation<?> placementsHolderLocation, String placementId) {
         String key = placementsHolderLocation.getUniqueId() + PlacementsHolderLocation.ID_DELIMITTER + placementId;
-        if (placed.containsKey(key)) {
-            return placed.get(key);
+        if (placedStatusMap.containsKey(key)) {
+            return placedStatusMap.get(key);
         } 
         else {
             return false;
         }
     }
     
-    public void removePlaced(PlacementsHolderLocation<?> placementsHolderLocation, String placementId) {
+    /**
+     * Removes the stored placed status of a Placement
+     * @param placementsHolderLocation - the PlacementsHolderLocation that contains the Placement
+     * @param placementId - the id of the Placement
+     */
+    public void removePlacedStatus(PlacementsHolderLocation<?> placementsHolderLocation, String placementId) {
         String key = placementsHolderLocation.getUniqueId() + PlacementsHolderLocation.ID_DELIMITTER + placementId;
-        placed.remove(key);
-        firePropertyChange("placed", null, placed);
+        if (placedStatusMap.remove(key) != null) {
+            firePropertyChange("placed", null, placedStatusMap);
+        }
     }
     
-    public void clearAllPlaced() {
-        placed.clear();
-        firePropertyChange("placed", null, placed);
+    /**
+     * Removes all stored placed status 
+     */
+    public void removeAllPlacedStatus() {
+        placedStatusMap.clear();
+        firePropertyChange("placed", null, placedStatusMap);
     }
     
-    public void setEnabled(PlacementsHolderLocation<?> placementsHolderLocation, Placement placement, boolean enabled) {
+    /**
+     * Stores the enabled state of a Placement or PlacementsHolderLocation in a way that is 
+     * uniquely identifiable to it
+     * @param placementsHolderLocation - the PlacementsHolderLocation holding the Placement
+     * @param placement - the Placement whose state is to be stored or null if the 
+     * PlacementsHolderLocation state is to be stored
+     * @param enabledStateMap - the enabled state to be stored
+     */
+    public void storeEnabledState(PlacementsHolderLocation<?> placementsHolderLocation, Placement placement, boolean enabled) {
         String key = placementsHolderLocation.getUniqueId();
         if (placement != null) {
             key += PlacementsHolderLocation.ID_DELIMITTER + placement.getId();
         }
-        this.enabled.put(key, enabled);
-        firePropertyChange("enabled", null, this.enabled);
+        this.enabledStateMap.put(key, enabled);
+        firePropertyChange("enabled", null, this.enabledStateMap);
     }
 
-    public boolean getEnabled(PlacementsHolderLocation<?> placementsHolderLocation, Placement placement) {
+    /**
+     * Retrieves the stored enabled state of a Placement or PlacementsHolderLocation 
+     * @param placementsHolderLocation - the PlacementsHolderLocation holding the Placement
+     * @param placement - the Placement whose state is to be retrieved or null if the 
+     * PlacementsHolderLocation state is to be retrieved
+     * @return the stored enabled state if one has been previously stored, otherwise returns the
+     * current enabled state of the Placement or PlacementsHolderLocation
+     */
+    public boolean retrieveEnabledState(PlacementsHolderLocation<?> placementsHolderLocation, Placement placement) {
         String key = placementsHolderLocation.getUniqueId();
         if (placement != null) {
             key += PlacementsHolderLocation.ID_DELIMITTER + placement.getId();
         }
-        if (enabled.containsKey(key)) {
-            return enabled.get(key);
+        if (enabledStateMap.containsKey(key)) {
+            return enabledStateMap.get(key);
         } 
         else {
             return placement != null ? placement.isEnabled() : placementsHolderLocation.isLocallyEnabled();
         }
     }
     
-    public void removeEnabled(PlacementsHolderLocation<?> placementsHolderLocation, Placement placement) {
+    /**
+     * Removes the stored enabled state of a PlacementsHolderLocation or Placement
+     * @param placementsHolderLocation - the placementsHolderLocation that contains the placement
+     * @param placement - the Placement whose state is to be removed or null if the 
+     * PlacementsHolderLocation state is to be removed
+     */
+    public void removeEnabledState(PlacementsHolderLocation<?> placementsHolderLocation, Placement placement) {
         String key = placementsHolderLocation.getUniqueId();
         if (placement != null) {
             key += PlacementsHolderLocation.ID_DELIMITTER + placement.getId();
         }
-        enabled.remove(key);
-        firePropertyChange("enabled", null, enabled);
+        enabledStateMap.remove(key);
+        firePropertyChange("enabled", null, enabledStateMap);
     }
     
-    public void removeAllEnabled() {
-        enabled.clear();
-        firePropertyChange("enabled", null, enabled);
+    /**
+     * Removes all stored enabled states
+     */
+    public void removeAllEnabledState() {
+        enabledStateMap.clear();
+        firePropertyChange("enabled", null, enabledStateMap);
     }
     
-    public void setCheckFiducials(PlacementsHolderLocation<?> placementsHolderLocation, boolean enabled) {
+    /**
+     * Stores the check fiducials state of a PlacementsHolderLocation in a way that is uniquely
+     * identifiable to it
+     * @param placementsHolderLocation - the PlacementsHolderLocation whose state is to be stored
+     * @param enabledStateMap - the check fiducials state to be stored
+     */
+    public void storeCheckFiducialsState(PlacementsHolderLocation<?> placementsHolderLocation, boolean enabled) {
         String key = placementsHolderLocation.getUniqueId();
-        this.checkFiducials.put(key, enabled);
-        firePropertyChange("checkFiducials", null, this.checkFiducials);
+        this.checkFiducialsStateMap.put(key, enabled);
+        firePropertyChange("checkFiducials", null, this.checkFiducialsStateMap);
     }
 
-    public boolean getCheckFiducials(PlacementsHolderLocation<?> placementsHolderLocation) {
+    /**
+     * Retrieves the stored check fiducials state of a PlacementsHolderLocation
+     * @param placementsHolderLocation - the PlacementsHolderLocation whose state is to be retrieved
+     * @return the stored check fiducials state if one has been previously stored, otherwise returns
+     * the current check fiducials state of the PlacementsHolderLocation
+     */
+    public boolean retrieveCheckFiducialsState(PlacementsHolderLocation<?> placementsHolderLocation) {
         String key = placementsHolderLocation.getUniqueId();
-        if (checkFiducials.containsKey(key)) {
-            return checkFiducials.get(key);
+        if (checkFiducialsStateMap.containsKey(key)) {
+            return checkFiducialsStateMap.get(key);
         } 
         else {
             return placementsHolderLocation.isCheckFiducials();
         }
     }
     
-    public void removeCheckFiducials(PlacementsHolderLocation<?> placementsHolderLocation) {
+    /**
+     * Removes the stored check fiducials state of a PlacementsHolderLocation
+     * @param placementsHolderLocation - the PlacementsHolderLocation whose state is to be removed
+     */
+    public void removeCheckFiducialsState(PlacementsHolderLocation<?> placementsHolderLocation) {
         String key = placementsHolderLocation.getUniqueId();
-        checkFiducials.remove(key);
-        firePropertyChange("checkFiducials", null, checkFiducials);
+        checkFiducialsStateMap.remove(key);
+        firePropertyChange("checkFiducials", null, checkFiducialsStateMap);
     }
     
-    public void removeAllCheckFiducials() {
-        checkFiducials.clear();
-        firePropertyChange("checkFiducials", null, checkFiducials);
+    /**
+     * Removes all stored check fiducial states
+     */
+    public void removeAllCheckFiducialsState() {
+        checkFiducialsStateMap.clear();
+        firePropertyChange("checkFiducials", null, checkFiducialsStateMap);
     }
     
-    public void setErrorHandling(PlacementsHolderLocation<?> placementsHolderLocation, Placement placement, Placement.ErrorHandling errorHandling) {
+    /**
+     * Stores the error handling state of a Placement in a way that is uniquely identifiable to it   
+     * @param placementsHolderLocation - the PlacementsHolderLocation that contains the Placement
+     * @param placement - the Placement
+     * @param errorHandling - the state to be stored
+     */
+    public void storeErrorHandlingState(PlacementsHolderLocation<?> placementsHolderLocation, Placement placement, Placement.ErrorHandling errorHandling) {
         String key = placementsHolderLocation.getUniqueId() + PlacementsHolderLocation.ID_DELIMITTER + placement.getId();
-        this.errorHandling.put(key, errorHandling);
-        firePropertyChange("errorHandling", null, this.errorHandling);
+        this.errorHandlingStateMap.put(key, errorHandling);
+        firePropertyChange("errorHandling", null, this.errorHandlingStateMap);
     }
 
-    public Placement.ErrorHandling getErrorHandling(PlacementsHolderLocation<?> placementsHolderLocation, Placement placement) {
+    /**
+     * Retrieves the stored error handling state of a Placement   
+     * @param placementsHolderLocation - the PlacementsHolderLocation that contains the Placement
+     * @param placement - the Placements whose stored state is to be retrieved
+     * @return - the stored error handling state if one was previously stored, otherwise returns
+     * the current error handling state of the Placement
+     */
+    public Placement.ErrorHandling retrieveErrorHandlingState(PlacementsHolderLocation<?> placementsHolderLocation, Placement placement) {
         String key = placementsHolderLocation.getUniqueId() + PlacementsHolderLocation.ID_DELIMITTER + placement.getId();
-        if (errorHandling.containsKey(key)) {
-            return errorHandling.get(key);
+        if (errorHandlingStateMap.containsKey(key)) {
+            return errorHandlingStateMap.get(key);
         } 
         else {
             return placement.getErrorHandling();
         }
     }
     
-    public void removeErrorHandling(PlacementsHolderLocation<?> placementsHolderLocation, Placement placement) {
+    /**
+     * Removes the stored error handling state of a Placement   
+     * @param placementsHolderLocation - the PlacementsHolderLocation that contains the Placement
+     * @param placement - the Placements whose stored state is to be removed
+     */
+    public void removeErrorHandlingState(PlacementsHolderLocation<?> placementsHolderLocation, Placement placement) {
         String key = placementsHolderLocation.getUniqueId() + PlacementsHolderLocation.ID_DELIMITTER + placement.getId();
-        errorHandling.remove(key);
-        firePropertyChange("errorHandling", null, this.errorHandling);
-    }
-    
-    public void removeAllErrorHandling() {
-        errorHandling.clear();
-        firePropertyChange("errorHandling", null, errorHandling);
+        errorHandlingStateMap.remove(key);
+        firePropertyChange("errorHandling", null, this.errorHandlingStateMap);
     }
     
     /**
-     * @return the version
+     * Removes all stored error handling states
+     */
+    public void removeAllErrorHandlingState() {
+        errorHandlingStateMap.clear();
+        firePropertyChange("errorHandling", null, errorHandlingStateMap);
+    }
+    
+    /**
+     * @return the job's version
      */
     public Double getVersion() {
         return version;
     }
 
+    /**
+     * Processes property change events for the job to set the flag indicating the job has been 
+     * modified
+     */
     public void propertyChange(PropertyChangeEvent evt) {
-        Logger.trace("PropertyChangeEvent = " + evt);
         if (evt.getSource() != Job.this || !evt.getPropertyName().equals("dirty")) {
             setDirty(true);
         }

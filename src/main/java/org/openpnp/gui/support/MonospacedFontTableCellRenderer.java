@@ -23,6 +23,10 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
 
+/**
+ * Renders a table cell using a mono-spaced font. Useful for displaying numerical values with their
+ * decimal points aligned in a column
+ */
 @SuppressWarnings("serial")
 public class MonospacedFontTableCellRenderer extends DefaultTableCellRenderer
 {

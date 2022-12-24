@@ -202,7 +202,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                     }
                     
                     // Ignore placements that are placed already
-                    if (job.getPlaced(boardLocation, placement.getId())) {
+                    if (job.retrievePlacedStatus(boardLocation, placement.getId())) {
                         continue;
                     }
                     
@@ -857,7 +857,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             
             // Mark the placement as "placed"
 //            boardLocation.setPlaced(jobPlacement.getPlacement().getId(), true);
-            job.setPlaced(boardLocation, jobPlacement.getPlacement().getId(), true);
+            job.storePlacedStatus(boardLocation, jobPlacement.getPlacement().getId(), true);
             
             totalPartsPlaced++;
             

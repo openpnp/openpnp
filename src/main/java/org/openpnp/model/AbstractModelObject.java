@@ -45,22 +45,24 @@ public abstract class AbstractModelObject {
     }
     
     /**
-     * Removes all property change listeners from this object
+     * Removes all property change listeners from this object and logs a warning message for each
      */
     public void dispose() {
-       Logger.trace(String.format("Disposing of %s @%08x", this.getClass().getSimpleName(), this.hashCode()));
        for (PropertyChangeListener listener : propertyChangeSupport.getPropertyChangeListeners()) {
            if (listener instanceof PropertyChangeListenerProxy) {
                PropertyChangeListenerProxy proxy = (PropertyChangeListenerProxy) listener;
-               Logger.warn(String.format("    +-- Removing listener %s @%08x", proxy.getListener(), proxy.getListener().hashCode()));
+               Logger.warn(String.format("Removing listener %s @%08x", proxy.getListener(), proxy.getListener().hashCode()));
            }
            else {
-               Logger.warn(String.format("    +-- Removing listener %s @%08x", listener, listener.hashCode()));
+               Logger.warn(String.format("Removing listener %s @%08x", listener, listener.hashCode()));
            }
            propertyChangeSupport.removePropertyChangeListener(listener);
         }
     }
     
+    /**
+     * Dumps all registered listeners to the log file
+     */
     public void dumpListeners() {
         Logger.trace(String.format("Dump of %s @%08x listeners:", this.getClass().getSimpleName(), this.hashCode()));
         for (PropertyChangeListener listener : propertyChangeSupport.getPropertyChangeListeners()) {
