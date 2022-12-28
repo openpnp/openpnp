@@ -22,11 +22,16 @@ package org.openpnp.gui.support;
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import org.openpnp.gui.tablemodel.PlacementsHolderLocationsTableModel;
-import org.openpnp.model.PlacementsHolderLocation;
 import org.openpnp.model.PlacementsHolderLocation.PlacementsTransformStatus;
 
 import java.awt.*;
 
+/**
+ * Renders a table cell using a mono-spaced font. Useful for displaying numerical values with their
+ * decimal points aligned in a column. If the table model is of type
+ * {@link PlacementsHolderLocationsTableModel}, the background cell color is changed based on the 
+ * status of the {@link PlacementsHolderLocation}'s placement transform.
+ */
 @SuppressWarnings("serial")
 public class MonospacedFontWithAffineStatusTableCellRenderer extends DefaultTableCellRenderer
 {

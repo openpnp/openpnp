@@ -45,7 +45,6 @@ import javax.swing.JSplitPane;
 import javax.swing.JTable;
 import javax.swing.JToolBar;
 import javax.swing.ListSelectionModel;
-import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ListSelectionEvent;
@@ -62,7 +61,6 @@ import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.support.ActionGroup;
 import org.openpnp.gui.support.MonospacedFontTableCellRenderer;
 import org.openpnp.gui.support.TableUtils;
-import org.openpnp.gui.support.CustomAlignmentRenderer;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.LengthCellValue;
 import org.openpnp.gui.support.MessageBoxes;
@@ -71,8 +69,6 @@ import org.openpnp.model.Board;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Placement;
 import org.openpnp.model.Configuration.TablesLinked;
-import org.pmw.tinylog.Logger;
-
 import com.google.common.eventbus.Subscribe;
 
 @SuppressWarnings("serial")
@@ -108,11 +104,10 @@ public class BoardsPanel extends JPanel {
         
         boardsTableModel = new PlacementsHolderTableModel(configuration, 
                 () -> configuration.getBoards(), Board.class);
-        configuration.addPropertyChangeListener("boards", new PropertyChangeListener() {
+        configuration.addPropertyChangeListener("boards", new PropertyChangeListener() { //$NON-NLS-1$
 
             @Override
             public void propertyChange(PropertyChangeEvent evt) {
-//                Logger.trace("PropertyChangeEvent = " + evt);
                 boardsTableModel.fireTableDataChanged();
             }});
         
@@ -144,7 +139,7 @@ public class BoardsPanel extends JPanel {
         
         TableUtils.setColumnAlignment(boardsTableModel, boardsTable);
         
-        TableUtils.installColumnWidthSavers(boardsTable, prefs, "BoardsPanel.boardsTable.columnWidth");
+        TableUtils.installColumnWidthSavers(boardsTable, prefs, "BoardsPanel.boardsTable.columnWidth"); //$NON-NLS-1$
         
         boardsTable.getModel().addTableModelListener(new TableModelListener() {
             @Override
@@ -163,7 +158,8 @@ public class BoardsPanel extends JPanel {
                             return;
                         }
                         
-                        boolean updateLinkedTables = MainFrame.get().getTabs().getSelectedComponent() == MainFrame.get().getBoardsTab() 
+                        boolean updateLinkedTables = 
+                                MainFrame.get().getTabs().getSelectedComponent() == MainFrame.get().getBoardsTab() 
                                 && Configuration.get().getTablesLinked() == TablesLinked.Linked;
 
                         List<Board> selections = getSelections();
@@ -214,8 +210,8 @@ public class BoardsPanel extends JPanel {
 
         JPanel pnlBoards = new JPanel();
         pnlBoards.setBorder(new TitledBorder(null,
-                Translations.getString("BoardsPanel.Tab.Boards"),
-                TitledBorder.LEADING, TitledBorder.TOP, null)); //$NON-NLS-1$
+                Translations.getString("BoardsPanel.Tab.Boards"), //$NON-NLS-1$
+                TitledBorder.LEADING, TitledBorder.TOP, null));
         pnlBoards.setLayout(new BorderLayout(0, 0));
 
         JToolBar toolBarBoards = new JToolBar();
@@ -342,20 +338,22 @@ public class BoardsPanel extends JPanel {
     public final Action addNewBoardAction = new AbstractAction() {
         {
             putValue(NAME, Translations.getString("BoardPanel.Action.AddBoard.NewBoard")); //$NON-NLS-1$
-            putValue(SHORT_DESCRIPTION, Translations.getString("BoardPanel.Action.AddBoard.NewBoard.Description")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, 
+                    Translations.getString("BoardPanel.Action.AddBoard.NewBoard.Description")); //$NON-NLS-1$
             putValue(MNEMONIC_KEY, KeyEvent.VK_N);
         }
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            FileDialog fileDialog = new FileDialog(frame, Translations.getString("BoardPanel.Action.AddBoard.NewBoard.SaveDialog"), FileDialog.SAVE); //$NON-NLS-1$
+            FileDialog fileDialog = new FileDialog(frame, 
+                    Translations.getString("BoardPanel.Action.AddBoard.NewBoard.SaveDialog"), FileDialog.SAVE); //$NON-NLS-1$
             fileDialog.setFilenameFilter(new FilenameFilter() {
                 @Override
                 public boolean accept(File dir, String name) {
                     return name.toLowerCase().endsWith(".board.xml"); //$NON-NLS-1$
                 }
             });
-            fileDialog.setFile("*.board.xml");
+            fileDialog.setFile("*.board.xml"); //$NON-NLS-1$
             fileDialog.setVisible(true);
             try {
                 String filename = fileDialog.getFile();
@@ -373,7 +371,8 @@ public class BoardsPanel extends JPanel {
             }
             catch (Exception e) {
                 e.printStackTrace();
-                MessageBoxes.errorBox(frame, Translations.getString("BoardPanel.Action.AddBoard.NewBoard.ErrorMessage"), e.getMessage()); //$NON-NLS-1$
+                MessageBoxes.errorBox(frame, 
+                        Translations.getString("BoardPanel.Action.AddBoard.NewBoard.ErrorMessage"), e.getMessage()); //$NON-NLS-1$
             }
         }
     };
@@ -381,7 +380,8 @@ public class BoardsPanel extends JPanel {
     public final Action addExistingBoardAction = new AbstractAction() {
         {
             putValue(NAME, Translations.getString("BoardPanel.Action.AddBoard.ExistingBoard")); //$NON-NLS-1$
-            putValue(SHORT_DESCRIPTION, Translations.getString("BoardPanel.Action.AddBoard.ExistingBoard.Description")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, 
+                    Translations.getString("BoardPanel.Action.AddBoard.ExistingBoard.Description")); //$NON-NLS-1$
             putValue(MNEMONIC_KEY, KeyEvent.VK_E);
         }
 
@@ -394,7 +394,7 @@ public class BoardsPanel extends JPanel {
                     return name.toLowerCase().endsWith(".board.xml"); //$NON-NLS-1$
                 }
             });
-            fileDialog.setFile("*.board.xml");
+            fileDialog.setFile("*.board.xml"); //$NON-NLS-1$
             fileDialog.setVisible(true);
             try {
                 if (fileDialog.getFile() == null) {
@@ -408,7 +408,9 @@ public class BoardsPanel extends JPanel {
             }
             catch (Exception e) {
                 e.printStackTrace();
-                MessageBoxes.errorBox(frame, Translations.getString("BoardPanel.Action.AddBoard.ExistingBoard.ErrorMessage"), e.getMessage()); //$NON-NLS-1$
+                MessageBoxes.errorBox(frame, 
+                        Translations.getString("BoardPanel.Action.AddBoard.ExistingBoard.ErrorMessage"), //$NON-NLS-1$
+                        e.getMessage());
             }
         }
     };
@@ -428,7 +430,8 @@ public class BoardsPanel extends JPanel {
         {
             putValue(SMALL_ICON, Icons.delete);
             putValue(NAME, Translations.getString("BoardPanel.Action.RemoveBoard")); //$NON-NLS-1$
-            putValue(SHORT_DESCRIPTION, Translations.getString("BoardPanel.Action.RemoveBoard.Description")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, 
+                    Translations.getString("BoardPanel.Action.RemoveBoard.Description")); //$NON-NLS-1$
             putValue(MNEMONIC_KEY, KeyEvent.VK_R);
         }
 
@@ -436,8 +439,10 @@ public class BoardsPanel extends JPanel {
         public void actionPerformed(ActionEvent arg0) {
             for (Board selection : getSelections()) {
                 if (configuration.isInUse(selection)) {
-                    MessageBoxes.errorBox(BoardsPanel.this, Translations.getString("BoardPanel.Action.RemoveBoard.ErrorBox.Title"),
-                            String.format(Translations.getString("BoardPanel.Action.RemoveBoard.ErrorBox.MessageFormat"), selection.getName()));
+                    MessageBoxes.errorBox(BoardsPanel.this, 
+                            Translations.getString("BoardPanel.Action.RemoveBoard.ErrorBox.Title"), //$NON-NLS-1$
+                            String.format(Translations.getString("BoardPanel.Action.RemoveBoard.ErrorBox.MessageFormat"), //$NON-NLS-1$
+                                    selection.getName()));
                 }
                 else {
                     configuration.removeBoard(selection);
@@ -451,21 +456,23 @@ public class BoardsPanel extends JPanel {
         {
             putValue(SMALL_ICON, Icons.copy);
             putValue(NAME, Translations.getString("BoardPanel.Action.CopyBoard")); //$NON-NLS-1$
-            putValue(SHORT_DESCRIPTION, Translations.getString("BoardPanel.Action.CopyBoard.Description")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, 
+                    Translations.getString("BoardPanel.Action.CopyBoard.Description")); //$NON-NLS-1$
             putValue(MNEMONIC_KEY, KeyEvent.VK_COPY);
         }
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
             Board boardToCopy = getSelection();
-            FileDialog fileDialog = new FileDialog(frame, Translations.getString("BoardPanel.Action.CopyBoard.SaveDialog"), FileDialog.SAVE); //$NON-NLS-1$
+            FileDialog fileDialog = new FileDialog(frame, 
+                    Translations.getString("BoardPanel.Action.CopyBoard.SaveDialog"), FileDialog.SAVE); //$NON-NLS-1$
             fileDialog.setFilenameFilter(new FilenameFilter() {
                 @Override
                 public boolean accept(File dir, String name) {
                     return name.toLowerCase().endsWith(".board.xml"); //$NON-NLS-1$
                 }
             });
-            fileDialog.setFile("*.board.xml");
+            fileDialog.setFile("*.board.xml"); //$NON-NLS-1$
             fileDialog.setVisible(true);
             try {
                 String filename = fileDialog.getFile();
@@ -488,7 +495,9 @@ public class BoardsPanel extends JPanel {
             }
             catch (Exception e) {
                 e.printStackTrace();
-                MessageBoxes.errorBox(frame, Translations.getString("BoardPanel.Action.CopyBoard.ErrorMessage"), e.getMessage()); //$NON-NLS-1$
+                MessageBoxes.errorBox(frame, 
+                        Translations.getString("BoardPanel.Action.CopyBoard.ErrorMessage"), //$NON-NLS-1$
+                        e.getMessage());
             }
         }
     };

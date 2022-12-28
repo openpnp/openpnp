@@ -48,7 +48,6 @@ import javax.swing.border.EmptyBorder;
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.openpnp.Translations;
 import org.openpnp.gui.components.ComponentDecorators;
-import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.viewers.PlacementsHolderLocationViewer;
 import org.openpnp.model.Board;
@@ -62,10 +61,6 @@ import org.openpnp.model.PanelLocation;
 import org.openpnp.model.PlacementsHolderLocation;
 import org.openpnp.util.BeanUtils;
 import org.openpnp.util.Utils2D;
-import javax.swing.SwingConstants;
-import java.awt.Component;
-import javax.swing.Box;
-import java.awt.GridLayout;
 import javax.swing.border.EtchedBorder;
 
 @SuppressWarnings("serial")
@@ -92,8 +87,6 @@ public class PanelArrayBuilderDialog extends JDialog {
     private List<PlacementsHolderLocation<?>> newChildren = new ArrayList<>();
     private ArrayType arrayType = ArrayType.Rectangular;
     private final JPanel contentPanel = new JPanel();
-    private JTextField textFieldColumns;
-    private JTextField textFieldRows;
     private JTextField textFieldRowSpacing;
     private JTextField textFieldColumnSpacing;
     private JTextField textFieldAlternateOffset;
@@ -581,7 +574,7 @@ public class PanelArrayBuilderDialog extends JDialog {
             getContentPane().add(buttonPane, BorderLayout.SOUTH);
             {
                 JButton okButton = new JButton(
-                        Translations.getString("PanelArrayBuilderDialog.Button.Ok")); //$NON-NLS-1$
+                        Translations.getString("General.Ok")); //$NON-NLS-1$
                 okButton.addActionListener(new ActionListener() {
 
                     @Override
@@ -598,7 +591,7 @@ public class PanelArrayBuilderDialog extends JDialog {
             }
             {
                 JButton cancelButton = new JButton(
-                        Translations.getString("PanelArrayBuilderDialog.Button.Cancel")); //$NON-NLS-1$
+                        Translations.getString("General.Cancel")); //$NON-NLS-1$
                 cancelButton.addActionListener(new ActionListener() {
 
                     @Override

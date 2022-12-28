@@ -56,24 +56,33 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
 import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
 import javax.swing.border.EmptyBorder;
+import javax.swing.AbstractAction;
+import javax.swing.Action;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuItem;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.JCheckBox;
 import javax.swing.JCheckBoxMenuItem;
 import java.awt.Cursor;
 import java.awt.Dimension;
 
-import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.border.EtchedBorder;
 import javax.swing.JScrollPane;
 
 import org.openpnp.Translations;
+import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.LabeledPopupMenu;
+import org.openpnp.gui.support.Helpers;
+import org.openpnp.gui.support.Icons;
 import org.openpnp.model.Abstract2DLocatable.Side;
+import org.openpnp.model.Placement.ErrorHandling;
+import org.openpnp.spi.Camera;
+import org.openpnp.spi.HeadMountable;
 import org.openpnp.model.Board;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
@@ -86,9 +95,9 @@ import org.openpnp.model.PanelLocation;
 import org.openpnp.model.Placement;
 import org.openpnp.model.PlacementsHolder;
 import org.openpnp.model.PlacementsHolderLocation;
+import org.openpnp.util.MovableUtils;
+import org.openpnp.util.UiUtils;
 import org.openpnp.util.Utils2D;
-import org.pmw.tinylog.Logger;
-
 import java.awt.Component;
 import javax.swing.Box;
 import javax.swing.JButton;
@@ -108,11 +117,11 @@ public class PlacementsHolderLocationViewer extends JPanel {
     private Color reticleColor = new Color(255, 255, 255, 128);
     private Color maskColor = new Color(29, 1, 43, 230);
     private Color substrateColor = Color.GRAY;
-    private Color copperColor = new Color(232, 153, 97);
+    private Color copperColor = new Color(232, 153, 97);//E89961
     private Color legendColor = new Color(249, 247, 250);
     private Color transparentColor = new Color(255, 255, 255, 0);
-    private Color profileTopColor = new Color(0, 128, 128);  //Teal for Top
-    private Color profileBottomColor = new Color(0, 0, 200); //Blue for Bottom
+    private Color profileTopColor = new Color(0, 144, 144);  //Teal for Top
+    private Color profileBottomColor = new Color(10, 10, 255); //Blue for Bottom
     private Color placementEnabledColor = Color.WHITE;
     private Color placementDisabledColor = Color.DARK_GRAY;
     private Color fiducialEnabledColor = copperColor;
@@ -176,6 +185,13 @@ public class PlacementsHolderLocationViewer extends JPanel {
     private JCheckBox chckbxOrigins;
     private JCheckBox chckbxFiducials;
     private JCheckBox chckbxPlacements;
+    private Component verticalStrut_1;
+    private JLabel lblNewLabel_1;
+    private JLabel lblNewLabel_2;
+    private JLabel lblNewLabel_3;
+    private JLabel lblNewLabel_4;
+    private JLabel lblNewLabel_5;
+    private JLabel lblNewLabel_6;
 
     /**
      * Create the Panel.
@@ -218,8 +234,11 @@ public class PlacementsHolderLocationViewer extends JPanel {
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         
         btnViewingSide = new JButton();
+        btnViewingSide.setToolTipText(
+                Translations.getString("PlacementsHolderLocationViewer.ViewingSide.ToolTip")); //$NON-NLS-1$
         panel.add(btnViewingSide);
-        btnViewingSide.setText(Translations.getString("PlacementsHolderLocationViewer.ViewingSide.Top")); //$NON-NLS-1$
+        btnViewingSide.setText(
+                Translations.getString("PlacementsHolderLocationViewer.ViewingSide.Top")); //$NON-NLS-1$
         btnViewingSide.setEnabled(!isJob);
         btnViewingSide.addActionListener(new ActionListener() {
             @Override
@@ -236,6 +255,8 @@ public class PlacementsHolderLocationViewer extends JPanel {
         panel.add(lblNewLabel);
         
         btnShowChildrenOnly = new JButton();
+        btnShowChildrenOnly.setToolTipText(
+                Translations.getString("PlacementsHolderLocationViewer.ViewingOption.ToolTip")); //$NON-NLS-1$
         if (showChildrenOnly) {
             btnShowChildrenOnly.setText(
                     Translations.getString("PlacementsHolderLocationViewer.ViewingOption.ChildrenOnly")); //$NON-NLS-1$
@@ -258,6 +279,8 @@ public class PlacementsHolderLocationViewer extends JPanel {
         
         chckbxReticle = new JCheckBox(
                 Translations.getString("PlacementsHolderLocationViewer.ViewingOption.Reticle")); //$NON-NLS-1$
+        chckbxReticle.setToolTipText(
+                Translations.getString("PlacementsHolderLocationViewer.ViewingOption.Reticle.ToolTip")); //$NON-NLS-1$
         panel.add(chckbxReticle);
         chckbxReticle.setSelected(showReticle);
         chckbxReticle.addActionListener(new ActionListener() {
@@ -268,6 +291,8 @@ public class PlacementsHolderLocationViewer extends JPanel {
         
         chckbxLocations = new JCheckBox(
                 Translations.getString("PlacementsHolderLocationViewer.ViewingOption.Locations")); //$NON-NLS-1$
+        chckbxLocations.setToolTipText(
+                Translations.getString("PlacementsHolderLocationViewer.ViewingOption.Locations.ToolTip")); //$NON-NLS-1$
         panel.add(chckbxLocations);
         chckbxLocations.setSelected(showLocations);
         chckbxLocations.addActionListener(new ActionListener() {
@@ -278,6 +303,8 @@ public class PlacementsHolderLocationViewer extends JPanel {
         
         chckbxOrigins = new JCheckBox(
                 Translations.getString("PlacementsHolderLocationViewer.ViewingOption.Origins")); //$NON-NLS-1$
+        chckbxOrigins.setToolTipText(
+                Translations.getString("PlacementsHolderLocationViewer.ViewingOption.Origins.ToolTip")); //$NON-NLS-1$
         panel.add(chckbxOrigins);
         chckbxOrigins.setSelected(showOrigins);
         chckbxOrigins.addActionListener(new ActionListener() {
@@ -288,6 +315,8 @@ public class PlacementsHolderLocationViewer extends JPanel {
         
         chckbxFiducials = new JCheckBox(
                 Translations.getString("PlacementsHolderLocationViewer.ViewingOption.Fiducials")); //$NON-NLS-1$
+        chckbxFiducials.setToolTipText(
+                Translations.getString("PlacementsHolderLocationViewer.ViewingOption.Fiducials.ToolTip")); //$NON-NLS-1$
         panel.add(chckbxFiducials);
         chckbxFiducials.setSelected(showFiducials);
         chckbxFiducials.addActionListener(new ActionListener() {
@@ -298,8 +327,35 @@ public class PlacementsHolderLocationViewer extends JPanel {
         
         chckbxPlacements = new JCheckBox(
                 Translations.getString("PlacementsHolderLocationViewer.ViewingOption.Placements")); //$NON-NLS-1$
+        chckbxPlacements.setToolTipText(
+                Translations.getString("PlacementsHolderLocationViewer.ViewingOption.Placements.ToolTip")); //$NON-NLS-1$
         panel.add(chckbxPlacements);
         chckbxPlacements.setSelected(showPlacements);
+        
+        verticalStrut_1 = Box.createVerticalStrut(15);
+        panel.add(verticalStrut_1);
+        
+        lblNewLabel_4 = new JLabel(
+                Translations.getString("PlacementsHolderLocationViewer.Hints")); //$NON-NLS-1$
+        panel.add(lblNewLabel_4);
+        
+        lblNewLabel_5 = new JLabel(Translations.getString("PlacementsHolderLocationViewer.Hints.Colors.Top")); //$NON-NLS-1$
+        panel.add(lblNewLabel_5);
+        
+        lblNewLabel_6 = new JLabel(Translations.getString("PlacementsHolderLocationViewer.Hints.Colors.Bottom")); //$NON-NLS-1$
+        panel.add(lblNewLabel_6);
+        
+        lblNewLabel_1 = new JLabel(
+                Translations.getString("PlacementsHolderLocationViewer.Hints.Zooming")); //$NON-NLS-1$
+        panel.add(lblNewLabel_1);
+        
+        lblNewLabel_2 = new JLabel(
+                Translations.getString("PlacementsHolderLocationViewer.Hints.Panning")); //$NON-NLS-1$
+        panel.add(lblNewLabel_2);
+        
+        lblNewLabel_3 = new JLabel(
+                Translations.getString("PlacementsHolderLocationViewer.Hints.RightClicking")); //$NON-NLS-1$
+        panel.add(lblNewLabel_3);
         chckbxPlacements.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -677,7 +733,8 @@ public class PlacementsHolderLocationViewer extends JPanel {
                 graphicsBounds.add(profile.getBounds2D());
             }
             for (Placement placement : placementsHolderLocation.getPlacementsHolder().getPlacements()) {
-                Location loc = Utils2D.calculateBoardPlacementLocation(placementsHolderLocation, placement).convertToUnits(units);
+                Location loc = Utils2D.calculateBoardPlacementLocation(placementsHolderLocation, placement).
+                        convertToUnits(units);
                 graphicsBounds.add(new Point2D.Double(loc.getX(), loc.getY()));
                 
                 AffineTransform at2 = new AffineTransform();
@@ -711,7 +768,8 @@ public class PlacementsHolderLocationViewer extends JPanel {
     
     public void renderPlacementsHolderImage() {
         if (scrollingBounds != null && scrollingBounds.width > 0 && scrollingBounds.height > 0) {
-            placementsHolderImage = new BufferedImage((int) scrollingBounds.width, (int) scrollingBounds.height, BufferedImage.TYPE_4BYTE_ABGR);
+            placementsHolderImage = new BufferedImage((int) scrollingBounds.width,
+                    (int) scrollingBounds.height, BufferedImage.TYPE_4BYTE_ABGR);
             Graphics2D offScr = (Graphics2D) placementsHolderImage.getGraphics();
             offScr.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
     
@@ -817,7 +875,9 @@ public class PlacementsHolderLocationViewer extends JPanel {
                 Location offset = Location.origin;
                 if ((viewFromTop && placementsHolderLocation.getGlobalSide() == Side.Bottom) ||
                         (!viewFromTop && placementsHolderLocation.getGlobalSide() == Side.Top)) {
-                    offset = offset.add(new Location(units, placementsHolderLocation.getPlacementsHolder().getDimensions().getLengthX().convertToUnits(units).getValue(), 0, 0, 0));
+                    offset = offset.add(new Location(units, 
+                            placementsHolderLocation.getPlacementsHolder().getDimensions().getLengthX().
+                            convertToUnits(units).getValue(), 0, 0, 0));
                 }
                 Location location = Utils2D.calculateBoardPlacementLocation(placementsHolderLocation, offset);
                 overlayLocationMark(offScr, d, location);
@@ -1039,7 +1099,8 @@ public class PlacementsHolderLocationViewer extends JPanel {
                     Point2D mid = new Point2D.Double(x, y);
                     
                     at.transform(mid, mid);
-                    offScr.drawLine((int) mid.getX(), (int) (mid.getY()-tickLengthOver2), (int) mid.getX(), (int) (mid.getY()+tickLengthOver2));
+                    offScr.drawLine((int) mid.getX(), (int) (mid.getY()-tickLengthOver2), 
+                            (int) mid.getX(), (int) (mid.getY()+tickLengthOver2));
                     x += unitsPerTick;
                 }
                 y += unitsPerDivision;
@@ -1076,13 +1137,15 @@ public class PlacementsHolderLocationViewer extends JPanel {
             
             at.transform(tick, tick);
             
-            offScr.drawLine(VERTICAL_SCALE_WIDTH-SCALE_TICK_LENGTH, (int) tick.getY(), VERTICAL_SCALE_WIDTH, (int) tick.getY());
+            offScr.drawLine(VERTICAL_SCALE_WIDTH-SCALE_TICK_LENGTH, (int) tick.getY(), 
+                    VERTICAL_SCALE_WIDTH, (int) tick.getY());
 
             String text = String.format("%." + displayDecimals + "f", y*displayMultiplier); //$NON-NLS-1$ //$NON-NLS-2$
             TextLayout textTl = new TextLayout(text, f, frc);
         
             AffineTransform transform = new AffineTransform();
-            transform.translate(VERTICAL_SCALE_WIDTH-SCALE_TICK_LENGTH-textTl.getBounds().getWidth()-2, tick.getY()-textTl.getBounds().getHeight()/2);
+            transform.translate(VERTICAL_SCALE_WIDTH-SCALE_TICK_LENGTH-textTl.getBounds().getWidth()-2, 
+                    tick.getY()-textTl.getBounds().getHeight()/2);
             transform.scale(1, -1);
             Shape outline = textTl.getOutline(null);
             offScr.fill(transform.createTransformedShape(outline));
@@ -1098,7 +1161,8 @@ public class PlacementsHolderLocationViewer extends JPanel {
             double yMin, double yMax) {
         Color foreGround = Color.BLACK;
 
-        horizontalScaleImage = new BufferedImage((int) scrollingBounds.width, HORIZONTAL_SCALE_HEIGHT, BufferedImage.TYPE_4BYTE_ABGR);
+        horizontalScaleImage = new BufferedImage((int) scrollingBounds.width, 
+                HORIZONTAL_SCALE_HEIGHT, BufferedImage.TYPE_4BYTE_ABGR);
         Graphics2D offScr = (Graphics2D) horizontalScaleImage.getGraphics();
         offScr.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
@@ -1120,12 +1184,14 @@ public class PlacementsHolderLocationViewer extends JPanel {
             
             at.transform(tick, tick);
             
-            offScr.drawLine((int) tick.getX(), HORIZONTAL_SCALE_HEIGHT, (int) tick.getX(), HORIZONTAL_SCALE_HEIGHT-SCALE_TICK_LENGTH);
+            offScr.drawLine((int) tick.getX(), HORIZONTAL_SCALE_HEIGHT, (int) tick.getX(), 
+                    HORIZONTAL_SCALE_HEIGHT-SCALE_TICK_LENGTH);
             
             String text = String.format("%." + displayDecimals + "f", x*displayMultiplier); //$NON-NLS-1$ //$NON-NLS-2$
             TextLayout textTl = new TextLayout(text, f, frc);
             AffineTransform transform = new AffineTransform();
-            transform.translate(tick.getX()-textTl.getBounds().getWidth()/2, HORIZONTAL_SCALE_HEIGHT - 2 - textTl.getBounds().getHeight());
+            transform.translate(tick.getX()-textTl.getBounds().getWidth()/2, 
+                    HORIZONTAL_SCALE_HEIGHT - 2 - textTl.getBounds().getHeight());
             Shape outline = transform.createTransformedShape(textTl.getOutline(null));
             offScr.fill(outline);
             
@@ -1196,8 +1262,15 @@ public class PlacementsHolderLocationViewer extends JPanel {
         }
     }
 
-    private void displayPlacementPopupMenu(Point point, PlacementsHolderLocation<?> phl, String uniqueId, Placement placement, boolean enablable) {
+    private void displayPlacementPopupMenu(Point point, PlacementsHolderLocation<?> phl, 
+            String uniqueId, Placement placement, boolean enablable) {
         final Placement plmt = placement;
+        String type = plmt.getType() == Placement.Type.Fiducial ?
+                Translations.getString("Placement.Type.Fiducial") : //$NON-NLS-1$
+                Translations.getString("Placement.Type.Placement"); //$NON-NLS-1$
+        String side = phl.getGlobalSide() == Side.Top ?
+                Translations.getString("Placement.Side.Top") : //$NON-NLS-1$
+                Translations.getString("Placement.Side.Bottom"); //$NON-NLS-1$
         String popupLabel = "<pre>" + //$NON-NLS-1$
                 "<b>" + //$NON-NLS-1$
                 (plmt.getType() == Placement.Type.Placement ?
@@ -1213,19 +1286,20 @@ public class PlacementsHolderLocationViewer extends JPanel {
                 plmt.getPart().getId() + //$NON-NLS-1$
                 "<br>" + //$NON-NLS-1$
                 Translations.getString("PlacementsHolderLocationViewer.PopupMenu.Label.Side") + //$NON-NLS-1$
-                plmt.getSide() +
+                side +
                 "</pre>"; //$NON-NLS-1$
         LabeledPopupMenu popUp = new LabeledPopupMenu(popupLabel);
-        JCheckBoxMenuItem cbmi = new JCheckBoxMenuItem(
+        JCheckBoxMenuItem mnItmEnabled = new JCheckBoxMenuItem(
                 Translations.getString("PlacementsHolderLocationViewer.PopupMenu.Enabled")); //$NON-NLS-1$
-        cbmi.setSelected(plmt.isEnabled());
-        cbmi.addActionListener(new ActionListener() {
+        mnItmEnabled.setSelected(plmt.isEnabled());
+        mnItmEnabled.addActionListener(new ActionListener() {
     
             @Override
             public void actionPerformed(ActionEvent e) {
-                plmt.setEnabled(cbmi.isSelected());
+                plmt.setEnabled(mnItmEnabled.isSelected());
                 try {
-                    refreshTableModel.accept(phl, "Enabled?"); //$NON-NLS-1$
+                    refreshTableModel.accept(phl,
+                            Translations.getString("PlacementsHolderLocationsTableModel.ColumnName.Enabled")); //$NON-NLS-1$
                 }
                 catch (Exception e1) {
                     // TODO Auto-generated catch block
@@ -1234,12 +1308,64 @@ public class PlacementsHolderLocationViewer extends JPanel {
             }
             
         });
-        cbmi.setEnabled(enablable);
-        popUp.add(cbmi);
+        mnItmEnabled.setEnabled(enablable);
+        popUp.add(mnItmEnabled);
+        
+        if (isJob) {
+            popUp.addSeparator();
+            JCheckBoxMenuItem mnItmPlaced = new JCheckBoxMenuItem(
+                    Translations.getString("PlacementsHolderLocationViewer.PopupMenu.Placed")); //$NON-NLS-1$
+            mnItmPlaced.setSelected(MainFrame.get().getJobTab().getJob().retrievePlacedStatus(phl, plmt.getId()));
+            mnItmPlaced.addActionListener(new ActionListener() {
+        
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    MainFrame.get().getJobTab().getJob().storePlacedStatus(phl, plmt.getId(), mnItmPlaced.isSelected());
+                    try {
+                        refreshTableModel.accept(phl, 
+                                Translations.getString("PlacementsHolderLocationsTableModel.ColumnName.CheckFids")); //$NON-NLS-1$
+                    }
+                    catch (Exception e1) {
+                        // TODO Auto-generated catch block
+                        e1.printStackTrace();
+                    }
+                }
+                
+            });
+            mnItmPlaced.setEnabled(enablable);
+            popUp.add(mnItmPlaced);
+        }
+
+        if (isJob) {
+            popUp.addSeparator();
+            JMenuItem mnItemMoveCamera = new JMenuItem(
+                    Translations.getString("PlacementsHolderLocationViewer.PopupMenu.CenterCamera") + type); //$NON-NLS-1$
+            mnItemMoveCamera.setIcon(Icons.centerCamera);
+            mnItemMoveCamera.setToolTipText(
+                    Translations.getString("PlacementsHolderLocationViewer.PopupMenu.CenterCamera.MenuTip") + type); //$NON-NLS-1$
+            mnItemMoveCamera.addActionListener(new ActionListener() {
+
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    UiUtils.submitUiMachineTask(() -> {
+                        Location location = Utils2D.calculateBoardPlacementLocation(phl, plmt);
+
+                        Camera camera = MainFrame.get().getMachineControls().getSelectedTool().getHead()
+                                .getDefaultCamera();
+                        MovableUtils.moveToLocationAtSafeZ(camera, location);
+                        MovableUtils.fireTargetedUserAction(camera);
+
+                        Map<String, Object> globals = new HashMap<>();
+                        globals.put("camera", camera); //$NON-NLS-1$
+                        Configuration.get().getScripting().on("Camera.AfterPosition", globals); //$NON-NLS-1$
+                    });
+                }});
+            popUp.add(mnItemMoveCamera);
+        }
         popUp.show(drawingPanel, point.x, point.y);
     }
 
-    private void displayPlacementsHolderLocationPopupMenu(Point point, PlacementsHolderLocation<?>phl, String uniqueId, boolean enablable) {
+    private void displayPlacementsHolderLocationPopupMenu(Point point, PlacementsHolderLocation<?> phl, String uniqueId, boolean enablable) {
         String popupLabel = "<pre>" + //$NON-NLS-1$
                 "<b>" + //$NON-NLS-1$
                 (phl instanceof BoardLocation ? 
@@ -1258,16 +1384,17 @@ public class PlacementsHolderLocationViewer extends JPanel {
                 phl.getGlobalSide().flip(!viewFromTop) +
                 "</pre>"; //$NON-NLS-1$
         LabeledPopupMenu popUp = new LabeledPopupMenu(popupLabel);
-        JCheckBoxMenuItem cbmi = new JCheckBoxMenuItem(
+        JCheckBoxMenuItem mnItmEnabled = new JCheckBoxMenuItem(
                 Translations.getString("PlacementsHolderLocationViewer.PopupMenu.Enabled")); //$NON-NLS-1$
-        cbmi.setSelected(phl.isLocallyEnabled());
-        cbmi.addActionListener(new ActionListener() {
+        mnItmEnabled.setSelected(phl.isLocallyEnabled());
+        mnItmEnabled.addActionListener(new ActionListener() {
     
             @Override
             public void actionPerformed(ActionEvent e) {
-                phl.setLocallyEnabled(cbmi.isSelected());
+                phl.setLocallyEnabled(mnItmEnabled.isSelected());
                 try {
-                    refreshTableModel.accept(phl, "Enabled?"); //$NON-NLS-1$
+                    refreshTableModel.accept(phl,
+                            Translations.getString("PlacementsHolderLocationsTableModel.ColumnName.Enabled")); //$NON-NLS-1$
                 }
                 catch (Exception e1) {
                     // TODO Auto-generated catch block
@@ -1276,8 +1403,110 @@ public class PlacementsHolderLocationViewer extends JPanel {
             }
             
         });
-        cbmi.setEnabled(enablable);
-        popUp.add(cbmi);
+        mnItmEnabled.setEnabled(enablable);
+        popUp.add(mnItmEnabled);
+        
+        JCheckBoxMenuItem mnItmCheckFids = new JCheckBoxMenuItem(
+                Translations.getString("PlacementsHolderLocationViewer.PopupMenu.CheckFids")); //$NON-NLS-1$
+        mnItmCheckFids.setSelected(phl.isCheckFiducials());
+        mnItmCheckFids.addActionListener(new ActionListener() {
+    
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                phl.setCheckFiducials(mnItmEnabled.isSelected());
+                try {
+                    refreshTableModel.accept(phl,
+                            Translations.getString("PlacementsHolderLocationsTableModel.ColumnName.CheckFids")); //$NON-NLS-1$
+                }
+                catch (Exception e1) {
+                    // TODO Auto-generated catch block
+                    e1.printStackTrace();
+                }
+            }
+            
+        });
+        mnItmCheckFids.setEnabled(enablable);
+        popUp.add(mnItmCheckFids);
+        
+        if (isJob) {
+            popUp.addSeparator();
+            String type = phl instanceof BoardLocation ?
+                    Translations.getString("PlacementsHolderLocationViewer.PopupMenu.BoardLocation") : //$NON-NLS-1$
+                    Translations.getString("PlacementsHolderLocationViewer.PopupMenu.PanelLocation"); //$NON-NLS-1$
+            JMenuItem mnItemMoveCamera = new JMenuItem(
+                    Translations.getString("PlacementsHolderLocationViewer.PopupMenu.CenterCamera") + type); //$NON-NLS-1$
+            mnItemMoveCamera.setIcon(Icons.centerCamera);
+            mnItemMoveCamera.setToolTipText(
+                    Translations.getString("PlacementsHolderLocationViewer.PopupMenu.CenterCamera.MenuTip") + type); //$NON-NLS-1$
+            mnItemMoveCamera.addActionListener(new ActionListener() {
+
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    UiUtils.submitUiMachineTask(() -> {
+                        Placement dummy = new Placement("Dummy"); //$NON-NLS-1$
+                        dummy.removePropertyChangeListener(dummy);
+                        if (phl.getGlobalSide() == Side.Bottom) {
+                            dummy.setLocation(Location.origin.deriveLengths(
+                                    phl.getPlacementsHolder().getDimensions().getLengthX(), null, null, null));
+                        }
+                        Location location = Utils2D.calculateBoardPlacementLocation(phl, dummy);
+                        
+                        Camera camera = MainFrame.get().getMachineControls().getSelectedTool().getHead()
+                                .getDefaultCamera();
+                        MovableUtils.moveToLocationAtSafeZ(camera, location);
+                        MovableUtils.fireTargetedUserAction(camera);
+
+                        Map<String, Object> globals = new HashMap<>();
+                        globals.put("camera", camera); //$NON-NLS-1$
+                        Configuration.get().getScripting().on("Camera.AfterPosition", globals); //$NON-NLS-1$
+                    });
+                }});
+            popUp.add(mnItemMoveCamera);
+            
+            popUp.addSeparator();
+            JMenuItem mnItemCheckFiducials = new JMenuItem(
+                    Translations.getString("PlacementsHolderLocationViewer.PopupMenu.CheckFiducials") + type); //$NON-NLS-1$
+            mnItemCheckFiducials.setIcon(Icons.fiducialCheck);
+            mnItemCheckFiducials.setToolTipText(
+                    Translations.getString("PlacementsHolderLocationViewer.PopupMenu.CheckFiducials.MenuTip") + type); //$NON-NLS-1$
+            mnItemCheckFiducials.addActionListener(new ActionListener() {
+
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    UiUtils.submitUiMachineTask(() -> {
+                        Location location = Configuration.get().getMachine().getFiducialLocator()
+                                .locatePlacementsHolder(phl);
+                        
+                        /**
+                         * Update the board/panel's location to the one returned from the fiducial check. We
+                         * have to store and restore the placement transform because setting the location
+                         * clears it.  Note that we only update the location if the board/panel is
+                         * not a part of another panel.
+                         */
+                        if (phl.getParent() == MainFrame.get().getJobTab().getJob().getRootPanelLocation()) {
+                            AffineTransform tx = phl.getLocalToGlobalTransform();
+                            phl.setLocation(location);
+                            phl.setLocalToGlobalTransform(tx);
+                        }
+                        Helpers.selectObjectTableRow(MainFrame.get().getJobTab().getPlacementsHolderLocationsTable(), phl);
+                        
+                        SwingUtilities.invokeLater(() -> {
+                            MainFrame.get().getJobTab().refresh();
+                        });
+                        
+                        /**
+                         * Move the camera to the calculated position.
+                         */
+                        HeadMountable tool = MainFrame.get().getMachineControls().getSelectedTool();
+                        Camera camera = tool.getHead().getDefaultCamera();
+                        MovableUtils.moveToLocationAtSafeZ(camera, location);
+                        MovableUtils.fireTargetedUserAction(camera);
+                    });
+                }
+            });
+            popUp.add(mnItemCheckFiducials);
+        }
+        
         popUp.show(drawingPanel, point.x, point.y);
     }
 

@@ -112,8 +112,6 @@ import org.openpnp.spi.MachineListener;
 import org.openpnp.spi.MotionPlanner;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
-import org.pmw.tinylog.Logger;
-
 import com.google.common.eventbus.Subscribe;
 
 @SuppressWarnings("serial")  //$NON-NLS-1$
@@ -684,7 +682,7 @@ public class JobPanel extends JPanel {
             int result = JOptionPane.showConfirmDialog(mainFrame,
                     Translations.getString("JobPanel.CheckForModifications.Dialog.Question") + "\n" //$NON-NLS-1$ //$NON-NLS-2$
                             + Translations.getString("JobPanel.CheckForModifications.Dialog.Message"), //$NON-NLS-1$
-                    Translations.getString("JobPanel.CheckForModifications.Dialog.Title")
+                    Translations.getString("JobPanel.CheckForModifications.Dialog.Title") //$NON-NLS-1$
                     + " - " + name, JOptionPane.YES_NO_CANCEL_OPTION); //$NON-NLS-1$ //$NON-NLS-2$
             if (result == JOptionPane.YES_OPTION) {
                 return saveJob();
@@ -1455,8 +1453,8 @@ public class JobPanel extends JPanel {
             if (jobViewer == null) {
                 jobViewer = new PlacementsHolderLocationViewerDialog(
                         job.getRootPanelLocation(), true,
-                        (phl, colName) -> jobTableModel.
-                        fireDecendantsCellUpdated((PlacementsHolderLocation<?>) phl, jobTableModel.getColumnIndex(colName)));
+                        (phl, colName) -> jobTableModel.fireDecendantsCellUpdated(
+                                (PlacementsHolderLocation<?>) phl, jobTableModel.getColumnIndex(colName)));
                 jobViewer.addWindowListener(new WindowAdapter() {
                     @Override
                     public void windowClosing(WindowEvent e) {
@@ -1488,9 +1486,9 @@ public class JobPanel extends JPanel {
 
         public SetEnabledAction(Boolean value) {
             this.value = value;
-            String name = value ? 
-                    Translations.getString("JobPanel.Action.Job.Board.SetEnabled.Enabled") : //$NON-NLS-1$
-                    Translations.getString("JobPanel.Action.Job.Board.SetEnabled.Disabled"); //$NON-NLS-1$
+            String name = enabled ? 
+                    Translations.getString("General.Enabled") :  //$NON-NLS-1$
+                    Translations.getString("General.Disabled"); //$NON-NLS-1$
             putValue(NAME, name);
             putValue(SHORT_DESCRIPTION, 
                     Translations.getString("JobPanel.Action.Job.Board.SetEnabled.MenuTip") + " " + name); //$NON-NLS-1$ //$NON-NLS-2$
@@ -1527,9 +1525,9 @@ public class JobPanel extends JPanel {
 
         public SetCheckFidsAction(Boolean value) {
             this.value = value;
-            String name = value ? 
-                Translations.getString("JobPanel.Action.Job.Board.SetCheckFids.Check") : //$NON-NLS-1$
-                Translations.getString("JobPanel.Action.Job.Board.SetCheckFids.NoCheck"); //$NON-NLS-1$
+            String name = value ?
+                    Translations.getString("JobPanel.Action.Job.Board.SetCheckFids.Check") : //$NON-NLS-1$
+                    Translations.getString("JobPanel.Action.Job.Board.SetCheckFids.NoCheck"); //$NON-NLS-1$
             putValue(NAME, name);
             putValue(SHORT_DESCRIPTION, Translations.getString("JobPanel.Action.Job.Board.SetCheckFids.MenuTip") + " " + name); //$NON-NLS-1$ //$NON-NLS-2$
         }
@@ -1558,10 +1556,14 @@ public class JobPanel extends JPanel {
 
         public SetSideAction(Side side) {
             this.side = side;
-            String name = side == Side.Top ? 
-                    Translations.getString("JobPanel.Action.Job.Board.SetSide.Top") : //$NON-NLS-1$
-                    Translations.getString("JobPanel.Action.Job.Board.SetSide.Bottom"); //$NON-NLS-1$
-            putValue(NAME, side.toString());
+            String name;
+            if (side == Side.Top) {
+                name = Translations.getString("JobPanel.Action.Job.Board.SetSide.Top"); //$NON-NLS-1$
+            }
+            else {
+                name = Translations.getString("JobPanel.Action.Job.Board.SetSide.Bottom"); //$NON-NLS-1$
+            }
+            putValue(NAME, name);
             putValue(SHORT_DESCRIPTION, 
                     Translations.getString("JobPanel.Action.Job.Board.SetSide.MenuTip") + " " + name); //$NON-NLS-1$ //$NON-NLS-2$
         }

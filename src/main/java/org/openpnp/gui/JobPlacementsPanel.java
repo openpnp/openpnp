@@ -69,7 +69,6 @@ import org.openpnp.events.PlacementSelectedEvent;
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.support.ActionGroup;
 import org.openpnp.gui.support.CustomBooleanRenderer;
-import org.openpnp.gui.support.CustomAlignmentRenderer;
 import org.openpnp.gui.support.MonospacedFontTableCellRenderer;
 import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.Icons;
@@ -82,7 +81,6 @@ import org.openpnp.gui.support.RotationCellValue;
 import org.openpnp.gui.support.TableUtils;
 import org.openpnp.gui.tablemodel.PlacementsTableModel;
 import org.openpnp.gui.tablemodel.PlacementsTableModel.Status;
-import org.openpnp.model.Board;
 import org.openpnp.model.Abstract2DLocatable.Side;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Configuration.TablesLinked;
@@ -100,8 +98,6 @@ import org.openpnp.spi.Nozzle;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 import org.openpnp.util.Utils2D;
-import org.pmw.tinylog.Logger;
-
 import com.google.common.eventbus.Subscribe;
 
 @SuppressWarnings("serial")
@@ -548,10 +544,9 @@ public class JobPlacementsPanel extends JPanel {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             if (Configuration.get().getParts().size() == 0) {
-                MessageBoxes.errorBox(getTopLevelAncestor(), Translations.getString(
-                        "JobPlacementsPanel.NewPlacement.ErrorMessageBox.title"), //$NON-NLS-1$
-                        Translations.getString(
-                                "JobPlacementsPanel.NewPlacement.ErrorMessageBox.NoPartsMessage")); //$NON-NLS-1$
+                MessageBoxes.errorBox(getTopLevelAncestor(),
+                        Translations.getString("General.Error"), //$NON-NLS-1$
+                        Translations.getString("JobPlacementsPanel.NewPlacement.ErrorMessageBox.NoPartsMessage")); //$NON-NLS-1$
                 return;
             }
 
@@ -565,7 +560,7 @@ public class JobPlacementsPanel extends JPanel {
             for(Placement compareplacement : boardOrPanelLocation.getPlacementsHolder().getPlacements()) {
             	if (compareplacement.getId().equals(id)) {
             		MessageBoxes.errorBox(getTopLevelAncestor(), Translations.getString(
-                                    "JobPlacementsPanel.NewPlacement.ErrorMessageBox.title"), //$NON-NLS-1$
+                                    "General.Error"), //$NON-NLS-1$
                             Translations.getString(
                                     "JobPlacementsPanel.NewPlacement.ErrorMessageBox.IdAlreadyExistsMessage")); //$NON-NLS-1$
                     return;
@@ -793,9 +788,16 @@ public class JobPlacementsPanel extends JPanel {
 
         public SetSideAction(Side side) {
             this.side = side;
-            putValue(NAME, side.toString());
+            String name;
+            if (side == Side.Top) {
+                name = Translations.getString("General.Top"); //$NON-NLS-1$
+            }
+            else {
+                name = Translations.getString("General.Bottom"); //$NON-NLS-1$
+            }
+            putValue(NAME, name);
             putValue(SHORT_DESCRIPTION, Translations.getString("JobPlacementsPanel.SetSide.MenuTip") //$NON-NLS-1$
-                    + " " + side.toString()); //$NON-NLS-1$
+                    + " " + name); //$NON-NLS-1$
         }
 
         @Override
@@ -823,9 +825,16 @@ public class JobPlacementsPanel extends JPanel {
 
         public SetErrorHandlingAction(Placement.ErrorHandling errorHandling) {
             this.errorHandling = errorHandling;
-            putValue(NAME, errorHandling.toString());
+            String name;
+            if (errorHandling == Placement.ErrorHandling.Alert) {
+                name = Translations.getString("Placement.ErrorHandling.Alert"); //$NON-NLS-1$
+            }
+            else {
+                name = Translations.getString("Placement.ErrorHandling.Defer"); //$NON-NLS-1$
+            }
+            putValue(NAME, name);
             putValue(SHORT_DESCRIPTION, Translations.getString("JobPlacementsPanel.SetErrorHandling.MenuTip") //$NON-NLS-1$
-                    + " " + errorHandling.toString()); //$NON-NLS-1$
+                    + " " + name); //$NON-NLS-1$
         }
 
         @Override
@@ -853,8 +862,9 @@ public class JobPlacementsPanel extends JPanel {
 
         public SetPlacedAction(Boolean placed) {
             this.placed = placed;
-            String name = placed ? Translations.getString("JobPlacementsPanel.SetPlaced.Status.Placed") : //$NON-NLS-1$ 
-                Translations.getString("JobPlacementsPanel.SetPlaced.Status.NotPlaced"); //$NON-NLS-1$
+            String name = placed ?
+                    Translations.getString("JobPlacementsPanel.SetPlaced.Status.Placed") : //$NON-NLS-1$
+                    Translations.getString("JobPlacementsPanel.SetPlaced.Status.NotPlaced"); //$NON-NLS-1$
             putValue(NAME, name);
             putValue(SHORT_DESCRIPTION, Translations.getString("JobPlacementsPanel.SetPlaced.MenuTip") //$NON-NLS-1$
                     + " " + name); //$NON-NLS-1$
@@ -886,8 +896,9 @@ public class JobPlacementsPanel extends JPanel {
 
         public SetEnabledAction(Boolean enabled) {
             this.enabled = enabled;
-            String name = enabled ? Translations.getString("JobPlacementsPanel.SetEnabled.Enabled") : //$NON-NLS-1$ 
-                Translations.getString("JobPlacementsPanel.SetEnabled.Disabled"); //$NON-NLS-1$
+            String name = enabled ? 
+                    Translations.getString("General.Enabled") :  //$NON-NLS-1$
+                    Translations.getString("General.Disabled"); //$NON-NLS-1$
             putValue(NAME, name);
             putValue(SHORT_DESCRIPTION, Translations.getString("JobPlacementsPanel.SetEnabled.MenuTip") //$NON-NLS-1$
                     + " " + name); //$NON-NLS-1$ 

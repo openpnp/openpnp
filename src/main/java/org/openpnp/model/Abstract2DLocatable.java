@@ -59,16 +59,6 @@ public abstract class Abstract2DLocatable<T extends Abstract2DLocatable<T>> exte
                 return this;
             }
         }
-        
-        @Override
-        public String toString() {
-            if (this.equals(Side.Top)) {
-                return Translations.getString("Abstract2DLocatable.Side.Top"); //$NON-NLS-1$
-            }
-            else {
-                return Translations.getString("Abstract2DLocatable.Side.Bottom"); //$NON-NLS-1$
-            }
-        }
     }
 
     /**

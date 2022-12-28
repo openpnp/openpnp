@@ -505,7 +505,7 @@ public class PanelDefinitionPanel extends JPanel implements PropertyChangeListen
     
     @Subscribe
     public void panelDefinitionStructureChanged(DefinitionStructureChangedEvent event) {
-        if (rootPanelLocation != null) {
+        if (rootPanelLocation != null && event.source != this) {
             SwingUtilities.invokeLater(() -> {
                 refresh();
             });
@@ -623,10 +623,11 @@ public class PanelDefinitionPanel extends JPanel implements PropertyChangeListen
 
             panel.addPlacement(placement);
             fiducialTableModel.fireTableDataChanged();
-            Helpers.selectLastTableRow(fiducialTable);
-            
+            Helpers.selectObjectTableRow(fiducialTable, placement);
+
             Configuration.get().getBus()
                 .post(new DefinitionStructureChangedEvent(panel, "placements", PanelDefinitionPanel.this)); //$NON-NLS-1$
+
         }
     };
 

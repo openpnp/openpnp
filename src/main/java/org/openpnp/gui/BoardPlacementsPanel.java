@@ -140,7 +140,7 @@ public class BoardPlacementsPanel extends JPanel {
     private List<BoardImporter> scanForBoardImporters() {
         List<BoardImporter> boardImporters = new ArrayList<>();
         try (ScanResult scanResult = new ClassGraph().enableClassInfo()
-                .acceptPackages(BoardImporter.class.getPackageName()).scan()) {
+                .acceptPackages(BoardImporter.class.getPackage().getName()).scan()) {
             ClassInfoList importerClassInfoList = scanResult.
                     getClassesImplementing(BoardImporter.class.getCanonicalName());
             for (ClassInfo boardImporterInfo : importerClassInfoList) {
@@ -153,7 +153,7 @@ public class BoardPlacementsPanel extends JPanel {
                 }
                 
                 //For now, skip the solder paste importer
-                Logger.trace(boardImporter.getClass());
+                Logger.trace(boardImporter.getClass().getSimpleName());
                 if (boardImporter.getClass() == SolderPasteGerberImporter.class) {
                     continue;
                 }
@@ -165,7 +165,8 @@ public class BoardPlacementsPanel extends JPanel {
     }
     
     private void createUi() {
-        setBorder(new TitledBorder(null, Translations.getString("BoardPanel.BoardPlacements.Placements"), TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        setBorder(new TitledBorder(null, Translations.getString("BoardPanel.BoardPlacements.Placements"), //$NON-NLS-1$
+                TitledBorder.LEADING, TitledBorder.TOP, null, null));
         
         configuration = Configuration.get();
         
@@ -209,7 +210,7 @@ public class BoardPlacementsPanel extends JPanel {
         
         TableUtils.setColumnAlignment(tableModel, table);
         
-        TableUtils.installColumnWidthSavers(table, prefs, "BoardPlacementsPanel.placementsTable.columnWidth");
+        TableUtils.installColumnWidthSavers(table, prefs, "BoardPlacementsPanel.placementsTable.columnWidth"); //$NON-NLS-1$
         
         table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
             @Override
@@ -355,7 +356,7 @@ public class BoardPlacementsPanel extends JPanel {
         JPanel panel_1 = new JPanel();
         panel.add(panel_1, BorderLayout.EAST);
 
-        JLabel lblNewLabel = new JLabel(Translations.getString("BoardPanel.BoardPlacements.Placements.Search"));
+        JLabel lblNewLabel = new JLabel(Translations.getString("BoardPanel.BoardPlacements.Placements.Search")); //$NON-NLS-1$
         panel_1.add(lblNewLabel);
 
         searchTextField = new JTextField();
@@ -383,8 +384,7 @@ public class BoardPlacementsPanel extends JPanel {
     
     @Subscribe
     public void boardDefinitionStructureChanged(DefinitionStructureChangedEvent event) {
-        if (board != null && 
-                event.definition == board) {
+        if (board != null && event.definition == board && event.source != this) {
             SwingUtilities.invokeLater(() -> {
                 refresh();
             });
@@ -422,7 +422,7 @@ public class BoardPlacementsPanel extends JPanel {
         List<RowFilter<PlacementsHolderPlacementsTableModel, Integer>> filters = new ArrayList<>();
         
         try {
-            RowFilter<PlacementsHolderPlacementsTableModel, Integer> searchFilter = RowFilter.regexFilter("(?i)" + searchTextField.getText().trim());
+            RowFilter<PlacementsHolderPlacementsTableModel, Integer> searchFilter = RowFilter.regexFilter("(?i)" + searchTextField.getText().trim()); //$NON-NLS-1$
             filters.add(searchFilter);
         }
         catch (PatternSyntaxException e) {
@@ -472,20 +472,20 @@ public class BoardPlacementsPanel extends JPanel {
     public final Action newAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.add);
-            putValue(NAME, Translations.getString("BoardPanel.BoardPlacements.Action.NewPlacement"));
-            putValue(SHORT_DESCRIPTION, Translations.getString("BoardPanel.BoardPlacements.Action.NewPlacement.Description"));
+            putValue(NAME, Translations.getString("BoardPanel.BoardPlacements.Action.NewPlacement")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("BoardPanel.BoardPlacements.Action.NewPlacement.Description")); //$NON-NLS-1$
         }
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
             if (configuration.getParts().size() == 0) {
-                MessageBoxes.errorBox(getTopLevelAncestor(), Translations.getString("General.Error"),
-                        Translations.getString("BoardPanel.BoardPlacements.NewPlacement.ErrorMessageBox.NoPartsMessage"));
+                MessageBoxes.errorBox(getTopLevelAncestor(), Translations.getString("General.Error"), //$NON-NLS-1$
+                        Translations.getString("BoardPanel.BoardPlacements.NewPlacement.ErrorMessageBox.NoPartsMessage")); //$NON-NLS-1$
                 return;
             }
 
             String id = JOptionPane.showInputDialog(getTopLevelAncestor(),
-                    Translations.getString("BoardPanel.BoardPlacements.NewPlacement.InputDialog.enterIdMessage"));
+                    Translations.getString("BoardPanel.BoardPlacements.NewPlacement.InputDialog.enterIdMessage")); //$NON-NLS-1$
             if (id == null) {
                 return;
             }
@@ -493,8 +493,8 @@ public class BoardPlacementsPanel extends JPanel {
             // Check if the new placement ID is unique
             for(Placement compareplacement : board.getPlacements()) {
                 if (compareplacement.getId().equals(id)) {
-                    MessageBoxes.errorBox(getTopLevelAncestor(), Translations.getString("General.Error"),
-                            Translations.getString("BoardPanel.BoardPlacements.NewPlacement.ErrorMessageBox.IdAlreadyExistsMessage"));
+                    MessageBoxes.errorBox(getTopLevelAncestor(), Translations.getString("General.Error"), //$NON-NLS-1$
+                            Translations.getString("BoardPanel.BoardPlacements.NewPlacement.ErrorMessageBox.IdAlreadyExistsMessage")); //$NON-NLS-1$
                     return;
                 }
             }
@@ -510,15 +510,15 @@ public class BoardPlacementsPanel extends JPanel {
             Helpers.selectLastTableRow(table);
 
             configuration.getBus()
-                .post(new DefinitionStructureChangedEvent(board, "placements", BoardPlacementsPanel.this));
+                .post(new DefinitionStructureChangedEvent(board, "placements", BoardPlacementsPanel.this)); //$NON-NLS-1$
         }
     };
 
     public final Action removeAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.delete);
-            putValue(NAME, Translations.getString("BoardPanel.BoardPlacements.Action.RemovePlacement"));
-            putValue(SHORT_DESCRIPTION, Translations.getString("BoardPanel.BoardPlacements.Action.RemovePlacement.Description"));
+            putValue(NAME, Translations.getString("BoardPanel.BoardPlacements.Action.RemovePlacement")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("BoardPanel.BoardPlacements.Action.RemovePlacement.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -529,7 +529,7 @@ public class BoardPlacementsPanel extends JPanel {
             tableModel.fireTableDataChanged();
 
             configuration.getBus()
-                .post(new DefinitionStructureChangedEvent(board, "placements", BoardPlacementsPanel.this));
+                .post(new DefinitionStructureChangedEvent(board, "placements", BoardPlacementsPanel.this)); //$NON-NLS-1$
         }
     };
 
@@ -563,12 +563,12 @@ public class BoardPlacementsPanel extends JPanel {
                     //Option 1: Import after deleting all existing placements
                     //Option 2: Cancel the import
                     Object[] options = {
-                            Translations.getString("BoardPanel.BoardPlacements.Importer.OptionsBox.Merge"),
-                            Translations.getString("BoardPanel.BoardPlacements.Importer.OptionsBox.Replace"),
-                            Translations.getString("General.Cancel")};
+                            Translations.getString("BoardPanel.BoardPlacements.Importer.OptionsBox.Merge"), //$NON-NLS-1$
+                            Translations.getString("BoardPanel.BoardPlacements.Importer.OptionsBox.Replace"), //$NON-NLS-1$
+                            Translations.getString("General.Cancel")}; //$NON-NLS-1$
                     importOption = JOptionPane.showOptionDialog((Frame) getTopLevelAncestor(),
-                            Translations.getString("BoardPanel.BoardPlacements.Importer.OptionsBox.Question"),
-                            Translations.getString("BoardPanel.BoardPlacements.Importer.OptionsBox.Title"),
+                            Translations.getString("BoardPanel.BoardPlacements.Importer.OptionsBox.Question"), //$NON-NLS-1$
+                            Translations.getString("BoardPanel.BoardPlacements.Importer.OptionsBox.Title"), //$NON-NLS-1$
                             JOptionPane.YES_NO_CANCEL_OPTION,
                             JOptionPane.QUESTION_MESSAGE,
                             null,
@@ -609,7 +609,7 @@ public class BoardPlacementsPanel extends JPanel {
                 importedBoard.dispose();
                 
                 configuration.getBus()
-                    .post(new DefinitionStructureChangedEvent(board, "placements", BoardPlacementsPanel.this));
+                    .post(new DefinitionStructureChangedEvent(board, "placements", BoardPlacementsPanel.this)); //$NON-NLS-1$
             }
         }
         catch (Exception e) {
@@ -620,8 +620,8 @@ public class BoardPlacementsPanel extends JPanel {
     public final Action importAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.importt);
-            putValue(NAME, Translations.getString("BoardPanel.BoardPlacements.Action.Import"));
-            putValue(SHORT_DESCRIPTION, Translations.getString("BoardPanel.BoardPlacements.Action.Import.Description"));
+            putValue(NAME, Translations.getString("BoardPanel.BoardPlacements.Action.Import")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("BoardPanel.BoardPlacements.Action.Import.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -676,8 +676,8 @@ public class BoardPlacementsPanel extends JPanel {
 
     public final Action setTypeAction = new AbstractAction() {
         {
-            putValue(NAME, Translations.getString("BoardPanel.BoardPlacements.Action.SetType"));
-            putValue(SHORT_DESCRIPTION, Translations.getString("BoardPanel.BoardPlacements.Action.SetType.Description"));
+            putValue(NAME, Translations.getString("BoardPanel.BoardPlacements.Action.SetType")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("BoardPanel.BoardPlacements.Action.SetType.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -689,9 +689,19 @@ public class BoardPlacementsPanel extends JPanel {
 
         public SetTypeAction(Placement.Type type) {
             this.type = type;
-            putValue(NAME, Translations.getString("Placement.Type." + type.toString()));
-            putValue(SHORT_DESCRIPTION, Translations.getString("BoardPanel.BoardPlacements.Action.SetType.ToolTip") +
-                    " " + Translations.getString("Placement.Type." + type.toString()));
+            String name;
+            if (type == Placement.Type.Fiducial) {
+                name = Translations.getString("Placement.Type.Fiducial"); //$NON-NLS-1$
+            }
+            else if (type == Placement.Type.Placement) {
+                name = Translations.getString("Placement.Type.Placement"); //$NON-NLS-1$
+            }
+            else {
+                name = type.toString();
+            }
+            putValue(NAME, name);
+            putValue(SHORT_DESCRIPTION, Translations.getString("BoardPanel.BoardPlacements.Action.SetType.ToolTip") + //$NON-NLS-1$
+                    " " + name); //$NON-NLS-1$
         }
 
         @Override
@@ -705,8 +715,8 @@ public class BoardPlacementsPanel extends JPanel {
 
     public final Action setSideAction = new AbstractAction() {
         {
-            putValue(NAME, Translations.getString("BoardPanel.BoardPlacements.Action.SetSide"));
-            putValue(SHORT_DESCRIPTION, Translations.getString("BoardPanel.BoardPlacements.Action.SetSide.Description"));
+            putValue(NAME, Translations.getString("BoardPanel.BoardPlacements.Action.SetSide")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("BoardPanel.BoardPlacements.Action.SetSide.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -718,9 +728,16 @@ public class BoardPlacementsPanel extends JPanel {
 
         public SetSideAction(Side side) {
             this.side = side;
-            putValue(NAME, Translations.getString("Placement.Side." + side.toString()));
-            putValue(SHORT_DESCRIPTION, Translations.getString("BoardPanel.BoardPlacements.Action.SetSide.ToolTip") +
-                    " " + Translations.getString("Placement.Side." + side.toString()));
+            String name;
+            if (side == Side.Top) {
+                name = Translations.getString("Placement.Side.Top"); //$NON-NLS-1$
+            }
+            else {
+                name = Translations.getString("Placement.Side.Bottom"); //$NON-NLS-1$
+            }
+            putValue(NAME, name);
+            putValue(SHORT_DESCRIPTION, Translations.getString("BoardPanel.BoardPlacements.Action.SetSide.ToolTip") + //$NON-NLS-1$
+                    " " + name); //$NON-NLS-1$
         }
 
         @Override
@@ -734,8 +751,8 @@ public class BoardPlacementsPanel extends JPanel {
     
     public final Action setErrorHandlingAction = new AbstractAction() {
         {
-            putValue(NAME, Translations.getString("BoardPanel.BoardPlacements.Action.SetErrorHandling"));
-            putValue(SHORT_DESCRIPTION, Translations.getString("BoardPanel.BoardPlacements.Action.SetErrorHandling.Description"));
+            putValue(NAME, Translations.getString("BoardPanel.BoardPlacements.Action.SetErrorHandling")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("BoardPanel.BoardPlacements.Action.SetErrorHandling.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -747,9 +764,16 @@ public class BoardPlacementsPanel extends JPanel {
 
         public SetErrorHandlingAction(Placement.ErrorHandling errorHandling) {
             this.errorHandling = errorHandling;
-            putValue(NAME, Translations.getString("Placement.ErrorHandling." + errorHandling.toString()));
-            putValue(SHORT_DESCRIPTION, Translations.getString("BoardPanel.BoardPlacements.Action.SetErrorHandling.ToolTip") +
-                    " " + Translations.getString("Placement.ErrorHandling." + errorHandling.toString()));
+            String name;
+            if (errorHandling == Placement.ErrorHandling.Alert) {
+                name = Translations.getString("Placement.ErrorHandling.Alert"); //$NON-NLS-1$
+            }
+            else {
+                name = Translations.getString("Placement.ErrorHandling.Defer"); //$NON-NLS-1$
+            }
+            putValue(NAME, name);
+            putValue(SHORT_DESCRIPTION, Translations.getString("BoardPanel.BoardPlacements.Action.SetErrorHandling.ToolTip") + //$NON-NLS-1$
+                    " " + name); //$NON-NLS-1$
         }
 
         @Override
@@ -763,8 +787,8 @@ public class BoardPlacementsPanel extends JPanel {
     
     public final Action setEnabledAction = new AbstractAction() {
         {
-            putValue(NAME, Translations.getString("BoardPanel.BoardPlacements.Action.SetEnabled"));
-            putValue(SHORT_DESCRIPTION, Translations.getString("BoardPanel.BoardPlacements.Action.SetEnabled.Description"));
+            putValue(NAME, Translations.getString("BoardPanel.BoardPlacements.Action.SetEnabled")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("BoardPanel.BoardPlacements.Action.SetEnabled.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -777,10 +801,12 @@ public class BoardPlacementsPanel extends JPanel {
 
         public SetEnabledAction(Boolean enabled) {
             this.enabled = enabled;
-            String name = enabled ? Translations.getString("General.Enabled") : Translations.getString("General.Disabled");
+            String name = enabled ? 
+                    Translations.getString("General.Enabled") :  //$NON-NLS-1$
+                    Translations.getString("General.Disabled"); //$NON-NLS-1$
             putValue(NAME, name);
-            putValue(SHORT_DESCRIPTION, Translations.getString("BoardPanel.BoardPlacements.Action.SetEnabled.ToolTip") + 
-                    " " + name);
+            putValue(SHORT_DESCRIPTION, Translations.getString("BoardPanel.BoardPlacements.Action.SetEnabled.ToolTip") +  //$NON-NLS-1$
+                    " " + name); //$NON-NLS-1$
         }
 
         @Override
@@ -799,14 +825,24 @@ public class BoardPlacementsPanel extends JPanel {
                 return;
             }
             Type type = (Type) value;
-            setText(Translations.getString("Placement.Type." + type.name()));
+            String name;
+            if (type == Placement.Type.Fiducial) {
+                name = Translations.getString("Placement.Type.Fiducial"); //$NON-NLS-1$
+            }
+            else if (type == Placement.Type.Placement) {
+                name = Translations.getString("Placement.Type.Placement"); //$NON-NLS-1$
+            }
+            else {
+                name = value.toString();
+            }
+            setText(name); //$NON-NLS-1$
         }
 
         @Override
         public Component getTableCellRendererComponent(JTable table, Object value,
                                                        boolean isSelected, boolean hasFocus, int row, int column) {
             Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-            Color alternateRowColor = UIManager.getColor("Table.alternateRowColor");
+            Color alternateRowColor = UIManager.getColor("Table.alternateRowColor"); //$NON-NLS-1$
             if (value == Type.Fiducial) {
                 c.setForeground(Color.black);
                 c.setBackground(typeColorFiducial);

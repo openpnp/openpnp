@@ -242,27 +242,27 @@ public class ChildFiducialSelectorDialog extends JDialog {
                 buttonPane.setLayout(new FlowLayout(FlowLayout.RIGHT));
                 {
                     JButton okButton = new JButton(
-                            Translations.getString("ChildFiducialSelectorDialog.Button.Ok")); //$NON-NLS-1$
+                            Translations.getString("General.Ok")); //$NON-NLS-1$
                     okButton.addActionListener(new ActionListener() {
                         @Override
                         public void actionPerformed(ActionEvent e) {
                             addSelectedItemsToPanel();
                         }});
                     okButton.setActionCommand(
-                            Translations.getString("ChildFiducialSelectorDialog.Button.Ok")); //$NON-NLS-1$
+                            Translations.getString("General.Ok")); //$NON-NLS-1$
                     buttonPane.add(okButton);
                     getRootPane().setDefaultButton(okButton);
                 }
                 {
                     JButton cancelButton = new JButton(
-                            Translations.getString("ChildFiducialSelectorDialog.Button.Cancel")); //$NON-NLS-1$
+                            Translations.getString("General.Cancel")); //$NON-NLS-1$
                     cancelButton.addActionListener(new ActionListener() {
                         @Override
                         public void actionPerformed(ActionEvent e) {
                             close();
                         }});
                     cancelButton.setActionCommand(
-                            Translations.getString("ChildFiducialSelectorDialog.Button.Cancel")); //$NON-NLS-1$
+                            Translations.getString("General.Cancel")); //$NON-NLS-1$
                     buttonPane.add(cancelButton);
                 }
             }

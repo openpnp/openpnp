@@ -39,11 +39,9 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.net.URI;
 import java.security.InvalidParameterException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -84,12 +82,6 @@ import org.openpnp.Translations;
 import org.openpnp.gui.components.CameraPanel;
 import org.openpnp.gui.components.ThemeDialog;
 import org.openpnp.gui.importer.BoardImporter;
-import org.openpnp.gui.importer.DipTraceImporter;
-import org.openpnp.gui.importer.EagleBoardImporter;
-import org.openpnp.gui.importer.EagleMountsmdUlpImporter;
-import org.openpnp.gui.importer.KicadPosImporter;
-import org.openpnp.gui.importer.LabcenterProteusImporter; //
-import org.openpnp.gui.importer.NamedCSVImporter;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.HeadCellValue;
 import org.openpnp.gui.support.Icons;
@@ -102,7 +94,6 @@ import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Configuration.TablesLinked;
 import org.openpnp.model.LengthUnit;
-import org.openpnp.model.PlacementsHolderLocation;
 import org.openpnp.scripting.ScriptFileWatcher;
 import org.pmw.tinylog.Logger;
 
@@ -110,11 +101,6 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
-
-import io.github.classgraph.ClassGraph;
-import io.github.classgraph.ClassInfo;
-import io.github.classgraph.ClassInfoList;
-import io.github.classgraph.ScanResult;
 
 /**
  * The main window of the application.
