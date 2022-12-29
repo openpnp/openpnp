@@ -44,6 +44,7 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Solutions;
+import org.openpnp.model.Solutions.Issue;
 import org.openpnp.model.Solutions.Milestone;
 import org.openpnp.model.Solutions.Severity;
 import org.openpnp.model.Solutions.State;
@@ -61,7 +62,7 @@ public class CameraSolutions implements Solutions.Subject  {
     ReferenceCamera camera;
 
     final static long EXPOSURE_ADAPT_MILLISECONDS = 700;
-    final static int EXPOSURE_ADJUST_MAX_STEPS = 32;
+    final static int EXPOSURE_ADJUST_MAX_STEPS = 64;
 
     public CameraSolutions(ReferenceCamera camera) {
         this.camera = camera;
@@ -390,14 +391,15 @@ public class CameraSolutions implements Solutions.Subject  {
         long bestDiff = Long.MAX_VALUE;
         int expMin = exposureProperty.getMin();
         int expMax = exposureProperty.getMax();
-        int expStep = Math.max((expMax - expMin) / (maxSteps-1), 1);
-        for (int value = expMin; 
-                value <=  expMax;
-                value += expStep) {
+        int steps = Math.min(maxSteps - 1, expMax - expMin);
+        for (int step = 0;
+                step <= steps;
+                step++) {
+            int value = expMin + step*(expMax - expMin)/steps;
             exposureProperty.setValue(value);
             Thread.sleep(adaptMilliseconds);
             BufferedImage frame = camera.lightSettleAndCapture();
-            final String msg = "Exposure "+value;
+            final String msg = "Exposure "+value+" (probe "+(step+1)+"/"+(steps+1)+")";
             SwingUtilities.invokeLater(() -> cameraView.showFilteredImage(frame, msg, adaptMilliseconds*2));
             long [][] histogram = VisionUtils.computeImageHistogramHsv(frame);
             long diff = 0;
@@ -413,7 +415,7 @@ public class CameraSolutions implements Solutions.Subject  {
         Thread.sleep(adaptMilliseconds);
         BufferedImage frame1 = camera.lightSettleAndCapture();
         final String msg = "Exposure "+bestValue+" (set)";
-        SwingUtilities.invokeLater(() -> cameraView.showFilteredImage(frame1, msg, adaptMilliseconds*2));
+        SwingUtilities.invokeLater(() -> cameraView.showFilteredImage(frame1, msg, 4000));
     }
 
     protected boolean addCapturePropertyAutoSolution(Solutions solutions, 
@@ -438,13 +440,14 @@ public class CameraSolutions implements Solutions.Subject  {
 
                 @Override
                 public void setState(Solutions.State state) throws Exception {
+                    Function<Issue, Boolean> valueSetterToApply = null;
                     if (state == Solutions.State.Solved) {
                         if (valueSetter == null) {
                             property.setAuto(false);
                             property.setValue(property.getDefault());
                         }
                         else {
-                            valueSetter.apply(this);
+                            valueSetterToApply = valueSetter;
                         }
                     }
                     else {
@@ -453,6 +456,11 @@ public class CameraSolutions implements Solutions.Subject  {
                     }
                     camera.lightSettleAndCapture();
                     camera.ensureCameraVisible();
+                    if (valueSetterToApply != null) {
+                        // Call the value setter as the last thing, as it might spawn a machine task 
+                        // and we need to avoid threading conflicts on camera light or switcher actuators.
+                        valueSetterToApply.apply(this);
+                    }
                     super.setState(state);
                 }
             });
