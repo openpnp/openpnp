@@ -2,7 +2,7 @@
 The Bottom Camera is a upward looking camera fixed to the machine, and not the head. The Bottom Camera is used during Bottom Vision processing to more accurately place parts. It's not required to have a Bottom Camera, but you will generally get better results if you do have one.
 
 ## Add a Camera
-First, add a camera by following the instructions in [[General Camera Setup|Setup and Calibration: General Camera Setup]]. Make sure to configure each section before returning to this page to continue.
+First, add a camera by following the instructions in [[General Camera Setup|Setup and Calibration_General Camera Setup]]. Make sure to configure each section before returning to this page to continue.
 
 Many Bottom Cameras tend to use much shorter fisheye lenses, so pay careful attention to the Lens Calibration section in the document above. It's likely to be more important for the Bottom Camera than the Top Camera.
 
