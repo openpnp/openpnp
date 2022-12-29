@@ -255,7 +255,8 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                 if (gcodeDriver.getFirmwareProperty("FIRMWARE_NAME", "").contains("Smoothieware")) {
                     firmware = (gcodeDriver.getFirmwareProperty("X-GRBL_MODE", "").contains("1"))? 
                             FirmwareType.SmoothiewareGrblSyntax : 
-                                gcodeDriver.getFirmwareProperty("FIRMWARE_VERSION", "").contains("chmt-")?
+                                (gcodeDriver.getFirmwareProperty("FIRMWARE_VERSION", "").contains("chmt-")
+                                        || gcodeDriver.getFirmwareProperty("X-HARDWARE", "").contains("CHMT"))?
                                         FirmwareType.SmoothiewareChmt : FirmwareType.Smoothieware;
                     firmwareAxesCount = Integer.valueOf(gcodeDriver.getFirmwareProperty("X-AXES", "0"));
                     if (firmware == FirmwareType.SmoothiewareChmt) {
