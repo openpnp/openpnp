@@ -73,7 +73,7 @@ to the controller:
 
 * **Simulated3rdOrderControl:**
 
-   Apply motion planning assuming a controller with constant acceleration motion control but simulating 3rd order control with time step interpolation. [Watch a video](https://youtu.be/cH0SF2D6FhM) to see the effect of **Simulated3rdOrderControl** on oscillations/vibrations. 
+   Apply motion planning assuming a controller with constant acceleration motion control but simulating 3rd order control with time step interpolation. [Watch a video](https://youtu.be/cH0SF2D6FhM) to see the effect of **Simulated3rdOrderControl** on oscillations/vibrations. You also need to setup the [Interpolation](https://github.com/openpnp/openpnp/wiki/GcodeAsyncDriver#interpolation).
 
 * **Full3rdOrderControl:**
 
