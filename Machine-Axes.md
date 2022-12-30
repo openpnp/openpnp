@@ -66,7 +66,15 @@ If this is not configured right, you typically get timeout errors, i.e. your spe
 
 **Backlash Compensation** will be treated later, on the [[Backlash-Compensation]] page. For the first basic setup leave it at **None**. 
 
-**Resolution [Driver Units]** indicates the smallest step that OpenPnP should consider as a change in coordinate, also sometimes named a resolution "tick". It should be equal to a micro-step (or a practical multiple thereof). The larger the Resolution tick is, the more often OpenPnP can optimize axis moves away (especially in the small adjustments of non.squareness compensation, nozzle tip runout compensation etc.). By preventing unneeded micro axis move, OpenPnP can also prevent extra backlash compensation moves (not relevant with DirectionalCompensation). 
+**Resolution [Driver Units]** indicates the smallest step that OpenPnP should consider as a change in coordinate, also sometimes named a resolution "tick". It should be equal to the displacement equivalent to a micro-step on the axis motor (or a practical multiple thereof). Because this is often specified as **Steps per [Driver Unit]** you can alternatively enter it as such, the two field convert back and forth automatically:
+
+![Resolution](https://user-images.githubusercontent.com/9963310/138566530-0332b14a-d36c-45c3-95db-1b0bcaf78291.png)
+
+![Steps per Unit](https://user-images.githubusercontent.com/9963310/138566537-38005df9-98d8-4745-ae74-f2f46e629e87.png)
+
+The larger the **Resolution** tick is, the more often OpenPnP can optimize (omit) unnecessary micro axis moves, especially in the small adjustments of non-squareness compensation, nozzle tip runout compensation etc. By omitting micro axis moves, OpenPnP can also prevent extra backlash compensation moves, thus save time. Set the Resolution to a multiple of the micro-steps that makes sense in terms of needed precision for PnP, i.e. typically in the order of several 0.01mm. 
+
+When expressed in the format of the G-Code `MOVE_TO_COMMAND`, which defaults to %.4f, which means 0.0001 driver units, any coordinate should always change with each "tick" (however, it does not matter if the coordinate is rounded on the lesser digits).
 
 ### Controller Settings (Rotational Axis)
 
