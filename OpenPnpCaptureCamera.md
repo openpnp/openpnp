@@ -42,7 +42,7 @@ Likewise if you mistakenly reconnect the two cameras to the wrong/swapped USB po
 Finally, if your camera device driver or OS does not properly store settings between OpenPnP sessions or OS reboots, they are now restored as soon OpenPnP reopens the camera.
 
 Notes: 
-- Use the **Reapply to Camera** button (only available with frozen properties), to reapply properties to the camera at any time. If this is required, i.e. if the camera is arbitrarily not accepting or losing its properties, please report to the [discussion group](http://groups.google.com/group/openpnp).
+- Some cameras have been reported to not accept properties correctly on the reopen. For this reason properties are also applied when homing the machine. Use the **Reapply to Camera** button (only available with frozen properties), to reapply properties to the camera any time. If frequent manual reapplication is necessary, i.e. if the camera is arbitrarily not accepting or losing its properties, please report to the [discussion group](http://groups.google.com/group/openpnp). 
 - If you first switch the  **Freeze Properties?** on, press **Apply** for the properties to be initially frozen. 
 - Once you want to change the camera device for a different make or model, you will likely need to disable **Freeze Properties?** and press **Apply** to query reasonable settings from the new camera (availability and ranges of properties may change between makes and models). 
 
