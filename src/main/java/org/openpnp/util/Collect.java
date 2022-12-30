@@ -142,4 +142,5 @@ public class Collect {
             ret.add(list.get(indices[i]));
         }
         return ret;
+    }
 }
