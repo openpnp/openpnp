@@ -23,10 +23,11 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.function.BiConsumer;
 import javax.swing.JFrame;
+import javax.swing.SwingUtilities;
 
 import org.openpnp.Translations;
 import org.openpnp.gui.MainFrame;
-import org.openpnp.model.BoardLocation;
+import org.openpnp.model.Board;
 import org.openpnp.model.PlacementsHolder;
 import org.openpnp.model.PlacementsHolderLocation;
 
@@ -34,6 +35,7 @@ import org.openpnp.model.PlacementsHolderLocation;
 @SuppressWarnings("serial")
 public class PlacementsHolderLocationViewerDialog extends JFrame {
 
+    private boolean isJob;
     private PlacementsHolderLocationViewer contentPane;
     
     /**
@@ -41,6 +43,7 @@ public class PlacementsHolderLocationViewerDialog extends JFrame {
      */
     public PlacementsHolderLocationViewerDialog(PlacementsHolderLocation<?> placementsHolderLocation, 
             boolean isJob, BiConsumer<PlacementsHolderLocation<?>, String> refreshTableModel) {
+        this.isJob = isJob;
         setBounds(100, 100, 800, 600);
         
         addWindowListener(new WindowAdapter( ) {
@@ -51,26 +54,45 @@ public class PlacementsHolderLocationViewerDialog extends JFrame {
             }
         });
 
-        if (isJob) {
-            setTitle(Translations.getString("PlacementsHolderLocationViewer.TitleType.Job") + 
-                    " - " + MainFrame.get().getTitle());
-        }
-        else if (placementsHolderLocation instanceof BoardLocation) {
-            setTitle(Translations.getString("PlacementsHolderLocationViewer.TitleType.Board") + 
-                    " - " + placementsHolderLocation.getPlacementsHolder().getFile().getName());
-        }
-        else {
-            setTitle(Translations.getString("PlacementsHolderLocationViewer.TitleType.Panel") + 
-                    " - " + placementsHolderLocation.getPlacementsHolder().getFile().getName());
-        }
+//        if (isJob) {
+//            setTitle(Translations.getString("PlacementsHolderLocationViewer.TitleType.Job") + 
+//                    " - " + MainFrame.get().getTitle());
+//        }
+//        else if (placementsHolderLocation instanceof BoardLocation) {
+//            setTitle(Translations.getString("PlacementsHolderLocationViewer.TitleType.Board") + 
+//                    " - " + placementsHolderLocation.getPlacementsHolder().getFile().getName());
+//        }
+//        else {
+//            setTitle(Translations.getString("PlacementsHolderLocationViewer.TitleType.Panel") + 
+//                    " - " + placementsHolderLocation.getPlacementsHolder().getFile().getName());
+//        }
+        setTitle(placementsHolderLocation.getPlacementsHolder());
         
         contentPane = new PlacementsHolderLocationViewer(placementsHolderLocation, isJob, 
                 refreshTableModel);
         setContentPane(contentPane);
     }
 
+    protected void setTitle(PlacementsHolder<?> placementsHolder) {
+        if (isJob) {
+            setTitle(Translations.getString("PlacementsHolderLocationViewer.TitleType.Job") + 
+                    " - " + MainFrame.get().getTitle());
+        }
+        else if (placementsHolder instanceof Board) {
+            setTitle(Translations.getString("PlacementsHolderLocationViewer.TitleType.Board") + 
+                    " - " + placementsHolder.getFile().getName());
+        }
+        else {
+            setTitle(Translations.getString("PlacementsHolderLocationViewer.TitleType.Panel") + 
+                    " - " + placementsHolder.getFile().getName());
+        }
+    }
+    
     public void setPlacementsHolder(PlacementsHolder<?> placementsHolder) {
         contentPane.setPlacementsHolder(placementsHolder);
+        SwingUtilities.invokeLater(() -> {
+            setTitle(placementsHolder);
+        });
     }
     
     public void regenerate() {
