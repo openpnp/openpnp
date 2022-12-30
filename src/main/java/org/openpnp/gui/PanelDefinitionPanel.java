@@ -717,8 +717,8 @@ public class PanelDefinitionPanel extends JPanel implements PropertyChangeListen
                 }
                 File file = new File(new File(fileDialog.getDirectory()), filename);
 
-                addBoard(file);
-                Helpers.selectLastTableRow(childrenTable);
+                BoardLocation newBoardLocation = addBoard(file);
+                Helpers.selectObjectTableRow(childrenTable, newBoardLocation);
             }
             catch (Exception e) {
                 e.printStackTrace();
@@ -747,8 +747,8 @@ public class PanelDefinitionPanel extends JPanel implements PropertyChangeListen
                 return;
             }
             try {
-                addBoard(file);
-                Helpers.selectLastTableRow(childrenTable);
+                BoardLocation newBoardLocation = addBoard(file);
+                Helpers.selectObjectTableRow(childrenTable, newBoardLocation);
             }
             catch (Exception e) {
                 e.printStackTrace();
@@ -759,19 +759,20 @@ public class PanelDefinitionPanel extends JPanel implements PropertyChangeListen
         }
     };
 
-    protected void addBoard(File file) throws Exception {
+    protected BoardLocation addBoard(File file) throws Exception {
         //Make a deep copy of the board's definition to add to the panel
         Board board = new Board(configuration.getBoard(file));
         
         BoardLocation boardLocation = new BoardLocation(board);
         boardLocation.setParent(rootPanelLocation);
         panel.addChild(boardLocation);
-//        PanelLocation.setParentsOfAllDescendants(rootPanelLocation);
         childrenTableModel.fireTableDataChanged();
         
         Configuration.get().getBus()
             .post(new DefinitionStructureChangedEvent(rootPanelLocation.getPanel(), "children",  //$NON-NLS-1$
                     PanelDefinitionPanel.this));
+        
+        return boardLocation;
     }
     
     public final Action addNewPanelAction = new AbstractAction() {
@@ -804,8 +805,8 @@ public class PanelDefinitionPanel extends JPanel implements PropertyChangeListen
                 }
                 File file = new File(new File(fileDialog.getDirectory()), filename);
 
-                addPanel(file);
-                Helpers.selectLastTableRow(childrenTable);
+                PanelLocation newPanelLocation = addPanel(file);
+                Helpers.selectObjectTableRow(childrenTable, newPanelLocation);
             }
             catch (Exception e) {
                 e.printStackTrace();
@@ -834,8 +835,8 @@ public class PanelDefinitionPanel extends JPanel implements PropertyChangeListen
                 return;
             }
             try {
-                addPanel(file);
-                Helpers.selectLastTableRow(childrenTable);
+                PanelLocation newPanelLocation = addPanel(file);
+                Helpers.selectObjectTableRow(childrenTable, newPanelLocation);
             }
             catch (Exception e) {
                 e.printStackTrace();
@@ -846,7 +847,7 @@ public class PanelDefinitionPanel extends JPanel implements PropertyChangeListen
         }
     };
 
-    protected void addPanel(File file) throws Exception {
+    protected PanelLocation addPanel(File file) throws Exception {
         //Make a deep copy of the panel's definition to add to the panel
         Panel newPanel = new Panel(configuration.getPanel(file));
         
@@ -858,6 +859,8 @@ public class PanelDefinitionPanel extends JPanel implements PropertyChangeListen
         
         Configuration.get().getBus()
             .post(new DefinitionStructureChangedEvent(panel, "children", PanelDefinitionPanel.this)); //$NON-NLS-1$
+        
+        return panelLocation;
     }
     
     private void verifyNoCircularReferences(PanelLocation root, PanelLocation decendant) throws Exception {
