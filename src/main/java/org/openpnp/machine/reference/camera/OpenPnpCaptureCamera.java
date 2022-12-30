@@ -587,4 +587,12 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
     public void reapplyProperties() {
         setPropertiesStream(stream);
     }
+
+    @Override
+    public void home() throws Exception {
+        super.home();
+        if (isFreezeProperties()) {
+            reapplyProperties();
+        }
+    }
 }
