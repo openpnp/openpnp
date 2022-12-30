@@ -81,8 +81,20 @@ public class GcodeDriverSolutions implements Solutions.Subject {
             return this == Smoothieware || this == SmoothiewareGrblSyntax || this == SmoothiewareChmt;
         }
 
-        boolean isFlowControlOff() {
-            return this == TinyG || this == Grbl || this == SmoothiewareChmt;
+        FlowControl getFlowControl(GcodeDriver gcodeDriver) {
+            // If M115 specifies the flow control, take that.
+            String flowControl = gcodeDriver.getFirmwareProperty("X-SERIAL_FLOW", "").toUpperCase().trim();
+            if (flowControl.equals("NONE") || flowControl.equals("OFF")) {
+                return FlowControl.Off;
+            }
+            else if (flowControl.equals("RTS/CTS")) {
+                return FlowControl.RtsCts;
+            }
+            else if (flowControl.equals("XON/XOFF")) {
+                return FlowControl.XonXoff;
+            }
+            // Default to typical driver setting.
+            return (this == TinyG || this == Grbl || this == SmoothiewareChmt) ? FlowControl.Off : FlowControl.RtsCts;
         }
     }
 
@@ -255,7 +267,8 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                 if (gcodeDriver.getFirmwareProperty("FIRMWARE_NAME", "").contains("Smoothieware")) {
                     firmware = (gcodeDriver.getFirmwareProperty("X-GRBL_MODE", "").contains("1"))? 
                             FirmwareType.SmoothiewareGrblSyntax : 
-                                gcodeDriver.getFirmwareProperty("FIRMWARE_VERSION", "").contains("chmt-")?
+                                (gcodeDriver.getFirmwareProperty("FIRMWARE_VERSION", "").contains("chmt-")
+                                        || gcodeDriver.getFirmwareProperty("X-HARDWARE", "").contains("CHMT"))?
                                         FirmwareType.SmoothiewareChmt : FirmwareType.Smoothieware;
                     firmwareAxesCount = Integer.valueOf(gcodeDriver.getFirmwareProperty("X-AXES", "0"));
                     if (firmware == FirmwareType.SmoothiewareChmt) {
@@ -368,7 +381,7 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                 if (gcodeDriver.getCommunicationsType() == CommunicationsType.serial 
                         && gcodeDriver.getSerial() != null) {
                     final FlowControl oldFlowControl = gcodeDriver.getSerial().getFlowControl();
-                    final FlowControl newFlowControl = (firmware.isFlowControlOff() ? FlowControl.Off : FlowControl.RtsCts);
+                    final FlowControl newFlowControl = firmware.getFlowControl(gcodeDriver);
                     if (oldFlowControl != newFlowControl) {
                         solutions.add(new Solutions.Issue(
                                 gcodeDriver, 
@@ -433,7 +446,7 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                     }
                     boolean serialFlowControlOff = (gcodeDriver.getCommunicationsType() == CommunicationsType.serial 
                         && gcodeDriver.getSerial() != null 
-                        && gcodeDriver.getSerial().getFlowControl() == FlowControl.Off) || firmware.isFlowControlOff();
+                        && gcodeDriver.getSerial().getFlowControl() == FlowControl.Off) || firmware.getFlowControl(gcodeDriver) == FlowControl.Off;
                     boolean confirmationFlowControlRecommended = serialFlowControlOff || ! hasAxes;
                     if (confirmationFlowControlRecommended != confirmationFlowControl) {
                         solutions.add(new Solutions.Issue(

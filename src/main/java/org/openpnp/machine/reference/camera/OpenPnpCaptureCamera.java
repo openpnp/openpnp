@@ -90,6 +90,9 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
     @Element(required = false)
     private CapturePropertyHolder zoom = new CapturePropertyHolder(CaptureProperty.Zoom);
 
+    @Attribute(required = false)
+    private boolean freezeProperties = false;
+
     public List<CaptureDevice> getCaptureDevices() {
         return capture.getDevices();
     }
@@ -427,6 +430,7 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
         @Attribute(required = false)
         private Boolean auto;
 
+        private OpenPnpCaptureCamera camera;
         private CaptureStream stream;
 
         public CapturePropertyHolder(CaptureProperty property) {
@@ -438,6 +442,7 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
         }
 
         public void setCamera(OpenPnpCaptureCamera camera) {
+            this.camera = camera;
             camera.addPropertyChangeListener("device", e -> {
                 firePropertyChange("supported", null, isSupported());
             });
@@ -498,7 +503,12 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
 
         public boolean isAuto() {
             try {
-                return this.auto = stream.getAutoProperty(property);
+                if (this.auto == null || !this.camera.isFreezeProperties()) {
+                    return this.auto = stream.getAutoProperty(property);
+                }
+                else {
+                    return this.auto;
+                }
             }
             catch (Exception e) {
                 return false;
@@ -527,7 +537,12 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
 
         public int getValue() {
             try {
-                return this.value = stream.getProperty(property);
+                if (this.value == null || !this.camera.isFreezeProperties()) {
+                    return this.value = stream.getProperty(property);
+                }
+                else {
+                    return this.value;
+                }
             }
             catch (Exception e) {
                 return 0;
@@ -552,6 +567,32 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
             catch (Exception e) {
                 return false;
             }
+        }
+    }
+
+    public boolean isFreezeProperties() {
+        return freezeProperties;
+    }
+
+    public void setFreezeProperties(boolean freezeProperties) {
+        Object oldValue = this.freezeProperties;
+        this.freezeProperties = freezeProperties;
+        if (! freezeProperties) {
+            // Unfrozen properties might be read back different. 
+            reapplyProperties();
+        }
+        firePropertyChange("freezeProperties", oldValue, freezeProperties);
+    }
+
+    public void reapplyProperties() {
+        setPropertiesStream(stream);
+    }
+
+    @Override
+    public void home() throws Exception {
+        super.home();
+        if (isFreezeProperties()) {
+            reapplyProperties();
         }
     }
 }
