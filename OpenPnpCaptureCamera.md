@@ -33,7 +33,7 @@ If in doubt, set to the **Default** value indicated on the right side.
 The **Freeze Properties?** switch determines how camera properties are handled: 
 
 - If **disabled** (default), the camera device driver will store the properties (**Auto** and **Value**). They are queried from the camera whenever it is reopened. 
-- If **enabled** (new), the OpenPnP configuration (`machine.xml`) will store all the currently set properties (**Auto** and **Value**). They are reapplied to the camera whenever it is later reopened. They can still be changed through the UI, but settings will never be overwritten from the camera device. 
+- If **enabled** (new), the OpenPnP configuration (`machine.xml`) will store all the currently set properties (**Auto** and **Value**). They are reapplied to the camera whenever it is later reopened. To make sure you get repeatable results, the properties will also be reapplied when the machine is homed. They can still be changed through the UI, but settings will never be overwritten with those queried from the camera device.
 
 Enable **Freeze Properties?** when you want repeatable settings stored with the OpenPnP configuration. You can then switch between configurations or even between different applications using the web cam with no harm. The configured  properties will always be restored.
 
