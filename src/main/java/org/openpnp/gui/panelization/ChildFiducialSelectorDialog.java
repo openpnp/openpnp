@@ -24,11 +24,14 @@ import java.awt.Component;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.event.WindowEvent;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.prefs.Preferences;
 
 import javax.swing.Box;
 import javax.swing.ButtonGroup;
@@ -47,10 +50,16 @@ import javax.swing.border.BevelBorder;
 import javax.swing.table.TableColumnModel;
 
 import org.openpnp.Translations;
+import org.openpnp.gui.BoardPlacementsPanel;
+import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.MultisortTableHeaderCellRenderer;
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.IdentifiableTableCellRenderer;
+import org.openpnp.gui.support.LengthCellValue;
+import org.openpnp.gui.support.MonospacedFontTableCellRenderer;
+import org.openpnp.gui.support.RotationCellValue;
+import org.openpnp.gui.support.TableUtils;
 import org.openpnp.gui.tablemodel.PlacementsHolderPlacementsTableModel;
 import org.openpnp.model.Abstract2DLocatable.Side;
 import org.openpnp.model.LengthUnit;
@@ -66,6 +75,15 @@ import org.openpnp.util.Utils2D;
 
 @SuppressWarnings("serial")
 public class ChildFiducialSelectorDialog extends JDialog {
+    private static final String PREF_WINDOW_X = "ChildFiducialSelectorDialog.windowX"; //$NON-NLS-1$
+    private static final int PREF_WINDOW_X_DEF = 100;
+    private static final String PREF_WINDOW_Y = "ChildFiducialSelectorDialog.windowY"; //$NON-NLS-1$
+    private static final int PREF_WINDOW_Y_DEF = 100;
+    private static final String PREF_WINDOW_WIDTH = "ChildFiducialSelectorDialog.windowWidth"; //$NON-NLS-1$
+    private static final int PREF_WINDOW_WIDTH_DEF = 800;
+    private static final String PREF_WINDOW_HEIGHT = "ChildFiducialSelectorDialog.windowHeight"; //$NON-NLS-1$
+    private static final int PREF_WINDOW_HEIGHT_DEF = 600;
+    private static final String PREF_COLUMN_WIDTHS = "ChildFiducialSelectorDialog.childFiducialsTable.columnWidth"; //$NON-NLS-1$
 
     private enum PlacementTypes {FiducialsOnly, PlacementsOnly, Both};
         
@@ -81,20 +99,47 @@ public class ChildFiducialSelectorDialog extends JDialog {
     private List<Placement> filteredPseudoPlacementsHull;
     private List<Placement> goodPseudoPlacements;
     protected boolean showHullOnly = true;
+    private Preferences prefs = Preferences.userNodeForPackage(ChildFiducialSelectorDialog.class);
 
     /**
      * Create the dialog.
      */
     public ChildFiducialSelectorDialog(PanelLocation panelLocation) {
+        super(MainFrame.get(), panelLocation.getPanel().getName() + 
+                Translations.getString("ChildFiducialSelectorDialog.Frame.Title"), //$NON-NLS-1$
+            ModalityType.APPLICATION_MODAL);
         this.panelLocation = panelLocation;
         
         allPseudoPlacements = new ArrayList<>();
         generateAllPseudoPlacementsList(panelLocation);
 
-        this.setTitle(panelLocation.getPanel().getName() + 
-                Translations.getString("ChildFiducialSelectorDialog.Frame.Title")); //$NON-NLS-1$
-        setModalityType(ModalityType.APPLICATION_MODAL);
-        setBounds(100, 100, 800, 600);
+        if (prefs.getInt(PREF_WINDOW_WIDTH, 50) < 50) {
+            prefs.putInt(PREF_WINDOW_WIDTH, PREF_WINDOW_WIDTH_DEF);
+        }
+
+        if (prefs.getInt(PREF_WINDOW_HEIGHT, 50) < 50) {
+            prefs.putInt(PREF_WINDOW_HEIGHT, PREF_WINDOW_HEIGHT_DEF);
+        }
+
+        setBounds(prefs.getInt(PREF_WINDOW_X, PREF_WINDOW_X_DEF),
+                prefs.getInt(PREF_WINDOW_Y, PREF_WINDOW_Y_DEF),
+                prefs.getInt(PREF_WINDOW_WIDTH, PREF_WINDOW_WIDTH_DEF),
+                prefs.getInt(PREF_WINDOW_HEIGHT, PREF_WINDOW_HEIGHT_DEF));
+        
+        addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentMoved(ComponentEvent e) {
+                prefs.putInt(PREF_WINDOW_X, getLocation().x);
+                prefs.putInt(PREF_WINDOW_Y, getLocation().y);
+            }
+
+            @Override
+            public void componentResized(ComponentEvent e) {
+                prefs.putInt(PREF_WINDOW_WIDTH, getSize().width);
+                prefs.putInt(PREF_WINDOW_HEIGHT, getSize().height);
+            }
+        });
+        
         getContentPane().setLayout(new BorderLayout());
         {
             JPanel panel = new JPanel();
@@ -228,11 +273,18 @@ public class ChildFiducialSelectorDialog extends JDialog {
             childFiducialsTable.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
             childFiducialsTable.setDefaultRenderer(Part.class, 
                     new IdentifiableTableCellRenderer<Part>());
+            childFiducialsTable.setDefaultRenderer(LengthCellValue.class, new MonospacedFontTableCellRenderer());
+            childFiducialsTable.setDefaultRenderer(RotationCellValue.class, new MonospacedFontTableCellRenderer());
+            childFiducialsTable.setAutoResizeMode(JTable.AUTO_RESIZE_NEXT_COLUMN);
             
             //No need to see the Error Handling or Comments columns so remove them
             TableColumnModel tcm = childFiducialsTable.getColumnModel();
             tcm.removeColumn(tcm.getColumn(9)); //skip Comments column
             tcm.removeColumn(tcm.getColumn(8)); //skip Error Handling column
+            
+            TableUtils.setColumnAlignment(tableModel, childFiducialsTable);
+            
+            TableUtils.installColumnWidthSavers(childFiducialsTable, prefs, PREF_COLUMN_WIDTHS);
             
             JScrollPane scrollPane = new JScrollPane(childFiducialsTable);
             panel.add(scrollPane, BorderLayout.CENTER);

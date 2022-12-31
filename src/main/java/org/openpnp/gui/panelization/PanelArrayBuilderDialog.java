@@ -27,11 +27,15 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.prefs.Preferences;
+
 import javax.swing.ButtonGroup;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
@@ -48,6 +52,7 @@ import javax.swing.border.EmptyBorder;
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.openpnp.Translations;
 import org.openpnp.gui.components.ComponentDecorators;
+import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.viewers.PlacementsHolderLocationViewer;
 import org.openpnp.model.Board;
@@ -65,6 +70,14 @@ import javax.swing.border.EtchedBorder;
 
 @SuppressWarnings("serial")
 public class PanelArrayBuilderDialog extends JDialog {
+    private static final String PREF_WINDOW_X = "PanelArrayBuilderDialog.windowX"; //$NON-NLS-1$
+    private static final int PREF_WINDOW_X_DEF = 100;
+    private static final String PREF_WINDOW_Y = "PanelArrayBuilderDialog.windowY"; //$NON-NLS-1$
+    private static final int PREF_WINDOW_Y_DEF = 100;
+    private static final String PREF_WINDOW_WIDTH = "PanelArrayBuilderDialog.windowWidth"; //$NON-NLS-1$
+    private static final int PREF_WINDOW_WIDTH_DEF = 800;
+    private static final String PREF_WINDOW_HEIGHT = "PanelArrayBuilderDialog.windowHeight"; //$NON-NLS-1$
+    private static final int PREF_WINDOW_HEIGHT_DEF = 600;
 
     private enum ArrayType {
         Rectangular, Circular;
@@ -111,6 +124,7 @@ public class PanelArrayBuilderDialog extends JDialog {
     private boolean increaseProportionally = false;
     private boolean panelReferenceFrame = true;
     private PlacementsHolderLocationViewer panelLayout;
+    private Preferences prefs = Preferences.userNodeForPackage(PanelArrayBuilderDialog.class);
 
     private String rootChildId;
 
@@ -123,6 +137,9 @@ public class PanelArrayBuilderDialog extends JDialog {
      */
     public PanelArrayBuilderDialog(PanelLocation panelLocation, 
             PlacementsHolderLocation<?> rootChildLocation, Runnable refresh) {
+        super(MainFrame.get(), 
+                Translations.getString("PanelArrayBuilderDialog.Frame.Title"), //$NON-NLS-1$
+                ModalityType.APPLICATION_MODAL);
         this.panelLocation = panelLocation;
         this.rootChildLocation = rootChildLocation;
         this.refresh = refresh;
@@ -136,9 +153,34 @@ public class PanelArrayBuilderDialog extends JDialog {
             }
         };
         addWindowListener(windowCloseListener);
-        setModalityType(ModalityType.APPLICATION_MODAL);
-        setTitle(Translations.getString("PanelArrayBuilderDialog.Frame.Title")); //$NON-NLS-1$
-        setBounds(100, 100, 800, 600);
+
+        if (prefs.getInt(PREF_WINDOW_WIDTH, 50) < 50) {
+            prefs.putInt(PREF_WINDOW_WIDTH, PREF_WINDOW_WIDTH_DEF);
+        }
+
+        if (prefs.getInt(PREF_WINDOW_HEIGHT, 50) < 50) {
+            prefs.putInt(PREF_WINDOW_HEIGHT, PREF_WINDOW_HEIGHT_DEF);
+        }
+
+        setBounds(prefs.getInt(PREF_WINDOW_X, PREF_WINDOW_X_DEF),
+                prefs.getInt(PREF_WINDOW_Y, PREF_WINDOW_Y_DEF),
+                prefs.getInt(PREF_WINDOW_WIDTH, PREF_WINDOW_WIDTH_DEF),
+                prefs.getInt(PREF_WINDOW_HEIGHT, PREF_WINDOW_HEIGHT_DEF));
+        
+        addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentMoved(ComponentEvent e) {
+                prefs.putInt(PREF_WINDOW_X, getLocation().x);
+                prefs.putInt(PREF_WINDOW_Y, getLocation().y);
+            }
+
+            @Override
+            public void componentResized(ComponentEvent e) {
+                prefs.putInt(PREF_WINDOW_WIDTH, getSize().width);
+                prefs.putInt(PREF_WINDOW_HEIGHT, getSize().height);
+            }
+        });
+        
         getContentPane().setLayout(new BorderLayout());
         contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
         getContentPane().add(contentPanel, BorderLayout.CENTER);

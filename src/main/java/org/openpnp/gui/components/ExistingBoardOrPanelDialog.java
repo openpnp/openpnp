@@ -62,6 +62,7 @@ public class ExistingBoardOrPanelDialog extends JDialog {
      * Create the dialog.
      */
     public ExistingBoardOrPanelDialog(Configuration configuration, Class<?> type, String title) {
+        super(MainFrame.get(), title, ModalityType.APPLICATION_MODAL);
         if (type == Board.class) {
             boardOrPanel = Translations.getString("ExistingBoardOrPanelDialog.boardOrPanel.Board"); //$NON-NLS-1$
             for (Board board : configuration.getBoards()) {
@@ -78,8 +79,6 @@ public class ExistingBoardOrPanelDialog extends JDialog {
             throw new UnsupportedOperationException("Unsupported operation for class " + type); //$NON-NLS-1$
         }
         fileExtension = "." + boardOrPanel + ".xml"; //$NON-NLS-1$ //$NON-NLS-2$
-        setTitle(title);
-        setModalityType(ModalityType.APPLICATION_MODAL);
         setBounds(100, 100, 600, 400);
         getContentPane().setLayout(new BorderLayout());
         contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));

@@ -52,7 +52,6 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
-import javax.swing.table.TableColumnModel;
 import javax.swing.table.TableRowSorter;
 
 import org.openpnp.Translations;
@@ -61,10 +60,8 @@ import org.openpnp.events.PlacementsHolderSelectedEvent;
 import org.openpnp.events.PlacementSelectedEvent;
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.support.ActionGroup;
-import org.openpnp.gui.support.CustomAlignmentRenderer;
 import org.openpnp.gui.support.MonospacedFontTableCellRenderer;
 import org.openpnp.gui.support.TableUtils;
-import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.LengthCellValue;
 import org.openpnp.gui.support.MessageBoxes;
@@ -73,10 +70,7 @@ import org.openpnp.model.Panel;
 import org.openpnp.model.PanelLocation;
 import org.openpnp.model.Placement;
 import org.openpnp.model.Configuration.TablesLinked;
-import org.openpnp.model.Board;
 import org.openpnp.model.Configuration;
-import org.pmw.tinylog.Logger;
-
 import com.google.common.eventbus.Subscribe;
 
 @SuppressWarnings("serial")
