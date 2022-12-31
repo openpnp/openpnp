@@ -119,11 +119,20 @@ public class DipTraceImporter implements BoardImporter {
             double placementX = Double.parseDouble(tokens[2]);   		// X (mm) in Diptrace export
             double placementY = Double.parseDouble(tokens[3]);   		// Y (mm) in Diptrace export
             double placementRotation = Double.parseDouble(tokens[5]); 	// Rotate in Diptrace export
-            String placementLayer = tokens[4];    						// Side in Diptrace export
+            Side placementLayer = tokens[4].charAt(0) == 'T' ? Side.Top : Side.Bottom;    	// Side in Diptrace export
+
+            if(placementLayer == Side.Bottom){
+                // Bottom parts need to be mirrored
+                placementRotation = 180 - placementRotation;
+
+                // ensure rotation is positive for better UX
+                if(placementRotation < 0){
+                    placementRotation = placementRotation + 360;
+                }
+            }
 
             Placement placement = new Placement(placementId);
-            placement.setLocation(new Location(LengthUnit.Millimeters, placementX, placementY, 0,
-                    placementRotation));
+            placement.setLocation(new Location(LengthUnit.Millimeters, placementX, placementY, 0, placementRotation));
             Configuration cfg = Configuration.get();
             if (cfg != null && createMissingParts) {
                 String partId = pkgName + "-" + partValue;
@@ -143,7 +152,7 @@ public class DipTraceImporter implements BoardImporter {
 
             }
 
-            placement.setSide(placementLayer.charAt(0) == 'T' ? Side.Top : Side.Bottom);
+            placement.setSide(placementLayer);
             placements.add(placement);
         }
         reader.close();
