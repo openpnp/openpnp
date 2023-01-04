@@ -99,7 +99,7 @@ HELP WANTED: Configuration was discussed [here](https://github.com/openpnp/openp
 * See the [proposed changes (Pull Request)](https://github.com/synthetos/TinyG/pull/258).
 * Follow [the discussion](https://groups.google.com/d/msg/openpnp/veyVAwqS0do/Zsn73noGBQAJ).
 
-The changes have now officially been adopted by the TinyG project. But please still use the [makr.zone link](https://makr.zone/tinyg-new-g-code-commands-for-openpnp-use/577/), as the official firmware downloads are not yet updated and additional guidance is needed. 
+Most changes have now officially been adopted by the TinyG project. But please still use the [makr.zone link](https://makr.zone/tinyg-new-g-code-commands-for-openpnp-use/577/), as the official firmware downloads (binaries) are not yet updated and additional guidance is needed. Plus there is still a special version supporting the ADC for vacuum sensing.
 
 ___
 
