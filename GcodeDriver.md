@@ -117,6 +117,24 @@ Enable this to allow escaped character sequences to be embedded in commands. The
 * \r - carriage return character, equivalent to \u000D
 * \t - tab character, equivalent to \u0009
 
+### Dollar Command Wait Time
+
+The TinyG controller is traditionally configured via the `CONNECT_COMMAND` using a series of `$var=<value>` statements. These might cause TinyG to write some settings back to the EEPROM (only if they're changed). During that [EEPROM write, interrupts on the MCU have to be disabled](https://github.com/synthetos/TinyG/wiki/Tinyg-Communications-Programming#configuration-commands) therefore no further serial communication is allowed. 
+
+There is now a **$-Command Wait Time [ms]** that pauses sending for that many milliseconds after each command starting with a `$` sign:
+
+![Driver Settings](https://user-images.githubusercontent.com/9963310/176452155-a2d7f14e-e5f3-4915-bdf7-f70c3cc9ebe6.png)
+
+Notes: The 50ms default was taken from the [Liteplacer Software source code](https://github.com/jkuusama/LitePlacer-DEV/blob/0607c29c5cca4654fa8e55aa3854325d2108b8df/LitePlacer/TinyG.cs#L364). See also the [user discussion](https://groups.google.com/g/openpnp/c/M0K_TirXPcs/m/QGzm2y1BAgAJ).
+
+With **Confirmation Flow Control** enabled, this is always going to work, which is what **Issues & Solutions** automatically suggests for the TinyG.
+
+With **Confirmation Flow Control** disabled (i.e. truly asynchronous operation), this is only guaranteed to work, if the $-commands come as the first thing inside the `CONNECT_COMMAND`, or if the controller is otherwise guaranteed to be idle before sending $-commands.
+
+The wait time will now be added to any $-commands, regardless of whether it actually writes to the EEPROM or not. To check the effect, go to the **Log** tab (set to **Trace** level):
+
+![Log](https://user-images.githubusercontent.com/9963310/176452255-2e15ad2c-8078-4302-a50f-b0d9de541240.png)
+
 ## Sub-Drivers
 
 For **newer Versions of OpenPnP 2.0**, Sub-Drivers are obsolete. You can now add multiple drivers of any type using the usual `[+]` button on the Drivers tree node. 
