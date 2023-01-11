@@ -49,6 +49,14 @@ Configuration
 
 * [[Duet3D Openpnp Example]]
 
+## RepRapFirmware on other Boards
+
+RepRapFirmware is the official name of the Duet3D boards' firmware (see [above](#duet)). It is [Open Source](https://github.com/Duet3D/RepRapFirmware) and ports are available for some STM32 and LPC boards:
+
+* [RepRapFirmware for LPC and STM32 based boards](https://teamgloomy.github.io/)
+
+You need an OpenPnP version from 2023-01-11 or newer to support these.
+
 ## Smoothieware
 
 **⚠ WARNING ⚠** do not buy the illegitimate clones of the Smoothieboard that are typically offered in Chinese online-shops. These are known to violate Open Source licenses and brand names, they use inferior/sub-spec and counterfeit components, inadequate copper layers etc. They are known to fail with OpenPnP. **We will not provide support for these boards.** See the discussions [here](https://groups.google.com/g/openpnp/c/rdAXltRoSdc/m/lPNkWLX4BQAJ) and [here](https://groups.google.com/g/openpnp/c/4LswIzPOfpU/m/gopdUoiPAAAJ).   
