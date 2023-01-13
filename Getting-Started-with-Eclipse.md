@@ -39,6 +39,8 @@ To support translations in different languages and scriptures in Eclipse, go to 
 
 ![UTF-8 setting](https://user-images.githubusercontent.com/9963310/205128585-a3a652f0-099f-414f-918c-04ac4b1171d8.png)
 
+NOTE: the `translation.properties` file is always kept in the sorting order of property names, i.e. ordered by translation **Key** (binary collation). Eclipse and Window Builder will always preserve the order to keep versioning stable. Please adhere to it when using external editors.
+
 ### Include Resources into Build
 
 Open the project properties, go to **Java Build Path**, select the **Sources** tab, and **Remove** the exclusion pattern from the `openpnp/src/main/resources` path:
