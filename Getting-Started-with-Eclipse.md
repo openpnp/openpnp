@@ -39,6 +39,14 @@ To support translations in different languages and scriptures in Eclipse, go to 
 
 ![UTF-8 setting](https://user-images.githubusercontent.com/9963310/205128585-a3a652f0-099f-414f-918c-04ac4b1171d8.png)
 
+### Include Resources into Build
+
+Open the project properties, go to **Java Build Path**, select the **Sources** tab, and **Remove** the exclusion pattern from the `openpnp/src/main/resources` path:
+
+![image](https://user-images.githubusercontent.com/9963310/205499213-172562d4-751b-4d4f-8113-9852f7b8748d.png)
+
+It appears, this exclusion pattern is mistakenly (?) added in the maven project conversion. See [Eclipse/m2e bug](https://bugs.eclipse.org/bugs/show_bug.cgi?id=369296), and [follow up here](https://github.com/eclipse-m2e/m2e-core/issues/139).
+
 ### Translate in WindowBuilder
 
 The WindowBuilder designer has built-in localization support, so you can directly select the language in the drop-down (click on arrow-down, see below) and then set and preview texts like labels and tooltips transparently in the graphical designer. WindowBuilder will automatically generate the translation key, add missing translation entries and texts to the Java properties files.
@@ -58,12 +66,6 @@ Some text strings in the source code might be outside the scope of WindowBuilder
 Press **Configure...** to check whether the configuration is correct, if not, make it so:
 
 ![image](https://user-images.githubusercontent.com/9963310/205495114-7d3b7c41-15a7-41ea-8614-17a38d60d195.png)
-
-**CAUTION:** if this dialog does not accept the **Properties file location and name** as show here, you must cancel the dialogs and first remove an Exclusion pattern from the `openpnp/src/main/resources` path in the project properties:
-
-![image](https://user-images.githubusercontent.com/9963310/205499213-172562d4-751b-4d4f-8113-9852f7b8748d.png)
-
-This exclusion pattern is apparently mistakenly (?) added in the maven project conversion. See [Eclipse/m2e bug](https://bugs.eclipse.org/bugs/show_bug.cgi?id=369296), and [follow up here](https://github.com/eclipse-m2e/m2e-core/issues/139).
 
 #### Externalize Strings Dialog
 
