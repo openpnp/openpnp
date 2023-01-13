@@ -248,6 +248,9 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     protected boolean compressGcode;
 
     @Attribute(required = false)
+    protected String compressionExcludes = "[]\"";
+
+    @Attribute(required = false)
     protected boolean loggingGcode;
 
     @Deprecated
@@ -717,6 +720,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         Double feedRate = move.getFeedRatePerMinute();
         Double acceleration = move.getAccelerationPerSecond2();
         Double jerk = move.getJerkPerSecond3();
+
         double driverDistance = movedAxesLocation.getEuclideanMetric(this, (axis) -> 
             movedAxesLocation.getLengthCoordinate(axis).convertToUnits(getUnits()).getValue() - axis.getDriverCoordinate()).third;
 
@@ -737,6 +741,25 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         if (hasVariable(command, "BacklashFeedRate")) {
             throw new Exception(getName()+" configuration upgrade needed: Please remove the extra backlash compensation move from your MOVE_TO_COMMAND. "
                     +"Backlash compensation is now done outside of the drivers and configured on the axes.");
+        }
+
+        // Sanitize and unit-convert the rates.
+        double vMin = getMinimumRate(1)
+                .convertToUnits(getUnits()).getValue();
+        double aMin = getMinimumRate(2)
+                .convertToUnits(getUnits()).getValue();
+        double jMin = getMinimumRate(3)
+                .convertToUnits(getUnits()).getValue();
+        double driverUnitsFactor = new Length(1, AxesLocation.getUnits())
+                .convertToUnits(getUnits()).getValue();
+        if (feedRate != null) {
+            feedRate = Math.max(feedRate*driverUnitsFactor, vMin);
+        }
+        if (acceleration != null) {
+            acceleration = Math.max(acceleration*driverUnitsFactor, aMin);
+        }
+        if (jerk != null) {
+            jerk = Math.max(jerk*driverUnitsFactor, jMin);
         }
 
         command = substituteVariable(command, "Id", hm.getId());
@@ -811,8 +834,8 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
                 // Axis specific jerk limits are needed on TinyG.
                 double axisDistance = coordinate - previousCoordinate;
                 double axisJerk = (jerk != null ? jerk : 0)*Math.abs(axisDistance)/driverDistance;
-                command = substituteVariable(command, variable+"Jerk", axisJerk > 1 ? axisJerk : null);
-                command = substituteVariable(command, variable+"JerkMupm3", axisJerk > 4.63 ? axisJerk*1e-6*Math.pow(60, 3) : null); // TinyG: Megaunits/min^3 
+                command = substituteVariable(command, variable+"Jerk", axisJerk > jMin ? axisJerk : null);
+                command = substituteVariable(command, variable+"JerkMupm3", axisJerk > jMin*4.63 ? axisJerk*1e-6*Math.pow(60, 3) : null); // TinyG: Megaunits/min^3 
                 // Store the new driver coordinate on the axis.
                 axis.setDriverCoordinate(coordinate);
             }
@@ -1175,16 +1198,41 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     protected String preProcessCommand(String command) {
         if (removeComments || compressGcode) {
             // See http://linuxcnc.org/docs/2.4/html/gcode_overview.html
-            int col = 0;
             boolean insideComment = false;
             boolean decimal = false;
             int trailingZeroes = 0;
             StringBuilder compressedCommand = new StringBuilder();
-            for (char ch : command.toCharArray()) {
-                col++;
+            for (int col = 0; col < command.length();) {
+                char ch = command.charAt(col++);
                 if (ch == ' ') {
                     // Note, in Gcode, spaces are allowed in the middle of decimals.
                     if (compressGcode) {
+                        continue;
+                    }
+                }
+                else if (compressionExcludes.contains(String.valueOf(ch))) {
+                    trailingZeroes = compressDecimal(trailingZeroes, compressedCommand);
+                    decimal = false;
+                    // Due to ambiguities in escaping of strings and nesting of brackets, and brackets in strings,
+                    // just exclude everything from the left-most to the right-most exclude character. 
+                    int pos = col - 1;
+                    for (char cch : compressionExcludes.toCharArray()) {
+                        if (cch != ' ') { // ignore spaces the user might have added
+                            int p = command.lastIndexOf(cch);
+                            if (p >= pos) {
+                                pos = p;
+                            }
+                        }
+                    }
+                    if (pos < col) {
+                        // Matching char missing, just append the rest of the line as is.
+                        compressedCommand.append(command.substring(col-1));
+                        break;
+                    }
+                    else {
+                        // Matching bracket/quote found, exclude inner string from compression. 
+                        compressedCommand.append(command.substring(col-1, pos+1));
+                        col = pos+1;
                         continue;
                     }
                 }
@@ -1268,9 +1316,15 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     }
 
     private int compressDecimal(int trailingZeroes, StringBuilder compressedCommand) {
-        if (compressGcode && trailingZeroes > 0) {
-            // Cut away trailing zeroes.
-            compressedCommand.delete(compressedCommand.length() - trailingZeroes, compressedCommand.length());
+        if (compressGcode && trailingZeroes > 0 
+                && compressedCommand.length() - trailingZeroes > 0) {
+            // Has trailing zeroes (or trailing dot).
+            // Check if it has at least one digit.
+            char ch = compressedCommand.charAt(compressedCommand.length() - trailingZeroes - 1);
+            if (ch >= '0' && ch <= '9') {
+                // Cut away trailing zeroes.
+                compressedCommand.delete(compressedCommand.length() - trailingZeroes, compressedCommand.length());
+            }
         }
         return 0;
     }
@@ -1494,6 +1548,14 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         Object oldValue = this.compressGcode;
         this.compressGcode = compressGcode;
         firePropertyChange("compressGcode", oldValue, compressGcode);
+    }
+
+    public String getCompressionExcludes() {
+        return compressionExcludes;
+    }
+
+    public void setCompressionExcludes(String compressionExcludes) {
+        this.compressionExcludes = compressionExcludes;
     }
 
     public boolean isUsingLetterVariables() {

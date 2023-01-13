@@ -297,8 +297,11 @@ import org.openpnp.spi.MotionPlanner.CompletionType;
     }
 
     /**
-     * @return The minimum velocity the driver supports, in mm/s. Used to prevent "rounded to zero" errors caused in
-     * interpolation. 
+     * @return The minimum velocity, acceleration, jerk the driver supports. 
+     * Used to prevent "rounded to zero" errors in decimal formatting and interpolation.
+     *  
+     * @param order Derivative order, velocity (1), acceleration (2), jerk (3)
+     * @return
      */
-    double getMinimumVelocity();
+    Length getMinimumRate(int order);
 }
