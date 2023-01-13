@@ -39,6 +39,7 @@ import org.openpnp.machine.reference.driver.NullDriver;
 import org.openpnp.machine.reference.driver.SerialPortCommunications.FlowControl;
 import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Solutions;
 import org.openpnp.model.Solutions.Milestone;
 import org.openpnp.model.Solutions.Severity;
@@ -72,7 +73,7 @@ public class GcodeDriverSolutions implements Solutions.Subject {
         Smoothieware,
         SmoothiewareGrblSyntax,
         SmoothiewareChmt,
-        Duet,
+        RepRapFirmware,
         TinyG,
         Marlin,
         Grbl;
@@ -297,8 +298,8 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                                 "https://github.com/openpnp/openpnp/wiki/Motion-Controller-Firmwares#smoothieware"));
                     }
                 }
-                else if (gcodeDriver.getFirmwareProperty("FIRMWARE_NAME", "").contains("Duet")) {
-                    firmware = FirmwareType.Duet;
+                else if (gcodeDriver.getFirmwareProperty("FIRMWARE_NAME", "").contains("RepRapFirmware")) {
+                    firmware = FirmwareType.RepRapFirmware;
                     String firmwareVersion = gcodeDriver.getFirmwareProperty("FIRMWARE_VERSION", "0.0");
                     Integer major = null;
                     Integer minor = null;
@@ -316,7 +317,7 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                             || major < 3 || (major == 3 && minor < 3)) {
                         solutions.add(new Solutions.PlainIssue(
                                 gcodeDriver,
-                                "Duet3D firmware was improved for OpenPnP, please use version 3.3beta or newer. Current version is "+firmwareVersion,
+                                "RepRapFirmware was improved for OpenPnP, please use version 3.3beta or newer. Current version is "+firmwareVersion,
                                 "Get the new version through the linked web page.",
                                 Severity.Error,
                                 "https://github.com/openpnp/openpnp/wiki/Motion-Controller-Firmwares#duet"));
@@ -334,7 +335,7 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                         if (gcodeDriver.getConfiguredAxes().contains("(r)")) {
                             solutions.add(new Solutions.PlainIssue(
                                     gcodeDriver,
-                                    "Axes should be configured as linear in feedrate calculations on the Duet controller. See the linked web page.",
+                                    "Axes should be configured as linear in feedrate calculations on the RepRapFirmware controller. See the linked web page.",
                                     "Use the M584 S0 option in your config.g file.",
                                     Severity.Error,
                                     "https://duet3d.dozuki.com/Wiki/Gcode#Section_M584_Set_drive_mapping"));
@@ -787,9 +788,13 @@ public class GcodeDriverSolutions implements Solutions.Subject {
             switch (commandType) {
                 case CONNECT_COMMAND:
                     if (command == null) {
-                        commandBuilt = 
-                                "G21 ; Set millimeters mode \n"
-                                        +"G90 ; Set absolute positioning mode";
+                        if (gcodeDriver.getUnits() == LengthUnit.Millimeters) {
+                            commandBuilt = "G21 ; Set millimeters mode \n";
+                        }
+                        else if (gcodeDriver.getUnits() == LengthUnit.Inches) {
+                            commandBuilt = "G20 ; Set inches mode \n";
+                        }
+                        commandBuilt += "G90 ; Set absolute positioning mode";
                         if (dialect == FirmwareType.TinyG) {
                             commandBuilt = 
                                     // We no longer propose the $ex setting. You can't change flow-control in mid-connection reliably.
@@ -798,15 +803,47 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                                     +commandBuilt;
                         }
                     }
-                    else if (dialect == FirmwareType.TinyG) {
-                        commandModified = true;
-                        if (command.contains("$ex=2")) {
-                            commandBuilt = command.replace("$ex=2", "$ex=0");
+                    else {
+                        if (gcodeDriver.getUnits() == LengthUnit.Millimeters) {
+                            if (command.contains("G20 ")) {
+                                commandBuilt = command
+                                        .replace("G20 ", "G21 ")
+                                        .replace("inches", "millimeters");
+                            }
+                            else if (! command.contains("G21 "))
+                            { commandBuilt = "G21 ; Set millimeters mode \n" 
+                                    + command;
+                            }
                         }
-                        else if (command.contains("$ex=1")) {
-                            commandBuilt = command.replace("$ex=1", "$ex=0");
+                        else if (gcodeDriver.getUnits() == LengthUnit.Inches) {
+                            if (command.contains("G21 ")) {
+                                commandBuilt = command
+                                        .replace("G21 ", "G20 ")
+                                        .replace("millimeters", "inches");
+                            }
+                            else if (! command.contains("G20 "))
+                            { commandBuilt = "G20 ; Set inches mode \n"
+                                    + command;
+                            }
                         }
-                        // We no longer propose the $ex setting, if not yet present. You can't change flow-control in mid-connection reliably.
+                        else {
+                            if (command.contains("G21 ") || command.contains("G20 ")) {
+                                // This is a bit helpless but functionally better than leaving the wroing mode.
+                                commandBuilt = command
+                                        .replace("G21 ", "; Unsupported driver unit ")
+                                        .replace("G20 ", "; Unsupported driver unit ");
+                            }
+                        }
+                        if (dialect == FirmwareType.TinyG) {
+                            commandModified = true;
+                            if (command.contains("$ex=2")) {
+                                commandBuilt = command.replace("$ex=2", "$ex=0");
+                            }
+                            else if (command.contains("$ex=1")) {
+                                commandBuilt = command.replace("$ex=1", "$ex=0");
+                            }
+                            // We no longer propose the $ex setting, if not yet present. You can't change flow-control in mid-connection reliably.
+                        }
                     }
                     break;
                 case COMMAND_CONFIRM_REGEX:
@@ -857,11 +894,19 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                     break;
                 case MOVE_TO_COMMAND:
                     if (hasAxes) {
+                        // Determine minimum rates to compute needed decimal digits.
+                        double vMin = gcodeDriver.getMinimumRate(1)
+                                .convertToUnits(gcodeDriver.getUnits()).getValue();
+                        double aMin = gcodeDriver.getMinimumRate(2)
+                                .convertToUnits(gcodeDriver.getUnits()).getValue();
+                        double jMin = gcodeDriver.getMinimumRate(3)
+                                .convertToUnits(gcodeDriver.getUnits()).getValue();
                         if (dialect == FirmwareType.TinyG) {
                             // Apply jerk limits per axis. 
+                            int digits = digitsToExpress(jMin);
                             commandBuilt = "M201.3 ";
                             for (String variable : gcodeDriver.getAxisVariables(machine)) {
-                                commandBuilt += "{"+variable+"Jerk:"+variable+"%.0f} ";
+                                commandBuilt += "{"+variable+"Jerk:"+variable+"%."+digits+"f} ";
                             }
                             // This needs a new-line: "It is an error to put a G-code from group 1 
                             // and a G-code from group 0 on the same line if both of
@@ -870,7 +915,8 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                         }
                         else {
                             // Apply acceleration limit.
-                            commandBuilt = "{Acceleration:M204 S%.2f} ";
+                            int digits = digitsToExpress(aMin);
+                            commandBuilt = "{Acceleration:M204 S%."+digits+"f} ";
                             if (dialect == FirmwareType.Marlin) {
                                 // Non-conformant G-code parser, needs newline.
                                 commandBuilt += "\n";
@@ -878,9 +924,12 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                         }
                         commandBuilt += "G1 ";
                         for (String variable : gcodeDriver.getAxisVariables(machine)) {
-                            commandBuilt += "{"+variable+":"+variable+"%.4f} ";
+                            // Determine the significant number of digits.
+                            int digits = digitsAxisResolution(variable, machine);
+                            commandBuilt += "{"+variable+":"+variable+"%."+digits+"f} ";
                         }
-                        commandBuilt += "{FeedRate:F%.2f} ; move to target";
+                        int digits = digitsToExpress(vMin*60); // F is per minute
+                        commandBuilt += "{FeedRate:F%."+digits+"f} ; move to target";
                     }
                     else if (command != null) {
                         commandBuilt = "";
@@ -984,6 +1033,28 @@ public class GcodeDriverSolutions implements Solutions.Subject {
             suggestGcodeCommand(gcodeDriver, null, solutions, commandType, commandBuilt, commandModified,
                     disallowHeadMountables);
         }
+    }
+
+    /**
+     * @param variable
+     * @param machine
+     * @return
+     */
+    private int digitsAxisResolution(String variable, ReferenceMachine machine) {
+        int digits = 4;
+        for (ControllerAxis axis : gcodeDriver.getAxes(machine)) {
+            if (variable.equals(axis.getLetter())) {
+                if (axis instanceof ReferenceControllerAxis) {
+                    double res = ((ReferenceControllerAxis) axis).getResolution();
+                    digits = digitsToExpress(res);
+                }
+            }
+        }
+        return digits;
+    }
+
+    static private int digitsToExpress(double res) {
+        return Math.max(0, Math.min(4, (int)Math.ceil(-Math.log10(res))));
     }
 
     /**

@@ -97,6 +97,8 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
                 RowSpec.decode("max(50dlu;default)"),}));
         
         JLabel lblMotionControlType = new JLabel(Translations.getString(
@@ -164,45 +166,11 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
         supportingPreMove = new JCheckBox("");
         settingsPanel.add(supportingPreMove, "8, 10");
 
-        JLabel lblRemoveComments = new JLabel(Translations.getString(
-                "GcodeDriverSettings.SettingsPanel.RemoveCommentsLabel.text")); //$NON-NLS-1$
-        lblRemoveComments.setToolTipText(Translations.getString(
-                "GcodeDriverSettings.SettingsPanel.RemoveCommentsLabel.toolTipText")); //$NON-NLS-1$
-        settingsPanel.add(lblRemoveComments, "2, 12, right, default");
-        
-        removeComments = new JCheckBox("");
-        removeComments.setToolTipText("");
-        settingsPanel.add(removeComments, "4, 12");
-
         JLabel lblCompressGcode = new JLabel(Translations.getString(
                 "GcodeDriverSettings.SettingsPanel.CompressGCodeLabel.text")); //$NON-NLS-1$
-        lblCompressGcode.setToolTipText(Translations.getString(
-                "GcodeDriverSettings.SettingsPanel.CompressGCodeLabel.toolTipText")); //$NON-NLS-1$
-        settingsPanel.add(lblCompressGcode, "6, 12, right, default");
-        
-        compressGcode = new JCheckBox("");
-        settingsPanel.add(compressGcode, "8, 12");
+        lblCompressGcode.setToolTipText(Translations.getString("GcodeDriverSettings.SettingsPanel.CompressGCodeLabel.toolTipText")); //$NON-NLS-1$
+        settingsPanel.add(lblCompressGcode, "2, 12, right, default");
 
-        JLabel lblBackslashEscapedCharacters = new JLabel(Translations.getString(
-                "GcodeDriverSettings.SettingsPanel.BackslashEscapedCharactersLabel.text")); //$NON-NLS-1$
-        lblBackslashEscapedCharacters.setToolTipText(Translations.getString(
-                "GcodeDriverSettings.SettingsPanel.BackslashEscapedCharactersLabel.toolTipText")); //$NON-NLS-1$
-        settingsPanel.add(lblBackslashEscapedCharacters, "2, 14, right, default");
-        
-        backslashEscapedCharacters = new JCheckBox("");
-        backslashEscapedCharacters.setToolTipText(Translations.getString(
-                "GcodeDriverSettings.SettingsPanel.BackslashEscapedCharactersLabel.toolTipText")); //$NON-NLS-1$
-        settingsPanel.add(backslashEscapedCharacters, "4, 14");
-
-        JLabel lblLogGcode = new JLabel(Translations.getString(
-                "GcodeDriverSettings.SettingsPanel.LogGCodeLabel.text")); //$NON-NLS-1$
-        lblLogGcode.setToolTipText(Translations.getString(
-                "GcodeDriverSettings.SettingsPanel.LogGCodeLabel.toolTipText")); //$NON-NLS-1$
-        settingsPanel.add(lblLogGcode, "6, 14, right, default");
-        
-        loggingGcode = new JCheckBox("");
-        settingsPanel.add(loggingGcode, "8, 14");
-        
         JButton btnDetectFirmware = new JButton(Translations.getString(
                 "GcodeDriverSettings.SettingsPanel.DetectFirmwareButton.text")); //$NON-NLS-1$
         btnDetectFirmware.addActionListener(new ActionListener() {
@@ -228,10 +196,49 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
                 });
             }
         });
+
+        compressGcode = new JCheckBox("");
+        settingsPanel.add(compressGcode, "4, 12");
+
+        JLabel lblCompressExcludes = new JLabel(Translations.getString("GcodeDriverSettings.lblCompressExcludes.text")); //$NON-NLS-1$
+        lblCompressExcludes.setToolTipText(Translations.getString("GcodeDriverSettings.lblCompressExcludes.toolTipText")); //$NON-NLS-1$
+        settingsPanel.add(lblCompressExcludes, "6, 12, right, default");
+
+        compressionExcludes = new JTextField();
+        compressionExcludes.setFont(UIManager.getFont("TextArea.font"));
+        settingsPanel.add(compressionExcludes, "8, 12, fill, default");
+        compressionExcludes.setColumns(10);
+
+        JLabel lblRemoveComments = new JLabel(Translations.getString(
+                "GcodeDriverSettings.SettingsPanel.RemoveCommentsLabel.text")); //$NON-NLS-1$
+        lblRemoveComments.setToolTipText(Translations.getString(
+                "GcodeDriverSettings.SettingsPanel.RemoveCommentsLabel.toolTipText")); //$NON-NLS-1$
+        settingsPanel.add(lblRemoveComments, "2, 14, right, default");
+
+        removeComments = new JCheckBox("");
+        removeComments.setToolTipText("");
+        settingsPanel.add(removeComments, "4, 14");
+
+        JLabel lblBackslashEscapedCharacters = new JLabel(Translations.getString("GcodeDriverSettings.SettingsPanel.BackslashEscapedCharactersLabel.text")); //$NON-NLS-1$
+        lblBackslashEscapedCharacters.setToolTipText(Translations.getString("GcodeDriverSettings.SettingsPanel.BackslashEscapedCharactersLabel.toolTipText")); //$NON-NLS-1$
+        settingsPanel.add(lblBackslashEscapedCharacters, "6, 14, right, default");
+
+        backslashEscapedCharacters = new JCheckBox("");
+        backslashEscapedCharacters.setToolTipText(Translations.getString(
+                "GcodeDriverSettings.SettingsPanel.BackslashEscapedCharactersLabel.toolTipText")); //$NON-NLS-1$
+        settingsPanel.add(backslashEscapedCharacters, "8, 14");
+
+        JLabel lblLogGcode = new JLabel(Translations.getString("GcodeDriverSettings.SettingsPanel.LogGCodeLabel.text")); //$NON-NLS-1$
+        lblLogGcode.setToolTipText(Translations.getString(
+                "GcodeDriverSettings.SettingsPanel.LogGCodeLabel.toolTipText")); //$NON-NLS-1$
+        settingsPanel.add(lblLogGcode, "2, 16, right, default");
+
+        loggingGcode = new JCheckBox("");
+        settingsPanel.add(loggingGcode, "4, 16");
         
         JLabel label_1 = new JLabel(" ");
-        settingsPanel.add(label_1, "10, 16");
-        settingsPanel.add(btnDetectFirmware, "2, 18");
+        settingsPanel.add(label_1, "10, 18");
+        settingsPanel.add(btnDetectFirmware, "2, 20");
         
         firmwareConfiguration = new JTextArea();
         firmwareConfiguration.setBackground(UIManager.getColor("controlLtHighlight"));
@@ -240,10 +247,10 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
         firmwareConfiguration.setLineWrap(true);
         firmwareConfiguration.setEditable(false);
         firmwareConfiguration.setFont(new Font("Dialog", Font.PLAIN, 11));
-        settingsPanel.add(firmwareConfiguration, "4, 18, 7, 3, fill, fill");
+        settingsPanel.add(firmwareConfiguration, "4, 20, 7, 3, fill, fill");
         
         JLabel label = new JLabel(" ");
-        settingsPanel.add(label, "2, 20");
+        settingsPanel.add(label, "2, 22");
     }
 
     @Override
@@ -258,6 +265,7 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
         addWrappedBinding(driver, "dollarWaitTimeMilliseconds", dollarWaitTimeMilliseconds, "text", intConverter);
         addWrappedBinding(driver, "removeComments", removeComments, "selected");
         addWrappedBinding(driver, "compressGcode", compressGcode, "selected");
+        addWrappedBinding(driver, "compressionExcludes", compressionExcludes, "text");
         addWrappedBinding(driver, "backslashEscapedCharactersEnabled", backslashEscapedCharacters, "selected");
         addWrappedBinding(driver, "supportingPreMove", supportingPreMove, "selected");
         addWrappedBinding(driver, "usingLetterVariables", letterVariables, "selected");
@@ -267,6 +275,7 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
         ComponentDecorators.decorateWithAutoSelect(maxFeedRateTf);
         ComponentDecorators.decorateWithAutoSelect(commandTimeoutTf);
         ComponentDecorators.decorateWithAutoSelect(connectWaitTimeTf);
+        ComponentDecorators.decorateWithAutoSelect(compressionExcludes);
     }
 
     public final Action exportProfileAction = new AbstractAction() {
@@ -419,6 +428,7 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
 
     private JTextArea firmwareConfiguration;
     private JTextField dollarWaitTimeMilliseconds;
+    private JTextField compressionExcludes;
 
     static class HeadMountableItem {
         private HeadMountable hm;

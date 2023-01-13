@@ -198,8 +198,8 @@ public class TestDriver extends AbstractDriver implements Driver {
         }
 
         @Override
-        public double getMinimumVelocity() {
-            return 0;
+        public Length getMinimumRate(int order) {
+            return new Length(0.1, LengthUnit.Millimeters);
         }
 
         @Override

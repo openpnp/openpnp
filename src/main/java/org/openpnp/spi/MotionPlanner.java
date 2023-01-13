@@ -209,4 +209,10 @@ public interface MotionPlanner extends PropertySheetHolder, Solutions.Subject {
      * @return true if the location is valid, i.e. inside soft limits etc.
      */
     public boolean isValidLocation(HeadMountable hm, AxesLocation axesLocation);
+
+    /**
+     * @return The allowable minimum speed factor for motion planning. Limits the required
+     * precision for computations, interpolation, and decimal encoding in textual form (e.g. G-code).
+     */
+    double getMinimumSpeed();
 }

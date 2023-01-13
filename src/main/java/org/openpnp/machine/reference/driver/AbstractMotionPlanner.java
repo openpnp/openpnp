@@ -137,6 +137,9 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
         if (speed <= 0) {
             throw new Exception("Speed must be greater than 0.");
         }
+        else if (speed < getMinimumSpeed()) {
+            speed = getMinimumSpeed();
+        }
         // Handle soft limits and rotation axes limiting and wrap-around.
         axesLocation = limitAxesLocation(hm, axesLocation, false);
 
