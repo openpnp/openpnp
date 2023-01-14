@@ -50,11 +50,14 @@ import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.geom.Rectangle2D.Double;
 import java.awt.image.BufferedImage;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.BiConsumer;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 import javax.swing.BorderFactory;
@@ -72,6 +75,10 @@ import javax.swing.border.EtchedBorder;
 import javax.swing.JScrollPane;
 
 import org.openpnp.Translations;
+import org.openpnp.events.DefinitionStructureChangedEvent;
+import org.openpnp.events.PlacementChangedEvent;
+import org.openpnp.events.PlacementsHolderChangedEvent;
+import org.openpnp.events.PlacementsHolderLocationChangedEvent;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.LabeledPopupMenu;
 import org.openpnp.gui.support.Helpers;
@@ -94,13 +101,16 @@ import org.openpnp.model.PlacementsHolderLocation;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 import org.openpnp.util.Utils2D;
+
+import com.google.common.eventbus.Subscribe;
+
 import java.awt.Component;
 import javax.swing.Box;
 import javax.swing.JButton;
 
 
 @SuppressWarnings("serial")
-public class PlacementsHolderLocationViewer extends JPanel {
+public class PlacementsHolderLocationViewer extends JPanel implements PropertyChangeListener {
     private static final double SCREEN_PPI = Toolkit.getDefaultToolkit().getScreenResolution();
     private static final double INCHES_PER_MAJOR_DIVISION = 0.75;
     private static final double PIXELS_PER_MAJOR_DIVISION = SCREEN_PPI * INCHES_PER_MAJOR_DIVISION;
@@ -140,7 +150,6 @@ public class PlacementsHolderLocationViewer extends JPanel {
     private double aspectRatio;
     private PlacementsHolder<?> placementsHolder;
     private PlacementsHolderLocation<?> placementsHolderLocation;
-    private BiConsumer<PlacementsHolderLocation<?>, String> refreshTableModel;
     private boolean isJob = false;
     private LengthUnit units;
     private Rectangle2D graphicsBounds;
@@ -192,10 +201,8 @@ public class PlacementsHolderLocationViewer extends JPanel {
     /**
      * Create the Panel.
      */
-    public PlacementsHolderLocationViewer(PlacementsHolderLocation<?> placementsHolderLocation, 
-            boolean isJob, BiConsumer<PlacementsHolderLocation<?>, String> refreshTableModel) {
+    public PlacementsHolderLocationViewer(PlacementsHolderLocation<?> placementsHolderLocation, boolean isJob) {
         this.placementsHolderLocation = placementsHolderLocation;
-        this.refreshTableModel = refreshTableModel;
         this.isJob = isJob;
         if (placementsHolderLocation instanceof BoardLocation) {
             placementsHolder = (Board) placementsHolderLocation.getPlacementsHolder();
@@ -206,7 +213,9 @@ public class PlacementsHolderLocationViewer extends JPanel {
             showChildrenOnly = true;
         }
         else if (placementsHolderLocation instanceof PanelLocation) {
-            PanelLocation.setParentsOfAllDescendants((PanelLocation) placementsHolderLocation); 
+            if (!isJob) {
+                PanelLocation.setParentsOfAllDescendants((PanelLocation) placementsHolderLocation);
+            }
             placementsHolder = (Panel) placementsHolderLocation.getPlacementsHolder();
             showPlacements = false;
             showFiducials = false;
@@ -466,7 +475,99 @@ public class PlacementsHolderLocationViewer extends JPanel {
         drawingPanelRowHeader.setSize(VERTICAL_SCALE_WIDTH, newSize.height);
         drawingPanelRowHeader.setPreferredSize(new Dimension(VERTICAL_SCALE_WIDTH, newSize.height));
 
-        regenerate();
+        setPlacementsHolder(placementsHolder);
+        
+        Configuration.get().getBus().register(this);
+    }
+    
+    @Subscribe
+    public void placementChangedEventHandler(PlacementChangedEvent evt) {
+        String propName = evt.propertyName;
+        //Possibilities are "partId", "type", "part", "comments", "errorHandling", "side", "enabled", "location", "placed"
+        String regenerateArray[] = {"type", "side", "location"};
+        String refreshArray[] = {"enabled"};
+        List<String> regenerateOnPropertyChange = new ArrayList<>(Arrays.asList(regenerateArray));
+        List<String> refreshOnPropertyChange = new ArrayList<>(Arrays.asList(refreshArray));
+        
+        //For now, we'll just regenerate or refresh everything but in the future we could be more 
+        //specific based on the contents of the PlacementChangedEvent
+        if (regenerateOnPropertyChange.contains(propName)) {
+            SwingUtilities.invokeLater(() -> {
+                regenerate();
+            });
+        }
+        else if (refreshOnPropertyChange.contains(propName)) {
+            SwingUtilities.invokeLater(() -> {
+                refresh();
+            });
+        }
+    }
+
+    @Subscribe 
+    public void placementsHolderChangedEventHandler(PlacementsHolderChangedEvent evt) {
+        String propName = evt.propertyName;
+        //Possibilities are "name", "dimensions"
+        String regenerateArray[] = {"dimensions"};
+        String refreshArray[] = {};
+        List<String> regenerateOnPropertyChange = new ArrayList<>(Arrays.asList(regenerateArray));
+        List<String> refreshOnPropertyChange = new ArrayList<>(Arrays.asList(refreshArray));
+        
+        //For now, we'll just regenerate or refresh everything but in the future we could be more 
+        //specific based on the contents of the PlacementsHolderLocationChangedEvent
+        if (regenerateOnPropertyChange.contains(propName)) {
+            SwingUtilities.invokeLater(() -> {
+                regenerate();
+            });
+        }
+        else if (refreshOnPropertyChange.contains(propName)) {
+            SwingUtilities.invokeLater(() -> {
+                refresh();
+            });
+        }
+    }
+    
+    @Subscribe
+    public void placementsHolderLocationChangedEventHandler(PlacementsHolderLocationChangedEvent evt) {
+        String propName = evt.propertyName;
+        //Possibilities are "ALL", "id", "name", "dimensions", "side", "location", "locallyEnabled", "checkFiducials"
+        String regenerateArray[] = {"ALL", "dimensions", "side", "location"};
+        String refreshArray[] = {"locallyEnabled"};
+        List<String> regenerateOnPropertyChange = new ArrayList<>(Arrays.asList(regenerateArray));
+        List<String> refreshOnPropertyChange = new ArrayList<>(Arrays.asList(refreshArray));
+        
+        //For now, we'll just regenerate or refresh everything but in the future we could be more 
+        //specific based on the contents of the PlacementsHolderLocationChangedEvent
+        if (regenerateOnPropertyChange.contains(propName)) {
+            SwingUtilities.invokeLater(() -> {
+                regenerate();
+            });
+        }
+        else if (refreshOnPropertyChange.contains(propName)) {
+            SwingUtilities.invokeLater(() -> {
+                refresh();
+            });
+        }
+    }
+    
+    @Subscribe
+    public void definitionStructureChangedEventHandler(DefinitionStructureChangedEvent evt) {
+        if (isJob && ((Panel) placementsHolderLocation.getPlacementsHolder()).getDefinition().isDefinitionUsed((PlacementsHolder<?>) evt.definition)) {
+            SwingUtilities.invokeLater(() -> {
+                regenerate();
+            });
+        }
+        else if ((evt.definition instanceof Board) && (placementsHolderLocation instanceof BoardLocation) &&
+                (placementsHolderLocation.getPlacementsHolder().getDefinition() == ((Board) evt.definition).getDefinition())) {
+            SwingUtilities.invokeLater(() -> {
+                regenerate();
+            });
+        }
+        else if ((placementsHolderLocation instanceof PanelLocation) &&
+                ((Panel) placementsHolderLocation.getPlacementsHolder()).getDefinition().isDefinitionUsed((PlacementsHolder<?>) evt.definition)) {
+            SwingUtilities.invokeLater(() -> {
+                regenerate();
+            });
+        }
     }
 
     public void setPlacementsHolder(PlacementsHolder<?> placementsHolder) {
@@ -479,7 +580,9 @@ public class PlacementsHolderLocationViewer extends JPanel {
         }
         else if (placementsHolder instanceof Panel) {
             placementsHolderLocation = new PanelLocation((Panel) placementsHolder);
-            PanelLocation.setParentsOfAllDescendants((PanelLocation) placementsHolderLocation);
+            if (!isJob) {
+                PanelLocation.setParentsOfAllDescendants((PanelLocation) placementsHolderLocation);
+            }
         }
         else {
             throw new UnsupportedOperationException("Viewing of " + //$NON-NLS-1$
@@ -781,7 +884,7 @@ public class PlacementsHolderLocationViewer extends JPanel {
             Paint originalPaint = offScr.getPaint();
             
             //Create a striped pattern to fill disabled Boards and Panels
-            GradientPaint gp1 = new GradientPaint(5, 5, 
+            GradientPaint stripedPaint = new GradientPaint(5, 5, 
                     new Color(255, 0, 0, 128), 8, 8, new Color(0, 0, 0, 128), true);
             
 
@@ -797,12 +900,18 @@ public class PlacementsHolderLocationViewer extends JPanel {
                                     (!viewFromTop && placement.getSide() != phl.getGlobalSide())) {
                                 if (showPlacements && placement.getType() == Placement.Type.Placement) {
                                     Area area = placementInverseMap.get(placement);
+                                    if (area == null || area.isEmpty()) {
+                                        continue;
+                                    }
                                     offScr.setColor(placement.isEnabled() ? placementEnabledColor : placementDisabledColor);
                                     Shape placementShape = objectToViewTransform.createTransformedShape(area);
                                     offScr.draw(placementShape);
                                 }
                                 else if (showFiducials && placement.getType() == Placement.Type.Fiducial) {
                                     Area area = placementInverseMap.get(placement);
+                                    if (area == null || area.isEmpty()) {
+                                        continue;
+                                    }
                                     offScr.setColor(placement.isEnabled() ? fiducialEnabledColor : fiducialDisabledColor);
                                     Shape placementShape = objectToViewTransform.createTransformedShape(area);
                                     offScr.fill(placementShape);
@@ -823,9 +932,14 @@ public class PlacementsHolderLocationViewer extends JPanel {
                     else {
                         offScr.setStroke(new BasicStroke(2, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_ROUND));
                     }
+                    
+                    if (profile == null || profile.isEmpty()) {
+                        continue;
+                    }
+
                     Shape profileShape = objectToViewTransform.createTransformedShape(profile);
                     if (!phl.isLocallyEnabled()) {
-                        offScr.setPaint(gp1);
+                        offScr.setPaint(stripedPaint);
                         offScr.fill(profileShape);
                     }
                     offScr.setPaint(originalPaint);
@@ -1198,6 +1312,7 @@ public class PlacementsHolderLocationViewer extends JPanel {
     }
 
     public void cancel() {
+        Configuration.get().getBus().unregister(this);
     }
     
     private void displayPopupMenu(MouseEvent e) {
@@ -1248,7 +1363,8 @@ public class PlacementsHolderLocationViewer extends JPanel {
         
         boolean enablable = isJob || ((uniqueId.equals("") && placement != null)) || //$NON-NLS-1$
                 (phl != null && placementsHolder instanceof Panel &&
-                ((Panel) placementsHolder).getChildren().contains(phl));
+                ((Panel) placementsHolder).getChildren().contains(phl) && (placement == null)) ||
+                ((phl == null) && (placement != null));
         
         if (placement != null) {
             displayPlacementPopupMenu(point, phl, uniqueId, placement, enablable);
@@ -1279,7 +1395,7 @@ public class PlacementsHolderLocationViewer extends JPanel {
                 plmt.getId() +
                 "<br>" + //$NON-NLS-1$
                 Translations.getString("PlacementsHolderLocationViewer.PopupMenu.Label.Part") + //$NON-NLS-1$
-                plmt.getPart().getId() + //$NON-NLS-1$
+                (plmt.getPart() != null ? plmt.getPart().getId() : "unassigned") + //$NON-NLS-1$
                 "<br>" + //$NON-NLS-1$
                 Translations.getString("PlacementsHolderLocationViewer.PopupMenu.Label.Side") + //$NON-NLS-1$
                 side +
@@ -1292,15 +1408,9 @@ public class PlacementsHolderLocationViewer extends JPanel {
     
             @Override
             public void actionPerformed(ActionEvent e) {
+                Object oldValue = plmt.isEnabled();
                 plmt.setEnabled(mnItmEnabled.isSelected());
-                try {
-                    refreshTableModel.accept(phl,
-                            Translations.getString("PlacementsHolderLocationsTableModel.ColumnName.Enabled")); //$NON-NLS-1$
-                }
-                catch (Exception e1) {
-                    // TODO Auto-generated catch block
-                    e1.printStackTrace();
-                }
+                Configuration.get().getBus().post(new PlacementChangedEvent(phl.getPlacementsHolder(), plmt, "enabled", oldValue, mnItmEnabled.isSelected(), PlacementsHolderLocationViewer.this)); //$NON-NLS-1$
             }
             
         });
@@ -1316,15 +1426,9 @@ public class PlacementsHolderLocationViewer extends JPanel {
         
                 @Override
                 public void actionPerformed(ActionEvent e) {
+                    Object oldValue = MainFrame.get().getJobTab().getJob().retrievePlacedStatus(phl, plmt.getId());
                     MainFrame.get().getJobTab().getJob().storePlacedStatus(phl, plmt.getId(), mnItmPlaced.isSelected());
-                    try {
-                        refreshTableModel.accept(phl, 
-                                Translations.getString("PlacementsHolderLocationsTableModel.ColumnName.CheckFids")); //$NON-NLS-1$
-                    }
-                    catch (Exception e1) {
-                        // TODO Auto-generated catch block
-                        e1.printStackTrace();
-                    }
+                    Configuration.get().getBus().post(new PlacementChangedEvent(phl.getPlacementsHolder(), plmt, "placed", oldValue, mnItmPlaced.isSelected(), PlacementsHolderLocationViewer.this)); //$NON-NLS-1$
                 }
                 
             });
@@ -1387,15 +1491,11 @@ public class PlacementsHolderLocationViewer extends JPanel {
     
             @Override
             public void actionPerformed(ActionEvent e) {
+                Object oldValue = phl.isLocallyEnabled();
                 phl.setLocallyEnabled(mnItmEnabled.isSelected());
-                try {
-                    refreshTableModel.accept(phl,
-                            Translations.getString("PlacementsHolderLocationsTableModel.ColumnName.Enabled")); //$NON-NLS-1$
-                }
-                catch (Exception e1) {
-                    // TODO Auto-generated catch block
-                    e1.printStackTrace();
-                }
+                Configuration.get().getBus().post(new PlacementsHolderLocationChangedEvent(phl, 
+                        "locallyEnabled", oldValue, mnItmEnabled.isSelected(), //$NON-NLS-1$
+                        PlacementsHolderLocationViewer.this));
             }
             
         });
@@ -1409,15 +1509,11 @@ public class PlacementsHolderLocationViewer extends JPanel {
     
             @Override
             public void actionPerformed(ActionEvent e) {
-                phl.setCheckFiducials(mnItmEnabled.isSelected());
-                try {
-                    refreshTableModel.accept(phl,
-                            Translations.getString("PlacementsHolderLocationsTableModel.ColumnName.CheckFids")); //$NON-NLS-1$
-                }
-                catch (Exception e1) {
-                    // TODO Auto-generated catch block
-                    e1.printStackTrace();
-                }
+                Object oldValue = phl.isCheckFiducials();
+                phl.setCheckFiducials(mnItmCheckFids.isSelected());
+                Configuration.get().getBus().post(new PlacementsHolderLocationChangedEvent(phl, 
+                        "checkFiducials", oldValue, mnItmCheckFids.isSelected(), //$NON-NLS-1$
+                        PlacementsHolderLocationViewer.this));
             }
             
         });
@@ -1484,7 +1580,8 @@ public class PlacementsHolderLocationViewer extends JPanel {
                             phl.setLocation(location);
                             phl.setLocalToGlobalTransform(tx);
                         }
-                        Helpers.selectObjectTableRow(MainFrame.get().getJobTab().getPlacementsHolderLocationsTable(), phl);
+                        Helpers.selectObjectTableRow(MainFrame.get().getJobTab().
+                                getPlacementsHolderLocationsTable(), phl);
                         
                         SwingUtilities.invokeLater(() -> {
                             MainFrame.get().getJobTab().refresh();
@@ -1607,5 +1704,10 @@ public class PlacementsHolderLocationViewer extends JPanel {
         this.newArrayMembers = newArrayMembers;
         renderPlacementsHolderImage();
         drawingPanel.repaint();
+    }
+
+    @Override
+    public void propertyChange(PropertyChangeEvent evt) {
+        regenerate();
     }
 }

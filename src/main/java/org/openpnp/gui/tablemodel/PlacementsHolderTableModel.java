@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.function.Supplier;
 
 import org.openpnp.Translations;
+import org.openpnp.events.PlacementsHolderChangedEvent;
 import org.openpnp.gui.support.LengthCellValue;
 import org.openpnp.model.Board;
 import org.openpnp.model.Configuration;
@@ -101,24 +102,31 @@ public class PlacementsHolderTableModel extends AbstractObjectTableModel impleme
         try {
             PlacementsHolder<?> placementsHolder = placementsHolders.get().get(rowIndex);
             if (columnIndex == 0) {
+                Object oldValue = placementsHolder.getName();
                 placementsHolder.setName((String) aValue);
                 fireTableCellUpdated(rowIndex, columnIndex);
+                Configuration.get().getBus().post(
+                        new PlacementsHolderChangedEvent(placementsHolder, "name", oldValue, aValue, this)); //$NON-NLS-1$
             }
             else if (columnIndex == 1) {
                 LengthCellValue value = (LengthCellValue) aValue;
                 Length length = value.getLength();
-                Location dims = placementsHolder.getDimensions();
-                dims = Length.setLocationField(configuration, dims, length, Length.Field.X);
+                Location oldValue = placementsHolder.getDimensions();
+                Location dims = Length.setLocationField(configuration, oldValue, length, Length.Field.X);
                 placementsHolder.setDimensions(dims);
                 fireTableCellUpdated(rowIndex, columnIndex);
+                Configuration.get().getBus().post(
+                        new PlacementsHolderChangedEvent(placementsHolder, "dimensions", oldValue, dims, this)); //$NON-NLS-1$
             }
             else if (columnIndex == 2) {
                 LengthCellValue value = (LengthCellValue) aValue;
                 Length length = value.getLength();
-                Location dims = placementsHolder.getDimensions();
-                dims = Length.setLocationField(configuration, dims, length, Length.Field.Y);
+                Location oldValue = placementsHolder.getDimensions();
+                Location dims = Length.setLocationField(configuration, oldValue, length, Length.Field.Y);
                 placementsHolder.setDimensions(dims);
                 fireTableCellUpdated(rowIndex, columnIndex);
+                Configuration.get().getBus().post(
+                        new PlacementsHolderChangedEvent(placementsHolder, "dimensions", oldValue, dims, this)); //$NON-NLS-1$
             }
         }
         catch (Exception e) {

@@ -212,6 +212,7 @@ public abstract class PlacementsHolder<T extends PlacementsHolder<T>>
      */
     public void setPlacement(int index, Placement placement) {
         if (placement != null) {
+            placement = new Placement(placement);
             if (index >= placements.size()) {
                 placements.add(placement);
             }

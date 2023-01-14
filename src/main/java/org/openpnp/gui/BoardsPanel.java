@@ -56,7 +56,6 @@ import javax.swing.table.TableRowSorter;
 import org.openpnp.Translations;
 import org.openpnp.events.PlacementsHolderLocationSelectedEvent;
 import org.openpnp.events.PlacementsHolderSelectedEvent;
-import org.openpnp.events.PlacementSelectedEvent;
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.support.ActionGroup;
 import org.openpnp.gui.support.MonospacedFontTableCellRenderer;
@@ -67,7 +66,6 @@ import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.tablemodel.PlacementsHolderTableModel;
 import org.openpnp.model.Board;
 import org.openpnp.model.Configuration;
-import org.openpnp.model.Placement;
 import org.openpnp.model.Configuration.TablesLinked;
 import com.google.common.eventbus.Subscribe;
 
@@ -104,12 +102,13 @@ public class BoardsPanel extends JPanel {
         
         boardsTableModel = new PlacementsHolderTableModel(configuration, 
                 () -> configuration.getBoards(), Board.class);
+        
         configuration.addPropertyChangeListener("boards", new PropertyChangeListener() { //$NON-NLS-1$
-
             @Override
             public void propertyChange(PropertyChangeEvent evt) {
                 boardsTableModel.fireTableDataChanged();
-            }});
+            }
+        });
         
         boardsTable = new AutoSelectTextTable(boardsTableModel) {
             @Override
@@ -239,6 +238,12 @@ public class BoardsPanel extends JPanel {
         btnCopyBoard.setHideActionText(true);
         toolBarBoards.add(btnCopyBoard);
 
+        toolBarBoards.addSeparator();
+        
+        JButton btnCleanUp = new JButton(cleanUpAction);
+        btnCleanUp.setHideActionText(true);
+        toolBarBoards.add(btnCleanUp);
+        
         pnlBoards.add(new JScrollPane(boardsTable));
         splitPane.setLeftComponent(pnlBoards);
         
@@ -268,31 +273,17 @@ public class BoardsPanel extends JPanel {
         });
     }
 
-    @Subscribe
-    public void placementSelected(PlacementSelectedEvent event) {
-        if (event.source == this || event.source == getBoardPlacementsPanel() || event.placementsHolderLocation == null || !(event.placementsHolderLocation.getPlacementsHolder() instanceof Board)) {
-            return;
-        }
-        Placement placement = event.placement == null ? null : (Placement) event.placement.getDefinition();
-        SwingUtilities.invokeLater(() -> {
-            selectBoard((Board) event.placementsHolderLocation.getPlacementsHolder().getDefinition());
-            getBoardPlacementsPanel().selectPlacement(placement);
-        });
-    }
-
     private void selectBoard(Board board) {
         if (board == null) {
             boardsTable.getSelectionModel().clearSelection();
             return;
         }
-        for (int i = 0; i < boardsTableModel.getRowCount(); i++) {
-            if (configuration.getBoards().get(i) == board) {
-                int index = boardsTable.convertRowIndexToView(i);
-                boardsTable.getSelectionModel().setSelectionInterval(index, index);
-                boardsTable.scrollRectToVisible(
-                        new Rectangle(boardsTable.getCellRect(index, 0, true)));
-                break;
-            }
+        int index = boardsTableModel.indexOf(board);
+        if (index >= 0) {
+            index = boardsTable.convertRowIndexToView(index);
+            boardsTable.getSelectionModel().setSelectionInterval(index, index);
+            boardsTable.scrollRectToVisible(
+                    new Rectangle(boardsTable.getCellRect(index, 0, true)));
         }
     }
 
@@ -485,6 +476,7 @@ public class BoardsPanel extends JPanel {
                 File file = new File(new File(fileDialog.getDirectory()), filename);
 
                 Board newBoard = new Board(boardToCopy);
+                newBoard.setDefinition(newBoard);
                 newBoard.setFile(file);
                 newBoard.setName(file.getName());
                 newBoard.setDirty(false);
@@ -498,6 +490,25 @@ public class BoardsPanel extends JPanel {
                 MessageBoxes.errorBox(frame, 
                         Translations.getString("BoardPanel.Action.CopyBoard.ErrorMessage"), //$NON-NLS-1$
                         e.getMessage());
+            }
+        }
+    };
+
+    public final Action cleanUpAction = new AbstractAction() {
+        {
+            putValue(SMALL_ICON, Icons.clean);
+            putValue(NAME, Translations.getString("BoardsPanel.Action.CleanUp")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("BoardsPanel.Action.CleanUp.Description")); //$NON-NLS-1$
+            putValue(MNEMONIC_KEY, KeyEvent.VK_D);
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            List<Board> boardsList = new ArrayList<>(configuration.getBoards());
+            for (Board board : boardsList) {
+                if (!configuration.isInUse(board)) {
+                    configuration.removeBoard(board);
+                }
             }
         }
     };

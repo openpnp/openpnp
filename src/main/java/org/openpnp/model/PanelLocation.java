@@ -24,7 +24,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.pmw.tinylog.Logger;
-import org.simpleframework.xml.core.Commit;
 
 /**
  * A container for a Panel that gives the panel a physical Location relative to its parent. It 

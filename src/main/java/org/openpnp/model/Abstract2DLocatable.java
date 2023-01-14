@@ -21,7 +21,6 @@ package org.openpnp.model;
 
 import java.beans.PropertyChangeListener;
 
-import org.openpnp.Translations;
 import org.openpnp.spi.Definable;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;

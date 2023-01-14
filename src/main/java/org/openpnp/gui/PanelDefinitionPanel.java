@@ -95,11 +95,6 @@ import org.openpnp.model.Panel;
 import org.openpnp.model.PanelLocation;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
-import org.openpnp.model.PlacementsHolder;
-import org.pmw.tinylog.Logger;
-
-import com.google.common.eventbus.Subscribe;
-
 import javax.swing.JSplitPane;
 import javax.swing.JTable;
 import javax.swing.border.EtchedBorder;
@@ -264,14 +259,6 @@ public class PanelDefinitionPanel extends JPanel implements PropertyChangeListen
             public void tableChanged(TableModelEvent e) {
                 SwingUtilities.invokeLater(() -> {
                     fiducialTableModel.fireTableDataChanged();
-                    if (panelViewer != null) {
-                        if (e.getColumn() == TableModelEvent.ALL_COLUMNS) {
-                            panelViewer.regenerate();
-                        }
-                        else {
-                            panelViewer.refresh();
-                        }
-                    }
                 });
             }
         });
@@ -405,9 +392,11 @@ public class PanelDefinitionPanel extends JPanel implements PropertyChangeListen
         
         fiducialTable = new AutoSelectTextTable(fiducialTableModel);
         tcm = fiducialTable.getColumnModel();
-        tcm.removeColumn(tcm.getColumn(9)); //remove Type column
-        tcm.removeColumn(tcm.getColumn(8)); //remove Error Handling column
-        tcm.removeColumn(tcm.getColumn(7)); //remove Comments column
+        tcm.removeColumn(tcm.getColumn(11)); //remove Comments column
+        tcm.removeColumn(tcm.getColumn(10)); //remove Error Handling column
+        tcm.removeColumn(tcm.getColumn(9)); //remove Status column
+        tcm.removeColumn(tcm.getColumn(8)); //remove Placed column
+        tcm.removeColumn(tcm.getColumn(7)); //remove Type column
         
         fiducialTable.setRowSorter(fiducialTableSorter);
         fiducialTable.getTableHeader().setDefaultRenderer(new MultisortTableHeaderCellRenderer());
@@ -456,22 +445,6 @@ public class PanelDefinitionPanel extends JPanel implements PropertyChangeListen
             }
         });
 
-        fiducialTable.getModel().addTableModelListener(new TableModelListener() {
-            @Override
-            public void tableChanged(TableModelEvent e) {
-                SwingUtilities.invokeLater(() -> {
-                    if (panelViewer != null) {
-                        if (e.getType() == TableModelEvent.UPDATE) {
-                            panelViewer.refresh();
-                        }
-                        else {
-                            panelViewer.regenerate();
-                        }
-                    }
-                });
-            }
-        });
-
         JPopupMenu fiducialPopupMenu = new JPopupMenu();
 
         JMenu setFiducialSideMenu = new JMenu(setSideAction);
@@ -503,15 +476,6 @@ public class PanelDefinitionPanel extends JPanel implements PropertyChangeListen
         Configuration.get().getBus().register(this);
     }
     
-    @Subscribe
-    public void panelDefinitionStructureChanged(DefinitionStructureChangedEvent event) {
-        if (rootPanelLocation != null && event.source != this) {
-            SwingUtilities.invokeLater(() -> {
-                refresh();
-            });
-        }
-    }
-
     public void setPanel(Panel panel) throws IOException {
         this.panel = panel;
         rootPanelLocation.setGlobalSide(Side.Top);
@@ -743,6 +707,7 @@ public class PanelDefinitionPanel extends JPanel implements PropertyChangeListen
                     Translations.getString("PanelDefinition.Children.Add.ExistingBoard.DialogTitle")); //$NON-NLS-1$
             existingBoardDialog.setVisible(true);
             File file = existingBoardDialog.getFile();
+            existingBoardDialog.dispose();
             if (file == null) {
                 return;
             }
@@ -831,6 +796,7 @@ public class PanelDefinitionPanel extends JPanel implements PropertyChangeListen
                     Translations.getString("PanelDefinition.Children.Add.ExistingPanel.DialogTitle")); //$NON-NLS-1$
             existingPanelDialog.setVisible(true);
             File file = existingPanelDialog.getFile();
+            existingPanelDialog.dispose();
             if (file == null) {
                 return;
             }
@@ -911,7 +877,8 @@ public class PanelDefinitionPanel extends JPanel implements PropertyChangeListen
             Configuration.get().getBus()
             .post(new DefinitionStructureChangedEvent(rootPanelLocation.getPanel(), "children", //$NON-NLS-1$
                     PanelDefinitionPanel.this));
-
+            
+            Helpers.selectObjectTableRow(childrenTable, child);
         }
     };
     
@@ -926,10 +893,7 @@ public class PanelDefinitionPanel extends JPanel implements PropertyChangeListen
         @Override
         public void actionPerformed(ActionEvent arg0) {
             if (panelViewer == null) {
-                panelViewer = new PlacementsHolderLocationViewerDialog(
-                        rootPanelLocation, false,
-                        (phl, colName) -> childrenTableModel.fireDecendantsCellUpdated((PlacementsHolderLocation<?>) phl,
-                                childrenTableModel.getColumnIndex(colName)));
+                panelViewer = new PlacementsHolderLocationViewerDialog(rootPanelLocation, false);
                 panelViewer.addWindowListener(new WindowAdapter() {
                     @Override
                     public void windowClosing(WindowEvent e) {
@@ -969,10 +933,13 @@ public class PanelDefinitionPanel extends JPanel implements PropertyChangeListen
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            for (Placement fiducial : getFiducialSelections()) {
-                fiducial.getDefinition().setSide(side);
-                fiducialTableModel.fireTableDataChanged();
+            List<Placement> selections = getFiducialSelections();
+            for (Placement fiducial : selections) {
+                fiducial.setSide(side);
+                fiducialTableModel.fireTableCellUpdated(fiducial, 
+                        Translations.getString("PlacementsHolderPlacementsTableModel.ColumnName.Side")); //$NON-NLS-1$
             }
+            Helpers.selectObjectTableRows(fiducialTable, selections);
         }
     };
     
@@ -991,10 +958,13 @@ public class PanelDefinitionPanel extends JPanel implements PropertyChangeListen
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            for (PlacementsHolderLocation<?> child : getChildrenSelections()) {
+            List<PlacementsHolderLocation<?>> selections = getChildrenSelections();
+            for (PlacementsHolderLocation<?> child : selections) {
                 child.getDefinition().setGlobalSide(side);
-                childrenTableModel.fireTableDataChanged();
+                childrenTableModel.fireTableCellDecendantsUpdated(child, 
+                        Translations.getString("PlacementsHolderLocationsTableModel.ColumnName.Side")); //$NON-NLS-1$
             }
+            Helpers.selectObjectTableRows(childrenTable, selections);
         }
     };
     
@@ -1023,10 +993,13 @@ public class PanelDefinitionPanel extends JPanel implements PropertyChangeListen
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            for (Placement fiducial : getFiducialSelections()) {
-                ((Placement) fiducial.getDefinition()).setEnabled(enabled);
+            List<Placement> selections = getFiducialSelections();
+            for (Placement fiducial : selections) {
+                fiducial.setEnabled(enabled);
+                fiducialTableModel.fireTableCellUpdated(fiducial, 
+                        Translations.getString("PlacementsHolderPlacementsTableModel.ColumnName.Enabled")); //$NON-NLS-1$
             }
-            fiducialTableModel.fireTableDataChanged();   
+            Helpers.selectObjectTableRows(fiducialTable, selections);
         }
     };
 
@@ -1040,15 +1013,18 @@ public class PanelDefinitionPanel extends JPanel implements PropertyChangeListen
                     Translations.getString("General.Disabled"); //$NON-NLS-1$
             putValue(NAME, name);
             putValue(SHORT_DESCRIPTION, Translations.getString("PanelDefinition.SetEnabled.Children.Description") //$NON-NLS-1$
-                    + " " + name); //$NON-NLS-2$
+                    + " " + name); //$NON-NLS-2$ //$NON-NLS-1$
         }
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            for (PlacementsHolderLocation<?> child : getChildrenSelections()) {
+            List<PlacementsHolderLocation<?>> selections = getChildrenSelections();
+            for (PlacementsHolderLocation<?> child : selections) {
                 child.getDefinition().setLocallyEnabled(enabled);
+                childrenTableModel.fireTableCellDecendantsUpdated(child, 
+                        Translations.getString("PlacementsHolderLocationsTableModel.ColumnName.Enabled")); //$NON-NLS-1$
             }
-            childrenTableModel.fireTableDataChanged();   
+            Helpers.selectObjectTableRows(childrenTable, selections);
         }
     };
 
@@ -1077,10 +1053,13 @@ public class PanelDefinitionPanel extends JPanel implements PropertyChangeListen
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            for (PlacementsHolderLocation<?> child : getChildrenSelections()) {
+            List<PlacementsHolderLocation<?>> selections = getChildrenSelections();
+            for (PlacementsHolderLocation<?> child : selections) {
                 child.getDefinition().setCheckFiducials(value);
+                childrenTableModel.fireTableCellUpdated(child, 
+                        Translations.getString("PlacementsHolderLocationsTableModel.ColumnName.CheckFids")); //$NON-NLS-1$
             }
-            childrenTableModel.fireTableDataChanged();   
+            Helpers.selectObjectTableRows(childrenTable, selections);
         }
     }
 

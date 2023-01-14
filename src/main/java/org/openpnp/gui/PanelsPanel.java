@@ -256,6 +256,12 @@ public class PanelsPanel extends JPanel {
         btnCopyPanel.setHideActionText(true);
         toolBarPanels.add(btnCopyPanel);
 
+        toolBarPanels.addSeparator();
+        
+        JButton btnCleanUp = new JButton(cleanUpAction);
+        btnCleanUp.setHideActionText(true);
+        toolBarPanels.add(btnCleanUp);
+        
         pnlPanels.add(new JScrollPane(panelsTable));
         splitPane.setLeftComponent(pnlPanels);
         
@@ -390,7 +396,6 @@ public class PanelsPanel extends JPanel {
 
                 Panel panel = addPanel(file);
 
-//                Helpers.selectLastTableRow(panelsTable);
                 selectPanel(panel);
             }
             catch (Exception e) {
@@ -428,7 +433,6 @@ public class PanelsPanel extends JPanel {
 
                 Panel panel = addPanel(file);
 
-//                Helpers.selectLastTableRow(panelsTable);
                 selectPanel(panel);
             }
             catch (Exception e) {
@@ -505,6 +509,7 @@ public class PanelsPanel extends JPanel {
                 File file = new File(new File(fileDialog.getDirectory()), filename);
 
                 Panel newPanel = new Panel(panelToCopy);
+                newPanel.setDefinition(newPanel);
                 newPanel.setFile(file);
                 newPanel.setName(file.getName());
                 newPanel.setDirty(false);
@@ -518,6 +523,33 @@ public class PanelsPanel extends JPanel {
                 MessageBoxes.errorBox(frame, 
                         Translations.getString("PanelsPanel.Action.CopyPanel.ErrorMessage"),  //$NON-NLS-1$
                         e.getMessage());
+            }
+        }
+    };
+
+    public final Action cleanUpAction = new AbstractAction() {
+        {
+            putValue(SMALL_ICON, Icons.clean);
+            putValue(NAME, Translations.getString("PanelsPanel.Action.CleanUp")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("PanelsPanel.Action.CleanUp.Description")); //$NON-NLS-1$
+            putValue(MNEMONIC_KEY, KeyEvent.VK_D);
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            int endingCount = configuration.getPanels().size();
+            int startingCount = endingCount + 1;
+            //Because panels may be nested in panels, we need to repeat the cleanup until the
+            //remaining list no longer changes size
+            while (startingCount > endingCount) {
+                startingCount = endingCount;
+                List<Panel> panelsList = new ArrayList<>(configuration.getPanels());
+                for (Panel panel : panelsList) {
+                    if (!configuration.isInUse(panel)) {
+                        configuration.removePanel(panel);
+                        endingCount--;
+                    }
+                }
             }
         }
     };

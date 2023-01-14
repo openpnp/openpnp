@@ -83,7 +83,12 @@ public class Board extends PlacementsHolder<Board> implements PropertyChangeList
      */
     public Board(Board boardToCopy) {
         super(boardToCopy);
-        this.solderPastePads = new ArrayList<>(boardToCopy.solderPastePads); //really should be be a deep copy
+        this.solderPastePads = new ArrayList<>();
+        for (BoardPad pad : boardToCopy.solderPastePads) {
+            BoardPad newPad = new BoardPad(pad);
+            newPad.addPropertyChangeListener(this);
+            this.solderPastePads.add(newPad);
+        }
     }
 
     /**

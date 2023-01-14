@@ -21,7 +21,14 @@ package org.openpnp.gui.tablemodel;
 
 import java.util.List;
 
+import javax.swing.SwingUtilities;
+import javax.swing.event.TableModelEvent;
+
 import org.openpnp.Translations;
+import org.openpnp.events.DefinitionStructureChangedEvent;
+import org.openpnp.events.PlacementChangedEvent;
+import org.openpnp.gui.JobPlacementsPanel;
+import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.LengthCellValue;
 import org.openpnp.gui.support.PartCellValue;
 import org.openpnp.gui.support.RotationCellValue;
@@ -35,8 +42,11 @@ import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
 import org.openpnp.model.Placement.ErrorHandling;
 import org.openpnp.model.Placement.Type;
+import org.openpnp.spi.Feeder;
 import org.openpnp.model.PlacementsHolder;
+import org.openpnp.model.PlacementsHolderLocation;
 import org.openpnp.util.Utils2D;
+import com.google.common.eventbus.Subscribe;
 
 @SuppressWarnings("serial")
 public class PlacementsHolderPlacementsTableModel extends AbstractObjectTableModel 
@@ -48,30 +58,96 @@ public class PlacementsHolderPlacementsTableModel extends AbstractObjectTableMod
                     Translations.getString("PlacementsHolderPlacementsTableModel.ColumnName.Id"), //$NON-NLS-1$
                     Translations.getString("PlacementsHolderPlacementsTableModel.ColumnName.Part"), //$NON-NLS-1$
                     Translations.getString("PlacementsHolderPlacementsTableModel.ColumnName.Side"), //$NON-NLS-1$
-                    "X", "Y", //$NON-NLS-1$ //$NON-NLS-2$
+                    "X", //$NON-NLS-1$ 
+                    "Y", //$NON-NLS-1$
                     Translations.getString("PlacementsHolderPlacementsTableModel.ColumnName.Rot"), //$NON-NLS-1$
                     Translations.getString("PlacementsHolderPlacementsTableModel.ColumnName.Type"), //$NON-NLS-1$
+                    "Placed",
+                    "Status",
                     Translations.getString("PlacementsHolderPlacementsTableModel.ColumnName.ErrorHandling"), //$NON-NLS-1$
                     Translations.getString("PlacementsHolderPlacementsTableModel.ColumnName.Comments")}; //$NON-NLS-1$
 
+    private String[] propertyNames = new String[] {
+            "enabled", //$NON-NLS-1$
+            "id", //$NON-NLS-1$
+            "part", //$NON-NLS-1$
+            "side", //$NON-NLS-1$
+            "location", //$NON-NLS-1$
+            "location", //$NON-NLS-1$
+            "location", //$NON-NLS-1$
+            "type", //$NON-NLS-1$
+            "placed", //$NON-NLS-1$
+            "status", //$NON-NLS-1$
+            "errorHandling", //$NON-NLS-1$
+            "comments" //$NON-NLS-1$
+    };
+    
     @SuppressWarnings("rawtypes")
     private Class[] columnTypes = new Class[] {Boolean.class, PartCellValue.class, Part.class, 
             Side.class, LengthCellValue.class, LengthCellValue.class, RotationCellValue.class, 
-            Type.class, ErrorHandling.class, String.class};
+            Type.class, Boolean.class, Status.class, ErrorHandling.class, String.class};
     
     private int[] columnAlignments = new int[] {CENTER, LEFT, LEFT, CENTER, CENTER, CENTER, 
-            CENTER, CENTER, CENTER, LEFT};
+            CENTER, CENTER, CENTER, CENTER, CENTER, LEFT};
 
     private int[] columnWidthTypes = new int[] {FIXED, FIXED, PROPORTIONAL, FIXED, FIXED, 
-            FIXED, FIXED, FIXED, FIXED, PROPORTIONAL};
+            FIXED, FIXED, FIXED, FIXED, FIXED, FIXED, PROPORTIONAL};
     
+    public enum Status {
+        Ready,
+        MissingPart,
+        MissingFeeder,
+        ZeroPartHeight,
+        Disabled
+    }
+
     private boolean localReferenceFrame = true;
 
     private PanelLocation parent = null;
 
     private List<Placement> placements = null;
 
+    private PlacementsHolderLocation<?> placementsHolderLocation;
+    private JobPlacementsPanel jobPlacementsPanel;
+    private boolean editDefinition;
     private boolean isPanel;
+    private Configuration configuration;
+    
+    public PlacementsHolderPlacementsTableModel() {
+        super();
+        configuration = Configuration.get();
+        configuration.getBus().register(this);
+    }
+    
+    @Subscribe
+    public void definitionStructureChangedEventHandler(DefinitionStructureChangedEvent event) {
+        if (event.source != this && placementsHolder != null && event.definition == placementsHolder) {
+            SwingUtilities.invokeLater(() -> {
+                fireTableDataChanged();
+            });
+        }
+    }
+
+    @Subscribe
+    public void placementChangedEventHandler(PlacementChangedEvent evt) {
+        if (evt.source != this && evt.placementsHolder == placementsHolder) {
+            Placement placement = evt.placement;
+            int index = indexOf(placement);
+            if (index < 0) {
+                for (index = 0; index < getRowCount(); index++) {
+                    if (getRowObjectAt(index).getDefinition() == placement) {
+                        break;
+                    }
+                }
+            }
+            if (index < getRowCount()) {
+                final int idx = index;
+                SwingUtilities.invokeLater(() -> {
+                    fireTableCellUpdated(idx, TableModelEvent.ALL_COLUMNS);
+                });
+            }
+        }
+    }
     
     public PlacementsHolder<?> getPlacementsHolder() {
         return placementsHolder;
@@ -83,14 +159,27 @@ public class PlacementsHolderPlacementsTableModel extends AbstractObjectTableMod
         fireTableDataChanged();
     }
     
-    public void setParentLocation(PanelLocation parent) {
-        this.parent = parent;
-        fireTableDataChanged();
-    }
-    
     public void setPlacements(List<Placement> placements) {
         this.placements = placements;
         placementsHolder = null;
+        fireTableDataChanged();
+    }
+
+    public void setJobPlacementsPanel(JobPlacementsPanel jobPlacementsPanel) {
+        this.jobPlacementsPanel = jobPlacementsPanel;
+    }
+
+    public void setPlacementsHolderLocation(PlacementsHolderLocation<?> placementsHolderLocation,
+            boolean editDefinition) {
+        this.placementsHolderLocation = placementsHolderLocation;
+        this.editDefinition = editDefinition;
+        if (placementsHolderLocation == null) {
+            placementsHolder = null;
+        }
+        else {
+            placementsHolder = placementsHolderLocation.getPlacementsHolder();
+            isPanel = placementsHolder instanceof Panel;
+        }
         fireTableDataChanged();
     }
 
@@ -145,65 +234,97 @@ public class PlacementsHolderPlacementsTableModel extends AbstractObjectTableMod
 
     @Override
     public boolean isCellEditable(int rowIndex, int columnIndex) {
-        return columnIndex != 1; //Can't edit the Id
+        return columnIndex != 1 && columnIndex != 9; //Can't edit the Id or Status
     }
 
     @Override
     public Class<?> getColumnClass(int columnIndex) {
         return columnTypes[columnIndex];
     }
-
+    
     @Override
     public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
         try {
             Placement placement = getRowObjectAt(rowIndex);
+            Placement definition = (Placement) placement.getDefinition();
+            if (definition == null) {
+                definition = placement;
+            }
             if (columnIndex == 0) {
-                placement.setEnabled((Boolean) aValue);
+                if (editDefinition) {
+                    definition.setEnabled((Boolean) aValue);
+                }
+                else {
+                    placement.setEnabled((Boolean) aValue);
+                }
+                fireTableCellUpdated(rowIndex, columnIndex);
+                if (jobPlacementsPanel != null) {
+                    jobPlacementsPanel.updateActivePlacements();
+                }
             }
             else if (columnIndex == 2) {
-                placement.setPart((Part) aValue);
+                definition.setPart((Part) aValue);
                 fireTableCellUpdated(rowIndex, columnIndex);
             }
             else if (columnIndex == 3) {
-                placement.setSide((Side) aValue);
+                definition.setSide((Side) aValue);
                 fireTableCellUpdated(rowIndex, columnIndex);
+                if (jobPlacementsPanel != null) {
+                    jobPlacementsPanel.updateActivePlacements();
+                }
             }
             else if (columnIndex == 4) {
                 LengthCellValue value = (LengthCellValue) aValue;
                 value.setDisplayNativeUnits(true);
                 Length length = value.getLength();
-                Location location = placement.getLocation();
-                location = Length.setLocationField(Configuration.get(), location, length,
-                        Length.Field.X, true);
-                placement.setLocation(location);
+                Location oldValue = placement.getLocation();
+                Location location = Length.setLocationField(configuration, oldValue, length, Length.Field.X,
+                        true);
+                definition.setLocation(location);
                 fireTableCellUpdated(rowIndex, columnIndex);
             }
             else if (columnIndex == 5) {
                 LengthCellValue value = (LengthCellValue) aValue;
                 value.setDisplayNativeUnits(true);
                 Length length = value.getLength();
-                Location location = placement.getLocation();
-                location = Length.setLocationField(Configuration.get(), location, length,
-                        Length.Field.Y, true);
-                placement.setLocation(location);
+                Location oldValue = placement.getLocation();
+                Location location = Length.setLocationField(configuration, oldValue, length, Length.Field.Y,
+                        true);
+                definition.setLocation(location);
                 fireTableCellUpdated(rowIndex, columnIndex);
             }
             else if (columnIndex == 6) {
-                Location location = placement.getLocation();
-                double rotation = ((RotationCellValue) aValue).getRotation();
-                placement.setLocation(location.derive(null, null, null, rotation));
+                RotationCellValue value = (RotationCellValue) aValue;
+                double rotation = value.getRotation();
+                Location oldValue = placement.getLocation();
+                Location location = oldValue.derive(null, null, null, rotation);
+                definition.setLocation(location);
                 fireTableCellUpdated(rowIndex, columnIndex);
             }
             else if (columnIndex == 7) {
-                placement.setType((Type) aValue);
+                definition.setType((Type) aValue);
                 fireTableCellUpdated(rowIndex, columnIndex);
+                if (jobPlacementsPanel != null) {
+                    jobPlacementsPanel.updateActivePlacements();
+                }
             }
             else if (columnIndex == 8) {
-                placement.setErrorHandling((ErrorHandling) aValue);
+                jobPlacementsPanel.getJobPanel().getJob()
+                    .storePlacedStatus(placementsHolderLocation, placement.getId(), (Boolean) aValue);
                 fireTableCellUpdated(rowIndex, columnIndex);
+                jobPlacementsPanel.updateActivePlacements();
             }
-            else if (columnIndex == 9) {
-                placement.setComments((String) aValue);
+            else if (columnIndex == 10) {
+                if (editDefinition) {
+                    definition.setErrorHandling((ErrorHandling) aValue);
+                }
+                else {
+                    placement.setErrorHandling((ErrorHandling) aValue);
+                }
+                fireTableCellUpdated(rowIndex, columnIndex);
+             }
+            else if (columnIndex == 11) {
+                definition.setComments((String) aValue);
                 fireTableCellUpdated(rowIndex, columnIndex);
             }
         }
@@ -212,6 +333,23 @@ public class PlacementsHolderPlacementsTableModel extends AbstractObjectTableMod
         }
     }
 
+    public void fireTableCellUpdated(Placement placement, String columnName) {
+        fireTableCellUpdated(indexOf(placement), findColumn(columnName));
+    }
+    
+    @Override
+    public void fireTableCellUpdated(int row, int column) {
+        super.fireTableCellUpdated(row, column);
+        String propName = "ALL";
+        Object newValue = null;
+        if (column >= 0 && column < propertyNames.length) {
+            propName = propertyNames[column];
+            newValue = getValueAt(row, column);
+        }
+        Configuration.get().getBus().post(new PlacementChangedEvent(placementsHolder, 
+                getRowObjectAt(row), propName, null, newValue, this));
+    }
+    
     public Object getValueAt(int row, int col) {
         Placement placement = getRowObjectAt(row);
         Location loc;
@@ -242,12 +380,50 @@ public class PlacementsHolderPlacementsTableModel extends AbstractObjectTableMod
             case 7:
                 return placement.getType();
             case 8:
-                return placement.getErrorHandling();
+                // TODO STOPSHIP: Both of these are huge performance hogs and do not belong
+                // in the render process. At the least we should cache this information but it
+                // would be better if the information was updated out of band by a listener.
+                jobPlacementsPanel.updateActivePlacements();
+                return MainFrame.get().getJobTab().getJob()
+                        .retrievePlacedStatus(placementsHolderLocation, placement.getId());
             case 9:
+                return getPlacementStatus(placement);
+            case 10:
+                return placement.getErrorHandling();
+            case 11:
                 return placement.getComments();
             default:
                 return null;
         }
+    }
+
+    // TODO: Ideally this would all come from the JobPlanner, but this is a
+    // good start for now.
+    private Status getPlacementStatus(Placement placement) {
+        if (placement.getPart() == null) {
+            return Status.MissingPart;
+        }
+        if (!placement.isEnabled()) {
+            return Status.Disabled;
+                    
+        }
+        if (placement.getType() == Placement.Type.Placement && placement.isEnabled()) {
+            boolean found = false;
+            for (Feeder feeder : Configuration.get().getMachine().getFeeders()) {
+                if (feeder.getPart() == placement.getPart() && feeder.isEnabled()) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                return Status.MissingFeeder;
+            }
+
+            if (placement.getPart().isPartHeightUnknown()) {
+                return Status.ZeroPartHeight;
+            }
+        }
+        return Status.Ready;
     }
 
     public void setLocalReferenceFrame(boolean b) {

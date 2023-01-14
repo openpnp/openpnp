@@ -20,14 +20,20 @@
 package org.openpnp.gui.tablemodel;
 
 import java.util.List;
-import java.util.Locale;
 
+import javax.swing.SwingUtilities;
 import javax.swing.event.TableModelEvent;
 
 import org.openpnp.Translations;
+import org.openpnp.events.PlacementsHolderLocationChangedEvent;
 import org.openpnp.gui.support.LengthCellValue;
 import org.openpnp.gui.support.RotationCellValue;
+import org.openpnp.model.Abstract2DLocatable;
 import org.openpnp.model.Abstract2DLocatable.Side;
+import org.pmw.tinylog.Logger;
+
+import com.google.common.eventbus.Subscribe;
+
 import org.openpnp.model.Configuration;
 import org.openpnp.model.PlacementsHolderLocation;
 import org.openpnp.model.Job;
@@ -40,7 +46,7 @@ public class PlacementsHolderLocationsTableModel extends AbstractObjectTableMode
         implements ColumnAlignable, ColumnWidthSaveable {
     private final Configuration configuration;
 
-    private String[] columnNames = new String[] {
+    private final String[] columnNames = new String[] {
             Translations.getString("PlacementsHolderLocationsTableModel.ColumnName.BoardPanelId"), //$NON-NLS-1$
             Translations.getString("PlacementsHolderLocationsTableModel.ColumnName.Name"), //$NON-NLS-1$
             Translations.getString("PlacementsHolderLocationsTableModel.ColumnName.Width"), //$NON-NLS-1$
@@ -51,6 +57,19 @@ public class PlacementsHolderLocationsTableModel extends AbstractObjectTableMode
             Translations.getString("PlacementsHolderLocationsTableModel.ColumnName.Enabled"), //$NON-NLS-1$
             Translations.getString("PlacementsHolderLocationsTableModel.ColumnName.CheckFids")}; //$NON-NLS-1$
 
+    private final String[] propertyNames = new String[] { 
+            "id",  //$NON-NLS-1$
+            "name",  //$NON-NLS-1$
+            "dimensions",  //$NON-NLS-1$
+            "dimensions",  //$NON-NLS-1$
+            "side",  //$NON-NLS-1$
+            "location",  //$NON-NLS-1$
+            "location",  //$NON-NLS-1$
+            "location",  //$NON-NLS-1$
+            "location",  //$NON-NLS-1$
+            "locallyEnabled",  //$NON-NLS-1$
+            "checkFiducials"}; //$NON-NLS-1$
+    
     @SuppressWarnings("rawtypes")
     private Class[] columnTypes = new Class[] {String.class, String.class, LengthCellValue.class,
             LengthCellValue.class, Side.class, LengthCellValue.class, LengthCellValue.class,
@@ -70,8 +89,33 @@ public class PlacementsHolderLocationsTableModel extends AbstractObjectTableMode
 
     public PlacementsHolderLocationsTableModel(Configuration configuration) {
         this.configuration = configuration;
+        configuration.getBus().register(this);
     }
 
+    @Subscribe
+    public void placementsHolderLocationChangedEventHandler(PlacementsHolderLocationChangedEvent evt) {
+        if (evt.source != this && rootPanelLocation != null) {
+            PlacementsHolderLocation<?> phl = evt.placementsHolderLocation;
+            int index = indexOf(phl);
+            if (index >= 0) {
+                final int idx = index;
+                SwingUtilities.invokeLater(() -> {
+                    fireTableCellDecendantsUpdated(idx, TableModelEvent.ALL_COLUMNS);
+                });
+            }
+            else {
+                for (index = 0; index < getRowCount(); index++) {
+                    if (((PlacementsHolderLocation<?>) getRowObjectAt(index)).getDefinition() == phl) {
+                        final int idx = index;
+                        SwingUtilities.invokeLater(() -> {
+                            fireTableCellDecendantsUpdated(idx, TableModelEvent.ALL_COLUMNS);
+                        });
+                    }
+                }
+            }
+        }
+    }
+    
     public void setJob(Job job) {
         this.job = job;
         if (job != null) {
@@ -119,15 +163,6 @@ public class PlacementsHolderLocationsTableModel extends AbstractObjectTableMode
         return columnNames[column];
     }
 
-    public int getColumnIndex(String columnName) {
-        for (int i=0; i<columnNames.length; i++) {
-            if (columnName.equals(columnNames[i])) {
-                return i;
-            }
-        }
-        return -1;
-    }
-    
     public int getColumnCount() {
         return columnNames.length;
     }
@@ -190,16 +225,16 @@ public class PlacementsHolderLocationsTableModel extends AbstractObjectTableMode
             else if (columnIndex == 2) {
                 LengthCellValue value = (LengthCellValue) aValue;
                 Length length = value.getLength();
-                Location dims = placementsHolderLocation.getPlacementsHolder().getDimensions();
-                dims = Length.setLocationField(configuration, dims, length, Length.Field.X);
+                Location oldValue = placementsHolderLocation.getPlacementsHolder().getDimensions();
+                Location dims = Length.setLocationField(configuration, oldValue, length, Length.Field.X);
                 placementsHolderLocation.getPlacementsHolder().getDefinition().setDimensions(dims);
                 fireTableCellUpdated(rowIndex, columnIndex);
             }
             else if (columnIndex == 3) {
                 LengthCellValue value = (LengthCellValue) aValue;
                 Length length = value.getLength();
-                Location dims = placementsHolderLocation.getPlacementsHolder().getDimensions();
-                dims = Length.setLocationField(configuration, dims, length, Length.Field.Y);
+                Location oldValue = placementsHolderLocation.getPlacementsHolder().getDimensions();
+                Location dims = Length.setLocationField(configuration, oldValue, length, Length.Field.Y);
                 placementsHolderLocation.getPlacementsHolder().getDefinition().setDimensions(dims);
                 fireTableCellUpdated(rowIndex, columnIndex);
             }
@@ -213,42 +248,47 @@ public class PlacementsHolderLocationsTableModel extends AbstractObjectTableMode
                         placementsHolderLocation.setGlobalLocation(savedLocation);
                     }
                     placementsHolderLocation.setLocalToParentTransform(null);
+                    fireTableCellDecendantsUpdated(rowIndex, TableModelEvent.ALL_COLUMNS);
                 }
-                fireDecendantsCellUpdated(rowIndex, TableModelEvent.ALL_COLUMNS);
             }
             else if (columnIndex == 5) {
                 LengthCellValue value = (LengthCellValue) aValue;
                 Length length = value.getLength();
-                Location location = placementsHolderLocation.getGlobalLocation();
-                location = Length.setLocationField(configuration, location, length, Length.Field.X);
+                Location oldValue = placementsHolderLocation.getGlobalLocation();
+                Location location = Length.setLocationField(configuration, oldValue, length, Length.Field.X);
                 placementsHolderLocation.setGlobalLocation(location);
-                fireDecendantsCellUpdated(rowIndex, TableModelEvent.ALL_COLUMNS);
+                fireTableCellDecendantsUpdated(rowIndex, TableModelEvent.ALL_COLUMNS);
             }
             else if (columnIndex == 6) {
                 LengthCellValue value = (LengthCellValue) aValue;
                 Length length = value.getLength();
-                Location location = placementsHolderLocation.getGlobalLocation();
-                location = Length.setLocationField(configuration, location, length, Length.Field.Y);
+                Location oldValue = placementsHolderLocation.getGlobalLocation();
+                Location location = Length.setLocationField(configuration, oldValue, length, Length.Field.Y);
                 placementsHolderLocation.setGlobalLocation(location);
-                fireDecendantsCellUpdated(rowIndex, TableModelEvent.ALL_COLUMNS);
+                fireTableCellDecendantsUpdated(rowIndex, TableModelEvent.ALL_COLUMNS);
             }
             else if (columnIndex == 7) {
                 LengthCellValue value = (LengthCellValue) aValue;
                 Length length = value.getLength();
-                Location location = placementsHolderLocation.getGlobalLocation();
-                location = Length.setLocationField(configuration, location, length, Length.Field.Z);
+                Location oldValue = placementsHolderLocation.getGlobalLocation();
+                Location location = Length.setLocationField(configuration, oldValue, length, Length.Field.Z);
                 placementsHolderLocation.setGlobalLocation(location);
-                fireDecendantsCellUpdated(rowIndex, columnIndex);
+                fireTableCellDecendantsUpdated(rowIndex, columnIndex);
             }
             else if (columnIndex == 8) {
-                Location location = placementsHolderLocation.getGlobalLocation();
-                double rotation = ((RotationCellValue) aValue).getRotation();
-                placementsHolderLocation.setLocation(location.derive(null, null, null, rotation));
-                fireDecendantsCellUpdated(rowIndex, TableModelEvent.ALL_COLUMNS);
+                RotationCellValue value = (RotationCellValue) aValue;
+                double rotation = value.getRotation();
+                Location oldValue = placementsHolderLocation.getGlobalLocation();
+                Location location = oldValue.derive(null, null, null, rotation);
+                placementsHolderLocation.setLocation(location);
+                fireTableCellDecendantsUpdated(rowIndex, TableModelEvent.ALL_COLUMNS);
             }
             else if (columnIndex == 9) {
-                placementsHolderLocation.setLocallyEnabled((Boolean) aValue);
-                fireDecendantsCellUpdated(rowIndex, columnIndex);
+                if ((placementsHolderLocation.getParent() == null) ||
+                        placementsHolderLocation.getParent().isEnabled()) {
+                    placementsHolderLocation.setLocallyEnabled((Boolean) aValue);
+                    fireTableCellDecendantsUpdated(rowIndex, columnIndex);
+                }
             }
             else if (columnIndex == 10) {
                 placementsHolderLocation.setCheckFiducials((Boolean) aValue);
@@ -261,25 +301,54 @@ public class PlacementsHolderLocationsTableModel extends AbstractObjectTableMode
         }
     }
 
-    public void fireDecendantsUpdated(PlacementsHolderLocation<?> placementsHolderLocation) {
-        fireDecendantsCellUpdated(placementsHolderLocation, TableModelEvent.ALL_COLUMNS);
+    public void fireTableCellUpdated(PlacementsHolderLocation<?> placementsHolderLocation, String columnName) {
+        fireTableCellUpdated(indexOf(placementsHolderLocation), findColumn(columnName));
     }
     
-    public void fireDecendantsCellUpdated(PlacementsHolderLocation<?> placementsHolderLocation, int columnIndex) {
-        int idx = indexOf(placementsHolderLocation);
-        if (idx >= 0) {
-            fireDecendantsCellUpdated(idx, columnIndex);
-        }
+    public void fireTableCellDecendantsUpdated(PlacementsHolderLocation<?> placementsHolderLocation, String columnName) {
+        fireTableCellDecendantsUpdated(indexOf(placementsHolderLocation), findColumn(columnName));
     }
-
-    private void fireDecendantsCellUpdated(int rowIndex, int columnIndex) {
-        PlacementsHolderLocation<?> fll = getPlacementsHolderLocation(rowIndex);
-        int endRow = rowIndex;
-        if (fll instanceof PanelLocation) {
-            List<PlacementsHolderLocation<?>> list = ((PanelLocation) fll).getChildren();
-            endRow = indexOf(list.get(list.size()-1));
+    
+    public void fireTableCellDecendantsUpdated(PlacementsHolderLocation<?> placementsHolderLocation, int columnIndex) {
+        fireTableCellDecendantsUpdated(indexOf(placementsHolderLocation), columnIndex);
+    }
+    
+    @Override
+    public void fireTableCellUpdated(int row, int column) {
+        super.fireTableCellUpdated(row, column);
+        String propName = "ALL";
+        Object newValue = null;
+        if (column >= 0 && column < propertyNames.length) {
+            propName = propertyNames[column];
+            newValue = getValueAt(row, column);
         }
-        fireTableChanged(new TableModelEvent(this, rowIndex, endRow, columnIndex));
+        Configuration.get().getBus().post(new PlacementsHolderLocationChangedEvent(
+                getPlacementsHolderLocation(row),
+                propName,
+                null, newValue, this));
+    }
+    
+    protected void fireTableCellDecendantsUpdated(int row, int column) {
+        PlacementsHolderLocation<?> placementsHolderLocation = getPlacementsHolderLocation(row);
+        int endRow = row;
+        if (placementsHolderLocation instanceof PanelLocation) {
+            List<PlacementsHolderLocation<?>> list = ((PanelLocation) placementsHolderLocation).
+                    getChildren();
+            if (list.size() > 0) {
+                endRow = indexOf(list.get(list.size()-1));
+            }
+        }
+        fireTableChanged(new TableModelEvent(this, row, endRow, column));
+        String propName = "ALL";
+        Object newValue = null;
+        if (column >= 0 && column < propertyNames.length) {
+            propName = propertyNames[column];
+            newValue = getValueAt(row, column);
+        }
+        Configuration.get().getBus().post(new PlacementsHolderLocationChangedEvent(
+                getPlacementsHolderLocation(row),
+                propName,
+                null, newValue, this));
     }
     
     public Object getValueAt(int row, int col) {

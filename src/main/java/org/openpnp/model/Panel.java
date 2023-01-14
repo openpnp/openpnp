@@ -202,18 +202,17 @@ public class Panel extends PlacementsHolder<Panel> implements PropertyChangeList
             if (child instanceof PanelLocation) {
                 PanelLocation newPanelLocation = new PanelLocation((PanelLocation) child);
                 addChild(newPanelLocation);
-                newPanelLocation.addPropertyChangeListener(this);
             }
             else if (child instanceof BoardLocation) {
                 BoardLocation newboardLocation = new BoardLocation((BoardLocation) child);
                 addChild(newboardLocation);
-                newboardLocation.addPropertyChangeListener(this);
             }
         }
         for (Placement pseudoPlacement : panel.pseudoPlacements) {
             Placement newPseudoPlacement = new Placement(pseudoPlacement);
             pseudoPlacements.add(newPseudoPlacement);
-            newPseudoPlacement.addPropertyChangeListener("id", this);
+//            newPseudoPlacement.addPropertyChangeListener("id", this);
+            newPseudoPlacement.addPropertyChangeListener(this);
         }
     }
     
@@ -228,6 +227,7 @@ public class Panel extends PlacementsHolder<Panel> implements PropertyChangeList
             child.dispose();
         }
         for (Placement pseudoPlacement : pseudoPlacements) {
+//            pseudoPlacement.removePropertyChangeListener("id", this);
             pseudoPlacement.removePropertyChangeListener(this);
             pseudoPlacement.dispose();
         }
@@ -686,18 +686,23 @@ public class Panel extends PlacementsHolder<Panel> implements PropertyChangeList
     }
     
     /**
-     * Checks to see if a placementsHolder is a descendant of this panel
-     * @param potentialDescendant - the potential descendant to check
-     * @return - true if potentialDescendant is a descendant of this panel
+     * Checks to see if the definition of a placementsHolder is the definition of this panel or or
+     * any of its descendants
+     * @param placementsHolder - the placementsHolder to check
+     * @return - true if the definition of placementsHolder is the definition of this panel or or
+     * any of its descendants
      */
-    public boolean isDescendant(PlacementsHolder<?> potentialDescendant) {
+    public boolean isDefinitionUsed(PlacementsHolder<?> placementsHolder) {
+        if (this.getDefinition() == placementsHolder.getDefinition()) {
+            return true;
+        }
         List<PlacementsHolderLocation<?>> descendants = getDescendants();
         for (PlacementsHolderLocation<?> descendantLocation : descendants) {
-            if (descendantLocation.getPlacementsHolder() == potentialDescendant) {
+            if (descendantLocation.getPlacementsHolder().getDefinition() == placementsHolder.getDefinition()) {
                 return true;
             }
             if (descendantLocation.getPlacementsHolder() instanceof Panel) {
-                if (((Panel) descendantLocation.getPlacementsHolder()).isDefinition(potentialDescendant)) {
+                if (((Panel) descendantLocation.getPlacementsHolder()).isDefinitionUsed(placementsHolder)) {
                     return true;
                 }
             }

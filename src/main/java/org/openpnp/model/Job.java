@@ -103,7 +103,6 @@ public class Job extends AbstractModelObject implements PropertyChangeListener {
      */
     public List<BoardLocation> getBoardLocations() {
         return Collections.unmodifiableList(rootPanelLocation.getPanel().getDescendantBoardLocations());
-//        return rootPanelLocation.getPanel().getDescendantBoardLocations();
     }
 
     /**
@@ -143,8 +142,8 @@ public class Job extends AbstractModelObject implements PropertyChangeListener {
      * @param boardOrPanelLocation - the BoardLocation or PanelLocation
      */
     public void removeBoardOrPanelLocation(PlacementsHolderLocation<?> boardOrPanelLocation) {
-        rootPanelLocation.removeChild(boardOrPanelLocation);
         boardOrPanelLocation.removePropertyChangeListener(this);
+        rootPanelLocation.removeChild(boardOrPanelLocation);
         firePropertyChange("rootPanelLocation", null, rootPanelLocation);
     }
 

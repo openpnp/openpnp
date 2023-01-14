@@ -26,6 +26,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -47,10 +48,11 @@ import javax.swing.JTextArea;
 import javax.swing.ListSelectionModel;
 import javax.swing.UIManager;
 import javax.swing.border.BevelBorder;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableColumnModel;
 
 import org.openpnp.Translations;
-import org.openpnp.gui.BoardPlacementsPanel;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.MultisortTableHeaderCellRenderer;
 import org.openpnp.gui.components.AutoSelectTextTable;
@@ -62,6 +64,7 @@ import org.openpnp.gui.support.RotationCellValue;
 import org.openpnp.gui.support.TableUtils;
 import org.openpnp.gui.tablemodel.PlacementsHolderPlacementsTableModel;
 import org.openpnp.model.Abstract2DLocatable.Side;
+import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.PanelLocation;
@@ -100,6 +103,7 @@ public class ChildFiducialSelectorDialog extends JDialog {
     private List<Placement> goodPseudoPlacements;
     protected boolean showHullOnly = true;
     private Preferences prefs = Preferences.userNodeForPackage(ChildFiducialSelectorDialog.class);
+    private JButton okButton;
 
     /**
      * Create the dialog.
@@ -110,6 +114,14 @@ public class ChildFiducialSelectorDialog extends JDialog {
             ModalityType.APPLICATION_MODAL);
         this.panelLocation = panelLocation;
         
+        addWindowListener(new WindowAdapter( ) {
+
+            @Override
+            public void windowClosing(WindowEvent e) {
+                Configuration.get().getBus().unregister(tableModel);
+            }
+        });
+
         allPseudoPlacements = new ArrayList<>();
         generateAllPseudoPlacementsList(panelLocation);
 
@@ -120,11 +132,15 @@ public class ChildFiducialSelectorDialog extends JDialog {
         if (prefs.getInt(PREF_WINDOW_HEIGHT, 50) < 50) {
             prefs.putInt(PREF_WINDOW_HEIGHT, PREF_WINDOW_HEIGHT_DEF);
         }
-
         setBounds(prefs.getInt(PREF_WINDOW_X, PREF_WINDOW_X_DEF),
                 prefs.getInt(PREF_WINDOW_Y, PREF_WINDOW_Y_DEF),
                 prefs.getInt(PREF_WINDOW_WIDTH, PREF_WINDOW_WIDTH_DEF),
                 prefs.getInt(PREF_WINDOW_HEIGHT, PREF_WINDOW_HEIGHT_DEF));
+        if (prefs.getInt(PREF_WINDOW_X, Integer.MIN_VALUE) == Integer.MIN_VALUE) {
+            setLocationRelativeTo(MainFrame.get());
+            prefs.putInt(PREF_WINDOW_X, getLocation().x);
+            prefs.putInt(PREF_WINDOW_Y, getLocation().y);
+        }
         
         addComponentListener(new ComponentAdapter() {
             @Override
@@ -264,8 +280,6 @@ public class ChildFiducialSelectorDialog extends JDialog {
 
             };
             
-            tableModel.setLocalReferenceFrame(false);
-            
             childFiducialsTable = new AutoSelectTextTable(tableModel);
             childFiducialsTable.setAutoCreateRowSorter(true);
             childFiducialsTable.getTableHeader()
@@ -277,15 +291,26 @@ public class ChildFiducialSelectorDialog extends JDialog {
             childFiducialsTable.setDefaultRenderer(RotationCellValue.class, new MonospacedFontTableCellRenderer());
             childFiducialsTable.setAutoResizeMode(JTable.AUTO_RESIZE_NEXT_COLUMN);
             
-            //No need to see the Error Handling or Comments columns so remove them
-            TableColumnModel tcm = childFiducialsTable.getColumnModel();
-            tcm.removeColumn(tcm.getColumn(9)); //skip Comments column
-            tcm.removeColumn(tcm.getColumn(8)); //skip Error Handling column
-            
             TableUtils.setColumnAlignment(tableModel, childFiducialsTable);
             
             TableUtils.installColumnWidthSavers(childFiducialsTable, prefs, PREF_COLUMN_WIDTHS);
             
+            //No need to see the Error Handling or Comments columns so remove them
+            TableColumnModel tcm = childFiducialsTable.getColumnModel();
+            tcm.removeColumn(tcm.getColumn(11)); //skip Comments column
+            tcm.removeColumn(tcm.getColumn(10)); //skip Error Handling column
+            tcm.removeColumn(tcm.getColumn(9)); //skip Status column
+            tcm.removeColumn(tcm.getColumn(8)); //skip Placed column
+            
+            childFiducialsTable.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+                @Override
+                public void valueChanged(ListSelectionEvent e) {
+                    if (e.getValueIsAdjusting()) {
+                        return;
+                    }
+                    okButton.setEnabled(childFiducialsTable.getSelectedRowCount() > 0);
+                }});
+
             JScrollPane scrollPane = new JScrollPane(childFiducialsTable);
             panel.add(scrollPane, BorderLayout.CENTER);
             {
@@ -293,7 +318,7 @@ public class ChildFiducialSelectorDialog extends JDialog {
                 panel.add(buttonPane, BorderLayout.SOUTH);
                 buttonPane.setLayout(new FlowLayout(FlowLayout.RIGHT));
                 {
-                    JButton okButton = new JButton(
+                    okButton = new JButton(
                             Translations.getString("General.Ok")); //$NON-NLS-1$
                     okButton.addActionListener(new ActionListener() {
                         @Override
@@ -302,6 +327,7 @@ public class ChildFiducialSelectorDialog extends JDialog {
                         }});
                     okButton.setActionCommand(
                             Translations.getString("General.Ok")); //$NON-NLS-1$
+                    okButton.setEnabled(false);
                     buttonPane.add(okButton);
                     getRootPane().setDefaultButton(okButton);
                 }

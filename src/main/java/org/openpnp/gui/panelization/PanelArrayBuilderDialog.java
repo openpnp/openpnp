@@ -145,6 +145,7 @@ public class PanelArrayBuilderDialog extends JDialog {
         this.refresh = refresh;
         this.rootChildId  = rootChildLocation.getId();
         this.dirtyState = panelLocation.isDirty();
+        
         windowCloseListener = new WindowAdapter( ) {
 
             @Override
@@ -166,6 +167,11 @@ public class PanelArrayBuilderDialog extends JDialog {
                 prefs.getInt(PREF_WINDOW_Y, PREF_WINDOW_Y_DEF),
                 prefs.getInt(PREF_WINDOW_WIDTH, PREF_WINDOW_WIDTH_DEF),
                 prefs.getInt(PREF_WINDOW_HEIGHT, PREF_WINDOW_HEIGHT_DEF));
+        if (prefs.getInt(PREF_WINDOW_X, Integer.MIN_VALUE) == Integer.MIN_VALUE) {
+            setLocationRelativeTo(MainFrame.get());
+            prefs.putInt(PREF_WINDOW_X, getLocation().x);
+            prefs.putInt(PREF_WINDOW_Y, getLocation().y);
+        }
         
         addComponentListener(new ComponentAdapter() {
             @Override
@@ -603,7 +609,7 @@ public class PanelArrayBuilderDialog extends JDialog {
                 }
             }
             {
-                panelLayout = new PlacementsHolderLocationViewer(panelLocation, false, (a, b) -> refresh.run());
+                panelLayout = new PlacementsHolderLocationViewer(panelLocation, false);
                 panelLayout.setArrayRoot(rootChildLocation);
                 panelLayout.setShowLocations(false);
                 panelLayout.setShowReticle(false);
@@ -855,8 +861,10 @@ public class PanelArrayBuilderDialog extends JDialog {
                     int cCount = columnCount + ((i % 2) == 0 ? 0 : alternateRowColumnDelta);
                     Length rowOffset = alternateOffset.abs().multiply((i % 2) == 0 ? 0 : -alternateRowColumnDelta);
                     for (int j=0; j<cCount; j++) {
-                        if (i == 0 && j == 0 && (rowCount > 1 || cCount > 1)) {
-                            rootChildLocation.setId(String.format("%s[%d,%d]", rootChildId, i+1, j+1)); //$NON-NLS-1$
+                        if (i == 0 && j == 0 ) {
+                            if (rowCount > 1 || cCount > 1) {
+                                rootChildLocation.setId(String.format("%s[%d,%d]", rootChildId, i+1, j+1)); //$NON-NLS-1$
+                            }
                         }
                         else {
                             Location offset = new Location(systemUnit);
@@ -865,9 +873,11 @@ public class PanelArrayBuilderDialog extends JDialog {
                             PlacementsHolderLocation<?> newChildLocation = null;
                             if (rootChildLocation instanceof BoardLocation) {
                                 newChildLocation = new BoardLocation(new Board(((BoardLocation) rootChildLocation).getBoard()));
+                                ((BoardLocation) newChildLocation).setDefinition((BoardLocation) newChildLocation);
                             }
                             else if (rootChildLocation instanceof PanelLocation) {
                                 newChildLocation = new PanelLocation(new Panel(((PanelLocation) rootChildLocation).getPanel()));
+                                ((PanelLocation) newChildLocation).setDefinition((PanelLocation) newChildLocation);
                             }
                             newChildLocation.setCheckFiducials(rootChildLocation.isCheckFiducials());
                             newChildLocation.setId(String.format("%s[%d,%d]", rootChildId, i+1, j+1)); //$NON-NLS-1$

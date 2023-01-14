@@ -28,6 +28,14 @@ public class BoardPad extends AbstractModelObject {
 
     }
 
+    public BoardPad(BoardPad boardPad) {
+        this.type = boardPad.type;
+        this.side = boardPad.side;
+        this.location = boardPad.location;
+        this.name = boardPad.name;
+        this.pad = boardPad.pad;
+    }
+    
     public BoardPad(Pad pad, Location location) {
         setPad(pad);
         setLocation(location);

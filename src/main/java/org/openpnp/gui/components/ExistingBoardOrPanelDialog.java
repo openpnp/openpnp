@@ -35,6 +35,8 @@ import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 
 import org.openpnp.Translations;
 import org.openpnp.gui.MainFrame;
@@ -57,12 +59,14 @@ public class ExistingBoardOrPanelDialog extends JDialog {
     private JList existingListDisplay;
     protected Exception savedException;
     private String boardOrPanel;
+    private JButton okButton;
 
     /**
      * Create the dialog.
      */
     public ExistingBoardOrPanelDialog(Configuration configuration, Class<?> type, String title) {
         super(MainFrame.get(), title, ModalityType.APPLICATION_MODAL);
+        
         if (type == Board.class) {
             boardOrPanel = Translations.getString("ExistingBoardOrPanelDialog.boardOrPanel.Board"); //$NON-NLS-1$
             for (Board board : configuration.getBoards()) {
@@ -80,6 +84,8 @@ public class ExistingBoardOrPanelDialog extends JDialog {
         }
         fileExtension = "." + boardOrPanel + ".xml"; //$NON-NLS-1$ //$NON-NLS-2$
         setBounds(100, 100, 600, 400);
+        setLocationRelativeTo(MainFrame.get());
+
         getContentPane().setLayout(new BorderLayout());
         contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
         getContentPane().add(contentPanel, BorderLayout.CENTER);
@@ -96,6 +102,14 @@ public class ExistingBoardOrPanelDialog extends JDialog {
             existingListDisplay.setVisibleRowCount(8);
             existingListDisplay.setBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
             existingListDisplay.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+            existingListDisplay.addListSelectionListener(new ListSelectionListener() {
+                @Override
+                public void valueChanged(ListSelectionEvent e) {
+                    if (e.getValueIsAdjusting()) {
+                        return;
+                    }
+                    okButton.setEnabled(existingListDisplay.getSelectedValue() != null);
+                }});
             JScrollPane scrollPane = new JScrollPane(existingListDisplay);
             contentPanel.add(scrollPane, BorderLayout.CENTER);
         }
@@ -104,7 +118,7 @@ public class ExistingBoardOrPanelDialog extends JDialog {
             buttonPane.setLayout(new FlowLayout(FlowLayout.RIGHT));
             getContentPane().add(buttonPane, BorderLayout.SOUTH);
             {
-                JButton okButton = new JButton(
+                okButton = new JButton(
                         Translations.getString("ExistingBoardOrPanelDialog.Button.Ok")); //$NON-NLS-1$
                 okButton.addActionListener(new ActionListener() {
 
@@ -113,6 +127,7 @@ public class ExistingBoardOrPanelDialog extends JDialog {
                         file = (File) existingListDisplay.getSelectedValue();
                         close();
                     }});
+                okButton.setEnabled(false);
                 buttonPane.add(okButton);
                 getRootPane().setDefaultButton(okButton);
             }
@@ -125,6 +140,7 @@ public class ExistingBoardOrPanelDialog extends JDialog {
                     public void actionPerformed(ActionEvent e) {
                         close();
                         FileDialog fileDialog = new FileDialog(MainFrame.get());
+                        fileDialog.setLocationRelativeTo(MainFrame.get());
                         fileDialog.setTitle(getTitle());
                         fileDialog.setFilenameFilter(new FilenameFilter() {
                             @Override

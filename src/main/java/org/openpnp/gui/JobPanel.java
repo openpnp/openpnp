@@ -74,6 +74,7 @@ import org.openpnp.events.DefinitionStructureChangedEvent;
 import org.openpnp.events.PlacementsHolderLocationSelectedEvent;
 import org.openpnp.events.JobLoadedEvent;
 import org.openpnp.events.PlacementSelectedEvent;
+import org.openpnp.events.PlacementsHolderLocationChangedEvent;
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.components.ExistingBoardOrPanelDialog;
 import org.openpnp.gui.processes.MultiPlacementBoardLocationProcess;
@@ -252,14 +253,6 @@ public class JobPanel extends JPanel {
             public void tableChanged(TableModelEvent e) {
                 SwingUtilities.invokeLater(() -> {
                     jobPlacementsPanel.refresh();
-                    if (jobViewer != null) {
-                        if (e.getColumn() == TableModelEvent.ALL_COLUMNS) {
-                            jobViewer.regenerate();
-                        }
-                        else {
-                            jobViewer.refresh();
-                        }
-                    }
                 });
             }
         });
@@ -503,7 +496,7 @@ public class JobPanel extends JPanel {
 
     @Subscribe
     public void placementsHolderLocationSelected(PlacementsHolderLocationSelectedEvent event) {
-        if (event.source == this) {
+        if (event.source == this || event.source == jobTableModel) {
             return;
         }
         SwingUtilities.invokeLater(() -> {
@@ -523,9 +516,6 @@ public class JobPanel extends JPanel {
                 });
                 break;
             }
-        }
-        if (jobViewer != null) {
-            jobViewer.regenerate();
         }
         job.getRootPanelLocation().dump("");  //$NON-NLS-1$
     }
@@ -553,20 +543,20 @@ public class JobPanel extends JPanel {
         if (this.job != null) {
             this.job.removePropertyChangeListener("dirty", titlePropertyChangeListener); //$NON-NLS-1$
             this.job.removePropertyChangeListener("file", titlePropertyChangeListener); //$NON-NLS-1$
-            for (PlacementsHolderLocation<?> child : this.job.getBoardAndPanelLocations()) {
-                child.removePropertyChangeListener(this.job);
-            }
+//            for (PlacementsHolderLocation<?> child : this.job.getBoardAndPanelLocations()) {
+//                child.removePropertyChangeListener(this.job);
+//            }
         }
         this.job = job;
-        for (PlacementsHolderLocation<?> child : this.job.getBoardAndPanelLocations()) {
-            child.addPropertyChangeListener(this.job);
-        }
+//        for (PlacementsHolderLocation<?> child : this.job.getBoardAndPanelLocations()) {
+//            child.addPropertyChangeListener(this.job);
+//        }
         jobTableModel.setJob(job);
         job.addPropertyChangeListener("dirty", titlePropertyChangeListener); //$NON-NLS-1$
         job.addPropertyChangeListener("file", titlePropertyChangeListener); //$NON-NLS-1$
         updateTitle();
         updateJobActions();
-        getJobPlacementsPanel().updateActivePlacements();
+        jobPlacementsPanel.updateActivePlacements();
         if (jobViewer != null) {
             jobViewer.setPlacementsHolder(job.getRootPanelLocation().getPlacementsHolder());
         }
@@ -575,6 +565,10 @@ public class JobPanel extends JPanel {
 
     public JobPlacementsPanel getJobPlacementsPanel() {
         return jobPlacementsPanel;
+    }
+
+    public PlacementsHolderLocationViewerDialog getJobViewer() {
+        return jobViewer;
     }
 
     private void updateRecentJobsMenu() {
@@ -623,9 +617,6 @@ public class JobPanel extends JPanel {
 
     public void refresh() {
         jobTableModel.fireTableDataChanged();
-        if (jobViewer != null) {
-            jobViewer.refresh();
-        }
     }
 
     public void refreshSelectedRow() {
@@ -640,9 +631,6 @@ public class JobPanel extends JPanel {
             }
         }
         jobTableModel.fireTableRowsUpdated(index, endIndex-1);
-        if (jobViewer != null) {
-            jobViewer.refresh();
-        }
     }
 
     public PlacementsHolderLocation<?> getSelection() {
@@ -1141,6 +1129,7 @@ public class JobPanel extends JPanel {
                     Translations.getString("JobPanel.Action.Job.AddBoard.ExistingBoard.Dialog.Title")); //$NON-NLS-1$
             existingBoardDialog.setVisible(true);
             File file = existingBoardDialog.getFile();
+            existingBoardDialog.dispose();
             if (file == null) {
                 return;
             }
@@ -1153,7 +1142,6 @@ public class JobPanel extends JPanel {
                         Translations.getString("JobPanel.Action.Job.AddBoard.ExistingBoard.Error.ErrorBox.Title"),  //$NON-NLS-1$
                         e.getMessage());
             }
-            jobTableModel.fireTableDataChanged();
 
             Helpers.selectLastTableRow(jobTable);
         }
@@ -1166,6 +1154,7 @@ public class JobPanel extends JPanel {
         job.getRootPanelLocation().dump(""); //$NON-NLS-1$
         // TODO: Move to a list property listener.
         jobTableModel.fireTableDataChanged();
+        Configuration.get().getBus().post(new PlacementsHolderLocationChangedEvent(boardLocation, "all", null, null, this));
     }
     
     public final Action addNewPanelAction = new AbstractAction() {
@@ -1227,6 +1216,7 @@ public class JobPanel extends JPanel {
                     Translations.getString("JobPanel.Action.Job.AddBoard.ExitingPanel.Dialog.Title")); //$NON-NLS-1$
             existingPanelDialog.setVisible(true);
             File file = existingPanelDialog.getFile();
+            existingPanelDialog.dispose();
             if (file == null) {
                 return;
             }
@@ -1235,6 +1225,11 @@ public class JobPanel extends JPanel {
             job.addBoardOrPanelLocation(panelLocation);
             try {
                 configuration.resolvePanel(job, panelLocation);
+                jobTableModel.fireTableDataChanged();
+                Configuration.get().getBus().post(new PlacementsHolderLocationChangedEvent(panelLocation, "side", null, null, this)); //$NON-NLS-1$
+
+                Helpers.selectObjectTableRow(jobTable, panelLocation);
+                job.getRootPanelLocation().dump(""); //$NON-NLS-1$
             }
             catch (Exception e) {
                 job.removeBoardOrPanelLocation(panelLocation);
@@ -1243,10 +1238,6 @@ public class JobPanel extends JPanel {
                         Translations.getString("JobPanel.Action.Job.AddBoard.ExistingPanel.Error.ErrorBox.Title"),  //$NON-NLS-1$
                         e.getMessage());
             }
-            jobTableModel.fireTableDataChanged();
-
-            Helpers.selectObjectTableRow(jobTable, panelLocation);
-            job.getRootPanelLocation().dump(""); //$NON-NLS-1$
         }
     };
 
@@ -1264,6 +1255,7 @@ public class JobPanel extends JPanel {
                 job.removeBoardOrPanelLocation(selection);
             }
             jobTableModel.fireTableDataChanged();
+            Configuration.get().getBus().post(new DefinitionStructureChangedEvent(job.getRootPanelLocation().getPanel(), "children", this));
         }
     };
 
@@ -1451,10 +1443,7 @@ public class JobPanel extends JPanel {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             if (jobViewer == null) {
-                jobViewer = new PlacementsHolderLocationViewerDialog(
-                        job.getRootPanelLocation(), true,
-                        (phl, colName) -> jobTableModel.fireDecendantsCellUpdated(
-                                (PlacementsHolderLocation<?>) phl, jobTableModel.getColumnIndex(colName)));
+                jobViewer = new PlacementsHolderLocationViewerDialog(job.getRootPanelLocation(), true);
                 jobViewer.addWindowListener(new WindowAdapter() {
                     @Override
                     public void windowClosing(WindowEvent e) {
@@ -1486,7 +1475,7 @@ public class JobPanel extends JPanel {
 
         public SetEnabledAction(Boolean value) {
             this.value = value;
-            String name = enabled ? 
+            String name = value ? 
                     Translations.getString("General.Enabled") :  //$NON-NLS-1$
                     Translations.getString("General.Disabled"); //$NON-NLS-1$
             putValue(NAME, name);
@@ -1500,13 +1489,11 @@ public class JobPanel extends JPanel {
             for (PlacementsHolderLocation<?> bl : selections) {
                 if (bl.isParentBranchEnabled()) {
                     bl.setLocallyEnabled(value);
+                    jobTableModel.fireTableCellDecendantsUpdated(bl, 
+                            Translations.getString("PlacementsHolderLocationsTableModel.ColumnName.Enabled")); //$NON-NLS-1$
                 }
             }
-            refresh();
             Helpers.selectObjectTableRows(jobTable, selections);
-            if (jobViewer != null) {
-                jobViewer.refresh();
-            }
         }
     };
 
@@ -1534,9 +1521,13 @@ public class JobPanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            for (PlacementsHolderLocation<?> bl : getSelections()) {
+            List<PlacementsHolderLocation<?>> selections = getSelections();
+            for (PlacementsHolderLocation<?> bl : selections) {
                 bl.setCheckFiducials(value);
+                jobTableModel.fireTableCellUpdated(bl,
+                        Translations.getString("PlacementsHolderLocationsTableModel.ColumnName.CheckFids")); //$NON-NLS-1$
             }
+            Helpers.selectObjectTableRows(jobTable, selections);
         }
     };
     
@@ -1582,13 +1573,11 @@ public class JobPanel extends JPanel {
                         }
                         bl.setLocalToParentTransform(null);
                     }
-                    jobTableModel.fireDecendantsUpdated(bl);
+                    jobTableModel.fireTableCellDecendantsUpdated(bl, TableModelEvent.ALL_COLUMNS );
                 }
             }
             jobPlacementsPanel.refresh();
-            if (jobViewer != null) {
-                jobViewer.regenerate();
-            }
+            Helpers.selectObjectTableRows(jobTable, selections);
         }
     };
     

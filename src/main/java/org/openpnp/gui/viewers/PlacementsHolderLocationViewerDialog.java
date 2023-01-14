@@ -19,11 +19,11 @@
 
 package org.openpnp.gui.viewers;
 
+import java.awt.Rectangle;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.util.function.BiConsumer;
 import java.util.prefs.Preferences;
 
 import javax.swing.JFrame;
@@ -31,8 +31,8 @@ import javax.swing.SwingUtilities;
 
 import org.openpnp.Translations;
 import org.openpnp.gui.MainFrame;
-import org.openpnp.gui.panelization.PanelArrayBuilderDialog;
 import org.openpnp.model.Board;
+import org.openpnp.model.Panel;
 import org.openpnp.model.PlacementsHolder;
 import org.openpnp.model.PlacementsHolderLocation;
 
@@ -56,8 +56,7 @@ public class PlacementsHolderLocationViewerDialog extends JFrame {
     /**
      * Create the frame.
      */
-    public PlacementsHolderLocationViewerDialog(PlacementsHolderLocation<?> placementsHolderLocation, 
-            boolean isJob, BiConsumer<PlacementsHolderLocation<?>, String> refreshTableModel) {
+    public PlacementsHolderLocationViewerDialog(PlacementsHolderLocation<?> placementsHolderLocation, boolean isJob) {
         this.isJob = isJob;
         
         setTitle(placementsHolderLocation.getPlacementsHolder());
@@ -70,6 +69,14 @@ public class PlacementsHolderLocationViewerDialog extends JFrame {
             prefs.putInt(PREF_WINDOW_HEIGHT + prefsSuffix, PREF_WINDOW_HEIGHT_DEF);
         }
 
+        if (prefs.getInt(PREF_WINDOW_X + prefsSuffix, Integer.MIN_VALUE) == Integer.MIN_VALUE) {
+            Rectangle mfBounds = MainFrame.get().getBounds();
+            prefs.putInt(PREF_WINDOW_X + prefsSuffix, 
+                    mfBounds.x + (mfBounds.width - PREF_WINDOW_WIDTH_DEF)/2);
+            prefs.putInt(PREF_WINDOW_Y + prefsSuffix, 
+                    mfBounds.y + (mfBounds.height - PREF_WINDOW_HEIGHT_DEF)/2);
+        }
+        
         setBounds(prefs.getInt(PREF_WINDOW_X + prefsSuffix, PREF_WINDOW_X_DEF),
                 prefs.getInt(PREF_WINDOW_Y + prefsSuffix, PREF_WINDOW_Y_DEF),
                 prefs.getInt(PREF_WINDOW_WIDTH + prefsSuffix, PREF_WINDOW_WIDTH_DEF),
@@ -97,8 +104,7 @@ public class PlacementsHolderLocationViewerDialog extends JFrame {
             }
         });
 
-        contentPane = new PlacementsHolderLocationViewer(placementsHolderLocation, isJob, 
-                refreshTableModel);
+        contentPane = new PlacementsHolderLocationViewer(placementsHolderLocation, isJob);
         setContentPane(contentPane);
     }
 
@@ -110,12 +116,12 @@ public class PlacementsHolderLocationViewerDialog extends JFrame {
         }
         else if (placementsHolder instanceof Board) {
             setTitle(Translations.getString("PlacementsHolderLocationViewer.TitleType.Board") +  //$NON-NLS-1$
-                    " - " + placementsHolder.getFile().getName()); //$NON-NLS-1$
+                    " - " + placementsHolder.getName()); //$NON-NLS-1$
             prefsSuffix = ".Board"; //$NON-NLS-1$
         }
-        else {
+        else if (placementsHolder instanceof Panel) {
             setTitle(Translations.getString("PlacementsHolderLocationViewer.TitleType.Panel") +  //$NON-NLS-1$
-                    " - " + placementsHolder.getFile().getName()); //$NON-NLS-1$
+                    " - " + placementsHolder.getName()); //$NON-NLS-1$
             prefsSuffix = ".Panel"; //$NON-NLS-1$
         }
     }

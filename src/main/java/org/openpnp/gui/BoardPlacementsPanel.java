@@ -61,9 +61,8 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
-import javax.swing.event.TableModelEvent;
-import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.TableColumnModel;
 import javax.swing.table.TableRowSorter;
 
 import org.openpnp.Translations;
@@ -85,7 +84,7 @@ import org.openpnp.gui.support.PartsComboBoxModel;
 import org.openpnp.gui.support.RotationCellValue;
 import org.openpnp.gui.support.TableUtils;
 import org.openpnp.gui.tablemodel.PlacementsHolderPlacementsTableModel;
-import org.openpnp.gui.tablemodel.PlacementsTableModel.Status;
+import org.openpnp.gui.tablemodel.PlacementsHolderPlacementsTableModel.Status;
 import org.openpnp.gui.viewers.PlacementsHolderLocationViewerDialog;
 import org.openpnp.model.Abstract2DLocatable.Side;
 import org.openpnp.model.Board;
@@ -193,6 +192,11 @@ public class BoardPlacementsPanel extends JPanel {
         tableSorter = new TableRowSorter<>(tableModel);
         
         table = new AutoSelectTextTable(tableModel);
+        
+        TableColumnModel tcm = table.getColumnModel();
+        tcm.removeColumn(tcm.getColumn(9)); //remove Status column
+        tcm.removeColumn(tcm.getColumn(8)); //remove Placed column
+        
         table.setRowSorter(tableSorter);
         table.getTableHeader().setDefaultRenderer(new MultisortTableHeaderCellRenderer());
         
@@ -252,6 +256,7 @@ public class BoardPlacementsPanel extends JPanel {
                 }
             }
         });
+        
         table.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent mouseEvent) {
                 if (mouseEvent.getClickCount() != 2) {
@@ -268,6 +273,7 @@ public class BoardPlacementsPanel extends JPanel {
                 }
             }
         });
+        
         table.addKeyListener(new KeyAdapter() {
             @Override
             public void keyTyped(KeyEvent e) {
@@ -282,22 +288,6 @@ public class BoardPlacementsPanel extends JPanel {
             }
         });
         
-        table.getModel().addTableModelListener(new TableModelListener() {
-            @Override
-            public void tableChanged(TableModelEvent e) {
-                SwingUtilities.invokeLater(() -> {
-                    if (boardViewer != null) {
-                        if (e.getType() == TableModelEvent.UPDATE) {
-                            boardViewer.refresh();
-                        }
-                        else {
-                            boardViewer.regenerate();
-                        }
-                    }
-                });
-            }
-        });
-
         JPopupMenu popupMenu = new JPopupMenu();
 
         JMenu setTypeMenu = new JMenu(setTypeAction);
@@ -385,12 +375,14 @@ public class BoardPlacementsPanel extends JPanel {
     }
     
     @Subscribe
-    public void boardDefinitionStructureChanged(DefinitionStructureChangedEvent event) {
-        if (board != null && event.definition == board && event.source != this) {
-            SwingUtilities.invokeLater(() -> {
-                refresh();
-            });
+    public void placementSelectedEventHandler(PlacementSelectedEvent event) {
+        if (event.source == this || event.placementsHolderLocation == null || !(event.placementsHolderLocation.getPlacementsHolder() instanceof Board)) {
+            return;
         }
+        Placement placement = event.placement == null ? null : (Placement) event.placement.getDefinition();
+        SwingUtilities.invokeLater(() -> {
+            selectPlacement(placement);
+        });
     }
 
     private void search() {
@@ -409,14 +401,13 @@ public class BoardPlacementsPanel extends JPanel {
     public void selectPlacement(Placement placement) {
         if (placement == null) {
             table.getSelectionModel().clearSelection();
+            return;
         }
-        for (int i = 0; i < tableModel.getRowCount(); i++) {
-            if (tableModel.getRowObjectAt(i) == placement) {
-                int index = table.convertRowIndexToView(i);
-                table.getSelectionModel().setSelectionInterval(index, index);
-                table.scrollRectToVisible(new Rectangle(table.getCellRect(index, 0, true)));
-                break;
-            }
+        int index = tableModel.indexOf(placement);
+        if (index >= 0) {
+            index = table.convertRowIndexToView(index);
+            table.getSelectionModel().setSelectionInterval(index, index);
+            table.scrollRectToVisible(new Rectangle(table.getCellRect(index, 0, true)));
         }
     }
     
@@ -659,9 +650,7 @@ public class BoardPlacementsPanel extends JPanel {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             if (boardViewer == null) {
-                boardViewer = new PlacementsHolderLocationViewerDialog(
-                        new BoardLocation(board), false,
-                        (a,b) -> tableModel.fireTableDataChanged());
+                boardViewer = new PlacementsHolderLocationViewerDialog(new BoardLocation(board), false);
                 boardViewer.addWindowListener(new WindowAdapter() {
                     @Override
                     public void windowClosing(WindowEvent e) {
@@ -710,7 +699,8 @@ public class BoardPlacementsPanel extends JPanel {
         public void actionPerformed(ActionEvent arg0) {
             for (Placement placement : getSelections()) {
                 placement.setType(type);
-                tableModel.fireTableDataChanged();
+                tableModel.fireTableCellUpdated(placement, 
+                        Translations.getString("PlacementsHolderPlacementsTableModel.ColumnName.Type")); //$NON-NLS-1$
             }
         }
     };
@@ -746,7 +736,8 @@ public class BoardPlacementsPanel extends JPanel {
         public void actionPerformed(ActionEvent arg0) {
             for (Placement placement : getSelections()) {
                 placement.setSide(side);
-                tableModel.fireTableDataChanged();
+                tableModel.fireTableCellUpdated(placement, 
+                        Translations.getString("PlacementsHolderPlacementsTableModel.ColumnName.Side")); //$NON-NLS-1$
             }
         }
     };
@@ -782,7 +773,8 @@ public class BoardPlacementsPanel extends JPanel {
         public void actionPerformed(ActionEvent arg0) {
             for (Placement placement : getSelections()) {
                 placement.setErrorHandling(errorHandling);
-                tableModel.fireTableDataChanged();
+                tableModel.fireTableCellUpdated(placement, 
+                        Translations.getString("PlacementsHolderPlacementsTableModel.ColumnName.ErrorHandling")); //$NON-NLS-1$
             }
         }
     };
@@ -815,7 +807,8 @@ public class BoardPlacementsPanel extends JPanel {
         public void actionPerformed(ActionEvent arg0) {
             for (Placement placement : getSelections()) {
                 placement.setEnabled(enabled);
-                tableModel.fireTableDataChanged();   
+                tableModel.fireTableCellUpdated(placement, 
+                        Translations.getString("PlacementsHolderPlacementsTableModel.ColumnName.Enabled")); //$NON-NLS-1$
             }
         }
     };

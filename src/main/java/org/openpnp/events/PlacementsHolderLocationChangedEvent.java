@@ -19,27 +19,21 @@
 
 package org.openpnp.events;
 
-import org.openpnp.model.Placement;
 import org.openpnp.model.PlacementsHolderLocation;
 
-public class PlacementSelectedEvent {
-    final public Placement placement;
+public class PlacementsHolderLocationChangedEvent {
     final public PlacementsHolderLocation<?> placementsHolderLocation;
     final public Object source;
+    final public String propertyName;
+    final public Object oldValue;
+    final public Object newValue;
     
-    public PlacementSelectedEvent(Placement placement, PlacementsHolderLocation<?> placementsHolderLocation, Object source) {
-        this.placement = placement;
+    public PlacementsHolderLocationChangedEvent(PlacementsHolderLocation<?> placementsHolderLocation, 
+            String propertyName, Object oldValue, Object newValue, Object source) {
         this.placementsHolderLocation = placementsHolderLocation;
+        this.propertyName = propertyName;
+        this.oldValue = oldValue;
+        this.newValue = newValue;
         this.source = source;
     }
-    
-    public PlacementSelectedEvent(Placement placement, PlacementsHolderLocation<?> placementsHolderLocation) {
-        this(placement, placementsHolderLocation, null);
-    }
-    
-    public PlacementSelectedEvent(Placement placement) {
-        this(placement, null);
-    }
-    
-    
 }

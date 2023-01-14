@@ -998,6 +998,8 @@ public class Configuration extends AbstractModelObject {
         job.setFile(file);
         convertLegacyJob(job);
         
+        job.rootPanelLocation.setPlacementsHolder(job.rootPanel);
+        
         resolvePanel(job, job.getRootPanelLocation());
         restoreJobEnabledAndErrorHandlingSettings(job, job.getRootPanelLocation());
         
@@ -1068,7 +1070,8 @@ public class Configuration extends AbstractModelObject {
                     null, null));
 
             //The panel fiducials for the bottom side need to moved to the bottom side and have
-            //their coordinates adjusted
+            //their coordinates adjusted (legacy panelization only had fiducials on the top side of
+            //the panel regardless of which way the boards were facing).
             if (rootBoardLocation.getGlobalSide() == Side.Bottom) {
                 for (Placement fiducial : panel.getPlacements()) {
                     Location loc = fiducial.getLocation();
@@ -1083,7 +1086,7 @@ public class Configuration extends AbstractModelObject {
             
             for (int j = 0; j < panel.rows; j++) {
                 for (int i = 0; i < panel.columns; i++) {
-                    // deep copy the existing rootPcb
+                    // deep copy the existing root board
                     BoardLocation newPcb = new BoardLocation(rootBoardLocation);
                     newPcb.setParent(null);
                     newPcb.setDefinition(newPcb);
@@ -1125,8 +1128,7 @@ public class Configuration extends AbstractModelObject {
             panelLocation.setGlobalSide(rootBoardLocation.getGlobalSide());
             panelLocation.setCheckFiducials(savedCheckFids);
             job.rootPanel.addChild(panelLocation);
-            Logger.info("The job file has been updated to use the new panel file.")
-            ;
+            Logger.info("The job file has been updated to use the new panel file.");
             job.dirty = true;
             job.panels = null;
             job.boardLocations = null;
@@ -1136,6 +1138,7 @@ public class Configuration extends AbstractModelObject {
             backupLegacyJob(job);
             //Add board locations to the root panel
             for (BoardLocation boardLocation : job.boardLocations) {
+                boardLocation.setParent(job.rootPanelLocation);
                 job.rootPanel.addChild(boardLocation);
                 
                 //Move the deprecated placement status from the boardLocation to the job
@@ -1150,8 +1153,6 @@ public class Configuration extends AbstractModelObject {
             job.panels = null;
             job.boardLocations = null;
         }
-        
-        job.rootPanelLocation.setPlacementsHolder(job.rootPanel);
     }
     
     /**
@@ -1166,7 +1167,7 @@ public class Configuration extends AbstractModelObject {
         File backupFile = new File(file.getParentFile(), backupFileName);
         Files.copy(Paths.get(file.toURI()), Paths.get(backupFile.toURI()), 
                 StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.COPY_ATTRIBUTES);
-        Logger.info("A backup of the legacy job file has been copied here: " + backupFile.getCanonicalPath());
+        Logger.info("A backup of the legacy job file has been copied to: " + backupFile.getCanonicalPath());
     }
     
     /**
@@ -1400,6 +1401,9 @@ public class Configuration extends AbstractModelObject {
         panel.setFile(file);
         for (PlacementsHolderLocation<?> child : panel.getChildren()) {
             File childFile = new File(child.getFileName());
+            if (!childFile.exists()) {
+                childFile = new File(file.getParentFile(), childFile.getName());
+            }
             if (childFile.exists()) {
                 if (child instanceof BoardLocation) {
                     child.setPlacementsHolder(new Board(getBoard(childFile)));

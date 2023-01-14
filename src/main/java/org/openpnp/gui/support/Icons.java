@@ -51,6 +51,7 @@ public class Icons {
     public static Icon useChildFiducial = getIcon("/icons/panelize_use_board_fiducial.svg");
     public static Icon board = getIcon("/icons/board.svg");
     public static Icon panel = getIcon("/icons/panel.svg");
+    public static Icon clean = getIcon("/icons/clean-sweep.svg");
 
     public static Icon feed = getIcon("/icons/feeder-feed.svg");
     public static Icon pick = getIcon("/icons/pick.svg");

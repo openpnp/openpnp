@@ -26,7 +26,6 @@ import java.lang.reflect.InvocationTargetException;
 
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.beanutils.PropertyUtils;
-import org.pmw.tinylog.Logger;
 
 /**
  * An interface used to indicate a one-way relationship of one object (the definition) to one or
@@ -91,7 +90,7 @@ public interface Definable<T> extends PropertyChangeListener {
     /**
      * This method is called when bound properties are changed. It updates the properties of
      * all objects that are defined by this object. It also marks this object as being modified
-     * whenever one or more of its properties change value. 
+     * whenever one or more of its bound properties change value. 
      */
     @Override
     public default void propertyChange(PropertyChangeEvent evt) {

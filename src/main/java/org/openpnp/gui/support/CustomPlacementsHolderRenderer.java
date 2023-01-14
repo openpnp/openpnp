@@ -27,9 +27,7 @@ import javax.swing.table.TableCellRenderer;
 
 import org.openpnp.gui.tablemodel.PlacementsHolderLocationsTableModel;
 import org.openpnp.model.BoardLocation;
-import org.openpnp.model.PanelLocation;
 import org.openpnp.model.PlacementsHolderLocation;
-
 import java.awt.*;
 import java.util.Arrays;
 
@@ -61,6 +59,10 @@ public class CustomPlacementsHolderRenderer extends JLabel implements TableCellR
 
     public Component getTableCellRendererComponent(JTable table, Object value,
                                                    boolean isSelected, boolean hasFocus, int row, int column) {
+        if (table == null) {
+            return this;
+        }
+        
         Color alternateRowColor = UIManager.getColor("Table.alternateRowColor");
         if (isSelected) {
             setForeground(table.getSelectionForeground());
@@ -78,8 +80,8 @@ public class CustomPlacementsHolderRenderer extends JLabel implements TableCellR
             right.setForeground(table.getForeground());
             right.setBackground(row%2==0 ? table.getBackground() : alternateRowColor);
         }
-
-        String uniqueId = (String) value;
+        
+        String uniqueId = value == null ? "" : (String) value;
         String id = uniqueId.substring(uniqueId.lastIndexOf(PlacementsHolderLocation.ID_DELIMITTER)+1);
         int depth = 0;
         int idx = -1;
@@ -91,14 +93,15 @@ public class CustomPlacementsHolderRenderer extends JLabel implements TableCellR
         Arrays.fill(charArray, ' ');
         left.setText(new String(charArray));
         right.setText(id);
-        
-        if (((PlacementsHolderLocationsTableModel) table.getModel()).getPlacementsHolderLocation(table.convertRowIndexToModel(row)) instanceof BoardLocation) {
+            
+        if (((PlacementsHolderLocationsTableModel) table.getModel()).
+                getPlacementsHolderLocation(table.convertRowIndexToModel(row)) instanceof BoardLocation) {
             right.setIcon(Icons.board);
         }
         else {
             right.setIcon(Icons.panel);
         }
-        
+
         if (hasFocus) {
             setBorder(UIManager.getBorder("Table.focusCellHighlightBorder"));
         } else {
