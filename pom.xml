@@ -419,7 +419,7 @@
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>2.22.2</version>
 				<configuration>
-					<argLine>-Xmx512m</argLine>
+					<argLine>-Xmx1024m -XX:+UnlockDiagnosticVMOptions -XX:GCLockerRetryAllocationCount=100</argLine>
 				</configuration>
 			</plugin>
 

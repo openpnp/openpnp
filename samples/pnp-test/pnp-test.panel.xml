@@ -1,0 +1,38 @@
+<openpnp-panel name="pnp-test.panel.xml" version="2.0">
+   <dimensions units="Millimeters" x="71.016" y="64.336" z="0.0" rotation="0.0"/>
+   <placements>
+      <placement version="1.4" side="Top" id="Fid1" part-id="FIDUCIAL-1X2-FIDUCIAL1X2" type="Fiducial" enabled="true">
+         <location units="Millimeters" x="1.234" y="1.505" z="0.0" rotation="0.0"/>
+         <error-handling>Alert</error-handling>
+      </placement>
+      <placement version="1.4" side="Top" id="Fid2" part-id="FIDUCIAL-1X2-FIDUCIAL1X2" type="Fiducial" enabled="true">
+         <location units="Millimeters" x="69.726" y="1.369" z="0.0" rotation="0.0"/>
+         <error-handling>Alert</error-handling>
+      </placement>
+      <placement version="1.4" side="Top" id="Fid3" part-id="FIDUCIAL-1X2-FIDUCIAL1X2" type="Fiducial" enabled="true">
+         <location units="Millimeters" x="69.911" y="62.96" z="0.0" rotation="0.0"/>
+         <error-handling>Alert</error-handling>
+      </placement>
+      <placement version="1.4" side="Top" id="Fid4" part-id="FIDUCIAL-1X2-FIDUCIAL1X2" type="Fiducial" enabled="true">
+         <location units="Millimeters" x="1.199" y="62.619" z="0.0" rotation="0.0"/>
+         <error-handling>Alert</error-handling>
+      </placement>
+   </placements>
+   <children>
+      <object class="org.openpnp.model.BoardLocation" side="Top" id="Brd1" file-name="C:\Users\Tony\git\openpnp\samples\pnp-test\pnp-test.board.xml" check-fiducials="true" locally-enabled="true">
+         <location units="Millimeters" x="2.984" y="3.2365" z="0.0" rotation="0.0"/>
+      </object>
+      <object class="org.openpnp.model.BoardLocation" side="Top" id="Brd2" file-name="C:\Users\Tony\git\openpnp\samples\pnp-test\pnp-test.board.xml" check-fiducials="true" locally-enabled="true">
+         <location units="Millimeters" x="3.003" y="32.861" z="0.0" rotation="0.0"/>
+      </object>
+      <object class="org.openpnp.model.BoardLocation" side="Bottom" id="Brd3" file-name="C:\Users\Tony\git\openpnp\samples\pnp-test\pnp-test.board.xml" check-fiducials="true" locally-enabled="true">
+         <location units="Millimeters" x="41.191" y="50.4845" z="0.0" rotation="-90.0"/>
+      </object>
+   </children>
+   <pseudo-placement-ids>
+      <string>Brd1⇒FID4</string>
+      <string>Brd1⇒FID6</string>
+      <string>Brd2⇒FID5</string>
+      <string>Brd3⇒FID2</string>
+   </pseudo-placement-ids>
+</openpnp-panel>
