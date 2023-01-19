@@ -4,7 +4,7 @@ The first thing to realize, is that _only_ the nozzle rotation between the momen
 
 The **Rotation Mode** can now exploit these facts and optimize the way a nozzle rotates between the pick and place. This can serve the following purposes:
 
-1. Support machines that have nozzles with restricted angular articulation, i.e. that cannot articulate the full 360°. Machines with a bit more than 180° are now supported, by exploiting the available _relative_ rotation between pick and placement. 
+1. Support machines that have nozzles with restricted angular articulation, i.e. that cannot articulate the full 360°. Machines with a bit more than 180° are supported by exploiting the available _relative_ rotation between pick and placement. 
 
     ![rotation-mode](https://user-images.githubusercontent.com/9963310/137022424-6ec3ce82-5983-4ef8-b0e7-890bb6c00898.png)
 
