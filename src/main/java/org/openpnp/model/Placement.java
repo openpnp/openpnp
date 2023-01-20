@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Jason von Nieda <jason@vonnieda.org>, Tony Luken <tonyluken62+openpnp@gmail.com>
+ * Copyright (C) 2023 Jason von Nieda <jason@vonnieda.org>, Tony Luken <tonyluken62+openpnp@gmail.com>
  * 
  * This file is part of OpenPnP.
  * 
@@ -175,7 +175,7 @@ public class Placement extends Abstract2DLocatable<Placement> {
 
     @Override
     public String toString() {
-        return String.format("Placement %s, location=%s, side=%s, part=%s, type=%s", id, getLocation(), side,
-                part, type);
+        return String.format("Placement %s @%08x, location=%s, side=%s, part=%s, type=%s", id, 
+                this.hashCode(), getLocation(), side, part, type);
     }
 }

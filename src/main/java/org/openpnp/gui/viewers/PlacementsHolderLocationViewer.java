@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Jason von Nieda <jason@vonnieda.org>, Tony Luken <tonyluken62+openpnp@gmail.com>
+ * Copyright (C) 2023 Jason von Nieda <jason@vonnieda.org>, Tony Luken <tonyluken62+openpnp@gmail.com>
  * 
  * This file is part of OpenPnP.
  * 
@@ -121,10 +121,10 @@ public class PlacementsHolderLocationViewer extends JPanel implements PropertyCh
     private static final int SCALE_TICK_LENGTH = 5;
 
     private Color reticleColor = new Color(255, 255, 255, 128);
-    private Color maskColor = new Color(29, 1, 43, 230);
+    private Color maskColor = new Color(29, 1, 43, 230); //OSHPARK dark purple solder mask
     private Color substrateColor = Color.GRAY;
     private Color copperColor = new Color(232, 153, 97);//E89961
-    private Color legendColor = new Color(249, 247, 250);
+    private Color legendColor = new Color(249, 247, 250); //Silkscreen
     private Color transparentColor = new Color(255, 255, 255, 0);
     private Color profileTopColor = new Color(0, 144, 144);  //Teal for Top
     private Color profileBottomColor = new Color(10, 10, 255); //Blue for Bottom
@@ -831,7 +831,11 @@ public class PlacementsHolderLocationViewer extends JPanel implements PropertyCh
             else {
                 graphicsBounds.add(profile.getBounds2D());
             }
-            for (Placement placement : placementsHolderLocation.getPlacementsHolder().getPlacements()) {
+            List<Placement> placements = new ArrayList<>(placementsHolderLocation.getPlacementsHolder().getPlacements());
+            if (placementsHolderLocation instanceof PanelLocation) {
+                placements.addAll(((PanelLocation) placementsHolderLocation).getPanel().getPseudoPlacements()); 
+            }
+            for (Placement placement : placements) {
                 Location loc = Utils2D.calculateBoardPlacementLocation(placementsHolderLocation, placement).
                         convertToUnits(units);
                 graphicsBounds.add(new Point2D.Double(loc.getX(), loc.getY()));
@@ -895,7 +899,11 @@ public class PlacementsHolderLocationViewer extends JPanel implements PropertyCh
                     if (showPlacements || showFiducials) {
                         offScr.setStroke(new BasicStroke(2, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_ROUND));
                         PlacementsHolder<?> ph = phl.getPlacementsHolder();
-                        for (Placement placement : ph.getPlacements()) {
+                        List<Placement> placements = new ArrayList<>(ph.getPlacements());
+                        if (phl instanceof PanelLocation) {
+                            placements.addAll(((PanelLocation) phl).getPanel().getPseudoPlacements()); 
+                        }
+                        for (Placement placement : placements) {
                             if ((viewFromTop && placement.getSide() == phl.getGlobalSide()) ||
                                     (!viewFromTop && placement.getSide() != phl.getGlobalSide())) {
                                 if (showPlacements && placement.getType() == Placement.Type.Placement) {
@@ -1049,7 +1057,11 @@ public class PlacementsHolderLocationViewer extends JPanel implements PropertyCh
         offScr.setStroke(new BasicStroke(1, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_ROUND));
         for (Area profileArea : profileMap.keySet()) {
             PlacementsHolderLocation<?> placementsHolderLocation = profileMap.get(profileArea);
-            for (Placement placement : placementsHolderLocation.getPlacementsHolder().getPlacements()) {
+            List<Placement> placements = new ArrayList<>(placementsHolderLocation.getPlacementsHolder().getPlacements());
+            if (placementsHolderLocation instanceof PanelLocation) {
+                placements.addAll(((PanelLocation) placementsHolderLocation).getPanel().getPseudoPlacements()); 
+            }
+            for (Placement placement : placements) {
                 if (placement.getType() == Placement.Type.Placement && 
                         ((viewFromTop && placement.getSide() == placementsHolderLocation.getGlobalSide()) || 
                         (!viewFromTop && placement.getSide() != placementsHolderLocation.getGlobalSide()))) {
@@ -1065,7 +1077,11 @@ public class PlacementsHolderLocationViewer extends JPanel implements PropertyCh
         double d = EDGE_GAP/(2.0*scaleFactor);
         for (Area profileArea : profileMap.keySet()) {
             PlacementsHolderLocation<?> placementsHolderLocation = profileMap.get(profileArea);
-            for (Placement placement : placementsHolderLocation.getPlacementsHolder().getPlacements()) {
+            List<Placement> placements = new ArrayList<>(placementsHolderLocation.getPlacementsHolder().getPlacements());
+            if (placementsHolderLocation instanceof PanelLocation) {
+                placements.addAll(((PanelLocation) placementsHolderLocation).getPanel().getPseudoPlacements()); 
+            }
+            for (Placement placement : placements) {
                 if (placement.getType() == Placement.Type.Fiducial && 
                         ((viewFromTop && placement.getSide() == placementsHolderLocation.getGlobalSide()) || 
                         (!viewFromTop && placement.getSide() != placementsHolderLocation.getGlobalSide()))) {

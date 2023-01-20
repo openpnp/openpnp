@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
+ * Copyright (C) 2023 Jason von Nieda <jason@vonnieda.org>, Tony Luken <tonyluken62+openpnp@gmail.com>
  * 
  * This file is part of OpenPnP.
  * 
@@ -762,6 +762,10 @@ public class Utils2D {
      */
     public static double polygonArea(List<Point> vertices)
     {
+        if (vertices.size() < 3) {
+            return 0;
+        }
+        
         // Initialize area
         double area = 0;
         

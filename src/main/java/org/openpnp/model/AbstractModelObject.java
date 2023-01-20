@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
+ * Copyright (C) 2023 Jason von Nieda <jason@vonnieda.org>, Tony Luken <tonyluken62+openpnp@gmail.com>
  * 
  * This file is part of OpenPnP.
  * 
@@ -51,12 +51,17 @@ public abstract class AbstractModelObject {
        for (PropertyChangeListener listener : propertyChangeSupport.getPropertyChangeListeners()) {
            if (listener instanceof PropertyChangeListenerProxy) {
                PropertyChangeListenerProxy proxy = (PropertyChangeListenerProxy) listener;
-               Logger.warn(String.format("During disposal of %s @%08x - removed listener: %s @%08x", this.getClass().getSimpleName(), this.hashCode(), proxy.getListener(), proxy.getListener().hashCode()));
+               Logger.warn(String.format("During disposal of %s @%08x - removed listener: %s @%08x", 
+                       this.getClass().getSimpleName(), this.hashCode(), proxy.getListener(), 
+                       proxy.getListener().hashCode()));
+               propertyChangeSupport.removePropertyChangeListener(proxy.getPropertyName(), 
+                       proxy.getListener());
            }
            else {
-               Logger.warn(String.format("During disposal of %s @%08x - removed listener: %s @%08x", this.getClass().getSimpleName(), this.hashCode(), listener, listener.hashCode()));
+               Logger.warn(String.format("During disposal of %s @%08x - removed listener: %s @%08x", 
+                       this.getClass().getSimpleName(), this.hashCode(), listener, listener.hashCode()));
+               propertyChangeSupport.removePropertyChangeListener(listener);
            }
-           propertyChangeSupport.removePropertyChangeListener(listener);
         }
     }
     
@@ -68,7 +73,8 @@ public abstract class AbstractModelObject {
         for (PropertyChangeListener listener : propertyChangeSupport.getPropertyChangeListeners()) {
             if (listener instanceof PropertyChangeListenerProxy) {
                 PropertyChangeListenerProxy proxy = (PropertyChangeListenerProxy) listener;
-                Logger.trace(String.format("    +-- prop:%s %s @%08x", proxy.getPropertyName(), proxy.getListener(), proxy.getListener().hashCode()));
+                Logger.trace(String.format("    +-- prop:%s %s @%08x", proxy.getPropertyName(), 
+                        proxy.getListener(), proxy.getListener().hashCode()));
             }
             else {
                 Logger.trace(String.format("    +-- %s @%08x", listener, listener.hashCode()));

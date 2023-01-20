@@ -1,7 +1,9 @@
 package org.openpnp.gui.components;
 
 import java.awt.Component;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
+import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -10,7 +12,9 @@ import java.util.EventObject;
 import java.util.List;
 import java.util.Vector;
 
+import javax.swing.InputMap;
 import javax.swing.JTable;
+import javax.swing.KeyStroke;
 import javax.swing.ListSelectionModel;
 import javax.swing.RowSorter;
 import javax.swing.RowSorter.SortKey;
@@ -84,6 +88,12 @@ public class AutoSelectTextTable extends JTable {
      */
     public AutoSelectTextTable(TableModel dm, TableColumnModel cm, ListSelectionModel sm) {
         super(dm, cm, sm);
+        
+        //Add a keystroke to de-select all rows of the table (in Windows this would be Ctrl-Shift-A)
+        InputMap im = getInputMap(JTable.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+        final int CMD_BTN = Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx();
+        im.put(KeyStroke.getKeyStroke(KeyEvent.VK_A, InputEvent.SHIFT_DOWN_MASK | CMD_BTN),
+                "clearSelection" );
     }
 
     /**

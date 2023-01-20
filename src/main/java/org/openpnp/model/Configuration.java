@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
+ * Copyright (C) 2023 Jason von Nieda <jason@vonnieda.org>, Tony Luken <tonyluken62+openpnp@gmail.com>
  * 
  * This file is part of OpenPnP.
  * 
@@ -720,6 +720,7 @@ public class Configuration extends AbstractModelObject {
         LinkedHashMap<File, Panel> oldValue = new LinkedHashMap<>(panels);
         panels.remove(panel.getFile());
         firePropertyChange("panels", oldValue, panels);
+        panel.dispose();
     }
     
     /**
@@ -786,6 +787,7 @@ public class Configuration extends AbstractModelObject {
         LinkedHashMap<File, Board> oldValue = new LinkedHashMap<>(boards);
         boards.remove(board.getFile());
         firePropertyChange("boards", oldValue, boards);
+        board.dispose();
     }
     
     /**
@@ -1242,13 +1244,11 @@ public class Configuration extends AbstractModelObject {
             if (child instanceof PanelLocation) {
                 PanelLocation childPanelLocation = (PanelLocation) child;
                 childPanelLocation.setParent(panelLocation);
-                childPanelLocation.getDefinition().addPropertyChangeListener(childPanelLocation);
                 resolvePanel(job, childPanelLocation);
             }
             else if (child instanceof BoardLocation) {
                 BoardLocation boardLocation = (BoardLocation) child;
                 boardLocation.setParent(panelLocation);
-                boardLocation.getDefinition().addPropertyChangeListener(boardLocation);
                 resolveBoard(job, boardLocation);
             }
             else {

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Jason von Nieda <jason@vonnieda.org>, Tony Luken <tonyluken62+openpnp@gmail.com>
+ * Copyright (C) 2023 Jason von Nieda <jason@vonnieda.org>, Tony Luken <tonyluken62+openpnp@gmail.com>
  * 
  * This file is part of OpenPnP.
  * 
@@ -176,7 +176,7 @@ public class JobPlacementsPanel extends JPanel {
         
         setLayout(new BorderLayout(0, 0));
 
-        tableModel = new PlacementsHolderPlacementsTableModel() {
+        tableModel = new PlacementsHolderPlacementsTableModel(this) {
             @Override
             public boolean isCellEditable(int rowIndex, int columnIndex) {
                 return (columnIndex != 1 && columnIndex != 9) && ((topLevel && singleInstance && 
@@ -236,11 +236,13 @@ public class JobPlacementsPanel extends JPanel {
                     multiSelectionActionGroup.setEnabled(false);
                     singleSelectionActionGroup.setEnabled(getSelection() != null);
                     editFeederActionGroup.setEnabled(getSelection() != null && 
-                            getSelection().getType() == Placement.Type.Placement);
+                            getSelection().getType() == Placement.Type.Placement &&
+                            (boardOrPanelLocation instanceof BoardLocation));
                     positionActionGroup.setEnabled(getSelection() != null
                             && getSelection().getSide() == boardOrPanelLocation.getGlobalSide());
                     captureActionGroup.setEnabled(topLevel && singleInstance && getSelection() != null
-                            && getSelection().getSide() == boardOrPanelLocation.getGlobalSide());
+                            && getSelection().getSide() == boardOrPanelLocation.getGlobalSide() &&
+                            (boardOrPanelLocation instanceof BoardLocation));
                     if (updateLinkedTables) {
                         Configuration.get().getBus().post(new PlacementSelectedEvent(getSelection(),
                                 boardOrPanelLocation, JobPlacementsPanel.this));
@@ -489,7 +491,7 @@ public class JobPlacementsPanel extends JPanel {
                     1 == jobPanel.getJob().instanceCount(boardOrPanelLocation.getPlacementsHolder());
             tableModel.setPlacementsHolderLocation(boardOrPanelLocation, topLevel && singleInstance && 
                     (boardOrPanelLocation instanceof BoardLocation));
-            topLevelSingleInstanceActionGroup.setEnabled(topLevel && singleInstance);
+            topLevelSingleInstanceActionGroup.setEnabled(topLevel && singleInstance && (boardOrPanelLocation instanceof BoardLocation));
 
             updateRowFilter();
         }
@@ -581,7 +583,7 @@ public class JobPlacementsPanel extends JPanel {
                         "placements", JobPlacementsPanel.this)); //$NON-NLS-1$
             jobPanel.getJob().removePlacedStatus(boardOrPanelLocation, placement.getId());
             tableModel.fireTableDataChanged();
-            Helpers.selectLastTableRow(table);
+            Helpers.selectObjectTableRow(table, placement);
             
             updateActivePlacements();
         }

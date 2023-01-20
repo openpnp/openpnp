@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Jason von Nieda <jason@vonnieda.org>, Tony Luken <tonyluken62+openpnp@gmail.com>
+ * Copyright (C) 2023 Jason von Nieda <jason@vonnieda.org>, Tony Luken <tonyluken62+openpnp@gmail.com>
  * 
  * This file is part of OpenPnP.
  * 
@@ -145,7 +145,8 @@ public class BoardPlacementsPanel extends JPanel {
             for (ClassInfo boardImporterInfo : importerClassInfoList) {
                 BoardImporter boardImporter;
                 try {
-                    boardImporter = ((Class<? extends BoardImporter>) boardImporterInfo.loadClass()).getDeclaredConstructor().newInstance();
+                    boardImporter = ((Class<? extends BoardImporter>) boardImporterInfo.loadClass())
+                            .getDeclaredConstructor().newInstance();
                 }
                 catch (Exception e) {
                     throw new Error(e);
@@ -164,7 +165,8 @@ public class BoardPlacementsPanel extends JPanel {
     }
     
     private void createUi() {
-        setBorder(new TitledBorder(null, Translations.getString("BoardPanel.BoardPlacements.Placements"), //$NON-NLS-1$
+        setBorder(new TitledBorder(null, 
+                Translations.getString("BoardPanel.BoardPlacements.Placements"), //$NON-NLS-1$
                 TitledBorder.LEADING, TitledBorder.TOP, null, null));
         
         configuration = Configuration.get();
@@ -188,7 +190,7 @@ public class BoardPlacementsPanel extends JPanel {
         JComboBox<ErrorHandling> errorHandlingComboBox = new JComboBox<>(ErrorHandling.values());
         
         setLayout(new BorderLayout(0, 0));
-        tableModel = new PlacementsHolderPlacementsTableModel();
+        tableModel = new PlacementsHolderPlacementsTableModel(this);
         tableSorter = new TableRowSorter<>(tableModel);
         
         table = new AutoSelectTextTable(tableModel);

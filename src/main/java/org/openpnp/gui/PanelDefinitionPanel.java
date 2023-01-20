@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Jason von Nieda <jason@vonnieda.org>, Tony Luken <tonyluken62+openpnp@gmail.com>
+ * Copyright (C) 2023 Jason von Nieda <jason@vonnieda.org>, Tony Luken <tonyluken62+openpnp@gmail.com>
  * 
  * This file is part of OpenPnP.
  * 
@@ -376,7 +376,7 @@ public class PanelDefinitionPanel extends JPanel implements PropertyChangeListen
         btnUseChildFiducial.setHideActionText(true);
         toolBarFiducials.add(btnUseChildFiducial);
         
-        fiducialTableModel = new PlacementsHolderPlacementsTableModel() {
+        fiducialTableModel = new PlacementsHolderPlacementsTableModel(this) {
             @Override
             public boolean isCellEditable(int rowIndex, int columnIndex) {
                 if (!super.isCellEditable(rowIndex, columnIndex)) {
@@ -586,12 +586,13 @@ public class PanelDefinitionPanel extends JPanel implements PropertyChangeListen
             placement.setType(Placement.Type.Fiducial);
 
             panel.addPlacement(placement);
-            fiducialTableModel.fireTableDataChanged();
-            Helpers.selectObjectTableRow(fiducialTable, placement);
 
             Configuration.get().getBus()
                 .post(new DefinitionStructureChangedEvent(panel, "placements", PanelDefinitionPanel.this)); //$NON-NLS-1$
 
+            fiducialTableModel.fireTableDataChanged();
+            
+            Helpers.selectObjectTableRow(fiducialTable, placement);
         }
     };
 
@@ -849,9 +850,9 @@ public class PanelDefinitionPanel extends JPanel implements PropertyChangeListen
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            for (PlacementsHolderLocation<?> child : getChildrenSelections()) {
+            List<PlacementsHolderLocation<?>> selectedChildren = getChildrenSelections();
+            for (PlacementsHolderLocation<?> child : selectedChildren) {
                 rootPanelLocation.getPanel().getDefinition().removeChild(child);
-                child.dispose();
             }
             childrenTableModel.fireTableDataChanged();
             

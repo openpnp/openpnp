@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Jason von Nieda <jason@vonnieda.org>, Tony Luken <tonyluken62+openpnp@gmail.com>
+ * Copyright (C) 2023 Jason von Nieda <jason@vonnieda.org>, Tony Luken <tonyluken62+openpnp@gmail.com>
  * 
  * This file is part of OpenPnP.
  * 
@@ -19,6 +19,7 @@
 
 package org.openpnp.gui.tablemodel;
 
+import java.awt.Container;
 import java.util.List;
 
 import javax.swing.SwingUtilities;
@@ -112,16 +113,20 @@ public class PlacementsHolderPlacementsTableModel extends AbstractObjectTableMod
     private boolean editDefinition;
     private boolean isPanel;
     private Configuration configuration;
+
+    private Container container;
     
-    public PlacementsHolderPlacementsTableModel() {
+    public PlacementsHolderPlacementsTableModel(Container container) {
         super();
+        this.container = container;
         configuration = Configuration.get();
         configuration.getBus().register(this);
     }
     
     @Subscribe
     public void definitionStructureChangedEventHandler(DefinitionStructureChangedEvent event) {
-        if (event.source != this && placementsHolder != null && event.definition == placementsHolder) {
+        if (event.source != this && event.source != container && 
+                event.changedName.contentEquals("placements")) {
             SwingUtilities.invokeLater(() -> {
                 fireTableDataChanged();
             });
@@ -188,7 +193,13 @@ public class PlacementsHolderPlacementsTableModel extends AbstractObjectTableMod
         if (placementsHolder != null) {
             int limit = placementsHolder.getPlacements().size();
             if (isPanel && index >= limit) {
-                return ((Panel) placementsHolder).getPseudoPlacement(index - limit);
+                int idx = index - limit;
+                if (idx < ((Panel) placementsHolder).getPseudoPlacements().size()) {
+                    return ((Panel) placementsHolder).getPseudoPlacement(index - limit);
+                }
+                else {
+                    return null;
+                }
             }
             return placementsHolder.getPlacement(index);
         }
@@ -337,6 +348,10 @@ public class PlacementsHolderPlacementsTableModel extends AbstractObjectTableMod
         fireTableCellUpdated(indexOf(placement), findColumn(columnName));
     }
     
+    public void fireTableCellUpdated(Placement placement, int columnIndex) {
+        fireTableCellUpdated(indexOf(placement), columnIndex);
+    }
+    
     @Override
     public void fireTableCellUpdated(int row, int column) {
         super.fireTableCellUpdated(row, column);
@@ -352,6 +367,9 @@ public class PlacementsHolderPlacementsTableModel extends AbstractObjectTableMod
     
     public Object getValueAt(int row, int col) {
         Placement placement = getRowObjectAt(row);
+        if (placement == null) {
+            return null;
+        }
         Location loc;
         Side side;
         if (localReferenceFrame || parent == null) {

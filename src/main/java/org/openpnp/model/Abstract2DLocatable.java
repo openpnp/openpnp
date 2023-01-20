@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Jason von Nieda <jason@vonnieda.org>, Tony Luken <tonyluken62+openpnp@gmail.com>
+ * Copyright (C) 2023 Jason von Nieda <jason@vonnieda.org>, Tony Luken <tonyluken62+openpnp@gmail.com>
  * 
  * This file is part of OpenPnP.
  * 
@@ -20,7 +20,6 @@
 package org.openpnp.model;
 
 import java.beans.PropertyChangeListener;
-
 import org.openpnp.spi.Definable;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -95,8 +94,7 @@ public abstract class Abstract2DLocatable<T extends Abstract2DLocatable<T>> exte
     @SuppressWarnings("unchecked")
     Abstract2DLocatable() {
         super();
-        definition = (T) this;
-        addPropertyChangeListener(this);
+        setDefinition((T) this);
     }
     
     /**
@@ -108,7 +106,6 @@ public abstract class Abstract2DLocatable<T extends Abstract2DLocatable<T>> exte
         location = abstract2DLocatableToCopy.location;
         setDefinition(abstract2DLocatableToCopy.getDefinition());
         id = abstract2DLocatableToCopy.id;
-        addPropertyChangeListener(this);
     }
     
     /**
@@ -127,7 +124,7 @@ public abstract class Abstract2DLocatable<T extends Abstract2DLocatable<T>> exte
     @Override
     public void dispose() {
         removePropertyChangeListener(this);
-        setDefinition(null);
+        definition.removePropertyChangeListener(this);
         super.dispose();
     }
     

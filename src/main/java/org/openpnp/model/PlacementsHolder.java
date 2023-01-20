@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Jason von Nieda <jason@vonnieda.org>, Tony Luken <tonyluken62+openpnp@gmail.com>
+ * Copyright (C) 2023 Jason von Nieda <jason@vonnieda.org>, Tony Luken <tonyluken62+openpnp@gmail.com>
  * 
  * This file is part of OpenPnP.
  * 
@@ -228,8 +228,8 @@ public abstract class PlacementsHolder<T extends PlacementsHolder<T>>
         else {
             if (index >= 0 && index < placements.size()) {
                 placement = placements.get(index);
-                placements.remove(index);
                 fireIndexedPropertyChange("placement", index, placement, null);
+                placements.remove(index);
                 placement.removePropertyChangeListener(this);
                 placement.dispose();
             }

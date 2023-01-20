@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Jason von Nieda <jason@vonnieda.org>, Tony Luken <tonyluken62+openpnp@gmail.com>
+ * Copyright (C) 2023 Jason von Nieda <jason@vonnieda.org>, Tony Luken <tonyluken62+openpnp@gmail.com>
  * 
  * This file is part of OpenPnP.
  * 
@@ -272,7 +272,7 @@ public class ChildFiducialSelectorDialog extends JDialog {
                 radioPanel.add(btnSelectGood);
             }
             
-            tableModel = new PlacementsHolderPlacementsTableModel() {
+            tableModel = new PlacementsHolderPlacementsTableModel(this) {
                 @Override
                 public boolean isCellEditable(int rowIndex, int columnIndex) {
                     return columnIndex == 0; //Only the enabled setting is editable
@@ -363,8 +363,14 @@ public class ChildFiducialSelectorDialog extends JDialog {
 
     public void addSelectedItemsToPanel() {
         for (Placement fiducial : getSelections()) {
-            panelLocation.getPanel().getDefinition().addPseudoPlacement(
-                    panelLocation.getPanel().getDefinition().createPseudoPlacement(fiducial.getId()));
+            try {
+                panelLocation.getPanel().getDefinition().addPseudoPlacement(
+                        panelLocation.getPanel().getDefinition().createPseudoPlacement(fiducial.getId()));
+            }
+            catch (Exception e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
         }
         close();
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Jason von Nieda <jason@vonnieda.org>, Tony Luken <tonyluken62+openpnp@gmail.com>
+ * Copyright (C) 2023 Jason von Nieda <jason@vonnieda.org>, Tony Luken <tonyluken62+openpnp@gmail.com>
  * 
  * This file is part of OpenPnP.
  * 
@@ -94,7 +94,6 @@ public abstract class PlacementsHolderLocation<T extends PlacementsHolderLocatio
             this.localToParentTransform = null;
         }
         placementsTransformStatus = placementsHolderLocationToCopy.placementsTransformStatus;
-        setDefinition(placementsHolderLocationToCopy.getDefinition());
     }
     
     /**
