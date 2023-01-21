@@ -69,6 +69,9 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
     private boolean interpolationRetiming = true;
 
     @Attribute(required = false)
+    protected double minimumSpeed = 0.05;
+
+    @Attribute(required = false)
     private boolean showApproximation = true;
 
     @Element(required = false)
@@ -141,6 +144,15 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
 
     public void setInterpolationRetiming(boolean interpolationRetiming) {
         this.interpolationRetiming = interpolationRetiming;
+    }
+
+    @Override
+    public double getMinimumSpeed() {
+        return minimumSpeed;
+    }
+
+    public void setMinimumSpeed(double minimumSpeed) {
+        this.minimumSpeed = minimumSpeed;
     }
 
     public boolean isDiagnosticsEnabled() {

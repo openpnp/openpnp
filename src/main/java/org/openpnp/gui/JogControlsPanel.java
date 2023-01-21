@@ -369,11 +369,23 @@ public class JogControlsPanel extends JPanel {
         speedSlider.setOrientation(SwingConstants.VERTICAL);
         panelControls.add(speedSlider, "20, 4, 1, 9"); //$NON-NLS-1$
         speedSlider.addChangeListener(new ChangeListener() {
+            int oldValue = 100;
             @Override
             public void stateChanged(ChangeEvent e) {
-                Configuration.get()
-                .getMachine()
-                .setSpeed(speedSlider.getValue() * 0.01);
+                Machine machine = Configuration.get().getMachine();
+                int minSpeedSlider = (int) Math.ceil(machine.getMotionPlanner().getMinimumSpeed()*100);
+                if (speedSlider.getValue() > 0 && speedSlider.getValue() < minSpeedSlider) {
+                    if (oldValue > speedSlider.getValue()) {
+                        // Snap to zero.
+                        speedSlider.setValue(0);
+                    }
+                    else {
+                        // Snap to minium.
+                        speedSlider.setValue(minSpeedSlider);
+                    }
+                }
+                oldValue = speedSlider.getValue();
+                machine.setSpeed(speedSlider.getValue() * 0.01);
             }
         });
 

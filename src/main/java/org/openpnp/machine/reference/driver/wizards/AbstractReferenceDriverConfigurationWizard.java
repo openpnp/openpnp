@@ -368,6 +368,8 @@ public class AbstractReferenceDriverConfigurationWizard extends AbstractConfigur
         addWrappedBinding(driver, "port", portTextField, "text", integerConverter);
 
         ComponentDecorators.decorateWithAutoSelect(driverName);
+        ComponentDecorators.decorateWithAutoSelect(ipAddressTextField);
+        ComponentDecorators.decorateWithAutoSelect(portTextField);
 
         communicationsTypeChanged();
     }

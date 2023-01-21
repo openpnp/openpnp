@@ -813,6 +813,8 @@ public class Motion {
         Double timeStep = driver.getInterpolationTimeStep();
         Integer distStep = driver.getInterpolationMinStep();
         Length junctionDeviationLength = driver.getJunctionDeviation();
+        double minVelocity = driver.getMinimumRate(1).convertToUnits(AxesLocation.getUnits()).getValue();
+        double minAcceleration = driver.getMinimumRate(2).convertToUnits(AxesLocation.getUnits()).getValue();
 
         if (maxSteps == null || maxJerkSteps == null || timeStep == null || distStep == null || junctionDeviationLength == null) {
             throw new Exception("Driver does not support move interpolation. Please refer to Issues & Solutions.");
@@ -831,7 +833,7 @@ public class Motion {
         // Determine per axis maximum delta a for Jerk Control simulation.
         AxesLocation maxDeltaA = new AxesLocation(location0.getAxes(driver),
                 (axis) -> new Length(
-                        computeMaxDeltaA(maxJerkSteps, axis), 
+                        Math.max(minAcceleration*5, computeMaxDeltaA(maxJerkSteps, axis)), 
                         AxesLocation.getUnits()));
 
         boolean simpleSymmetricMove = (/*MotionProfile.isCoordinated(axesProfiles) 
@@ -1008,8 +1010,6 @@ public class Motion {
         double tS = 0;
         MoveToCommand commandS = null;
 
-        double minVelocity = driver.getMinimumVelocity();
-        double minAcceleration = minVelocity*4; // HACK
         double maxVelocity = minVelocity;
 
         double dt = time/numSteps;
@@ -1111,7 +1111,7 @@ public class Motion {
                             location0, location2,
                             movedAxesLocation, // just the axes that are actually moved  
                             velocity, 
-                            Math.max(Math.abs(acceleration), minSegmentAcceleration),
+                            Math.max(Math.max(Math.abs(acceleration), minSegmentAcceleration), minAcceleration),
                             null, // No jerk, we're simulating it, remember?
                             t0, dtNominal, v0, v2); 
 
@@ -1359,9 +1359,9 @@ solve(eq, a)
             MoveToCommand command = new MoveToCommand(
                     location0, location1,
                     getMovingAxesTargetLocation(driver),
-                    Math.max(driver.getMinimumVelocity(), 
+                    Math.max(driver.getMinimumRate(1).convertToUnits(AxesLocation.getUnits()).getValue(), 
                             Math.abs(factor*v)), 
-                    Math.max(driver.getMinimumVelocity()*4, // HACK
+                    Math.max(driver.getMinimumRate(2).convertToUnits(AxesLocation.getUnits()).getValue(),
                             Math.abs(factor*a)),
                     null, // No jerk
                     0.0, time, Math.abs(factor*v0), Math.abs(factor*v7));
@@ -1398,9 +1398,9 @@ solve(eq, a)
             list.add(new MoveToCommand(
                     location0, location1,
                     getMovingAxesTargetLocation(driver),
-                    Math.max(driver.getMinimumVelocity(), 
+                    Math.max(driver.getMinimumRate(1).convertToUnits(AxesLocation.getUnits()).getValue(), 
                             factor*moderatedProfile.getProfileVelocity(MotionControlType.ConstantAcceleration)), 
-                    Math.max(driver.getMinimumVelocity()*4, // HACK
+                    Math.max(driver.getMinimumRate(2).convertToUnits(AxesLocation.getUnits()).getValue(),
                             factor*moderatedProfile.getProfileAcceleration(MotionControlType.ConstantAcceleration)),
                     null, // No jerk
                     0.0, time, Math.abs(factor*vEntry), Math.abs(factor*vExit)));

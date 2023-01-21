@@ -57,4 +57,9 @@ public class NullMotionPlanner extends AbstractMotionPlanner {
     public Wizard getConfigurationWizard() {
         return null;
     }
+
+    @Override
+    public double getMinimumSpeed() {
+        return 0.05;
+    }
 }

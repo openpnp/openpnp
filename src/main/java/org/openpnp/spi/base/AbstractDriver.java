@@ -18,6 +18,7 @@ import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
 import org.openpnp.machine.reference.axis.ReferenceVirtualAxis;
 import org.openpnp.model.AbstractModelObject;
+import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.spi.Axis;
@@ -69,10 +70,27 @@ public abstract class AbstractDriver extends AbstractModelObject implements Driv
         return false;
     }
 
+
     @Override
-    public double getMinimumVelocity() {
-        // For now just return a fixed 0.1mm/s minimum feed-rate, i.e. 6mm/min minimum F word in Gcode.
-        return 0.1;
+    public Length getMinimumRate(int order) {
+        // Get the minimum of all the axes' rate limits. 
+        double rate = Double.POSITIVE_INFINITY;
+        ReferenceMachine machine = ((ReferenceMachine) Configuration.get().getMachine());
+        for (ControllerAxis axis : getAxes(machine)) {
+            double axisRate = axis.getMotionLimit(order);
+            if (rate > axisRate && axisRate != 0) {
+                rate = axisRate;
+            }
+        }
+        // Take it at minimum planner speed.
+        rate *= Math.pow(machine.getMotionPlanner().getMinimumSpeed(), order);
+        // Make it the next lower decimal digit in driver units.
+        double driverUnitFactor = Length.convertToUnits(1, AxesLocation.getUnits(), getUnits());
+        rate = Math.pow(10, Math.floor(Math.log10(rate*driverUnitFactor)))/driverUnitFactor;
+        if (!Double.isFinite(rate)) {
+            rate = 1;
+        }
+        return new Length(rate, AxesLocation.getUnits());
     }
 
     @Override

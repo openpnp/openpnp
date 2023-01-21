@@ -22,24 +22,25 @@
 package org.openpnp.machine.reference.driver.wizards;
 
 
-import java.util.HashSet;
-import java.util.Set;
+import java.awt.Color;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 
 import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.UIManager;
 import javax.swing.border.TitledBorder;
 
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.components.LocationButtonsPanel;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
-import org.openpnp.gui.support.ActuatorsComboBoxModel;
 import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MutableLocationProxy;
+import org.openpnp.gui.support.PercentConverter;
 import org.openpnp.machine.reference.driver.ReferenceAdvancedMotionPlanner;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Machine;
@@ -50,14 +51,6 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
-import javax.swing.UIManager;
-import java.awt.Color;
-import javax.swing.SwingConstants;
-import org.jdesktop.beansbinding.BeanProperty;
-import org.jdesktop.beansbinding.AutoBinding;
-import org.jdesktop.beansbinding.Bindings;
-import java.awt.event.ItemListener;
-import java.awt.event.ItemEvent;
 
 @SuppressWarnings("serial")
 public class ReferenceAdvancedMotionPlannerConfigurationWizard extends AbstractConfigurationWizard {
@@ -120,6 +113,8 @@ public class ReferenceAdvancedMotionPlannerConfigurationWizard extends AbstractC
     private JLabel lblCaution1;
     private JLabel lblCaution2;
     private JLabel lblCaution3;
+    private JLabel lblMinimumSpeed;
+    private JTextField minimumSpeed;
 
 
     public ReferenceAdvancedMotionPlannerConfigurationWizard(ReferenceAdvancedMotionPlanner motionPlanner) {
@@ -149,13 +144,15 @@ public class ReferenceAdvancedMotionPlannerConfigurationWizard extends AbstractC
                 ColumnSpec.decode("default:grow"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
-                new RowSpec[] {
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.PREF_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,}));
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.PREF_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
 
         JLabel lblContinuousMotion = new JLabel("Allow continous motion?");
         lblContinuousMotion.setToolTipText("<html>\r\n<p>Often, OpenPnP directs the controller(s) to execute motion that involves multiple<br/>\r\nsegments. For example, consider a move to Safe Z, followed by a move over the target <br/>\r\nlocation, followed by a move to lower the the nozzle down to pick or place a part. </p> \r\n<p>If the motion planner and/or the motion controller get these commands as one<br/>\r\nsequence, they can apply certain optimizations to them. There are also no delays<br/>\r\nintroduced when communicating back and forth. Furthermore, the planning can go <br/>\r\nahead in parallel while the controller is still executing the last commands.</p>\r\n<p>By allowing continuous motion, you enable these optimizations. However, the <br/>\r\nMachine setup i.e. Gcode, custom scripts etc. must be configured in awareness that the <br/>\r\nplanner no longer waits for motion to complete each time, unless explicitly told to. </p>\r\n</html>");
@@ -176,7 +173,15 @@ public class ReferenceAdvancedMotionPlannerConfigurationWizard extends AbstractC
         panelSettings.add(lblRetime, "2, 6, right, default");
 
         interpolationRetiming = new JCheckBox("");
-        panelSettings.add(interpolationRetiming, "4, 6, right, top");
+        panelSettings.add(interpolationRetiming, "4, 6, left, top");
+        
+        lblMinimumSpeed = new JLabel("Minimum Speed");
+        lblMinimumSpeed.setToolTipText("<html>\r\n<p>\r\nMinimum speed supported by the motion planner.\r\n</p><p>\r\nExcessively low minimum speeds lead to excessive required precision for<br/>\r\nfeed-rates, acceleration (and jerk) rates. By keeping minmum speeds above<br/>\r\nreasonable levels (e.g. 5%), some computations (like interpolation) can be<br/>\r\noptimized.<br/>\r\n</p><p>\r\nFor drivers communicating via text protocol (GcodeDriver), fewer decimal<br/>\r\ndigits are required, which lowers command latency.<br/>\r\n</p>\r\n</html>\r\n");
+        panelSettings.add(lblMinimumSpeed, "2, 8, right, default");
+        
+        minimumSpeed = new JTextField();
+        panelSettings.add(minimumSpeed, "4, 8, fill, default");
+        minimumSpeed.setColumns(10);
 
         panel = new JPanel();
         panel.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "Test Motion", TitledBorder.LEADING, TitledBorder.TOP, null));
@@ -243,25 +248,25 @@ public class ReferenceAdvancedMotionPlannerConfigurationWizard extends AbstractC
 
         lblRotation = new JLabel("Rotation");
         panel.add(lblRotation, "12, 2, center, default");
-        
+
         startLocationEnabled = new JCheckBox("");
         panel.add(startLocationEnabled, "4, 4, center, bottom");
 
         textFieldStartRotation = new JTextField();
         panel.add(textFieldStartRotation, "12, 4, fill, default");
         textFieldStartRotation.setColumns(10);
-                
-                        lblSpeed1 = new JLabel("Speed 1 ↔ 2");
-                        panel.add(lblSpeed1, "2, 6, right, default");
-        
-                toMid1Speed = new JTextField();
-                toMid1Speed.setToolTipText("Speed between First location and Second location");
-                panel.add(toMid1Speed, "4, 6, fill, default");
-                toMid1Speed.setColumns(5);
-        
+
+        lblSpeed1 = new JLabel("Speed 1 ↔ 2");
+        panel.add(lblSpeed1, "2, 6, right, default");
+
+        toMid1Speed = new JTextField();
+        toMid1Speed.setToolTipText("Speed between First location and Second location");
+        panel.add(toMid1Speed, "4, 6, fill, default");
+        toMid1Speed.setColumns(5);
+
         lblSafeZ = new JLabel("Safe Z?");
         panel.add(lblSafeZ, "8, 6, right, default");
-        
+
         toMid1SafeZ = new JCheckBox("");
         toMid1SafeZ.addItemListener(new ItemListener() {
             public void itemStateChanged(ItemEvent e) {
@@ -269,29 +274,29 @@ public class ReferenceAdvancedMotionPlannerConfigurationWizard extends AbstractC
             }
         });
         panel.add(toMid1SafeZ, "10, 6, center, default");
-        
+
         lblCaution1 = new JLabel("CAUTION!");
         lblCaution1.setForeground(Color.RED);
         panel.add(lblCaution1, "12, 6");
-        
+
         mid1LocationEnabled = new JCheckBox("");
         panel.add(mid1LocationEnabled, "4, 8, center, default");
 
         textFieldMidRotation1 = new JTextField();
         panel.add(textFieldMidRotation1, "12, 8, fill, default");
         textFieldMidRotation1.setColumns(10);
-                
-                        lblSpeed2 = new JLabel("Speed 2 ↔ 3");
-                        panel.add(lblSpeed2, "2, 10, right, default");
-        
-                toMid2Speed = new JTextField();
-                toMid2Speed.setToolTipText("Speed between Second location and Third location");
-                toMid2Speed.setColumns(5);
-                panel.add(toMid2Speed, "4, 10, fill, default");
-        
+
+        lblSpeed2 = new JLabel("Speed 2 ↔ 3");
+        panel.add(lblSpeed2, "2, 10, right, default");
+
+        toMid2Speed = new JTextField();
+        toMid2Speed.setToolTipText("Speed between Second location and Third location");
+        toMid2Speed.setColumns(5);
+        panel.add(toMid2Speed, "4, 10, fill, default");
+
         lblSafeZ_1 = new JLabel("Safe Z?");
         panel.add(lblSafeZ_1, "8, 10, right, default");
-        
+
         toMid2SafeZ = new JCheckBox("");
         toMid2SafeZ.addItemListener(new ItemListener() {
             public void itemStateChanged(ItemEvent e) {
@@ -299,11 +304,11 @@ public class ReferenceAdvancedMotionPlannerConfigurationWizard extends AbstractC
             }
         });
         panel.add(toMid2SafeZ, "10, 10, center, default");
-        
+
         lblCaution2 = new JLabel("CAUTION!");
         lblCaution2.setForeground(Color.RED);
         panel.add(lblCaution2, "12, 10");
-        
+
         mid2LocationEnabled = new JCheckBox("");
         panel.add(mid2LocationEnabled, "4, 12, center, default");
 
@@ -369,18 +374,18 @@ public class ReferenceAdvancedMotionPlannerConfigurationWizard extends AbstractC
         midLocation2ButtonsPanel = new LocationButtonsPanel(textFieldMidX2, textFieldMidY2, textFieldMidZ2, (JTextField) null);
         midLocation2ButtonsPanel.setShowPositionToolNoSafeZ(true);
         panel.add(midLocation2ButtonsPanel, "14, 11, 1, 3, fill, default");
-                
-                        lblSpeedEnd = new JLabel("Speed 3 ↔ 4");
-                        panel.add(lblSpeedEnd, "2, 15, right, default");
-        
-                toEndSpeed = new JTextField();
-                toEndSpeed.setToolTipText("Speed between Third location and Last location");
-                toEndSpeed.setColumns(5);
-                panel.add(toEndSpeed, "4, 15, fill, default");
-        
+
+        lblSpeedEnd = new JLabel("Speed 3 ↔ 4");
+        panel.add(lblSpeedEnd, "2, 15, right, default");
+
+        toEndSpeed = new JTextField();
+        toEndSpeed.setToolTipText("Speed between Third location and Last location");
+        toEndSpeed.setColumns(5);
+        panel.add(toEndSpeed, "4, 15, fill, default");
+
         lblSafeZ_2 = new JLabel("Safe Z?");
         panel.add(lblSafeZ_2, "8, 15, right, default");
-        
+
         toEndSafeZ = new JCheckBox("");
         toEndSafeZ.addItemListener(new ItemListener() {
             public void itemStateChanged(ItemEvent e) {
@@ -388,14 +393,14 @@ public class ReferenceAdvancedMotionPlannerConfigurationWizard extends AbstractC
             }
         });
         panel.add(toEndSafeZ, "10, 15, center, default");
-        
+
         lblCaution3 = new JLabel("CAUTION!");
         lblCaution3.setForeground(Color.RED);
         panel.add(lblCaution3, "12, 15");
 
         lblEndLocation = new JLabel("Last Location");
         panel.add(lblEndLocation, "2, 17, right, default");
-        
+
         endLocationEnabled = new JCheckBox("");
         panel.add(endLocationEnabled, "4, 17, center, default");
 
@@ -425,10 +430,12 @@ public class ReferenceAdvancedMotionPlannerConfigurationWizard extends AbstractC
     public void createBindings() {
         LengthConverter lengthConverter = new LengthConverter();
         DoubleConverter doubleConverter = new DoubleConverter(Configuration.get().getLengthDisplayFormat());
+        PercentConverter percentConverter = new PercentConverter();
 
         addWrappedBinding(motionPlanner, "allowContinuousMotion", allowContinuousMotion, "selected");
         addWrappedBinding(motionPlanner, "allowUncoordinated", allowUncoordinated, "selected");
         addWrappedBinding(motionPlanner, "interpolationRetiming", interpolationRetiming, "selected");
+        addWrappedBinding(motionPlanner, "minimumSpeed", minimumSpeed, "text", percentConverter);
 
         addWrappedBinding(motionPlanner, "startLocationEnabled", startLocationEnabled, "selected");
         addWrappedBinding(motionPlanner, "mid1LocationEnabled", mid1LocationEnabled, "selected");
