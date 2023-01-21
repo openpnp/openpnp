@@ -72,7 +72,7 @@ For machines that have very large runout in the nozzle it might be imperative th
 On the "unloaded" nozzle tip's Calibration Wizard, setup the pipeline and other settings as usual. Use the Calibration Z Offset to account for the missing tip on the nozzle and to bring it down into the focal plane of the bottom camera. OpenPNP will safely suppress any changer motion for this pseudo nozzle tip. 
 
 ## Pipeline
-Nowadays, the nozzle tip calibration uses the a self-tuning **Circular Symmetry** pipeline [(also posted and explained here)](https://github.com/openpnp/openpnp/wiki/DetectCircularSymmetry#nozzle-tip-calibration). The needed **Vision Diameter** is automatically set up if you simply follow [[Issues an Solutions]], which is very much recommeneded. 
+Nowadays, the nozzle tip calibration uses the a self-tuning **Circular Symmetry** pipeline [(also posted and explained here)](https://github.com/openpnp/openpnp/wiki/DetectCircularSymmetry#nozzle-tip-calibration). The needed **Vision Diameter** is automatically set up if you simply follow [[Issues and Solutions]], which is very much recommeneded. 
 
 ___
 
