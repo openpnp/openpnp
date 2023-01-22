@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.concurrent.TimeoutException;
 
+import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 
 import com.fazecast.jSerialComm.SerialPort;
@@ -106,8 +107,15 @@ public class SerialPortCommunications extends ReferenceDriverCommunications {
         if (setRts) {
             serialPort.setRTS();
         }
-        serialPort.setComPortTimeouts(
+        boolean didItWork = serialPort.setComPortTimeouts(
                 SerialPort.TIMEOUT_READ_SEMI_BLOCKING | SerialPort.TIMEOUT_WRITE_BLOCKING, 0, 0);
+        if(didItWork) {
+            Logger.info("Hey, setting com port timeout worked!");
+        } else {
+            Logger.info("Interesting that that didn't work");
+            Logger.info("Error code: " + serialPort.getLastErrorCode());
+            Logger.info("Error location: " + serialPort.getLastErrorLocation());
+        }
     }
 
     public synchronized void disconnect() throws Exception {

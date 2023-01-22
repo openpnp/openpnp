@@ -3,9 +3,9 @@ package org.openpnp.machine.photon;
 import org.openpnp.spi.Machine;
 
 public class PhotonProperties {
-    static final String FEEDER_COMMUNICATION_MAX_RETRY = "PhotonMachines.FeederCommunicationMaxRetry";
-    static final String FEEDER_SLOTS_PROPERTY = "PhotonMachines.FeederSlots";
-    static final String MAX_FEEDER_ADDRESS = "PhotonMachines.MaxFeederAddress";
+    static final String FEEDER_COMMUNICATION_MAX_RETRY = "PhotonFeeder.FeederCommunicationMaxRetry";
+    static final String FEEDER_SLOTS_PROPERTY = "PhotonFeeder.FeederSlots";
+    static final String MAX_FEEDER_ADDRESS = "PhotonFeeder.MaxFeederAddress";
 
     final Machine machine;
 
