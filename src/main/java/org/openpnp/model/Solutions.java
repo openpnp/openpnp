@@ -390,7 +390,7 @@ public class Solutions extends AbstractTableModel {
                 return null; 
             }
             public abstract String get();
-            public abstract void set(String value);
+            public abstract void set(String value) throws Exception;
             public String getSuggestionToolTip() { 
                 return getToolTip();
             }
@@ -416,7 +416,7 @@ public class Solutions extends AbstractTableModel {
                 return max;
             }
             public abstract int get();
-            public abstract void set(int value);
+            public abstract void set(int value) throws Exception;
         }
         public abstract class DoubleProperty extends CustomProperty {
             private final double min;
@@ -434,14 +434,14 @@ public class Solutions extends AbstractTableModel {
                 return max;
             }
             public abstract double get();
-            public abstract void set(double value);
+            public abstract void set(double value)  throws Exception;
         }
         public abstract class LengthProperty extends CustomProperty {
             public LengthProperty(String label, String toolTip) {
                 super(label, toolTip);
             }
             public abstract Length get();
-            public abstract void set(Length value);
+            public abstract void set(Length value)  throws Exception;
         }
         public abstract class ActionProperty extends CustomProperty {
             public ActionProperty(String label, String toolTip) {

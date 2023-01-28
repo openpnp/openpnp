@@ -46,7 +46,8 @@ public class TextUtils {
             }
             String v = "";
             if (value != null) {
-                v = String.format((Locale) null, format, value);
+                v = String.format((Locale) null, format, value)
+                        .replace("<((", "{").replace("))>", "}"); // Unescape nested curly brackets.
             }
             matcher.appendReplacement(sb, v);
         }

@@ -402,7 +402,7 @@ public class AxisSolutions implements Solutions.Subject {
         @Override
         public void setState(Solutions.State state) throws Exception {
             if (state == State.Solved) {
-                if (newAxisLetter.isEmpty()) {
+                if (newAxisLetter == null || newAxisLetter.isEmpty()) {
                     throw new Exception("Axis letter must not be empty");
                 }
                 axis.setLetter(newAxisLetter);

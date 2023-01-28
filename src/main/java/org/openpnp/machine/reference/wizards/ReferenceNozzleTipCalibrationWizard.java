@@ -652,7 +652,7 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
                 nozzle, 
                 moveToLocation, true, () -> {
                     CvPipeline pipeline = calibration
-                            .getPipeline(camera, nozzle, moveToLocation);
+                            .getPreparedPipeline(camera, nozzle, moveToLocation);
                     CvPipelineEditor editor = new CvPipelineEditor(pipeline);
                     JDialog dialog = new CvPipelineEditorDialog(MainFrame.get(), "Calibration Pipeline", editor);
                     dialog.setVisible(true);
