@@ -226,7 +226,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     protected double backlashFeedRateFactor = 0.1;
 
     @Attribute(required = false)
-    protected int timeoutMilliseconds = 5000;
+    protected int timeoutMilliseconds = 20000;
 
     @Attribute(required = false)
     protected int connectWaitTimeMilliseconds = 3000;
@@ -919,14 +919,16 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     @Override
     public void actuate(Actuator actuator, boolean on) throws Exception {
         String command = getCommand(actuator, CommandType.ACTUATE_BOOLEAN_COMMAND);
+        // This substitution must come first, as it may contain nested and escaped {variables}.
+        command = substituteVariable(command, "True", on ? on : null);
+        command = substituteVariable(command, "False", on ? null : on);
+
         command = substituteVariable(command, "Id", actuator.getId());
         command = substituteVariable(command, "Name", actuator.getName());
         if (actuator instanceof ReferenceActuator) {
             command = substituteVariable(command, "Index", ((ReferenceActuator)actuator).getIndex());
         }
         command = substituteVariable(command, "BooleanValue", on);
-        command = substituteVariable(command, "True", on ? on : null);
-        command = substituteVariable(command, "False", on ? null : on);
         sendGcode(command);
         SimulationModeMachine.simulateActuate(actuator, on, true);
     }
