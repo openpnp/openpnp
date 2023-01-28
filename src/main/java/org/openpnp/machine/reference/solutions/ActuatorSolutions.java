@@ -38,6 +38,7 @@ import org.openpnp.model.Solutions.Subject;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Machine;
 import org.openpnp.util.TextUtils;
+import org.pmw.tinylog.Logger;
 
 /**
  * This helper class implements the Issues & Solutions for the ReferenceHead. 
@@ -74,8 +75,8 @@ public class ActuatorSolutions implements Solutions.Subject {
                 case Double: {
                     HashMap<CommandType, String []> suggestions = new HashMap<>();
                     suggestions.put(CommandType.ACTUATE_DOUBLE_COMMAND, new String[] { 
-                            "M\u2753 \u2753{DoubleValue:%.4f}; actuate "+qualifier+" with double value",
-                            "M\u2753 \u2753{IntegerValue}; actuate "+qualifier+" with integer value",
+                            "M\u00BF \u00BF{DoubleValue:%.4f}; actuate "+qualifier+" with double value",
+                            "M\u00BF \u00BF{IntegerValue}; actuate "+qualifier+" with integer value",
                     });
                     new ActuatorSolutions(actuator).findActuatorIssues(solutions, holder, qualifier, 
                             new CommandType[] { CommandType.ACTUATE_DOUBLE_COMMAND }, suggestions, 
@@ -85,8 +86,8 @@ public class ActuatorSolutions implements Solutions.Subject {
                 case Boolean: {
                     HashMap<CommandType, String []> suggestions = new HashMap<>();
                     suggestions.put(CommandType.ACTUATE_BOOLEAN_COMMAND, new String[] { 
-                            "{True:M\u2753 ; actuate "+qualifier+" ON}\n"
-                                    + "{False:M\u2753 ; actuate "+qualifier+" OFF}"
+                            "{True:M\u00BF ; actuate "+qualifier+" ON}\n"
+                                    + "{False:M\u00BF ; actuate "+qualifier+" OFF}"
                     });
                     new ActuatorSolutions(actuator).findActuatorIssues(solutions, holder, qualifier, 
                             new CommandType[] { CommandType.ACTUATE_BOOLEAN_COMMAND }, suggestions, 
@@ -97,7 +98,7 @@ public class ActuatorSolutions implements Solutions.Subject {
                     HashMap<CommandType, String []> suggestions = new HashMap<>();
                     suggestions.put(CommandType.ACTUATE_STRING_COMMAND, new String[] { 
                             "{StringValue} ; actuate "+qualifier+" with direct string command value",
-                            "M\u2753 \u2753{StringValue} ; actuate "+qualifier+" with string value argument"
+                            "M\u00BF \u00BF{StringValue} ; actuate "+qualifier+" with string value argument"
                     });
                     new ActuatorSolutions(actuator).findActuatorIssues(solutions, holder, qualifier, 
                             new CommandType[] { CommandType.ACTUATE_STRING_COMMAND }, suggestions, 
@@ -124,8 +125,8 @@ public class ActuatorSolutions implements Solutions.Subject {
         HashMap<CommandType, String []> suggestions = new HashMap<>();
         suggestions.put(CommandType.ACTUATOR_READ_COMMAND, new String[] { "M105 ; read inputs" });
         suggestions.put(CommandType.ACTUATOR_READ_REGEX, new String[] { 
-                ".*\u2753:(?<Value>-?\\d+).*",
-                ".*\u2753:(?<Value>-?\\d+\\.\\d+).*" 
+                ".*\u00BF:(?<Value>-?\\d+).*",
+                ".*\u00BF:(?<Value>-?\\d+\\.\\d+).*" 
         });
         new ActuatorSolutions(actuator).findActuatorIssues(solutions, holder, qualifier, 
                 new CommandType[] { CommandType.ACTUATOR_READ_COMMAND, CommandType.ACTUATOR_READ_REGEX }, suggestions, 
@@ -198,7 +199,7 @@ public class ActuatorSolutions implements Solutions.Subject {
                     + "Suggested templates for the <code>"+commandType+"</code>.<br/><br/>\n"
                     + "<strong>CAUTION:</strong> You may need to adapt these to your specific <br/>\n"
                     + holder.getSubjectText()+", controller and/or "+qualifier+".<br/>\n"
-                    + "Replace placeholders \u2753 with the proper numbers/letters/designators."
+                    + "Replace placeholders \u00BF with the proper numbers/letters/designators."
                     + "</html>";
         }
 
@@ -208,8 +209,8 @@ public class ActuatorSolutions implements Solutions.Subject {
                 if (newGcode.isEmpty()) {
                     throw new Exception(commandType+" must not be empty");
                 }
-                if (newGcode.contains("\u2753")) {
-                    throw new Exception(commandType+" still contains placeholders \u2753. "
+                if (newGcode.contains("\u00BF")) {
+                    throw new Exception(commandType+" still contains placeholders \u00BF. "
                             + "Please replace with the proper digits or letters specific to your "
                             + "controller/"+qualifier+" configuration.");
                 }
@@ -267,16 +268,12 @@ public class ActuatorSolutions implements Solutions.Subject {
                     return extractBooleanCommand(on, newGcode);
                 }
                 @Override
-                public void set(String value) {
+                public void set(String value) throws Exception {
                     if (on) {
-                        newGcode = composeBooleanCommand(on, value)
-                                +"\n"
-                                +composeBooleanCommand(!on, extractBooleanCommand(!on, newGcode));
+                        newGcode = composeBooleanCommand(value, extractBooleanCommand(!on, newGcode));
                     }
                     else {
-                        newGcode = composeBooleanCommand(!on, extractBooleanCommand(!on, newGcode))
-                                +"\n"
-                                +composeBooleanCommand(on, value);
+                        newGcode = composeBooleanCommand(extractBooleanCommand(!on, newGcode), value);
                     }
                     //Logger.trace(newGcode);
                 }
@@ -311,18 +308,73 @@ public class ActuatorSolutions implements Solutions.Subject {
             return String.join("\n", subCommand);
         }
 
-        protected String composeBooleanCommand(boolean on, String command) {
-            // Simplified line-based composition.
-            ArrayList<String> subCommand = new ArrayList<>();
-            Arrays.stream(command.split("\\r?\\n")).forEach(line -> {
-                // Simply disallow these characters.
-                line = line.replace("{", "").replace("}", "");
-                if (!line.isEmpty()) {
-                    subCommand.add("{"+(on ? "True" : "False")+":"+line+"}");
-                }
+        protected String composeBooleanCommand(String commandOn, String commandOff) {
+            // Reconstruct True/False composition.
+            // Split into lines.
+            ArrayList<String> commandLinesOn = new ArrayList<>();
+            Arrays.stream(commandOn.split("\\r?\\n")).forEach(line -> {
+                commandLinesOn.add(line);
             });
-
-            return String.join("\n", subCommand);
+            ArrayList<String> commandLinesOff = new ArrayList<>();
+            Arrays.stream(commandOff.split("\\r?\\n")).forEach(line -> {
+                commandLinesOff.add(line);
+            });
+            // Pad with empty lines.
+            while (commandLinesOn.size() < commandLinesOff.size()) {
+                commandLinesOn.add("");
+            }
+            while (commandLinesOff.size() < commandLinesOn.size()) {
+                commandLinesOff.add("");
+            }
+            // Compose lines.
+            ArrayList<String> commandLines = new ArrayList<>();
+            for (int i = 0; i < commandLinesOn.size(); i++) {
+                String lineOn = commandLinesOn.get(i);
+                String lineOff = commandLinesOff.get(i);
+                int minLen = Math.min(lineOn.length(), lineOff.length());
+                int leftEqual;
+                for (leftEqual = 0; leftEqual < minLen; leftEqual++) {
+                    if (!lineOn.substring(0, leftEqual+1).equals(lineOff.substring(0, leftEqual+1))) {
+                        break;
+                    }
+                }
+                int rightEqual;
+                for (rightEqual = 0; rightEqual < minLen - leftEqual; rightEqual++) {
+                    if (!lineOn.substring(lineOn.length()-rightEqual-1).equals(lineOff.substring(lineOff.length()-rightEqual-1))) {
+                        break;
+                    }
+                }
+                if (leftEqual + rightEqual < minLen/2) {
+                    // Line differs too much, switch the full line.
+                    leftEqual = 0;
+                    rightEqual = 0;
+                }
+                String line = lineOn.substring(0, leftEqual);
+                String onPart = lineOn.substring(leftEqual, lineOn.length()-rightEqual).replace("{", "<((").replace("}", "))>");
+                String offPart = lineOff.substring(leftEqual, lineOff.length()-rightEqual).replace("{", "<((").replace("}", "))>");
+                if (!onPart.isEmpty()) {
+                    line += "{True:"+onPart+"}";
+                }
+                if (!line.isEmpty() 
+                        && leftEqual == 0 && rightEqual == 0) {
+                    line += "\n";
+                }
+                if (!offPart.isEmpty()) {
+                    line += "{False:"+offPart+"}";
+                }
+                line += lineOn.substring(lineOn.length()-rightEqual);
+                if (!line.isEmpty()) {
+                    commandLines.add(line);
+                }
+            }
+            String command = String.join("\n", commandLines);
+            Logger.trace("Composited "+qualifier+" "+commandType+":\n"+command);
+            // NOTE: the following check is too hard due to empty lines ambiguities (may be fixed in the future).
+            //          if (!(extractBooleanCommand(true, command).equals(commandOn) 
+            //                    && extractBooleanCommand(false, command).equals(commandOff))) {
+            //              throw new Exception("ON and OFF command composition failed, please set the "+qualifier+" "+commandType+" manually on the GcodeDriver.");
+            //          }
+            return command;
         }
     }
 }
