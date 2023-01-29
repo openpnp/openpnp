@@ -22,18 +22,16 @@ The created **Light Actuator** can now be assigned to the camera:
 
 There are various ON and OFF actuation Options:
 
-* **Before Capture ON**: actuate the Light Actuator before computer vision captures a camera image. This happens before the [Camera Settling](/openpnp/openpnp/wiki/Camera-Settling). See the [ImageCapture Stage](#use-in-the-imagecapture-stage) section to control pipeline specific light actuation values and profiles. **NOTE:** This option should almost always be enabled. 
-* **After Capture OFF**: actuate the Light Actuator OFF after computer vision captured a camera image. 
-* **User Camera Action ON**: actuate the Light Actuator ON when a user action is deliberately positioning or otherwise using the camera. 
-* **Anti-Glare OFF**: prevent this camera light from blinding another camera, it is actuated OFF before any other camera is capturing an image. Only cameras looking the other way (up/down) are taken into consideration (see the **Looking** field). 
+* **ON** at **Before Capture**: actuate the Light Actuator before computer vision captures a camera image. This happens before the [Camera Settling](/openpnp/openpnp/wiki/Camera-Settling). See the [ImageCapture Stage](#use-in-the-imagecapture-stage) section to control pipeline specific light actuation values and profiles. **NOTE:** This option should almost always be enabled. 
+* **ON** at **User Camera Action**: actuate the Light Actuator ON when a user action is deliberately positioning or otherwise using the camera. 
+* **OFF** at **After Capture**: actuate the Light Actuator OFF after computer vision captured a camera image. 
+* **OFF** at **Anti-Glare**: prevent this camera light from blinding another camera, it is actuated OFF before any other camera is capturing an image. Only cameras looking the other way (up/down) are taken into consideration (see the **Looking** field). 
+
+# Test The Lights
 
 As soon as a **Light Actuator** is assigned, the Camera View will display a new overlay light symbol in the upper right corner. It shows the camera light status and can be clicked to turn the light on or off:
  
 ![CameraViewLightOnOff](https://user-images.githubusercontent.com/9963310/103424966-9e2c5e80-4baf-11eb-8eac-a20844fed4e8.gif)
-
-# Test The Lights
-
-As soon as a light actuator is assigned to the camera, a "sun" symbol appears in the top right corner camera view. Click on it to toggle the camera light. 
 
 Alternatively, go to Main Window -> Machine Controls -> Actuators and click the button named after the created Actuator. Your lights should come on. Click it again and they should turn off. If this doesn't work, adjust your settings until it does, or ask for help.
 
