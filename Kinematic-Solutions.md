@@ -8,7 +8,7 @@ To get some impressions, [watch a video of these and other calibration solutions
 
 # Capture Soft Limits
 
-For each axis, capture the lower and higher soft limit:
+For each axis, capture the lower and higher soft limit, i.e., the very extremes the controller axis is allowed to move (in case of a Z axis, not to be confused with the Save Z zone). Jog to the low or high extreme respectively. If the axis has a limit switch, use a position close to it, but still safe not to accidentally trigger it, taking fast moves and machine vibration/flex into account. Press Accept to capture the coordinate:
 
 ![Capture Soft Limit](https://user-images.githubusercontent.com/9963310/129459436-55511299-6a66-4d49-91e5-2a7d56d2c294.png)
 
