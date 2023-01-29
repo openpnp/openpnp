@@ -316,9 +316,9 @@ public class BoardsPanel extends JPanel {
 
     public final Action addBoardAction = new AbstractAction() {
         {
-            putValue(NAME, Translations.getString("BoardPanel.Action.AddBoard")); //$NON-NLS-1$
+            putValue(NAME, Translations.getString("BoardsPanel.Action.AddBoard")); //$NON-NLS-1$
             putValue(SMALL_ICON, Icons.add);
-            putValue(SHORT_DESCRIPTION, Translations.getString("BoardPanel.Action.AddBoard.Description")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("BoardsPanel.Action.AddBoard.Description")); //$NON-NLS-1$
             putValue(MNEMONIC_KEY, KeyEvent.VK_A);
         }
 
@@ -328,16 +328,16 @@ public class BoardsPanel extends JPanel {
 
     public final Action addNewBoardAction = new AbstractAction() {
         {
-            putValue(NAME, Translations.getString("BoardPanel.Action.AddBoard.NewBoard")); //$NON-NLS-1$
+            putValue(NAME, Translations.getString("BoardsPanel.Action.AddBoard.NewBoard")); //$NON-NLS-1$
             putValue(SHORT_DESCRIPTION, 
-                    Translations.getString("BoardPanel.Action.AddBoard.NewBoard.Description")); //$NON-NLS-1$
+                    Translations.getString("BoardsPanel.Action.AddBoard.NewBoard.Description")); //$NON-NLS-1$
             putValue(MNEMONIC_KEY, KeyEvent.VK_N);
         }
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
             FileDialog fileDialog = new FileDialog(frame, 
-                    Translations.getString("BoardPanel.Action.AddBoard.NewBoard.SaveDialog"), FileDialog.SAVE); //$NON-NLS-1$
+                    Translations.getString("BoardsPanel.Action.AddBoard.NewBoard.SaveDialog"), FileDialog.SAVE); //$NON-NLS-1$
             fileDialog.setFilenameFilter(new FilenameFilter() {
                 @Override
                 public boolean accept(File dir, String name) {
@@ -363,16 +363,16 @@ public class BoardsPanel extends JPanel {
             catch (Exception e) {
                 e.printStackTrace();
                 MessageBoxes.errorBox(frame, 
-                        Translations.getString("BoardPanel.Action.AddBoard.NewBoard.ErrorMessage"), e.getMessage()); //$NON-NLS-1$
+                        Translations.getString("BoardsPanel.Action.AddBoard.NewBoard.ErrorMessage"), e.getMessage()); //$NON-NLS-1$
             }
         }
     };
 
     public final Action addExistingBoardAction = new AbstractAction() {
         {
-            putValue(NAME, Translations.getString("BoardPanel.Action.AddBoard.ExistingBoard")); //$NON-NLS-1$
+            putValue(NAME, Translations.getString("BoardsPanel.Action.AddBoard.ExistingBoard")); //$NON-NLS-1$
             putValue(SHORT_DESCRIPTION, 
-                    Translations.getString("BoardPanel.Action.AddBoard.ExistingBoard.Description")); //$NON-NLS-1$
+                    Translations.getString("BoardsPanel.Action.AddBoard.ExistingBoard.Description")); //$NON-NLS-1$
             putValue(MNEMONIC_KEY, KeyEvent.VK_E);
         }
 
@@ -400,7 +400,7 @@ public class BoardsPanel extends JPanel {
             catch (Exception e) {
                 e.printStackTrace();
                 MessageBoxes.errorBox(frame, 
-                        Translations.getString("BoardPanel.Action.AddBoard.ExistingBoard.ErrorMessage"), //$NON-NLS-1$
+                        Translations.getString("BoardsPanel.Action.AddBoard.ExistingBoard.ErrorMessage"), //$NON-NLS-1$
                         e.getMessage());
             }
         }
@@ -420,9 +420,9 @@ public class BoardsPanel extends JPanel {
     public final Action removeBoardAction = new AbstractAction("Remove Board") { //$NON-NLS-1$
         {
             putValue(SMALL_ICON, Icons.delete);
-            putValue(NAME, Translations.getString("BoardPanel.Action.RemoveBoard")); //$NON-NLS-1$
+            putValue(NAME, Translations.getString("BoardsPanel.Action.RemoveBoard")); //$NON-NLS-1$
             putValue(SHORT_DESCRIPTION, 
-                    Translations.getString("BoardPanel.Action.RemoveBoard.Description")); //$NON-NLS-1$
+                    Translations.getString("BoardsPanel.Action.RemoveBoard.Description")); //$NON-NLS-1$
             putValue(MNEMONIC_KEY, KeyEvent.VK_R);
         }
 
@@ -431,8 +431,8 @@ public class BoardsPanel extends JPanel {
             for (Board selection : getSelections()) {
                 if (configuration.isInUse(selection)) {
                     MessageBoxes.errorBox(BoardsPanel.this, 
-                            Translations.getString("BoardPanel.Action.RemoveBoard.ErrorBox.Title"), //$NON-NLS-1$
-                            String.format(Translations.getString("BoardPanel.Action.RemoveBoard.ErrorBox.MessageFormat"), //$NON-NLS-1$
+                            Translations.getString("BoardsPanel.Action.RemoveBoard.ErrorBox.Title"), //$NON-NLS-1$
+                            String.format(Translations.getString("BoardsPanel.Action.RemoveBoard.ErrorBox.MessageFormat"), //$NON-NLS-1$
                                     selection.getName()));
                 }
                 else {
@@ -446,9 +446,9 @@ public class BoardsPanel extends JPanel {
     public final Action copyBoardAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.copy);
-            putValue(NAME, Translations.getString("BoardPanel.Action.CopyBoard")); //$NON-NLS-1$
+            putValue(NAME, Translations.getString("BoardsPanel.Action.CopyBoard")); //$NON-NLS-1$
             putValue(SHORT_DESCRIPTION, 
-                    Translations.getString("BoardPanel.Action.CopyBoard.Description")); //$NON-NLS-1$
+                    Translations.getString("BoardsPanel.Action.CopyBoard.Description")); //$NON-NLS-1$
             putValue(MNEMONIC_KEY, KeyEvent.VK_COPY);
         }
 
@@ -456,7 +456,7 @@ public class BoardsPanel extends JPanel {
         public void actionPerformed(ActionEvent arg0) {
             Board boardToCopy = getSelection();
             FileDialog fileDialog = new FileDialog(frame, 
-                    Translations.getString("BoardPanel.Action.CopyBoard.SaveDialog"), FileDialog.SAVE); //$NON-NLS-1$
+                    Translations.getString("BoardsPanel.Action.CopyBoard.SaveDialog"), FileDialog.SAVE); //$NON-NLS-1$
             fileDialog.setFilenameFilter(new FilenameFilter() {
                 @Override
                 public boolean accept(File dir, String name) {
@@ -488,7 +488,7 @@ public class BoardsPanel extends JPanel {
             catch (Exception e) {
                 e.printStackTrace();
                 MessageBoxes.errorBox(frame, 
-                        Translations.getString("BoardPanel.Action.CopyBoard.ErrorMessage"), //$NON-NLS-1$
+                        Translations.getString("BoardsPanel.Action.CopyBoard.ErrorMessage"), //$NON-NLS-1$
                         e.getMessage());
             }
         }

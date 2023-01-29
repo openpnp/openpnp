@@ -543,14 +543,8 @@ public class JobPanel extends JPanel {
         if (this.job != null) {
             this.job.removePropertyChangeListener("dirty", titlePropertyChangeListener); //$NON-NLS-1$
             this.job.removePropertyChangeListener("file", titlePropertyChangeListener); //$NON-NLS-1$
-//            for (PlacementsHolderLocation<?> child : this.job.getBoardAndPanelLocations()) {
-//                child.removePropertyChangeListener(this.job);
-//            }
         }
         this.job = job;
-//        for (PlacementsHolderLocation<?> child : this.job.getBoardAndPanelLocations()) {
-//            child.addPropertyChangeListener(this.job);
-//        }
         jobTableModel.setJob(job);
         job.addPropertyChangeListener("dirty", titlePropertyChangeListener); //$NON-NLS-1$
         job.addPropertyChangeListener("file", titlePropertyChangeListener); //$NON-NLS-1$
@@ -623,14 +617,7 @@ public class JobPanel extends JPanel {
         int index = jobTable.convertRowIndexToModel(jobTable.getSelectedRow());
         List<PlacementsHolderLocation<?>> boardAndPanelLocations = job.getBoardAndPanelLocations();
         PlacementsHolderLocation<?> selectedLocation = boardAndPanelLocations.get(index);
-        int endIndex = index+1;
-        if (selectedLocation instanceof PanelLocation) {
-            while (endIndex < boardAndPanelLocations.size() && 
-                    boardAndPanelLocations.get(endIndex).isDescendantOf(selectedLocation)) {
-                endIndex++;
-            }
-        }
-        jobTableModel.fireTableRowsUpdated(index, endIndex-1);
+        jobTableModel.fireTableCellDecendantsUpdated(selectedLocation, TableModelEvent.ALL_COLUMNS);
     }
 
     public PlacementsHolderLocation<?> getSelection() {

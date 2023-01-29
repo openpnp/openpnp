@@ -343,7 +343,7 @@ public class MainFrame extends JFrame {
         // File -> Import
         //////////////////////////////////////////////////////////////////////
         mnFile.addSeparator();
-        mnImport = new JMenu(Translations.getString("BoardPanel.BoardPlacements.Action.Import")); //$NON-NLS-1$
+        mnImport = new JMenu(Translations.getString("BoardsPanel.BoardPlacements.Action.Import")); //$NON-NLS-1$
         mnImport.setMnemonic(KeyEvent.VK_I);
         mnImport.setEnabled(false);
         mnFile.add(mnImport);

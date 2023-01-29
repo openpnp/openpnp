@@ -117,6 +117,7 @@ public class JobPlacementsPanel extends JPanel {
     private boolean singleInstance;
     private ActionGroup editFeederActionGroup;
     private Preferences prefs = Preferences.userNodeForPackage(JobPlacementsPanel.class);
+    private Configuration configuration;
 
 
     private static Color typeColorFiducial = new Color(157, 188, 255);
@@ -130,12 +131,13 @@ public class JobPlacementsPanel extends JPanel {
     	this.jobPanel = jobPanel;
         createUi();
     }
+    
     private void createUi() {
         setBorder(new TitledBorder(null,
                 Translations.getString("JobPlacementsPanel.Border.title"), //$NON-NLS-1$
                 TitledBorder.LEADING, TitledBorder.TOP, null, null));
         
-        Configuration configuration = Configuration.get();
+        configuration = Configuration.get();
         
         topLevelSingleInstanceActionGroup = new ActionGroup(newAction, removeAction, 
                 setTypeAction, setSideAction);
@@ -217,7 +219,7 @@ public class JobPlacementsPanel extends JPanel {
 
                 boolean updateLinkedTables = 
                         MainFrame.get().getTabs().getSelectedComponent() == MainFrame.get().getJobTab() 
-                        && Configuration.get().getTablesLinked() == TablesLinked.Linked;
+                        && configuration.getTablesLinked() == TablesLinked.Linked;
                 
                 if (getSelections().size() > 1) {
                     // multi select
@@ -227,7 +229,7 @@ public class JobPlacementsPanel extends JPanel {
                     captureActionGroup.setEnabled(false);
                     multiSelectionActionGroup.setEnabled(true);
                     if (updateLinkedTables) {
-                        Configuration.get().getBus().post(new PlacementSelectedEvent(null,
+                        configuration.getBus().post(new PlacementSelectedEvent(null,
                                 boardOrPanelLocation, JobPlacementsPanel.this));
                     }
                 }
@@ -244,7 +246,7 @@ public class JobPlacementsPanel extends JPanel {
                             && getSelection().getSide() == boardOrPanelLocation.getGlobalSide() &&
                             (boardOrPanelLocation instanceof BoardLocation));
                     if (updateLinkedTables) {
-                        Configuration.get().getBus().post(new PlacementSelectedEvent(getSelection(),
+                        configuration.getBus().post(new PlacementSelectedEvent(getSelection(),
                                 boardOrPanelLocation, JobPlacementsPanel.this));
                     }
                     MainFrame mainFrame = MainFrame.get();
@@ -394,7 +396,7 @@ public class JobPlacementsPanel extends JPanel {
         panel_1.add(searchTextField);
         searchTextField.setColumns(15);
         
-        Configuration.get().getBus().register(this);
+        configuration.getBus().register(this);
     }
     
     @Subscribe
@@ -544,7 +546,7 @@ public class JobPlacementsPanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            if (Configuration.get().getParts().size() == 0) {
+            if (configuration.getParts().size() == 0) {
                 MessageBoxes.errorBox(getTopLevelAncestor(),
                         Translations.getString("General.Error"), //$NON-NLS-1$
                         Translations.getString("JobPlacementsPanel.NewPlacement.ErrorMessageBox.NoPartsMessage")); //$NON-NLS-1$
@@ -570,15 +572,15 @@ public class JobPlacementsPanel extends JPanel {
             
             Placement placement = new Placement(id);
 
-            placement.setPart(Configuration.get().getParts().get(0));
-            placement.setLocation(new Location(Configuration.get().getSystemUnits()));
+            placement.setPart(configuration.getParts().get(0));
+            placement.setLocation(new Location(configuration.getSystemUnits()));
             placement.setSide(boardOrPanelLocation.getGlobalSide());
 
             if (boardOrPanelLocation instanceof PanelLocation) {
                 placement.setType(Type.Fiducial);
             }
             boardOrPanelLocation.getPlacementsHolder().getDefinition().addPlacement(placement);
-            Configuration.get().getBus()
+            configuration.getBus()
                 .post(new DefinitionStructureChangedEvent(boardOrPanelLocation.getPlacementsHolder().getDefinition(), 
                         "placements", JobPlacementsPanel.this)); //$NON-NLS-1$
             jobPanel.getJob().removePlacedStatus(boardOrPanelLocation, placement.getId());
@@ -601,7 +603,7 @@ public class JobPlacementsPanel extends JPanel {
             for (Placement placement : getSelections()) {
                 boardOrPanelLocation.getPlacementsHolder().getDefinition().removePlacement((Placement) placement.getDefinition());
             }
-            Configuration.get().getBus()
+            configuration.getBus()
                 .post(new DefinitionStructureChangedEvent(boardOrPanelLocation.getPlacementsHolder().getDefinition(),
                         "placements", JobPlacementsPanel.this)); //$NON-NLS-1$
             tableModel.fireTableDataChanged();
@@ -630,7 +632,7 @@ public class JobPlacementsPanel extends JPanel {
 
                 Map<String, Object> globals = new HashMap<>();
                 globals.put("camera", camera); //$NON-NLS-1$
-                Configuration.get().getScripting().on("Camera.AfterPosition", globals); //$NON-NLS-1$
+                configuration.getScripting().on("Camera.AfterPosition", globals); //$NON-NLS-1$
             });
         }
     };
@@ -660,7 +662,7 @@ public class JobPlacementsPanel extends JPanel {
 
                 Map<String, Object> globals = new HashMap<>();
                 globals.put("camera", camera); //$NON-NLS-1$
-                Configuration.get().getScripting().on("Camera.AfterPosition", globals); //$NON-NLS-1$
+                configuration.getScripting().on("Camera.AfterPosition", globals); //$NON-NLS-1$
             });
         };
     };

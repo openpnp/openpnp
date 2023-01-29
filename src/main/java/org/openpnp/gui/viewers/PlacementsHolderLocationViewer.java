@@ -1600,7 +1600,7 @@ public class PlacementsHolderLocationViewer extends JPanel implements PropertyCh
                                 getPlacementsHolderLocationsTable(), phl);
                         
                         SwingUtilities.invokeLater(() -> {
-                            MainFrame.get().getJobTab().refresh();
+                            MainFrame.get().getJobTab().refreshSelectedRow();
                         });
                         
                         /**

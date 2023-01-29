@@ -22,6 +22,8 @@ package org.openpnp.model;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.NoninvertibleTransformException;
 import java.io.IOException;
+
+import org.openpnp.gui.MainFrame;
 import org.openpnp.util.Utils2D;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.core.Commit;
@@ -106,10 +108,34 @@ public abstract class PlacementsHolderLocation<T extends PlacementsHolderLocatio
         setPlacementsHolder(placementsHolder);
     }
 
+    /**
+     * Cleans-up property change listeners
+     */
     @Override
     public void dispose() {
+        if (isDescendantOfJob()) {
+            Job job = MainFrame.get().getJobTab().getJob();
+            removePropertyChangeListener(job);
+            placementsHolder.removePropertyChangeListener(job);
+        }
         placementsHolder.dispose();
         super.dispose();
+    }
+    
+    /**
+     * 
+     * @return true if this PlacementsHolderLocation is a descendant of the job
+     */
+    public boolean isDescendantOfJob() {
+        PanelLocation jobRoot = MainFrame.get().getJobTab().getJob().getRootPanelLocation();
+        PanelLocation ancestor = parent;
+        while (ancestor != null) {
+            if (ancestor == jobRoot) {
+                return true;
+            }
+            ancestor = ancestor.parent;
+        }
+        return false;
     }
     
     /**

@@ -1202,6 +1202,11 @@ public class Configuration extends AbstractModelObject {
         //Create a deep copy of the board's definition and assign it to the BoardLocation
         Board board = new Board(getBoard(boardFile));
         boardLocation.setBoard(board);
+        
+        if (job != null) {
+            boardLocation.addPropertyChangeListener(job);
+            board.addPropertyChangeListener(job);
+        }
     }
 
     /**
@@ -1238,17 +1243,23 @@ public class Configuration extends AbstractModelObject {
             panel = new Panel(getPanel(panelFile));
             panelLocation.setPanel(panel);
         }
+        if (job != null) {
+            panelLocation.addPropertyChangeListener(job);
+            panel.addPropertyChangeListener(job);
+        }
 
         //Recursively resolve all the panel's children
         for (PlacementsHolderLocation<?> child : panel.getChildren()) {
             if (child instanceof PanelLocation) {
                 PanelLocation childPanelLocation = (PanelLocation) child;
                 childPanelLocation.setParent(panelLocation);
+                childPanelLocation.getDefinition().addPropertyChangeListener(childPanelLocation);
                 resolvePanel(job, childPanelLocation);
             }
             else if (child instanceof BoardLocation) {
                 BoardLocation boardLocation = (BoardLocation) child;
                 boardLocation.setParent(panelLocation);
+                boardLocation.getDefinition().addPropertyChangeListener(boardLocation);
                 resolveBoard(job, boardLocation);
             }
             else {

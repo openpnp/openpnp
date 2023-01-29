@@ -284,6 +284,7 @@ public class Panel extends PlacementsHolder<Panel> implements PropertyChangeList
             else {
                 PlacementsHolderLocation<?> oldChild = children.get(index);
                 oldChild.removePropertyChangeListener(this);
+                oldChild.getDefinition().removePropertyChangeListener(child);
                 oldChild.dispose();
                 children.set(index, child);
             }
@@ -297,6 +298,7 @@ public class Panel extends PlacementsHolder<Panel> implements PropertyChangeList
                     children.remove(index);
                     fireIndexedPropertyChange("child", index, child, null);
                     child.removePropertyChangeListener(this);
+                    child.getDefinition().removePropertyChangeListener(child);
                     child.dispose();
                 }
             }

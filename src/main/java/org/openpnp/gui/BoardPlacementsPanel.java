@@ -166,7 +166,7 @@ public class BoardPlacementsPanel extends JPanel {
     
     private void createUi() {
         setBorder(new TitledBorder(null, 
-                Translations.getString("BoardPanel.BoardPlacements.Placements"), //$NON-NLS-1$
+                Translations.getString("BoardsPanel.BoardPlacements.Placements"), //$NON-NLS-1$
                 TitledBorder.LEADING, TitledBorder.TOP, null, null));
         
         configuration = Configuration.get();
@@ -350,7 +350,7 @@ public class BoardPlacementsPanel extends JPanel {
         JPanel panel_1 = new JPanel();
         panel.add(panel_1, BorderLayout.EAST);
 
-        JLabel lblNewLabel = new JLabel(Translations.getString("BoardPanel.BoardPlacements.Placements.Search")); //$NON-NLS-1$
+        JLabel lblNewLabel = new JLabel(Translations.getString("BoardsPanel.BoardPlacements.Placements.Search")); //$NON-NLS-1$
         panel_1.add(lblNewLabel);
 
         searchTextField = new JTextField();
@@ -467,20 +467,20 @@ public class BoardPlacementsPanel extends JPanel {
     public final Action newAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.add);
-            putValue(NAME, Translations.getString("BoardPanel.BoardPlacements.Action.NewPlacement")); //$NON-NLS-1$
-            putValue(SHORT_DESCRIPTION, Translations.getString("BoardPanel.BoardPlacements.Action.NewPlacement.Description")); //$NON-NLS-1$
+            putValue(NAME, Translations.getString("BoardsPanel.BoardPlacements.Action.NewPlacement")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("BoardsPanel.BoardPlacements.Action.NewPlacement.Description")); //$NON-NLS-1$
         }
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
             if (configuration.getParts().size() == 0) {
                 MessageBoxes.errorBox(getTopLevelAncestor(), Translations.getString("General.Error"), //$NON-NLS-1$
-                        Translations.getString("BoardPanel.BoardPlacements.NewPlacement.ErrorMessageBox.NoPartsMessage")); //$NON-NLS-1$
+                        Translations.getString("BoardsPanel.BoardPlacements.NewPlacement.ErrorMessageBox.NoPartsMessage")); //$NON-NLS-1$
                 return;
             }
 
             String id = JOptionPane.showInputDialog(getTopLevelAncestor(),
-                    Translations.getString("BoardPanel.BoardPlacements.NewPlacement.InputDialog.enterIdMessage")); //$NON-NLS-1$
+                    Translations.getString("BoardsPanel.BoardPlacements.NewPlacement.InputDialog.enterIdMessage")); //$NON-NLS-1$
             if (id == null) {
                 return;
             }
@@ -489,7 +489,7 @@ public class BoardPlacementsPanel extends JPanel {
             for(Placement compareplacement : board.getPlacements()) {
                 if (compareplacement.getId().equals(id)) {
                     MessageBoxes.errorBox(getTopLevelAncestor(), Translations.getString("General.Error"), //$NON-NLS-1$
-                            Translations.getString("BoardPanel.BoardPlacements.NewPlacement.ErrorMessageBox.IdAlreadyExistsMessage")); //$NON-NLS-1$
+                            Translations.getString("BoardsPanel.BoardPlacements.NewPlacement.ErrorMessageBox.IdAlreadyExistsMessage")); //$NON-NLS-1$
                     return;
                 }
             }
@@ -512,8 +512,8 @@ public class BoardPlacementsPanel extends JPanel {
     public final Action removeAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.delete);
-            putValue(NAME, Translations.getString("BoardPanel.BoardPlacements.Action.RemovePlacement")); //$NON-NLS-1$
-            putValue(SHORT_DESCRIPTION, Translations.getString("BoardPanel.BoardPlacements.Action.RemovePlacement.Description")); //$NON-NLS-1$
+            putValue(NAME, Translations.getString("BoardsPanel.BoardPlacements.Action.RemovePlacement")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("BoardsPanel.BoardPlacements.Action.RemovePlacement.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -530,8 +530,8 @@ public class BoardPlacementsPanel extends JPanel {
 
     public void importBoard(Class<? extends BoardImporter> boardImporterClass) {
         if (boardsPanel.getSelection() == null) {
-            MessageBoxes.errorBox(getTopLevelAncestor(), Translations.getString("BoardPanel.BoardPlacements.Importer.Fail"), //$NON-NLS-1$
-                    Translations.getString("BoardPanel.BoardPlacements.Importer.Fail.Message")); //$NON-NLS-1$
+            MessageBoxes.errorBox(getTopLevelAncestor(), Translations.getString("BoardsPanel.BoardPlacements.Importer.Fail"), //$NON-NLS-1$
+                    Translations.getString("BoardsPanel.BoardPlacements.Importer.Fail.Message")); //$NON-NLS-1$
             return;
         }
         
@@ -540,7 +540,7 @@ public class BoardPlacementsPanel extends JPanel {
             boardImporter = boardImporterClass.newInstance();
         }
         catch (Exception e) {
-            MessageBoxes.errorBox(getTopLevelAncestor(), Translations.getString("BoardPanel.BoardPlacements.Importer.Fail"), e); //$NON-NLS-1$
+            MessageBoxes.errorBox(getTopLevelAncestor(), Translations.getString("BoardsPanel.BoardPlacements.Importer.Fail"), e); //$NON-NLS-1$
             return;
         }
 
@@ -558,12 +558,12 @@ public class BoardPlacementsPanel extends JPanel {
                     //Option 1: Import after deleting all existing placements
                     //Option 2: Cancel the import
                     Object[] options = {
-                            Translations.getString("BoardPanel.BoardPlacements.Importer.OptionsBox.Merge"), //$NON-NLS-1$
-                            Translations.getString("BoardPanel.BoardPlacements.Importer.OptionsBox.Replace"), //$NON-NLS-1$
+                            Translations.getString("BoardsPanel.BoardPlacements.Importer.OptionsBox.Merge"), //$NON-NLS-1$
+                            Translations.getString("BoardsPanel.BoardPlacements.Importer.OptionsBox.Replace"), //$NON-NLS-1$
                             Translations.getString("General.Cancel")}; //$NON-NLS-1$
                     importOption = JOptionPane.showOptionDialog((Frame) getTopLevelAncestor(),
-                            Translations.getString("BoardPanel.BoardPlacements.Importer.OptionsBox.Question"), //$NON-NLS-1$
-                            Translations.getString("BoardPanel.BoardPlacements.Importer.OptionsBox.Title"), //$NON-NLS-1$
+                            Translations.getString("BoardsPanel.BoardPlacements.Importer.OptionsBox.Question"), //$NON-NLS-1$
+                            Translations.getString("BoardsPanel.BoardPlacements.Importer.OptionsBox.Title"), //$NON-NLS-1$
                             JOptionPane.YES_NO_CANCEL_OPTION,
                             JOptionPane.QUESTION_MESSAGE,
                             null,
@@ -608,15 +608,15 @@ public class BoardPlacementsPanel extends JPanel {
             }
         }
         catch (Exception e) {
-            MessageBoxes.errorBox(getTopLevelAncestor(), Translations.getString("BoardPanel.BoardPlacements.Importer.Fail"), e); //$NON-NLS-1$
+            MessageBoxes.errorBox(getTopLevelAncestor(), Translations.getString("BoardsPanel.BoardPlacements.Importer.Fail"), e); //$NON-NLS-1$
         }
     }
 
     public final Action importAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.importt);
-            putValue(NAME, Translations.getString("BoardPanel.BoardPlacements.Action.Import")); //$NON-NLS-1$
-            putValue(SHORT_DESCRIPTION, Translations.getString("BoardPanel.BoardPlacements.Action.Import.Description")); //$NON-NLS-1$
+            putValue(NAME, Translations.getString("BoardsPanel.BoardPlacements.Action.Import")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("BoardsPanel.BoardPlacements.Action.Import.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -645,8 +645,8 @@ public class BoardPlacementsPanel extends JPanel {
     public final Action viewerAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.colorTrue);
-            putValue(NAME, Translations.getString("BoardPanel.BoardPlacements.Action.View")); //$NON-NLS-1$
-            putValue(SHORT_DESCRIPTION, Translations.getString("BoardPanel.BoardPlacements.Action.View.Description")); //$NON-NLS-1$
+            putValue(NAME, Translations.getString("BoardsPanel.BoardPlacements.Action.View")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("BoardsPanel.BoardPlacements.Action.View.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -669,8 +669,8 @@ public class BoardPlacementsPanel extends JPanel {
 
     public final Action setTypeAction = new AbstractAction() {
         {
-            putValue(NAME, Translations.getString("BoardPanel.BoardPlacements.Action.SetType")); //$NON-NLS-1$
-            putValue(SHORT_DESCRIPTION, Translations.getString("BoardPanel.BoardPlacements.Action.SetType.Description")); //$NON-NLS-1$
+            putValue(NAME, Translations.getString("BoardsPanel.BoardPlacements.Action.SetType")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("BoardsPanel.BoardPlacements.Action.SetType.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -693,7 +693,7 @@ public class BoardPlacementsPanel extends JPanel {
                 name = type.toString();
             }
             putValue(NAME, name);
-            putValue(SHORT_DESCRIPTION, Translations.getString("BoardPanel.BoardPlacements.Action.SetType.ToolTip") + //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("BoardsPanel.BoardPlacements.Action.SetType.ToolTip") + //$NON-NLS-1$
                     " " + name); //$NON-NLS-1$
         }
 
@@ -709,8 +709,8 @@ public class BoardPlacementsPanel extends JPanel {
 
     public final Action setSideAction = new AbstractAction() {
         {
-            putValue(NAME, Translations.getString("BoardPanel.BoardPlacements.Action.SetSide")); //$NON-NLS-1$
-            putValue(SHORT_DESCRIPTION, Translations.getString("BoardPanel.BoardPlacements.Action.SetSide.Description")); //$NON-NLS-1$
+            putValue(NAME, Translations.getString("BoardsPanel.BoardPlacements.Action.SetSide")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("BoardsPanel.BoardPlacements.Action.SetSide.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -730,7 +730,7 @@ public class BoardPlacementsPanel extends JPanel {
                 name = Translations.getString("Placement.Side.Bottom"); //$NON-NLS-1$
             }
             putValue(NAME, name);
-            putValue(SHORT_DESCRIPTION, Translations.getString("BoardPanel.BoardPlacements.Action.SetSide.ToolTip") + //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("BoardsPanel.BoardPlacements.Action.SetSide.ToolTip") + //$NON-NLS-1$
                     " " + name); //$NON-NLS-1$
         }
 
@@ -746,8 +746,8 @@ public class BoardPlacementsPanel extends JPanel {
     
     public final Action setErrorHandlingAction = new AbstractAction() {
         {
-            putValue(NAME, Translations.getString("BoardPanel.BoardPlacements.Action.SetErrorHandling")); //$NON-NLS-1$
-            putValue(SHORT_DESCRIPTION, Translations.getString("BoardPanel.BoardPlacements.Action.SetErrorHandling.Description")); //$NON-NLS-1$
+            putValue(NAME, Translations.getString("BoardsPanel.BoardPlacements.Action.SetErrorHandling")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("BoardsPanel.BoardPlacements.Action.SetErrorHandling.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -767,7 +767,7 @@ public class BoardPlacementsPanel extends JPanel {
                 name = Translations.getString("Placement.ErrorHandling.Defer"); //$NON-NLS-1$
             }
             putValue(NAME, name);
-            putValue(SHORT_DESCRIPTION, Translations.getString("BoardPanel.BoardPlacements.Action.SetErrorHandling.ToolTip") + //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("BoardsPanel.BoardPlacements.Action.SetErrorHandling.ToolTip") + //$NON-NLS-1$
                     " " + name); //$NON-NLS-1$
         }
 
@@ -783,8 +783,8 @@ public class BoardPlacementsPanel extends JPanel {
     
     public final Action setEnabledAction = new AbstractAction() {
         {
-            putValue(NAME, Translations.getString("BoardPanel.BoardPlacements.Action.SetEnabled")); //$NON-NLS-1$
-            putValue(SHORT_DESCRIPTION, Translations.getString("BoardPanel.BoardPlacements.Action.SetEnabled.Description")); //$NON-NLS-1$
+            putValue(NAME, Translations.getString("BoardsPanel.BoardPlacements.Action.SetEnabled")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("BoardsPanel.BoardPlacements.Action.SetEnabled.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -801,7 +801,7 @@ public class BoardPlacementsPanel extends JPanel {
                     Translations.getString("General.Enabled") :  //$NON-NLS-1$
                     Translations.getString("General.Disabled"); //$NON-NLS-1$
             putValue(NAME, name);
-            putValue(SHORT_DESCRIPTION, Translations.getString("BoardPanel.BoardPlacements.Action.SetEnabled.ToolTip") +  //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("BoardsPanel.BoardPlacements.Action.SetEnabled.ToolTip") +  //$NON-NLS-1$
                     " " + name); //$NON-NLS-1$
         }
 
