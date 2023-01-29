@@ -2,13 +2,17 @@ You can use OpenPnP's [Actuator](https://github.com/openpnp/openpnp/wiki/Setup-a
 
 # Set Up a Lighting Actuator
 
-1. Add an actuator for the lights you want to control. Go to the Machine Setup tab and then look for the Camera you want to assign the light to. You'll find it either attached to the Machine (up-looking Camera) or to the Head (down-looking Camera). Got to the Actuators branch besides the Cameras branch and then click the green + button to add a new Actuator.
-2. Expand the Actuators list and select the new Actuator.
-3. Set up the Actuator as described in the [Actuators page](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration_Actuators). If you have multi-channel lights, be sure to read about the Actuator Profiles. 
+1. For new machine configurations, the light actuators are already setup.
+2. Otherwise, add an actuator for the lights you want to control. Go to the Machine Setup tab and then look for the Camera you want to assign the light to. You'll find it either attached to the Machine (up-looking Camera) or to the Head (down-looking Camera). Got to the Actuators branch besides the Cameras branch and then click the green + button to add a new Actuator.
+3. Expand the Actuators list and select the new Actuator.
+4. Set up the Actuator as described in the [Actuators page](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration_Actuators). If you have multi-channel lights, be sure to read about the Actuator Profiles. 
 
-# Test The Lights
+## Shared Camera Light Actuator
+If both camera lights are switched by the _same_ controller output, you need a shared light actuator, otherwise OpenPnP will be confused about the actuator switching state. In this case you best delete the LIGHT_TOP actuator and also use the LIGHT_BOTTOM actuator for the Top camera. You need to enable the **Allow Machine Actuators?** checkbox for it to be selectable (by default only head mounted actuators are selectable for head mounted cameras). Also, you need to disable **Anti-Glare?** on _both_ cameras:
 
-Go to Main Window -> Machine Controls -> Actuators and click the button named after the created Actuator. Your lights should come on. Click it again and they should turn off. If this doesn't work, adjust your settings until it does, or ask for help.
+![Shared light actuator](https://user-images.githubusercontent.com/9963310/215325506-8e054219-b0b9-4996-a793-ac030a97a5d0.png)
+
+Of course, you can then rename the shared actuator to simply LIGHT or similar. 
 
 # Assign the Camera Light Actuator
 
@@ -26,6 +30,12 @@ There are various ON and OFF actuation Options:
 As soon as a **Light Actuator** is assigned, the Camera View will display a new overlay light symbol in the upper right corner. It shows the camera light status and can be clicked to turn the light on or off:
  
 ![CameraViewLightOnOff](https://user-images.githubusercontent.com/9963310/103424966-9e2c5e80-4baf-11eb-8eac-a20844fed4e8.gif)
+
+# Test The Lights
+
+As soon as a light actuator is assigned to the camera, a "sun" symbol appears in the top right corner camera view. Click on it to toggle the camera light. 
+
+Alternatively, go to Main Window -> Machine Controls -> Actuators and click the button named after the created Actuator. Your lights should come on. Click it again and they should turn off. If this doesn't work, adjust your settings until it does, or ask for help.
 
 # Use in the ImageCapture Stage 
 
