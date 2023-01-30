@@ -11,7 +11,7 @@ This might sound strange at first, but there are good technical reasons behind t
 
 Furthermore, most Z axes are _homed_ at the top (single nozzle) or at midpoint (dual shared Z nozzles), where the nozzles are retracted or balanced. It is the default for many controllers to home an axis to zero, i.e. you have _another_ reason why the top Z is 0 while the reach below is negative. 
 
-Finally, locations are initialized to all zero, including Z. Sometimes the X, Y and Z are treated separately, i.e. you setup the X, Y with the camera (crosshairs) and the Z by touching with the nozzle tip (typical for feeders, nozzle changer locations etc.). If you ever forget the second step and leave Z at 0, its a good thing for this to be at safe Z. Otherwise it would potentially crash the nozzle into the feeder/nozzle changer etc. as soon as OpenPnP wants to position to that location (and typically at full speed). 
+Finally, in the OpenPnP software, all locations are first initialized to all zero coordinates, including Z. Sometimes the X, Y and Z are treated separately, i.e. you setup the X, Y with the camera (crosshairs) and the Z by touching with the nozzle tip (typical process for capturing feeder pick locations, nozzle changer locations etc.). If you ever forget the second step and leave Z at 0, its a good thing for this to be a _safe Z_. Otherwise it would potentially crash the nozzle into the feeder/nozzle changer etc. as soon as OpenPnP wants to position to that location (and often at full speed). 
 
 ### But I still want to work with all positive Z!
 
