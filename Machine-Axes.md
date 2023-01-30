@@ -9,6 +9,8 @@ OpenPnP typically uses Z coordinates that have Z = 0 where the nozzle is retract
 
 This might sound strange at first, but there are good technical reasons behind that choice. If you have a dual nozzle head with _shared Z axis_, one nozzle goes up when the other goes down. It is therefore a natural choice to have the two nozzles at the same coordinate value, one negative, one positive. To keep the coordinate system right-handed (Z axis must point up), the nozzle that is reaching down must have negative Z coordinates. Furthermore, most Z axes are _homed_ at the top (single nozzle) or at midpoint (dual shared Z nozzles), where the nozzles are retracted or balanced. It is the default for many controllers to home an axis to zero, i.e. you have _another_ reason why the top Z is 0 while the reach below is negative. 
 
+## I still want to work with all positive Z!
+
 Theoretically, the software should support machines with all-positive Z. However there are some caveats:
 
 1. Locations are initialized to all zero, including Z. Sometimes the X, Y and Z are treated separately, i.e. you setup the X, Y with the camera and the Z with the nozzle (typical for feeders, nozzle changer locations etc.). With all-positive Z coordinates, if you forget to setup the Z and leave it at 0, that's potentially dangerous, as it may crash the nozzle into the feeder/nozzle changer etc. when you or some part of OpenPnP tries to position to that location. Nothing bad happens, if the forgotten Z=0 is at safe height.
