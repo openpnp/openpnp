@@ -12,19 +12,22 @@ For each axis, capture the lower and higher soft limit, i.e., the very extremes 
 
 If the axis has limit switches (or if the controller has its own soft limits, which are not to be confused), use a position close to these, but still safe not to accidentally trigger them, taking fast moves and machine vibration/flex into account. Allow for ~0.2mm wiggle room. 
 
-In case of a Z axis, do not confused the **Soft Limits** with the **Save Z Zone**. Instead you need to jog over the area of the machine, where you need to lower the nozzle(s) the most. This can be where the bottom camera is sunken into the machine table, or where the nozzle tips are changed or some other low point the nozzle needs to be able reach in operation. Then jog Z to the lowest allowed position. 
-
-In case of shared Z axes (two nozzles moved up/down together by the same motor) the low and high soft limits are determined by one or the other nozzle being lowered as low as admissible. Please also make sure, that you are still in effective articulation range of the mechanics, e.g. if you have a cam setup, make sure the cam/rollers are not blocked or out of reach yet. However, note that only the _down-reach_ is relevant, it does not matter if the up-going nozzle is blocked earlier.
-
-![Articulation at limit](https://user-images.githubusercontent.com/9963310/215420497-6d07b738-5e6c-48c6-946e-6f8b6d2e4a0b.png)
- 
-
 When you are happy with the position, press Accept to capture the axis coordinate:
 
 ![Capture Soft Limit](https://user-images.githubusercontent.com/9963310/129459436-55511299-6a66-4d49-91e5-2a7d56d2c294.png)
 
 These captures coordinates will set the Soft Limits as described on the [Machine Axes page](https://github.com/openpnp/openpnp/wiki/Machine-Axes#kinematic-settings--axis-limits).
 
+## Special Considerations for Z Axes
+
+In case of a Z axis, do not confused the **Soft Limits** with the **Save Z Zone** (which is a different thing, as explained [here](#capture-safe-z)). To capture Z **Soft Limits** you need to jog over the area of the machine, where you need to lower the nozzle(s) the most. This can be where the bottom camera is sunken into the machine table, or where the nozzle tips are changed or some other low point the nozzle needs to be able reach in operation. Then jog Z to the lowest allowed position. 
+
+In case of shared Z axes where two nozzles are moved up/down together by the same Z axis motor, the low and high soft limits on the _motor axis_ are determined by one or the other nozzle being lowered as low as admissible, i.e., the high positions of the nozzles are not relevant and should _not_ be taken into consideration. The up-going nozzle (typically pulled up by a spring) is often blocked from moving further up, long before the opposite nozzle has reached the lowest operational position, which is the relevant position here. 
+
+Please also make sure, that you are still in effective articulation range of the mechanics, e.g., if you have a cam setup, make sure the cam/rollers are not blocked or maxed out yet. The following image shows an example of a cam operated shared Z axis at its mechanical limit. Again, best do not go all the way to the limit, allow for some wiggle room. Also note how the opposite up-going nozzle was already blocked well below that point and how its Z position is irrelevant for setting the Soft Limit:
+
+![Articulation at limit](https://user-images.githubusercontent.com/9963310/215420497-6d07b738-5e6c-48c6-946e-6f8b6d2e4a0b.png)
+ 
 # Dynamic Safe Z
 Choose whether you want **Dynamic Safe Z** handling or not: 
 
