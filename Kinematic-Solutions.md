@@ -8,11 +8,16 @@ To get some impressions, [watch a video of these and other calibration solutions
 
 # Capture Soft Limits
 
-For each axis, capture the lower and higher soft limit, i.e., the very extremes the controller axis is allowed to move. Jog to the low or high extreme respectively. If the axis has limit switches (or if the controller has its own soft limits, which are not to be confused), use a position close to these, but still safe not to accidentally trigger them, taking fast moves and machine vibration/flex into account. Allow for ~0.2mm wiggle room.
+For each axis, capture the lower and higher soft limit, i.e., the very extremes the controller axis is allowed to move. Jog to the low or high extreme respectively. 
+
+If the axis has limit switches (or if the controller has its own soft limits, which are not to be confused), use a position close to these, but still safe not to accidentally trigger them, taking fast moves and machine vibration/flex into account. Allow for ~0.2mm wiggle room. 
 
 In case of a Z axis, do not confused the **Soft Limits** with the **Save Z Zone**. Instead you need to jog over the area of the machine, where you need to lower the nozzle(s) the most. This can be where the bottom camera is sunken into the machine table, or where the nozzle tips are changed or some other low point the nozzle needs to be able reach in operation. Then jog Z to the lowest allowed position. 
 
-In case of shared Z axes (two nozzles moved up/down together by the same motor) the low and high soft limits are determined by one or the other nozzle being lowered as low as admissible.
+In case of shared Z axes (two nozzles moved up/down together by the same motor) the low and high soft limits are determined by one or the other nozzle being lowered as low as admissible. Please also make sure, that you are still in effective articulation range of the mechanics, e.g. if you have a cam setup, make sure the cam/rollers are not blocked or out of reach yet. However, note that only the _down-reach_ is relevant, it does not matter if the up-going nozzle is blocked earlier.
+
+![Articulation at limit](https://user-images.githubusercontent.com/9963310/215420497-6d07b738-5e6c-48c6-946e-6f8b6d2e4a0b.png)
+ 
 
 When you are happy with the position, press Accept to capture the axis coordinate:
 
