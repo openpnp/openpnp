@@ -17,6 +17,7 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 import org.openpnp.model.Solutions;
 import org.openpnp.spi.*;
+import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 
@@ -68,19 +69,19 @@ public class PhotonFeeder extends ReferenceFeeder {
 
     private void verifyFeederLocationIsFullyConfigured() throws NoSlotAddressException,
             UnconfiguredSlotException, FeederHasNoLocationOffsetException {
-        if(slotAddress == null) {
+        if (slotAddress == null) {
             throw new NoSlotAddressException(
                     String.format("Photon Feeder with address %s has no address. Is it inserted?", hardwareId)
             );
         }
 
-        if(getSlot().getLocation() == null) {
+        if (getSlot().getLocation() == null) {
             throw new UnconfiguredSlotException(
                     String.format("The slot at address %s has no location configured.", slotAddress)
             );
         }
 
-        if(offset == null) {
+        if (offset == null) {
             throw new FeederHasNoLocationOffsetException(
                     String.format("Photon Feeder with address %s has no location offset.", hardwareId)
             );
@@ -101,11 +102,11 @@ public class PhotonFeeder extends ReferenceFeeder {
     public void findIssues(Solutions solutions) {
         super.findIssues(solutions);
 
-        if(hardwareId == null) {
+        if (hardwareId == null) {
             return;
         }
 
-        if(slotAddress != null && getSlot().getLocation() == null) {
+        if (slotAddress != null && getSlot().getLocation() == null) {
             solutions.add(new Solutions.PlainIssue(
                     this,
                     "Feeder slot has no configured location",
@@ -115,7 +116,7 @@ public class PhotonFeeder extends ReferenceFeeder {
             ));
         }
 
-        if(offset == null) {
+        if (offset == null) {
             solutions.add(new Solutions.PlainIssue(
                     this,
                     "Feeder has no configured offset",
@@ -227,7 +228,7 @@ public class PhotonFeeder extends ReferenceFeeder {
             findSlotAddressIfNeeded();
             initializeIfNeeded();
 
-            if(! initialized) {
+            if (!initialized) {
                 continue;
             }
 
@@ -257,7 +258,7 @@ public class PhotonFeeder extends ReferenceFeeder {
     @Override
     public String getPropertySheetHolderTitle() {
         String classSimpleName = getClass().getSimpleName();
-        if(hardwareId == null) {
+        if (hardwareId == null) {
             return String.format("Unconfigured %s", classSimpleName);
         } else {
             return String.format("%s %s", classSimpleName, getName());
@@ -268,7 +269,7 @@ public class PhotonFeeder extends ReferenceFeeder {
     public PropertySheet[] getPropertySheets() {
         List<PropertySheet> sheets = new ArrayList<>();
 
-        if(hardwareId != null) {
+        if (hardwareId != null) {
             sheets.add(new FeederPropertySheet(this));
         }
 
@@ -294,7 +295,7 @@ public class PhotonFeeder extends ReferenceFeeder {
 
     @Override
     public String getName() {
-        if(hardwareId == null) {
+        if (hardwareId == null) {
             return String.format("Unconfigured %s", getClass().getSimpleName());
         }
 
@@ -337,7 +338,7 @@ public class PhotonFeeder extends ReferenceFeeder {
     }
 
     public PhotonFeederSlots.Slot getSlot() {
-        if(slotAddress == null) {
+        if (slotAddress == null) {
             return null;
         }
 
@@ -349,7 +350,7 @@ public class PhotonFeeder extends ReferenceFeeder {
         Integer oldValue = this.slotAddress;
         String oldName = this.getName();
 
-        if(slotAddress != null) {
+        if (slotAddress != null) {
             // Find any other photon feeders and if they have this slot address, set their address to null
             PhotonFeeder otherFeeder = findBySlotAddress(slotAddress);
             if (otherFeeder != null) {
@@ -373,10 +374,10 @@ public class PhotonFeeder extends ReferenceFeeder {
         String oldValue = this.hardwareId;
         this.hardwareId = hardwareId;
 
-        if(getClass().getSimpleName().equals(name)) {
+        if (getClass().getSimpleName().equals(name)) {
             name = hardwareId;
         }
-        
+
         firePropertyChange("hardwareId", oldValue, hardwareId);
     }
 
@@ -440,16 +441,21 @@ public class PhotonFeeder extends ReferenceFeeder {
     }
 
     public static void findAllFeeders(IntConsumer progressUpdate) throws Exception {
+        Logger.info("Searching for Photon Feeders");
         Machine machine = Configuration.get().getMachine();
         PhotonProperties photonProperties = new PhotonProperties(machine);
         Actuator actuator = getDataActuator();
         int maxFeederAddress = photonProperties.getMaxFeederAddress();
+        Logger.debug("Max Photon feeder address: " + maxFeederAddress);
 
         List<PhotonFeeder> feedersToAdd = new ArrayList<>();
 
         for (int address = 1; address <= maxFeederAddress; address++) {
+            Logger.debug("Querying Photon feeder address: " + address);
             String command = PhotonCommands.getFeederId(address);
+            Logger.trace("Photon feeder command: " + command);
             String response = actuator.read(command);
+            Logger.trace("Photon feeder response: " + command);
             PacketResponse packetResponse = GetFeederId.decode(response);
 
             if (progressUpdate != null) {
@@ -467,6 +473,9 @@ public class PhotonFeeder extends ReferenceFeeder {
                         feedersToAdd.add(otherFeeder);
                     }
                 }
+
+                Logger.trace("Found feeder with hardware uuid " + otherFeeder.slotAddress + " at address " + otherFeeder.getSlotAddress());
+
                 otherFeeder.setHardwareId(packetResponse.getUuid());
                 otherFeeder.setSlotAddress(address);
             } else if (packetResponse.getError() == ErrorTypes.TIMEOUT) {
@@ -475,6 +484,8 @@ public class PhotonFeeder extends ReferenceFeeder {
                     otherFeeder.slotAddress = null;
                     otherFeeder.initialized = false;
                 }
+            } else {
+                Logger.debug("Unknown error from packet response: " + packetResponse.getError().toString());
             }
         }
 
