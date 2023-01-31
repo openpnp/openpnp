@@ -884,7 +884,7 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                     }
                     else {
                         // Reset the acceleration (it is not automatically reset on some controllers). 
-                        commandBuilt = "{Acceleration:M204 S%.2f} ; Initialize acceleration\n";
+                        commandBuilt = "{Acceleration:M204 S%.2f ; Initialize acceleration}\n";
                         // Home all axes.
                         commandBuilt += "G28 ; Home all axes";
                     }
@@ -916,7 +916,7 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                         else {
                             // Apply acceleration limit.
                             int digits = digitsToExpress(aMin);
-                            commandBuilt = "{Acceleration:M204 S%."+digits+"f} ";
+                            commandBuilt = "{Acceleration:M204 S%."+digits+"f }";
                             if (dialect == FirmwareType.Marlin) {
                                 // Non-conformant G-code parser, needs newline.
                                 commandBuilt += "\n";
