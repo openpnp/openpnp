@@ -69,6 +69,8 @@ Press **Configure...** to check whether the configuration is correct, if not, ma
 
 ![image](https://user-images.githubusercontent.com/9963310/205495114-7d3b7c41-15a7-41ea-8614-17a38d60d195.png)
 
+If you can't set this, you likely forgot [to include Resources into the build in Maven](#include-resources-into-build).
+
 #### Externalize Strings Dialog
 
 The dialog lists all the yet untreated strings found in the source code. Select an entry to position to the code.
