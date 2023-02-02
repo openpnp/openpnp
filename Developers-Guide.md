@@ -122,8 +122,6 @@ Simply import the `openpnp` folder as a Maven project.
 
 # System Architecture
 
-This [sourcespy dashboard](https://sourcespy.com/github/openpnpopenpnp/) provides a high level overview of architecture, build process and dependencies of the project.
-
 ## Framework
 
 OpenPnP is written in Java using [Swing](https://en.wikipedia.org/wiki/Swing_(Java)) and [WindowBuilder](https://eclipse.org/windowbuilder/). Dependency and build management are performed using Maven. The majority of the code has been written using the Eclipse IDE but the system uses no Eclipse specific components and any IDE can be used.
