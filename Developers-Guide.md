@@ -191,11 +191,13 @@ The core of the reference implementation is the [ReferenceMachine class](http://
 
 ### Issues & Solutions
 
-The Issues & Solutions system constantly supervises the machine configuration. It also tracks the progress in initial machine setup using a system of Milestones. It detects missing or faulty configuration and guides the user through an elaborate set of "solutions" for interactive and/or automatic configuration and/or calibration. If there is no automatic solution possible, it at least alerts the user to detected "issues". The user remains the boss, proposed solutions can always be dismissed.
+The Issues & Solutions system constantly supervises the machine configuration. It also tracks the progress in initial machine setup using a system of Milestones. It detects missing or faulty configuration and guides the user through an elaborate set of Solutions for interactive and/or automatic configuration and/or calibration. If there is no automatic solution possible, it at least alerts the user to detected Issues. The user remains the boss, proposed solutions can always be dismissed.
 
-The order of these steps is automatically determined through dependencies and Milestones. The prerequisites must be established, before the dependent next steps are proposed. However, where dependencies are not relevant, the user is completely free to chose the order, i.e., all the currently ready steps are listed. Most solutions can also be revisited later. Milestones organize these steps into broader goals for attained machine functionality. 
+The order of these steps is automatically determined through dependencies and Milestones. Prerequisites must be established, before the dependent next steps are proposed. However, where dependencies are not relevant, users are completely free to chose any order of working through them. All the currently ready steps are listed. Most solutions can also be revisited later. Milestones organize these steps into broader intermediate goals for attained machine functionality. 
 
-The supervision is permanent. If the user later expands the machine with new components, or introduces a problem through manual configuration, or if a new OpenPnP version improves the coverage of Issues & Solutions, the relevant solutions automatically pop up.
+The supervision is permanent. If users later expands the machine with new components, or introduces a problem through manual (mis-)configuration, or if a new OpenPnP version improves the coverage of Issues & Solutions, the relevant solutions automatically pop up.
+
+Developers can easily integrate Issues & Solutions into their classes.
 
 ### Vision
 
