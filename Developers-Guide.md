@@ -189,16 +189,23 @@ The core of the reference implementation is the [ReferenceMachine class](http://
 
 ## Component Specifics
 
+### Issues & Solutions
+
+The Issues & Solutions system constantly supervises the machine configuration. It also tracks the progress in initial machine setup using a system of Milestones. It detects missing or faulty configuration and guides the user through an elaborate set of "solutions" for interactive and/or automatic configuration and/or calibration. If there is no automatic solution possible, it at least alerts the user to detected "issues". The user remains the boss, proposed solutions can always be dismissed.
+
+The order of these steps is automatically determined through dependencies and Milestones. The prerequisites must be established, before the dependent next steps are proposed. However, where dependencies are not relevant, the user is completely free to chose the order, i.e., all the currently ready steps are listed. Most solutions can also be revisited later. Milestones organize these steps into broader goals for attained machine functionality. 
+
+The supervision is permanent. If the user later expands the machine with new components, or introduces a problem through manual configuration, or if a new OpenPnP version improves the coverage of Issues & Solutions, the relevant solutions automatically pop up.
+
 ### Vision
 
-Vision tasks in OpenPnP are specified by the [VisionProvider SPI class](http://openpnp.github.io/openpnp/develop/org/openpnp/spi/VisionProvider.html). This area is still in it's infancy and suggestions on it's architecture are welcome.
+Vision tasks in OpenPnP are handled by Computer Vision Pipelines (`CvPipeline`). For developers and users alike, the Pipeline Editor allows composition of elaborate  pipelines to perform acquisition, processing, conversion, detection, transformation in dedicated pipeline stages. OpenPnP comes with a rich assortment of powerful stages mostly employing OpenCV.
 
-Currently, the concept is that VisionProviders provide data about images they receive from a camera. A VisionProvider has a reference to a Camera and can use it to capture images as needed. When other parts of the system have a need for a vision task, they query the involved Camera for it's VisionProvider and then ask the VisionProvider to provide vision services.
+Pipeline can be parametrized from the calling code, providing physical properties to the stages, like previously acquired (auto-)calibration data, expected dimensions, expected relative positions, shapes or template images for subjects to be detected and more. Essential parameters can be exposed to the user for easy use (sliders). 
 
-The VisionProvider interface specifies a few methods that are used by existing vision systems to get data but these are fairly rigidly defined and change may be needed to make this system more generic.
+Proven stock Pipelines are shipped with OpenPnP. Users can copy and edit their own pipelines and associate them with individual Parts, Packages, Feeders, Nozzle tips etc. Pipelines can be exchanged in the community using copy&paste (via XML).
 
-For the time being, if you are adding vision capabilities to OpenPnP you will need to add methods to the VisionProvider SPI and then implement those methods in the reference classes.
-
+Increasingly, the pipelines are self-tuning and/or fully parametrized from a few easy-to-use exposed parameters. Most physical parameters are provided from the machine configuration and calibration, which is widely supported by Issues & Solutions. Therefore users seldom need to edit pipelines any more.
 
 ### Wizards
 
