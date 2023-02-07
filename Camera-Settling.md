@@ -6,9 +6,9 @@ Camera Settling is used to let your camera adjust to what it's looking at before
 
 # Auto-Calibration by Issues & Solutions
 
-In newer OpenPnP versions, the Camera Settling is auto-calibrated by [[Issues and Solutions]]. 
+In newer OpenPnP versions, the Camera Settling is auto-calibrated by [[Issues and Solutions]]. The relevant steps can be seen in a [short video](https://youtu.be/Pxg6g3KI5_E).
 
-The relevant steps can be seen in a [short video](https://youtu.be/Pxg6g3KI5_E).
+![Adaptive Camera Settling](https://user-images.githubusercontent.com/9963310/217313303-c6544eeb-f07c-4e40-895f-2a28afb8258e.png)
 
 If you ever want to revisit the auto-calibration, just set the camera settling method back to **Fixed Time**, press **Apply**, then go to the Issues & Solutions tab and press **Find Issues & Solutions**. The _"Use an adaptive camera settling method"_ solution should appear.
 
