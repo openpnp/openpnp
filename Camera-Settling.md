@@ -4,7 +4,7 @@ Camera Settling is used to let your camera adjust to what it's looking at before
 
 ![AdvancedCameraSettleSmall](https://user-images.githubusercontent.com/9963310/81856586-504fe100-9561-11ea-982a-a0b95bf4c0e8.gif)
 
-# Camera Settling Auto-Calibration
+# Auto-Calibration by Issues & Solutions
 
 In newer OpenPnP versions, the Camera Settling is auto-calibrated by [[Issues and Solutions]]. 
 
