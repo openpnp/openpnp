@@ -4,6 +4,14 @@ Camera Settling is used to let your camera adjust to what it's looking at before
 
 ![AdvancedCameraSettleSmall](https://user-images.githubusercontent.com/9963310/81856586-504fe100-9561-11ea-982a-a0b95bf4c0e8.gif)
 
+# Camera Settling Auto-Calibration
+
+In newer OpenPnP versions, the Camera Settling is auto-calibrated by [[Issues and Solutions]]. 
+
+The relevant steps can be seen in a [short video](https://youtu.be/Pxg6g3KI5_E).
+
+The following sections explain advanced/manual setup.
+
 # Simple Method: Fixed Time
 
 The simple method is to just wait a moment. The default settle time is 250 milliseconds. If you find that things like fiducial checks are getting blurry images, you may need to increase the settle time.
