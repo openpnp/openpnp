@@ -10,7 +10,7 @@ In newer OpenPnP versions, the Camera Settling is auto-calibrated by [[Issues an
 
 The relevant steps can be seen in a [short video](https://youtu.be/Pxg6g3KI5_E).
 
-If you ever want to revisit the auto-calibration, just set the camera settling method back to **Fixed Time*, press **Apply**, then go to the Issues & Solutions tab and press **Find Issues & Solutions**. The _"Use an adaptive camera settling method"_ solution should appear.
+If you ever want to revisit the auto-calibration, just set the camera settling method back to **Fixed Time**, press **Apply**, then go to the Issues & Solutions tab and press **Find Issues & Solutions**. The _"Use an adaptive camera settling method"_ solution should appear.
 
 The following sections explain advanced/manual setup.
 
