@@ -90,7 +90,7 @@ public class CameraView extends JComponent implements CameraListener {
     private static final String PREF_RETICLE = "CamerView.reticle";
     private static final String PREF_ZOOM_INCREMENT = "CamerView.zoomIncrement";
     private static final String PREF_RENDERING_QUALITY = "CamerView.renderingQuality";
-    private static final double DEFAULT_ZOOM_INCREMENT = 0.01;
+    private static final double DEFAULT_ZOOM_INCREMENT = 0.1;
 
     private static final String DEFAULT_RETICLE_KEY = "DEFAULT_RETICLE_KEY";
 

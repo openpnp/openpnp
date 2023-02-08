@@ -38,7 +38,6 @@ import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.MessageBoxes;
-import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.driver.GcodeDriver;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
@@ -178,21 +177,15 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
                 setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
                 firmwareConfiguration.setText(Translations.getString(
                         "GcodeDriverSettings.SettingsPanel.FirmwareConfigurationTextArea.Detecting.text")); //$NON-NLS-1$
-                ReferenceMachine machine = (ReferenceMachine) Configuration.get().getMachine();
                 UiUtils.messageBoxOnException(() -> {
-                    if (machine.isEnabled()) {
-                        machine.execute(() -> {
-                            driver.detectFirmware(false);
-                            return true;
+                    try {
+                        driver.detectFirmware(false, true);
+                    }
+                    finally {
+                        SwingUtilities.invokeLater(() -> {
+                            setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
                         });
                     }
-                    else {
-                        // Use an ad hoc connection.
-                        driver.detectFirmware(false);
-                    }
-                    SwingUtilities.invokeLater(() -> {
-                        setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-                    });
                 });
             }
         });
