@@ -1623,8 +1623,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         Matcher m = p.matcher(getReportedAxes());
         while (m.find()) {
             String letter = m.group("letter");
-            if (!reportedLetters.contains(letter) // No duplicates.
-                    && (!letter.equals("E") || reportedLetters.contains("A"))) { // Not E, if solo.
+            if (!reportedLetters.contains(letter)) { // No duplicates.
                 reportedLetters.add(letter);
             }
         }
@@ -1665,56 +1664,72 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
      * Instead just connect/disconnect this single driver.
      * 
      * @param preserveOldValue preserve the old value if the detection fails.  
+     * @param allowConnect allow opening an ad hoc connection, if the machine is disabled.
      * 
      * @throws Exception
      */
-    public void detectFirmware(boolean preserveOldValue) throws Exception {
+    public void detectFirmware(boolean preserveOldValue, boolean allowConnect) throws Exception {
         if (!preserveOldValue) {
             setDetectedFirmware(null);
             setReportedAxes(null);
             setConfiguredAxes(null);
         }
-        boolean wasConnected = connected;
-        if (!wasConnected) {
-            connect();
+        Machine machine = Configuration.get().getMachine();
+        if (machine.isEnabled() || !allowConnect) {
+            // If the machine is enabled, we must do this properly in a machine task.
+            machine.execute(() -> { 
+                detectFirmwareSequence();
+                return null;
+            }, 
+                    false, 100, timeoutMilliseconds);
         }
-
-        try {
-            Logger.debug("=== Detecting firmware and position reporting, please ignore any errors and warnings.");
-            sendCommand("M115");
-            String firmware = receiveSingleResponse("^.*FIRMWARE.*");
-            if (firmware != null) {
-                setDetectedFirmware(firmware);
+        else {
+            // If the machine is not enabled, use an ad hoc connection.
+            boolean wasConnected = connected;
+            if (!wasConnected) {
+                connect();
             }
-            sendCommand("M114");
-            String reportedAxes = receiveSingleResponse(".*[XYZABCDEUVW]:-?\\d+\\.\\d+.*");
-            if (reportedAxes != null) {
-                if (firmware != null) {
-                    try {
-                        if (getFirmwareProperty("FIRMWARE_NAME", "").contains("Duet")) {
-                            sendCommand("M584");
-                            String axisConfig = receiveSingleResponse("^Driver assignments:.*");
-                            if (axisConfig != null) {
-                                setConfiguredAxes(axisConfig);
-                            }
-                        }
-                        else {
-                            setConfiguredAxes(null);
+            try {
+                detectFirmwareSequence();
+            }
+            finally {
+                if (!wasConnected) {
+                    disconnect();
+                }
+            }
+        }
+    }
+
+    protected void detectFirmwareSequence() throws Exception {
+        Logger.debug("=== Detecting firmware and position reporting, please ignore any errors and warnings.");
+        sendCommand("M115");
+        String firmware = receiveSingleResponse("^.*FIRMWARE.*");
+        if (firmware != null) {
+            setDetectedFirmware(firmware);
+        }
+        sendCommand("M114");
+        String reportedAxes = receiveSingleResponse(".*[XYZABCDEUVW]:-?\\d+\\.\\d+.*");
+        if (reportedAxes != null) {
+            if (firmware != null) {
+                try {
+                    if (getFirmwareProperty("FIRMWARE_NAME", "").contains("Duet")) {
+                        sendCommand("M584");
+                        String axisConfig = receiveSingleResponse("^Driver assignments:.*");
+                        if (axisConfig != null) {
+                            setConfiguredAxes(axisConfig);
                         }
                     }
-                    catch (Exception e) {
-                        // ignore
+                    else {
+                        setConfiguredAxes(null);
                     }
                 }
-                setReportedAxes(reportedAxes);
+                catch (Exception e) {
+                    // ignore
+                }
             }
-            Logger.debug("=== End detecting firmware and position reporting.");
+            setReportedAxes(reportedAxes);
         }
-        finally {
-            if (!wasConnected) {
-                disconnect();
-            }
-        }
+        Logger.debug("=== End detecting firmware and position reporting.");
     }
 
     public String getFirmwareProperty(String name, String defaultValue) {

@@ -182,11 +182,9 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                     && (gcodeDriver.getDetectedFirmware() == null
                     || !gcodeDriver.getDetectedFirmware().equals(GcodeServer.getGenericFirmware()))) {
                 try {
-                    machine.execute(
-                            () -> {
-                                gcodeDriver.detectFirmware(true);
-                                return true;
-                            }, true, 1L);
+                    if (machine.isEnabled()) {
+                        gcodeDriver.detectFirmware(true, false);
+                    }
                 }
                 catch (Exception e) {
                     Logger.warn(e, gcodeDriver.getName()+" failure to detect firmware");
@@ -234,16 +232,7 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                             if ((Boolean)getChoice()) {
                                 final State oldState = getState();
                                 try {
-                                    if (machine.isEnabled()) {
-                                        machine.execute(() -> {
-                                            gcodeDriver.detectFirmware(false);
-                                            return true;
-                                        });
-                                    }
-                                    else {
-                                        // Use an ad hoc connection.
-                                        gcodeDriver.detectFirmware(false);
-                                    }
+                                    gcodeDriver.detectFirmware(false, true);
                                     super.setState(state);
                                 }
                                 catch (Exception e) { 
