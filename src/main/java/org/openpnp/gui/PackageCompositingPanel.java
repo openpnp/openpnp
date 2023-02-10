@@ -258,8 +258,13 @@ public class PackageCompositingPanel extends JPanel {
                 }
             }
             setComposite(composite);
-            setStatus((composite.getCompositingSolution().isInvalid() ? "Error: " : "Solution: ")
-                    +composite.getCompositingSolution()+" | Min. shots: "+minShots+" | Max. shots: "+maxShots+" | Computation: "+String.format("%.2f", composite.getComputeTime())+"ms");
+            if (composite.getCompositingSolution().isInvalid()) {
+                setStatus("Error: "+composite.getCompositingSolution()+" | "+composite.getDiagnostics());
+            }
+            else {
+                setStatus("Solution: "+composite.getCompositingSolution()+" | Min. shots: "+minShots+" | Max. shots: "+maxShots
+                        +" | Computation: "+String.format("%.2f", composite.getComputeTime())+"ms");
+            }
             return composite;
         }
         catch (Exception e) {

@@ -71,7 +71,7 @@ public class NullDriver extends AbstractDriver {
 
     @Override
     public void home(Machine machine) throws Exception {
-        Logger.debug("home()");
+        Logger.debug("home()"); //$NON-NLS-1$
         checkEnabled();
         if (machine instanceof SimulationModeMachine) {
             Location homingError = ((SimulationModeMachine) machine).getHomingError(); 
@@ -97,7 +97,7 @@ public class NullDriver extends AbstractDriver {
         // Take the current driver location of the given axes.
         AxesLocation oldDriverLocation = new AxesLocation(newDriverLocation.getAxes(this), 
                 (axis) -> (axis.getDriverLengthCoordinate()));
-        Logger.debug("setGlobalOffsets("+oldDriverLocation+" -> "+newDriverLocation+")");
+        Logger.debug("setGlobalOffsets("+oldDriverLocation+" -> "+newDriverLocation+")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         // Calculate the new machine to working coordinate system offset. 
         homingOffsets = newDriverLocation.subtract(oldDriverLocation).add(homingOffsets);
         // Store to axes
@@ -112,7 +112,7 @@ public class NullDriver extends AbstractDriver {
     @Override
     public void moveTo(HeadMountable hm, MoveToCommand move)
             throws Exception {
-        Logger.debug("moveTo({}, {}, {})", hm, move.getLocation1(), move.getFeedRatePerSecond());
+        Logger.debug("moveTo({}, {}, {})", hm, move.getLocation1(), move.getFeedRatePerSecond()); //$NON-NLS-1$
         checkEnabled();
         AxesLocation newDriverLocation = move.getLocation1();
         // Take the current driver location of the given axes.
@@ -121,7 +121,7 @@ public class NullDriver extends AbstractDriver {
         if (!oldDriverLocation.matches(newDriverLocation)) {
             // Store to axes
             newDriverLocation.setToDriverCoordinates(this);
-            Logger.debug("Machine new location {}", newDriverLocation);
+            Logger.debug("Machine new location {}", newDriverLocation); //$NON-NLS-1$
             motionPending = true;
         }
     }
@@ -154,14 +154,14 @@ public class NullDriver extends AbstractDriver {
 
     @Override
     public void actuate(Actuator actuator, double value) throws Exception {
-        Logger.debug("actuate({}, {})", actuator, value);
+        Logger.debug("actuate({}, {})", actuator, value); //$NON-NLS-1$
         checkEnabled();
         SimulationModeMachine.simulateActuate(actuator, value, feedRateMmPerMinute > 0);
     }
 
     @Override
     public void actuate(Actuator actuator, boolean on) throws Exception {
-        Logger.debug("actuate({}, {})", actuator, on);
+        Logger.debug("actuate({}, {})", actuator, on); //$NON-NLS-1$
         checkEnabled();
 
         SimulationModeMachine.simulateActuate(actuator, on, feedRateMmPerMinute > 0);
@@ -169,7 +169,7 @@ public class NullDriver extends AbstractDriver {
 
     @Override
     public void actuate(Actuator actuator, String value) throws Exception {
-        Logger.debug("actuate({}, {})", actuator, value);
+        Logger.debug("actuate({}, {})", actuator, value); //$NON-NLS-1$
         checkEnabled();
         if (feedRateMmPerMinute > 0) {
             Thread.sleep(10);
@@ -178,12 +178,12 @@ public class NullDriver extends AbstractDriver {
 
     @Override
     public String actuatorRead(Actuator actuator) throws Exception {
-        return Math.random() + "";
+        return Math.random() + ""; //$NON-NLS-1$
     }
 
     @Override
     public void setEnabled(boolean enabled) throws Exception {
-        Logger.debug("setEnabled({})", enabled);
+        Logger.debug("setEnabled({})", enabled); //$NON-NLS-1$
         this.enabled = enabled;
     }
 
@@ -193,7 +193,7 @@ public class NullDriver extends AbstractDriver {
     }
     private void checkEnabled() throws Exception {
         if (!enabled) {
-            throw new Exception("Driver is not yet enabled!");
+            throw new Exception(Translations.getString("NullDriver.DriverNotEnabled")); //$NON-NLS-1$
         }
     }
 
@@ -279,7 +279,7 @@ public class NullDriver extends AbstractDriver {
                     this,
                     Translations.getString("NullDriver.Issue"), //$NON-NLS-1$
                     Translations.getString("NullDriver.Solution"), Severity.Fundamental, //$NON-NLS-1$
-                    "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Driver-Setup#automatic-conversion-of-the-nulldriver") {
+                    "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Driver-Setup#automatic-conversion-of-the-nulldriver") { //$NON-NLS-1$
 
                 @Override
                 public void setState(Solutions.State state) throws Exception {

@@ -14,7 +14,10 @@ import javax.swing.JTextField;
 import javax.swing.UIManager;
 import javax.swing.border.TitledBorder;
 
+import org.jdesktop.beansbinding.AutoBinding;
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
+import org.jdesktop.beansbinding.BeanProperty;
+import org.jdesktop.beansbinding.Bindings;
 import org.openpnp.Translations;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.ComponentDecorators;
@@ -76,6 +79,12 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
     private JButton btnGeneralizeSettings;
     private PipelineControls pipelinePanel;
     private JPanel panelDetectOffset;
+    private JCheckBox asymmetric;
+    private JLabel lblAsymmetric;
+    private JButton btnAutoVisionCenterOffset;
+    private JLabel lblX;
+    private JLabel lblY;
+    private JLabel lblVisionCenterOffset;
 
     public BottomVisionSettingsConfigurationWizard(BottomVisionSettings visionSettings, 
             PartSettingsHolder settingsHolder) {
@@ -360,36 +369,44 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
                 ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("default:grow"),},
-                new RowSpec[] {
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,}));
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
+        
+        lblAsymmetric = new JLabel(Translations.getString("BottomVisionSettingsConfigurationWizard.lblAllowVisionOffsets.text")); //$NON-NLS-1$
+        lblAsymmetric.setToolTipText(Translations.getString("BottomVisionSettingsConfigurationWizard.lblAllowVisionOffsets.toolTipText")); //$NON-NLS-1$
+        panelDetectOffset.add(lblAsymmetric, "2, 2");
+        
+        asymmetric = new JCheckBox();
+        panelDetectOffset.add(asymmetric, "4, 2");
 
-        JLabel lblX = new JLabel("X");
-        panelDetectOffset.add(lblX, "4, 2, center, default");
+        lblX = new JLabel("X");
+        panelDetectOffset.add(lblX, "4, 4, center, default");
 
-        JLabel lblY = new JLabel("Y");
-        panelDetectOffset.add(lblY, "6, 2, center, default");
+        lblY = new JLabel("Y");
+        panelDetectOffset.add(lblY, "6, 4, center, default");
 
-        JLabel lblVisionCenterOffset = new JLabel(Translations.getString(
-                "BottomVisionSettingsConfigurationWizard.PanelDetectOffset.VisionCenterOffsetLabel.text")); //$NON-NLS-1$
-        panelDetectOffset.add(lblVisionCenterOffset, "2, 4");
+        lblVisionCenterOffset = new JLabel(Translations.getString("BottomVisionSettingsConfigurationWizard.PanelDetectOffset.VisionCenterOffsetLabel.text")); //$NON-NLS-1$
+        panelDetectOffset.add(lblVisionCenterOffset, "2, 6");
         lblVisionCenterOffset.setToolTipText(Translations.getString(
                 "BottomVisionSettingsConfigurationWizard.PanelDetectOffset.VisionCenterOffsetLabel.toolTipText")); //$NON-NLS-1$
 
         tfBottomVisionOffsetX = new JTextField();
-        panelDetectOffset.add(tfBottomVisionOffsetX, "4, 4");
+        panelDetectOffset.add(tfBottomVisionOffsetX, "4, 6");
         tfBottomVisionOffsetX.setColumns(10);
 
         tfBottomVisionOffsetY = new JTextField();
-        panelDetectOffset.add(tfBottomVisionOffsetY, "6, 4");
+        panelDetectOffset.add(tfBottomVisionOffsetY, "6, 6");
         tfBottomVisionOffsetY.setText("");
         tfBottomVisionOffsetY.setColumns(10);
 
-        JButton btnAutoVisionCenterOffset = new JButton(Translations.getString(
+        btnAutoVisionCenterOffset = new JButton(Translations.getString(
                 "BottomVisionSettingsConfigurationWizard.PanelDetectOffset.AutoVisionCenterOffsetButton.text")); //$NON-NLS-1$
-        panelDetectOffset.add(btnAutoVisionCenterOffset, "8, 4");
+        panelDetectOffset.add(btnAutoVisionCenterOffset, "8, 6");
         btnAutoVisionCenterOffset.setToolTipText(Translations.getString(
                 "BottomVisionSettingsConfigurationWizard.PanelDetectOffset.AutoVisionCenterOffsetButton.toolTipText")); //$NON-NLS-1$
         btnAutoVisionCenterOffset.addActionListener((e) -> {
@@ -398,6 +415,7 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
                 determineVisionOffset();
             });
         });
+        initDataBindings();
 
 
     }
@@ -429,6 +447,7 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
         addWrappedBinding(visionSettings, "checkPartSizeMethod", comboBoxCheckPartSizeMethod, "selectedItem");
         addWrappedBinding(visionSettings, "checkSizeTolerancePercent", textPartSizeTolerance, "text", intConverter);
         addWrappedBinding(visionSettings, "maxRotation", comboBoxMaxRotation, "selectedItem");
+        addWrappedBinding(visionSettings, "asymmetric", asymmetric, "selected");
         MutableLocationProxy bottomVisionOffsetProxy = new MutableLocationProxy();
         addWrappedBinding(visionSettings, "visionOffset", bottomVisionOffsetProxy, "location");
         bind(UpdateStrategy.READ_WRITE, bottomVisionOffsetProxy, "lengthX", tfBottomVisionOffsetX, "text", lengthConverter);
@@ -633,5 +652,27 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
     public String getWizardName() {
         return Translations.getString("BottomVisionSettingsConfigurationWizard.wizardName"); //$NON-NLS-1$
     }
-
+    protected void initDataBindings() {
+        BeanProperty<JCheckBox, Boolean> jCheckBoxBeanProperty = BeanProperty.create("selected");
+        BeanProperty<JTextField, Boolean> jTextFieldBeanProperty = BeanProperty.create("enabled");
+        AutoBinding<JCheckBox, Boolean, JTextField, Boolean> autoBinding = Bindings.createAutoBinding(UpdateStrategy.READ, asymmetric, jCheckBoxBeanProperty, tfBottomVisionOffsetX, jTextFieldBeanProperty);
+        autoBinding.bind();
+        //
+        AutoBinding<JCheckBox, Boolean, JTextField, Boolean> autoBinding_1 = Bindings.createAutoBinding(UpdateStrategy.READ, asymmetric, jCheckBoxBeanProperty, tfBottomVisionOffsetY, jTextFieldBeanProperty);
+        autoBinding_1.bind();
+        //
+        BeanProperty<JButton, Boolean> jButtonBeanProperty = BeanProperty.create("enabled");
+        AutoBinding<JCheckBox, Boolean, JButton, Boolean> autoBinding_2 = Bindings.createAutoBinding(UpdateStrategy.READ, asymmetric, jCheckBoxBeanProperty, btnAutoVisionCenterOffset, jButtonBeanProperty);
+        autoBinding_2.bind();
+        //
+        BeanProperty<JLabel, Boolean> jLabelBeanProperty = BeanProperty.create("enabled");
+        AutoBinding<JCheckBox, Boolean, JLabel, Boolean> autoBinding_3 = Bindings.createAutoBinding(UpdateStrategy.READ, asymmetric, jCheckBoxBeanProperty, lblX, jLabelBeanProperty);
+        autoBinding_3.bind();
+        //
+        AutoBinding<JCheckBox, Boolean, JLabel, Boolean> autoBinding_4 = Bindings.createAutoBinding(UpdateStrategy.READ, asymmetric, jCheckBoxBeanProperty, lblY, jLabelBeanProperty);
+        autoBinding_4.bind();
+        //
+        AutoBinding<JCheckBox, Boolean, JLabel, Boolean> autoBinding_5 = Bindings.createAutoBinding(UpdateStrategy.READ, asymmetric, jCheckBoxBeanProperty, lblVisionCenterOffset, jLabelBeanProperty);
+        autoBinding_5.bind();
+    }
 }
