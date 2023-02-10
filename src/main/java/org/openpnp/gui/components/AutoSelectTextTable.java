@@ -91,7 +91,8 @@ public class AutoSelectTextTable extends JTable {
         
         //Add a keystroke to de-select all rows of the table (in Windows this would be Ctrl-Shift-A)
         InputMap im = getInputMap(JTable.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
-        final int CMD_BTN = Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx();
+        //Should use getMenuShortcutKeyMaskEx here but it is not supported in Java 8
+        final int CMD_BTN = Toolkit.getDefaultToolkit().getMenuShortcutKeyMask();
         im.put(KeyStroke.getKeyStroke(KeyEvent.VK_A, InputEvent.SHIFT_DOWN_MASK | CMD_BTN),
                 "clearSelection" );
     }
