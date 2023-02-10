@@ -122,7 +122,12 @@ public class PseudoPlacement extends Placement {
             phl.definition.removePropertyChangeListener("side", this);
             phl.definition.removePropertyChangeListener("id", this);
             if (phl == tip) {
-                phl.definition.placementsHolder.definition.removePropertyChangeListener("placement", this);
+                if (phl.definition.placementsHolder.definition != null) {
+                    phl.definition.placementsHolder.definition.removePropertyChangeListener("placement", this);
+                }
+                else {
+                    phl.definition.placementsHolder.removePropertyChangeListener("placement", this);
+                }
             }
             else {
                 phl.definition.placementsHolder.definition.removePropertyChangeListener("child", this);

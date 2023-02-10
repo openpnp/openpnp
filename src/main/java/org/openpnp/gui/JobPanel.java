@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
+ * Copyright (C) 2023 Jason von Nieda <jason@vonnieda.org>, Tony Luken <tonyluken62+openpnp@gmail.com>
  * 
  * This file is part of OpenPnP.
  * 
@@ -543,6 +543,7 @@ public class JobPanel extends JPanel {
         if (this.job != null) {
             this.job.removePropertyChangeListener("dirty", titlePropertyChangeListener); //$NON-NLS-1$
             this.job.removePropertyChangeListener("file", titlePropertyChangeListener); //$NON-NLS-1$
+            this.job.getRootPanelLocation().getPanel().removeAllChildren();
         }
         this.job = job;
         jobTableModel.setJob(job);
@@ -1091,8 +1092,6 @@ public class JobPanel extends JPanel {
                 File file = new File(new File(fileDialog.getDirectory()), filename);
 
                 addBoard(file);
-
-                Helpers.selectLastTableRow(jobTable);
             }
             catch (Exception e) {
                 e.printStackTrace();
@@ -1129,19 +1128,21 @@ public class JobPanel extends JPanel {
                         Translations.getString("JobPanel.Action.Job.AddBoard.ExistingBoard.Error.ErrorBox.Title"),  //$NON-NLS-1$
                         e.getMessage());
             }
-
-            Helpers.selectLastTableRow(jobTable);
         }
     };
 
     protected void addBoard(File file) throws Exception {
         Board board = new Board(configuration.getBoard(file));
         BoardLocation boardLocation = new BoardLocation(board);
+        
+        Configuration.get().resolveBoard(job, boardLocation);
+        
         job.addBoardOrPanelLocation(boardLocation);
         job.getRootPanelLocation().dump(""); //$NON-NLS-1$
         // TODO: Move to a list property listener.
         jobTableModel.fireTableDataChanged();
         Configuration.get().getBus().post(new PlacementsHolderLocationChangedEvent(boardLocation, "all", null, null, this));
+        Helpers.selectObjectTableRow(jobTable, boardLocation);
     }
     
     public final Action addNewPanelAction = new AbstractAction() {
@@ -1173,12 +1174,7 @@ public class JobPanel extends JPanel {
                 }
                 File file = new File(new File(fileDialog.getDirectory()), filename);
 
-                Panel panel = new Panel(configuration.getPanel(file));
-                PanelLocation panelLocation = new PanelLocation(panel);
-                job.addBoardOrPanelLocation(panelLocation);
-                jobTableModel.fireTableDataChanged();
-
-                Helpers.selectObjectTableRow(jobTable, panelLocation);
+                addPanel(file);
             }
             catch (Exception e) {
                 e.printStackTrace();
@@ -1207,19 +1203,10 @@ public class JobPanel extends JPanel {
             if (file == null) {
                 return;
             }
-            PanelLocation panelLocation = new PanelLocation();
-            panelLocation.setFileName(file.getAbsolutePath());
-            job.addBoardOrPanelLocation(panelLocation);
             try {
-                configuration.resolvePanel(job, panelLocation);
-                jobTableModel.fireTableDataChanged();
-                Configuration.get().getBus().post(new PlacementsHolderLocationChangedEvent(panelLocation, "side", null, null, this)); //$NON-NLS-1$
-
-                Helpers.selectObjectTableRow(jobTable, panelLocation);
-                job.getRootPanelLocation().dump(""); //$NON-NLS-1$
+                addPanel(file);
             }
             catch (Exception e) {
-                job.removeBoardOrPanelLocation(panelLocation);
                 e.printStackTrace();
                 MessageBoxes.errorBox(mainFrame, 
                         Translations.getString("JobPanel.Action.Job.AddBoard.ExistingPanel.Error.ErrorBox.Title"),  //$NON-NLS-1$
@@ -1228,6 +1215,20 @@ public class JobPanel extends JPanel {
         }
     };
 
+    protected void addPanel(File file) throws Exception {
+        Panel panel = new Panel(configuration.getPanel(file));
+        PanelLocation panelLocation = new PanelLocation(panel);
+        
+        Configuration.get().resolvePanel(job, panelLocation);
+        
+        job.addBoardOrPanelLocation(panelLocation);
+        job.getRootPanelLocation().dump(""); //$NON-NLS-1$
+        // TODO: Move to a list property listener.
+        jobTableModel.fireTableDataChanged();
+        Configuration.get().getBus().post(new PlacementsHolderLocationChangedEvent(panelLocation, "all", null, null, this));
+        Helpers.selectObjectTableRow(jobTable, panelLocation);
+    }
+    
     public final Action removeBoardAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.delete);

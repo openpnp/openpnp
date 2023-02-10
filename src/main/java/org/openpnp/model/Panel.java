@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.openpnp.gui.MainFrame;
 import org.openpnp.util.IdentifiableList;
 import org.openpnp.util.Pair;
 import org.simpleframework.xml.Attribute;
@@ -216,13 +217,13 @@ public class Panel extends PlacementsHolder<Panel> implements PropertyChangeList
      */
     @Override
     public void dispose() {
-        for (PlacementsHolderLocation<?> child : getChildren()) {
-            child.removePropertyChangeListener(this);
-            child.dispose();
-        }
         for (Placement pseudoPlacement : pseudoPlacements) {
             pseudoPlacement.removePropertyChangeListener(this);
             pseudoPlacement.dispose();
+        }
+        for (PlacementsHolderLocation<?> child : getChildren()) {
+            child.removePropertyChangeListener(this);
+            child.dispose();
         }
         super.dispose();
     }
@@ -271,9 +272,27 @@ public class Panel extends PlacementsHolder<Panel> implements PropertyChangeList
         if (child != null) {
             if (child instanceof BoardLocation) {
                 child = new BoardLocation((BoardLocation) child.getDefinition());
+                if (MainFrame.get().getJobTab().getJob().getRootPanelLocation().getPanel().isMember(this)) {
+                    try {
+                        Configuration.get().resolveBoard(MainFrame.get().getJobTab().getJob(), (BoardLocation) child);
+                    }
+                    catch (Exception e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    }
+                }
             }
             else if (child instanceof PanelLocation) {
                 child = new PanelLocation((PanelLocation) child.getDefinition());
+                if (MainFrame.get().getJobTab().getJob().getRootPanelLocation().getPanel().isMember(this)) {
+                    try {
+                        Configuration.get().resolvePanel(MainFrame.get().getJobTab().getJob(), (PanelLocation) child);
+                    }
+                    catch (Exception e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    }
+                }
             }
             else {
                 throw new UnsupportedOperationException("Unable to create panel child of type " + child.getClass());
@@ -284,7 +303,6 @@ public class Panel extends PlacementsHolder<Panel> implements PropertyChangeList
             else {
                 PlacementsHolderLocation<?> oldChild = children.get(index);
                 oldChild.removePropertyChangeListener(this);
-                oldChild.getDefinition().removePropertyChangeListener(child);
                 oldChild.dispose();
                 children.set(index, child);
             }
@@ -298,7 +316,6 @@ public class Panel extends PlacementsHolder<Panel> implements PropertyChangeList
                     children.remove(index);
                     fireIndexedPropertyChange("child", index, child, null);
                     child.removePropertyChangeListener(this);
-                    child.getDefinition().removePropertyChangeListener(child);
                     child.dispose();
                 }
             }
@@ -362,7 +379,7 @@ public class Panel extends PlacementsHolder<Panel> implements PropertyChangeList
      * Removes all children from this panel
      */
     public void removeAllChildren() {
-        List<PlacementsHolderLocation<?>> oldValue = children;
+        List<PlacementsHolderLocation<?>> oldValue = new ArrayList<>(children);
         for (PlacementsHolderLocation<?> child : oldValue) {
             removeChild(child);
         }
@@ -492,8 +509,6 @@ public class Panel extends PlacementsHolder<Panel> implements PropertyChangeList
         if (this != this.definition) {
             throw new UnsupportedOperationException("Can only remove pseudoPlacements from a panel definition");
         }
-        String id = pseudoPlacement.getId();
-        Pair<List<PlacementsHolderLocation<?>>, Placement> pair = getDescendantPlacement(id);
         int index = pseudoPlacements.indexOf(pseudoPlacement);
         pseudoPlacements.remove(pseudoPlacement);
         fireIndexedPropertyChange("pseudoPlacement", index, pseudoPlacement, null);
@@ -663,6 +678,23 @@ public class Panel extends PlacementsHolder<Panel> implements PropertyChangeList
             }
         }
         return instanceCount;
+    }
+    
+    /**
+     * Checks whether the specified PlacementsHolder is a member of this Panel's family hierarchy
+     * @param placementsHolder - the PlacementsHolder to check
+     * @return true if it is a member
+     */
+    public boolean isMember(PlacementsHolder<?> placementsHolder) {
+        for (PlacementsHolderLocation<?> child : children) {
+            if (child.getPlacementsHolder() == placementsHolder) {
+                return true;
+            }
+            else if (child instanceof PanelLocation && ((PanelLocation) child).getPanel().isMember(placementsHolder)) {
+                return true;
+            }
+        }
+        return false;
     }
     
     @Override

@@ -175,7 +175,7 @@ public class Placement extends Abstract2DLocatable<Placement> {
 
     @Override
     public String toString() {
-        return String.format("Placement %s @%08x, location=%s, side=%s, part=%s, type=%s", id, 
-                this.hashCode(), getLocation(), side, part, type);
+        return String.format("Placement %s @%08x defined by @%08x, location=%s, side=%s, part=%s, type=%s", id, 
+                this.hashCode(), definition.hashCode(), getLocation(), side, part, type);
     }
 }

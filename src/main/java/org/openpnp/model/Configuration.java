@@ -1199,9 +1199,14 @@ public class Configuration extends AbstractModelObject {
         if (!boardFile.exists()) {
             throw new Exception("Board file not found: " + boardFilename);
         }
-        //Create a deep copy of the board's definition and assign it to the BoardLocation
-        Board board = new Board(getBoard(boardFile));
-        boardLocation.setBoard(board);
+        
+        Board boardDefinition = getBoard(boardFile);
+        Board board = boardLocation.getBoard();
+        if (board == null || board.getDefinition() != boardDefinition) {
+            //Create a deep copy of the board's definition and assign it to the BoardLocation
+            board = new Board(boardDefinition);
+            boardLocation.setBoard(board);
+        }
         
         if (job != null) {
             boardLocation.addPropertyChangeListener(job);
@@ -1239,10 +1244,15 @@ public class Configuration extends AbstractModelObject {
             if (!panelFile.exists()) {
                 throw new Exception("Panel file not found: " + panelFileName);
             }
-            //Create a deep copy of the Panel definition and assign it to the PanelLocation
-            panel = new Panel(getPanel(panelFile));
-            panelLocation.setPanel(panel);
+            
+            Panel panelDefinition = getPanel(panelFile);
+            if (panel == null || panel.getDefinition() != panelDefinition) {
+                //Create a deep copy of the Panel definition and assign it to the PanelLocation
+                panel = new Panel(panelDefinition);
+                panelLocation.setPanel(panel);
+            }
         }
+        
         if (job != null) {
             panelLocation.addPropertyChangeListener(job);
             panel.addPropertyChangeListener(job);
@@ -1253,13 +1263,11 @@ public class Configuration extends AbstractModelObject {
             if (child instanceof PanelLocation) {
                 PanelLocation childPanelLocation = (PanelLocation) child;
                 childPanelLocation.setParent(panelLocation);
-                childPanelLocation.getDefinition().addPropertyChangeListener(childPanelLocation);
                 resolvePanel(job, childPanelLocation);
             }
             else if (child instanceof BoardLocation) {
                 BoardLocation boardLocation = (BoardLocation) child;
                 boardLocation.setParent(panelLocation);
-                boardLocation.getDefinition().addPropertyChangeListener(boardLocation);
                 resolveBoard(job, boardLocation);
             }
             else {

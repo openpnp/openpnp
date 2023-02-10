@@ -20,13 +20,13 @@
    </placements>
    <children>
       <object class="org.openpnp.model.BoardLocation" side="Top" id="Brd1" file-name="C:\Users\Tony\git\openpnp\samples\pnp-test\pnp-test.board.xml" check-fiducials="true" locally-enabled="true">
-         <location units="Millimeters" x="2.984" y="3.2365" z="0.0" rotation="0.0"/>
+         <location units="Millimeters" x="3.0" y="3.25" z="0.0" rotation="0.0"/>
       </object>
       <object class="org.openpnp.model.BoardLocation" side="Top" id="Brd2" file-name="C:\Users\Tony\git\openpnp\samples\pnp-test\pnp-test.board.xml" check-fiducials="true" locally-enabled="true">
-         <location units="Millimeters" x="3.003" y="32.861" z="0.0" rotation="0.0"/>
+         <location units="Millimeters" x="3.0" y="32.75" z="0.0" rotation="0.0"/>
       </object>
       <object class="org.openpnp.model.BoardLocation" side="Bottom" id="Brd3" file-name="C:\Users\Tony\git\openpnp\samples\pnp-test\pnp-test.board.xml" check-fiducials="true" locally-enabled="true">
-         <location units="Millimeters" x="41.191" y="50.4845" z="0.0" rotation="-90.0"/>
+         <location units="Millimeters" x="41.25" y="50.5" z="0.0" rotation="-90.0"/>
       </object>
    </children>
    <pseudo-placement-ids>

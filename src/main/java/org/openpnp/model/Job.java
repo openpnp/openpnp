@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
+ * Copyright (C) 2023 Jason von Nieda <jason@vonnieda.org>, Tony Luken <tonyluken62+openpnp@gmail.com>
  * 
  * This file is part of OpenPnP.
  * 
@@ -107,7 +107,7 @@ public class Job extends AbstractModelObject implements PropertyChangeListener {
 
     /**
     *
-    * @return a flattened list of all PanleLocations held by the job
+    * @return a flattened list of all PanelLocations held by the job
     */
     public List<PanelLocation> getPanelLocations() {
         List<PanelLocation> retList = new ArrayList<>();
@@ -133,7 +133,6 @@ public class Job extends AbstractModelObject implements PropertyChangeListener {
      */
     public void addBoardOrPanelLocation(PlacementsHolderLocation<?> boardOrPanelLocation) {
         rootPanelLocation.addChild(boardOrPanelLocation);
-        boardOrPanelLocation.addPropertyChangeListener(this);
         firePropertyChange("rootPanelLocation", null, rootPanelLocation);
     }
 
@@ -142,7 +141,6 @@ public class Job extends AbstractModelObject implements PropertyChangeListener {
      * @param boardOrPanelLocation - the BoardLocation or PanelLocation
      */
     public void removeBoardOrPanelLocation(PlacementsHolderLocation<?> boardOrPanelLocation) {
-        boardOrPanelLocation.removePropertyChangeListener(this);
         rootPanelLocation.removeChild(boardOrPanelLocation);
         firePropertyChange("rootPanelLocation", null, rootPanelLocation);
     }

@@ -106,6 +106,7 @@ public abstract class Abstract2DLocatable<T extends Abstract2DLocatable<T>> exte
         location = abstract2DLocatableToCopy.location;
         setDefinition(abstract2DLocatableToCopy.getDefinition());
         id = abstract2DLocatableToCopy.id;
+        addPropertyChangeListener(this);
     }
     
     /**
@@ -124,7 +125,9 @@ public abstract class Abstract2DLocatable<T extends Abstract2DLocatable<T>> exte
     @Override
     public void dispose() {
         removePropertyChangeListener(this);
-        definition.removePropertyChangeListener(this);
+        if (this != definition) {
+            definition.removePropertyChangeListener(this);
+        }
         super.dispose();
     }
     
@@ -196,7 +199,7 @@ public abstract class Abstract2DLocatable<T extends Abstract2DLocatable<T>> exte
         if (oldValue != null) {
             oldValue.removePropertyChangeListener(this);
         }
-        if (definition != null && definition != this) {
+        if (definition != null) {
             definition.addPropertyChangeListener(this);
         }
     }

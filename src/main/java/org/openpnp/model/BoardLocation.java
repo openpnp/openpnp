@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
+ * Copyright (C) 2023 Jason von Nieda <jason@vonnieda.org>, Tony Luken <tonyluken62+openpnp@gmail.com>
  * 
  * This file is part of OpenPnP.
  * 
@@ -75,7 +75,7 @@ public class BoardLocation extends PlacementsHolderLocation<BoardLocation> {
     /**
      * Default constructor
      */
-    BoardLocation() {
+    public BoardLocation() {
         setLocation(new Location(LengthUnit.Millimeters));
     }
 

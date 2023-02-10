@@ -105,11 +105,13 @@ public abstract class PlacementsHolder<T extends PlacementsHolder<T>>
     @Override
     public void dispose() {
         removePropertyChangeListener(this);
+        if (this != definition) {
+            definition.removePropertyChangeListener(this);
+        }
         for (Placement placement : placements) {
             placement.removePropertyChangeListener(this);
             placement.dispose();
         }
-        setDefinition(null);
         super.dispose();
     }
     

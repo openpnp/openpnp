@@ -37,11 +37,42 @@ public abstract class AbstractModelObject {
     }
 
     public void removePropertyChangeListener(PropertyChangeListener listener) {
+        if (!isListener(listener)) {
+            Logger.warn(String.format("Attempting to remove listener from: %s @%08x - but: %s @%08x is not a listener", 
+                    this.getClass().getSimpleName(), this.hashCode(), listener, listener.hashCode()));
+            dumpListeners();
+        }
         propertyChangeSupport.removePropertyChangeListener(listener);
     }
 
     public void removePropertyChangeListener(String propertyName, PropertyChangeListener listener) {
+        if (!isListener(propertyName, listener)) {
+            Logger.warn(String.format("Attempting to remove listener from: %s @%08x - but: %s @%08x is not a listener for: %s", 
+                    this.getClass().getSimpleName(), this.hashCode(), listener, listener.hashCode(), propertyName));
+            dumpListeners();
+        }
         propertyChangeSupport.removePropertyChangeListener(propertyName, listener);
+    }
+    
+    public boolean isListener(PropertyChangeListener possibleListener) {
+        return isListener(null, possibleListener);
+    }
+    
+    public boolean isListener(String propertyName, PropertyChangeListener possibleListener) {
+        for (PropertyChangeListener listener : propertyChangeSupport.getPropertyChangeListeners()) {
+            if (propertyName != null && listener instanceof PropertyChangeListenerProxy) {
+                PropertyChangeListenerProxy proxy = (PropertyChangeListenerProxy) listener;
+                if (proxy.getPropertyName().equals(propertyName) && proxy.getListener() == possibleListener) {
+                    return true;
+                }
+            }
+            else {
+                if (listener == possibleListener) {
+                    return true;
+                }
+            }
+         }
+        return false;
     }
     
     /**
