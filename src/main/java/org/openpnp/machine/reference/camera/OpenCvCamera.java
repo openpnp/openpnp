@@ -28,7 +28,6 @@ import org.opencv.core.Mat;
 import org.opencv.videoio.VideoCapture;
 import org.opencv.videoio.Videoio;
 import org.openpnp.gui.support.Wizard;
-import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.machine.reference.camera.wizards.OpenCvCameraConfigurationWizard;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.util.OpenCvUtils;

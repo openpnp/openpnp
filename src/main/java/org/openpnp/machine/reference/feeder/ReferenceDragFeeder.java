@@ -89,8 +89,6 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
     @Element(required = false)
     protected Length backoffDistance = new Length(0, LengthUnit.Millimeters);    
 
-    protected Location pickLocation;
-
     private double feededCount = 0;
     private double partsPitchX = -2; //-2mm for 0402
     private double partsPitchY = 0;
@@ -106,9 +104,7 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
 
     @Override
     public Location getPickLocation() throws Exception {
-        if (pickLocation == null) {
-            pickLocation = location;
-        }
+        Location pickLocation = location;
 
         if (partPitch.convertToUnits(LengthUnit.Millimeters).getValue() == 2 && partPick != null) {
 			pickLocation = pickLocation.add(partPick);
@@ -177,10 +173,7 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
 
         // Now we have visionOffsets (if we're using them) so we
         // need to create a local, offset version of the feedStartLocation,
-        // feedEndLocation and pickLocation. pickLocation will be saved
-        // for the pick operation while feed start and end are used
-        // here and then discarded.
-        pickLocation = this.location;
+        // feedEndLocation.
 
         if (feededCount == 0) {
             Location feedStartLocation = this.feedStartLocation;
@@ -250,7 +243,7 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
 
             Logger.debug("final visionOffsets " + visionOffset);
 
-            Logger.debug("Modified pickLocation {}", pickLocation.subtract(visionOffset));
+            Logger.debug("Modified pickLocation {}", location.subtract(visionOffset));
         }
     }
 

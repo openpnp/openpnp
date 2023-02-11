@@ -69,7 +69,7 @@ import org.openpnp.CameraListener;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.reticle.Reticle;
 import org.openpnp.gui.support.LengthConverter;
-import org.openpnp.machine.reference.AbstractBroadcastingCamera;
+import org.openpnp.machine.reference.camera.AbstractBroadcastingCamera;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
@@ -90,7 +90,7 @@ public class CameraView extends JComponent implements CameraListener {
     private static final String PREF_RETICLE = "CamerView.reticle";
     private static final String PREF_ZOOM_INCREMENT = "CamerView.zoomIncrement";
     private static final String PREF_RENDERING_QUALITY = "CamerView.renderingQuality";
-    private static final double DEFAULT_ZOOM_INCREMENT = 0.01;
+    private static final double DEFAULT_ZOOM_INCREMENT = 0.1;
 
     private static final String DEFAULT_RETICLE_KEY = "DEFAULT_RETICLE_KEY";
 
@@ -441,6 +441,42 @@ public class CameraView extends JComponent implements CameraListener {
     }
 
     /**
+     * Show an animation of N images instead of the camera image for milliseconds each frame. After 
+     * N*milliseconds elapses the view goes back to showing the camera image. See also showFilteredImage().
+     * 
+     * @param images
+     * @param texts
+     * @param millseconds
+     */
+    public void showFilteredImages(BufferedImage [] filteredImages, String [] texts, long milliseconds) {
+        setCameraViewFilter(new CameraViewFilter() {
+            long t = System.currentTimeMillis();
+            int n = filteredImages.length;
+
+            @Override
+            public BufferedImage filterCameraImage(Camera camera, BufferedImage image) {
+                long elapsed = System.currentTimeMillis() - t;
+                if (elapsed < milliseconds*n) {
+                    int i = (int) (elapsed/milliseconds);
+                    if (texts != null && i < texts.length) {
+                        setText(texts[i]);
+                    }
+                    return filteredImages[i];
+                }
+                else {
+                    if (texts != null) {
+                        setText(null);
+                    }
+                    setCameraViewFilter(null);
+                    return image;
+                }
+            }
+        });
+        // Make sure the filtered image is shown immediately and also counted as fps (for 0 or low fps cameras). 
+        frameReceived(null);
+    }
+
+    /**
      * Show image instead of the camera image for milliseconds. After milliseconds elapses the view
      * goes back to showing the camera image. The image should be the same width and height as the
      * camera image otherwise the behavior is undefined. This function is intended to be used to
@@ -455,28 +491,7 @@ public class CameraView extends JComponent implements CameraListener {
      * @param millseconds
      */
     public void showFilteredImage(BufferedImage filteredImage, String text, long milliseconds) {
-        if (text != null) {
-            setText(text);
-        }
-        setCameraViewFilter(new CameraViewFilter() {
-            long t = System.currentTimeMillis();
-
-            @Override
-            public BufferedImage filterCameraImage(Camera camera, BufferedImage image) {
-                if ((System.currentTimeMillis() - t) < milliseconds) {
-                    return filteredImage;
-                }
-                else {
-                    if (text != null) {
-                        setText(null);
-                    }
-                    setCameraViewFilter(null);
-                    return image;
-                }
-            }
-        });
-        // Make sure the filtered image is shown immediately and also counted as fps (for 0 or low fps cameras). 
-        frameReceived(null);
+        showFilteredImages(new BufferedImage[] { filteredImage }, text == null ? null : new String [] { text }, milliseconds);
     }
 
     public BufferedImage captureSelectionImage() {
@@ -1418,7 +1433,7 @@ public class CameraView extends JComponent implements CameraListener {
      * Capture the current image (unscaled, unmodified) and write it to disk.
      */
     private void captureSnapshot() {
-        UiUtils.messageBoxOnException(() -> {
+        UiUtils.submitUiMachineTask(() -> {
             File dir = new File(Configuration.get().getConfigurationDirectory(), "snapshots");
             dir.mkdirs();
             DateFormat df = new SimpleDateFormat("YYYY-MM-dd_HH.mm.ss.SSS");
@@ -1524,12 +1539,21 @@ public class CameraView extends JComponent implements CameraListener {
                 // The camera is non-movable
                 // Get the selected nozzle
                 Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
+                Location currentLocation = nozzle.getLocation();
                 // Subtract the offsets from the nozzle position.
-                Location location = nozzle.getLocation().subtract(offsets);
+                Location location = currentLocation.subtract(offsets);
                 // Only change X/Y. 
-                location = nozzle.getLocation().derive(location, true, true, false, false);
+                location = currentLocation.derive(location, true, true, false, false);
                 // Move the nozzle such that the clicked position is moved to the center of the camera view
-                MovableUtils.moveToLocationAtSafeZ(nozzle, location);
+                if (currentLocation.getLinearLengthTo(camera.getLocation()).compareTo(camera.getRoamingRadius()) < 0
+                        && location.getLinearLengthTo(camera.getLocation()).compareTo(camera.getRoamingRadius()) < 0) {
+                    // Within the roaming area, no need to go to Safe Z.
+                    nozzle.moveTo(location);
+                }
+                else {
+                    // Current or new location outside roaming area. Move to safe Z.
+                    MovableUtils.moveToLocationAtSafeZ(nozzle, location);
+                }
             }
             else { 
                 // The camera is movable

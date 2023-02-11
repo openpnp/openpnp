@@ -25,6 +25,7 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.DriversComboBoxModel;
 import org.openpnp.gui.support.NamedConverter;
@@ -53,7 +54,9 @@ public class ReferenceActuatorConfigurationWizard extends AbstractActuatorConfig
     @Override 
     protected void createUi(AbstractMachine machine) {
         panelProperties = new JPanel();
-        panelProperties.setBorder(new TitledBorder(null, "Properties", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        panelProperties.setBorder(new TitledBorder(null, Translations.getString(
+                "ReferenceActuatorConfigurationWizard.PropertiesPanel.Border.title"), //$NON-NLS-1$
+                TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panelProperties);
         panelProperties.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -66,13 +69,15 @@ public class ReferenceActuatorConfigurationWizard extends AbstractActuatorConfig
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
-        lblDriver = new JLabel("Driver");
+        lblDriver = new JLabel(Translations.getString(
+                "ReferenceActuatorConfigurationWizard.PropertiesPanel.DriverLabel.text")); //$NON-NLS-1$
         panelProperties.add(lblDriver, "2, 2, right, default");
         
         driver = new JComboBox(new DriversComboBoxModel(machine, true));
         panelProperties.add(driver, "4, 2, fill, default");
         
-        lblName = new JLabel("Name");
+        lblName = new JLabel(Translations.getString(
+                "ReferenceActuatorConfigurationWizard.PropertiesPanel.NameLabel.text")); //$NON-NLS-1$
         panelProperties.add(lblName, "2, 4, right, default");
         
         nameTf = new JTextField();

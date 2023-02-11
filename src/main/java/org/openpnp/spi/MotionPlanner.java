@@ -188,6 +188,12 @@ public interface MotionPlanner extends PropertySheetHolder, Solutions.Subject {
      */
     Motion getMomentaryMotion(double time);
 
+    /**
+     * Get the last planned motion with displacement of axes. 
+     * @return 
+     */
+    Motion getLastMotion();
+
      /**
      * Clear the motion planning older than the given real-time from the history of the motion planner. The 
      * MotionPlanner is free to do its own house-keeping and get rid of past planning data before this is called. 
@@ -203,4 +209,10 @@ public interface MotionPlanner extends PropertySheetHolder, Solutions.Subject {
      * @return true if the location is valid, i.e. inside soft limits etc.
      */
     public boolean isValidLocation(HeadMountable hm, AxesLocation axesLocation);
+
+    /**
+     * @return The allowable minimum speed factor for motion planning. Limits the required
+     * precision for computations, interpolation, and decimal encoding in textual form (e.g. G-code).
+     */
+    double getMinimumSpeed();
 }

@@ -44,12 +44,18 @@ import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.machine.reference.camera.OpenPnpCaptureCamera;
 import org.openpnp.model.Configuration;
+import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
+import org.jdesktop.beansbinding.BeanProperty;
+import org.jdesktop.beansbinding.AutoBinding;
+import org.jdesktop.beansbinding.Bindings;
+import javax.swing.AbstractAction;
+import javax.swing.Action;
 
 @SuppressWarnings("serial")
 public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurationWizard {
@@ -160,7 +166,20 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
     private JLabel lblCaptureFps;
     private JTextField nativeFps;
     private JButton btnTest;
-
+    private JLabel lblFreezeProperties;
+    private JCheckBox freezeProperties;
+    private JButton btnReapplyToCamera;
+    private final Action reapplyPropertiesToCameraAction = new AbstractAction() {
+        {
+            putValue(NAME, "Reapply to Camera");
+            putValue(SHORT_DESCRIPTION, "Reapply the frozen properties to the camera.");
+        }
+        public void actionPerformed(ActionEvent e) {
+            camera.reapplyProperties();
+            MovableUtils.fireTargetedUserAction(camera);
+        }
+    };
+    
     public OpenPnpCaptureCameraConfigurationWizard(OpenPnpCaptureCamera camera) {
         this.camera = camera;
         createUi();
@@ -283,6 +302,10 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
 
         lblAuto = new JLabel("Auto");
@@ -304,7 +327,7 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
         panelProperties.add(brightness, "2, 4, right, default");
 
         brightnessAuto = new JCheckBox("");
-        panelProperties.add(brightnessAuto, "4, 4");
+        panelProperties.add(brightnessAuto, "4, 4, center, default");
 
         brightnessMin = new JLabel("min");
         panelProperties.add(brightnessMin, "8, 4");
@@ -312,7 +335,7 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
         brightnessSlider = new JSlider();
         brightnessSlider.setPaintTicks(true);
         brightnessSlider.setPaintLabels(true);
-        panelProperties.add(brightnessSlider, "12, 4");
+        panelProperties.add(brightnessSlider, "12, 4, fill, default");
 
         brightnessValue = new JTextField();
         brightnessValue.setText("00000");
@@ -329,7 +352,7 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
         panelProperties.add(backLightCompensation, "2, 6, right, default");
         
         backLightCompensationAuto = new JCheckBox("");
-        panelProperties.add(backLightCompensationAuto, "4, 6");
+        panelProperties.add(backLightCompensationAuto, "4, 6, center, default");
         
         backLightCompensationMin = new JLabel("min");
         panelProperties.add(backLightCompensationMin, "8, 6");
@@ -337,7 +360,7 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
         backLightCompensationSlider = new JSlider();
         backLightCompensationSlider.setPaintTicks(true);
         backLightCompensationSlider.setPaintLabels(true);
-        panelProperties.add(backLightCompensationSlider, "12, 6");
+        panelProperties.add(backLightCompensationSlider, "12, 6, fill, default");
         
         backLightCompensationValue = new JTextField();
         backLightCompensationValue.setText("00000");
@@ -354,7 +377,7 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
         panelProperties.add(contrast, "2, 8, right, default");
 
         contrastAuto = new JCheckBox("");
-        panelProperties.add(contrastAuto, "4, 8");
+        panelProperties.add(contrastAuto, "4, 8, center, default");
 
         contrastMin = new JLabel("min");
         panelProperties.add(contrastMin, "8, 8");
@@ -362,7 +385,7 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
         contrastSlider = new JSlider();
         contrastSlider.setPaintTicks(true);
         contrastSlider.setPaintLabels(true);
-        panelProperties.add(contrastSlider, "12, 8");
+        panelProperties.add(contrastSlider, "12, 8, fill, default");
 
         contrastValue = new JTextField();
         contrastValue.setText("00000");
@@ -387,7 +410,7 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
         exposureSlider = new JSlider();
         exposureSlider.setPaintLabels(true);
         exposureSlider.setPaintTicks(true);
-        panelProperties.add(exposureSlider, "12, 10, center, default");
+        panelProperties.add(exposureSlider, "12, 10, fill, default");
 
         exposureValue = new JTextField();
         exposureValue.setText("00000");
@@ -410,7 +433,7 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
         panelProperties.add(gamma, "2, 16, right, default");
 
         gammaAuto = new JCheckBox("");
-        panelProperties.add(gammaAuto, "4, 16");
+        panelProperties.add(gammaAuto, "4, 16, center, default");
 
         gammaMin = new JLabel("min");
         panelProperties.add(gammaMin, "8, 16");
@@ -418,7 +441,7 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
         gammaSlider = new JSlider();
         gammaSlider.setPaintTicks(true);
         gammaSlider.setPaintLabels(true);
-        panelProperties.add(gammaSlider, "12, 16");
+        panelProperties.add(gammaSlider, "12, 16, fill, default");
 
         gammaValue = new JTextField();
         gammaValue.setText("00000");
@@ -435,7 +458,7 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
         panelProperties.add(hue, "2, 18, right, default");
         
         hueAuto = new JCheckBox("");
-        panelProperties.add(hueAuto, "4, 18");
+        panelProperties.add(hueAuto, "4, 18, center, default");
         
         hueMin = new JLabel("min");
         panelProperties.add(hueMin, "8, 18");
@@ -443,7 +466,7 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
         hueSlider = new JSlider();
         hueSlider.setPaintTicks(true);
         hueSlider.setPaintLabels(true);
-        panelProperties.add(hueSlider, "12, 18");
+        panelProperties.add(hueSlider, "12, 18, fill, default");
         
         hueValue = new JTextField();
         hueValue.setText("00000");
@@ -460,7 +483,7 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
         panelProperties.add(powerLineFrequency, "2, 20, right, default");
         
         powerLineFrequencyAuto = new JCheckBox("");
-        panelProperties.add(powerLineFrequencyAuto, "4, 20");
+        panelProperties.add(powerLineFrequencyAuto, "4, 20, center, default");
         
         powerLineFrequencyMin = new JLabel("min");
         panelProperties.add(powerLineFrequencyMin, "8, 20");
@@ -468,7 +491,7 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
         powerLineFrequencySlider = new JSlider();
         powerLineFrequencySlider.setPaintTicks(true);
         powerLineFrequencySlider.setPaintLabels(true);
-        panelProperties.add(powerLineFrequencySlider, "12, 20");
+        panelProperties.add(powerLineFrequencySlider, "12, 20, fill, default");
         
         powerLineFrequencyValue = new JTextField();
         powerLineFrequencyValue.setText("00000");
@@ -485,7 +508,7 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
         panelProperties.add(saturation, "2, 22, right, default");
 
         saturationAuto = new JCheckBox("");
-        panelProperties.add(saturationAuto, "4, 22");
+        panelProperties.add(saturationAuto, "4, 22, center, default");
 
         saturationMin = new JLabel("min");
         panelProperties.add(saturationMin, "8, 22");
@@ -493,7 +516,7 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
         saturationSlider = new JSlider();
         saturationSlider.setPaintTicks(true);
         saturationSlider.setPaintLabels(true);
-        panelProperties.add(saturationSlider, "12, 22");
+        panelProperties.add(saturationSlider, "12, 22, fill, default");
 
         saturationValue = new JTextField();
         saturationValue.setText("00000");
@@ -510,7 +533,7 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
         panelProperties.add(sharpness, "2, 24, right, default");
         
         sharpnessAuto = new JCheckBox("");
-        panelProperties.add(sharpnessAuto, "4, 24");
+        panelProperties.add(sharpnessAuto, "4, 24, center, default");
         
         sharpnessMin = new JLabel("min");
         panelProperties.add(sharpnessMin, "8, 24");
@@ -518,7 +541,7 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
         sharpnessSlider = new JSlider();
         sharpnessSlider.setPaintTicks(true);
         sharpnessSlider.setPaintLabels(true);
-        panelProperties.add(sharpnessSlider, "12, 24");
+        panelProperties.add(sharpnessSlider, "12, 24, fill, default");
         
         sharpnessValue = new JTextField();
         sharpnessValue.setText("00000");
@@ -543,7 +566,7 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
         whiteBalanceSlider = new JSlider();
         whiteBalanceSlider.setPaintTicks(true);
         whiteBalanceSlider.setPaintLabels(true);
-        panelProperties.add(whiteBalanceSlider, "12, 26, center, default");
+        panelProperties.add(whiteBalanceSlider, "12, 26, fill, default");
 
         whiteBalanceValue = new JTextField();
         whiteBalanceValue.setText("00000");
@@ -565,7 +588,7 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
         focusSlider = new JSlider();
         focusSlider.setPaintTicks(true);
         focusSlider.setPaintLabels(true);
-        panelProperties.add(focusSlider, "12, 12, center, default");
+        panelProperties.add(focusSlider, "12, 12, fill, default");
 
         focusValue = new JTextField();
         focusValue.setText("00000");
@@ -590,7 +613,7 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
         zoomSlider = new JSlider();
         zoomSlider.setPaintTicks(true);
         zoomSlider.setPaintLabels(true);
-        panelProperties.add(zoomSlider, "12, 28, center, default");
+        panelProperties.add(zoomSlider, "12, 28, fill, default");
 
         zoomValue = new JTextField();
         zoomValue.setText("00000");
@@ -612,7 +635,7 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
         gainSlider = new JSlider();
         gainSlider.setPaintTicks(true);
         gainSlider.setPaintLabels(true);
-        panelProperties.add(gainSlider, "12, 14, center, default");
+        panelProperties.add(gainSlider, "12, 14, fill, default");
 
         gainValue = new JTextField();
         gainValue.setText("00000");
@@ -624,10 +647,21 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
 
         zoomDefault = new JLabel("def");
         panelProperties.add(zoomDefault, "22, 28");
+        
+        lblFreezeProperties = new JLabel("Freeze Properties?");
+        lblFreezeProperties.setToolTipText("<html>\n<p>Freeze properties as applied, and reapply them to the camera<br/>\nwhenever reopened. Never query properties back from the camera.<p/>\n<p>Use this when properties are not properly persisted by the camera<p/>\ndriver, or when you use this camera in different configurations <p/>\nor apps.\n</html>");
+        panelProperties.add(lblFreezeProperties, "2, 32, right, default");
+        
+        freezeProperties = new JCheckBox("");
+        panelProperties.add(freezeProperties, "4, 32, center, default");
+        
+        btnReapplyToCamera = new JButton(reapplyPropertiesToCameraAction);
+        panelProperties.add(btnReapplyToCamera, "12, 32");
 
         for (CaptureDevice dev : camera.getCaptureDevices()) {
             deviceCb.addItem(dev);
         }
+        initDataBindings();
     }
 
     @Override
@@ -662,6 +696,8 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
         bindProperty("whiteBalance", whiteBalanceAuto, whiteBalanceMin, whiteBalanceMax,
                 whiteBalanceSlider, whiteBalance, whiteBalanceValue, whiteBalanceDefault);
         bindProperty("zoom", zoomAuto, zoomMin, zoomMax, zoomSlider, zoom, zoomValue, zoomDefault);
+
+        addWrappedBinding(camera, "freezeProperties", freezeProperties, "selected");
     }
 
     private void bindProperty(String property, JCheckBox auto, JLabel min, JLabel max,
@@ -721,5 +757,11 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
         public Boolean convertReverse(Boolean arg0) {
             return !arg0;
         }
+    }
+    protected void initDataBindings() {
+        BeanProperty<JCheckBox, Boolean> jCheckBoxBeanProperty = BeanProperty.create("selected");
+        BeanProperty<JButton, Boolean> jButtonBeanProperty = BeanProperty.create("enabled");
+        AutoBinding<JCheckBox, Boolean, JButton, Boolean> autoBinding = Bindings.createAutoBinding(UpdateStrategy.READ, freezeProperties, jCheckBoxBeanProperty, btnReapplyToCamera, jButtonBeanProperty);
+        autoBinding.bind();
     }
 }

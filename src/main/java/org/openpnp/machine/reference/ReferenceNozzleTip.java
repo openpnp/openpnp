@@ -17,6 +17,7 @@ import org.opencv.core.Rect;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 import org.openpnp.ConfigurationListener;
+import org.openpnp.Translations;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
@@ -53,6 +54,9 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
 
     @Attribute(required = false)
     private int placeDwellMilliseconds;
+
+    @Attribute(required = false)
+    private double placeBlowOffLevel;
 
     @Element(required = false)
     private Location changerStartLocation = new Location(LengthUnit.Millimeters);
@@ -168,7 +172,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     private Length maxPartDiameter = new Length(20, LengthUnit.Millimeters);
 
     @Element(required = false)
-    private Length maxPartHeight = new Length(10, LengthUnit.Millimeters);
+    private Length maxPartHeight = new Length(5, LengthUnit.Millimeters);
 
     @Element(required = false)
     protected Length maxPickTolerance = new Length(1, LengthUnit.Millimeters);
@@ -337,12 +341,16 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     public PropertySheet[] getPropertySheets() {
         return new PropertySheet[] {
                 new PropertySheetWizardAdapter(getConfigurationWizard()),
-                new PropertySheetWizardAdapter(new ReferenceNozzleTipPartDetectionWizard(this), "Part Detection"),
-                new PropertySheetWizardAdapter(new ReferenceNozzleTipToolChangerWizard(this), "Tool Changer"),
-                new PropertySheetWizardAdapter(new ReferenceNozzleTipCalibrationWizard(this), "Calibration")
+                new PropertySheetWizardAdapter(new ReferenceNozzleTipPartDetectionWizard(this),
+                        Translations.getString("ReferenceNozzleTip.PartDetection.tab.title")), //$NON-NLS-1$
+                new PropertySheetWizardAdapter(new ReferenceNozzleTipToolChangerWizard(this),
+                        Translations.getString("ReferenceNozzleTip.ToolChanger.tab.title")), //$NON-NLS-1$
+                new PropertySheetWizardAdapter(new ReferenceNozzleTipCalibrationWizard(this),
+                        Translations.getString("ReferenceNozzleTip.Calibration.tab.title")) //$NON-NLS-1$
                 };
     }
 
+    @Override
     public Length getMaxPartHeight() {
         return maxPartHeight;
     }
@@ -351,6 +359,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         this.maxPartHeight = maxPartHeight;
     }
 
+    @Override
     public Length getMaxPartDiameter() {
         return maxPartDiameter;
     }
@@ -359,6 +368,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         this.maxPartDiameter = maxPartDiameter;
     }
 
+    @Override
     public Length getMinPartDiameter() {
         return minPartDiameter;
     }
@@ -367,22 +377,13 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         this.minPartDiameter = minPartDiameter;
     }
 
+    @Override
     public Length getMaxPickTolerance() {
         return maxPickTolerance;
     }
 
     public void setMaxPickTolerance(Length maxPickTolerance) {
         this.maxPickTolerance = maxPickTolerance;
-    }
-
-    public Length getMinPartDiameterWithTolerance() {
-        return getMinPartDiameter()
-                .subtract(getMaxPickTolerance().multiply(2.0));
-    }
-
-    public Length getMaxPartDiameterWithTolerance() {
-        return getMaxPartDiameter()
-                .add(getMaxPickTolerance().multiply(2.0));
     }
 
     public int getPickDwellMilliseconds() {
@@ -399,6 +400,14 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
 
     public void setPlaceDwellMilliseconds(int placeDwellMilliseconds) {
         this.placeDwellMilliseconds = placeDwellMilliseconds;
+    }
+
+    public double getPlaceBlowOffLevel() {
+        return placeBlowOffLevel;
+    }
+
+    public void setPlaceBlowOffLevel(double placeBlowOffLevel) {
+        this.placeBlowOffLevel = placeBlowOffLevel;
     }
 
     public Location getChangerStartLocation() {
@@ -511,7 +520,8 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         firePropertyChange("visionCalibrationTrigger", oldValue, visionCalibrationTrigger);
     }
 
-    public ReferenceNozzle getNozzleAttachedTo() {
+    @Override
+    public ReferenceNozzle getNozzleWhereLoaded() {
         for (Head head : Configuration.get().getMachine().getHeads()) {
             for (Nozzle nozzle : head.getNozzles()) {
                 if (nozzle instanceof ReferenceNozzle) {
@@ -715,7 +725,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
      */
     public Length getCalibrationOffsetZ() {
         Length offsetZ = null;
-        Nozzle nozzle = getNozzleAttachedTo();
+        Nozzle nozzle = getNozzleWhereLoaded();
         if (nozzle instanceof ContactProbeNozzle) {
             offsetZ = ((ContactProbeNozzle) nozzle).getCalibrationOffsetZ();
         }
@@ -1073,8 +1083,8 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     public Action loadAction = new AbstractAction("Load") {
         {
             putValue(SMALL_ICON, Icons.nozzleTipLoad);
-            putValue(NAME, "Load");
-            putValue(SHORT_DESCRIPTION, "Load the currently selected nozzle tip.");
+            putValue(NAME, Translations.getString("ReferenceNozzleTip.Action.Load")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("ReferenceNozzleTip.Action.Load.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -1090,8 +1100,8 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     public Action unloadAction = new AbstractAction("Unload") {
         {
             putValue(SMALL_ICON, Icons.nozzleTipUnload);
-            putValue(NAME, "Unload");
-            putValue(SHORT_DESCRIPTION, "Unload the currently loaded nozzle tip.");
+            putValue(NAME, Translations.getString("ReferenceNozzleTip.Action.Unload")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("ReferenceNozzleTip.Action.Unload.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -1106,15 +1116,16 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     public Action deleteAction = new AbstractAction("Delete Nozzle Tip") {
         {
             putValue(SMALL_ICON, Icons.nozzleTipRemove);
-            putValue(NAME, "Delete Nozzle Tip");
-            putValue(SHORT_DESCRIPTION, "Delete the currently selected nozzle tip.");
+            putValue(NAME, Translations.getString("ReferenceNozzleTip.Action.Delete")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("ReferenceNozzleTip.Action.Delete.Description")); //$NON-NLS-1$
         }
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
             int ret = JOptionPane.showConfirmDialog(MainFrame.get(),
-                    "Are you sure you want to delete " + getName() + "?",
-                    "Delete " + getName() + "?", JOptionPane.YES_NO_OPTION);
+                    Translations.getString("DialogMessages.ConfirmDelete.text") + " " + getName() + "?", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-2$
+                    Translations.getString("DialogMessages.ConfirmDelete.title") + " " + getName() + "?", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                    JOptionPane.YES_NO_OPTION);
             if (ret == JOptionPane.YES_OPTION) {
                 Configuration.get().getMachine().removeNozzleTip(ReferenceNozzleTip.this);
             }
@@ -1193,7 +1204,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                 Mat templateMatOccupied = OpenCvUtils.toMat(templateOccupied);
                 try {
                     Location originalLocation = location;
-                    boolean shouldBeOccupied = (getNozzleAttachedTo() == null);
+                    boolean shouldBeOccupied = (getNozzleWhereLoaded() == null);
                     for (int pass = 0; pass < visionCalibrationMaxPasses; ++pass) {
                         BufferedImage cameraImage = camera.lightSettleAndCapture();
                         int x = (cameraImage.getWidth() - width) / 2;

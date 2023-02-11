@@ -25,6 +25,9 @@ public class BottomVisionSettings extends AbstractVisionSettings {
     @Attribute(required = false)
     protected MaxRotation maxRotation = MaxRotation.Adjust;
 
+    @Attribute(required = false)
+    protected boolean asymmetric = false;
+
     @Element(required = false)
     protected Location visionOffset = new Location(LengthUnit.Millimeters);
 
@@ -54,6 +57,7 @@ public class BottomVisionSettings extends AbstractVisionSettings {
         this.checkSizeTolerancePercent = partSettings.getCheckSizeTolerancePercent();
         this.maxRotation = partSettings.getMaxRotation();
         this.visionOffset = partSettings.getVisionOffset();
+        this.asymmetric = this.visionOffset.isInitialized();
     }
 
     public PreRotateUsage getPreRotateUsage() {
@@ -96,6 +100,24 @@ public class BottomVisionSettings extends AbstractVisionSettings {
         firePropertyChange("maxRotation", oldValue, maxRotation);
     }
 
+    public boolean isAsymmetric() {
+        if (visionOffset.isInitialized()) {
+            // Where offsets were stored from previous versions, make it asymmetric.
+            asymmetric = true;
+        }
+        return asymmetric;
+    }
+
+    public void setAsymmetric(boolean asymmetric) {
+        Object oldValue = this.asymmetric;
+        this.asymmetric = asymmetric;
+        if (!asymmetric) {
+            // Reset the offsets.
+            this.setVisionOffset(new Location(LengthUnit.Millimeters));
+        }
+        firePropertyChange("asymmetric", oldValue, this.asymmetric);
+    }
+
     public Location getVisionOffset() {
         return visionOffset;
     }
@@ -119,6 +141,7 @@ public class BottomVisionSettings extends AbstractVisionSettings {
         setMaxRotation(another.getMaxRotation());
         setCheckSizeTolerancePercent(another.getCheckSizeTolerancePercent());
         setVisionOffset(another.getVisionOffset());
+        setAsymmetric(another.isAsymmetric());
         Configuration.get().fireVisionSettingsChanged();
     }
 

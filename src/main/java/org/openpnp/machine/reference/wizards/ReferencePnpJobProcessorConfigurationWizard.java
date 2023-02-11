@@ -20,6 +20,7 @@
 package org.openpnp.machine.reference.wizards;
 
 import javax.swing.BoxLayout;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -43,6 +44,7 @@ public class ReferencePnpJobProcessorConfigurationWizard extends AbstractConfigu
     private final ReferencePnpJobProcessor jobProcessor;
     private JComboBox comboBoxJobOrder;
     private JTextField maxVisionRetriesTextField;
+    private JCheckBox steppingToNextMotion;
 
     public ReferencePnpJobProcessorConfigurationWizard(ReferencePnpJobProcessor jobProcessor) {
         this.jobProcessor = jobProcessor;
@@ -57,23 +59,35 @@ public class ReferencePnpJobProcessorConfigurationWizard extends AbstractConfigu
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
-            new RowSpec[] {
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,}));
+                new RowSpec[] {
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,}));
 
-        JLabel lblJobOrder = new JLabel(Translations.getString("MachineSetup.JobProcessors.ReferencePnpJobProcessor.Label.JobOrder"));
+        JLabel lblJobOrder = new JLabel(Translations.getString("MachineSetup.JobProcessors.ReferencePnpJobProcessor.Label.JobOrder")); //$NON-NLS-1$
         panelGeneral.add(lblJobOrder, "2, 2, right, default");
 
         comboBoxJobOrder = new JComboBox(JobOrderHint.values());
         panelGeneral.add(comboBoxJobOrder, "4, 2");
 
-        JLabel lblMaxVisionRetries = new JLabel(Translations.getString("MachineSetup.JobProcessors.ReferencePnpJobProcessor.Label.MaxVisionRetries"));
-        panelGeneral.add(lblMaxVisionRetries, "2, 3, right, default");
+        JLabel lblMaxVisionRetries = new JLabel(Translations.getString("MachineSetup.JobProcessors.ReferencePnpJobProcessor.Label.MaxVisionRetries")); //$NON-NLS-1$
+        panelGeneral.add(lblMaxVisionRetries, "2, 4, right, default");
 
         maxVisionRetriesTextField = new JTextField();
-        panelGeneral.add(maxVisionRetriesTextField, "4, 3");
+        panelGeneral.add(maxVisionRetriesTextField, "4, 4");
         maxVisionRetriesTextField.setColumns(10);
+
+        JLabel lblStepsMotion = new JLabel(Translations.getString("ReferencePnpJobProcessorConfigurationWizard.lblStepsMotion.text")); //$NON-NLS-1$
+        lblStepsMotion.setToolTipText(Translations.getString("ReferencePnpJobProcessorConfigurationWizard.lblStepsMotion.toolTipText")); //$NON-NLS-1$
+        panelGeneral.add(lblStepsMotion, "2, 6, right, default");
+
+        steppingToNextMotion = new JCheckBox(); 
+        panelGeneral.add(steppingToNextMotion, "4, 6");
     }
 
     @Override
@@ -82,7 +96,8 @@ public class ReferencePnpJobProcessorConfigurationWizard extends AbstractConfigu
 
         addWrappedBinding(jobProcessor, "jobOrder", comboBoxJobOrder, "selectedItem");
         addWrappedBinding(jobProcessor, "maxVisionRetries", maxVisionRetriesTextField, "text", intConverter);
-
+        addWrappedBinding(jobProcessor, "steppingToNextMotion", steppingToNextMotion, "selected");
+        
         ComponentDecorators.decorateWithAutoSelect(maxVisionRetriesTextField);
     }
 }

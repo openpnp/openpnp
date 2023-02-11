@@ -29,6 +29,7 @@ import java.util.Set;
 import javax.swing.Action;
 
 import org.openpnp.ConfigurationListener;
+import org.openpnp.Translations;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.neoden4.NeoDen4Driver;
@@ -83,6 +84,8 @@ import org.openpnp.machine.reference.signaler.ActuatorSignaler;
 import org.openpnp.machine.reference.signaler.SoundSignaler;
 import org.openpnp.machine.reference.solutions.CalibrationSolutions;
 import org.openpnp.machine.reference.solutions.KinematicSolutions;
+import org.openpnp.machine.reference.solutions.NozzleTipSolutions;
+import org.openpnp.machine.reference.solutions.ScriptingSolutions;
 import org.openpnp.machine.reference.solutions.VisionSolutions;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision;
 import org.openpnp.machine.reference.vision.ReferenceFiducialLocator;
@@ -146,6 +149,9 @@ public class ReferenceMachine extends AbstractMachine {
 
     @Element(required = false)
     private Length unsafeZRoamingDistance = new Length(10, LengthUnit.Millimeters);
+
+    @Element(required = false)
+    private boolean poolScriptingEngines = false;
 
     @Element(required = false)
     private Solutions solutions = new Solutions();
@@ -327,6 +333,16 @@ public class ReferenceMachine extends AbstractMachine {
     }
 
     @Override
+    public boolean isPoolScriptingEngines() {
+        return poolScriptingEngines;
+    }
+
+    public void setPoolScriptingEngines(boolean poolScriptingEngines) {
+        this.poolScriptingEngines = poolScriptingEngines;
+    }
+
+
+    @Override
     public Wizard getConfigurationWizard() {
         return new ReferenceMachineConfigurationWizard(this);
     }
@@ -339,23 +355,33 @@ public class ReferenceMachine extends AbstractMachine {
     @Override
     public PropertySheetHolder[] getChildPropertySheetHolders() {
         ArrayList<PropertySheetHolder> children = new ArrayList<>();
-        children.add(new AxesPropertySheetHolder(this, "Axes", getAxes(), null));
-        children.add(new SignalersPropertySheetHolder(this, "Signalers", getSignalers(), null));
-        children.add(new SimplePropertySheetHolder("Feeders", getFeeders()));
-        children.add(new SimplePropertySheetHolder("Heads", getHeads()));
-        children.add(new NozzleTipsPropertySheetHolder("Nozzle Tips", getNozzleTips(), null));
-        children.add(new CamerasPropertySheetHolder(null, "Cameras", getCameras(), null));
-        children.add(new ActuatorsPropertySheetHolder(null, "Actuators", getActuators(), null));
-        children.add(new DriversPropertySheetHolder(this, "Drivers", getDrivers(), null));
-        children.add(new SimplePropertySheetHolder("Job Processors",
-                Arrays.asList(getPnpJobProcessor())));
+        children.add(new AxesPropertySheetHolder(this, Translations.getString(
+                "ReferenceMachine.PropertySheetHolder.Axes.title"), getAxes(), null)); //$NON-NLS-1$
+        children.add(new SignalersPropertySheetHolder(this, Translations.getString(
+                "ReferenceMachine.PropertySheetHolder.Signalers.title"), getSignalers(), null)); //$NON-NLS-1$
+        children.add(new SimplePropertySheetHolder(Translations.getString(
+                "ReferenceMachine.PropertySheetHolder.Feeders.title"), getFeeders())); //$NON-NLS-1$
+        children.add(new SimplePropertySheetHolder(Translations.getString(
+                "ReferenceMachine.PropertySheetHolder.Heads.title"), getHeads())); //$NON-NLS-1$
+        children.add(new NozzleTipsPropertySheetHolder(Translations.getString(
+                "ReferenceMachine.PropertySheetHolder.NozzleTips.title"), //$NON-NLS-1$
+                getNozzleTips(), null));
+        children.add(new CamerasPropertySheetHolder(null, Translations.getString(
+                "ReferenceMachine.PropertySheetHolder.Cameras.title"), getCameras(), null)); //$NON-NLS-1$
+        children.add(new ActuatorsPropertySheetHolder(null, Translations.getString(
+                "ReferenceMachine.PropertySheetHolder.Actuators.title"), getActuators(), null)); //$NON-NLS-1$
+        children.add(new DriversPropertySheetHolder(this, Translations.getString(
+                "ReferenceMachine.PropertySheetHolder.Drivers.title"), getDrivers(), null)); //$NON-NLS-1$
+        children.add(new SimplePropertySheetHolder(Translations.getString(
+                "ReferenceMachine.PropertySheetHolder.JobProcessors.title"), Arrays.asList(getPnpJobProcessor()))); //$NON-NLS-1$
 
         List<PropertySheetHolder> vision = new ArrayList<>();
         for (PartAlignment alignment : getPartAlignments()) {
             vision.add(alignment);
         }
         vision.add(getFiducialLocator());
-        children.add(new SimplePropertySheetHolder("Vision", vision));
+        children.add(new SimplePropertySheetHolder(Translations.getString(
+                "ReferenceMachine.PropertySheetHolder.Vision.title"), vision)); //$NON-NLS-1$
         return children.toArray(new PropertySheetHolder[] {});
     }
 
@@ -574,6 +600,9 @@ public class ReferenceMachine extends AbstractMachine {
     //@Element(required = false)
     private KinematicSolutions kinematicSolutions = new KinematicSolutions(); 
 
+    //@Element(required = false)
+    private NozzleTipSolutions nozzleTipSolutions = new NozzleTipSolutions();
+
     @Element(required = false)
     private VisionSolutions visualSolutions = new VisionSolutions();
 
@@ -588,11 +617,15 @@ public class ReferenceMachine extends AbstractMachine {
         return calibrationSolutions;
     }
 
+    private ScriptingSolutions scriptingSolutions = new ScriptingSolutions();
+
     @Override
     public void findIssues(Solutions solutions) {
         kinematicSolutions.setMachine(this).findIssues(solutions);
+        nozzleTipSolutions.setMachine(this).findIssues(solutions);
         visualSolutions.setMachine(this).findIssues(solutions);
         calibrationSolutions.setMachine(this).findIssues(solutions);
+        scriptingSolutions.setMachine(this).findIssues(solutions);
 
         if (solutions.isTargeting(Milestone.Advanced)) {
             if (getMotionPlanner() instanceof NullMotionPlanner) {

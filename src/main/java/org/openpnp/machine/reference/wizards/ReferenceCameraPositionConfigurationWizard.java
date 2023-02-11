@@ -1,24 +1,22 @@
 package org.openpnp.machine.reference.wizards;
 
-import java.awt.Color;
-
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
-import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
+import org.openpnp.Translations;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.components.LocationButtonsPanel;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.AxesComboBoxModel;
 import org.openpnp.gui.support.DoubleConverter;
-import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.gui.support.NamedConverter;
-import org.openpnp.machine.reference.ReferenceCamera;
+import org.openpnp.machine.reference.camera.ReferenceCamera;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.base.AbstractAxis;
@@ -28,7 +26,6 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
-import javax.swing.JComboBox;
 
 @SuppressWarnings("serial")
 public class ReferenceCameraPositionConfigurationWizard extends AbstractConfigurationWizard {
@@ -57,6 +54,9 @@ public class ReferenceCameraPositionConfigurationWizard extends AbstractConfigur
     private JComboBox axisRotation;
     private JLabel lblRotation;
     private JTextField textFieldOffRotation;
+    private JLabel lblLocation;
+    private JLabel lblRoamingRadius;
+    private JTextField roamingRadius;
 
 
     public ReferenceCameraPositionConfigurationWizard(AbstractMachine machine, ReferenceCamera referenceCamera) {
@@ -65,10 +65,11 @@ public class ReferenceCameraPositionConfigurationWizard extends AbstractConfigur
         panelOffsets = new JPanel();
         contentPanel.add(panelOffsets);
         panelOffsets.setBorder(new TitledBorder(null,
-                "Coordinate System", TitledBorder.LEADING, TitledBorder.TOP, null));
+                Translations.getString("ReferenceCameraPositionConfigurationWizard.OffsetsPanel.Border.title"), //$NON-NLS-1$
+                TitledBorder.LEADING, TitledBorder.TOP, null));
         panelOffsets.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
+                ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -78,6 +79,10 @@ public class ReferenceCameraPositionConfigurationWizard extends AbstractConfigur
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
@@ -94,10 +99,12 @@ public class ReferenceCameraPositionConfigurationWizard extends AbstractConfigur
         JLabel olblZ = new JLabel("Z");
         panelOffsets.add(olblZ, "8, 2");
         
-        lblRotation = new JLabel("Rotation");
+        lblRotation = new JLabel(Translations.getString(
+                "ReferenceCameraPositionConfigurationWizard.OffsetsPanel.RotationLabel.text")); //$NON-NLS-1$
         panelOffsets.add(lblRotation, "10, 2");
         
-        lblAxis = new JLabel("Axis");
+        lblAxis = new JLabel(Translations.getString(
+                "ReferenceCameraPositionConfigurationWizard.OffsetsPanel.AxisLabel.text")); //$NON-NLS-1$
         panelOffsets.add(lblAxis, "2, 4, right, default");
         
         axisX = new JComboBox(new AxesComboBoxModel(machine, AbstractAxis.class, Axis.Type.X, true));
@@ -112,50 +119,44 @@ public class ReferenceCameraPositionConfigurationWizard extends AbstractConfigur
         axisRotation = new JComboBox(new AxesComboBoxModel(machine, AbstractAxis.class, Axis.Type.Rotation, true));
         panelOffsets.add(axisRotation, "10, 4, fill, default");
         
-        lblOffset = new JLabel("Offset");
+        lblOffset = new JLabel(Translations.getString(
+                "ReferenceCameraPositionConfigurationWizard.OffsetsPanel.OffsetLabel.text")); //$NON-NLS-1$
         panelOffsets.add(lblOffset, "2, 6, right, default");
 
 
         textFieldOffX = new JTextField();
         panelOffsets.add(textFieldOffX, "4, 6");
-        textFieldOffX.setColumns(8);
+        textFieldOffX.setColumns(10);
 
         textFieldOffY = new JTextField();
         panelOffsets.add(textFieldOffY, "6, 6");
-        textFieldOffY.setColumns(8);
+        textFieldOffY.setColumns(10);
 
         textFieldOffZ = new JTextField();
         panelOffsets.add(textFieldOffZ, "8, 6");
-        textFieldOffZ.setColumns(8);
-        
+        textFieldOffZ.setColumns(10);
+
         textFieldOffRotation = new JTextField();
         panelOffsets.add(textFieldOffRotation, "10, 6, fill, default");
         textFieldOffRotation.setColumns(10);
 
-        JPanel panelSafeZ = new JPanel();
-        panelSafeZ.setBorder(new TitledBorder(null, "Safe Z", TitledBorder.LEADING,
-                TitledBorder.TOP, null, null));
-        contentPanel.add(panelSafeZ);
-        panelSafeZ.setLayout(new FormLayout(
-                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
-                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
-
-        JLabel lblSafeZ = new JLabel("Safe Z");
-        panelSafeZ.add(lblSafeZ, "2, 2, right, default");
+        JLabel lblSafeZ = new JLabel(Translations.getString(
+                "ReferenceCameraPositionConfigurationWizard.SafeZPanel.SafeZLabel.text")); //$NON-NLS-1$
+        panelOffsets.add(lblSafeZ, "2, 10, right, default");
 
         textFieldSafeZ = new JTextField();
+        panelOffsets.add(textFieldSafeZ, "8, 10");
         textFieldSafeZ.setEditable(false);
-        panelSafeZ.add(textFieldSafeZ, "4, 2, fill, default");
         textFieldSafeZ.setColumns(10);
 
         panelLocation = new JPanel();
-        panelLocation.setBorder(new TitledBorder(null, "Location", TitledBorder.LEADING,
-                TitledBorder.TOP, null, null));
+        panelLocation.setBorder(new TitledBorder(null, Translations.getString(
+                "ReferenceCameraPositionConfigurationWizard.LocationPanel.Border.title"), //$NON-NLS-1$
+                TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panelLocation);
         panelLocation.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
+                ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -163,50 +164,64 @@ public class ReferenceCameraPositionConfigurationWizard extends AbstractConfigur
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("default:grow"),},
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("left:default"),},
             new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
 
         lblX = new JLabel("X");
-        panelLocation.add(lblX, "2, 2");
+        panelLocation.add(lblX, "4, 2");
 
         lblY = new JLabel("Y");
-        panelLocation.add(lblY, "4, 2");
+        panelLocation.add(lblY, "6, 2");
 
         lblZ = new JLabel("Z");
-        panelLocation.add(lblZ, "6, 2");
+        panelLocation.add(lblZ, "8, 2");
 
-        lblRotation_1 = new JLabel("Rotation");
-        panelLocation.add(lblRotation_1, "8, 2");
+        lblRotation_1 = new JLabel(Translations.getString(
+                "ReferenceCameraPositionConfigurationWizard.LocationPanel.RotationLabel.text")); //$NON-NLS-1$
+        panelLocation.add(lblRotation_1, "10, 2");
+        
+        lblLocation = new JLabel(Translations.getString("ReferenceCameraPositionConfigurationWizard.LocationPanel.LocationLabel.text")); //$NON-NLS-1$
+        panelLocation.add(lblLocation, "2, 4, right, default");
 
         textFieldLocationX = new JTextField();
-        panelLocation.add(textFieldLocationX, "2, 4, fill, default");
-        textFieldLocationX.setColumns(8);
+        panelLocation.add(textFieldLocationX, "4, 4, fill, default");
+        textFieldLocationX.setColumns(10);
 
         textFieldLocationY = new JTextField();
-        panelLocation.add(textFieldLocationY, "4, 4, fill, default");
-        textFieldLocationY.setColumns(8);
+        panelLocation.add(textFieldLocationY, "6, 4, fill, default");
+        textFieldLocationY.setColumns(10);
 
         textFieldLocationZ = new JTextField();
-        panelLocation.add(textFieldLocationZ, "6, 4, fill, default");
-        textFieldLocationZ.setColumns(8);
+        panelLocation.add(textFieldLocationZ, "8, 4, fill, default");
+        textFieldLocationZ.setColumns(10);
 
         textFieldLocationRotation = new JTextField();
-        panelLocation.add(textFieldLocationRotation, "8, 4, fill, default");
-        textFieldLocationRotation.setColumns(8);
-
+        panelLocation.add(textFieldLocationRotation, "10, 4, fill, default");
+        textFieldLocationRotation.setColumns(10);
+        
+        lblRoamingRadius = new JLabel(Translations.getString("ReferenceCameraPositionConfigurationWizard.LocationPanel.RoamingRadiusLabel.text")); //$NON-NLS-1$
+        lblRoamingRadius.setToolTipText(Translations.getString("ReferenceCameraPositionConfigurationWizard.LocationPanel.RoamingRadiusLabel.toolTipText")); //$NON-NLS-1$
+        panelLocation.add(lblRoamingRadius, "2, 6, right, default");
+        
+        roamingRadius = new JTextField();
+        panelLocation.add(roamingRadius, "4, 6, fill, default");
+        roamingRadius.setColumns(10);
+        locationButtonsPanel = new LocationButtonsPanel(textFieldLocationX,
+                textFieldLocationY, textFieldLocationZ, textFieldLocationRotation);
+        panelLocation.add(locationButtonsPanel, "12, 4, fill, fill");
         try {
             // Causes WindowBuilder to fail, so just throw away the error.
             if (referenceCamera.getHead() == null) {
                 // Fixed camera, add the location fields and buttons and turn off offsets.
-                locationButtonsPanel = new LocationButtonsPanel(textFieldLocationX,
-                        textFieldLocationY, textFieldLocationZ, textFieldLocationRotation);
-                panelLocation.add(locationButtonsPanel, "10, 4, fill, fill");
                 panelOffsets.setVisible(false);    
-                panelSafeZ.setVisible(false);
             }
             else {
                 // Moving camera, hide location and show only offsets.
@@ -254,6 +269,7 @@ public class ReferenceCameraPositionConfigurationWizard extends AbstractConfigur
             
             addWrappedBinding(referenceCamera, "safeZ", textFieldSafeZ, "text", lengthConverter);
         }
+        addWrappedBinding(referenceCamera, "roamingRadius", roamingRadius, "text", lengthConverter);
 
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldOffX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldOffY);
@@ -264,6 +280,7 @@ public class ReferenceCameraPositionConfigurationWizard extends AbstractConfigur
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldLocationY);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldLocationZ);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldLocationRotation);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(roamingRadius);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldSafeZ);
     }
 }

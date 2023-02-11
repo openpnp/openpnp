@@ -22,6 +22,7 @@
  package org.openpnp.gui.components;
 
 import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.awt.Toolkit;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
@@ -44,6 +45,7 @@ import javax.swing.JSpinner;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.SpinnerNumberModel;
+import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.border.TitledBorder;
@@ -58,6 +60,7 @@ import org.jdesktop.beansbinding.AutoBinding;
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.jdesktop.beansbinding.BeanProperty;
 import org.jdesktop.beansbinding.Bindings;
+import org.openpnp.Translations;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.model.Length;
@@ -136,7 +139,7 @@ public class IssuePanel extends JPanel {
         }
         : dynamicRowspec(rowCount)));
 
-        lblSubject = new JLabel("Subject");
+        lblSubject = new JLabel(Translations.getString("IssuePanel.SubjectLabel.text")); //$NON-NLS-1$
         panel.add(lblSubject, "2, 2, right, center");
 
         panel_1 = new JPanel();
@@ -151,7 +154,7 @@ public class IssuePanel extends JPanel {
         panel_1.add(subjectText, "1, 1, fill, default");
         subjectText.setBackground(lblSubject.getBackground());
 
-        lblIssue = new JLabel("Issue");
+        lblIssue = new JLabel(Translations.getString("IssuePanel.IssueLabel.text")); //$NON-NLS-1$
         panel.add(lblIssue, "2, 4, right, center");
 
         panel_2 = new JPanel();
@@ -170,7 +173,7 @@ public class IssuePanel extends JPanel {
         issueText.setWrapStyleWord(true);  
         issueText.setLineWrap(true);
 
-        lblSolution = new JLabel("Solution");
+        lblSolution = new JLabel(Translations.getString("IssuePanel.SolutionLabel.text")); //$NON-NLS-1$
         panel.add(lblSolution, "2, 6, right, center");
 
         panel_3 = new JPanel();
@@ -236,13 +239,19 @@ public class IssuePanel extends JPanel {
                     scrollPane.setViewportView(textField);
                     textField.getDocument().addDocumentListener(new DocumentListener() {
                         public void changedUpdate(DocumentEvent e) {
-                            stringProperty.set(textField.getText());
+                            UiUtils.messageBoxOnException(() -> {
+                                stringProperty.set(textField.getText());
+                            });
                         }
                         public void removeUpdate(DocumentEvent e) {
-                            stringProperty.set(textField.getText());
+                            UiUtils.messageBoxOnException(() -> {
+                                stringProperty.set(textField.getText());
+                            });
                         }
                         public void insertUpdate(DocumentEvent e) {
-                            stringProperty.set(textField.getText());
+                            UiUtils.messageBoxOnException(() -> {
+                                stringProperty.set(textField.getText());
+                            });
                         }
                     });
                     String val = stringProperty.get();
@@ -279,7 +288,9 @@ public class IssuePanel extends JPanel {
                     comboBox.addActionListener(new ActionListener() {
                         @Override
                         public void actionPerformed(ActionEvent e) {
-                            stringProperty.set((String) comboBox.getSelectedItem());
+                            UiUtils.messageBoxOnException(() -> {
+                                stringProperty.set((String) comboBox.getSelectedItem());
+                            });
                         }
                     });
                     String val = stringProperty.get();
@@ -292,13 +303,19 @@ public class IssuePanel extends JPanel {
                     JTextField textField = new JTextField();
                     textField.getDocument().addDocumentListener(new DocumentListener() {
                         public void changedUpdate(DocumentEvent e) {
-                            stringProperty.set(textField.getText());
+                            UiUtils.messageBoxOnException(() -> {
+                                stringProperty.set(textField.getText());
+                            });
                         }
                         public void removeUpdate(DocumentEvent e) {
-                            stringProperty.set(textField.getText());
+                            UiUtils.messageBoxOnException(() -> {
+                                stringProperty.set(textField.getText());
+                            });
                         }
                         public void insertUpdate(DocumentEvent e) {
-                            stringProperty.set(textField.getText());
+                            UiUtils.messageBoxOnException(() -> {
+                                stringProperty.set(textField.getText());
+                            });
                         }
                     });
                     String val = stringProperty.get();
@@ -317,7 +334,9 @@ public class IssuePanel extends JPanel {
                 spinner.addChangeListener(new ChangeListener() {
                     public void stateChanged(ChangeEvent e) {
                         int value = (int) spinner.getValue();
-                        intProperty.set(value);
+                        UiUtils.messageBoxOnException(() -> {
+                            intProperty.set(value);
+                        });
                         int newValue = intProperty.get();
                         if (newValue != value) {
                             spinner.setValue(newValue);
@@ -340,7 +359,9 @@ public class IssuePanel extends JPanel {
                 slider.addChangeListener(new ChangeListener() {
                     public void stateChanged(ChangeEvent e) {
                         int value = (int) slider.getValue();
-                        doubleProperty.set(doubleProperty.getMin() + value*(doubleProperty.getMax() - doubleProperty.getMin())/SLIDER_MAX);
+                        UiUtils.messageBoxOnException(() -> {
+                            doubleProperty.set(doubleProperty.getMin() + value*(doubleProperty.getMax() - doubleProperty.getMin())/SLIDER_MAX);
+                        });
                         int newValue = getSliderValue(doubleProperty);
                         if (newValue != value) {
                             slider.setValue(newValue);
@@ -377,20 +398,24 @@ public class IssuePanel extends JPanel {
                     public void changedText() {
                         String text = textField.getText();
                         Length length = lengthConverter.convertReverse(text);
-                        lengthProperty.set(length);
+                        UiUtils.messageBoxOnException(() -> {
+                            lengthProperty.set(length);
+                        });
                     }
                 });
                 panel.add(textField, "4, "+(formRow*2)+", left, default");
             }
             else if (property instanceof ActionProperty) {
-                ActionProperty lengthProperty = (ActionProperty) property;
-                JLabel lbl = new JLabel(lengthProperty.getLabel());
-                lbl.setToolTipText(lengthProperty.getToolTip());
+                ActionProperty actionProperty = (ActionProperty) property;
+                JLabel lbl = new JLabel(actionProperty.getLabel());
+                lbl.setToolTipText(actionProperty.getToolTip());
                 panel.add(lbl, "2, "+(formRow*2)+", right, default");
-                JButton button = new JButton(lengthProperty.get());
-                button.setToolTipText(lengthProperty.getToolTip());
+                JButton button = new JButton(actionProperty.get());
+                button.setToolTipText(actionProperty.getToolTip());
                 button.setEnabled(issue.getState() == Solutions.State.Open);
-                panel.add(button, "4, "+(formRow*2)+", left, default");
+                button.setHorizontalAlignment(SwingConstants.LEFT);
+                button.setPreferredSize(new Dimension(200, button.getPreferredSize().height));
+                panel.add(button, "4, "+(formRow*2)+", left, fill");
             }
             // Consume the row
             formRow++;

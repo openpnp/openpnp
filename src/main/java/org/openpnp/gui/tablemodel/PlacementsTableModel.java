@@ -19,6 +19,7 @@
 
 package org.openpnp.gui.tablemodel;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.JobPlacementsPanel;
 import org.openpnp.gui.support.LengthCellValue;
 import org.openpnp.gui.support.PartCellValue;
@@ -39,7 +40,20 @@ public class PlacementsTableModel extends AbstractObjectTableModel {
     final Configuration configuration;
 
     private String[] columnNames =
-            new String[] {"Enabled", "ID", "Part", "Side", "X", "Y", "Rot.", "Type", "Placed", "Status", "Error Handling", "Comments"};
+            new String[] {
+                    Translations.getString("PlacementsTableModel.ColumnName.Enabled"), //$NON-NLS-1$
+                    Translations.getString("PlacementsTableModel.ColumnName.ID"), //$NON-NLS-1$
+                    Translations.getString("PlacementsTableModel.ColumnName.Part"), //$NON-NLS-1$
+                    Translations.getString("PlacementsTableModel.ColumnName.Side"), //$NON-NLS-1$
+                    "X", //$NON-NLS-1$
+                    "Y", //$NON-NLS-1$
+                    Translations.getString("PlacementsTableModel.ColumnName.Rotation"), //$NON-NLS-1$
+                    Translations.getString("PlacementsTableModel.ColumnName.Type"), //$NON-NLS-1$
+                    Translations.getString("PlacementsTableModel.ColumnName.Placed"), //$NON-NLS-1$
+                    Translations.getString("PlacementsTableModel.ColumnName.Status"), //$NON-NLS-1$
+                    Translations.getString("PlacementsTableModel.ColumnName.ErrorHandling"), //$NON-NLS-1$
+                    Translations.getString("PlacementsTableModel.ColumnName.Comments" //$NON-NLS-1$
+                    )};
 
     private Class[] columnTypes = new Class[] {Boolean.class, PartCellValue.class, Part.class, Side.class,
             LengthCellValue.class, LengthCellValue.class, RotationCellValue.class, Type.class,

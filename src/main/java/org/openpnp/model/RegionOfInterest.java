@@ -12,18 +12,30 @@ public class RegionOfInterest {
     protected Location lowerLeftCorner;
     @Attribute
     protected boolean rectify;
-
+    @Element(required = false)
+    protected Location offsets;
+    
     public RegionOfInterest()
     {}
     
     public RegionOfInterest(Location upperLeftCorner, Location upperRightCorner,
             Location lowerLeftCorner, boolean rectify) {
-        super();
         this.upperLeftCorner = upperLeftCorner;
         this.upperRightCorner = upperRightCorner;
         this.lowerLeftCorner = lowerLeftCorner;
         this.rectify = rectify;
+        this.offsets = null;
     }
+    
+    public RegionOfInterest(Location upperLeftCorner, Location upperRightCorner,
+            Location lowerLeftCorner, boolean rectify, Location offsets) {
+        this.upperLeftCorner = upperLeftCorner;
+        this.upperRightCorner = upperRightCorner;
+        this.lowerLeftCorner = lowerLeftCorner;
+        this.rectify = rectify;
+        this.offsets = offsets;
+    }
+    
     public Location getUpperLeftCorner() {
         return upperLeftCorner;
     }
@@ -36,12 +48,16 @@ public class RegionOfInterest {
     public boolean isRectify() {
         return rectify;
     }
+    public Location getOffsets() {
+        return offsets;
+    }
     
     public RegionOfInterest rotateXy(double angle) {
         return new RegionOfInterest(
                 upperLeftCorner.rotateXy(angle),
                 upperRightCorner.rotateXy(angle),
                 lowerLeftCorner.rotateXy(angle),
-                rectify);
+                rectify,
+                this.offsets==null ? null : offsets.rotateXy(angle));
     }
 }

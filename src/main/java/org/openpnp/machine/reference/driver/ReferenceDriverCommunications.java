@@ -22,6 +22,8 @@ package org.openpnp.machine.reference.driver;
 import java.io.IOException;
 import java.util.concurrent.TimeoutException;
 
+import org.jfree.chart.util.ArrayUtils;
+import org.openpnp.util.Collect;
 import org.openpnp.util.GcodeServer;
 import org.simpleframework.xml.Attribute;
 
@@ -73,8 +75,8 @@ public abstract class ReferenceDriverCommunications {
     }
 
     public void writeLine(String data) throws IOException {
-        writeBytes(data.getBytes());
-        writeBytes(getLineEndingType().getLineEnding().getBytes());
+        byte [] line = Collect.concat(data.getBytes(), getLineEndingType().getLineEnding().getBytes());
+        writeBytes(line);
     }
 
     /**

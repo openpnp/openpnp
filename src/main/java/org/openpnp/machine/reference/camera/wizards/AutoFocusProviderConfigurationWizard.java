@@ -39,10 +39,10 @@ import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.LengthConverter;
-import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.machine.reference.ReferenceNozzleTip;
 import org.openpnp.machine.reference.camera.AutoFocusProvider;
+import org.openpnp.machine.reference.camera.ReferenceCamera;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
@@ -191,7 +191,8 @@ public class AutoFocusProviderConfigurationWizard extends AbstractConfigurationW
                 Length maxPartHeight = nt.getMaxPartHeight();
                 Location location0 = location1.add(new Location(maxPartHeight.getUnits(), 
                         0, 0, maxPartHeight.getValue(), 0));
-                Location focus = focusProvider.autoFocus(camera, nozzle, nt.getMaxPartDiameterWithTolerance(), location0, location1);
+                Location focus = focusProvider.autoFocus(camera, nozzle, nt.getMaxPartDiameter()
+                .add(nt.getMaxPickTolerance().multiply(2.0)), location0, location1);
                 setLastFocusDistance(focus.getXyzLengthTo(location1));
                 MovableUtils.fireTargetedUserAction(camera);
             });

@@ -119,14 +119,30 @@ public interface Camera extends HeadMountable, WizardConfigurable,
     public BufferedImage captureTransformed();
     
     public BufferedImage captureRaw();
-    
+
+    public enum SettleOption {
+        Skip,
+        Settle,
+        SettleFullArea;
+    }
+
     /**
      * Same as capture() but settles the camera before capturing.
+     * @param settleOption Determines how thorough the settling is.
      * 
      * @return
      * @throws Exception
      */
-    public BufferedImage settleAndCapture() throws Exception;
+    public BufferedImage settleAndCapture(SettleOption settleOption) throws Exception;
+
+    /**
+     * Same as capture() but settles the camera before capturing.
+     * @return
+     * @throws Exception
+     */
+    public default BufferedImage settleAndCapture() throws Exception {
+        return settleAndCapture(SettleOption.Settle);
+    }
 
     /**
      * Same as capture(), but lights and settles the camera before capturing. Uses default lighting.
@@ -230,4 +246,12 @@ public interface Camera extends HeadMountable, WizardConfigurable,
     boolean isShownInMultiCameraView();
 
     public FocusProvider getFocusProvider();
+
+    /**
+     * @return The bottom camera roaming radius within which a part is allowed to be positioned at camera Z.
+     * It includes moving the nozzle around to take different shots of the parts, and the part extent itself.  
+     * It does not include pick offsets and other deviations that may occur during practical operation, a 
+     * physical camera "pit" must allow for some extra wiggle space, on to of this nominal radius.   
+     */
+    public Length getRoamingRadius();
 }

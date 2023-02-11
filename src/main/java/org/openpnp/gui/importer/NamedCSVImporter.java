@@ -120,8 +120,9 @@ public class NamedCSVImporter implements BoardImporter {
     private static final String Rots[] = {"ROTATION", "ROT", "ROTATE", "SYM_ROTATE"};
     private static final String TBs[] = {"LAYER", "SIDE", "TB", "SYM_MIRROR"};
     private static final String Heights[] = {"HEIGHT", "HEIGHT(MIL)", "HEIGHT(MM)"};
+    private static final String Comments[] = {"ADDCOMMENT"};
     //////////////////////////////////////////////////////////
-    static private int Ref = -1, Val = -1, Pack = -1, X = -1, Y = -1, Rot = -1, TB = -1, HT = -1,
+    static private int Ref = -1, Val = -1, Pack = -1, X = -1, Y = -1, Rot = -1, TB = -1, HT = -1, Comment = -1,
             Len = 0;
     static private int units_mils_x = 0, units_mils_y = 0, units_mils_height = 0; // set if units
                                                                                   // are in mils not
@@ -171,6 +172,7 @@ public class NamedCSVImporter implements BoardImporter {
             // the following fields are optional
             HT = checkCSV(Heights, str); // optional height field
             TB = checkCSV(TBs, str); // optional top/bottom layer field
+            Comment = checkCSV(Comments, str); // optional comment field
 
             Len = Ref <= Len ? Len : Ref;
             Len = Val <= Len ? Len : Val;
@@ -191,6 +193,7 @@ public class NamedCSVImporter implements BoardImporter {
         Logger.trace("checkCSV: Rot = " + Rot);
         Logger.trace("checkCSV: TB = " + TB);
         Logger.trace("checkCSV: HT = " + HT);
+        Logger.trace("checkCSV: Comment = " + Comment);
         Ref = -1;
         Val = -1;
         Pack = -1;
@@ -199,6 +202,7 @@ public class NamedCSVImporter implements BoardImporter {
         Rot = -1;
         TB = -1;
         HT = -1;
+        Comment = -1;
         Len = 0;
         return false;
     }
@@ -364,6 +368,10 @@ public class NamedCSVImporter implements BoardImporter {
 
                 }
 
+                if(Comment != -1) {
+                    placement.setComments(as[Comment]);
+                }
+
                 char c = 0;
                 if (TB != -1) {
                     c = as[TB].toUpperCase().charAt(0);
@@ -400,7 +408,7 @@ public class NamedCSVImporter implements BoardImporter {
                     new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                             FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
 
-            JLabel lblTopFilemnt = new JLabel("Centeroid File (.csv)");
+            JLabel lblTopFilemnt = new JLabel("Centroid File (.csv)");
             panel.add(lblTopFilemnt, "2, 2, right, default");
 
             textFieldTopFile = new JTextField();

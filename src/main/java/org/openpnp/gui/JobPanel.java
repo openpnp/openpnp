@@ -86,6 +86,7 @@ import org.openpnp.model.BoardPad;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Job;
 import org.openpnp.model.Location;
+import org.openpnp.model.Motion;
 import org.openpnp.model.Placement;
 import org.openpnp.model.Placement.Type;
 import org.openpnp.spi.Camera;
@@ -94,6 +95,7 @@ import org.openpnp.spi.JobProcessor;
 import org.openpnp.spi.JobProcessor.TextStatusListener;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
+import org.openpnp.spi.MotionPlanner;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 
@@ -288,8 +290,8 @@ public class JobPanel extends JPanel {
 
         JPanel pnlBoards = new JPanel();
         pnlBoards.setBorder(new TitledBorder(null,
-                Translations.getString("JobPanel.Tab.Boards"),
-                TitledBorder.LEADING, TitledBorder.TOP, null)); //$NON-NLS-1$
+                Translations.getString("JobPanel.Tab.Boards"), //$NON-NLS-1$
+                TitledBorder.LEADING, TitledBorder.TOP, null));
         pnlBoards.setLayout(new BorderLayout(0, 0));
 
         JToolBar toolBarBoards = new JToolBar();
@@ -899,10 +901,24 @@ public class JobPanel extends JPanel {
     
     public void jobRun() {
         UiUtils.submitUiMachineTask(() -> {
+            // For optional motion stepping, remember the past move.
+            MotionPlanner motionPlanner = Configuration.get().getMachine().getMotionPlanner();
+            Motion pastMotion = motionPlanner.getLastMotion();
             do {
-                if (!jobProcessor.next()) {
-                    setState(State.Stopped);
+                do { 
+                    if (!jobProcessor.next()) {
+                        setState(State.Stopped);
+                        break;
+                    }
+                    else if (state == State.Pausing) {
+                        // We're pausing, but check if we need motion before we can pause for real.
+                        Motion lastMotion = motionPlanner.getLastMotion();
+                        if (! (jobProcessor.isSteppingToNextMotion() && lastMotion == pastMotion)) {
+                            break;
+                        }
+                    }
                 }
+                while (state == State.Pausing);
             } while (state == State.Running);
             
             if (state == State.Pausing) {
@@ -1426,8 +1442,8 @@ public class JobPanel extends JPanel {
     
     public final Action setEnabledAction = new AbstractAction() {
         {
-            putValue(NAME, "Set Enabled");
-            putValue(SHORT_DESCRIPTION, "Set board(s) enabled to...");
+            putValue(NAME, Translations.getString("JobPanel.Action.Job.Board.SetEnabled")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("JobPanel.Action.Job.Board.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -1454,8 +1470,8 @@ public class JobPanel extends JPanel {
 
     public final Action setCheckFidsAction = new AbstractAction() {
         {
-            putValue(NAME, "Set Check Fids");
-            putValue(SHORT_DESCRIPTION, "Set check fids to...");
+            putValue(NAME, Translations.getString("JobPanel.Action.Job.Board.SetCheckFids")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("JobPanel.Action.Job.Board.SetCheckFids.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -1482,8 +1498,8 @@ public class JobPanel extends JPanel {
     
     public final Action setSideAction = new AbstractAction() {
         {
-            putValue(NAME, "Set Side");
-            putValue(SHORT_DESCRIPTION, "Set board side(s) to...");
+            putValue(NAME, Translations.getString("JobPanel.Action.Job.Board.SetSide")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("JobPanel.Action.Job.Board.SetSide.Description")); //$NON-NLS-1$
         }
 
         @Override

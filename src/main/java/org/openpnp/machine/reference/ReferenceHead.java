@@ -23,6 +23,7 @@ import java.util.ArrayList;
 
 import javax.swing.Action;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.psh.ActuatorsPropertySheetHolder;
@@ -119,9 +120,12 @@ public class ReferenceHead extends AbstractHead {
     @Override
     public PropertySheetHolder[] getChildPropertySheetHolders() {
         ArrayList<PropertySheetHolder> children = new ArrayList<>();
-        children.add(new NozzlesPropertySheetHolder(this, "Nozzles", getNozzles(), null));
-        children.add(new CamerasPropertySheetHolder(this, "Cameras", getCameras(), null));
-        children.add(new ActuatorsPropertySheetHolder(this, "Actuators", getActuators(), null));
+        children.add(new NozzlesPropertySheetHolder(this, Translations.getString(
+                "ReferenceHead.NozzlesPropertySheetHolder.title"), getNozzles(), null)); //$NON-NLS-1$
+        children.add(new CamerasPropertySheetHolder(this, Translations.getString(
+                "ReferenceHead.CamerasPropertySheetHolder.title"), getCameras(), null)); //$NON-NLS-1$
+        children.add(new ActuatorsPropertySheetHolder(this, Translations.getString(
+                "ReferenceHead.ActuatorsPropertySheetHolder.title"), getActuators(), null)); //$NON-NLS-1$
         return children.toArray(new PropertySheetHolder[] {});
     }
 

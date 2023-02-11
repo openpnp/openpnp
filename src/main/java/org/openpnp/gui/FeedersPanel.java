@@ -55,6 +55,7 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableRowSorter;
 
+import org.openpnp.Translations;
 import org.openpnp.events.FeederSelectedEvent;
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.components.ClassSelectionDialog;
@@ -146,7 +147,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         JPanel panel_1 = new JPanel();
         panel.add(panel_1, BorderLayout.EAST);
 
-        JLabel lblSearch = new JLabel("Search");
+        JLabel lblSearch = new JLabel(Translations.getString("FeedersPanel.SearchLabel.text")); //$NON-NLS-1$
         panel_1.add(lblSearch);
 
         searchTextField = new JTextField();
@@ -472,14 +473,16 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 
         String title;
         if (part == null) {
-            title = "Select Feeder...";
+            title = Translations.getString("FeedersPanel.SelectFeederImplementationDialog.Select.title"); //$NON-NLS-1$
         }
         else {
-            title = "Select Feeder for " + part.getId() + "...";
+            title = Translations.getString("FeedersPanel.SelectFeederImplementationDialog.SelectFor.title" //$NON-NLS-1$
+            ) + " " + part.getId() + "..."; //$NON-NLS-1$ //$NON-NLS-2$
         }
         ClassSelectionDialog<Feeder> dialog =
                 new ClassSelectionDialog<>(JOptionPane.getFrameForComponent(FeedersPanel.this),
-                        title, "Please select a Feeder implemention from the list below.",
+                        title, Translations.getString(
+                                "FeedersPanel.SelectFeederImplementationDialog.Description"), //$NON-NLS-1$
                         configuration.getMachine().getCompatibleFeederClasses());
         dialog.setVisible(true);
         Class<? extends Feeder> feederClass = dialog.getSelectedClass();
@@ -524,8 +527,8 @@ public class FeedersPanel extends JPanel implements WizardContainer {
     public Action newFeederAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.add);
-            putValue(NAME, "New Feeder...");
-            putValue(SHORT_DESCRIPTION, "Create a new feeder.");
+            putValue(NAME, Translations.getString("FeedersPanel.Action.NewFeeder")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("FeedersPanel.Action.NewFeeder.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -537,8 +540,8 @@ public class FeedersPanel extends JPanel implements WizardContainer {
     public Action deleteFeederAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.delete);
-            putValue(NAME, "Delete Feeder");
-            putValue(SHORT_DESCRIPTION, "Delete the selected feeder.");
+            putValue(NAME, Translations.getString("FeedersPanel.Action.DeleteFeeder")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("FeedersPanel.Action.DeleteFeeder.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -554,8 +557,10 @@ public class FeedersPanel extends JPanel implements WizardContainer {
             }
             
             int ret = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                    "Are you sure you want to delete " + formattedIds + "?",
-                    "Delete " + selections.size() + " feeders?", JOptionPane.YES_NO_OPTION);
+                    Translations.getString("DialogMessages.ConfirmDelete.text") + " " + formattedIds + "?", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                    Translations.getString("DialogMessages.ConfirmDelete.title") + " " + //$NON-NLS-1$ //$NON-NLS-2$
+                            selections.size() + " " + Translations.getString("CommonWords.feeders") + "?", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                    JOptionPane.YES_NO_OPTION);
             if (ret == JOptionPane.YES_OPTION) {
                 for (Feeder feeder : selections) {
                     configuration.getMachine().removeFeeder(feeder);
@@ -568,8 +573,8 @@ public class FeedersPanel extends JPanel implements WizardContainer {
     public Action feedFeederAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.feed);
-            putValue(NAME, "Feed");
-            putValue(SHORT_DESCRIPTION, "Command the selected feeder to perform a feed operation.");
+            putValue(NAME, Translations.getString("FeedersPanel.Action.FeedFeeder")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("FeedersPanel.Action.FeedFeeder.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -578,13 +583,6 @@ public class FeedersPanel extends JPanel implements WizardContainer {
                 Feeder feeder = getSelection();
                 // Do the feed and get the nozzle that would be used for the subsequent pick. 
                 Nozzle nozzle = feedFeeder(feeder);
-
-                // Note, we do not use nozzle.moveToPickLocation(feeder) as this might involve 
-                // probing, which we don't want to happen here. Instead we need to simulate a preliminary 
-                // pick location. 
-                Location pickLocation = preliminaryPickLocation(feeder, nozzle);
-                MovableUtils.moveToLocationAtSafeZ(nozzle, pickLocation);
-                MovableUtils.fireTargetedUserAction(nozzle);
             });
         }
     };
@@ -592,8 +590,8 @@ public class FeedersPanel extends JPanel implements WizardContainer {
     public Action pickFeederAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.pick);
-            putValue(NAME, "Pick");
-            putValue(SHORT_DESCRIPTION, "Perform a feed and pick on the selected feeder.");
+            putValue(NAME, Translations.getString("FeedersPanel.Action.PickFeeder")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("FeedersPanel.Action.PickFeeder.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -714,29 +712,45 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         if (nozzle.getNozzleTip() == null || 
                 !packag.getCompatibleNozzleTips().contains(nozzle.getNozzleTip())) {
             // Wrong nozzle tip, try find one that works.
-            boolean resolved = false;
-            if (nozzle.isNozzleTipChangedOnManualFeed() && allowNozzleTipChange) {
-                for (NozzleTip nozzleTip : packag.getCompatibleNozzleTips()) {
-                    if (nozzle.getCompatibleNozzleTips().contains(nozzleTip)) {
-                        // Found a compatible one. Unload and load like the JobProcessor.
+            Nozzle altNozzle = null;
+            // Try find a good nozzle tip.
+            for (NozzleTip nozzleTip : packag.getCompatibleNozzleTips()) {
+                Nozzle nozzle2 = nozzleTip.getNozzleWhereLoaded();
+                if (nozzle2 == null 
+                        && nozzle.getCompatibleNozzleTips().contains(nozzleTip)) {
+                    // Found a compatible one. 
+                    if (nozzle.isNozzleTipChangedOnManualFeed() && allowNozzleTipChange) {
+                        // Unload and load like the JobProcessor.
                         nozzle.unloadNozzleTip();
                         nozzle.loadNozzleTip(nozzleTip);
-                        resolved = true;
-                        break;
+                        return nozzle; // Success.
                     }
                 }
+                if (altNozzle == null && nozzle2 != null){
+                    altNozzle = nozzle2;
+                }
             }
+            String errMsg = "";
             if (nozzle.getNozzleTip() == null) {
-                throw new Exception("No nozzle tip loaded on nozzle "+nozzle.getName()+". "
-                        +"You may want to enable automatic nozzle tip change on manual pick on the Nozzle / Tool Changer.");
+                errMsg += "No nozzle tip loaded on nozzle "+nozzle.getName()+". ";
             }
-            else if (! resolved) {
-                throw new Exception("Loaded nozzle tip "+
-                        nozzle.getNozzleTip().getName()+" is not compatible with package "+packag.getId()+". "
-                        +(allowNozzleTipChange ? 
-                                "You may want to enable automatic nozzle tip change on manual pick on the Nozzle / Tool Changer." 
-                                : ""));
+            else {
+                errMsg += "Nozzle "+nozzle.getName()+" loaded nozzle tip "+
+                        nozzle.getNozzleTip().getName()+" is not compatible with package "+packag.getId()+". ";
+                if (nozzle.getPart() != null) {
+                    errMsg += "There is already a part "+nozzle.getPart().getId()+" loaded. "; 
+                }
             }
+            if (altNozzle != null) {
+                errMsg += "Consider selecting nozzle "+altNozzle.getName()+", "
+                        + "it has compatible nozzle tip "+altNozzle.getNozzleTip().getName()+" loaded. ";
+            }
+            else if (allowNozzleTipChange && !nozzle.isNozzleTipChangedOnManualFeed()) { 
+                errMsg += "You may want to enable automatic nozzle tip change on manual pick on the "
+                        + "Nozzle / Tool Changer. ";
+            }
+            errMsg += "The pick will always be performed with the nozzle selected in the Machine Controls. ";
+            throw new Exception(errMsg);
         }
         return nozzle;
     }
@@ -744,9 +758,8 @@ public class FeedersPanel extends JPanel implements WizardContainer {
     public Action moveCameraToPickLocation = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.centerCameraOnFeeder);
-            putValue(NAME, "Move Camera");
-            putValue(SHORT_DESCRIPTION,
-                    "Move the camera to the selected feeder's current pick location.");
+            putValue(NAME, Translations.getString("FeedersPanel.Action.MoveCameraToPick")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION,Translations.getString("FeedersPanel.Action.MoveCameraToPick.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -772,9 +785,8 @@ public class FeedersPanel extends JPanel implements WizardContainer {
     public Action moveToolToPickLocation = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.centerNozzleOnFeeder);
-            putValue(NAME, "Move Tool");
-            putValue(SHORT_DESCRIPTION,
-                    "Move the tool to the selected feeder's current pick location.");
+            putValue(NAME, Translations.getString("FeedersPanel.Action.MoveToolToPick")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION,Translations.getString("FeedersPanel.Action.MoveToolToPick.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -792,8 +804,8 @@ public class FeedersPanel extends JPanel implements WizardContainer {
     
     public final Action setEnabledAction = new AbstractAction() {
         {
-            putValue(NAME, "Set Enabled");
-            putValue(SHORT_DESCRIPTION, "Set board(s) enabled to...");
+            putValue(NAME, Translations.getString("FeedersPanel.Action.SetEnabled")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("FeedersPanel.Action.SetEnabled.Description")); //$NON-NLS-1$
         }
 
         @Override

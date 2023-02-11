@@ -137,6 +137,9 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
         if (speed <= 0) {
             throw new Exception("Speed must be greater than 0.");
         }
+        else if (speed < getMinimumSpeed()) {
+            speed = getMinimumSpeed();
+        }
         // Handle soft limits and rotation axes limiting and wrap-around.
         axesLocation = limitAxesLocation(hm, axesLocation, false);
 
@@ -703,6 +706,18 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
             motion.setPlannedTime1(time);
             return motion;
         }
+    }
+
+    @Override
+    public synchronized Motion getLastMotion() {
+        for (Map.Entry<Double, Motion> entry : motionPlan.descendingMap().entrySet()) {
+            Motion motion = entry.getValue();
+            if (!motion.getLocation0().matches(motion.getLocation1())) {
+                // Got a real move.
+                return motion;
+            }
+        }
+        return null;
     }
 
     @Override

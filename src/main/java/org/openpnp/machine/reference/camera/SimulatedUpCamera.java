@@ -13,10 +13,11 @@ import java.awt.image.ConvolveOp;
 import java.awt.image.Kernel;
 import java.util.ConcurrentModificationException;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.support.Wizard;
-import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.machine.reference.SimulationModeMachine;
 import org.openpnp.machine.reference.camera.wizards.SimulatedUpCameraConfigurationWizard;
+import org.openpnp.machine.reference.solutions.CameraSolutions;
 import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Footprint;
@@ -93,10 +94,10 @@ public class SimulatedUpCamera extends ReferenceCamera {
         // figure out our physical viewport size
         Location phySize = getSimulatedUnitsPerPixel().convertToUnits(LengthUnit.Millimeters)
                 .multiply(width, height, 0, 0);
-        double phyWidth = phySize.getX();
-        double phyHeight = phySize.getY();
+        double phyWidth = phySize.getX()*2;
+        double phyHeight = phySize.getY()*2;
 
-        // and bounds (times two to cover perspective projection)
+        // and bounds (times two to cover perspective projection and large ICs)
         Location location = getSimulatedLocation().convertToUnits(LengthUnit.Millimeters);
         Rectangle2D.Double phyBounds = new Rectangle2D.Double(location.getX() - phyWidth,
                 location.getY() - phyHeight, phyWidth*2, phyHeight*2);
@@ -108,7 +109,7 @@ public class SimulatedUpCamera extends ReferenceCamera {
             try {
                 for (Head head :  machine.getHeads()) {
                     for (Nozzle nozzle : head.getNozzles()) {
-                        Location l = SimulationModeMachine.getSimulatedPhysicalLocation(nozzle, getLooking());
+                        Location l = SimulationModeMachine.getSimulatedPhysicalLocation(nozzle, getLooking(), true);
                         if (phyBounds.contains(l.getX(), l.getY())) {
                             drawNozzle(g, nozzle, l);
                         }
@@ -185,8 +186,14 @@ public class SimulatedUpCamera extends ReferenceCamera {
                 throw new Error("Not yet supported.");
             }
 
-            // Account for the patu height.
-            Location partUndersideLocation = l.subtract(new Location(part.getHeight().getUnits(), 0, 0, Math.abs(part.getHeight().getValue()), 0));
+            // Account for the part height.
+            double partHeightMm = Math.abs(part.getHeight().convertToUnits(LengthUnit.Millimeters).getValue());
+            if (partHeightMm == 0) {
+                // Just simulate something.
+                partHeightMm = 1.0;
+            }
+            Location partUndersideLocation = l.subtract(new Location(LengthUnit.Millimeters, 
+                    0, 0, partHeightMm, 0));
             offsets = partUndersideLocation.subtractWithRotation(getSimulatedLocation());
 
             // First draw the body in dark grey.
@@ -382,21 +389,21 @@ public class SimulatedUpCamera extends ReferenceCamera {
         super.findIssues(solutions);
         if (solutions.isTargeting(Milestone.Connect)) {
             solutions.add(new Solutions.Issue(
-                    this, 
-                    "The SimulatedUpCamera can be replaced with a OpenPnpCaptureCamera to connect to a real USB camera.", 
-                    "Replace with OpenPnpCaptureCamera.", 
+                    this,
+                    Translations.getString("SimulatedUpCamera.Issue"), //$NON-NLS-1$
+                    Translations.getString("SimulatedUpCamera.Solution"), //$NON-NLS-1$
                     Severity.Fundamental,
                     "https://github.com/openpnp/openpnp/wiki/OpenPnpCaptureCamera") {
 
                 @Override
                 public void setState(Solutions.State state) throws Exception {
                     if (state == Solutions.State.Solved) {
-                        OpenPnpCaptureCamera camera = createReplacementCamera();
-                        replaceCamera(camera);
+                        OpenPnpCaptureCamera camera = CameraSolutions.createReplacementCamera(SimulatedUpCamera.this);
+                        CameraSolutions.replaceCamera(camera);
                     }
                     else if (getState() == Solutions.State.Solved) {
                         // Place the old one back (from the captured SimulatedUpCamera.this).
-                        replaceCamera(SimulatedUpCamera.this);
+                        CameraSolutions.replaceCamera(SimulatedUpCamera.this);
                     }
                     super.setState(state);
                 }

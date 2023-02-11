@@ -29,6 +29,7 @@ import javax.swing.border.TitledBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.Icons;
@@ -59,7 +60,9 @@ public class GcodeDriverGcodes extends AbstractConfigurationWizard {
         this.driver = driver;
 
         JPanel gcodePanel = new JPanel();
-        gcodePanel.setBorder(new TitledBorder(null, "Gcode", TitledBorder.LEADING, TitledBorder.TOP, null));
+        gcodePanel.setBorder(new TitledBorder(null, Translations.getString(
+                "GcodeDriverGcodes.GCodePanel.Border.title"),
+                TitledBorder.LEADING, TitledBorder.TOP, null));
         contentPanel.add(gcodePanel);
         gcodePanel.setLayout(new FormLayout(
                 new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"),
@@ -68,10 +71,12 @@ public class GcodeDriverGcodes extends AbstractConfigurationWizard {
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, RowSpec.decode("default:grow"),}));
 
-        JLabel lblHeadMountable = new JLabel("Head Mountable");
+        JLabel lblHeadMountable = new JLabel(Translations.getString(
+                "GcodeDriverGcodes.GCodePanel.HeadMountableLabel.text"));
         gcodePanel.add(lblHeadMountable, "2, 2");
 
-        JLabel lblSetting = new JLabel("Setting");
+        JLabel lblSetting = new JLabel(Translations.getString(
+                "GcodeDriverGcodes.GCodePanel.SettingLabel.text"));
         gcodePanel.add(lblSetting, "4, 2");
 
         comboBoxHm = new JComboBox<>();
@@ -127,8 +132,9 @@ public class GcodeDriverGcodes extends AbstractConfigurationWizard {
         textAreaCommand.setRows(5);
 
         JPanel importExportPanel = new JPanel();
-        importExportPanel.setBorder(new TitledBorder(null, "Import / Export", TitledBorder.LEADING,
-                TitledBorder.TOP, null, null));
+        importExportPanel.setBorder(new TitledBorder(null, Translations.getString(
+                "GcodeDriverGcodes.ImportExportPanel.Border.title"),
+                TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(importExportPanel);
         importExportPanel.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -273,15 +279,15 @@ public class GcodeDriverGcodes extends AbstractConfigurationWizard {
     public final Action exportProfileAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.export);
-            putValue(NAME, "Export Gcode File");
-            putValue(SHORT_DESCRIPTION, "Export the Gcode profile to a file.");
+            putValue(NAME, Translations.getString("GcodeDriverGcodes.Action.Export")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("GcodeDriverGcodes.Action.Export.Description")); //$NON-NLS-1$
         }
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
             try {
-                FileDialog fileDialog = new FileDialog(MainFrame.get(), "Save Gcode Profile As...",
-                        FileDialog.SAVE);
+                FileDialog fileDialog = new FileDialog(MainFrame.get(), Translations.getString(
+                        "GcodeDriverGcodes.SaveFileDialog.title"), FileDialog.SAVE); //$NON-NLS-1$
                 fileDialog.setFilenameFilter(new FilenameFilter() {
                     @Override
                     public boolean accept(File dir, String name) {
@@ -320,15 +326,15 @@ public class GcodeDriverGcodes extends AbstractConfigurationWizard {
     public final Action importProfileAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.importt);
-            putValue(NAME, "Load Gcode File");
-            putValue(SHORT_DESCRIPTION, "Import the Gcode profile from a file.");
+            putValue(NAME, Translations.getString("GcodeDriverGcodes.Action.Import")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("GcodeDriverGcodes.Action.Import.Description")); //$NON-NLS-1$
         }
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
             try {
-                FileDialog fileDialog = new FileDialog(MainFrame.get(),
-                        "Load Gcode Profile From...", FileDialog.LOAD);
+                FileDialog fileDialog = new FileDialog(MainFrame.get(), Translations.getString(
+                        "GcodeDriverGcodes.OpenFileDialog.title"), FileDialog.LOAD); //$NON-NLS-1$
                 fileDialog.setFilenameFilter(new FilenameFilter() {
                     @Override
                     public boolean accept(File dir, String name) {
@@ -352,8 +358,8 @@ public class GcodeDriverGcodes extends AbstractConfigurationWizard {
     public final Action copyProfileToClipboardAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.copy);
-            putValue(NAME, "Copy Gcode to Clipboard");
-            putValue(SHORT_DESCRIPTION, "Copy the Gcode profile to the clipboard.");
+            putValue(NAME, Translations.getString("GcodeDriverGcodes.Action.CopyProfile")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("GcodeDriverGcodes.Action.CopyProfile.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -365,7 +371,8 @@ public class GcodeDriverGcodes extends AbstractConfigurationWizard {
                 StringSelection stringSelection = new StringSelection(w.toString());
                 Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
                 clipboard.setContents(stringSelection, null);
-                MessageBoxes.infoBox("Copied Gcode", "Copied Gcode to Clipboard");
+                MessageBoxes.infoBox(Translations.getString("CommonPhrases.copiedGcode"), //$NON-NLS-1$
+                        Translations.getString("CommonPhrases.copiedGcodeToClipboard")); //$NON-NLS-1$
             }
             catch (Exception e) {
                 MessageBoxes.errorBox(MainFrame.get(), "Copy Failed", e);
@@ -376,8 +383,8 @@ public class GcodeDriverGcodes extends AbstractConfigurationWizard {
     public final Action pasteProfileFromClipboardAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.paste);
-            putValue(NAME, "Paste Gcode from Clipboard");
-            putValue(SHORT_DESCRIPTION, "Import the Gcode profile from the clipboard.");
+            putValue(NAME, Translations.getString("GcodeDriverGcodes.Action.PasteProfile")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("GcodeDriverGcodes.Action.PasteProfile.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -389,7 +396,8 @@ public class GcodeDriverGcodes extends AbstractConfigurationWizard {
                 StringReader r = new StringReader(s);
                 GcodeDriver d = ser.read(GcodeDriver.class, s);
                 // copySettings(d, driver);
-                MessageBoxes.infoBox("Pasted Gcode", "Pasted Gcode from Clipboard");
+                MessageBoxes.infoBox(Translations.getString("CommonPhrases.pastedGcode"), //$NON-NLS-1$
+                        Translations.getString("CommonPhrases.pastedGcodeFromClipboard")); //$NON-NLS-1$
             }
             catch (Exception e) {
                 MessageBoxes.errorBox(MainFrame.get(), "Paste Failed", e);
@@ -399,8 +407,8 @@ public class GcodeDriverGcodes extends AbstractConfigurationWizard {
     public final Action resetToDefaultAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.delete);
-            putValue(NAME, "Reset to defaults");
-            putValue(SHORT_DESCRIPTION, "Reset the Gcode profile to the default.");
+            putValue(NAME, Translations.getString("GcodeDriverGcodes.Action.ResetToDefaults")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("GcodeDriverGcodes.Action.ResetToDefaults.Description")); //$NON-NLS-1$
         }
 
         @Override

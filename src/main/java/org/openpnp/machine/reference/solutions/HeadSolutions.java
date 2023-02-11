@@ -24,6 +24,7 @@ package org.openpnp.machine.reference.solutions;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.machine.reference.ReferenceHead;
@@ -37,6 +38,7 @@ import org.openpnp.machine.reference.axis.ReferenceMappedAxis;
 import org.openpnp.machine.reference.axis.ReferenceVirtualAxis;
 import org.openpnp.machine.reference.driver.GcodeDriver;
 import org.openpnp.machine.reference.driver.GcodeDriver.CommandType;
+import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.Solutions;
@@ -84,9 +86,9 @@ public class HeadSolutions implements Solutions.Subject {
             final Camera theCamera = camera;
             if (isDefaultHead && solutions.isTargeting(Milestone.Welcome)) { 
                 solutions.add(new Solutions.Issue(
-                        head, 
-                        "Create nozzles for this head.", 
-                        "Choose the number and type of your nozzles.", 
+                        head,
+                        Translations.getString("HeadSolutions.Issue.CreateNozzles"), //$NON-NLS-1$
+                        Translations.getString("HeadSolutions.Solution.CreateNozzles"), //$NON-NLS-1$
                         Solutions.Severity.Fundamental,
                         "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Nozzle-Setup") {
 
@@ -128,19 +130,8 @@ public class HeadSolutions implements Solutions.Subject {
                     @Override
                     public void setState(Solutions.State state) throws Exception {
                         if (state == State.Solved) {
-                            if (solutions.confirm("<html>"
-                                    + "<p>Accepting this solution may change your machine configuration fundamentally.<br/>"
-                                    + "The following will happen:<p/>"
-                                    + "<ol>"
-                                    + "<li>The current machine configuration is saved (same as File/Save Configuration).</li>"
-                                    + "<li>The new solution overwrites your existing nozzle and axis configuration.</li>"
-                                    + "<li>As far as nozzles and axes remain the same type and count, their detail configuration is preserved.</li>"
-                                    + "<li>A nozzle solution can be applied multiple times, you can revisit and expand it.</li>"
-                                    + "<li><span color=\"red\">Caution:</span> Reopen will not restore the previous configuration, only enable a fresh choice.<br/>"
-                                    + "If you want to restore previous configuration you must restore the saved configuration manually.</li>"
-                                    + "</ol>"
-                                    + "<br/>"
-                                    +"Are you sure?</html>", true)) {
+                            if (solutions.confirm(Translations.getString(
+                                    "HeadSolutions.Issue.CreateNozzles.Confirm"), true)) { //$NON-NLS-1$
                                 createNozzleSolution(theCamera, (NozzleSolution) getChoice(), multiplier);
                                 // Remember this is solved (it can be revisited).
                                 solutions.setSolutionsIssueSolved(this, true);
@@ -159,9 +150,11 @@ public class HeadSolutions implements Solutions.Subject {
                     public Solutions.Issue.CustomProperty[] getProperties() {
                         return new Solutions.Issue.CustomProperty[] {
                                 new Solutions.Issue.IntegerProperty(
-                                        "Number of Nozzle Units",
-                                        "The Number of Nozzles or Pairs of Nozzles",
-                                        1, 8) {
+                                        Translations.getString(
+                                                "HeadSolutions.Solution.CreateNozzles.NumberOfNozzlesLabel.text"), //$NON-NLS-1$
+                                        Translations.getString(
+                                                "HeadSolutions.Solution.CreateNozzles.NumberOfNozzlesLabel.toolTipText" //$NON-NLS-1$
+                                        ), 1, 8) {
                                     @Override
                                     public int get() {
                                         return multiplier;
@@ -175,25 +168,16 @@ public class HeadSolutions implements Solutions.Subject {
                     }
                     @Override
                     public Solutions.Issue.Choice[] getChoices() {
-                        return new Solutions.Issue.Choice[] {
-                                new Solutions.Issue.Choice(NozzleSolution.Standalone, 
-                                        "<html><h3>Standalone Nozzle</h3>"
-                                                + "<p>A nozzle has its own dedicated Z axis motor</p>"
-                                                + "</html>",
-                                                Icons.nozzleSingle),
-                                new Solutions.Issue.Choice(NozzleSolution.DualNegated, 
-                                        "<html><h3>Nozzle Pair, Shared Z Axis, Negated</h3>"
-                                                + "<p>A nozzle pair shares a Z axis motor. "
-                                                + "When the first nozzle moves up, then second one moves down equally. "
-                                                + "The nozzles are negatively coupled by rack and pinion or belt.</p>"
-                                                + "</html>",
-                                                Icons.nozzleDualNeg),
-                                new Solutions.Issue.Choice(NozzleSolution.DualCam, 
-                                        "<html><h3>Nozzle Pair, Shared Z Axis, Cam</h3>"
-                                                + "<p>A nozzle pair shares a Z axis motor. "
-                                                + "The two nozzles are pushed down by a rotational cam, pulled up with a spring.</p>"
-                                                + "</html>",
-                                                Icons.nozzleDualCam),
+                        return new Solutions.Issue.Choice[]{
+                                new Solutions.Issue.Choice(NozzleSolution.Standalone, Translations.getString(
+                                        "HeadSolutions.Solution.CreateNozzles.Choice.0"), //$NON-NLS-1$
+                                        Icons.nozzleSingle),
+                                new Solutions.Issue.Choice(NozzleSolution.DualNegated, Translations.getString(
+                                        "HeadSolutions.Solution.CreateNozzles.Choice.1"), //$NON-NLS-1$
+                                        Icons.nozzleDualNeg),
+                                new Solutions.Issue.Choice(NozzleSolution.DualCam, Translations.getString(
+                                        "HeadSolutions.Solution.CreateNozzles.Choice.2"), //$NON-NLS-1$
+                                        Icons.nozzleDualCam),
                         };
                     }
                 });
@@ -221,10 +205,8 @@ public class HeadSolutions implements Solutions.Subject {
                     }
                 }
 
-                if (head.getPumpActuator() != null) {
-                    ActuatorSolutions.findActuateIssues(solutions, head, head.getPumpActuator(), "pump control",
+                ActuatorSolutions.findActuateIssues(solutions, head, head.getPumpActuator(), "pump control",
                         "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Vacuum-Setup#pump-control-setup");
-                }
                 if (head.getzProbeActuator() != null) {
                     ActuatorSolutions.findActuatorReadIssues(solutions, head, head.getzProbeActuator(), "Z probe",
                         "https://github.com/openpnp/openpnp/wiki/Z-Probing");
@@ -580,10 +562,20 @@ public class HeadSolutions implements Solutions.Subject {
                 head.getMachine().permutateAxis(axis, -1);
                 pos--;
             }
-            if (axis instanceof AbstractControllerAxis 
+            if (axis instanceof AbstractControllerAxis  
                     && camera.getAxisX() instanceof AbstractControllerAxis) {
                 // Inherit the driver.
                 ((AbstractControllerAxis) axis).setDriver(((AbstractControllerAxis) camera.getAxisX()).getDriver());
+            }
+            if (axis instanceof ReferenceControllerAxis) {
+                if (type == Type.Rotation) {
+                    ((ReferenceControllerAxis) axis).setLimitRotation(true);
+                    ((ReferenceControllerAxis) axis).setSoftLimitLow(new Length(-180, AxesLocation.getUnits()));
+                    ((ReferenceControllerAxis) axis).setSoftLimitHigh(new Length(+180, AxesLocation.getUnits()));
+                    ((ReferenceControllerAxis) axis).setFeedratePerSecond(new Length(200000.0/60, AxesLocation.getUnits()));
+                    ((ReferenceControllerAxis) axis).setAccelerationPerSecond2(new Length(2*200000.0/60, AxesLocation.getUnits()));
+                    ((ReferenceControllerAxis) axis).setJerkPerSecond3(new Length(0, AxesLocation.getUnits()));
+                }
             }
         }
         else {

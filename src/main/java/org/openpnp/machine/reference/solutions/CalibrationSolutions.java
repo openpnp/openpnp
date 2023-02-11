@@ -30,13 +30,13 @@ import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.CameraView;
 import org.openpnp.gui.processes.CalibrateCameraProcess;
 import org.openpnp.gui.support.LengthConverter;
-import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
 import org.openpnp.machine.reference.axis.ReferenceControllerAxis.BacklashCompensationMethod;
 import org.openpnp.machine.reference.camera.ImageCamera;
+import org.openpnp.machine.reference.camera.ReferenceCamera;
 import org.openpnp.machine.reference.camera.calibration.AdvancedCalibration;
 import org.openpnp.machine.reference.feeder.ReferenceTubeFeeder;
 import org.openpnp.model.AxesLocation;
@@ -367,7 +367,6 @@ public class CalibrationSolutions implements Solutions.Subject {
         if (visionSolutions.isSolvedPrimaryXY(head) 
                 && visionSolutions.isSolvedPrimaryZ(head) 
                 && (nozzle.getHeadOffsets().isInitialized() || isSimulatedNozzle)) {
-            final Location oldNozzleOffsets = nozzle.getHeadOffsets();
             final Length oldTestObjectDiameter = head.getCalibrationTestObjectDiameter(); 
             // Get the test subject diameter.
             solutions.add(visionSolutions.new VisionFeatureIssue(
@@ -378,6 +377,8 @@ public class CalibrationSolutions implements Solutions.Subject {
                     "Use a test object to perform the precision camera ↔ nozzle "+nozzle.getName()+" offsets calibration.", 
                     Solutions.Severity.Fundamental,
                     "https://github.com/openpnp/openpnp/wiki/Calibration-Solutions#calibrating-precision-camera-to-nozzle-offsets") {
+
+                private Location oldNozzleOffsets = null;
 
                 @Override 
                 public String getExtendedDescription() {
@@ -401,10 +402,11 @@ public class CalibrationSolutions implements Solutions.Subject {
                                     + "<table>"
                                     + "<tr><td align=\"right\">Detected Nozzle Head Offsets:</td>"
                                     + "<td>"+nozzle.getHeadOffsets()+"</td></tr>"
-                                    + "<tr><td align=\"right\">Previous Nozzle Head Offsets:</td>"
-                                    + "<td>"+oldNozzleOffsets+"</td></tr>"
-                                    + "<tr><td align=\"right\">Difference:</td>"
-                                    + "<td>"+nozzle.getHeadOffsets().subtract(oldNozzleOffsets)+"</td></tr>"
+                                    + (oldNozzleOffsets == null ? "" : 
+                                        "<tr><td align=\"right\">Previous Nozzle Head Offsets:</td>"
+                                        + "<td>"+oldNozzleOffsets+"</td></tr>"
+                                        + "<tr><td align=\"right\">Difference:</td>"
+                                        + "<td>"+nozzle.getHeadOffsets().subtract(oldNozzleOffsets)+"</td></tr>")
                                     + "</table>" 
                                     : "")
                             + "</html>";
@@ -427,9 +429,10 @@ public class CalibrationSolutions implements Solutions.Subject {
                         UiUtils.submitUiMachineTask(
                                 () -> {
                                     Circle testObject = visionSolutions
-                                            .getSubjectPixelLocation(defaultCamera, null, new Circle(0, 0, featureDiameter), 0, null, null);
+                                            .getSubjectPixelLocation(defaultCamera, null, new Circle(0, 0, featureDiameter), 0, null, null, false);
                                     head.setCalibrationTestObjectDiameter(
                                             defaultCamera.getUnitsPerPixelPrimary().getLengthX().multiply(testObject.getDiameter()));
+                                    oldNozzleOffsets = nozzle.getHeadOffsets();
                                     calibrateNozzleOffsets(head, defaultCamera, nozzle);
                                     return true;
                                 },
@@ -445,8 +448,11 @@ public class CalibrationSolutions implements Solutions.Subject {
                                 });
                     }
                     else {
-                        // Restore the head offset
-                        nozzle.setHeadOffsets(oldNozzleOffsets);
+                        // Restore the head offsets
+                        if (oldNozzleOffsets != null) {
+                            nozzle.setHeadOffsets(oldNozzleOffsets);
+                            oldNozzleOffsets = null;
+                        }
                         head.setCalibrationTestObjectDiameter(oldTestObjectDiameter);
                         // Persist this unsolved state.
                         solutions.setSolutionsIssueSolved(this, false);
@@ -1101,10 +1107,14 @@ public class CalibrationSolutions implements Solutions.Subject {
             throws Exception {
         try {
             // Create a pseudo part, package and feeder to enable pick and place.
-            Part testPart = new Part("TEST-OBJECT");
-            testPart.setHeight(new Length(0.01, LengthUnit.Millimeters));
-            Package packag = new Package("TEST-OBJECT-PACKAGE");
-            testPart.setPackage(packag);
+            Part testPart = Configuration.get().getPart("TEST-OBJECT");
+            if (testPart == null) {
+                // No predefined part, create one temporarily 
+                testPart = new Part("TEST-OBJECT");
+                testPart.setHeight(new Length(0.01, LengthUnit.Millimeters));
+                Package packag = new Package("TEST-OBJECT-PACKAGE");
+                testPart.setPackage(packag);
+            }
             ReferenceTubeFeeder feeder = new ReferenceTubeFeeder();
             feeder.setPart(testPart);
             // Get the initial precise test object location. It must lay on the primary fiducial. 

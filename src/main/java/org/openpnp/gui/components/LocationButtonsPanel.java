@@ -34,6 +34,7 @@ import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.Icons;
@@ -255,10 +256,11 @@ public class LocationButtonsPanel extends JPanel {
     }
 
     private Action captureCameraCoordinatesAction =
-            new AbstractAction("Get Camera Coordinates", Icons.captureCamera) {
+            new AbstractAction(Translations.getString("LocalButtonsPanel.Action.CaptureCameraCoordinates"), //$NON-NLS-1$
+                    Icons.captureCamera) {
                 {
-                    putValue(Action.SHORT_DESCRIPTION,
-                            "Capture the location that the camera is centered on.");
+                    putValue(Action.SHORT_DESCRIPTION,Translations.getString(
+                            "LocalButtonsPanel.Action.CaptureCameraCoordinates.Description")); //$NON-NLS-1$
                 }
 
                 @Override
@@ -288,10 +290,11 @@ public class LocationButtonsPanel extends JPanel {
             };
 
     private Action captureToolCoordinatesAction =
-            new AbstractAction("Get Tool Coordinates", Icons.captureTool) {
+            new AbstractAction(Translations.getString("LocalButtonsPanel.Action.CaptureToolCoordinates"), //$NON-NLS-1$
+                    Icons.captureTool) {
                 {
-                    putValue(Action.SHORT_DESCRIPTION,
-                            "Capture the location that the tool is centered on.");
+                    putValue(Action.SHORT_DESCRIPTION, Translations.getString(
+                            "LocalButtonsPanel.Action.CaptureToolCoordinates.Description")); //$NON-NLS-1$
                 }
 
                 @Override
@@ -314,10 +317,11 @@ public class LocationButtonsPanel extends JPanel {
             };
 
     private Action captureActuatorCoordinatesAction =
-            new AbstractAction("Get Actuator Coordinates", Icons.capturePin) {
+            new AbstractAction(Translations.getString("LocalButtonsPanel.Action.CaptureActuatorCoordinates" //$NON-NLS-1$
+            ), Icons.capturePin) {
                 {
-                    putValue(Action.SHORT_DESCRIPTION,
-                            "Capture the location that the actuator is centered on.");
+                    putValue(Action.SHORT_DESCRIPTION, Translations.getString(
+                            "LocalButtonsPanel.Action.CaptureActuatorCoordinates.Description")); //$NON-NLS-1$
                 }
 
                 @Override
@@ -345,10 +349,11 @@ public class LocationButtonsPanel extends JPanel {
             };
 
     private Action positionCameraAction =
-            new AbstractAction("Position Camera", Icons.centerCamera) {
+            new AbstractAction(Translations.getString("LocalButtonsPanel.Action.PositionCamera"), //$NON-NLS-1$
+                    Icons.centerCamera) {
                 {
-                    putValue(Action.SHORT_DESCRIPTION,
-                            "Position the camera over the center of the location.");
+                    putValue(Action.SHORT_DESCRIPTION, Translations.getString(
+                            "LocalButtonsPanel.Action.PositionCamera.Description")); //$NON-NLS-1$
                 }
 
                 @Override
@@ -372,10 +377,11 @@ public class LocationButtonsPanel extends JPanel {
                 }
             };
 
-    private Action positionToolAction = new AbstractAction("Position Tool", Icons.centerTool) {
+    private Action positionToolAction = new AbstractAction(Translations.getString(
+            "LocalButtonsPanel.Action.PositionTool"), Icons.centerTool) { //$NON-NLS-1$
         {
-            putValue(Action.SHORT_DESCRIPTION,
-                    "Position the tool over the center of the location.");
+            putValue(Action.SHORT_DESCRIPTION, Translations.getString(
+                    "LocalButtonsPanel.Action.PositionTool.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -396,10 +402,11 @@ public class LocationButtonsPanel extends JPanel {
     };
 
     private Action positionToolNoSafeZAction =
-            new AbstractAction("Position Tool (Without Safe Z)", Icons.centerToolNoSafeZ) {
+            new AbstractAction(Translations.getString("LocalButtonsPanel.Action.PositionToolNoSafeZ"), //$NON-NLS-1$
+                    Icons.centerToolNoSafeZ) {
         {
-            putValue(Action.SHORT_DESCRIPTION,
-                    "Position the tool over the center of the location without first moving to Safe Z.");
+            putValue(Action.SHORT_DESCRIPTION, Translations.getString(
+                    "LocalButtonsPanel.Action.PositionToolNoSafeZ.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -420,10 +427,11 @@ public class LocationButtonsPanel extends JPanel {
     };
 
     private Action contactProbeNozzleAction =
-            new AbstractAction("Contact Probe Tool", Icons.contactProbeNozzle) {
+            new AbstractAction(Translations.getString("LocalButtonsPanel.Action.ContactProbeNozzle"), //$NON-NLS-1$
+                    Icons.contactProbeNozzle) {
         {
-            putValue(Action.SHORT_DESCRIPTION,
-                    "Position the tool over the center of the location then contact-probe Z.");
+            putValue(Action.SHORT_DESCRIPTION, Translations.getString(
+                            "LocalButtonsPanel.Action.ContactProbeNozzle.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -470,10 +478,11 @@ public class LocationButtonsPanel extends JPanel {
     };
 
     private Action positionActuatorAction =
-            new AbstractAction("Position Actuator", Icons.centerPin) {
+            new AbstractAction(Translations.getString("LocalButtonsPanel.Action.PositionActuator"), //$NON-NLS-1$
+                    Icons.centerPin) {
         {
-            putValue(Action.SHORT_DESCRIPTION,
-                    "Position the actuator over the center of the location.");
+            putValue(Action.SHORT_DESCRIPTION, Translations.getString(
+                    "LocalButtonsPanel.Action.PositionActuator.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -494,10 +503,11 @@ public class LocationButtonsPanel extends JPanel {
     };
 
     private Action positionActuatorNoSafeZAction =
-            new AbstractAction("Position Actuator (Without Safe Z)", Icons.centerPinNoSafeZ) {
+            new AbstractAction(Translations.getString("LocalButtonsPanel.Action.PositionActuatorNoSafeZ"), //$NON-NLS-1$
+                    Icons.centerPinNoSafeZ) {
         {
-            putValue(Action.SHORT_DESCRIPTION,
-                    "Position the actuator over the center of the location without first moving to Safe Z.");
+            putValue(Action.SHORT_DESCRIPTION, Translations.getString(
+                    "LocalButtonsPanel.Action.PositionActuatorNoSafeZ.Description")); //$NON-NLS-1$
         }
 
         @Override

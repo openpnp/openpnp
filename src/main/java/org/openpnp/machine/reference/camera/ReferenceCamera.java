@@ -17,7 +17,7 @@
  * For more information about OpenPnP visit http://openpnp.org
  */
 
-package org.openpnp.machine.reference;
+package org.openpnp.machine.reference.camera;
 
 import java.awt.Color;
 import java.awt.event.ActionEvent;
@@ -25,7 +25,6 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import javax.swing.AbstractAction;
@@ -42,21 +41,19 @@ import org.opencv.core.RotatedRect;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 import org.openpnp.ConfigurationListener;
+import org.openpnp.Translations;
 import org.openpnp.gui.MainFrame;
-import org.openpnp.gui.components.CameraPanel;
-import org.openpnp.gui.components.CameraView;
-import org.openpnp.gui.components.CameraView.RenderingQuality;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.WizardUtils;
 import org.openpnp.gui.wizards.CameraConfigurationWizard;
 import org.openpnp.gui.wizards.CameraVisionConfigurationWizard;
-import org.openpnp.machine.reference.camera.AutoFocusProvider;
-import org.openpnp.machine.reference.camera.OpenPnpCaptureCamera;
+import org.openpnp.machine.reference.ReferenceHeadMountable;
+import org.openpnp.machine.reference.ReferenceNozzleTipCalibration;
 import org.openpnp.machine.reference.camera.calibration.AdvancedCalibration;
 import org.openpnp.machine.reference.camera.calibration.LensCalibrationParams;
 import org.openpnp.machine.reference.camera.wizards.ReferenceCameraWhiteBalanceConfigurationWizard;
-import org.openpnp.machine.reference.solutions.ActuatorSolutions;
+import org.openpnp.machine.reference.solutions.CameraSolutions;
 import org.openpnp.machine.reference.wizards.ReferenceCameraCalibrationConfigurationWizard;
 import org.openpnp.machine.reference.wizards.ReferenceCameraCalibrationWizard;
 import org.openpnp.machine.reference.wizards.ReferenceCameraPositionConfigurationWizard;
@@ -66,17 +63,13 @@ import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Solutions;
-import org.openpnp.model.Solutions.Milestone;
-import org.openpnp.model.Solutions.Severity;
 import org.openpnp.spi.Actuator;
-import org.openpnp.spi.Camera;
 import org.openpnp.spi.FocusProvider;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
 import org.openpnp.util.Collect;
 import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.SimpleGraph;
-import org.openpnp.util.UiUtils;
 import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.LensCalibration;
 import org.openpnp.vision.LensCalibration.LensModel;
@@ -887,11 +880,10 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
                     else {
                         if (colorMap[ch][level-1] > colorMap[ch][level+1]) {
                             throw new Exception("Image does not contain grayscales at level "+100*level/levels+" ... "+100*(level+1)/levels+"%.");
-//                            colorMap[ch][level] = colorMap[ch][level-1];
                         }
                         else {
-                        // Simply interpolate.
-                        colorMap[ch][level] = (colorMap[ch][level-1] + colorMap[ch][level+1])/2;
+                            // Simply interpolate.
+                            colorMap[ch][level] = (colorMap[ch][level-1] + colorMap[ch][level+1])/2;
                         }
                     }
                 }
@@ -1223,18 +1215,40 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
     @Override
     public PropertySheet[] getPropertySheets() {
         PropertySheet[] sheets = new PropertySheet[] {
-                new PropertySheetWizardAdapter(WizardUtils.configurationWizardFactory(CameraConfigurationWizard.class, this.getId(), this), "General Configuration"),
-                new PropertySheetWizardAdapter(WizardUtils.configurationWizardFactory(CameraVisionConfigurationWizard.class, this.getId(), this), "Camera Settling"),
-                new PropertySheetWizardAdapter(getConfigurationWizard(), "Device Settings"),
-                new PropertySheetWizardAdapter(WizardUtils.configurationWizardFactory(ReferenceCameraWhiteBalanceConfigurationWizard.class, this.getId(), this), "White Balance"),
-                new PropertySheetWizardAdapter(WizardUtils.configurationWizardFactory(ReferenceCameraPositionConfigurationWizard.class, this.getId(), getMachine(), this), "Position"),
-                new PropertySheetWizardAdapter(WizardUtils.configurationWizardFactory(ReferenceCameraCalibrationConfigurationWizard.class, this.getId(), this), "Lens Calibration"),
-                new PropertySheetWizardAdapter(WizardUtils.configurationWizardFactory(ReferenceCameraTransformsConfigurationWizard.class, this.getId(), this), "Image Transforms"),
-                new PropertySheetWizardAdapter(WizardUtils.configurationWizardFactory(ReferenceCameraCalibrationWizard.class, this.getId(), this), "Advanced Calibration")
+                new PropertySheetWizardAdapter(WizardUtils.configurationWizardFactory(CameraConfigurationWizard.class,
+                        this.getId(), this), Translations.getString(
+                                "ReferenceCamera.CameraConfigurationWizard.tab.title")), //$NON-NLS-1$
+                new PropertySheetWizardAdapter(WizardUtils.configurationWizardFactory(
+                        CameraVisionConfigurationWizard.class, this.getId(), this), Translations.getString(
+                                "ReferenceCamera.CameraVisionConfigurationWizard.tab.title")), //$NON-NLS-1$
+                new PropertySheetWizardAdapter(getConfigurationWizard(), Translations.getString(
+                        "ReferenceCamera.DeviceSettings.tab.title")), //$NON-NLS-1$
+                new PropertySheetWizardAdapter(WizardUtils.configurationWizardFactory(
+                        ReferenceCameraWhiteBalanceConfigurationWizard.class, this.getId(), this),
+                        Translations.getString(
+                                "ReferenceCamera.ReferenceCameraWhiteBalanceConfigurationWizard.tab.title")), //$NON-NLS-1$
+                new PropertySheetWizardAdapter(WizardUtils.configurationWizardFactory(
+                        ReferenceCameraPositionConfigurationWizard.class, this.getId(), getMachine(), this),
+                        Translations.getString(
+                                "ReferenceCamera.ReferenceCameraPositionConfigurationWizard.tab.title")), //$NON-NLS-1$
+                new PropertySheetWizardAdapter(WizardUtils.configurationWizardFactory(
+                        ReferenceCameraCalibrationConfigurationWizard.class, this.getId(), this),
+                        Translations.getString(
+                                "ReferenceCamera.ReferenceCameraCalibrationConfigurationWizard.tab.title")), //$NON-NLS-1$
+                new PropertySheetWizardAdapter(WizardUtils.configurationWizardFactory(
+                        ReferenceCameraTransformsConfigurationWizard.class, this.getId(), this),
+                        Translations.getString(
+                                "ReferenceCamera.ReferenceCameraTransformsConfigurationWizard.tab.title")), //$NON-NLS-1$
+                new PropertySheetWizardAdapter(WizardUtils.configurationWizardFactory(
+                        ReferenceCameraCalibrationWizard.class, this.getId(), this),
+                        Translations.getString(
+                                "ReferenceCamera.ReferenceCameraCalibrationWizard.tab.title")) //$NON-NLS-1$
         };
         if (getFocusSensingMethod() != FocusSensingMethod.None) {
                 sheets = Collect.concat(sheets, new PropertySheet[] {
-                        new PropertySheetWizardAdapter(getFocusProvider().getConfigurationWizard(this), "Auto Focus"),
+                        new PropertySheetWizardAdapter(getFocusProvider().getConfigurationWizard(this),
+                                Translations.getString(
+                                        "ReferenceCamera.FocusProvider.ConfigurationWizard.tab.title")), //$NON-NLS-1$
                 });
         }
         return sheets;
@@ -1245,18 +1259,19 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
         return new Action[] { deleteAction };
     }
     
-    public Action deleteAction = new AbstractAction("Delete Camera") {
+    public Action deleteAction = new AbstractAction(Translations.getString("ReferenceCamera.Action.Delete")) { //$NON-NLS-1$
         {
             putValue(SMALL_ICON, Icons.delete);
-            putValue(NAME, "Delete Camera");
-            putValue(SHORT_DESCRIPTION, "Delete the currently selected camera.");
+            putValue(NAME, Translations.getString("ReferenceCamera.Action.Delete")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("ReferenceCamera.Action.Delete.Description")); //$NON-NLS-1$
         }
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
             int ret = JOptionPane.showConfirmDialog(MainFrame.get(),
-                    "Are you sure you want to delete " + getName() + "?",
-                    "Delete " + getName() + "?", JOptionPane.YES_NO_OPTION);
+                    Translations.getString("DialogMessages.ConfirmDelete.text") + " " + getName() + "?", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                    Translations.getString("DialogMessages.ConfirmDelete.title") + " " + getName() + "?", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                    JOptionPane.YES_NO_OPTION);
             if (ret == JOptionPane.YES_OPTION) {
                 if (getHead() != null) {
                     getHead().removeCamera(ReferenceCamera.this);
@@ -1282,189 +1297,6 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
     @Override
     public void findIssues(Solutions solutions) {
         super.findIssues(solutions);
-        if (solutions.isTargeting(Milestone.Vision)) {
-            /* replaced by more advanced solutions
-            if (getLooking() == Looking.Up
-                    && isFlipX() == isFlipY()
-                    && ! (this instanceof SimulatedUpCamera)) {
-                solutions.add(new Solutions.PlainIssue(
-                        this, 
-                        "An up-looking camera should usually mirror the image.", 
-                        "Enable either Flip X or Flip Y (but not both) in the camera's Image Transforms.", 
-                        Severity.Warning,
-                        "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-General-Camera-Setup#set-rotation-and-transforms"));
-            }
-            if (getUnitsPerPixel().getX() == 0 && getUnitsPerPixel().getY() == 0) {
-                solutions.add(new Solutions.PlainIssue(
-                        this, 
-                        "Units per pixel are not yet set.", 
-                        "Perform the Units Per Pixel measurement in the General Configuration tab .", 
-                        Severity.Error,
-                        "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-General-Camera-Setup#set-units-per-pixel"));
-            }
-            */
-            final double previewFps = getPreviewFps();
-            if (previewFps > 15) {
-                solutions.add(new Solutions.Issue(
-                        this, 
-                        "A high Preview FPS value might create undue CPU load.", 
-                        "Set to 5 FPS.", 
-                        Severity.Suggestion,
-                        "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-General-Camera-Setup#general-configuration") {
-
-
-                    @Override
-                    public void setState(Solutions.State state) throws Exception {
-                        setPreviewFps((state == Solutions.State.Solved) ? 5.0 : previewFps);
-                        super.setState(state);
-                    }
-                });
-            }
-            if (! isSuspendPreviewInTasks()) {
-                solutions.add(new Solutions.Issue(
-                        this, 
-                        "It is recommended to suspend camera preview during machine tasks / Jobs.", 
-                        "Enable Suspend during tasks.", 
-                        Severity.Suggestion,
-                        "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-General-Camera-Setup#general-configuration") {
-
-                    @Override
-                    public void setState(Solutions.State state) throws Exception {
-                        setSuspendPreviewInTasks((state == Solutions.State.Solved));
-                        super.setState(state);
-                    }
-                });
-            }
-            if (! isAutoVisible()) {
-                solutions.add(new Solutions.Issue(
-                        this, 
-                        "In single camera preview OpenPnP can automatically switch the camera for you.", 
-                        "Enable Auto Camera View.", 
-                        Severity.Suggestion,
-                        "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-General-Camera-Setup#general-configuration") {
-
-                    @Override
-                    public void setState(Solutions.State state) throws Exception {
-                        setAutoVisible((state == Solutions.State.Solved));
-                        super.setState(state);
-                    }
-                });
-            }
-            CameraPanel cameraPanel = MainFrame.get().getCameraViews();
-            CameraView view = cameraPanel.getCameraView(this);
-            if (view != null) {
-                final RenderingQuality renderingQuality = view.getRenderingQuality();
-                if (renderingQuality.ordinal() < RenderingQuality.High.ordinal()) {
-                    solutions.add(new Solutions.Issue(
-                            this, 
-                            "The preview rendering quality can be improved.", 
-                            "Set to Rendering Quality to High (right click the Camera View to see other options).", 
-                            Severity.Suggestion,
-                            "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-General-Camera-Setup#camera-view-configuration") {
-
-                        @Override
-                        public void setState(Solutions.State state) throws Exception {
-                            view.setRenderingQuality((state == Solutions.State.Solved) ? RenderingQuality.High : renderingQuality);
-                            cameraViewHasChanged(null);
-                            super.setState(state);
-                        }
-                    });
-                }
-            }
-            if (getLightActuator() != null) {
-                ActuatorSolutions.findActuateIssues(solutions, this, this.getLightActuator(), "camera light",
-                    "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Camera-Lighting");
-            }
-        }
-    }
-
-    /**
-     * Create a replacement OpenPnpCaptureCamera for this camera with some of the
-     * generic settings transferred.  
-     * 
-     * @return
-     */
-    protected OpenPnpCaptureCamera createReplacementCamera() {
-        OpenPnpCaptureCamera camera = new OpenPnpCaptureCamera();
-        camera.setHead(getHead());
-        camera.setId(getId());
-        camera.setLooking(getLooking());
-        camera.setName(getName());
-        camera.setHeadOffsets(getHeadOffsets());
-        camera.setAxisX(getAxisX());
-        camera.setAxisY(getAxisY());
-        camera.setAxisZ(getAxisZ());
-        camera.setAxisRotation(getAxisRotation());
-        camera.setPreviewFps(getPreviewFps());
-        camera.setSuspendPreviewInTasks(isSuspendPreviewInTasks());
-        camera.setAutoVisible(isAutoVisible());
-        camera.setLightActuator(getLightActuator());
-        camera.setAllowMachineActuators(isAllowMachineActuators());
-        camera.setBeforeCaptureLightOn(isBeforeCaptureLightOn());
-        camera.setAfterCaptureLightOff(isAfterCaptureLightOff());
-        camera.setUserActionLightOn(isUserActionLightOn());
-        camera.setAntiGlareLightOff(isAntiGlareLightOff());
-        return camera;
-    }
-
-    /**
-     * Replace a camera with the same Id at the same place in the cameras list.
-     * 
-     * @param camera
-     * @throws Exception
-     */
-    public static void replaceCamera(Camera camera) throws Exception {
-        // Disable the machine, so the driver isn't connected.
-        Machine machine = Configuration.get().getMachine();
-        // Find the old driver with the same Id.
-        Head cameraHead = camera.getHead();
-        List<Camera> list = (cameraHead == null ? machine.getCameras() : cameraHead.getCameras());
-        Camera replaced = null;
-        int index;
-        for (index = 0; index < list.size(); index++) {
-            if (list.get(index).getId().equals(camera.getId())) {
-                replaced = list.get(index);
-                if (cameraHead == null) {
-                    machine.removeCamera(replaced);
-                }
-                else {
-                    cameraHead.removeCamera(replaced);
-                }
-                MainFrame.get().getCameraViews().removeCamera(replaced);
-                if (replaced instanceof AutoCloseable) {
-                    try {
-                        ((AutoCloseable) replaced).close();
-                    }
-                    catch (Exception e) {
-                        Logger.warn(e);
-                    }
-                }
-                break;
-            }
-        }
-        final int formerIndex = index;
-
-        UiUtils.messageBoxOnExceptionLater(() -> {
-            // Add the new one.
-            if (cameraHead == null) {
-                machine.addCamera(camera);
-            }
-            else {
-                cameraHead.addCamera(camera);
-            }
-            // Permutate it back to the old list place (cumbersome but works).
-            for (int p = list.size() - formerIndex; p > 1; p--) {
-                if (cameraHead == null) {
-                    machine.permutateCamera(camera, -1);
-                }
-                else {
-                    cameraHead.permutateCamera(camera, -1);
-                }
-            }
-            if (camera instanceof AbstractBroadcastingCamera) {
-                ((AbstractBroadcastingCamera) camera).reinitialize();
-            }
-            MainFrame.get().getCameraViews().addCamera(camera);
-        });
+        new CameraSolutions(this).findIssues(solutions);
     }
 }

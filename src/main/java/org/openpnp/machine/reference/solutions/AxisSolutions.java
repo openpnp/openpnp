@@ -91,17 +91,22 @@ public class AxisSolutions implements Solutions.Subject {
                     solutions.add(new AxisLetterIssue(
                             axis, 
                             "Avoid axis letter E, if possible. Use proper rotation axes instead.", 
-                            "Check if your controller supports proper axes A B C (etc.) instead of E.", 
+                            "Check if your controller supports proper axes A B C (etc.) instead of \"extruder\" E. "
+                            + "Press the blue info button (below) for more information.", 
                             Severity.Warning,
-                            "https://github.com/openpnp/openpnp/wiki/Advanced-Motion-Control#migration-from-a-previous-version"));
+                            "https://github.com/openpnp/openpnp/wiki/Motion-Controller-Firmwares#upgrading-and-configuring-firmwares"));
                 }
             }
             else if (!getValidAxisLetters().contains(axis.getLetter())) {
                 solutions.add(new AxisLetterIssue(
                         axis, 
-                        "Axis letter "+axis.getLetter()+" is not a controller/G-code standard letter, one of "+String.join(" ", getValidAxisLetters())+".", 
-                        "Please assign the correct controller axis letter (some contoller may support an extended range of letters, "
-                                + "in which case you can dismiss this warning).", 
+                        "Axis letter "+axis.getLetter()+" is not a "+(getReportedAxisLetters() != null ? "controller reported" : "G-code standard")
+                        +" letter, one of "+String.join(" ", getValidAxisLetters())+".", 
+                        "Please assign the correct controller axis letter. Some controllers may "
+                                +(getReportedAxisLetters() != null ? 
+                                        "not report all axes on M114, in which case the letter might still be valid"
+                                        : "support an extended range of letters, in which case the letter might still be valid"
+                                        )+". Press the blue info button (below) for more information.", 
                                 Severity.Warning,
                         "https://github.com/openpnp/openpnp/wiki/Machine-Axes#controller-settings"));
             }
@@ -201,6 +206,22 @@ public class AxisSolutions implements Solutions.Subject {
                                 nozzle.setRotationMode((state == Solutions.State.Solved) ?
                                         RotationMode.LimitedArticulation :
                                             oldRotationMode);
+                                super.setState(state);
+                            }
+                        });
+                    }
+                    if (!nozzle.isAligningRotationMode()) {
+                        solutions.add(new Solutions.Issue(
+                                nozzle, 
+                                "Align nozzle "+nozzle.getName()+" rotation with part.", 
+                                        "Enable part aligned nozzle rotation mode, so camera view cross-hairs and DRO-coordinates show the "
+                                        + "bottom vision aligned part rotation instead of the unadjusted nozzle rotation.", 
+                                        Severity.Suggestion,
+                                "https://github.com/openpnp/openpnp/wiki/Nozzle-Rotation-Mode#align-nozzle-rotation-with-part") {
+
+                            @Override
+                            public void setState(Solutions.State state) throws Exception {
+                                nozzle.setAligningRotationMode((state == Solutions.State.Solved));
                                 super.setState(state);
                             }
                         });
@@ -343,12 +364,20 @@ public class AxisSolutions implements Solutions.Subject {
         }
     }
 
-    protected List<String> getValidAxisLetters() {
+    protected List<String> getReportedAxisLetters() {
         if (axis.getDriver() instanceof GcodeDriver)  { 
             List<String> letters = ((GcodeDriver)axis.getDriver()).getReportedAxesLetters();
             if (letters.size() > 0) {
                 return letters;
             }
+        }
+        return null;
+    }
+
+    protected List<String> getValidAxisLetters() {
+        List<String> reportedAxisLetters = getReportedAxisLetters();
+        if (reportedAxisLetters != null) {
+            return reportedAxisLetters;
         }
         return Arrays.asList(AxisSolutions.VALID_AXIS_LETTERS);
     }
@@ -373,7 +402,7 @@ public class AxisSolutions implements Solutions.Subject {
         @Override
         public void setState(Solutions.State state) throws Exception {
             if (state == State.Solved) {
-                if (newAxisLetter.isEmpty()) {
+                if (newAxisLetter == null || newAxisLetter.isEmpty()) {
                     throw new Exception("Axis letter must not be empty");
                 }
                 axis.setLetter(newAxisLetter);

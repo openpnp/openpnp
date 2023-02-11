@@ -316,8 +316,44 @@ public class GcodeAsyncDriver extends GcodeDriver {
             Logger.debug("{} empty command after pre process", getCommunications().getConnectionName());
             return;
         }
+        if (command.startsWith("$")) {
+            waitForEmptyCommandQueue();
+        }
         CommandLine commandLine = new CommandLine(command, timeout);
         commandQueue.offer(commandLine, writerQueueTimeout, TimeUnit.MILLISECONDS);
+        if (command.startsWith("$")) {
+            waitForEmptyCommandQueue();
+            Thread.sleep(dollarWaitTimeMilliseconds);
+        }
+    }
+
+    /**
+     * A crude way to at least wait for all prior commands to have been sent. 
+     * This still does not guarantee that the controller has received and interpreted 
+     * the commands, let alone that it is truly idle. But at least it handles typical 
+     * CONNECT_COMMAND sequences properly, where this is typically needed (for $-commands
+     * on TinyG).  
+     * 
+     * Conversely, inside the CONNECT_COMMAND, we don't want to use the waitForCompletion() 
+     * method yet, as the controller might still not be properly configured for that, so 
+     * we resort to this crude method. 
+     * 
+     * @throws InterruptedException
+     */
+    protected void waitForEmptyCommandQueue() {
+        long t1 = System.currentTimeMillis() + getTimeoutAtMachineSpeed();
+        while (System.currentTimeMillis() < t1) {
+            if (commandQueue.size() == 0) {
+                return; // --->
+            }
+            try {
+                Logger.trace("{} wait for empty command queue.", getName());
+                Thread.sleep(10);
+            }
+            catch (InterruptedException e) {
+            }
+        }
+        Logger.warn("{} timeout while waiting for empty command queue.", getName());
     }
 
     @Override

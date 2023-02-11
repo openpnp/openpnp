@@ -12,6 +12,7 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.VisionSettingsComboBoxModel;
 import org.openpnp.gui.components.ComponentDecorators;
@@ -44,8 +45,9 @@ public class ReferenceBottomVisionConfigurationWizard extends AbstractConfigurat
         this.bottomVision = bottomVision;
 
         JPanel panel = new JPanel();
-        panel.setBorder(new TitledBorder(null, "General", TitledBorder.LEADING, TitledBorder.TOP,
-                null, null));
+        panel.setBorder(new TitledBorder(null, Translations.getString(
+                "ReferenceBottomVisionConfigurationWizard.GeneralPanel.Border.title"), //$NON-NLS-1$
+                TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panel);
         panel.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -68,13 +70,15 @@ public class ReferenceBottomVisionConfigurationWizard extends AbstractConfigurat
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
 
-        JLabel lblEnabled = new JLabel("Enabled?");
+        JLabel lblEnabled = new JLabel(Translations.getString(
+                "ReferenceBottomVisionConfigurationWizard.GeneralPanel.EnabledLabel.text")); //$NON-NLS-1$
         panel.add(lblEnabled, "2, 2");
 
         enabledCheckbox = new JCheckBox("");
         panel.add(enabledCheckbox, "4, 2");
 
-        JLabel lblBottomVision = new JLabel("Bottom Vision Settings");
+        JLabel lblBottomVision = new JLabel(Translations.getString(
+                "ReferenceBottomVisionConfigurationWizard.GeneralPanel.BottomVisionSettingsLabel.text")); //$NON-NLS-1$
         panel.add(lblBottomVision, "2, 4, right, default");
                 
                 visionSettings = new JComboBox(new VisionSettingsComboBoxModel(BottomVisionSettings.class));
@@ -87,31 +91,39 @@ public class ReferenceBottomVisionConfigurationWizard extends AbstractConfigurat
                 });
                 panel.add(visionSettings, "4, 4, 3, 1, fill, default");
 
-        JLabel lblPreRot = new JLabel("Rotate parts prior to vision?");
-        lblPreRot.setToolTipText("Pre-rotate default setting for bottom vision. Can be overridden on individual parts.");
+        JLabel lblPreRot = new JLabel(Translations.getString(
+                "ReferenceBottomVisionConfigurationWizard.GeneralPanel.RotatePartsLabel.text")); //$NON-NLS-1$
+        lblPreRot.setToolTipText(Translations.getString(
+                "ReferenceBottomVisionConfigurationWizard.GeneralPanel.RotatePartsLabel.toolTipText")); //$NON-NLS-1$
         panel.add(lblPreRot, "2, 6");
 
         preRotCheckbox = new JCheckBox("");
         panel.add(preRotCheckbox, "4, 6");
         
-        JLabel lblMaxVisionPasses = new JLabel("Max. vision passes");
-        lblMaxVisionPasses.setToolTipText("The maximum number of bottom vision passes performed to get a good fix on the part.");
+        JLabel lblMaxVisionPasses = new JLabel(Translations.getString(
+                "ReferenceBottomVisionConfigurationWizard.GeneralPanel.MaxVisionPassesLabel.text")); //$NON-NLS-1$
+        lblMaxVisionPasses.setToolTipText(Translations.getString(
+                "ReferenceBottomVisionConfigurationWizard.GeneralPanel.MaxVisionPassesLabel.toolTipText")); //$NON-NLS-1$
         panel.add(lblMaxVisionPasses, "2, 8, right, default");
         
         textFieldMaxVisionPasses = new JTextField();
         panel.add(textFieldMaxVisionPasses, "4, 8");
         textFieldMaxVisionPasses.setColumns(10);
         
-        JLabel lblMaxLinearOffset = new JLabel("Max. linear offset");
-        lblMaxLinearOffset.setToolTipText("The maximum linear part offset accepted as a good fix i.e. where no additional vision pass is needed.");
+        JLabel lblMaxLinearOffset = new JLabel(Translations.getString(
+                "ReferenceBottomVisionConfigurationWizard.GeneralPanel.MaxLinearOffsetLabel.text")); //$NON-NLS-1$
+        lblMaxLinearOffset.setToolTipText(Translations.getString(
+                "ReferenceBottomVisionConfigurationWizard.GeneralPanel.MaxLinearOffsetLabel.toolTipText")); //$NON-NLS-1$
         panel.add(lblMaxLinearOffset, "2, 10, right, default");
         
         textFieldMaxLinearOffset = new JTextField();
         panel.add(textFieldMaxLinearOffset, "4, 10, fill, default");
         textFieldMaxLinearOffset.setColumns(10);
         
-        JLabel lblMaxAngularOffset = new JLabel("Max. angular offset");
-        lblMaxAngularOffset.setToolTipText("The maximum angular part offset accepted as a good fix i.e. where no additional vision pass is needed.");
+        JLabel lblMaxAngularOffset = new JLabel(Translations.getString(
+                "ReferenceBottomVisionConfigurationWizard.GeneralPanel.MaxAngularOffsetLabel.text")); //$NON-NLS-1$
+        lblMaxAngularOffset.setToolTipText(Translations.getString(
+                "ReferenceBottomVisionConfigurationWizard.GeneralPanel.MaxAngularOffsetLabel.toolTipText")); //$NON-NLS-1$
         panel.add(lblMaxAngularOffset, "6, 10, right, default");
         
         textFieldMaxAngularOffset = new JTextField();
@@ -140,7 +152,7 @@ public class ReferenceBottomVisionConfigurationWizard extends AbstractConfigurat
 
     @Override
     public String getWizardName() {
-        return "ReferenceBottomVision";
+        return Translations.getString("ReferenceBottomVisionConfigurationWizard.wizardName"); //$NON-NLS-1$
     }
 
     @Override

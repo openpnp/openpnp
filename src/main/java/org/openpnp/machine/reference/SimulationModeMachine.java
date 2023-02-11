@@ -31,6 +31,7 @@ import java.util.function.BiFunction;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.machine.reference.camera.ImageCamera;
+import org.openpnp.machine.reference.camera.ReferenceCamera;
 import org.openpnp.machine.reference.driver.GcodeDriver;
 import org.openpnp.machine.reference.driver.NullDriver;
 import org.openpnp.machine.reference.driver.ReferenceDriverCommunications;
@@ -54,6 +55,7 @@ import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Locatable.LocationOption;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;
+import org.openpnp.spi.base.AbstractNozzle;
 import org.openpnp.util.Collect;
 import org.openpnp.util.GcodeServer;
 import org.openpnp.util.NanosecondTime;
@@ -334,6 +336,8 @@ public class SimulationModeMachine extends ReferenceMachine {
         return null;
     }
 
+    static private HashMap<Nozzle, Double> rotationModeOffsetAtPick = new HashMap<>();
+    
     /**
      * Simulates the Actuator. 
      * 
@@ -346,7 +350,7 @@ public class SimulationModeMachine extends ReferenceMachine {
         SimulationModeMachine machine = getSimulationModeMachine();
         if (machine != null 
                 && machine.getSimulationMode() != SimulationMode.Off) {
-            if (value instanceof Boolean && machine.isPickAndPlaceChecking()) {
+            if (value instanceof Boolean) {
                 // Check if this is a nozzle vacuum actuator.
                 if (actuator.getHead() != null) {
                     Camera camera = actuator.getHead().getDefaultCamera();
@@ -356,17 +360,30 @@ public class SimulationModeMachine extends ReferenceMachine {
                                     && ((ReferenceNozzle) nozzle).getVacuumActuator() == actuator) {
                                 // Got the vacuum actuator, which is a signal to check for pick/place.
                                 if (nozzle.getPart() != null) {
-                                    Location location = SimulationModeMachine.getSimulatedPhysicalLocation(nozzle, null);
-                                    if (location.getLinearDistanceTo(machine.getDiscardLocation()) > 4.0) {
-                                        if ((Boolean)value == true) {
-                                            // Pick
+                                    if ((Boolean)value == true) {
+                                        // New pick, remove any old offsets.
+                                        rotationModeOffsetAtPick.remove(nozzle);
+                                    }
+                                    Location location = SimulationModeMachine.getSimulatedPhysicalLocation(nozzle, null, true);
+                                    boolean checkPnP = machine.isPickAndPlaceChecking()
+                                            && (location.getLinearDistanceTo(machine.getDiscardLocation()) > 4.0); 
+                                    if ((Boolean)value == true) {
+                                        // Pick
+                                        if (checkPnP) {
                                             if (!((ImageCamera) camera).isPickLocation(location, nozzle)) {
                                                 throw new Exception("Nozzle "+nozzle.getName()+" part "+nozzle.getPart().getId()
                                                         +" pick location not recognized.");
                                             }
                                         }
-                                        else {
-                                            // Pick
+                                        if (nozzle instanceof AbstractNozzle) {
+                                            Double rotationModeOffset = ((AbstractNozzle) nozzle).getRotationModeOffset();
+                                            rotationModeOffsetAtPick.put(nozzle, rotationModeOffset == null ? 0.0 : rotationModeOffset);
+                                        }
+                                    }
+                                    else {
+                                        // Place
+                                        if (checkPnP) {
+                                            rotationModeOffsetAtPick.remove(nozzle);
                                             if (!((ImageCamera) camera).isPlaceLocation(location, nozzle)) {
                                                 throw new Exception("Nozzle "+nozzle.getName()+" part "+nozzle.getPart().getId()
                                                         +" place location not recognized.");
@@ -382,7 +399,7 @@ public class SimulationModeMachine extends ReferenceMachine {
         }
         if (realtime) {
             try {
-                Thread.sleep(500);
+                Thread.sleep(50);
             }
             catch (InterruptedException e) {
             }
@@ -394,9 +411,10 @@ public class SimulationModeMachine extends ReferenceMachine {
      *  
      * @param hm
      * @param looking
+     * @param partRotation 
      * @return
      */
-    public static Location getSimulatedPhysicalLocation(HeadMountable hm, Looking looking) {
+    public static Location getSimulatedPhysicalLocation(HeadMountable hm, Looking looking, boolean partRotation) {
         // Use ideal location as a default, used in case this fails (not a place to throw).
         Location location = hm.getLocation().convertToUnits(AxesLocation.getUnits());
         Machine plainMachine = Configuration.get().getMachine();
@@ -507,6 +525,19 @@ public class SimulationModeMachine extends ReferenceMachine {
                         LocationOption.SuppressCameraCalibration,
                         LocationOption.SuppressStaticCompensation,
                         LocationOption.SuppressDynamicCompensation);
+                // If the part rotation is wanted, we need to adjust the 
+                if (partRotation && hm instanceof AbstractNozzle) {
+                    Double rotationOffset = rotationModeOffsetAtPick.get(hm);
+                    if (rotationOffset != null) {
+                        location = location.derive(null, null, null, location.getRotation() + rotationOffset);
+                    }
+                    else {
+                        rotationOffset = ((AbstractNozzle)hm).getRotationModeOffset();
+                        if (rotationOffset != null) {
+                            location = location.derive(null, null, null, location.getRotation() + rotationOffset);
+                        }
+                    }
+                }
             }
             catch (Exception e) {
                 Logger.error(e);

@@ -36,27 +36,26 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 import javax.swing.border.TitledBorder;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.components.SimpleGraphView;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
-import org.openpnp.gui.support.ActuatorsComboBoxModel;
 import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.LongConverter;
-import org.openpnp.gui.support.NamedConverter;
+import org.openpnp.machine.reference.camera.AbstractSettlingCamera;
+import org.openpnp.machine.reference.camera.AbstractSettlingCamera.SettleMethod;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
-import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.HeadMountable;
-import org.openpnp.spi.base.AbstractCamera;
 import org.openpnp.spi.base.AbstractMachine;
-import org.openpnp.spi.base.AbstractCamera.SettleMethod;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 
@@ -67,20 +66,21 @@ import com.jgoodies.forms.layout.RowSpec;
 
 @SuppressWarnings("serial")
 public class CameraVisionConfigurationWizard extends AbstractConfigurationWizard {
-    private final AbstractCamera camera;
+    private final AbstractSettlingCamera camera;
     
-    public CameraVisionConfigurationWizard(AbstractCamera camera) {
+    public CameraVisionConfigurationWizard(AbstractSettlingCamera camera) {
         AbstractMachine machine = (AbstractMachine) Configuration.get().getMachine();
         this.camera = camera;
 
 
         panelVision = new JPanel();
-        panelVision.setBorder(new TitledBorder(null, "Camera Settling", TitledBorder.LEADING,
-                TitledBorder.TOP, null, null));
+        panelVision.setBorder(new TitledBorder(null, Translations.getString(
+                "CameraVisionConfigurationWizard.VisionPanel.Border.title"), //$NON-NLS-1$
+                TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panelVision);
         panelVision.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
+                ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -95,26 +95,27 @@ public class CameraVisionConfigurationWizard extends AbstractConfigurationWizard
                 ColumnSpec.decode("min:grow"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
-                new RowSpec[] {
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.MIN_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.MIN_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        RowSpec.decode("max(70dlu;default):grow"),}));
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.MIN_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.MIN_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                RowSpec.decode("max(70dlu;default):grow"),}));
 
-        lblSettleMethod = new JLabel("Settle Method");
+        lblSettleMethod = new JLabel(Translations.getString(
+                "CameraVisionConfigurationWizard.VisionPanel.SettleMethodLabel.text")); //$NON-NLS-1$
         panelVision.add(lblSettleMethod, "2, 2, 1, 3, right, default");
 
-        settleMethod = new JComboBox(AbstractCamera.SettleMethod.values());
+        settleMethod = new JComboBox(AbstractSettlingCamera.SettleMethod.values());
         settleMethod.addItemListener(new ItemListener() {
             public void itemStateChanged(ItemEvent e) {
                 adaptDialog();
@@ -122,36 +123,42 @@ public class CameraVisionConfigurationWizard extends AbstractConfigurationWizard
         });
         panelVision.add(settleMethod, "4, 2, 1, 3, fill, default");
 
-        lblSettleTimeMs = new JLabel("Settle Time (ms)");
+        lblSettleTimeMs = new JLabel(Translations.getString(
+                "CameraVisionConfigurationWizard.VisionPanel.SettleTimeLabel.text")); //$NON-NLS-1$
         panelVision.add(lblSettleTimeMs, "8, 2, right, center");
 
         settleTimeMs = new JTextField();
         panelVision.add(settleTimeMs, "10, 2, fill, center");
         settleTimeMs.setColumns(10);
 
-        lblSettleTimeoutMs = new JLabel("Settle Timeout (ms)");
+        lblSettleTimeoutMs = new JLabel(Translations.getString(
+                "CameraVisionConfigurationWizard.VisionPanel.SettleTimeOutLabel.text")); //$NON-NLS-1$
         panelVision.add(lblSettleTimeoutMs, "8, 4, right, default");
 
         settleTimeoutMs = new JTextField();
         panelVision.add(settleTimeoutMs, "10, 4, fill, default");
         settleTimeoutMs.setColumns(10);
 
-        lblSettleThreshold = new JLabel("Settle Threshold");
+        lblSettleThreshold = new JLabel(Translations.getString(
+                "CameraVisionConfigurationWizard.VisionPanel.SettleThresholdLabel.text")); //$NON-NLS-1$
         panelVision.add(lblSettleThreshold, "2, 6, right, default");
 
         settleThreshold = new JTextField();
         panelVision.add(settleThreshold, "4, 6, fill, default");
         settleThreshold.setColumns(10);
 
-        lblSettleDebounce = new JLabel("Debounce Frames");
+        lblSettleDebounce = new JLabel(Translations.getString(
+                "CameraVisionConfigurationWizard.VisionPanel.DebounceFramesLabel.text")); //$NON-NLS-1$
         panelVision.add(lblSettleDebounce, "8, 6, right, default");
 
         settleDebounce = new JTextField();
         panelVision.add(settleDebounce, "10, 6, fill, default");
         settleDebounce.setColumns(10);
 
-        lblSettleFullColor = new JLabel("Color Sensitive?");
-        lblSettleFullColor.setToolTipText("Compare as full color image, i.e. difference in colors with same brightness will register.");
+        lblSettleFullColor = new JLabel(Translations.getString(
+                "CameraVisionConfigurationWizard.VisionPanel.ColorSensitiveLabel.text")); //$NON-NLS-1$
+        lblSettleFullColor.setToolTipText(Translations.getString(
+                "CameraVisionConfigurationWizard.VisionPanel.ColorSensitiveLabel.toolTipText")); //$NON-NLS-1$
         panelVision.add(lblSettleFullColor, "2, 8, right, default");
 
         settleFullColor = new JCheckBox("");
@@ -196,39 +203,49 @@ public class CameraVisionConfigurationWizard extends AbstractConfigurationWizard
         btnTestRotate = new JButton(settleTestRotateAction);
         panelSettleTest.add(btnTestRotate, "6, 6");
 
-        lblSettleGradient = new JLabel("Edge Sensitive?");
-        lblSettleGradient.setToolTipText("Use the gradients of the images rather than brightness.");
+        lblSettleGradient = new JLabel(Translations.getString(
+                "CameraVisionConfigurationWizard.VisionPanel.EdgeSensitiveLabel.text")); //$NON-NLS-1$
+        lblSettleGradient.setToolTipText(Translations.getString(
+                "CameraVisionConfigurationWizard.VisionPanel.EdgeSensitiveLabel.toolTipText")); //$NON-NLS-1$
         panelVision.add(lblSettleGradient, "8, 8, right, default");
 
         settleGradients = new JCheckBox("");
         panelVision.add(settleGradients, "10, 8");
 
-        lblContrastEnhance = new JLabel("Enhance Contrast");
-        lblContrastEnhance.setToolTipText("How much it should enhance the contrast from 0.0 (original image) to 1.0 (full dynamic range).");
+        lblContrastEnhance = new JLabel(Translations.getString(
+                "CameraVisionConfigurationWizard.VisionPanel.EnhanceContrastLabel.text")); //$NON-NLS-1$
+        lblContrastEnhance.setToolTipText(Translations.getString(
+                "CameraVisionConfigurationWizard.VisionPanel.EnhanceContrastLabel.toolTipText")); //$NON-NLS-1$
         panelVision.add(lblContrastEnhance, "2, 10, right, default");
 
         settleContrastEnhance = new JTextField();
         panelVision.add(settleContrastEnhance, "4, 10, default, top");
         settleContrastEnhance.setColumns(10);
 
-        lblSettleGaussianBlur = new JLabel("Denoise (Pixel)");
-        lblSettleGaussianBlur.setToolTipText("<html>\r\nDiameter in pixels of the Gaussian Blur used to denoise the images. <br/>\r\nFor large diameters the image will be scaled down for better speed.\r\n</html>");
+        lblSettleGaussianBlur = new JLabel(Translations.getString(
+                "CameraVisionConfigurationWizard.VisionPanel.DenoisePixelLabel.text")); //$NON-NLS-1$
+        lblSettleGaussianBlur.setToolTipText(Translations.getString(
+                "CameraVisionConfigurationWizard.VisionPanel.DenoisePixelLabel.toolTipText")); //$NON-NLS-1$
         panelVision.add(lblSettleGaussianBlur, "8, 10, right, default");
 
         settleGaussianBlur = new JTextField();
         panelVision.add(settleGaussianBlur, "10, 10, fill, default");
         settleGaussianBlur.setColumns(10);
 
-        lblSettleMaskCircle = new JLabel("Center Mask");
-        lblSettleMaskCircle.setToolTipText("<html>\r\n<p>Size of the central circular mask, relative to the camera dimension <br/>\r\n(height or width, whichever is smaller).</p>\r\n<p>Examples:</p>\r\n<ul>\r\n<li>0.0 No mask</li>\r\n<li>0.5 Circular center area of half the camera view</li>\r\n<li>1.0 Circular center area to the edge of the camera view</li>\r\n<li>1.5 Circular area vignetting the camera view</li>\r\n</ul>\r\n</html>");
+        lblSettleMaskCircle = new JLabel(Translations.getString(
+                "CameraVisionConfigurationWizard.VisionPanel.CenterMaskLabel.text")); //$NON-NLS-1$
+        lblSettleMaskCircle.setToolTipText(Translations.getString(
+                "CameraVisionConfigurationWizard.VisionPanel.CenterMaskLabel.toolTipText")); //$NON-NLS-1$
         panelVision.add(lblSettleMaskCircle, "2, 12, right, default");
 
         settleMaskCircle = new JTextField();
         panelVision.add(settleMaskCircle, "4, 12, fill, default");
         settleMaskCircle.setColumns(10);
 
-        lblSettleDiagnostics = new JLabel("Diagnostics?");
-        lblSettleDiagnostics.setToolTipText("Enable graphical diagnostics and replay of settle frames.");
+        lblSettleDiagnostics = new JLabel(Translations.getString(
+                "CameraVisionConfigurationWizard.VisionPanel.DiagnosticsLabel.text")); //$NON-NLS-1$
+        lblSettleDiagnostics.setToolTipText(Translations.getString(
+                "CameraVisionConfigurationWizard.VisionPanel.DiagnosticsLabel.toolTipText")); //$NON-NLS-1$
         panelVision.add(lblSettleDiagnostics, "8, 12, right, default");
 
         settleDiagnostics = new JCheckBox("");
@@ -240,7 +257,7 @@ public class CameraVisionConfigurationWizard extends AbstractConfigurationWizard
         panelVision.add(settleDiagnostics, "10, 12");
 
         lblSettleGraph = new JLabel("<html>\r\n<body style=\"text-align:right\">\r\n<p>\r\nDifference <span style=\"color:#FF0000\">&mdash;&mdash;</span>\r\n</p>\r\n<p>\r\nThreshold <span style=\"color:#00BB00\">&mdash;&mdash;</span>\r\n</p>\r\n<p>\r\nCapture <span style=\"color:#005BD9\">&mdash;&mdash;</span>\r\n</p>\r\n</body>\r\n</html>");
-        panelVision.add(lblSettleGraph, "2, 14");
+        panelVision.add(lblSettleGraph, "2, 14, right, default");
 
         settleGraph = new SimpleGraphView();
         settleGraph.addPropertyChangeListener(new PropertyChangeListener() {
@@ -256,7 +273,7 @@ public class CameraVisionConfigurationWizard extends AbstractConfigurationWizard
     }
 
     private void adaptDialog() {
-        AbstractCamera.SettleMethod method = (SettleMethod) settleMethod.getSelectedItem();
+        AbstractSettlingCamera.SettleMethod method = (SettleMethod) settleMethod.getSelectedItem();
         boolean fixedTime = (method == SettleMethod.FixedTime);
 
         lblSettleTimeMs.setVisible(fixedTime);
@@ -358,13 +375,16 @@ public class CameraVisionConfigurationWizard extends AbstractConfigurationWizard
                 }
                 initialJogWarningDisplayed = true;
             }
-            UiUtils.submitUiMachineTask(() -> {
-                if (jogTool instanceof Camera) {
-                    camera.moveToSafeZ();
-                }
-                MainFrame.get().getMachineControls().getJogControlsPanel().jogTool(x, y, 0, c, jogTool);
-                MainFrame.get().getMachineControls().getJogControlsPanel().jogTool(-x, -y, 0, -c, jogTool);
-                camera.lightSettleAndCapture();
+            SwingUtilities.invokeLater(() -> {
+                // There is some strange redraw related race, so do this later.
+                UiUtils.submitUiMachineTask(() -> {
+                    if (jogTool instanceof Camera) {
+                        camera.moveToSafeZ();
+                    }
+                    MainFrame.get().getMachineControls().getJogControlsPanel().jogTool(x, y, 0, c, jogTool);
+                    MainFrame.get().getMachineControls().getJogControlsPanel().jogTool(-x, -y, 0, -c, jogTool);
+                    camera.lightSettleAndCapture();
+                });
             });
         });
     }
@@ -459,8 +479,8 @@ public class CameraVisionConfigurationWizard extends AbstractConfigurationWizard
         }
         @Override
         public void actionPerformed(ActionEvent e) {
+            applyAction.actionPerformed(e);
             UiUtils.messageBoxOnException(() -> {
-                applyAction.actionPerformed(e);
                 camera.lightSettleAndCapture();
                 MovableUtils.fireTargetedUserAction(camera);
             });

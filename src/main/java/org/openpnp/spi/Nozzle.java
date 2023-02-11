@@ -51,6 +51,12 @@ public interface Nozzle
     public RotationMode getRotationMode();
 
     /**
+     * @return Whether the bottom vision aligment of parts adjust the Rotation Mode of the nozzle to include the 
+     * alignment rotation offset.
+     */
+    public boolean isAligningRotationMode();
+
+    /**
      * Prepare the Nozzle for the next placement rotation. This will apply a rotation offset to the Nozzle 
      * that implements the {@link RotationMode} and is subject to articulation limits, if present.
      * 

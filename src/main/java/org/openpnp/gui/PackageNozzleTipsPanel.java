@@ -27,6 +27,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.table.AbstractTableModel;
 
+import org.openpnp.Translations;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.NozzleTip;
 import java.awt.BorderLayout;
@@ -51,7 +52,9 @@ public class PackageNozzleTipsPanel extends JPanel {
     }
 
     public class NozzleTipsTableModel extends AbstractTableModel {
-        private String[] columnNames = new String[] { "Nozzle Tip", "Compatible?" };
+        private String[] columnNames = new String[] {
+                Translations.getString("NozzleTipsTableModel.ColumnName.NozzleTip"), //$NON-NLS-1$
+                Translations.getString("NozzleTipsTableModel.ColumnName.Compatible") }; //$NON-NLS-1$
         private Class[] columnClasses = new Class[] { String.class, Boolean.class };
         private List<NozzleTip> nozzleTips;
 

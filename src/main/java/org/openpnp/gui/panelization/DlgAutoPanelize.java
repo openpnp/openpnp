@@ -140,6 +140,7 @@ public class DlgAutoPanelize extends JDialog {
 
         setSize(400, 600);
         setResizable(false);
+        pack();
         setLocationRelativeTo(parent);
 
         JRootPane rootPane = getRootPane();

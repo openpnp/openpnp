@@ -9,6 +9,7 @@ import javax.swing.Action;
 import javax.swing.Icon;
 import javax.swing.JOptionPane;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
@@ -17,6 +18,7 @@ import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
 import org.openpnp.machine.reference.axis.ReferenceVirtualAxis;
 import org.openpnp.model.AbstractModelObject;
+import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.spi.Axis;
@@ -68,10 +70,27 @@ public abstract class AbstractDriver extends AbstractModelObject implements Driv
         return false;
     }
 
+
     @Override
-    public double getMinimumVelocity() {
-        // For now just return a fixed 0.1mm/s minimum feed-rate, i.e. 6mm/min minimum F word in Gcode.
-        return 0.1;
+    public Length getMinimumRate(int order) {
+        // Get the minimum of all the axes' rate limits. 
+        double rate = Double.POSITIVE_INFINITY;
+        ReferenceMachine machine = ((ReferenceMachine) Configuration.get().getMachine());
+        for (ControllerAxis axis : getAxes(machine)) {
+            double axisRate = axis.getMotionLimit(order);
+            if (rate > axisRate && axisRate != 0) {
+                rate = axisRate;
+            }
+        }
+        // Take it at minimum planner speed.
+        rate *= Math.pow(machine.getMotionPlanner().getMinimumSpeed(), order);
+        // Make it the next lower decimal digit in driver units.
+        double driverUnitFactor = Length.convertToUnits(1, AxesLocation.getUnits(), getUnits());
+        rate = Math.pow(10, Math.floor(Math.log10(rate*driverUnitFactor)))/driverUnitFactor;
+        if (!Double.isFinite(rate)) {
+            rate = 1;
+        }
+        return new Length(rate, AxesLocation.getUnits());
     }
 
     @Override
@@ -171,18 +190,19 @@ public abstract class AbstractDriver extends AbstractModelObject implements Driv
     }
 
     @SuppressWarnings("serial")
-    public Action deleteAction = new AbstractAction("Delete Driver") {
+    public Action deleteAction = new AbstractAction(Translations.getString("AbstractDriver.Action.DeleteDriver")) { //$NON-NLS-1$
         {
             putValue(SMALL_ICON, Icons.delete);
-            putValue(NAME, "Delete Driver");
-            putValue(SHORT_DESCRIPTION, "Delete the currently selected driver.");
+            putValue(NAME, Translations.getString("AbstractDriver.Action.DeleteDriver")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("AbstractDriver.Action.DeleteDriver.Description")); //$NON-NLS-1$
         }
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
             int ret = JOptionPane.showConfirmDialog(MainFrame.get(),
-                    "Are you sure you want to delete " + getName() + "?",
-                    "Delete " + getName() + "?", JOptionPane.YES_NO_OPTION);
+                    Translations.getString("DialogMessages.ConfirmDelete.text") + " " + getName() + "?", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                    Translations.getString("DialogMessages.ConfirmDelete.title") + " " + getName() + "?", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                    JOptionPane.YES_NO_OPTION);
             if (ret == JOptionPane.YES_OPTION) {
                 Configuration.get().getMachine().removeDriver(AbstractDriver.this);
             }
@@ -193,8 +213,8 @@ public abstract class AbstractDriver extends AbstractModelObject implements Driv
     public Action permutateUpAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.arrowUp);
-            putValue(NAME, "Permutate Up");
-            putValue(SHORT_DESCRIPTION, "Move the currently selected driver one position up.");
+            putValue(NAME, Translations.getString("AbstractDriver.Action.PermutateUpDriver")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("AbstractDriver.Action.PermutateUpDriver.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -207,8 +227,9 @@ public abstract class AbstractDriver extends AbstractModelObject implements Driv
     public Action permutateDownAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.arrowDown);
-            putValue(NAME, "Permutate Down");
-            putValue(SHORT_DESCRIPTION, "Move the currently selected driver one position down.");
+            putValue(NAME, Translations.getString("AbstractDriver.Action.PermutateDownDriver")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString(
+                    "AbstractDriver.Action.PermutateDownDriver.Description")); //$NON-NLS-1$
         }
 
         @Override

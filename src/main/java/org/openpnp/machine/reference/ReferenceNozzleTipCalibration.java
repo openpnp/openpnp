@@ -18,6 +18,7 @@ import org.opencv.core.RotatedRect;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 import org.openpnp.gui.MainFrame;
+import org.openpnp.machine.reference.camera.ReferenceCamera;
 import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
@@ -913,7 +914,7 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
 
     private Location findCircle(ReferenceNozzle nozzle, Location measureLocation, boolean calibrateCamera) throws Exception {
         Camera camera = VisionUtils.getBottomVisionCamera();
-        try (CvPipeline pipeline = getPipeline(camera, nozzle, measureLocation)) {
+        try (CvPipeline pipeline = getPreparedPipeline(camera, nozzle, measureLocation)) {
             
             pipeline.process();
             List<Location> locations = new ArrayList<>();
@@ -1000,7 +1001,8 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
                 // Blot out the nozzle tip center part.
                 Point center = VisionUtils.getLocationPixels(camera, location.add(camera.getLocation()));
                 org.opencv.core.Point center2 = new org.opencv.core.Point(center.x, center.y);
-                Length minPartDiameter = nozzleTip.getMinPartDiameterWithTolerance();
+                Length minPartDiameter = nozzleTip.getMinPartDiameter()
+                .subtract(nozzleTip.getMaxPickTolerance().multiply(2.0));
                 if (minPartDiameter.compareTo(getCalibrationTipDiameter()) < 0) {
                     minPartDiameter = getCalibrationTipDiameter();
                 }
@@ -1039,7 +1041,8 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
             if (nozzleTip != null 
                     && backgroundImages.size() > 3) {
                 double t0 = NanosecondTime.getRuntimeSeconds();
-                double maskDiameterPixels = nozzleTip.getMaxPartDiameterWithTolerance()
+                double maskDiameterPixels = nozzleTip.getMaxPartDiameter()
+                .add(nozzleTip.getMaxPickTolerance().multiply(2.0))
                         .divide(camera.getUnitsPerPixel().getLengthX())*0.5;
                 int maskSq = (int)Math.pow(maskDiameterPixels, 2);
                 int rows = backgroundImageRows, cols = backgroundImageCols, ch = backgroundImageChannels;
@@ -1653,7 +1656,7 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
         firePropertyChange("backgroundDiagnostics", oldValue, backgroundDiagnostics);
     }
 
-    public CvPipeline getPipeline(Camera camera, Nozzle nozzle, Location measureLocation) throws Exception {
+    public CvPipeline getPreparedPipeline(Camera camera, Nozzle nozzle, Location measureLocation) throws Exception {
         pipeline.setProperty("camera", camera);
         pipeline.setProperty("nozzleTip.diameter", getCalibrationTipDiameter());
         // Set the search tolerance to be somewhat larger than the threshold.
@@ -1664,11 +1667,17 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
         return pipeline;
     }
 
+    public CvPipeline getPipeline() {
+        return pipeline;
+    }
+
     public void setPipeline(CvPipeline calibrationPipeline) {
         this.pipeline = calibrationPipeline;
     }
 
-    public synchronized List<BufferedImage> getBackgroundCalibrationImages() {
-        return backgroundCalibrationImages;
+    public synchronized BufferedImage[] getBackgroundCalibrationImages() {
+        return backgroundCalibrationImages != null ? 
+                backgroundCalibrationImages.toArray(new BufferedImage[backgroundCalibrationImages.size()])
+                : null;
     }
 }

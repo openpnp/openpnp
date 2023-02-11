@@ -21,10 +21,12 @@ package org.openpnp.machine.reference.wizards;
 
 import java.awt.BorderLayout;
 
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.ActuatorsComboBoxModel;
 import org.openpnp.gui.support.NamedConverter;
@@ -46,6 +48,8 @@ public class ReferenceNozzleVacuumWizard extends AbstractConfigurationWizard {
     private JComboBox blowOffComboBoxActuator;
     private JLabel lblSensingActuator;
     private JComboBox vacuumSenseActuator;
+    private JLabel lblClosingValve;
+    private JCheckBox blowOffClosingValve;
 
     public ReferenceNozzleVacuumWizard(ReferenceNozzle nozzle) {
         this.nozzle = nozzle;
@@ -61,9 +65,11 @@ public class ReferenceNozzleVacuumWizard extends AbstractConfigurationWizard {
         contentPanel.add(panel);
         panel.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
+                ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("max(50dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {
@@ -74,21 +80,33 @@ public class ReferenceNozzleVacuumWizard extends AbstractConfigurationWizard {
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
-        label = new JLabel("Vacuum Actuator");
+        label = new JLabel(Translations.getString(
+                "ReferenceNozzleVacuumWizard.ContentPanel.VacuumActuatorLabel.text")); //$NON-NLS-1$
         panel.add(label, "2, 2, right, center");
         
         vacuumComboBoxActuator = new JComboBox();
         vacuumComboBoxActuator.setMaximumRowCount(15);
         vacuumComboBoxActuator.setModel(new ActuatorsComboBoxModel(nozzle.getHead()));
         panel.add(vacuumComboBoxActuator, "4, 2");
-        label = new JLabel("Blow Off Actuator");
+        label = new JLabel(Translations.getString(
+                "ReferenceNozzleVacuumWizard.ContentPanel.BlowOffActuatorLabel.text")); //$NON-NLS-1$
         panel.add(label, "2, 4, right, center");
 
         blowOffComboBoxActuator = new JComboBox();
         blowOffComboBoxActuator.setMaximumRowCount(15);
         blowOffComboBoxActuator.setModel(new ActuatorsComboBoxModel(nozzle.getHead()));
         panel.add(blowOffComboBoxActuator, "4, 4");
-        lblSensingActuator = new JLabel("Sensing Actuator");
+
+        lblClosingValve = new JLabel(
+                Translations.getString("ReferenceNozzleVacuumWizard.ContentPanel.ClosesVacuumActuatorLabel.text")); //$NON-NLS-1$
+        lblClosingValve.setToolTipText(Translations.getString(
+                "ReferenceNozzleVacuumWizard.ContentPanel.ClosesVacuumActuatorLabel.toolTipText")); //$NON-NLS-1$
+        panel.add(lblClosingValve, "6, 4, right, default");
+
+        blowOffClosingValve = new JCheckBox("");
+        panel.add(blowOffClosingValve, "8, 4");
+        lblSensingActuator = new JLabel(Translations.getString(
+                "ReferenceNozzleVacuumWizard.ContentPanel.SensingActuatorLabel.text")); //$NON-NLS-1$
         panel.add(lblSensingActuator, "2, 6, right, default");
 
         vacuumSenseActuator = new JComboBox(new ActuatorsComboBoxModel(nozzle.getHead()));
@@ -102,5 +120,6 @@ public class ReferenceNozzleVacuumWizard extends AbstractConfigurationWizard {
         addWrappedBinding(nozzle, "vacuumActuator", vacuumComboBoxActuator, "selectedItem", actuatorConverter);
         addWrappedBinding(nozzle, "blowOffActuator", blowOffComboBoxActuator, "selectedItem", actuatorConverter);
         addWrappedBinding(nozzle, "vacuumSenseActuator", vacuumSenseActuator, "selectedItem", actuatorConverter);
+        addWrappedBinding(nozzle, "blowOffClosingValve", blowOffClosingValve, "selected");
     }
 }

@@ -35,10 +35,12 @@ import java.util.concurrent.TimeoutException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.ReferenceNozzle;
+import org.openpnp.machine.reference.SimulationModeMachine;
 import org.openpnp.machine.reference.axis.ReferenceCamClockwiseAxis;
 import org.openpnp.machine.reference.axis.ReferenceCamCounterClockwiseAxis;
 import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
@@ -224,10 +226,13 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     protected double backlashFeedRateFactor = 0.1;
 
     @Attribute(required = false)
-    protected int timeoutMilliseconds = 5000;
+    protected int timeoutMilliseconds = 20000;
 
     @Attribute(required = false)
     protected int connectWaitTimeMilliseconds = 3000;
+
+    @Attribute(required = false)
+    protected int dollarWaitTimeMilliseconds = 50;
 
     @Deprecated
     @Attribute(required = false)
@@ -241,6 +246,9 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
 
     @Attribute(required = false)
     protected boolean compressGcode;
+
+    @Attribute(required = false)
+    protected String compressionExcludes = "[]\"";
 
     @Attribute(required = false)
     protected boolean loggingGcode;
@@ -712,6 +720,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         Double feedRate = move.getFeedRatePerMinute();
         Double acceleration = move.getAccelerationPerSecond2();
         Double jerk = move.getJerkPerSecond3();
+
         double driverDistance = movedAxesLocation.getEuclideanMetric(this, (axis) -> 
             movedAxesLocation.getLengthCoordinate(axis).convertToUnits(getUnits()).getValue() - axis.getDriverCoordinate()).third;
 
@@ -732,6 +741,25 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         if (hasVariable(command, "BacklashFeedRate")) {
             throw new Exception(getName()+" configuration upgrade needed: Please remove the extra backlash compensation move from your MOVE_TO_COMMAND. "
                     +"Backlash compensation is now done outside of the drivers and configured on the axes.");
+        }
+
+        // Sanitize and unit-convert the rates.
+        double vMin = getMinimumRate(1)
+                .convertToUnits(getUnits()).getValue();
+        double aMin = getMinimumRate(2)
+                .convertToUnits(getUnits()).getValue();
+        double jMin = getMinimumRate(3)
+                .convertToUnits(getUnits()).getValue();
+        double driverUnitsFactor = new Length(1, AxesLocation.getUnits())
+                .convertToUnits(getUnits()).getValue();
+        if (feedRate != null) {
+            feedRate = Math.max(feedRate*driverUnitsFactor, vMin);
+        }
+        if (acceleration != null) {
+            acceleration = Math.max(acceleration*driverUnitsFactor, aMin);
+        }
+        if (jerk != null) {
+            jerk = Math.max(jerk*driverUnitsFactor, jMin);
         }
 
         command = substituteVariable(command, "Id", hm.getId());
@@ -806,8 +834,8 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
                 // Axis specific jerk limits are needed on TinyG.
                 double axisDistance = coordinate - previousCoordinate;
                 double axisJerk = (jerk != null ? jerk : 0)*Math.abs(axisDistance)/driverDistance;
-                command = substituteVariable(command, variable+"Jerk", axisJerk > 1 ? axisJerk : null);
-                command = substituteVariable(command, variable+"JerkMupm3", axisJerk > 4.63 ? axisJerk*1e-6*Math.pow(60, 3) : null); // TinyG: Megaunits/min^3 
+                command = substituteVariable(command, variable+"Jerk", axisJerk > jMin ? axisJerk : null);
+                command = substituteVariable(command, variable+"JerkMupm3", axisJerk > jMin*4.63 ? axisJerk*1e-6*Math.pow(60, 3) : null); // TinyG: Megaunits/min^3 
                 // Store the new driver coordinate on the axis.
                 axis.setDriverCoordinate(coordinate);
             }
@@ -891,15 +919,18 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     @Override
     public void actuate(Actuator actuator, boolean on) throws Exception {
         String command = getCommand(actuator, CommandType.ACTUATE_BOOLEAN_COMMAND);
+        // This substitution must come first, as it may contain nested and escaped {variables}.
+        command = substituteVariable(command, "True", on ? on : null);
+        command = substituteVariable(command, "False", on ? null : on);
+
         command = substituteVariable(command, "Id", actuator.getId());
         command = substituteVariable(command, "Name", actuator.getName());
         if (actuator instanceof ReferenceActuator) {
             command = substituteVariable(command, "Index", ((ReferenceActuator)actuator).getIndex());
         }
         command = substituteVariable(command, "BooleanValue", on);
-        command = substituteVariable(command, "True", on ? on : null);
-        command = substituteVariable(command, "False", on ? null : on);
         sendGcode(command);
+        SimulationModeMachine.simulateActuate(actuator, on, true);
     }
 
     @Override
@@ -913,6 +944,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         command = substituteVariable(command, "DoubleValue", value);
         command = substituteVariable(command, "IntegerValue", (int) value);
         sendGcode(command);
+        SimulationModeMachine.simulateActuate(actuator, value, true);
     }
 
     @Override
@@ -1076,6 +1108,9 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
             Configuration.get().getMachine().setEnabled(false);
         }
         waitForConfirmation(command, timeout);
+        if (command.startsWith("$")) {
+            Thread.sleep(dollarWaitTimeMilliseconds);
+        }
     }
 
     protected Line waitForConfirmation(String command, long timeout)
@@ -1165,16 +1200,41 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     protected String preProcessCommand(String command) {
         if (removeComments || compressGcode) {
             // See http://linuxcnc.org/docs/2.4/html/gcode_overview.html
-            int col = 0;
             boolean insideComment = false;
             boolean decimal = false;
             int trailingZeroes = 0;
             StringBuilder compressedCommand = new StringBuilder();
-            for (char ch : command.toCharArray()) {
-                col++;
+            for (int col = 0; col < command.length();) {
+                char ch = command.charAt(col++);
                 if (ch == ' ') {
                     // Note, in Gcode, spaces are allowed in the middle of decimals.
                     if (compressGcode) {
+                        continue;
+                    }
+                }
+                else if (compressionExcludes.contains(String.valueOf(ch))) {
+                    trailingZeroes = compressDecimal(trailingZeroes, compressedCommand);
+                    decimal = false;
+                    // Due to ambiguities in escaping of strings and nesting of brackets, and brackets in strings,
+                    // just exclude everything from the left-most to the right-most exclude character. 
+                    int pos = col - 1;
+                    for (char cch : compressionExcludes.toCharArray()) {
+                        if (cch != ' ') { // ignore spaces the user might have added
+                            int p = command.lastIndexOf(cch);
+                            if (p >= pos) {
+                                pos = p;
+                            }
+                        }
+                    }
+                    if (pos < col) {
+                        // Matching char missing, just append the rest of the line as is.
+                        compressedCommand.append(command.substring(col-1));
+                        break;
+                    }
+                    else {
+                        // Matching bracket/quote found, exclude inner string from compression. 
+                        compressedCommand.append(command.substring(col-1, pos+1));
+                        col = pos+1;
                         continue;
                     }
                 }
@@ -1258,9 +1318,15 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     }
 
     private int compressDecimal(int trailingZeroes, StringBuilder compressedCommand) {
-        if (compressGcode && trailingZeroes > 0) {
-            // Cut away trailing zeroes.
-            compressedCommand.delete(compressedCommand.length() - trailingZeroes, compressedCommand.length());
+        if (compressGcode && trailingZeroes > 0 
+                && compressedCommand.length() - trailingZeroes > 0) {
+            // Has trailing zeroes (or trailing dot).
+            // Check if it has at least one digit.
+            char ch = compressedCommand.charAt(compressedCommand.length() - trailingZeroes - 1);
+            if (ch >= '0' && ch <= '9') {
+                // Cut away trailing zeroes.
+                compressedCommand.delete(compressedCommand.length() - trailingZeroes, compressedCommand.length());
+            }
         }
         return 0;
     }
@@ -1401,9 +1467,12 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     public PropertySheet[] getPropertySheets() {
         return new PropertySheet[] {
                 new PropertySheetWizardAdapter(super.getConfigurationWizard()),
-                new PropertySheetWizardAdapter(new GcodeDriverSettings(this), "Driver Settings"),
-                new PropertySheetWizardAdapter(new GcodeDriverGcodes(this), "Gcode"),
-                new PropertySheetWizardAdapter(new GcodeDriverConsole(this), "Console"),
+                new PropertySheetWizardAdapter(new GcodeDriverSettings(this), Translations.getString(
+                        "GCodeDriver.GCodeDriverSettings.title")), //$NON-NLS-1$
+                new PropertySheetWizardAdapter(new GcodeDriverGcodes(this), Translations.getString(
+                        "GCodeDriver.GCode.title")), //$NON-NLS-1$
+                new PropertySheetWizardAdapter(new GcodeDriverConsole(this), Translations.getString(
+                        "GCodeDriver.Console.title")), //$NON-NLS-1$
         };
     }
 
@@ -1447,6 +1516,14 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         this.connectWaitTimeMilliseconds = connectWaitTimeMilliseconds;
     }
 
+    public int getDollarWaitTimeMilliseconds() {
+        return dollarWaitTimeMilliseconds;
+    }
+
+    public void setDollarWaitTimeMilliseconds(int dollarWaitTimeMilliseconds) {
+        this.dollarWaitTimeMilliseconds = dollarWaitTimeMilliseconds;
+    }
+
     public boolean isBackslashEscapedCharactersEnabled() {
         return backslashEscapedCharactersEnabled;
     }
@@ -1473,6 +1550,14 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         Object oldValue = this.compressGcode;
         this.compressGcode = compressGcode;
         firePropertyChange("compressGcode", oldValue, compressGcode);
+    }
+
+    public String getCompressionExcludes() {
+        return compressionExcludes;
+    }
+
+    public void setCompressionExcludes(String compressionExcludes) {
+        this.compressionExcludes = compressionExcludes;
     }
 
     public boolean isUsingLetterVariables() {
@@ -1538,8 +1623,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         Matcher m = p.matcher(getReportedAxes());
         while (m.find()) {
             String letter = m.group("letter");
-            if (!reportedLetters.contains(letter) // No duplicates.
-                    && (!letter.equals("E") || reportedLetters.contains("A"))) { // Not E, if solo.
+            if (!reportedLetters.contains(letter)) { // No duplicates.
                 reportedLetters.add(letter);
             }
         }
@@ -1580,61 +1664,72 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
      * Instead just connect/disconnect this single driver.
      * 
      * @param preserveOldValue preserve the old value if the detection fails.  
+     * @param allowConnect allow opening an ad hoc connection, if the machine is disabled.
      * 
      * @throws Exception
      */
-    public void detectFirmware(boolean preserveOldValue) throws Exception {
+    public void detectFirmware(boolean preserveOldValue, boolean allowConnect) throws Exception {
         if (!preserveOldValue) {
             setDetectedFirmware(null);
             setReportedAxes(null);
             setConfiguredAxes(null);
         }
-        boolean wasConnected = connected;
-        if (!wasConnected) {
-            connect();
+        Machine machine = Configuration.get().getMachine();
+        if (machine.isEnabled() || !allowConnect) {
+            // If the machine is enabled, we must do this properly in a machine task.
+            machine.execute(() -> { 
+                detectFirmwareSequence();
+                return null;
+            }, 
+                    false, 100, timeoutMilliseconds);
         }
-
-        try {
-            Logger.debug("Detecting firmware and position reporting, please ignore any errors and warnings.");
-            sendCommand("M115");
-            String firmware = receiveSingleResponse("^.*FIRMWARE.*");
-            if (firmware != null) {
-                setDetectedFirmware(firmware);
+        else {
+            // If the machine is not enabled, use an ad hoc connection.
+            boolean wasConnected = connected;
+            if (!wasConnected) {
+                connect();
             }
-            if (!getAxisVariables((ReferenceMachine) Configuration.get().getMachine()).isEmpty()) {
-                sendCommand("M114");
-                String reportedAxes = receiveSingleResponse(".*[XYZABCDEUVW]:-?\\d+\\.\\d+.*");
-                if (reportedAxes != null) {
-                    if (firmware != null) {
-                        try {
-                            if (getFirmwareProperty("FIRMWARE_NAME", "").contains("Duet")) {
-                                sendCommand("M584");
-                                String axisConfig = receiveSingleResponse("^Driver assignments:.*");
-                                if (axisConfig != null) {
-                                    setConfiguredAxes(axisConfig);
-                                }
-                            }
-                            else {
-                                setConfiguredAxes(null);
-                            }
-                        }
-                        catch (Exception e) {
-                            // ignore
-                        }
-                    }
-                    setReportedAxes(reportedAxes);
+            try {
+                detectFirmwareSequence();
+            }
+            finally {
+                if (!wasConnected) {
+                    disconnect();
                 }
             }
-            else {
-                setReportedAxes("");
-            }
-            Logger.debug("End detecting firmware and position reporting.");
         }
-        finally {
-            if (!wasConnected) {
-                disconnect();
-            }
+    }
+
+    protected void detectFirmwareSequence() throws Exception {
+        Logger.debug("=== Detecting firmware and position reporting, please ignore any errors and warnings.");
+        sendCommand("M115");
+        String firmware = receiveSingleResponse("^.*FIRMWARE.*");
+        if (firmware != null) {
+            setDetectedFirmware(firmware);
         }
+        sendCommand("M114");
+        String reportedAxes = receiveSingleResponse(".*[XYZABCDEUVW]:-?\\d+\\.\\d+.*");
+        if (reportedAxes != null) {
+            if (firmware != null) {
+                try {
+                    if (getFirmwareProperty("FIRMWARE_NAME", "").contains("Duet")) {
+                        sendCommand("M584");
+                        String axisConfig = receiveSingleResponse("^Driver assignments:.*");
+                        if (axisConfig != null) {
+                            setConfiguredAxes(axisConfig);
+                        }
+                    }
+                    else {
+                        setConfiguredAxes(null);
+                    }
+                }
+                catch (Exception e) {
+                    // ignore
+                }
+            }
+            setReportedAxes(reportedAxes);
+        }
+        Logger.debug("=== End detecting firmware and position reporting.");
     }
 
     public String getFirmwareProperty(String name, String defaultValue) {

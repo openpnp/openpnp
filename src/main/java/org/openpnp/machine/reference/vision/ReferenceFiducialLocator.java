@@ -202,7 +202,32 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
         
         Utils2D.AffineInfo ai = Utils2D.affineInfo(tx);
         Logger.info("Fiducial results: " + ai);
-        
+        double[] matrix = new double[6];
+        tx.getMatrix(matrix);
+        Logger.info("Placement to machine transform X:"
+                + " X Factor: "+String.format("%12.6f", matrix[0])
+                + " Y Factor: "+String.format("%12.6f", matrix[1])
+                + " X Offset: "+String.format("%12.6f", matrix[4]));
+        Logger.info("Placement to machine transform Y:"
+                + " X Factor: "+String.format("%12.6f", matrix[2])
+                + " Y Factor: "+String.format("%12.6f", matrix[3])
+                + " Y Offset: "+String.format("%12.6f", matrix[5]));
+        try {
+            AffineTransform invTx = tx.createInverse();
+            invTx.getMatrix(matrix);
+            Logger.info("Machine to placement transform X:"
+                    + " X Factor: "+String.format("%12.6f", matrix[0])
+                    + " Y Factor: "+String.format("%12.6f", matrix[1])
+                    + " X Offset: "+String.format("%12.6f", matrix[4]));
+            Logger.info("Machine to placement transform Y:"
+                    + " X Factor: "+String.format("%12.6f", matrix[2])
+                    + " Y Factor: "+String.format("%12.6f", matrix[3])
+                    + " Y Offset: "+String.format("%12.6f", matrix[5]));
+        }
+        catch (Exception e) {
+            Logger.warn(e);
+        }
+
         double boardOffset = newBoardLocation.getLinearLengthTo(savedBoardLocation).convertToUnits(LengthUnit.Millimeters).getValue();
         Logger.info("Board origin offset distance: " + boardOffset + "mm");
         
@@ -379,30 +404,31 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
             PartSettingsHolder partSettingsHolder) throws Exception {
         org.openpnp.model.Package pkg = null;
         Footprint footprint = null;
-        if (partSettingsHolder != null) {
-            if (partSettingsHolder instanceof Part) {
-                pkg = ((Part) partSettingsHolder).getPackage();
-            }
-            else if (partSettingsHolder instanceof org.openpnp.model.Package) {
-                pkg = (org.openpnp.model.Package) partSettingsHolder;
-            }
-            if (pkg == null) {
-                throw new Exception(
-                        String.format("%s %s does not have a valid package associated.", partSettingsHolder.getClass().getSimpleName(), partSettingsHolder.getShortName()));
-            }
+        if (partSettingsHolder instanceof Part) {
+            pkg = ((Part) partSettingsHolder).getPackage();
+        }
+        else if (partSettingsHolder instanceof org.openpnp.model.Package) {
+            pkg = (org.openpnp.model.Package) partSettingsHolder;
+        }
+        if (pkg == null) {
+            // If we're editing non-specific vision settings, i.e. when we are not on the Parts or Packages tab,
+            // use the FIDUCIAL-HOME as the stand-in package for pipeline editing. Defaults to a 1mm circular fiducial
+            // if it does not exist yet.
+            pkg = VisionUtils.readyHomingFiducialWithDiameter(new Length(1, LengthUnit.Millimeters), false)
+                    .getPackage();
+        }
 
-            footprint = pkg.getFootprint();
-            if (footprint == null) {
-                throw new Exception(String.format(
-                        "Package %s does not have a valid footprint. See https://github.com/openpnp/openpnp/wiki/Fiducials.",
-                        pkg.getId()));
-            }
+        footprint = pkg.getFootprint();
+        if (footprint == null) {
+            throw new Exception(String.format(
+                    "Package %s does not have a valid footprint. See https://github.com/openpnp/openpnp/wiki/Fiducials.",
+                    pkg.getId()));
+        }
 
-            if (footprint.getShape() == null) {
-                throw new Exception(String.format(
-                        "Package %s has an invalid or empty footprint.  See https://github.com/openpnp/openpnp/wiki/Fiducials.",
-                        pkg.getId()));
-            }
+        if (footprint.getShape() == null) {
+            throw new Exception(String.format(
+                    "Package %s has an invalid or empty footprint.  See https://github.com/openpnp/openpnp/wiki/Fiducials.",
+                    pkg.getId()));
         }
         pipeline.setProperty("camera", camera);
         pipeline.setProperty("part", partSettingsHolder);
@@ -414,7 +440,7 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
             pipeline.setProperty("fiducial.diameter", diameter);
             pipeline.setProperty("fiducial.maxDistance", getMaxDistance());
         }
-        pipeline.setProperties(pipelineParameterAssignments);
+        pipeline.addProperties(pipelineParameterAssignments);
     }
 
     public Location getFiducialLocation(Location nominalLocation, PartSettingsHolder partSettingsHolder) throws Exception {
@@ -635,6 +661,9 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
     @Override
     public Wizard getPartConfigurationWizard(PartSettingsHolder partSettingsHolder) {
         FiducialVisionSettings visionSettings = getInheritedVisionSettings(partSettingsHolder);
+        if (visionSettings == null) {
+            return null;
+        }
         try {
             visionSettings.getPipeline().setProperty("camera", getVisionCamera());
         }

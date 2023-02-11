@@ -165,18 +165,46 @@ public class UiUtils {
             String moveBeforeActionDescription, HeadMountable movable, 
             Location location, boolean allowWithoutMove,
             final Thrunnable actionThrunnable) {
+
         messageBoxOnException(() -> {
             if (movable == null || location == null || location.equals(movable.getLocation())) {
                 // Already there, just act.
+                actionThrunnable.thrun();
+            }
+            else  {
+                confirmMoveToLocationAndAct(parentComponent, moveBeforeActionDescription, allowWithoutMove,
+                        () -> {
+                            MovableUtils.moveToLocationAtSafeZ(movable, location);
+                            MovableUtils.fireTargetedUserAction(movable);
+                            movable.waitForCompletion(CompletionType.WaitForStillstand);
+                        },
+                        actionThrunnable);
+            }
+        });
+    }
+
+    public static void confirmMoveToLocationAndAct(Component parentComponent, 
+            String moveBeforeActionDescription, boolean allowWithoutMove,
+            final Thrunnable motionThrunnable,
+            final Thrunnable actionThrunnable) {
+    
+        messageBoxOnException(() -> {
+            if (moveBeforeActionDescription == null) {
+                // No motion given.
                 actionThrunnable.thrun();
             }
             else if (Configuration.get().getMachine().isEnabled()) {
                 // We need to move there, ask the user to confirm.
                 int result;
                 if (allowWithoutMove) {
-                    result = JOptionPane.showConfirmDialog(parentComponent,
-                            "Do you want to "+moveBeforeActionDescription+"?\n",
-                                    null, JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
+                    if (moveBeforeActionDescription != null) {
+                        result = JOptionPane.showConfirmDialog(parentComponent,
+                                "Do you want to "+moveBeforeActionDescription+"?\n",
+                                null, JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
+                    }
+                    else {
+                        result = JOptionPane.NO_OPTION;
+                    }
                 }
                 else {
                     result = JOptionPane.showConfirmDialog(parentComponent,
@@ -187,9 +215,7 @@ public class UiUtils {
                 if (result == JOptionPane.YES_OPTION) {
                     // Move wanted.
                     UiUtils.submitUiMachineTask(() -> {
-                        MovableUtils.moveToLocationAtSafeZ(movable, location);
-                        MovableUtils.fireTargetedUserAction(movable);
-                        movable.waitForCompletion(CompletionType.WaitForStillstand);
+                        motionThrunnable.thrun();
                         UiUtils.messageBoxOnExceptionLater(actionThrunnable);
                     });
                 }
