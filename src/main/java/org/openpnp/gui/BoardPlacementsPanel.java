@@ -774,6 +774,14 @@ public class BoardPlacementsPanel extends JPanel {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             for (Placement placement : getSelections()) {
+                //First set it to the "wrong" state so that when we set it to the correct state,
+                //the change is sure to propagate to all instances defined by the Placement
+                if (errorHandling == Placement.ErrorHandling.Alert) {
+                    placement.setErrorHandling(Placement.ErrorHandling.Defer);
+                }
+                else {
+                    placement.setErrorHandling(Placement.ErrorHandling.Alert);
+                }
                 placement.setErrorHandling(errorHandling);
                 tableModel.fireTableCellUpdated(placement, 
                         Translations.getString("PlacementsHolderPlacementsTableModel.ColumnName.ErrorHandling")); //$NON-NLS-1$
@@ -808,6 +816,9 @@ public class BoardPlacementsPanel extends JPanel {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             for (Placement placement : getSelections()) {
+                //First set it to the "wrong" state so that when we set it to the correct state,
+                //the change is sure to propagate to all instances defined by the Placement
+                placement.setEnabled(!enabled);
                 placement.setEnabled(enabled);
                 tableModel.fireTableCellUpdated(placement, 
                         Translations.getString("PlacementsHolderPlacementsTableModel.ColumnName.Enabled")); //$NON-NLS-1$
