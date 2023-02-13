@@ -28,7 +28,7 @@ Other than these requirements, the fiducial can be anything. The recommended fid
 
 The camera must be free to move in a wide area (250mm × 250mm) centered around the fiducial so that the camera can perform some fast moves for various calibration purposes. Do not place the fiducial at the edge of the machine motion range. 
 
-As both the camera and the camera light will move around and point at the fiducial from various angles, the fiducial must not have any depth or 3D structure, and it should have [diffuse reflection](https://en.wikipedia.org/wiki/Diffuse_reflection) so lighting it from the side should be fine. Don't use through holes, carrier tape sprocket holes, prints on glossy photo paper, HASL PCB fiducials or similar.
+As both the camera and the camera light will move around and point at the fiducial from various angles, the fiducial must have [diffuse reflection](https://en.wikipedia.org/wiki/Diffuse_reflection) so lighting it from the side will still be fine. Don't use carrier tape sprocket holes, prints on glossy photo paper, HASL PCB fiducials or similar.
 
 The primary fiducial must be mounted precisely on PCB surface Z Level. One way to make sure of this, is to glue the printed-out fiducial flat onto a surplus PCB that you can position roughly reproducibly (±1 mm) on your PCB holder. When capturing the location of the fiducial, the Z coordinate is the most critical as any error there will result is a camera scaling (units per pixel) error.
 
