@@ -74,18 +74,14 @@ import javax.swing.UIManager;
 import javax.swing.border.BevelBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.undo.UndoManager;
 
 import org.openpnp.Translations;
 import org.openpnp.gui.components.CameraPanel;
 import org.openpnp.gui.components.ThemeDialog;
 import org.openpnp.gui.importer.BoardImporter;
-import org.openpnp.gui.importer.DipTraceImporter;
-import org.openpnp.gui.importer.EagleBoardImporter;
-import org.openpnp.gui.importer.EagleMountsmdUlpImporter;
-import org.openpnp.gui.importer.KicadPosImporter;
-import org.openpnp.gui.importer.LabcenterProteusImporter; //
-import org.openpnp.gui.importer.NamedCSVImporter;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.HeadCellValue;
 import org.openpnp.gui.support.Icons;
@@ -94,6 +90,7 @@ import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.OSXAdapter;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.RotationCellValue;
+import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Configuration.TablesLinked;
 import org.openpnp.model.LengthUnit;
@@ -146,6 +143,8 @@ public class MainFrame extends JFrame {
     private static MainFrame mainFrame;
 
     private MachineControlsPanel machineControlsPanel;
+    private PanelsPanel panelsPanel;
+    private BoardsPanel boardsPanel;
     private PartsPanel partsPanel;
     private PackagesPanel packagesPanel;
     private FeedersPanel feedersPanel;
@@ -202,6 +201,14 @@ public class MainFrame extends JFrame {
 
     public MachineControlsPanel getMachineControls() {
         return machineControlsPanel;
+    }
+
+    public PanelsPanel getPanelsTab() {
+        return panelsPanel;
+    }
+
+    public BoardsPanel getBoardsTab() {
+        return boardsPanel;
     }
 
     public PartsPanel getPartsTab() {
@@ -267,6 +274,9 @@ public class MainFrame extends JFrame {
     private ActionListener instructionsProceedActionListener;
 
     private ScriptFileWatcher scriptFileWatcher;
+    private JMenuItem mnEditRemoveBoard;
+    private JMenu mnEditAddBoard;
+    private JMenuItem mnCaptureToolLocation;
 
     public MainFrame(Configuration configuration) {
         mainFrame = this;
@@ -300,6 +310,8 @@ public class MainFrame extends JFrame {
                 prefs.getInt(PREF_WINDOW_WIDTH, PREF_WINDOW_WIDTH_DEF),
                 prefs.getInt(PREF_WINDOW_HEIGHT, PREF_WINDOW_HEIGHT_DEF));
         jobPanel = new JobPanel(configuration, this);
+        panelsPanel = new PanelsPanel(configuration, this);
+        boardsPanel = new BoardsPanel(configuration, this);
         partsPanel = new PartsPanel(configuration, this);
         packagesPanel = new PackagesPanel(configuration, this);
         feedersPanel = new FeedersPanel(configuration, this);
@@ -331,8 +343,9 @@ public class MainFrame extends JFrame {
         // File -> Import
         //////////////////////////////////////////////////////////////////////
         mnFile.addSeparator();
-        mnImport = new JMenu(Translations.getString("Menu.File.ImportBoard")); //$NON-NLS-1$
+        mnImport = new JMenu(Translations.getString("BoardsPanel.BoardPlacements.Action.Import")); //$NON-NLS-1$
         mnImport.setMnemonic(KeyEvent.VK_I);
+        mnImport.setEnabled(false);
         mnFile.add(mnImport);
 
 
@@ -350,13 +363,18 @@ public class MainFrame extends JFrame {
         mnEdit.add(new JMenuItem(undoAction));
         mnEdit.add(new JMenuItem(redoAction));
         mnEdit.addSeparator();
-        JMenu mnEditAddBoard = new JMenu(jobPanel.addBoardAction);
+        mnEditAddBoard = new JMenu(jobPanel.addBoardAction);
         mnEditAddBoard.add(new JMenuItem(jobPanel.addNewBoardAction));
         mnEditAddBoard.add(new JMenuItem(jobPanel.addExistingBoardAction));
+        mnEditAddBoard.addSeparator();
+        mnEditAddBoard.add(new JMenuItem(jobPanel.addNewPanelAction));
+        mnEditAddBoard.add(new JMenuItem(jobPanel.addExistingPanelAction));
         mnEdit.add(mnEditAddBoard);
-        mnEdit.add(new JMenuItem(jobPanel.removeBoardAction));
+        mnEditRemoveBoard = new JMenuItem(jobPanel.removeBoardAction);
+        mnEdit.add(mnEditRemoveBoard);
         mnEdit.addSeparator();
-        mnEdit.add(new JMenuItem(jobPanel.captureToolBoardLocationAction));
+        mnCaptureToolLocation = new JMenuItem(jobPanel.captureToolBoardLocationAction);
+        mnEdit.add(mnCaptureToolLocation);
 
         // View
         //////////////////////////////////////////////////////////////////////
@@ -669,6 +687,10 @@ public class MainFrame extends JFrame {
 
         tabs.addTab(Translations.getString("MainFrame.RightComponent.tabs.Job"), //$NON-NLS-1$
                 null, jobPanel, null);
+        tabs.addTab(Translations.getString("MainFrame.RightComponent.tabs.Panels"), //$NON-NLS-1$
+                null, panelsPanel, null);
+        tabs.addTab(Translations.getString("MainFrame.RightComponent.tabs.Boards" //$NON-NLS-1$
+        ),null, boardsPanel, null);
         tabs.addTab(Translations.getString("MainFrame.RightComponent.tabs.Parts"), //$NON-NLS-1$
                 null, partsPanel, null);
         tabs.addTab(Translations.getString("MainFrame.RightComponent.tabs.Packages" //$NON-NLS-1$
@@ -686,6 +708,12 @@ public class MainFrame extends JFrame {
         tabs.addTab(Translations.getString("MainFrame.RightComponent.tabs.Log"),
                 null, logPanel, null); //$NON-NLS-1$
 
+        tabs.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                updateMenuState(tabs.getSelectedComponent());
+            }});
+        
         panelStatusAndDros = new JPanel();
         panelStatusAndDros.setBorder(null);
         contentPane.add(panelStatusAndDros, BorderLayout.SOUTH);
@@ -733,7 +761,7 @@ public class MainFrame extends JFrame {
                 TitledBorder.TOP, null, null)); //$NON-NLS-1$
         panelCameraAndInstructions.add(cameraPanel, BorderLayout.CENTER);
 
-        registerBoardImporters();
+        addImporterMenuOptions();
 
         addComponentListener(componentListener);
         
@@ -851,44 +879,84 @@ public class MainFrame extends JFrame {
         return droLbl;
     }
 
-    private void registerBoardImporters() {
-    	registerBoardImporter(LabcenterProteusImporter.class);
-        registerBoardImporter(EagleBoardImporter.class);
-        registerBoardImporter(EagleMountsmdUlpImporter.class);
-        registerBoardImporter(KicadPosImporter.class);
-        registerBoardImporter(DipTraceImporter.class);
-        registerBoardImporter(NamedCSVImporter.class);
+    private void addImporterMenuOptions() {
+        for (BoardImporter bi : boardsPanel.getBoardPlacementsPanel().getBoardImporters()) {
+            final BoardImporter boardImporter = bi;
+            JMenuItem menuItem = new JMenuItem(new AbstractAction() {
+                {
+                    putValue(NAME, boardImporter.getImporterName());
+                    putValue(SHORT_DESCRIPTION, boardImporter.getImporterDescription());
+                    putValue(MNEMONIC_KEY, KeyEvent.VK_I);
+                }
+
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    boardsPanel.getBoardPlacementsPanel().importBoard(boardImporter.getClass());
+                }
+            });
+            mnImport.add(menuItem);
+        }
     }
+
 
     /**
-     * Register a BoardImporter with the system, causing it to gain a menu location in the
-     * File->Import menu.
-     * 
-     * @param boardImporterClass
+     * Enables/disables the Import Board, Add Board/Panel, and Remove Board(s)/Panel(s) menu items
+     * appropriately depending on which tab is selected and what is selected within the tab
+     * @param selectedTab - the selected tab
      */
-    public void registerBoardImporter(final Class<? extends BoardImporter> boardImporterClass) {
-        final BoardImporter boardImporter;
-        try {
-            boardImporter = boardImporterClass.newInstance();
+    public void updateMenuState(Component selectedTab) {
+        if (selectedTab != tabs.getSelectedComponent()) {
+            return;
         }
-        catch (Exception e) {
-            throw new Error(e);
+        if (selectedTab == jobPanel) {
+            if (jobPanel.getSelections().size() == 1 && jobPanel.getSelection() instanceof BoardLocation &&
+                    jobPanel.getJob().instanceCount(jobPanel.getSelection().getPlacementsHolder()) == 1 &&
+                    jobPanel.getJob().getRootPanelLocation().getChildren().containsAll(jobPanel.getSelections())) {
+                mnImport.setEnabled(true);
+            }
+            else {
+                mnImport.setEnabled(false);
+            }
+            mnEditAddBoard.setEnabled(true);
+            if (jobPanel.getSelections().size() >= 1) {
+                mnEditRemoveBoard.setEnabled(jobPanel.getJob().getRootPanelLocation().getChildren().
+                        containsAll(jobPanel.getSelections()));
+            }
+            else {
+                mnEditRemoveBoard.getAction().setEnabled(false);
+            }
+            if (jobPanel.getSelections().size() == 1 && jobPanel.getJob().getRootPanelLocation().getChildren().containsAll(jobPanel.getSelections()) ) {
+                mnCaptureToolLocation.setEnabled(true);
+            }
+            else {
+                mnCaptureToolLocation.setEnabled(false);
+            }
         }
-        JMenuItem menuItem = new JMenuItem(new AbstractAction() {
-            {
-                putValue(NAME, boardImporter.getImporterName());
-                putValue(SHORT_DESCRIPTION, boardImporter.getImporterDescription());
-                putValue(MNEMONIC_KEY, KeyEvent.VK_I);
+        else if (selectedTab == panelsPanel) {
+            mnImport.setEnabled(false);
+            mnEditAddBoard.setEnabled(false);
+            mnEditRemoveBoard.setEnabled(false);
+            mnCaptureToolLocation.setEnabled(false);
+        }
+        else if (selectedTab == boardsPanel) {
+            if (boardsPanel.getSelections().size() == 1) {
+                mnImport.setEnabled(true);
             }
-
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                jobPanel.importBoard(boardImporterClass);
+            else {
+                mnImport.setEnabled(false);
             }
-        });
-        mnImport.add(menuItem);
+            mnEditAddBoard.setEnabled(false);
+            mnEditRemoveBoard.setEnabled(false);
+            mnCaptureToolLocation.setEnabled(false);
+        }
+        else {
+            mnImport.setEnabled(false);
+            mnEditAddBoard.setEnabled(false);
+            mnEditRemoveBoard.setEnabled(false);
+            mnCaptureToolLocation.setEnabled(false);
+        }
     }
-
+    
     public void showInstructions(String title, String instructions, boolean showCancelButton,
             boolean showProceedButton, String proceedButtonText,
             ActionListener cancelActionListener, ActionListener proceedActionListener) {

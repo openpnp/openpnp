@@ -24,10 +24,8 @@ import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.vision.wizards.FiducialVisionSettingsConfigurationWizard;
 import org.openpnp.machine.reference.vision.wizards.ReferenceFiducialLocatorConfigurationWizard;
+import org.openpnp.model.Abstract2DLocatable.Side;
 import org.openpnp.model.AbstractVisionSettings;
-import org.openpnp.model.Board;
-import org.openpnp.model.Board.Side;
-import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.FiducialVisionSettings;
 import org.openpnp.model.Footprint;
@@ -40,6 +38,8 @@ import org.openpnp.model.PartSettingsHolder;
 import org.openpnp.model.PartSettingsRoot;
 import org.openpnp.model.Placement;
 import org.openpnp.model.Placement.Type;
+import org.openpnp.model.PlacementsHolder;
+import org.openpnp.model.PlacementsHolderLocation;
 import org.openpnp.model.Point;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.FiducialLocator;
@@ -110,44 +110,31 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
         });
     }
 
-    public Location locateBoard(BoardLocation boardLocation) throws Exception {
-        return locateBoard(boardLocation, false);
-    }
-    
-    public Location locateBoard(BoardLocation boardLocation, boolean checkPanel) throws Exception {
+    public Location locatePlacementsHolder(PlacementsHolderLocation<?> placementsHolderLocation) throws Exception {
         List<Placement> fiducials;
 
-        Side boardSide = boardLocation.getSide();  // save for later
-        Location savedBoardLocation = boardLocation.getLocation();
-        AffineTransform savedPlacementTransform = boardLocation.getPlacementTransform();
+        Side boardSide = placementsHolderLocation.getGlobalSide();  // save for later
+        Location savedBoardLocation = placementsHolderLocation.getGlobalLocation();
+        AffineTransform savedPlacementTransform = placementsHolderLocation.getLocalToParentTransform();
        
-        if (checkPanel) {
-            Panel panel = MainFrame.get().getJobTab().getJob().getPanels()
-                    .get(boardLocation.getPanelId());
-            fiducials = panel.getFiducials();
-            // If we are looking for panel fiducials, we need to treat the board as top side
-            boardLocation.setSide(Side.Top);
-        }
-        else {
-            fiducials = getFiducials(boardLocation);
-        }
+        fiducials = getFiducials(placementsHolderLocation);
 
         if (fiducials.size() < 2) {
             throw new Exception(String.format(
-                    "The board side contains only %d placements marked as fiducials, but at least 2 are required.",
+                    "The panel/board side contains only %d placements marked as fiducials, but at least 2 are required.",
                     fiducials.size()));
         }
 
         // Clear the current transform so it doesn't potentially send us to the wrong spot
         // to find the fiducials.
-        boardLocation.setPlacementTransform(null);
+        placementsHolderLocation.setLocalToParentTransform(null);
 
         //Define where the fiducial trip will begin
         Location currentCameraLocation = new Location(LengthUnit.Millimeters);
         try {
             currentCameraLocation = MainFrame.get().getMachineControls().getSelectedTool().getHead().getDefaultCamera().getLocation();
         } catch (Exception e) {
-            currentCameraLocation = boardLocation.getLocation();
+            currentCameraLocation = placementsHolderLocation.getGlobalLocation();
         }
         
         // Use a traveling salesman algorithm to optimize the path to visit the fiducials
@@ -156,13 +143,13 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
                 new TravellingSalesman.Locator<Placement>() { 
                     @Override
                     public Location getLocation(Placement locatable) {
-                        return Utils2D.calculateBoardPlacementLocation(boardLocation, locatable.getLocation());
+                        return Utils2D.calculateBoardPlacementLocation(placementsHolderLocation, locatable.getLocation());
                     }
                 }, 
                 // start from current camera location
                 currentCameraLocation,
                 // and end at the board origin
-                boardLocation.getLocation());
+                placementsHolderLocation.getGlobalLocation());
 
         // Solve it using the default heuristics.
         tsm.solve();
@@ -171,7 +158,7 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
         List<Location> expectedLocations = new ArrayList<>();
         List<Location> measuredLocations = new ArrayList<>();
         for (Placement fiducial : tsm.getTravel()) {
-            Location measuredLocation = getFiducialLocation(boardLocation, fiducial);
+            Location measuredLocation = getFiducialLocation(placementsHolderLocation, fiducial);
             if (measuredLocation == null) {
                 throw new Exception("Unable to locate " + fiducial.getId());
             }
@@ -184,22 +171,22 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
         // Calculate the transform.
         AffineTransform tx = Utils2D.deriveAffineTransform(expectedLocations, measuredLocations);
         
+        if (boardSide == Side.Bottom) {
+            tx.scale(-1, 1);
+        }
+        
         // Set the transform.
-        boardLocation.setPlacementTransform(tx);
+        placementsHolderLocation.setLocalToGlobalTransform(tx);
         
         // Return the compensated board location
         Location origin = new Location(LengthUnit.Millimeters);
-        if (boardLocation.getSide() == Side.Bottom) {
-            origin = origin.add(boardLocation.getBoard().getDimensions().derive(null, 0., 0., 0.));
+        if (boardSide == Side.Bottom) {
+            origin = origin.add(placementsHolderLocation.getPlacementsHolder().getDimensions().derive(null, 0., 0., 0.));
         }
-        Location newBoardLocation = Utils2D.calculateBoardPlacementLocation(boardLocation, origin);
-        newBoardLocation = newBoardLocation.convertToUnits(boardLocation.getLocation().getUnits());
-        newBoardLocation = newBoardLocation.derive(null, null, boardLocation.getLocation().getZ(), null);
+        Location newBoardLocation = Utils2D.calculateBoardPlacementLocation(placementsHolderLocation, origin);
+        newBoardLocation = newBoardLocation.convertToUnits(placementsHolderLocation.getLocation().getUnits());
+        newBoardLocation = newBoardLocation.derive(null, null, placementsHolderLocation.getLocation().getZ(), null);
 
-        if (checkPanel) {
-            boardLocation.setSide(boardSide);	// restore side
-        }
-        
         Utils2D.AffineInfo ai = Utils2D.affineInfo(tx);
         Logger.info("Fiducial results: " + ai);
         double[] matrix = new double[6];
@@ -233,9 +220,13 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
         
         //Check for out-of-nominal conditions
         String errString = "";
-        if (Math.abs(ai.xScale-1) > tolerances.scalingTolerance) {
+        if (ai.xScale > 0 && Math.abs(ai.xScale-1) > tolerances.scalingTolerance) {
             errString += "x scaling = " + String.format("%.5f", ai.xScale) + " which is outside the expected range of [" +
                     String.format("%.5f", 1-tolerances.scalingTolerance) + ", " + String.format("%.5f", 1+tolerances.scalingTolerance) + "], ";
+        }
+        else if (ai.xScale < 0 && Math.abs(ai.xScale+1) > tolerances.scalingTolerance) {
+            errString += "x scaling = " + String.format("%.5f", ai.xScale) + " which is outside the expected range of [" +
+                    String.format("-%.5f", 1+tolerances.scalingTolerance) + ", " + String.format("-%.5f", 1-tolerances.scalingTolerance) + "], ";
         }
         if (Math.abs(ai.yScale-1) > tolerances.scalingTolerance) {
             errString += "the y scaling = " + String.format("%.5f", ai.yScale) + " which is outside the expected range of [" +
@@ -252,7 +243,7 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
         }
         if (errString.length() > 0) {
             errString = errString.substring(0, errString.length()-2); //strip off the last comma and space
-            boardLocation.setPlacementTransform(savedPlacementTransform);
+            placementsHolderLocation.setLocalToParentTransform(savedPlacementTransform);
             throw new Exception("Fiducial locator results are invalid because: " + errString + ".  Potential remidies include " +
                     "setting the initial board X, Y, Z, and Rotation in the Boards panel; using a different set of fiducials; " +
                     "or changing the allowable tolerances in the <tolerances> section of the fiducial-locator section in machine.xml.");
@@ -372,7 +363,7 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
      * @return
      * @throws Exception
      */
-    private Location getFiducialLocation(BoardLocation boardLocation, Placement fid)
+    private Location getFiducialLocation(PlacementsHolderLocation<?> boardLocation, Placement fid)
             throws Exception {
         Logger.debug("Locating {}", fid.getId());
 
@@ -535,12 +526,16 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
         return location;
     }
     
-    private static IdentifiableList<Placement> getFiducials(BoardLocation boardLocation) {
-        Board board = boardLocation.getBoard();
+    private static IdentifiableList<Placement> getFiducials(PlacementsHolderLocation<?> placementsHolderLocation) {
+        PlacementsHolder<?> placementsHolder = placementsHolderLocation.getPlacementsHolder();
+        IdentifiableList<Placement> placements = new IdentifiableList<>(placementsHolder.getPlacements());
+        if (placementsHolder instanceof Panel) {
+            placements.addAll(((Panel) placementsHolder).getPseudoPlacements());
+        }
         IdentifiableList<Placement> fiducials = new IdentifiableList<>();
-        for (Placement placement : board.getPlacements()) {
+        for (Placement placement : placements) {
             if (placement.getType() == Type.Fiducial
-                    && placement.getSide() == boardLocation.getSide()
+                    && placement.getSide() == placementsHolderLocation.getGlobalSide()
                     && placement.isEnabled()) {
                 fiducials.add(placement);
             }

@@ -33,18 +33,24 @@ public class RotationCellValue implements Comparable<RotationCellValue> {
      * converting to the system units.
      */
     private boolean displayNativeUnits;
+    private boolean displayAligned;
 
     public static void setConfiguration(Configuration configuration) {
         RotationCellValue.configuration = configuration;
     }
 
-    public RotationCellValue(double Rotation, boolean displayNativeUnits) {
-        setRotation(Rotation);
+    public RotationCellValue(double rotation, boolean displayNativeUnits, boolean displayAligned) {
+        setRotation(rotation);
         setDisplayNativeUnits(displayNativeUnits);
+        setDisplayAligned(displayAligned);
     }
 
-    public RotationCellValue(double Rotation) {
-        this(Rotation, false);
+    public RotationCellValue(double rotation, boolean displayNativeUnits) {
+        this(rotation, displayNativeUnits, false);
+    }
+
+    public RotationCellValue(double rotation) {
+        this(rotation, false, false);
     }
 
     public RotationCellValue(String value) {
@@ -57,8 +63,8 @@ public class RotationCellValue implements Comparable<RotationCellValue> {
         return rotation;
     }
 
-    public void setRotation(double Rotation) {
-        this.rotation = Rotation;
+    public void setRotation(double rotation) {
+        this.rotation = rotation;
     }
 
     public boolean isDisplayNativeUnits() {
@@ -69,11 +75,22 @@ public class RotationCellValue implements Comparable<RotationCellValue> {
         this.displayNativeUnits = displayNativeUnits;
     }
 
+    public boolean isDisplayAligned() {
+        return displayAligned;
+    }
+
+    public void setDisplayAligned(boolean displayAligned) {
+        this.displayAligned = displayAligned;
+    }
+
     @Override
     public String toString() {
-        double r = rotation;
-        return String.format(Locale.US, configuration.getLengthDisplayFormat(), r);
-
+        if (displayAligned) {
+            return String.format(Locale.US, configuration.getLengthDisplayAlignedFormat(), rotation);
+        }
+        else {
+            return String.format(Locale.US, configuration.getLengthDisplayFormat(), rotation);
+        }
     }
 
     @Override

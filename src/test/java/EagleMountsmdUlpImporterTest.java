@@ -2,7 +2,7 @@ import java.io.File;
 
 import org.junit.jupiter.api.Test;
 import org.openpnp.gui.importer.EagleMountsmdUlpImporter;
-import org.openpnp.model.Board.Side;
+import org.openpnp.model.Abstract2DLocatable.Side;
 import org.openpnp.model.Configuration;
 
 import com.google.common.io.Files;

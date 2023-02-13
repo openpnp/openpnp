@@ -18,6 +18,11 @@
 		<openpnp.version>${maven.build.timestamp}.${buildNumber}</openpnp.version>
 	</properties>
 	<dependencies>
+        <dependency>
+          <groupId>io.github.classgraph</groupId>
+          <artifactId>classgraph</artifactId>
+          <version>4.8.141</version>
+        </dependency>
 		<dependency>
 		  <groupId>net.java.dev.jna</groupId>
 		  <artifactId>jna</artifactId>
@@ -414,7 +419,7 @@
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>2.22.2</version>
 				<configuration>
-					<argLine>-Xmx512m</argLine>
+					<argLine>-Xmx1024m -XX:+UnlockDiagnosticVMOptions -XX:GCLockerRetryAllocationCount=100</argLine>
 				</configuration>
 			</plugin>
 

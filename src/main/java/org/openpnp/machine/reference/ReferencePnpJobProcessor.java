@@ -38,7 +38,7 @@ import org.openpnp.model.Job;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
-import org.openpnp.model.Panel;
+import org.openpnp.model.PanelLocation;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
 import org.openpnp.spi.Feeder;
@@ -202,12 +202,12 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                     }
                     
                     // Ignore placements that are placed already
-                    if (boardLocation.getPlaced(placement.getId())) {
+                    if (job.retrievePlacedStatus(boardLocation, placement.getId())) {
                         continue;
                     }
-
+                    
                     // Ignore placements that aren't on the side of the board we're processing.
-                    if (placement.getSide() != boardLocation.getSide()) {
+                    if (placement.getSide() != boardLocation.getGlobalSide()) {
                         continue;
                     }
 
@@ -388,20 +388,21 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         public Step step() throws JobProcessorException {
             FiducialLocator locator = Configuration.get().getMachine().getFiducialLocator();
             
-            if (job.isUsingPanel() && job.getPanels().get(0).isCheckFiducials()){
-                Panel p = job.getPanels().get(0);
-                
-                BoardLocation boardLocation = job.getBoardLocations().get(0);
-                
-                fireTextStatus("Panel fiducial check on %s", boardLocation);
+            for (PanelLocation panelLocation : job.getPanelLocations()) {
+                if (!panelLocation.isEnabled()) {
+                    continue;
+                }
+                if (!panelLocation.isCheckFiducials()) {
+                    continue;
+                }
+                fireTextStatus("Panel fiducial check on %s", panelLocation);
                 try {
-                    locator.locateBoard(boardLocation, p.isCheckFiducials());
+                    locator.locatePlacementsHolder(panelLocation);
                 }
                 catch (Exception e) {
-                    throw new JobProcessorException(boardLocation, e);
+                    throw new JobProcessorException(panelLocation, e);
                 }
             }
-            
             return new BoardLocationFiducialCheck();
         }
     }
@@ -425,7 +426,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 
                 fireTextStatus("Fiducial check for %s", boardLocation);
                 try {
-                    locator.locateBoard(boardLocation);
+                    locator.locatePlacementsHolder(boardLocation);
                 }
                 catch (Exception e) {
                     throw new JobProcessorException(boardLocation, e);
@@ -795,7 +796,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                             partAlignment,
                             part,
                             boardLocation,
-                            placement.getLocation(), nozzle);
+                            placement, nozzle);
                     Logger.debug("Align {} with {}, offsets {}", part, nozzle, plannedPlacement.alignmentOffsets);
                     return;
                 }
@@ -855,7 +856,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             jobPlacement.setStatus(Status.Complete);
             
             // Mark the placement as "placed"
-            boardLocation.setPlaced(jobPlacement.getPlacement().getId(), true);
+//            boardLocation.setPlaced(jobPlacement.getPlacement().getId(), true);
+            job.storePlacedStatus(boardLocation, jobPlacement.getPlacement().getId(), true);
             
             totalPartsPlaced++;
             

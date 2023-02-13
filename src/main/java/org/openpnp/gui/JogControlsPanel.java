@@ -221,7 +221,7 @@ public class JogControlsPanel extends JPanel {
                 if (!boardLocation.isEnabled()) {
                     continue;
                 }
-                boolean safe = nozzleLocationIsSafe(boardLocation.getLocation(),
+                boolean safe = nozzleLocationIsSafe(boardLocation.getGlobalLocation(),
                         boardLocation.getBoard()
                         .getDimensions(),
                         targetLocation, new Length(1.0, l.getUnits()));

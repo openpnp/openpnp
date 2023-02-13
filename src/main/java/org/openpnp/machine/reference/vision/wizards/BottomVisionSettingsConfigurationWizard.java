@@ -37,6 +37,7 @@ import org.openpnp.model.Location;
 import org.openpnp.model.Package;
 import org.openpnp.model.Part;
 import org.openpnp.model.PartSettingsHolder;
+import org.openpnp.model.Placement;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
@@ -566,8 +567,10 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
     public void alignAndCenter(ReferenceBottomVision bottomVision, Nozzle nozzle, double angle, boolean centerAfterTest)
             throws Exception {
         // perform the alignment
+        Placement dummy = new Placement("Dummy");
+        dummy.setLocation(new Location(LengthUnit.Millimeters, 0, 0, 0, angle));
         PartAlignment.PartAlignmentOffset alignmentOffset = VisionUtils.findPartAlignmentOffsets(bottomVision, nozzle.getPart(),
-                null, new Location(LengthUnit.Millimeters, 0, 0, 0, angle), nozzle);
+                null, dummy, nozzle);
         Location offsets = alignmentOffset.getLocation();
 
         if (!centerAfterTest) {

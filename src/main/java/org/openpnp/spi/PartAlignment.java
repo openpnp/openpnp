@@ -6,6 +6,7 @@ import org.openpnp.model.Location;
 import org.openpnp.model.Named;
 import org.openpnp.model.Part;
 import org.openpnp.model.PartSettingsHolder;
+import org.openpnp.model.Placement;
 import org.openpnp.model.Solutions;
 
 /**
@@ -52,7 +53,7 @@ public interface PartAlignment extends PartSettingsHolder, Named, Solutions.Subj
      * @return
      * @throws Exception if the alignment fails for any reason. The caller may retry.
      */
-    PartAlignmentOffset findOffsets(Part part, BoardLocation boardLocation, Location placementLocation, Nozzle nozzle) throws Exception;
+    PartAlignmentOffset findOffsets(Part part, BoardLocation boardLocation, Placement placement, Nozzle nozzle) throws Exception;
     
     /**
      * Get a Wizard for configuring the PartAlignment instance properties for a specific

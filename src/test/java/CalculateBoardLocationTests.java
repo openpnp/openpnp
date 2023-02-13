@@ -1,8 +1,10 @@
 import java.awt.geom.AffineTransform;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 import org.openpnp.model.Board;
-import org.openpnp.model.Board.Side;
+import org.openpnp.model.Abstract2DLocatable.Side;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
@@ -243,18 +245,32 @@ public class CalculateBoardLocationTests {
         fid3.setLocation(new Location(LengthUnit.Millimeters, 2, 2, 0, 0));
         
         boardLocation.setPlacementTransform(null);
-        Location fid1l = Utils2D.calculateBoardPlacementLocation(boardLocation, fid1.getLocation());
-        Location fid2l = Utils2D.calculateBoardPlacementLocation(boardLocation, fid2.getLocation());
-        Location fid3l = Utils2D.calculateBoardPlacementLocation(boardLocation, fid3.getLocation());
+        List<Location> globalLocations = new ArrayList<>();
+        globalLocations.add(Utils2D.calculateBoardPlacementLocation(boardLocation, fid1.getLocation()));
+        globalLocations.add(Utils2D.calculateBoardPlacementLocation(boardLocation, fid2.getLocation()));
+        globalLocations.add(Utils2D.calculateBoardPlacementLocation(boardLocation, fid3.getLocation()));
         
-        if (boardLocation.getSide() == Side.Bottom) {
+        //Utils2D.deriveAffineTransform expects to be using a right-handed coordinate system; but,
+        //the board's bottom coordinate system is left-handed so we need to change the sign of all 
+        //the x components before computing the Affine Transform and then change the sign of its 
+        //x scaling afterwards.
+        if (boardLocation.getGlobalSide() == Side.Bottom) {
             fid1.setLocation(fid1.getLocation().multiply(-1, 1, 1, 1));
             fid2.setLocation(fid2.getLocation().multiply(-1, 1, 1, 1));
             fid3.setLocation(fid3.getLocation().multiply(-1, 1, 1, 1));
         }
         
-        AffineTransform tx = Utils2D.deriveAffineTransform(fid1.getLocation(), fid2.getLocation(), fid3.getLocation(), 
-                fid1l, fid2l, fid3l);
+        List<Location> localLocations = new ArrayList<>();
+        localLocations.add(fid1.getLocation());
+        localLocations.add(fid2.getLocation());
+        localLocations.add(fid3.getLocation());
+
+        AffineTransform tx = Utils2D.deriveAffineTransform(localLocations, globalLocations);
+        
+        if (boardLocation.getGlobalSide() == Side.Bottom) {
+            tx.scale(-1, 1);
+        }
+        
         boardLocation.setPlacementTransform(tx);
         
         return tx;
@@ -284,10 +300,11 @@ public class CalculateBoardLocationTests {
         }
         
         BoardLocation boardLocation = new BoardLocation(board);
-        boardLocation.setSide(side);
+        boardLocation.setGlobalSide(side);
         if (side == Side.Top) {
             Placement r6 = new Placement("R6");
             r6.setLocation(new Location(LengthUnit.Millimeters, 25, 22, 0, 45));
+            r6.setSide(side);
             board.addPlacement(r6);
             
             boardLocation.setLocation(new Location(LengthUnit.Millimeters, 37.746, 100.964, -10, 74.628));
@@ -295,6 +312,7 @@ public class CalculateBoardLocationTests {
         else {
             Placement r17 = new Placement("R17");
             r17.setLocation(new Location(LengthUnit.Millimeters, 12, 22, 0, 45));
+            r17.setSide(side);
             board.addPlacement(r17);
 
             if (includeBoardWidth) {

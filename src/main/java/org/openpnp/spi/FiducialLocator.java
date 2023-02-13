@@ -1,7 +1,7 @@
 package org.openpnp.spi;
 
 import org.openpnp.gui.support.Wizard;
-import org.openpnp.model.BoardLocation;
+import org.openpnp.model.PlacementsHolderLocation;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.model.PartSettingsHolder;
@@ -13,9 +13,8 @@ import org.openpnp.model.PartSettingsHolder;
  * can occur without requiring configuration changes.
  */
 public interface FiducialLocator extends PropertySheetHolder {
-    public Location locateBoard(BoardLocation boardLocation) throws Exception;
-
-    public Location locateBoard(BoardLocation boardLocation, boolean checkPanel) throws Exception;
+    public Location locatePlacementsHolder(PlacementsHolderLocation<?> placementsHolderLocation) 
+            throws Exception;
 
     public Location getHomeFiducialLocation(Location location, Part part) throws Exception;
     

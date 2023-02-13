@@ -11,7 +11,7 @@ import org.openpnp.machine.reference.driver.test.TestDriver.TestDriverDelegate;
 import org.openpnp.machine.reference.feeder.ReferenceTubeFeeder;
 import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Board;
-import org.openpnp.model.Board.Side;
+import org.openpnp.model.Abstract2DLocatable.Side;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Job;
@@ -142,9 +142,9 @@ public class BasicJobTest {
 
         BoardLocation boardLocation = new BoardLocation(board);
         boardLocation.setLocation(new Location(LengthUnit.Millimeters, 0, 0, -10, 0));
-        boardLocation.setSide(Side.Top);
+        boardLocation.setGlobalSide(Side.Top);
 
-        job.addBoardLocation(boardLocation);
+        job.addBoardOrPanelLocation(boardLocation);
 
         return job;
     }
