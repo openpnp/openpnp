@@ -324,6 +324,7 @@ public class VisionSolutions implements Solutions.Subject {
                         @Override
                         public void set(int value) {
                             featureDiameter = value;
+                            Logger.debug("Manual feature diameter set to "+featureDiameter+"px");
                             try {
                                 UiUtils.submitUiMachineTask(() -> {
                                     try {
@@ -393,6 +394,7 @@ public class VisionSolutions implements Solutions.Subject {
                                                     Circle result = getSubjectPixelLocation(camera, null, new Circle(0, 0, (int)featureDiameter), 0.05, null, null, false);
                                                     featureDiameter = (int) Math.round(result.diameter);
                                                     getSubjectPixelLocation(camera, null, new Circle(0, 0, (int)featureDiameter), 0.05, "Best Diameter "+(int)featureDiameter+" px", null, false);
+                                                    Logger.debug("Next best feature diameter auto-detected at "+featureDiameter+"px");
                                                 }
                                                 catch (Exception e1) {
                                                 }

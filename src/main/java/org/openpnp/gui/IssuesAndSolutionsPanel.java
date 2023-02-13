@@ -460,13 +460,13 @@ public class IssuesAndSolutionsPanel extends JPanel {
                 for (Solutions.Issue issue : issues) {
                     if (issue.canBeAccepted() ) {
                         if (issue.getState() != Solutions.State.Solved) {
-                            issue.setState(Solutions.State.Solved);
+                            issue.setStateCall(Solutions.State.Solved);
                         }
                     }
                     else {
                         // Be tolerant, we handle a PlainIssue with no auto-solution as dismissal.
                         if (issue.getState() != Solutions.State.Dismissed) {
-                            issue.setState(Solutions.State.Dismissed);
+                            issue.setStateCall(Solutions.State.Dismissed);
                         }
                     }
                 }
@@ -487,7 +487,7 @@ public class IssuesAndSolutionsPanel extends JPanel {
                 List<Solutions.Issue> issues = getSelections();
                 for (Solutions.Issue issue : issues) {
                     if (issue.getState() != Solutions.State.Dismissed) {
-                        issue.setState(Solutions.State.Dismissed);
+                        issue.setStateCall(Solutions.State.Dismissed);
                     }
                 }
             });
@@ -507,7 +507,7 @@ public class IssuesAndSolutionsPanel extends JPanel {
                 List<Solutions.Issue> issues = getSelections();
                 for (Solutions.Issue issue : issues) {
                     if (issue.getState() != Solutions.State.Open) {
-                        issue.setState(Solutions.State.Open);
+                        issue.setStateCall(Solutions.State.Open);
                     }
                 }
             });
