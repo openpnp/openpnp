@@ -18,7 +18,7 @@ In order to perform Visual Calibration, a certain calibration rig is needed. The
 
 Preliminary camera calibration can be performed automatically by looking at a [fiducial](https://en.wikipedia.org/wiki/Fiducial_marker#Printed_circuit_boards) while moving the camera around in a certain pattern. 
 
-The fiducial must be round, ideally it is high contrast, sharp and flat, i.e., with no sunken/raised "3D" structure. It must appear as a single unambiguous circular feature, even when seen from the side. The calibration will move all around the fiducial and look at it from different angles. A fiducial with "3D" depth (such as a hole) is therefore no good. When looked at from the side, a different edge higher up in Z will suddenly define the contour of the fiducial, it will change from circular to lenticular shape, and even a small depth in Z will introduce a surprisingly large error in X/Y as shown in this illustration (errors in red):
+The fiducial must be round, high contrast, sharp and flat, i.e., with no sunken/raised "3D" structure. It must appear as a single unambiguous circular feature, even when seen from the side. Calibration will move all around the fiducial and look at it from different angles. A fiducial with "3D" depth (such as a hole) is therefore not well suited. When looked at from the side, a different edge higher up in Z will suddenly define the contour of the fiducial, it will go from circular to lenticular, and even a small depth in Z will introduce a surprisingly large error in X/Y as shown in this illustration (errors in red):
 
 ![no-3d-fiducials-please](https://user-images.githubusercontent.com/9963310/218517465-aa6f931c-9bcd-4cf1-8045-03228c6b6ec1.png)
 
