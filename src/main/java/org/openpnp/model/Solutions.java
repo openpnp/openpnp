@@ -54,6 +54,7 @@ import org.openpnp.spi.Machine;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.util.VisionUtils;
 import org.openpnp.util.XmlSerialize;
+import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.ElementList;
 
@@ -321,6 +322,11 @@ public class Solutions extends AbstractTableModel {
 
         public State getState() {
             return state;
+        }
+
+        public void setStateCall(State state) throws Exception {
+            Logger.debug("About to set state "+state+" (from "+getState()+") on "+getSubject().getSubjectText()+": "+getIssue());
+            setState(state);
         }
 
         public void setState(State state) throws Exception {

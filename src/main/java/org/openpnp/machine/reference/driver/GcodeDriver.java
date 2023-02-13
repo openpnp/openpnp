@@ -1681,7 +1681,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
                 detectFirmwareSequence();
                 return null;
             }, 
-                    false, 100, timeoutMilliseconds);
+                    false, 100, 1000);
         }
         else {
             // If the machine is not enabled, use an ad hoc connection.
