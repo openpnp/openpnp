@@ -50,11 +50,12 @@ The units for the X, Y and Z axes are set in the GUI. The default is Millimeters
 ## Important Definitions
 
 - **Board**: A board is a physical version of a PCB. Every new version of a PCB is a new board. A board contains placements that tell OpenPnP where to place parts.
-- **Fiducial**: A fidicual, or fiducial mark, is a small mark on a PCB that helps the machine locate the PCB automatically with great accuracy. Fiducials are typically small round pads with a large keepout area and no solder paste applied.
+- **Panel**: A panel is a collection of multiple boards that are physically connected into a single unit for convenience of fabrication and assembly. Once all the boards making up the panel have been assembled, they are physically separated from one another by cutting, snapping, or some other means.
+- **Fiducial**: A fiducial, or fiducial mark, is a small mark on a PCB that helps the machine locate the PCB automatically with great accuracy. Fiducials are typically small round pads with a large keep-out area and no solder paste applied.
 - **Part**: A part is a specific component for placement on a board. They are often synonymous with a manufacturer part number. Two parts with different values are different parts. For example, a 10k 0603 resistor is a different part than a 22k 0603 resistor. Every part is also assigned a package.
 - **Package**: A package describes the part's physical attributes such as it's length and width, and it's footprint. Many parts have the same package. Some examples of packages are 0603 resistor, 0603 capacitor, SOIC-8, TQFP-32, etc.
 - **Placement**: A placement is a location on the PCB where a part should be placed. These are usually the same as the X and Y coordinates where you placed parts when designing your PCB. Every placement has an X and Y coordinate relative to the board's origin, and a part assignment that tells OpenPnP which part goes on that placement.
-- **Job**: A job is a a file that contains a list of boards for the machine to process in a single run. A job can contain any mixture of any number of boards, including multiples of the same board.
+- **Job**: A job is a a file that contains a list of boards and/or panels for the machine to process in a single run. A job can contain any mixture of any number of boards and/or panels, including multiples of the same board and/or panel.
 - **Footprint**: A footprint is a definition of the numbers and shapes of the pads on the part. Footprints are not currently used in OpenPnP.
 - **Reticle**: The reticle is a crosshair, or other shape, overlayed on the camera window that helps you see the center of the image. Reticles can also display rulers, or arbitrary shapes in any physical size.
 - **Driver**: The driver is the part of OpenPnP that converts OpenPnP's commands into commands the machine can understand. Many machines speak Gcode, and that is the most commonly used driver in OpenPnP. Using different drivers, OpenPnP can talk to a wide variety of different types of machines, whether the use Gcode, ASCII, or a proprietary protocol.
@@ -73,7 +74,7 @@ OpenPnP has a single window interface, broken up into multiple sections. Those s
 
 OpenPnP's Main Window is laid out in sections. The main sections are the Machine Controls, Digital Read Outs (DROs), the Camera Panel, Tabbed Interface.
 
-![screen shot 2017-04-14 at 6 15 55 pm](https://cloud.githubusercontent.com/assets/1182323/25058445/1c1ce4f8-213f-11e7-86f7-f30aea7d7425.png)
+![MainWindowAnnotated](https://user-images.githubusercontent.com/50550971/218868481-76e79d66-bab5-49ea-8dbd-df4ae5436394.png)
 
 ## Machine Controls
 
@@ -110,11 +111,13 @@ You can also hold down Shift and click the Left Mouse Button in a Camera View to
 
 ## The Tabs
 
-![GUI Tabs](https://user-images.githubusercontent.com/9963310/184479921-74c0397f-168c-49a4-b4bf-76257fdbc07e.png)
+<img width="867" alt="tabs" src="https://user-images.githubusercontent.com/50550971/218871408-052db572-11db-405b-826d-9f6aca3dd377.png">
 
 The tabs at the right of the window are where all job operations, job setup, and configuration take place. The tabs are covered in more detail in the sections below, but here is a brief overview:
 
 - **Job**: Job setup and control.
+- **Panels**: Create and edit panel definitions.
+- **Boards**: Create and edit board definitions.
 - **Parts**: Create new parts, pick parts for testing.
 - **Packages**: Create packages, setup footprints. Important for [[Fiducials]].
 - **Vision**: Setup bottom and ficucial vision settings.
@@ -185,6 +188,14 @@ The below shortcuts are bound to your system command modifier key. On Windows an
 OpenPnP makes extensive use of tooltips for it's help system. You can hover over most buttons to get a tooltip that explains what the button does. The tooltip will appear in a small yellow box.
 
 ![screen shot 2018-07-24 at 8 36 53 pm](https://user-images.githubusercontent.com/1182323/43174752-64e50524-8f81-11e8-8715-70bfdd965fe6.png)
+
+# Recommended Workflow
+
+The recommended workflow for assembling boards (AKA running a job) is as follows:
+1. For any new boards, create new definitions for them on the Boards tab.
+2. If the board PCBs have been fabricated as a panel, create a new definition for the panel on the Panels tab.
+3. Setup the job definition on the Job tab.
+4. Run the job.
 
 # Job Setup
 
@@ -385,7 +396,7 @@ The [[Setup and Calibration]] Guide is the best reference to the Machine Setup t
 A common source of confusion is how OpenPnP uses the various Z values and Part heights throughout the system. In simplest terms:
 
 - Parts are picked from feeders at the Z value specified on the feeder. Every feeder type has a Z value you can set, and this is where the nozzle will be lowered to before picking.
-- Every board in a job has a location which includes a Z value. The Z value is the top of the board.
+- Every board in a job has a location which includes a Z value. The Z value is the surface of the board facing up on the machine.
 - Every part has an associated height value. The height value is added to the board's Z value when placing.
 
 # Advanced Topics
