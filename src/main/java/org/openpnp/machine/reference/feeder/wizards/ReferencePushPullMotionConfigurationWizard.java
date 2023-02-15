@@ -60,6 +60,7 @@ import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
+import org.openpnp.util.UiUtils;
 import org.pmw.tinylog.Logger;
 
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -545,7 +546,7 @@ extends AbstractConfigurationWizard {
         catch (Exception e) {
             Logger.error(e, "Cannot determine default head of machine.");
         }
-        NamedConverter<Actuator> actuatorConverter = (new NamedConverter<>(head.getActuators()));
+        actuatorConverter = (new NamedConverter<>(head.getActuators()));
 
         addWrappedBinding(feeder, "actuator", actuator, "selectedItem", actuatorConverter);
         addWrappedBinding(feeder, "actuator2", actuator2, "selectedItem", actuatorConverter);
@@ -672,25 +673,24 @@ extends AbstractConfigurationWizard {
     private void resetRotation() {
         boolean additive = additiveRotation.isSelected();
         btnRotationReset.setVisible(additive);
-        if (additive) {
-            try {
-                String actuatorName = (String) actuator.getSelectedItem();
-                if (actuatorName != null && !actuatorName.isEmpty()) {
-                    Machine machine = Configuration.get().getMachine();
-                    machine.executeIfEnabled(() -> {
-                        Head head = machine.getDefaultHead();
-                        Actuator feedActuator = head.getActuatorByName(actuatorName);
+        if (additive && actuatorConverter != null) {
+            Machine machine = Configuration.get().getMachine();
+            Actuator feedActuator = actuatorConverter.convertReverse((String) actuator.getSelectedItem());
+            if (feedActuator != null
+                    && feedActuator.getLocation().getRotation() != 0
+                    && machine.isEnabled()) {
+                UiUtils.submitUiMachineTask(() -> {
+                    try {
                         // Reset the rotation axis to zero.
                         AxesLocation rotation = feedActuator.toRaw(feedActuator.toHeadLocation(
                                 feedActuator.getLocation().multiply(1, 1, 1, 0)))
                                 .byType(Axis.Type.Rotation); 
                         machine.getMotionPlanner().setGlobalOffsets(rotation);
-                        return true;
-                    });
-                }
-            }
-            catch (Exception e) {
-                Logger.error(e, "Cannot reset actuator rotation axis.");
+                    }
+                    catch (Exception e) {
+                        Logger.error(e, "Cannot reset actuator rotation axis.");
+                    }
+                });
             }
         }
     }
@@ -708,4 +708,5 @@ extends AbstractConfigurationWizard {
             resetRotation();
         }
     };
+    private NamedConverter<Actuator> actuatorConverter;
 }
