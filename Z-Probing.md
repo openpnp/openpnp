@@ -1,5 +1,7 @@
 Z probing allows you to capture a Z coordinate, along with the normal X,Y, and Rotation, when using the capture coordinates with camera function. A Z probe is configured by adding an Actuator that can read a numeric value. Some examples of Z probe hardware are laser displacement sensors, nozzle switches, or deployable sensors.
 
+Not to be confused with the [[Contact Probing Nozzle]], which is a completely separate concept, integrated into the individual nozzles.
+
 To use Z probing:
 
 1. Create a new Actuator to read the probe.
