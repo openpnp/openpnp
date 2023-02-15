@@ -1,6 +1,16 @@
+## What is it?
+
 Z probing allows you to capture a Z coordinate, along with the normal X,Y, and Rotation, when using the capture coordinates with camera function. A Z probe is configured by adding an Actuator that can read a numeric value. Some examples of Z probe hardware are laser displacement sensors, nozzle switches, or deployable sensors.
 
-Not to be confused with the [[Contact Probing Nozzle]], which is a completely separate concept, integrated into the individual nozzles.
+## What is it _not_?
+
+Z Probing is not to be confused with the [[Contact Probing Nozzle]], which is a completely separate concept. The [[Contact Probing Nozzle]] can be integrated into production, as measurements can take place "on the go" with a part on the nozzle (sandwiching), to get the _real live_ part, solder paste, and board surface heights, or _real live_ feeder pick heights.
+
+Conversely, Z Probing (explained here) is used to measure any Z surfaces. The probing is always manual and intended for setting up the machine and feeders up front. If you have a laser displacement sensor, it may be able to measure delicate surfaces, like lose parts in feeders, without making contact and disturbing them.
+
+Of course, the two facilities can also be combined.
+
+## Usage
 
 To use Z probing:
 
