@@ -12,9 +12,11 @@ The use cases are explained further down.
 
 ## What is it _not_?
 
-Contact Probing is not to be confused with [[Z Probing]], which is a completely separate concept, used to measure Z surfaces. [[Z Probing]] is always manual and more for setting up the machine and feeders, and may be able to measure delicate surfaces (like lose parts in feeder) without contact if you have a laser displacement sensor. 
+Contact Probing is not to be confused with [[Z Probing]], which is a completely separate concept. [[Z Probing]] is used to measure any Z surfaces. The probing is always manual and intended for setting up the machine and feeders up front. If you have a laser displacement sensor, it may be able to measure delicate surfaces, like lose parts in feeders, without making contact and disturbing them.
 
-Conversely, the Contact Probing Nozzle explained here, can be fully integrated into production, measurements can efficiently take place "on the go", with no extra machine moves, because we can probe with a part on the nozzle (sandwiching), to get the _real live_ part, solder paste, and board surface heights, or _real live_ feeder pick heights.
+Conversely, the Contact Probing Nozzle (explained here), can be fully integrated into production, measurements can efficiently take place "on the go", with no extra machine moves, because we can probe with a part on the nozzle (sandwiching), to get the _real live_ part, solder paste, and board surface heights, or _real live_ feeder pick heights.
+
+Of course, the two facilities can also be combined.
 
 ## Use Cases
 
