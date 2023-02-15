@@ -1,6 +1,8 @@
 ## What is it?
 Some machines (e.g. the Liteplacer) have a nozzle that can sense when the nozzle tip touches down. The idea is to automatically stop Z down motion without having to know exactly how high a part, a feeder and/or a PCB is. To use this feature in OpenPNP, you can use the `ContactProbeNozzle`.
 
+Not to be confused with the [[Z Probe]], which is a completely separate concept, used to measure Z surfaces, possibly without contact (laser displacement sensor).
+
 What is it used for?
 
 - Nozzle/Nozzle Tip Z Calibration
