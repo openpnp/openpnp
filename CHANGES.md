@@ -1,6 +1,29 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2023-02-14
+
+## Panelization and other UI changes/improvements
+
+Panels are now stand-alone entities much like boards. They are now stored in *.panel.xml files
+rather than being "built-into" the job file. Panels can now have arbitrary layouts and can consist
+of any number of different boards and/or subpanels. Many of the issues issues that have been
+reported with the legacy panelization method have been fixed.
+
+Two new tabs have been added to the UI. The Panels tab is the primary area for creating and editing
+panels. The Boards tab is now the primary areas for creating and editing boards. The Job tab is now
+primarily for selecting boards and/or panels (defined on the aforementioned tabs) to be assembled, 
+setting their location and orientation on the machine and, of course, executing the job.
+
+There is now a button on the Job tab (the Panels and Boards tabs have one as well) that opens a 
+graphical viewer that displays the physical layout of the job (or Panel or Board).
+
+The column widths on the Job, Panels, and Boards tabs are now remembered between OpenPnP sessions.
+Numeric columns on those tabs are also now aligned on their decimal points. 
+
+See also:
+https://github.com/openpnp/openpnp/pull/1507
+
 # 2022-12-02
 
 ## UI translation improvements
