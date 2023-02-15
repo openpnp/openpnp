@@ -1,8 +1,6 @@
 ## What is it?
 Some machines (e.g. the Liteplacer) have a nozzle that can sense when the nozzle tip touches down. The idea is to automatically stop Z down motion without having to know exactly how high a part, a feeder and/or a PCB is. To use this feature in OpenPNP, you can use the `ContactProbeNozzle`.
 
-Not to be confused with the [[Z Probe]], which is a completely separate concept, used to measure Z surfaces, possibly without contact (laser displacement sensor).
-
 What is it used for?
 
 - Nozzle/Nozzle Tip Z Calibration
@@ -10,7 +8,15 @@ What is it used for?
 - Feeder Z Auto-Learning
 - Placement Z Auto Learning
 
-These uses are explained in the following sections.
+The use cases are explained further down.
+
+## What is it _not_?
+
+Contact Probing is not to be confused with [[Z Probing]], which is a completely separate concept, used to measure Z surfaces. [[Z Probing]] is always manual and more for setting up the machine and feeders, and may be able to measure delicate surfaces (like lose parts in feeder) without contact if you have a laser displacement sensor. 
+
+Conversely, the Contact Probing Nozzle explained here, can be fully integrated into production, measurements can efficiently take place "on the go", with no extra machine moves, because we can probe with a part on the nozzle (sandwiching), to get the _real live_ part, solder paste, and board surface heights, or _real live_ feeder pick heights.
+
+## Use Cases
 
 ### Nozzle/Nozzle Tip Z Calibration
 
@@ -46,11 +52,6 @@ Note: some feeders like the [[BlindsFeeder]] still need a precise Z location con
 The ContactProbeNozzle can also auto-learn the placement Z location of parts, even if the part height is known. On the first placement the height will be probed and then remembered. This will equalize nozzle (tip) spring compression force, taking solder paste height into consideration. 
 
 Note, Placement Z Auto Learning is part of the **Part Height Probing** settings (below).
-
-## What is it _not_?
-
-The ContactProbingNozzle does not cover other applications where Z coordinates must be sensed **without** making contact. This is called "Z probing" as opposed to "contact probing" and it often employs a laser displacement sensor. This page is _not_ about these.  
-
 
 ## Enable the ContactProbeNozzle 
 If you don't have a ContactProbeNozzle yet, let [[Issues and Solutions]] replace the existing ReferenceNozzle for you. **Note**, the solution will only be available in the **Advanced** milestone, it is not recommended to configure it earlier in the machine setup process:
