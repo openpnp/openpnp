@@ -49,11 +49,11 @@ The units for the X, Y and Z axes are set in the GUI. The default is Millimeters
 
 ## Important Definitions
 
-- **Board**: A board is a physical version of a PCB. Every new version of a PCB is a new board. A board contains placements that tell OpenPnP where to place parts.
-- **Panel**: A panel is a collection of multiple boards that are physically connected into a single unit for convenience of fabrication and assembly. Once all the boards making up the panel have been assembled, they are physically separated from one another by cutting, snapping, or some other means.
+- **Board**: A board is a physical version of a PCB. Every new version of a PCB is a new board. A board contains placements that tell OpenPnP where to place parts. OpenPnP supports placements on both sides of a board. The two sides are referred to as _Top_ and _Bottom_.
+- **Panel**: A panel is a collection of multiple boards that are physically connected into a single unit for convenience of fabrication and assembly. Once all the boards making up the panel have been assembled, they are physically separated from one another by sawing, milling, snapping, or some other means.
 - **Fiducial**: A fiducial, or fiducial mark, is a small mark on a PCB that helps the machine locate the PCB automatically with great accuracy. Fiducials are typically small round pads with a large keep-out area and no solder paste applied.
 - **Part**: A part is a specific component for placement on a board. They are often synonymous with a manufacturer part number. Two parts with different values are different parts. For example, a 10k 0603 resistor is a different part than a 22k 0603 resistor. Every part is also assigned a package.
-- **Package**: A package describes the part's physical attributes such as it's length and width, and it's footprint. Many parts have the same package. Some examples of packages are 0603 resistor, 0603 capacitor, SOIC-8, TQFP-32, etc.
+- **Package**: A package describes the part's physical attributes such as its length and width, and its footprint. Many parts have the same package. Some examples of packages are 0603 resistor, 0603 capacitor, SOIC-8, TQFP-32, etc.
 - **Placement**: A placement is a location on the PCB where a part should be placed. These are usually the same as the X and Y coordinates where you placed parts when designing your PCB. Every placement has an X and Y coordinate relative to the board's origin, and a part assignment that tells OpenPnP which part goes on that placement.
 - **Job**: A job is a a file that contains a list of boards and/or panels for the machine to process in a single run. A job can contain any mixture of any number of boards and/or panels, including multiples of the same board and/or panel.
 - **Footprint**: A footprint is a definition of the numbers and shapes of the pads on the part. Footprints are not currently used in OpenPnP.
@@ -199,25 +199,50 @@ The recommended workflow for assembling boards (AKA running a job) is as follows
 
 # Job Setup
 
-A job consists of one or more boards, along with locations and information about the boards. A job may contain any number of boards, and can include multiples of the same board or multiple different boards. 
+A job consists of one or more boards and/or panels, along with locations, orientations, and other information about them. A job may contain any number of boards and/or panels and can include multiples of the same board and/or panel or multiple different boards and/or panels. 
 
-Each board entry in a job tells OpenPnP where to find one particular board using machine coordinates. When you run the Job OpenPnP will process all of the placements for each board in the Job.
-
-You can easily set up panels of PCBs using the [[Panelization]] feature without having to add each board to the job individually.
+Each entry in a job tells OpenPnP where to find one particular board or panel using machine coordinates. When you run the Job OpenPnP will process all of the placements for each board in the Job.
 
 Jobs are stored in files with the extension `.job.xml`.
 
-When setting up a job, you'll need to configure Boards, Placements, Parts, Packages, and Feeders. These are all introduced in the sections below.
+When setting up a job, you'll need to configure Boards, Panels (optional), Placements, Parts, Packages, and Feeders. These are all introduced in the sections below.
 
 ## Boards
 
-Boards tell OpenPnP which parts to place and where to place them. Boards are stored in files with the extension `.board.xml`. A board contains a list of placements. A placement tells OpenPnP which part to place at what coordinates and rotation.
+Boards tell OpenPnP which parts to place and where to place them. Boards definitions are stored in files with the extension `.board.xml`. A board contains a list of placements. A placement tells OpenPnP which part to place, on which side the board, at what coordinates and rotation.
 
-Board files are independent from any user or machine. You can share board files for a given PCB design and use the file to build that particular PCB.
+Board files are independent from any user or machine. You can share board files for a given PCB design and use the file to assemble it on another machine.
 
-You will typically create a new board file by [importing data from your CAD software](https://github.com/openpnp/openpnp/wiki/Importing-Centroid-Data) such as Eagle or KiCAD. Once you've created a board file for a design there's no need to change it unless the design changes.
+You will typically create a new board definition on the Boards tab and [import placement data from your CAD software](https://github.com/openpnp/openpnp/wiki/Importing-Centroid-Data) such as Eagle or KiCAD. Once you've created a board definition for a design, there's no need to change it unless the design changes.
+
+
+<img width="871" alt="boardsTab" src="https://user-images.githubusercontent.com/50550971/219440431-e4400002-c769-4c60-9321-21c9c82ff95a.png">
+
+
+At the top of the Boards tab is a list of board definitions currently loaded into OpenPnP (they are not all necessarily part of the currently loaded job). You can create a new board definition or add an existing board definition to OpenPnP by clicking the <img src="https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/general-add.svg" width="16" height="16"> button just above the list. You can remove one or more board definitions by selecting them in the list and clicking the <img src="https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/general-remove.svg" width="16" height="16"> button. Removing a board definition from the list is only allowed if it is not in use by the current job or by any of the panel definitions currently loaded into OpenPnP. Note that removing a board definition from OpenPnP does not delete the board definition from you file system so it can always be added again later.
+
+The columns shown in the Boards table are:
+- **Board Name**: The name of the board definition.
+- **Width**: The width of the board as measured in the direction of the X-axis of the board's coordinate system. This value is important for OpenPnP to correctly compute placement locations on the bottom side of the board. It is also used when graphical representations of the board are displayed.
+- **Length**: The length of the board as measured in the direction of the Y-axis of the board's coordinate system. Currently this is only used when graphical representations of the board are displayed.
+
+When a board is selected in the list, the table at the bottom of the tab shows the board's placements. Boards have their own coordinate system in which their placement locations are defined. This coordinate system is defined by your CAD software. Later, when using the board definition in either a job or panel definition, you will need to know where the origin of this coordinate system is located and how it is oriented with respect to the board. To that end, it is advisable when creating the board's design in your CAD software, to place the origin somewhere that is easy to recognize when viewed through your top camera. Typically, this will be the lower left corner of a rectangular board. See [[Understanding Board Locations]] for all the details.
+
+The columns shown in the Placements table are:
+- **Enabled**: Indicates whether or not this placement is active - only enabled placements will be placed. You can uncheck this if you don't want to place this placement for this board. This is often referred to DNU (Do Not Use) or DNI (Do Not Install). Note, this setting can be overridden on an instance-by-instance basis from the Job tab.
+- **ID**: All placements on a board must have a unique ID (regardless of side). These are usually the same as the reference designators you set when designing the PCB. 
+- **Part**: The part that should be placed at this location.
+- **Side**: The board side on which the placement occurs.
+- **X, Y, Rot.**: The coordinates of the placement relative to the board's coordinate system. The X and Y coordinates are measured viewing the board from its top side regardless of which side the placement is on. Rotation is measured positive in the counterclockwise direction when viewing the placement from the side of the board the placement is on.
+- **Type**: Sets the type of the placement to either Placement (meaning a part is to be placed here) or Fiducial (meaning it is only for visual reference).
+- **Error Handling**: Sets the recommended action to take if an error occurs during a job when this placement is being placed. Either Alert (meaning to pause the job and wait for the operator to take action) or Defer (meaning to skip the placement and to continue the job). Note, this setting can be overridden on an instance-by-instance basis from the Job tab.
+- **Comments**: A freeform text field that can contain any user definable text.
+
+Placements are usually added to a board definition by clicking the <img src="https://user-images.githubusercontent.com/50550971/219510059-f5beb137-61dc-4d74-b4e4-ec2b856041fd.svg" width="16" height="16"> button to [import placement data from your CAD software](https://github.com/openpnp/openpnp/wiki/Importing-Centroid-Data).
+
 
 Board locations represent the 0, 0, 0 (X, Y, Z) origin of the top of the PCB. This tells the machine where to find 0, 0, 0 on the board and it performs the math needed to find the individual placements from there. Part height is added when placing a part so that the nozzle tip stops at the right height above the board.
+
 
 ![screen shot 2018-07-24 at 8 38 21 pm](https://user-images.githubusercontent.com/1182323/43174782-8c242f16-8f81-11e8-8551-7f0a6e9b9c94.png)
 
