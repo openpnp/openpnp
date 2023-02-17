@@ -89,9 +89,8 @@ The `pocket_width` is the width the physical pocket across the tape. You can mak
 `tape_play`, `cover_play` (negative or positive) are empirical. Start from the examples. There is more about those in the [Advanced](#Advanced) section.
 
 ### Building up the Feeder Array
-___
 
-**NEW VERSION**: newer OpenPnP versions have changed the way to define the tape lanes (see below this section for the old way): 
+Newer OpenPnP / BlindsFeeder versions support OCR / QR-Code to auto-learn the loaded parts, or double-check them. The LaneDefinition combines the number of equal lanes, TapeDefinition and the label for OCR / QR-Code: 
 
 ![grafik](https://user-images.githubusercontent.com/9963310/122678424-1b43a280-d1e7-11eb-86c1-c76a54dd089f.png)
 
@@ -124,17 +123,6 @@ rotate([0, 0, 180]) BlindsFeeder(
 ); 
 ```
 
-___
-
-**OLD VERSION**: Once you've defined your `TapeDefinition`s, you can multiply and mix them to build up a feeder array i.e. print many feeders in one piece (at end of the `BlindsFeeder-3DPrinting.scad` file):
-
-![grafik](https://user-images.githubusercontent.com/9963310/73120868-66ff0780-3f73-11ea-90d3-940594bee1ff.png)
-
-The `tape_length`, should again be specified in multiples of 4mm. 
-
-The `arrayed_tape_lanes` and the `arrayed_tapes` contain the number and definitions of tapes to be arrayed. Just set the lanes entry to `0` to not print a tape definition at all (no need to delete slots from the arrays).
-
-You can set `debug=true` to see how the feeder will look when the covers are mounted. 
 
 ## Creating the STL File
 
