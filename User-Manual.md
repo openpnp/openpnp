@@ -241,7 +241,28 @@ The columns shown in the Placements table are:
 Placements are usually added to a board definition by clicking the <img src="https://user-images.githubusercontent.com/50550971/219510059-f5beb137-61dc-4d74-b4e4-ec2b856041fd.svg" width="16" height="16"> button to [import placement data from your CAD software](https://github.com/openpnp/openpnp/wiki/Importing-Centroid-Data). They can also be added manually by clicking the <img src="https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/general-add.svg" width="16" height="16"> button and filling out the different fields appropriately. Placements can be deleted by selecting one or more in the table and clicking the <img src="https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/general-remove.svg" width="16" height="16"> button. Clicking the 
 <img src="https://user-images.githubusercontent.com/50550971/219733808-7073db8a-33b4-4156-8e49-b9987c8a43ac.svg" width="16" height="16"> button opens the Board Viewer that displays a graphical layout of the placements on the board.
 
+## Panels
 
+Panel definitions are the "blueprints" that tell OpenPnP how boards and/or subpanels are arranged to form a panel. Panel definitions are stored in files with the extension `.panel.xml`.
+
+Setting up panel definitions is strictly optional.
+
+Panel definitions are typically created on the Panels tab.
+
+<img width="831" alt="panelsTab" src="https://user-images.githubusercontent.com/50550971/219741989-cde49f03-8cdc-4197-a662-35965f8ec7aa.png">
+
+At the top of the Panels tab is a list of panel definitions currently loaded into OpenPnP (they are not all necessarily part of the currently loaded job). You can create a new panel definition or add an existing panel definition to OpenPnP by clicking the <img src="https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/general-add.svg" width="16" height="16"> button just above the list. You can remove one or more panel definitions by selecting them in the list and clicking the <img src="https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/general-remove.svg" width="16" height="16"> button. Removing a panel definition from the list is only allowed if it is not in use by the current job or by any of the other panel definitions currently loaded into OpenPnP. Note that removing a panel definition from OpenPnP does not delete the panel definition from your file system so it can always be added again later.
+
+The columns shown in the Panels table are:
+- **Panel Name**: The name of the panel definition.
+- **Width**: The width of the panel as measured in the direction of the X-axis of the panel's coordinate system. This value is important for OpenPnP to correctly compute placement locations on the bottom side of the panel. It is also used when graphical representations of the panel are displayed.
+- **Length**: The length of the panel as measured in the direction of the Y-axis of the panel's coordinate system. Currently this is only used when graphical representations of the panel are displayed.
+
+When a Panel is selected in the list, the middle table of the tab shows the panel's children. These are the boards and/or subpanels that comprise the panel. Similar to boards, Panels also have their own coordinate system in which the location and orientation of its children are defined. And, as with boards, it is highly recommended that the origin of the Panel be placed somewhere that is easy to recognize when viewed through your top camera. Typically, this will be the lower left corner of a rectangular panel. See [[Understanding Board Locations]] for all the details.
+
+
+
+ 
 
 Board locations represent the 0, 0, 0 (X, Y, Z) origin of the top of the PCB. This tells the machine where to find 0, 0, 0 on the board and it performs the math needed to find the individual placements from there. Part height is added when placing a part so that the nozzle tip stops at the right height above the board.
 
