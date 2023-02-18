@@ -248,7 +248,7 @@ Placements are usually added to a board definition by clicking the <img src="htt
 
 Panel definitions are the "blueprints" that tell OpenPnP how boards and/or subpanels are arranged to form a panel. Panel definitions are stored in files with the extension `.panel.xml`.
 
-Setting up panel definitions is strictly optional.
+Setting up panel definitions is strictly optional. If you do not use panels, you can safely ignore them.
 
 Panel definitions are typically created on the Panels tab.
 
@@ -261,8 +261,33 @@ The columns shown in the Panels table are:
 - **Width**: The width of the panel as measured in the direction of the X-axis of the panel's coordinate system. This value is important for OpenPnP to correctly compute placement locations on the bottom side of the panel. It is also used when graphical representations of the panel are displayed.
 - **Length**: The length of the panel as measured in the direction of the Y-axis of the panel's coordinate system. Currently this is only used when graphical representations of the panel are displayed.
 
-When a Panel is selected in the list, the middle table of the tab shows the panel's children. These are the boards and/or subpanels that comprise the panel. Similar to boards, Panels also have their own coordinate system in which the location and orientation of its children are defined. And, as with boards, it is highly recommended that the origin of the Panel be placed somewhere that is easy to recognize when viewed through your top camera. Typically, this will be the lower left corner of a rectangular panel. See [[Understanding Board Locations]] for all the details.
+When a Panel is selected in the list, the middle table of the tab shows the panel's children. These are the boards and/or subpanels that comprise the panel. Similar to boards, Panels also have their own coordinate system in which the location and orientation of its children (and fiducials, if any) are defined. And, as with boards, it is highly recommended that the origin of the Panel be placed somewhere that is easy to recognize when viewed through the top camera. Typically, this will be the lower left corner of a rectangular panel. See [[Understanding Board Locations]] for all the details.
 
+The columns shown in the Children table are:
+- **Board/Panel ID**: This is a user defined identifier for the child. This needs to be unique for each child of a panel.
+- **Name**: This is the name of the child's definition. This value is set when the child is added to the panel and is not editable here.
+- **Width**: This is the width of the child - this value is taken from the child's definition and is not editable here.
+- **Length**: This is the length of the child - this value is taken from the child's definition and is not editable here.
+- **Side**: This field defines which side of the child faces the top side of the panel.
+- **X, Y, Rot.**: These fields define the coordinates and rotation of the child relative to the panel's coordinate system. They work similar as they do when defining the location and rotation of boards in a job. 
+- **Enabled?**: This indicates whether or not the child will have parts placed on it during a job. Note, this setting can be overridden on an instance-by-instance basis from the Job tab.
+- **Check Fids?**: This indicates whether or not fiducials on the child will be checked during a job. Note, this setting can be overridden on an instance-by-instance basis from the Job tab.
+
+There are a couple of options for adding children to a panel definition. A boards or panel (known as a subpanel) can be manually added to the panel definition by clicking the <img src="https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/general-add.svg" width="16" height="16"> button just above the list and editing the fields in the table appropriately. Arrays of boards or subpanels can be generated and added to the panel by selecting a single child in the table (this child will be replicated multiple times to create the array) and clicking the 
+<img src="https://user-images.githubusercontent.com/50550971/219877700-a4919bd0-ba2e-430f-bb7e-63b6ac1d615a.svg" width="16" height="16"> button. This opens a dialog that allows the number of rows and columns as well as the spacing of the rows and columns to be defined. Children can be deleted by selecting one or more in the Children table and clicking the <img src="https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/general-remove.svg" width="16" height="16"> button.
+ 
+At the bottom of the Panels tab is a table showing the selected panel's fiducials. A panel can have dedicated fiducials to use for aligning it on the machine or it may use the fiducials located on its children (with respect to the panel, these are referred to as pseudo-fiducials). Even without fiducials, a panel can be aligned on the machine by using the manual multi-placement alignment process on a selected set of the children's placements (with respect to the panel, these are referred to as pseudo-placements).
+
+The columns shown in the Alignment Fiducials/Placements table are:
+- **Enabled**: 
+- **ID**: 
+- **Part**: 
+- **Side**: 
+- **X, Y, Rot.**: 
+
+
+A dedicated fiducial can be manually added to the panel by clicking the <img src="https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/general-add.svg" width="16" height="16"> button just above the list and editing the fields in the table appropriately. Pseudo-fiducials or pseudo-placements can be added to the panel by clicking the 
+<img src="https://user-images.githubusercontent.com/50550971/219879316-44c500da-afe8-49b4-9f9e-f9478e61a8f1.svg" width="16" height="16"> button and following the instructions in the dialog box. Fiducials can be removed by selecting one or more in the list and clicking the <img src="https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/general-remove.svg" width="16" height="16"> button.
 
 
  
