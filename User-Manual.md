@@ -273,18 +273,17 @@ The columns shown in the Children table are:
 - **Enabled?**: This indicates whether or not the child will have parts placed on it during a job. Note, this setting can be overridden on an instance-by-instance basis from the Job tab.
 - **Check Fids?**: This indicates whether or not fiducials on the child will be checked during a job. Note, this setting can be overridden on an instance-by-instance basis from the Job tab.
 
-There are a couple of options for adding children to a panel definition. A boards or panel (known as a subpanel) can be manually added to the panel definition by clicking the <img src="https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/general-add.svg" width="16" height="16"> button just above the list and editing the fields in the table appropriately. Arrays of boards or subpanels can be generated and added to the panel by selecting a single child in the table (this child will be replicated multiple times to create the array) and clicking the 
+There are a couple of options for adding children to a panel definition. A board or panel (known as a subpanel) can be manually added to the panel definition by clicking the <img src="https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/general-add.svg" width="16" height="16"> button just above the list and editing the fields in the table appropriately. Arrays of boards or subpanels can be generated and added to the panel by selecting a single child in the table (this child will be replicated multiple times to create the array) and clicking the 
 <img src="https://user-images.githubusercontent.com/50550971/219877700-a4919bd0-ba2e-430f-bb7e-63b6ac1d615a.svg" width="16" height="16"> button. This opens a dialog that allows the number of rows and columns as well as the spacing of the rows and columns to be defined. Children can be deleted by selecting one or more in the Children table and clicking the <img src="https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/general-remove.svg" width="16" height="16"> button.
  
 At the bottom of the Panels tab is a table showing the selected panel's fiducials. A panel can have dedicated fiducials to use for aligning it on the machine or it may use the fiducials located on its children (with respect to the panel, these are referred to as pseudo-fiducials). Even without fiducials, a panel can be aligned on the machine by using the manual multi-placement alignment process on a selected set of the children's placements (with respect to the panel, these are referred to as pseudo-placements).
 
 The columns shown in the Alignment Fiducials/Placements table are:
-- **Enabled**: 
-- **ID**: 
-- **Part**: 
-- **Side**: 
-- **X, Y, Rot.**: 
-
+- **Enabled**: The enabled state of the fiducial/placement. Only enabled fiducials will be checked during an automated fiducial check.
+- **ID**: The Id of the fiducial/placement. This must be unique for each entry. For pseudo-fiducials/pseudo-placements, the Id is automatically generated using the board/subpanel Id as a prefix to the actual fiducial/placements Id.
+- **Part**: The part for this fiducial/placement
+- **Side**: The side of the panel on which this fiducial is located
+- **X, Y, Rot.**: The coordinates of the fiducial as measured in the panels coordinate system.
 
 A dedicated fiducial can be manually added to the panel by clicking the <img src="https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/general-add.svg" width="16" height="16"> button just above the list and editing the fields in the table appropriately. Pseudo-fiducials or pseudo-placements can be added to the panel by clicking the 
 <img src="https://user-images.githubusercontent.com/50550971/219879316-44c500da-afe8-49b4-9f9e-f9478e61a8f1.svg" width="16" height="16"> button and following the instructions in the dialog box. Fiducials can be removed by selecting one or more in the list and clicking the <img src="https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/general-remove.svg" width="16" height="16"> button.
