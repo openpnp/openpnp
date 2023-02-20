@@ -67,6 +67,24 @@ public class SimulatedUpCamera extends ReferenceCamera {
     @Element(required = false)
     private Length sensorDiagonal = new Length(4.4, LengthUnit.Millimeters);
 
+    public enum BackgroundColor {
+        Black(0x000000),
+        Dark(0x222222),
+        Green(0x22AA22),
+        Magenta(0xAA22AA);
+
+        final private int rgb;
+        BackgroundColor(int rgb) {
+            this.rgb = rgb;
+        }
+        public Color getColor() {
+            return new Color(rgb);
+        }
+    }
+
+    @Attribute(required=false)
+    protected BackgroundColor backgroundColor = BackgroundColor.Dark;
+
     public SimulatedUpCamera() {
         setUnitsPerPixel(new Location(LengthUnit.Millimeters, 0.0234375D, 0.0234375D, 0, 0));
         setLooking(Looking.Up);
@@ -79,7 +97,7 @@ public class SimulatedUpCamera extends ReferenceCamera {
         }
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g = (Graphics2D) image.getGraphics();
-        g.setColor(new Color(32, 32, 32));
+        g.setColor(getBackgroundColor().getColor());
         g.fillRect(0, 0, width, height);
         AffineTransform tx = g.getTransform();
         // invert the image in Y so that Y+ is up
@@ -182,9 +200,9 @@ public class SimulatedUpCamera extends ReferenceCamera {
                 return;
             }
 
-            if (footprint.getUnits() != units) {
-                throw new Error("Not yet supported.");
-            }
+            Length u = new Length(1, footprint.getUnits())
+                    .convertToUnits(unitsPerPixel.getUnits());
+            double unitScale = u.getValue();
 
             // Account for the part height.
             double partHeightMm = Math.abs(part.getHeight().convertToUnits(LengthUnit.Millimeters).getValue());
@@ -196,11 +214,19 @@ public class SimulatedUpCamera extends ReferenceCamera {
                     0, 0, partHeightMm, 0));
             offsets = partUndersideLocation.subtractWithRotation(getSimulatedLocation());
 
+            // Transform footprint shapes to right-hand coordinate system.
+            Shape bodyShape = footprint.getBodyShape();
+            Shape padsShape = footprint.getPadsShape();
+            AffineTransform txShape = new AffineTransform();
+            txShape.scale(unitScale, unitScale);
+            padsShape = txShape.createTransformedShape(padsShape);
+            bodyShape = txShape.createTransformedShape(bodyShape);
+
             // First draw the body in dark grey.
-            fillShape(g, footprint.getBodyShape(), new Color(60, 60, 60), unitsPerPixel, offsets, true);
+            fillShape(g, bodyShape, new Color(60, 60, 60), unitsPerPixel, offsets, true);
 
             // Then draw the pads in white
-            fillShape(g, footprint.getPadsShape(), Color.white, unitsPerPixel, offsets, true);
+            fillShape(g, padsShape, Color.white, unitsPerPixel, offsets, true);
 
             if (frame != null) {
                 blurObjectIntoView(gView, frame, nozzle, 
@@ -366,6 +392,14 @@ public class SimulatedUpCamera extends ReferenceCamera {
 
     public void setErrorOffsets(Location errorOffsets) {
         this.errorOffsets = errorOffsets;
+    }
+
+    public BackgroundColor getBackgroundColor() {
+        return backgroundColor;
+    }
+
+    public void setBackgroundColor(BackgroundColor backgroundColor) {
+        this.backgroundColor = backgroundColor;
     }
 
     @Override

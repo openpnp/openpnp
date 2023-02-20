@@ -120,7 +120,7 @@ public class VisionCompositingPreview extends JComponent implements MouseMotionL
             // Create a transform to scale the shape by
             AffineTransform tx = new AffineTransform(txOld);
             tx.translate(width/2, height/2);
-            tx.scale(scale, -scale);
+            tx.scale(scale, scale);
             g2d.setTransform(tx);
 
             // Draw the package.

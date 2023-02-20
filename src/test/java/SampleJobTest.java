@@ -8,15 +8,19 @@ import org.jcodec.api.awt.SequenceEncoder;
 import org.junit.jupiter.api.Test;
 import org.openpnp.CameraListener;
 import org.openpnp.machine.reference.ReferenceMachine;
+import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.machine.reference.ReferencePnpJobProcessor;
 import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
 import org.openpnp.machine.reference.camera.AbstractSettlingCamera;
+import org.openpnp.machine.reference.camera.SimulatedUpCamera;
 import org.openpnp.machine.reference.driver.NullDriver;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Job;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.spi.Axis;
+import org.openpnp.spi.Nozzle;
+import org.openpnp.util.VisionUtils;
 import org.pmw.tinylog.Configurator;
 import org.pmw.tinylog.Level;
 
@@ -64,7 +68,11 @@ public class SampleJobTest {
         Configurator
         .currentConfig()
         .level(Level.INFO) // change this for other log levels.
-        .activate();
+        .activate(); 
+//        Configurator
+//        .currentConfig()
+//        .formatPattern("{date:yyyy-MM-dd HH:mm:ss.SSS} {class_name} {level}: {message}")
+//        .activate();
 
         Configuration.initialize(workingDirectory);
         Configuration.get().load();
@@ -86,19 +94,7 @@ public class SampleJobTest {
         }
 
         if (!imperfectMachine) {
-            NullDriver driver = (NullDriver) machine.getDefaultDriver();
-            // Make it faster for the test (now including axes).
-            driver.setFeedRateMmPerMinute(0);
-            for (Axis axis : machine.getAxes()) {
-                if (axis instanceof ReferenceControllerAxis) {
-                    ((ReferenceControllerAxis) axis).setFeedratePerSecond(new Length(1000000, LengthUnit.Millimeters));
-                    ((ReferenceControllerAxis) axis).setAccelerationPerSecond2(new Length(2000000, LengthUnit.Millimeters));
-                    ((ReferenceControllerAxis) axis).setJerkPerSecond3(new Length(0, LengthUnit.Millimeters));
-                }
-            }
-
-            camera.setSettleMethod(AbstractSettlingCamera.SettleMethod.FixedTime);
-            camera.setSettleTimeMs(0);
+            makeMachineFastest();
         }
         else {
             System.out.println("SampleJobTest runs with imperfect machine in real-time, please be patient...");
@@ -162,6 +158,27 @@ public class SampleJobTest {
         public synchronized void finish() throws Exception {
             finished = true;
             enc.finish();
+        }
+    }
+
+    public static void makeMachineFastest() throws Exception {
+        // Make it faster for the test.
+        ReferenceMachine machine = (ReferenceMachine)Configuration.get().getMachine();
+        NullDriver driver = (NullDriver) machine.getDefaultDriver();
+        driver.setFeedRateMmPerMinute(0);
+        for (Axis axis : machine.getAxes()) {
+            if (axis instanceof ReferenceControllerAxis) {
+                ((ReferenceControllerAxis) axis).setFeedratePerSecond(new Length(1000000, LengthUnit.Millimeters));
+                ((ReferenceControllerAxis) axis).setAccelerationPerSecond2(new Length(2000000, LengthUnit.Millimeters));
+                ((ReferenceControllerAxis) axis).setJerkPerSecond3(new Length(0, LengthUnit.Millimeters));
+            }
+        }
+        SimulatedUpCamera camera = (SimulatedUpCamera) VisionUtils.getBottomVisionCamera();
+        camera.setSettleMethod(AbstractSettlingCamera.SettleMethod.FixedTime);
+        camera.setSettleTimeMs(0);
+        for (Nozzle nozzle : machine.getDefaultHead().getNozzles()) {
+            ((ReferenceNozzle) nozzle).setPickDwellMilliseconds(0);
+            ((ReferenceNozzle) nozzle).setPlaceDwellMilliseconds(0);
         }
     }
 }

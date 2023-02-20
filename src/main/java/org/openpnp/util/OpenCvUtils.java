@@ -372,10 +372,10 @@ public class OpenCvUtils {
         // Create a transform to scale the Shape by
         AffineTransform tx = new AffineTransform();
 
-        // First we scale by units to convert the units and then we scale
+        // First we scale by units to convert the units and then we divide
         // by the camera X and Y units per pixels to get pixel locations.
-        tx.scale(unitScale, unitScale);
-        tx.scale(1.0 / unitsPerPixel.getX(), 1.0 / unitsPerPixel.getY());
+        // Left-hand coordinate system, so we invert Y and rotation.
+        tx.scale(unitScale/unitsPerPixel.getX(), -unitScale/unitsPerPixel.getY());
         tx.rotate(Math.toRadians(-rotation));
 
         // Transform the Shape and draw it out.

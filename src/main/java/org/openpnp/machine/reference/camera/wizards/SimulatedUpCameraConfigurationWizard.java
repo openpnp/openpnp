@@ -21,6 +21,7 @@ package org.openpnp.machine.reference.camera.wizards;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
@@ -77,6 +78,8 @@ public class SimulatedUpCameraConfigurationWizard extends AbstractConfigurationW
     private JTextField focalLength;
     private JLabel lblSensorDiagonal;
     private JTextField sensorDiagonal;
+    private JLabel lblBackgroundColor;
+    private JComboBox backgroundColor;
 
     public SimulatedUpCameraConfigurationWizard(SimulatedUpCamera camera) {
         this.camera = camera;
@@ -98,6 +101,8 @@ public class SimulatedUpCameraConfigurationWizard extends AbstractConfigurationW
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
@@ -199,45 +204,52 @@ public class SimulatedUpCameraConfigurationWizard extends AbstractConfigurationW
         panelGeneral.add(sensorDiagonal, "4, 12, fill, default");
         sensorDiagonal.setColumns(10);
         
+        lblBackgroundColor = new JLabel(Translations.getString("SimulatedUpCameraConfigurationWizard.lblBackgroundColor.text")); //$NON-NLS-1$
+        lblBackgroundColor.setToolTipText(Translations.getString("SimulatedUpCameraConfigurationWizard.lblBackgroundColor.toolTipText")); //$NON-NLS-1$
+        panelGeneral.add(lblBackgroundColor, "2, 14, right, default");
+        
+        backgroundColor = new JComboBox(SimulatedUpCamera.BackgroundColor.values());
+        panelGeneral.add(backgroundColor, "4, 14, fill, default");
+        
         lblErrorOffsets = new JLabel(Translations.getString(
                 "SimulatedUpCameraConfigurationWizard.GeneralPanel.PickErrorOffsetsLabel.text")); //$NON-NLS-1$
         lblErrorOffsets.setToolTipText(Translations.getString(
                 "SimulatedUpCameraConfigurationWizard.GeneralPanel.PickErrorOffsetsLabel.toolTipText")); //$NON-NLS-1$
-        panelGeneral.add(lblErrorOffsets, "2, 16, right, default");
+        panelGeneral.add(lblErrorOffsets, "2, 18, right, default");
         
         errorOffsetsX = new JTextField();
-        panelGeneral.add(errorOffsetsX, "4, 16, fill, default");
+        panelGeneral.add(errorOffsetsX, "4, 18, fill, default");
         errorOffsetsX.setColumns(10);
         
         errorOffsetsY = new JTextField();
-        panelGeneral.add(errorOffsetsY, "6, 16, fill, default");
+        panelGeneral.add(errorOffsetsY, "6, 18, fill, default");
         errorOffsetsY.setColumns(10);
         
         errorOffsetsZ = new JTextField();
-        panelGeneral.add(errorOffsetsZ, "8, 16, fill, default");
+        panelGeneral.add(errorOffsetsZ, "8, 18, fill, default");
         errorOffsetsZ.setColumns(10);
         
         errorOffsetsRotation = new JTextField();
-        panelGeneral.add(errorOffsetsRotation, "10, 16, fill, default");
+        panelGeneral.add(errorOffsetsRotation, "10, 18, fill, default");
         errorOffsetsRotation.setColumns(10);
         
         lblCameraFlipped = new JLabel(Translations.getString(
                 "SimulatedUpCameraConfigurationWizard.GeneralPanel.MirroredViewLabel.text")); //$NON-NLS-1$
         lblCameraFlipped.setToolTipText(Translations.getString(
                 "SimulatedUpCameraConfigurationWizard.GeneralPanel.MirroredViewLabel.toolTipText")); //$NON-NLS-1$
-        panelGeneral.add(lblCameraFlipped, "2, 20, right, default");
+        panelGeneral.add(lblCameraFlipped, "2, 22, right, default");
         
         simulatedFlipped = new JCheckBox("");
-        panelGeneral.add(simulatedFlipped, "4, 20");
+        panelGeneral.add(simulatedFlipped, "4, 22");
         
         lblFocalBlur = new JLabel(Translations.getString(
                 "SimulatedUpCameraConfigurationWizard.GeneralPanel.FocalBlurLabel.text")); //$NON-NLS-1$
         lblFocalBlur.setToolTipText(Translations.getString(
                 "SimulatedUpCameraConfigurationWizard.GeneralPanel.FocalBlurLabel.toolTipText")); //$NON-NLS-1$
-        panelGeneral.add(lblFocalBlur, "2, 22, right, default");
+        panelGeneral.add(lblFocalBlur, "2, 24, right, default");
         
         simulateFocalBlur = new JCheckBox("");
-        panelGeneral.add(simulateFocalBlur, "4, 22");
+        panelGeneral.add(simulateFocalBlur, "4, 24");
     }
 
     @Override
@@ -279,6 +291,7 @@ public class SimulatedUpCameraConfigurationWizard extends AbstractConfigurationW
 
         addWrappedBinding(camera, "focalLength", focalLength, "text", lengthConverter);
         addWrappedBinding(camera, "sensorDiagonal", sensorDiagonal, "text", lengthConverter);
+        addWrappedBinding(camera, "backgroundColor", backgroundColor, "selectedItem");
 
         ComponentDecorators.decorateWithAutoSelect(width);
         ComponentDecorators.decorateWithAutoSelect(height);
@@ -298,4 +311,5 @@ public class SimulatedUpCameraConfigurationWizard extends AbstractConfigurationW
         //ComponentDecorators.decorateWithAutoSelect(simulatedUnitsPerPixelX);
         //ComponentDecorators.decorateWithAutoSelect(simulatedUnitsPerPixelY);
     }
+
 }
