@@ -812,14 +812,9 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
             else { 
                 // Reassign the stock pipeline.
                 stockVisionSettings.setPipeline(createStockPipeline("Default"));
-                // Add the reclinear symmetry pipeline if missing.
-                AbstractVisionSettings rectlinearVisionSettings = configuration.getVisionSettings(AbstractVisionSettings.STOCK_BOTTOM_RECTLINEAR_ID);
-                if (rectlinearVisionSettings == null) {
-                    rectlinearVisionSettings = createRectlinearBottomVisionSettings();
-                    configuration.addVisionSettings(rectlinearVisionSettings);
-                }
-                // Reassign the stock pipeline.
-                rectlinearVisionSettings.setPipeline(createStockPipeline("Rectlinear"));
+                // Create other stock pipelines.
+                createStockVisionSettings(configuration, AbstractVisionSettings.STOCK_BOTTOM_RECTLINEAR_ID, "Rectlinear", "- Rectlinear Symmetry Bottom Vision Settings -");
+                createStockVisionSettings(configuration, AbstractVisionSettings.STOCK_BOTTOM_BODY_ID, "Body", "- Whole Part Body Bottom Vision Settings -");
                 return;
             }
         }
@@ -885,6 +880,20 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
         partSettingsByPartId = null;
 
         optimizeVisionSettings(configuration);
+    }
+
+    public AbstractVisionSettings createStockVisionSettings(Configuration configuration, String id, String tag, String description) {
+        // Add the vision settings if missing.
+        AbstractVisionSettings visionSettings = configuration.getVisionSettings(id);
+        if (visionSettings == null) {
+            visionSettings = createBottomVisionSettings(id, description, createStockPipeline(tag));
+            configuration.addVisionSettings(visionSettings);
+        }
+        else {
+            // Reassign the stock pipeline.
+            visionSettings.setPipeline(createStockPipeline(tag));
+        }
+        return visionSettings;
     }
 
     protected BottomVisionSettings createRectlinearBottomVisionSettings() {
