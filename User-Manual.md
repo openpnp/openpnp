@@ -194,11 +194,13 @@ OpenPnP makes extensive use of tooltips for it's help system. You can hover over
 
 # Recommended Workflow
 
-The recommended workflow for assembling boards (AKA running a job) is as follows:
-1. For any new boards, create new definitions for them on the Boards tab.
-2. If the board PCBs have been fabricated as a panel, create a new definition for the panel on the Panels tab.
+Before OpenPnP can be used to assemble parts onto PCBs, there are several items that must be setup. The recommended workflow for doing so is as follows:
+1. For any new board designs, create new definitions for them on the [Boards](#boards) tab.
+2. If the board PCBs have been fabricated as a panel, create a new definition for the panel on the [Panels](#panels) tab.
 3. Setup the job definition on the Job tab.
-4. Run the job.
+4. Setup parts and packages on the [Parts](#parts) and [Packages](#packages) tabs.
+5. Setup feeders on the [Feeders](#feeders) tab.
+6. Run the job.
 
 # Job Setup
 
@@ -231,7 +233,7 @@ The columns shown in the Boards table are:
 - **Width**: The width of the board as measured in the direction of the X-axis of the board's coordinate system. This value is important for OpenPnP to correctly compute placement locations on the bottom side of the board. It is also used when graphical representations of the board are displayed.
 - **Length**: The length of the board as measured in the direction of the Y-axis of the board's coordinate system. Currently this is only used when graphical representations of the board are displayed.
 
-When a board is selected in the list, the table at the bottom of the tab shows the board's placements. Boards have their own coordinate system in which their placement locations are defined. This coordinate system is defined by your CAD software. Later, when using the board definition in either a job or panel definition, you will need to know where the origin of this coordinate system is located and how it is oriented with respect to the board. To that end, it is advisable when creating the board's design in your CAD software, to place the origin somewhere that is easy to recognize when viewed through the top camera. Typically, this will be the lower left corner of a rectangular board. See [[Understanding Board Locations]] for all the details.
+When a board is selected in the list, the table at the bottom of the tab shows the board's placements. Boards have their own coordinate system in which their placement locations are defined. This coordinate system is defined by your CAD software. Later, when using the board definition in either a job or panel definition, you will need to know where the origin of this coordinate system is located and how it is oriented with respect to the board. To that end, it is advisable when creating the board's design in your CAD software, to place the origin somewhere that is easy to recognize when viewed through the top camera. Typically, this will be the lower left corner of a rectangular board (when viewed from the top) with the positive X-axis to the right. See [[Understanding Board Locations]] for all the details.
 
 The columns shown in the Placements table are:
 - **Enabled**: Indicates whether or not this placement is active - only enabled placements will be placed. You can uncheck this if you don't want to place this placement. This is often referred to DNU (Do Not Use) or DNI (Do Not Install). Note, this setting can be overridden on an instance-by-instance basis from the Job tab.
@@ -243,7 +245,7 @@ The columns shown in the Placements table are:
 - **Error Handling**: Sets the recommended action to take if an error occurs during a job when this placement is being placed. Can be set to either _Alert_ (meaning to pause the job and wait for the operator to take action) or _Defer_ (meaning to skip the placement and to continue the job). Note, this setting can be overridden on an instance-by-instance basis from the Job tab.
 - **Comments**: A freeform text field that can contain any user definable text.
 
-Placements are usually added to a board definition by clicking the <img src="https://user-images.githubusercontent.com/50550971/219510059-f5beb137-61dc-4d74-b4e4-ec2b856041fd.svg" width="16" height="16"> button to [import placement data from your CAD software](https://github.com/openpnp/openpnp/wiki/Importing-Centroid-Data). They can also be added manually by clicking the <img src="https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/general-add.svg" width="16" height="16"> button and filling out the different fields appropriately. Placements can be deleted by selecting one or more in the table and clicking the <img src="https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/general-remove.svg" width="16" height="16"> button. Clicking the 
+Placements are usually added to a board definition by clicking the <img src="https://user-images.githubusercontent.com/50550971/219510059-f5beb137-61dc-4d74-b4e4-ec2b856041fd.svg" width="16" height="16"> button just above the placements table to [import placement data from your CAD software](https://github.com/openpnp/openpnp/wiki/Importing-Centroid-Data). After the import is finished, check the list of placements and make any corrections - typically fiducials will need to have their type changed from Placement to Fiducial. Placements can also be added manually by clicking the <img src="https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/general-add.svg" width="16" height="16"> button and filling out the different fields appropriately. Placements can be deleted by selecting one or more in the table and clicking the <img src="https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/general-remove.svg" width="16" height="16"> button. Clicking the 
 <img src="https://user-images.githubusercontent.com/50550971/219733808-7073db8a-33b4-4156-8e49-b9987c8a43ac.svg" width="16" height="16"> button opens the Board Viewer that displays a graphical layout of the placements on the board.
 
 ## Panels
@@ -265,7 +267,7 @@ The columns shown in the Panels table are:
 - **Width**: The width of the panel as measured in the direction of the X-axis of the panel's coordinate system. This value is important for OpenPnP to correctly compute placement locations on the bottom side of the panel. It is also used when graphical representations of the panel are displayed.
 - **Length**: The length of the panel as measured in the direction of the Y-axis of the panel's coordinate system. Currently this is only used when graphical representations of the panel are displayed.
 
-When a Panel is selected in the list, the middle table of the tab shows the panel's children. These are the boards and/or subpanels that comprise the panel. Similar to boards, Panels also have their own coordinate system in which the location and orientation of its children (and the panel's fiducials, if any) are defined. And, as with boards, it is highly recommended that the origin of the Panel be placed somewhere that is easy to recognize when viewed through the top camera. Typically, this will be the lower left corner of a rectangular panel. See [[Understanding Board Locations]] for all the details.
+When a Panel is selected in the list, the middle table of the tab shows the panel's children. These are the boards and/or subpanels that make up the panel. Similar to boards, Panels also have their own coordinate system in which the location and orientation of their children (and the panel's fiducials, if any) are defined. And, as with boards, it is highly recommended that the origin of the Panel be placed somewhere that is easy to recognize when viewed through the top camera. Typically, this will be the lower left corner of a rectangular panel (when viewed from the top) with the positive X-axis to the right. See [[Understanding Board Locations]] for all the details.
 
 The columns shown in the Children table are:
 - **Board/Panel ID**: This is a user defined identifier for the child. This needs to be unique for each child of a panel.
@@ -285,10 +287,10 @@ At the bottom of the Panels tab is a table showing the selected panel's fiducial
 
 The columns shown in the Alignment Fiducials/Placements table are:
 - **Enabled**: The enabled state of the fiducial/placement. Only enabled fiducials will be checked during an automated fiducial check.
-- **ID**: The identifier of the fiducial/placement. This must be unique for each entry. For pseudo-fiducials/pseudo-placements, the identifier is automatically generated using the board/subpanel Id as a prefix to the actual fiducial/placements Id.
+- **ID**: The identifier of the fiducial/placement. This must be unique for each entry. For pseudo-fiducials/pseudo-placements, the identifier is automatically generated and is a path to the actual fiducial or placement. They have the form subPanelId⇒...⇒subPanelId⇒boardId⇒placementId.
 - **Part**: The part for this fiducial/placement. For pseudo-fiducials/pseudo-placements, the part is copied from the board definition.
 - **Side**: The side of the panel on which this fiducial is located. For pseudo-fiducials/pseudo-placements, the side is determined by the board definition and how the board sides are oriented with respect to the panel.
-- **X, Y, Rot.**: The coordinates of the fiducial as measured in the panels coordinate system. For pseudo-fiducials/pseudo-placements, the coordinates are determined by the board definition and how the board is oriented with respect to the panel.
+- **X, Y, Rot.**: The coordinates of the fiducial as measured in the panels coordinate system. For pseudo-fiducials/pseudo-placements, the coordinates are automatically computed from the board definition and how the board is oriented with respect to the panel.
 
 A dedicated panel fiducial can be manually added to the panel by clicking the <img src="https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/general-add.svg" width="16" height="16"> button just above the list and editing the fields in the table appropriately. Pseudo-fiducials or pseudo-placements can be added to the panel by clicking the 
 <img src="https://user-images.githubusercontent.com/50550971/219879316-44c500da-afe8-49b4-9f9e-f9478e61a8f1.svg" width="16" height="16"> button and following the instructions in the dialog box. Fiducials can be removed by selecting one or more in the list and clicking the <img src="https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/general-remove.svg" width="16" height="16"> button.
@@ -418,7 +420,7 @@ Now that we understand all the pieces of a job, let's put them all together. Thi
 
 7. Configure feeders for each part in the job. An easy way to do this is to click a placement and then click the feeder edit button ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/feeder-edit.svg). OpenPnP will either open the feeder for you, or prompt you to create a new one.
 
-8. Set the position of the board in the Job tab. You can use capture camera ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/capture-camera.svg) to align it to the corner, use fiducial locate ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/board-fiducial-locate.svg) to find it automatically or use the two placement manual process ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/board-two-placement-locate.svg).
+8. Set the position of the board in the Job tab. You can use capture camera ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/capture-camera.svg) to align it to the corner, use fiducial locate ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/board-fiducial-locate.svg) to find it automatically or use the multi-placement manual process ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/board-two-placement-locate.svg).
 
    For additional information on using fiducials, see [[Fiducials]].
 
