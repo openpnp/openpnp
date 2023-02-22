@@ -1,6 +1,6 @@
 [![Search](https://user-images.githubusercontent.com/9963310/182446869-7a6e5ab4-6547-4a5b-9dbe-8a5a4588cf35.png) Search the Wiki](/openpnp/openpnp/search?type=wikis)
 
-[Request to edit the Wiki 📧](mailto:jason@vonnieda.org).
+[Leave a request to edit the Wiki 🠊](https://github.com/openpnp/openpnp/issues/1526)
 
 OpenPnP
 -------
