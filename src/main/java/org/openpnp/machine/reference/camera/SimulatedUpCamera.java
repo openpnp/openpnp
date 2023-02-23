@@ -68,17 +68,22 @@ public class SimulatedUpCamera extends ReferenceCamera {
     private Length sensorDiagonal = new Length(4.4, LengthUnit.Millimeters);
 
     public enum BackgroundColor {
-        Black(0x000000),
-        Dark(0x222222),
-        Green(0x22AA22),
-        Magenta(0xAA22AA);
+        Black(0x000000, 0x00FF00),
+        Dark(0x222222, 0x00DD00),
+        Green(0x22AA22, 0x00DD00),
+        Magenta(0xAA22AA, 0x444444);
 
         final private int rgb;
-        BackgroundColor(int rgb) {
+        final private int rgbNozzleTip;
+        BackgroundColor(int rgb, int rgbNozzleTip) {
             this.rgb = rgb;
+            this.rgbNozzleTip = rgbNozzleTip;
         }
         public Color getColor() {
             return new Color(rgb);
+        }
+        Color getNozzleTipColor() {
+            return new Color(rgbNozzleTip);
         }
     }
 
@@ -178,7 +183,7 @@ public class SimulatedUpCamera extends ReferenceCamera {
         Location offsets = l.subtractWithRotation(getSimulatedLocation());
 
         // Create a nozzle shape
-        if (fillShape(g, new Ellipse2D.Double(-0.5, -0.5, 1, 1), new Color(0, 220, 0), unitsPerPixel, offsets, false)) {
+        if (fillShape(g, new Ellipse2D.Double(-0.5, -0.5, 1, 1), getBackgroundColor().getNozzleTipColor(), unitsPerPixel, offsets, false)) {
             fillShape(g, new Ellipse2D.Double(-0.1, -0.1, 0.2, 0.2), new Color(32, 32, 32), unitsPerPixel, offsets, false);
             if (frame != null) {
                 blurObjectIntoView(gView, frame, nozzle, l);

@@ -458,6 +458,15 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
             Length samplingSize = new Length(0.1, LengthUnit.Millimeters); // Default, if no setting on nozzle tip. 
             // Set the footprint.
             pipeline.setProperty("footprint", composite.getFootprint());
+            pipeline.setProperty("footprint.rotation", wantedLocation.getRotation());
+            pipeline.setProperty("footprint.xOffset", new Length(shot.getX(), composite.getUnits()));
+            pipeline.setProperty("footprint.yOffset", new Length(shot.getY(), composite.getUnits()));
+            // Crop to fit into the mask. 
+            // TODO: make the template circular. 
+            Length maxDim = new Length(Math.sqrt(2)*shot.getMaxMaskRadius(), composite.getUnits())
+                    .subtract(nozzleTip.getMaxPickTolerance().multiply(1.2));
+            pipeline.setProperty("footprint.maxWidth", maxDim);
+            pipeline.setProperty("footprint.maxHeight", maxDim);
             // Set alignment parameters.
             pipeline.setProperty("MinAreaRect.center", wantedLocation);
             pipeline.setProperty("MinAreaRect.expectedAngle", wantedLocation.getRotation());
