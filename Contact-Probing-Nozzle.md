@@ -82,6 +82,8 @@ Notes: The Wizard will show different fields according to the selection. If at l
 
 ![Vacuum Sense](https://user-images.githubusercontent.com/9963310/113567748-77971d00-960f-11eb-996f-8ccd6828b488.png)
 
+The settings of the "Part Off" test in [Vacuum Sensing](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration_Vacuum-Sensing) are used to probe for contact with the surface. As long as the "Part Off" test say "yes", the nozzle tip is lowered one step further down.
+
 **Start Offset** determines how high above the nominal probing location, the sensing should start. For the **Vacuum Sense** method, this must be high enough to get a clear "Part Off" result on the first sniffle.
 
 **Probe Depth** determines how far the probing should go. 
