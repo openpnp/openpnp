@@ -1,35 +1,65 @@
 package org.openpnp.machine.photon.protocol;
 
 public class PhotonCommands {
-    public static String getFeederId(int address) {
-        return PacketBuilder.command(address, 0x01).toByteString();
+    int packetId = 0;
+    int fromAddress;
+
+    public PhotonCommands(int fromAddress) {
+        this.fromAddress = fromAddress;
     }
 
-    public static String initializeFeeder(int address, String uuid) {
-        return PacketBuilder.command(address, 0x02)
+    public void setFromAddress(int fromAddress) {
+        this.fromAddress = fromAddress;
+    }
+
+    private int nextPacketId() {
+        int currentPacketId = packetId;
+        packetId = (packetId + 1) % 256;
+
+        return currentPacketId;
+    }
+
+    public String getFeederId(int address) {
+        Packet packet = PacketBuilder.command(address, fromAddress, nextPacketId(), 0x01).toPacket();
+
+        return packet.toByteString();
+    }
+
+    public String initializeFeeder(int address, String uuid) {
+        Packet packet = PacketBuilder.command(address, fromAddress, nextPacketId(), 0x02)
                 .putUuid(uuid)
-                .toByteString();
+                .toPacket();
+
+        return packet.toByteString();
     }
 
-    public static String getVersion(int address) {
-        return PacketBuilder.command(address, 0x03).toByteString();
+    public String getVersion(int address) {
+        Packet packet = PacketBuilder.command(address, fromAddress, nextPacketId(), 0x03).toPacket();
+
+        return packet.toByteString();
     }
 
-    public static String moveFeedForward(int address, int distance) {
-        return PacketBuilder.command(address, 0x04)
+    public String moveFeedForward(int address, int distance) {
+        Packet packet = PacketBuilder.command(address, fromAddress, nextPacketId(), 0x04)
                 .putByte(distance)
-                .toByteString();
+                .toPacket();
+
+        return packet.toByteString();
     }
 
-    public static String moveFeedBackward(int address, int distance) {
-        return PacketBuilder.command(address, 0x05)
+    public String moveFeedBackward(int address, int distance) {
+        Packet packet = PacketBuilder.command(address, fromAddress, nextPacketId(), 0x05)
                 .putByte(distance)
-                .toByteString();
+                .toPacket();
+
+        return packet.toByteString();
     }
 
-    public static String getFeederAddress(String uuid) {
-        return PacketBuilder.command(0xFF, 0xC0)
+    public String getFeederAddress(String uuid) {
+        Packet packet = PacketBuilder.command(0xFF, fromAddress, nextPacketId(), 0xC0)
                 .putUuid(uuid)
-                .toByteString();
+                .toPacket();
+
+        return packet.toByteString();
     }
 }

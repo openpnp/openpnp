@@ -8,6 +8,7 @@ import org.openpnp.machine.photon.exceptions.FeedFailureException;
 import org.openpnp.machine.photon.exceptions.FeederHasNoLocationOffsetException;
 import org.openpnp.machine.photon.exceptions.NoSlotAddressException;
 import org.openpnp.machine.photon.exceptions.UnconfiguredSlotException;
+import org.openpnp.machine.photon.protocol.PhotonCommands;
 import org.openpnp.machine.photon.sheets.FeederPropertySheet;
 import org.openpnp.machine.photon.sheets.SearchPropertySheet;
 import org.openpnp.machine.reference.ReferenceActuator;
@@ -24,7 +25,6 @@ import java.util.function.IntConsumer;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
-import static org.openpnp.machine.photon.protocol.PhotonCommands.*;
 import static org.openpnp.machine.photon.protocol.PhotonResponses.*;
 
 public class PhotonFeederTest {
@@ -39,6 +39,8 @@ public class PhotonFeederTest {
     private PhotonProperties photonProperties;
     private Location baseLocation;
     private Location feederOffset;
+
+    private PhotonCommands commands = new PhotonCommands(0);
 
     @BeforeEach
     public void setUp() throws Exception {
@@ -298,11 +300,11 @@ public class PhotonFeederTest {
         feeder.setOffset(feederOffset);
         setSlotLocation(feederAddress, baseLocation);
 
-        String getFeederAddressCommand = getFeederAddress(hardwareId);
+        String getFeederAddressCommand = commands.getFeederAddress(hardwareId);
         when(mockedActuator.read(getFeederAddressCommand))
                 .thenReturn(GetFeederAddress.ok(feederAddress, hardwareId));
 
-        String initializeFeederCommand = initializeFeeder(feederAddress, hardwareId);
+        String initializeFeederCommand = commands.initializeFeeder(feederAddress, hardwareId);
         when(mockedActuator.read(initializeFeederCommand))
                 .thenReturn(InitializeFeeder.ok(feederAddress));
 
@@ -323,7 +325,7 @@ public class PhotonFeederTest {
         feeder.setSlotAddress(feederAddress);
         setSlotLocation(feederAddress, baseLocation);
 
-        String initializeFeederCommand = initializeFeeder(feederAddress, hardwareId);
+        String initializeFeederCommand = commands.initializeFeeder(feederAddress, hardwareId);
         when(mockedActuator.read(initializeFeederCommand))
                 .thenReturn(InitializeFeeder.ok(feederAddress));
 
@@ -340,7 +342,7 @@ public class PhotonFeederTest {
     public void prepareForJobDoesNotInitializeIfSlotCanNotBeFound() throws Exception {
         feeder.setHardwareId(hardwareId);
 
-        String getFeederAddressCommand = getFeederAddress(hardwareId);
+        String getFeederAddressCommand = commands.getFeederAddress(hardwareId);
         when(mockedActuator.read(getFeederAddressCommand))
                 .thenReturn(Errors.timeout());
 
@@ -361,7 +363,7 @@ public class PhotonFeederTest {
         feeder.setOffset(feederOffset);
         feeder.setSlotAddress(feederAddress);
 
-        String initializeFeederCommand = initializeFeeder(feederAddress, hardwareId);
+        String initializeFeederCommand = commands.initializeFeeder(feederAddress, hardwareId);
         when(mockedActuator.read(initializeFeederCommand))
                 .thenReturn(Errors.timeout());
 
@@ -369,11 +371,11 @@ public class PhotonFeederTest {
 
         setSlotLocation(newAddress, baseLocation);
 
-        String newGetFeederAddressCommand = getFeederAddress(hardwareId);
+        String newGetFeederAddressCommand = commands.getFeederAddress(hardwareId);
         when(mockedActuator.read(newGetFeederAddressCommand))
                 .thenReturn(GetFeederAddress.ok(newAddress, hardwareId));
 
-        String newInitializeFeederCommand = initializeFeeder(newAddress, hardwareId);
+        String newInitializeFeederCommand = commands.initializeFeeder(newAddress, hardwareId);
         when(mockedActuator.read(newInitializeFeederCommand))
                 .thenReturn(InitializeFeeder.ok(newAddress));
 
@@ -397,7 +399,7 @@ public class PhotonFeederTest {
 
         assertNull(PhotonFeeder.findByHardwareId(otherHardwareId));
 
-        String initializeFeederCommand = initializeFeeder(feederAddress, hardwareId);
+        String initializeFeederCommand = commands.initializeFeeder(feederAddress, hardwareId);
         when(mockedActuator.read(initializeFeederCommand))
                 .thenReturn(Errors.wrongFeederUUID(feederAddress, otherHardwareId));
 
@@ -405,11 +407,11 @@ public class PhotonFeederTest {
 
         setSlotLocation(newAddress, baseLocation);
 
-        String newGetFeederAddressCommand = getFeederAddress(hardwareId);
+        String newGetFeederAddressCommand = commands.getFeederAddress(hardwareId);
         when(mockedActuator.read(newGetFeederAddressCommand))
                 .thenReturn(GetFeederAddress.ok(newAddress, hardwareId));
 
-        String newInitializeFeederCommand = initializeFeeder(newAddress, hardwareId);
+        String newInitializeFeederCommand = commands.initializeFeeder(newAddress, hardwareId);
         when(mockedActuator.read(newInitializeFeederCommand))
                 .thenReturn(InitializeFeeder.ok(newAddress));
 
@@ -442,7 +444,7 @@ public class PhotonFeederTest {
 
         assertSame(otherFeeder, PhotonFeeder.findByHardwareId(otherHardwareId));
 
-        String initializeFeederCommand = initializeFeeder(feederAddress, hardwareId);
+        String initializeFeederCommand = commands.initializeFeeder(feederAddress, hardwareId);
         when(mockedActuator.read(initializeFeederCommand))
                 .thenReturn(Errors.wrongFeederUUID(feederAddress, otherHardwareId));
 
@@ -450,11 +452,11 @@ public class PhotonFeederTest {
 
         setSlotLocation(newAddress, baseLocation);
 
-        String newGetFeederAddressCommand = getFeederAddress(hardwareId);
+        String newGetFeederAddressCommand = commands.getFeederAddress(hardwareId);
         when(mockedActuator.read(newGetFeederAddressCommand))
                 .thenReturn(GetFeederAddress.ok(newAddress, hardwareId));
 
-        String newInitializeFeederCommand = initializeFeeder(newAddress, hardwareId);
+        String newInitializeFeederCommand = commands.initializeFeeder(newAddress, hardwareId);
         when(mockedActuator.read(newInitializeFeederCommand))
                 .thenReturn(InitializeFeeder.ok(newAddress));
 
@@ -480,16 +482,16 @@ public class PhotonFeederTest {
         feeder.setSlotAddress(feederAddress);
         setSlotLocation(feederAddress, baseLocation);
 
-        String firstInitializeCommand = initializeFeeder(feederAddress, hardwareId);
+        String firstInitializeCommand = commands.initializeFeeder(feederAddress, hardwareId);
         when(mockedActuator.read(firstInitializeCommand))
                 .thenReturn(Errors.timeout());
 
         int newFeederAddress = 11;
-        String getFeederAddressCommand = getFeederAddress(hardwareId);
+        String getFeederAddressCommand = commands.getFeederAddress(hardwareId);
         when(mockedActuator.read(getFeederAddressCommand))
                 .thenReturn(GetFeederAddress.ok(newFeederAddress, hardwareId));
 
-        String newInitializeCommand = initializeFeeder(newFeederAddress, hardwareId);
+        String newInitializeCommand = commands.initializeFeeder(newFeederAddress, hardwareId);
         when(mockedActuator.read(newInitializeCommand))
                 .thenReturn(InitializeFeeder.ok(newFeederAddress));
 
@@ -506,7 +508,7 @@ public class PhotonFeederTest {
         feeder.setSlotAddress(feederAddress);
         setSlotLocation(feederAddress, baseLocation);
 
-        String initializeCommand = initializeFeeder(feederAddress, hardwareId);
+        String initializeCommand = commands.initializeFeeder(feederAddress, hardwareId);
         when(mockedActuator.read(initializeCommand))
                 .thenReturn(InitializeFeeder.ok(feederAddress));
 
@@ -524,11 +526,11 @@ public class PhotonFeederTest {
 
         int newAddress = 11;
 
-        String initializeFeederCommand = initializeFeeder(feederAddress, hardwareId);
+        String initializeFeederCommand = commands.initializeFeeder(feederAddress, hardwareId);
         when(mockedActuator.read(initializeFeederCommand))
                 .thenReturn(Errors.wrongFeederUUID(newAddress, hardwareId));
 
-        String newInitializeFeederCommand = initializeFeeder(newAddress, hardwareId);
+        String newInitializeFeederCommand = commands.initializeFeeder(newAddress, hardwareId);
         when(mockedActuator.read(newInitializeFeederCommand))
                 .thenReturn(Errors.wrongFeederUUID(newAddress, hardwareId));
 
@@ -553,7 +555,7 @@ public class PhotonFeederTest {
 
         int newAddress = 11;
 
-        String initializeFeederCommand = initializeFeeder(feederAddress, hardwareId);
+        String initializeFeederCommand = commands.initializeFeeder(feederAddress, hardwareId);
         when(mockedActuator.read(initializeFeederCommand))
                 .thenReturn(Errors.wrongFeederUUID(newAddress, hardwareId));
 
@@ -582,11 +584,11 @@ public class PhotonFeederTest {
         feeder.setSlotAddress(feederAddress);
         setSlotLocation(feederAddress, baseLocation);
 
-        String initializeFeederCommand = initializeFeeder(feederAddress, hardwareId);
+        String initializeFeederCommand = commands.initializeFeeder(feederAddress, hardwareId);
         when(mockedActuator.read(initializeFeederCommand))
                 .thenReturn(InitializeFeeder.ok(feederAddress));
 
-        String moveFeedForwardCommand = moveFeedForward(feederAddress, 20);
+        String moveFeedForwardCommand = commands.moveFeedForward(feederAddress, 20);
         when(mockedActuator.read(moveFeedForwardCommand))
                 .thenReturn(MoveFeedForward.ok(feederAddress));
 
@@ -605,11 +607,11 @@ public class PhotonFeederTest {
         feeder.setSlotAddress(feederAddress);
         setSlotLocation(feederAddress, baseLocation);
 
-        String oldInitializeFeederCommand = initializeFeeder(feederAddress, hardwareId);
+        String oldInitializeFeederCommand = commands.initializeFeeder(feederAddress, hardwareId);
         when(mockedActuator.read(oldInitializeFeederCommand))
                 .thenReturn(InitializeFeeder.ok(feederAddress));
 
-        String oldMoveFeederForwardCommand = moveFeedForward(feederAddress, 20);
+        String oldMoveFeederForwardCommand = commands.moveFeedForward(feederAddress, 20);
         when(mockedActuator.read(oldMoveFeederForwardCommand))
                 .thenReturn(Errors.uninitializedFeeder(feederAddress, hardwareId));
 
@@ -617,15 +619,15 @@ public class PhotonFeederTest {
 
         setSlotLocation(newAddress, baseLocation);
 
-        String newGetFeederAddressCommand = getFeederAddress(hardwareId);
+        String newGetFeederAddressCommand = commands.getFeederAddress(hardwareId);
         when(mockedActuator.read(newGetFeederAddressCommand))
                 .thenReturn(GetFeederAddress.ok(newAddress, hardwareId));
 
-        String newInitializeFeederCommand = initializeFeeder(newAddress, hardwareId);
+        String newInitializeFeederCommand = commands.initializeFeeder(newAddress, hardwareId);
         when(mockedActuator.read(newInitializeFeederCommand))
                 .thenReturn(InitializeFeeder.ok(newAddress));
 
-        String newMoveFeedForwardCommand = moveFeedForward(newAddress, 20);
+        String newMoveFeedForwardCommand = commands.moveFeedForward(newAddress, 20);
         when(mockedActuator.read(newMoveFeedForwardCommand))
                 .thenReturn(MoveFeedForward.ok(newAddress));
 
@@ -650,15 +652,15 @@ public class PhotonFeederTest {
         setSlotLocation(feederAddress, baseLocation);
         photonProperties.setFeederCommunicationMaxRetry(1);
 
-        String initializeFeederCommand = initializeFeeder(feederAddress, hardwareId);
+        String initializeFeederCommand = commands.initializeFeeder(feederAddress, hardwareId);
         when(mockedActuator.read(initializeFeederCommand))
                 .thenReturn(InitializeFeeder.ok(feederAddress));
 
-        String getFeederAddressCommand = getFeederAddress(hardwareId);
+        String getFeederAddressCommand = commands.getFeederAddress(hardwareId);
         when(mockedActuator.read(getFeederAddressCommand))
                 .thenReturn(GetFeederAddress.ok(feederAddress, hardwareId));
 
-        String moveFeederForwardCommand = moveFeedForward(feederAddress, 20);
+        String moveFeederForwardCommand = commands.moveFeedForward(feederAddress, 20);
         when(mockedActuator.read(moveFeederForwardCommand))
                 .thenReturn(Errors.timeout());
 
@@ -686,15 +688,15 @@ public class PhotonFeederTest {
         setSlotLocation(feederAddress, baseLocation);
         photonProperties.setFeederCommunicationMaxRetry(0);
 
-        String initializeFeederCommand = initializeFeeder(feederAddress, hardwareId);
+        String initializeFeederCommand = commands.initializeFeeder(feederAddress, hardwareId);
         when(mockedActuator.read(initializeFeederCommand))
                 .thenReturn(InitializeFeeder.ok(feederAddress));
 
-        String getFeederAddressCommand = getFeederAddress(hardwareId);
+        String getFeederAddressCommand = commands.getFeederAddress(hardwareId);
         when(mockedActuator.read(getFeederAddressCommand))
                 .thenReturn(GetFeederAddress.ok(feederAddress, hardwareId));
 
-        String moveFeederForwardCommand = moveFeedForward(feederAddress, 20);
+        String moveFeederForwardCommand = commands.moveFeedForward(feederAddress, 20);
         when(mockedActuator.read(moveFeederForwardCommand))
                 .thenReturn(Errors.timeout());
 
@@ -713,11 +715,11 @@ public class PhotonFeederTest {
         feeder.setPartPitch(2);
         photonProperties.setFeederCommunicationMaxRetry(1);
 
-        String initializeFeederCommand = initializeFeeder(feederAddress, hardwareId);
+        String initializeFeederCommand = commands.initializeFeeder(feederAddress, hardwareId);
         when(mockedActuator.read(initializeFeederCommand))
                 .thenReturn(Errors.timeout());
 
-        String getFeederAddressCommand = getFeederAddress(hardwareId);
+        String getFeederAddressCommand = commands.getFeederAddress(hardwareId);
         when(mockedActuator.read(getFeederAddressCommand))
                 .thenReturn(GetFeederAddress.ok(feederAddress, hardwareId));
 
@@ -742,11 +744,11 @@ public class PhotonFeederTest {
         feeder.setSlotAddress(feederAddress);
         setSlotLocation(feederAddress, baseLocation);
 
-        String initializeFeederCommand = initializeFeeder(feederAddress, hardwareId);
+        String initializeFeederCommand = commands.initializeFeeder(feederAddress, hardwareId);
         when(mockedActuator.read(initializeFeederCommand))
                 .thenReturn(InitializeFeeder.ok(feederAddress));
 
-        String moveFeedForwardCommand = moveFeedForward(feederAddress, 20);
+        String moveFeedForwardCommand = commands.moveFeedForward(feederAddress, 20);
         when(mockedActuator.read(moveFeedForwardCommand))
                 .thenReturn(Errors.timeout());
 
@@ -766,11 +768,11 @@ public class PhotonFeederTest {
         feeder.setSlotAddress(feederAddress);
         setSlotLocation(feederAddress, baseLocation);
 
-        String oldInitializeFeederCommand = initializeFeeder(feederAddress, hardwareId);
+        String oldInitializeFeederCommand = commands.initializeFeeder(feederAddress, hardwareId);
         when(mockedActuator.read(oldInitializeFeederCommand))
                 .thenReturn(InitializeFeeder.ok(feederAddress));
 
-        String oldMoveFeederForwardCommand = moveFeedForward(feederAddress, 20);
+        String oldMoveFeederForwardCommand = commands.moveFeedForward(feederAddress, 20);
         when(mockedActuator.read(oldMoveFeederForwardCommand))
                 .thenReturn(Errors.uninitializedFeeder(feederAddress, "FFEEDDCCBBAA998877665544"));
 
@@ -778,15 +780,15 @@ public class PhotonFeederTest {
 
         setSlotLocation(newAddress, baseLocation);
 
-        String newGetFeederAddressCommand = getFeederAddress(hardwareId);
+        String newGetFeederAddressCommand = commands.getFeederAddress(hardwareId);
         when(mockedActuator.read(newGetFeederAddressCommand))
                 .thenReturn(GetFeederAddress.ok(newAddress, hardwareId));
 
-        String newInitializeFeederCommand = initializeFeeder(newAddress, hardwareId);
+        String newInitializeFeederCommand = commands.initializeFeeder(newAddress, hardwareId);
         when(mockedActuator.read(newInitializeFeederCommand))
                 .thenReturn(InitializeFeeder.ok(newAddress));
 
-        String newMoveFeedForwardCommand = moveFeedForward(newAddress, 20);
+        String newMoveFeedForwardCommand = commands.moveFeedForward(newAddress, 20);
         when(mockedActuator.read(newMoveFeedForwardCommand))
                 .thenReturn(MoveFeedForward.ok(newAddress));
 
@@ -813,11 +815,11 @@ public class PhotonFeederTest {
         feeder.setSlotAddress(feederAddress);
         feeder.setPartPitch(2);
 
-        String initializeFeederCommand = initializeFeeder(feederAddress, hardwareId);
+        String initializeFeederCommand = commands.initializeFeeder(feederAddress, hardwareId);
         when(mockedActuator.read(initializeFeederCommand))
                 .thenReturn(InitializeFeeder.ok(feederAddress));
 
-        String moveFeedForwardCommand = moveFeedForward(feederAddress, 20);
+        String moveFeedForwardCommand = commands.moveFeedForward(feederAddress, 20);
         when(mockedActuator.read(moveFeedForwardCommand))
                 .thenReturn(MoveFeedForward.ok(feederAddress));
 
@@ -835,11 +837,11 @@ public class PhotonFeederTest {
         setSlotLocation(feederAddress, baseLocation);
         feeder.setPartPitch(2);
 
-        String initializeFeederCommand = initializeFeeder(feederAddress, hardwareId);
+        String initializeFeederCommand = commands.initializeFeeder(feederAddress, hardwareId);
         when(mockedActuator.read(initializeFeederCommand))
                 .thenReturn(InitializeFeeder.ok(feederAddress));
 
-        String moveFeedForwardCommand = moveFeedForward(feederAddress, 20);
+        String moveFeedForwardCommand = commands.moveFeedForward(feederAddress, 20);
         when(mockedActuator.read(moveFeedForwardCommand))
                 .thenReturn(MoveFeedForward.ok(feederAddress));
 
@@ -875,11 +877,11 @@ public class PhotonFeederTest {
         machine.addFeeder(feederB);
 
         // Both feeders initialized in their known slot
-        String feederASlot1InitializationCommand = initializeFeeder(1, hardwareIdA);
+        String feederASlot1InitializationCommand = commands.initializeFeeder(1, hardwareIdA);
         when(mockedActuator.read(feederASlot1InitializationCommand))
                 .thenReturn(InitializeFeeder.ok(1));
 
-        String feederBSlot2InitializationCommand = initializeFeeder(2, hardwareIdB);
+        String feederBSlot2InitializationCommand = commands.initializeFeeder(2, hardwareIdB);
         when(mockedActuator.read(feederBSlot2InitializationCommand))
                 .thenReturn(InitializeFeeder.ok(2));
 
@@ -891,21 +893,21 @@ public class PhotonFeederTest {
         // into slot 1. This causes the next move command to timeout for feeder B. We don't need to be running a job in
         // this unit test, we just need to call move manually below.
 
-        String feederBSlot2FeedCommand = moveFeedForward(2, 20);
+        String feederBSlot2FeedCommand = commands.moveFeedForward(2, 20);
         when(mockedActuator.read(feederBSlot2FeedCommand))
                 .thenReturn(Errors.timeout());
 
         // Feeder B is now in slot 1
-        String feederBGetAddressCommand = getFeederAddress(hardwareIdB);
+        String feederBGetAddressCommand = commands.getFeederAddress(hardwareIdB);
         when(mockedActuator.read(feederBGetAddressCommand))
                 .thenReturn(GetFeederAddress.ok(1, hardwareIdB));
 
-        String feederBSlot1InitializationCommand = initializeFeeder(1, hardwareIdB);
+        String feederBSlot1InitializationCommand = commands.initializeFeeder(1, hardwareIdB);
         when(mockedActuator.read(feederBSlot1InitializationCommand))
                 .thenReturn(InitializeFeeder.ok(1));
 
         // We can finally try feeding in the correct slot!
-        String feederBSlot1FeedCommand = moveFeedForward(1, 20);
+        String feederBSlot1FeedCommand = commands.moveFeedForward(1, 20);
         when(mockedActuator.read(feederBSlot1FeedCommand))
                 .thenReturn(MoveFeedForward.ok(1));
 
@@ -939,7 +941,7 @@ public class PhotonFeederTest {
 
         int newAddress = 11;
 
-        String getFeederAddressCommand = getFeederAddress(hardwareId);
+        String getFeederAddressCommand = commands.getFeederAddress(hardwareId);
         when(mockedActuator.read(getFeederAddressCommand))
                 .thenReturn(
                         GetFeederAddress.ok(feederAddress, hardwareId),
@@ -966,7 +968,7 @@ public class PhotonFeederTest {
         feeder.setHardwareId(hardwareId);
         feeder.setSlotAddress(feederAddress);
 
-        String getFeederAddressCommand = getFeederAddress(hardwareId);
+        String getFeederAddressCommand = commands.getFeederAddress(hardwareId);
         when(mockedActuator.read(getFeederAddressCommand))
                 .thenReturn(Errors.timeout());
 
@@ -985,7 +987,7 @@ public class PhotonFeederTest {
         photonProperties.setMaxFeederAddress(maxFeederAddress);
 
         for (int i = 1; i <= maxFeederAddress; i++) {
-            when(mockedActuator.read(getFeederId(i)))
+            when(mockedActuator.read(commands.getFeederId(i)))
                     .thenReturn(Errors.timeout());
         }
 
@@ -993,7 +995,7 @@ public class PhotonFeederTest {
 
         InOrder inOrder = inOrder(mockedActuator);
         for (int i = 1; i <= maxFeederAddress; i++) {
-            inOrder.verify(mockedActuator).read(getFeederId(i));
+            inOrder.verify(mockedActuator).read(commands.getFeederId(i));
         }
         inOrder.verify(mockedActuator, never()).read(any());
     }
@@ -1014,14 +1016,14 @@ public class PhotonFeederTest {
         feeder.setHardwareId(hardwareId);
         feeder.setSlotAddress(1);
 
-        when(mockedActuator.read(getFeederId(1)))
+        when(mockedActuator.read(commands.getFeederId(1)))
                 .thenReturn(GetFeederId.ok(1, newHardwareUuid));
 
-        when(mockedActuator.read(getFeederId(2)))
+        when(mockedActuator.read(commands.getFeederId(2)))
                 .thenReturn(GetFeederId.ok(2, hardwareId));
 
         for (int i = 3; i <= maxFeederAddress; i++) {
-            when(mockedActuator.read(getFeederId(i)))
+            when(mockedActuator.read(commands.getFeederId(i)))
                     .thenReturn(Errors.timeout());
         }
 
@@ -1029,7 +1031,7 @@ public class PhotonFeederTest {
 
         InOrder inOrder = inOrder(mockedActuator);
         for (int i = 1; i <= maxFeederAddress; i++) {
-            inOrder.verify(mockedActuator).read(getFeederId(i));
+            inOrder.verify(mockedActuator).read(commands.getFeederId(i));
         }
         inOrder.verify(mockedActuator, never()).read(any());
 
@@ -1062,17 +1064,17 @@ public class PhotonFeederTest {
 
         String newHardwareUuid = "FFEEDDCCBBAA998877665544";
 
-        when(mockedActuator.read(getFeederId(1)))
+        when(mockedActuator.read(commands.getFeederId(1)))
                 .thenReturn(GetFeederId.ok(1, hardwareId));
 
-        when(mockedActuator.read(getFeederId(2)))
+        when(mockedActuator.read(commands.getFeederId(2)))
                 .thenReturn(GetFeederId.ok(2, newHardwareUuid));
 
         PhotonFeeder.findAllFeeders(null);
 
         InOrder inOrder = inOrder(mockedActuator);
         for (int i = 1; i <= maxFeederAddress; i++) {
-            inOrder.verify(mockedActuator).read(getFeederId(i));
+            inOrder.verify(mockedActuator).read(commands.getFeederId(i));
         }
         inOrder.verify(mockedActuator, never()).read(any());
 
@@ -1101,7 +1103,7 @@ public class PhotonFeederTest {
         feeder.setHardwareId(hardwareId);
         feeder.setSlotAddress(1);
         for (int i = 1; i <= maxFeederAddress; i++) {
-            when(mockedActuator.read(getFeederId(i)))
+            when(mockedActuator.read(commands.getFeederId(i)))
                     .thenReturn(Errors.timeout());
         }
 
@@ -1109,7 +1111,7 @@ public class PhotonFeederTest {
 
         InOrder inOrder = inOrder(mockedActuator);
         for (int i = 1; i <= maxFeederAddress; i++) {
-            inOrder.verify(mockedActuator).read(getFeederId(i));
+            inOrder.verify(mockedActuator).read(commands.getFeederId(i));
         }
         inOrder.verify(mockedActuator, never()).read(any());
 
@@ -1122,7 +1124,7 @@ public class PhotonFeederTest {
         photonProperties.setMaxFeederAddress(maxFeederAddress);
 
         for (int i = 1; i <= maxFeederAddress; i++) {
-            when(mockedActuator.read(getFeederId(i)))
+            when(mockedActuator.read(commands.getFeederId(i)))
                     .thenReturn(Errors.timeout());
         }
 
@@ -1132,7 +1134,7 @@ public class PhotonFeederTest {
 
         InOrder inOrder = inOrder(mockedActuator, progressUpdates);
         for (int i = 1; i <= maxFeederAddress; i++) {
-            inOrder.verify(mockedActuator).read(getFeederId(i));
+            inOrder.verify(mockedActuator).read(commands.getFeederId(i));
             inOrder.verify(progressUpdates).accept((i * 100) / maxFeederAddress);
         }
         inOrder.verify(mockedActuator, never()).read(any());

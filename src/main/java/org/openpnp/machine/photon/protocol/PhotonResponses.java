@@ -6,12 +6,14 @@ public class PhotonResponses {
             return PacketBuilder.response(feederAddress)
                     .putError(ErrorTypes.WRONG_FEEDER_UUID)
                     .putUuid(uuid)
+                    .toPacket()
                     .toByteString();
         }
 
         public static String motorFault(int feederAddress) {
             return PacketBuilder.response(feederAddress)
                     .putError(ErrorTypes.MOTOR_FAULT)
+                    .toPacket()
                     .toByteString();
         }
 
@@ -19,6 +21,7 @@ public class PhotonResponses {
             return PacketBuilder.response(feederAddress)
                     .putError(ErrorTypes.UNINITIALIZED_FEEDER)
                     .putUuid(uuid)
+                    .toPacket()
                     .toByteString();
         }
 
@@ -33,6 +36,7 @@ public class PhotonResponses {
             return PacketBuilder.response(feederAddress)
                     .putOk()
                     .putUuid(uuid)
+                    .toPacket()
                     .toByteString();
         }
 
@@ -45,7 +49,8 @@ public class PhotonResponses {
 
     public static class InitializeFeeder {
         public static String ok(int feederAddress) {
-            return PacketBuilder.response(feederAddress).putOk().toByteString();
+            return PacketBuilder.response(feederAddress).putOk()
+                    .toPacket().toByteString();
         }
 
         public static PacketResponse decode(String message) {
@@ -60,6 +65,7 @@ public class PhotonResponses {
             return PacketBuilder.response(feederAddress)
                     .putOk()
                     .putByte(version)
+                    .toPacket()
                     .toByteString();
         }
 
@@ -72,7 +78,8 @@ public class PhotonResponses {
 
     public static class MoveFeedForward {
         public static String ok(int feederAddress) {
-            return PacketBuilder.response(feederAddress).putOk().toByteString();
+            return PacketBuilder.response(feederAddress).putOk()
+                    .toPacket().toByteString();
         }
 
         public static PacketResponse decode(String message) {
@@ -82,7 +89,8 @@ public class PhotonResponses {
 
     public static class MoveFeedBackward {
         public static String ok(int feederAddress) {
-            return PacketBuilder.response(feederAddress).putOk().toByteString();
+            return PacketBuilder.response(feederAddress).putOk()
+                    .toPacket().toByteString();
         }
 
         public static PacketResponse decode(String message) {
@@ -95,6 +103,7 @@ public class PhotonResponses {
             return PacketBuilder.response(feederAddress)
                     .putOk()
                     .putUuid(uuid)
+                    .toPacket()
                     .toByteString();
         }
 

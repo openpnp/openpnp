@@ -3,17 +3,24 @@ package org.openpnp.machine.photon.protocol;
 import java.nio.IntBuffer;
 
 public class PacketBuilder {
-    private final IntBuffer dataBuffer;
+    private final IntBuffer payloadBuffer;
+    private final Packet packet;
 
     private PacketBuilder() {
-        dataBuffer = IntBuffer.allocate(32);
+        packet = new Packet();
+        payloadBuffer = IntBuffer.allocate(32);
     }
 
-    public static PacketBuilder command(int address, int command_id) {
-        return new PacketBuilder()
-                .putByte(address)
-                .putByte(0x00) // For length, will be updated later
-                .putByte(command_id);
+    public static PacketBuilder command(int toAddress, int fromAddress, int packetId, int command_id) {
+        PacketBuilder builder = new PacketBuilder();
+        Packet packet = builder.packet;
+        packet.toAddress = toAddress;
+        packet.fromAddress = fromAddress;
+        packet.packetId = packetId;
+
+        builder.putByte(command_id);
+
+        return builder;
     }
 
     public static PacketBuilder response(int feederAddress) {
@@ -24,7 +31,7 @@ public class PacketBuilder {
     }
 
     public PacketBuilder putByte(int data) {
-        dataBuffer.put(data & 0xFF);
+        payloadBuffer.put(data & 0xFF);
         return this;
     }
 
@@ -45,22 +52,29 @@ public class PacketBuilder {
         return putByte(error.getId());
     }
 
-    public String toByteString() {
-        dataBuffer.put(1, dataBuffer.position() - 2); // Update length
+    public Packet toPacket() {
+        // Flip resets the buffer so that we're at the first byte and can grab the new "remaining" bytes and put them
+        // into our dataBytes.
 
-        dataBuffer.flip();
-        int[] dataBytes = new int[dataBuffer.remaining()];
-        dataBuffer.get(dataBytes);
+        payloadBuffer.flip();
+        int[] dataBytes = new int[payloadBuffer.remaining()];
+        payloadBuffer.get(dataBytes);
+        packet.payloadLength = dataBytes.length;
+        packet.payload = dataBytes;
 
-        int checksum = PacketHelper.crc16(dataBytes);
-        StringBuilder result = new StringBuilder();
+        CRC8_107 crc8 = new CRC8_107();
 
-        for (int data : dataBytes) {
-            result.append(String.format("%02X", data & 0xFF));
+        crc8.add(packet.toAddress);
+        crc8.add(packet.fromAddress);
+        crc8.add(packet.packetId);
+        crc8.add(packet.payloadLength);
+
+        for (int dataByte : dataBytes) {
+            crc8.add(dataByte);
         }
-        result.append(String.format("%02X", checksum & 0xFF));
-        result.append(String.format("%02X", (checksum >> 8) & 0xFF));
 
-        return result.toString();
+        packet.crc = crc8.getCRC();
+
+        return packet;
     }
 }

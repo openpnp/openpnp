@@ -48,6 +48,8 @@ public class PhotonFeeder extends ReferenceFeeder {
     @Element(required = false)
     private Location offset;
 
+    private static final PhotonCommands commands = new PhotonCommands(0);
+
     public PhotonFeeder() {
         Configuration.get().addListener(new ConfigurationListener.Adapter() {
             @Override
@@ -155,7 +157,7 @@ public class PhotonFeeder extends ReferenceFeeder {
         }
 
         Actuator actuator = getDataActuator();
-        String feederAddressResponseString = actuator.read(PhotonCommands.getFeederAddress(hardwareId));
+        String feederAddressResponseString = actuator.read(commands.getFeederAddress(hardwareId));
 
         PacketResponse response = GetFeederAddress.decode(feederAddressResponseString);
         if (!response.isOk()) {
@@ -179,7 +181,7 @@ public class PhotonFeeder extends ReferenceFeeder {
         }
 
         Actuator actuator = getDataActuator();
-        String responseString = actuator.read(PhotonCommands.initializeFeeder(slotAddress, hardwareId));
+        String responseString = actuator.read(commands.initializeFeeder(slotAddress, hardwareId));
         PacketResponse response = InitializeFeeder.decode(responseString);
 
         if (!response.isOk()) {
@@ -235,7 +237,7 @@ public class PhotonFeeder extends ReferenceFeeder {
             verifyFeederLocationIsFullyConfigured();
 
             Actuator actuator = getDataActuator();
-            String ackResponseString = actuator.read(PhotonCommands.moveFeedForward(slotAddress, partPitch * 10));
+            String ackResponseString = actuator.read(commands.moveFeedForward(slotAddress, partPitch * 10));
 
             PacketResponse ackResponse = MoveFeedForward.decode(ackResponseString);
             if (!ackResponse.isOk()) {
@@ -452,7 +454,7 @@ public class PhotonFeeder extends ReferenceFeeder {
 
         for (int address = 1; address <= maxFeederAddress; address++) {
             Logger.debug("Querying Photon feeder address: " + address);
-            String command = PhotonCommands.getFeederId(address);
+            String command = commands.getFeederId(address);
             Logger.trace("Photon feeder command: " + command);
             String response = actuator.read(command);
             Logger.trace("Photon feeder response: " + command);
