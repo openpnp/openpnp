@@ -285,14 +285,16 @@ The columns shown in the Alignment Fiducials/Placements table are:
 A dedicated panel fiducial can be manually added to the panel by clicking the <img src="https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/general-add.svg" width="16" height="16"> button just above the list and editing the fields in the table appropriately. Pseudo-fiducials or pseudo-placements can be added to the panel by clicking the 
 <img src="https://user-images.githubusercontent.com/50550971/219879316-44c500da-afe8-49b4-9f9e-f9478e61a8f1.svg" width="16" height="16"> button and following the instructions in the dialog box. Fiducials can be removed by selecting one or more in the list and clicking the <img src="https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/general-remove.svg" width="16" height="16"> button.
 
-# Job Setup
+## Job Definition
 
 A job definition is a set of instructions that tells OpenPnP what boards and/or panels to assemble. The job definition consists of a list of one or more boards and/or panels, along with their locations, orientations, and other information. A job definition may contain any number of boards and/or panels and can include multiples of the same board and/or panel or multiple different boards and/or panels. Each entry in the job definition tells OpenPnP where to find one particular board or panel using machine coordinates. When the job is run, OpenPnP will process all of the placements for each board in the Job.
 
-Job definitions are created on the Job tab and are stored in files with the extension `.job.xml`.
+A new job definition is created from OpenPnP's mainframe menu by selecting File->New Job. The file menu also has options for opening recent jobs as well as saving them. Job definitions are stored in files with the extension `.job.xml`. The name of the currently loaded job definition is shown at the top of OpenPnP's frame.
+
+The job definition is edited on the Job tab: 
 <img width="954" alt="jobTab2" src="https://user-images.githubusercontent.com/50550971/221249180-fdb9523e-98e4-44ca-b3a8-a96a9c911889.png">
 
-At the top of the job tab is a table that lists all of the boards and/or panels that are currently in the job definition.
+At the top of the job tab is a table that lists all of the boards and panels that are in the currently loaded job definition (the name of the job definition is show at the top of the OpenPnP main frame).
 
 The columns shown in the job table are:
 - **Board/Panel ID**: This is a unique identifier for each board and/or panel. The IDs for top-level boards and panels can be edited here but they must be unique. The IDs for boards and panels that are descendants of an upper-level panel are set by their parent panel definition and are not editable here. Boards are shown with a 
@@ -302,31 +304,18 @@ The columns shown in the job table are:
 - **Width**: This is the width of the board or panel. It is set by the board or panel's definition and is not editable here.
 - **Length**: This is the length of the board or panel. It is set by the board or panel's definition and is not editable here.
 - **Side**: This is the side of the board or panel that is facing up on the machine. The side can only be changed for top-level boards and panels, i.e., the side of boards and panels that are descendants of a higher-level panel can't be changed here (although changing the side of a top-level panel will automatically change the side of all of its descendants).
-- **X, Y, Z, Rot.**: This is location of the board or panel in machine coordinates. This can only be changed for top-level boards and panels, i.e., the location of boards and panels that are descendants of a higher-level panel can't be changed here (although changing the location of a top-level panel will automatically change the location of all of its descendants).
-- **Enabled?**: This tells OpenPnP whether or not to process the board or panel when the job is run. Disabling a panel also disables all of its descendants.
-- **Check Fids?**: This tells OpenPnP whether or not to perform a fiducial check on the board or panel prior to placing any parts on the boards (or the panel's descendant boards).
+- **X, Y, Z, Rot.**: This is location of the board or panel in machine coordinates. This can only be changed for top-level boards and panels, i.e., the location of boards and panels that are descendants of a higher-level panel can't be changed here (although changing the location of a top-level panel will automatically change the location of all of its descendants). The X, Y, and Rotation coordinates are explained in great detail in [[Understanding Board Locations]]. The Z coordinate should be set to the Z coordinate of the nozzle tip when it is just barely touching the upper surface of the board when it is on the machine. Part height is added to this when placing a part so that the nozzle tip stops at the right height above the board.
+- **Enabled?**: This tells OpenPnP whether or not to process the board or panel when the job is run. Disabling a panel also disables all of its descendants. Enabling a panel also enables all of its descendants that were previously enabled when the panel was disabled.
+- **Check Fids?**: This tells OpenPnP whether or not to perform an automatic fiducial check on the board or panel at the start of a job.
 
+Boards and/or panels are added to the job table by clicking the <img src="https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/general-add.svg" width="16" height="16"> button just above the list. If the [[Recommended Workflow]] is being followed, all board and/or panel definitions required for the job will have already been created so use the Existing Board... or Existing Panel... submenu options. Alternatively, boards and/or panels without existing definitions can be added with the New Board... or New Panel submenu options (new entries for these will be created on their respective tab and will require editing there to complete their definitions).
 
- 
+For each board or panel added to the job definition, use the dropdown menu to set the Side to match the side of the physical board or panel that is facing up on the machine.
 
-Board locations represent the 0, 0, 0 (X, Y, Z) origin of the top of the PCB. This tells the machine where to find 0, 0, 0 on the board and it performs the math needed to find the individual placements from there. Part height is added when placing a part so that the nozzle tip stops at the right height above the board.
+The location (X, Y, and Rot. fields) are generally set by jogging the top camera crosshairs over the appropriate spot on the physical board or panel, rotating them to match the orientation of the board, and then clicking the <img src="https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/capture-camera.svg" width="16" height="16"> button.
 
+The Z coordinate of the board or panel is set by jogging a nozzle tip somewhere over the board or panel, carefully lowering it until it just touches the top surface, and then clicking the <img src="https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/capture-nozzle.svg" width="16" height="16"> button. 
 
-![screen shot 2018-07-24 at 8 38 21 pm](https://user-images.githubusercontent.com/1182323/43174782-8c242f16-8f81-11e8-8551-7f0a6e9b9c94.png)
-
-
-
-You can add a new or existing board to the job by clicking the ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/general-add.svg) button in the Boards section.
-
-The columns in the table are:
-
-- **Board**: The name of the board at this location.
-- **Width**: The width of the bare PCB. This is optional, but it's helpful to set it if you will be placing the bottom of the board in addition to the top.
-- **Length**: The length, or height, of the bare PCB. Not currently used in OpenPnP.
-- **Side**: The side of the board you want to place in this job. Selecting the side tells OpenPnP which placements to place during the job run.
-- **X, Y, Z, Rot**: The X, Y, Z, and Rotation coordinates of the board in relation to the origin of the machine. This can be a complex topic. See [[Understanding Board Locations]] for all the details.
-- **Enabled?**: Only boards that are enabled will be processed in the job. You can uncheck a board to skip it for a job run.
-- **Check Fids?**: If this is checked OpenPnP will run a fiducial check on the board before processing it, and it will use the coordinates it finds to better locate the board.
 
 ## Placements
 
