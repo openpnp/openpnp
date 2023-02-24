@@ -202,16 +202,6 @@ Before OpenPnP can be used to assemble parts onto PCBs, there are several items 
 5. Setup feeders on the [Feeders](#feeders) tab.
 6. Run the job.
 
-# Job Setup
-
-A job consists of one or more boards and/or panels, along with locations, orientations, and other information about them. A job may contain any number of boards and/or panels and can include multiples of the same board and/or panel or multiple different boards and/or panels. 
-
-Each entry in a job tells OpenPnP where to find one particular board or panel using machine coordinates. When you run the Job OpenPnP will process all of the placements for each board in the Job.
-
-Jobs are stored in files with the extension `.job.xml`.
-
-When setting up a job, you'll need to configure Boards, Panels (optional), Placements, Parts, Packages, and Feeders. These are all introduced in the sections below.
-
 ## Boards
 
 Board definitions are the "blueprints" or assembly instructions that tell OpenPnP how to assemble parts onto a PCB. Board definitions are stored in files with the extension `.board.xml`. A board definition contains a list of placements. Each placement tells OpenPnP which part to pick, on which side of the PCB, and at what coordinates and rotation to place the part.
@@ -294,6 +284,27 @@ The columns shown in the Alignment Fiducials/Placements table are:
 
 A dedicated panel fiducial can be manually added to the panel by clicking the <img src="https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/general-add.svg" width="16" height="16"> button just above the list and editing the fields in the table appropriately. Pseudo-fiducials or pseudo-placements can be added to the panel by clicking the 
 <img src="https://user-images.githubusercontent.com/50550971/219879316-44c500da-afe8-49b4-9f9e-f9478e61a8f1.svg" width="16" height="16"> button and following the instructions in the dialog box. Fiducials can be removed by selecting one or more in the list and clicking the <img src="https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/general-remove.svg" width="16" height="16"> button.
+
+# Job Setup
+
+A job definition is a set of instructions that tells OpenPnP what boards and/or panels to assemble. The job definition consists of a list of one or more boards and/or panels, along with their locations, orientations, and other information. A job definition may contain any number of boards and/or panels and can include multiples of the same board and/or panel or multiple different boards and/or panels. Each entry in the job definition tells OpenPnP where to find one particular board or panel using machine coordinates. When the job is run, OpenPnP will process all of the placements for each board in the Job.
+
+Job definitions are created on the Job tab and are stored in files with the extension `.job.xml`.
+<img width="954" alt="jobTab2" src="https://user-images.githubusercontent.com/50550971/221249180-fdb9523e-98e4-44ca-b3a8-a96a9c911889.png">
+
+At the top of the job tab is a table that lists all of the boards and/or panels that are currently in the job definition.
+
+The columns shown in the job table are:
+- **Board/Panel ID**: This is a unique identifier for each board and/or panel. The IDs for top-level boards and panels can be edited here but they must be unique. The IDs for boards and panels that are descendants of an upper-level panel are set by their parent panel definition and are not editable here. Boards are shown with a 
+<img src="https://user-images.githubusercontent.com/50550971/221253312-bba51003-58b9-40e4-a88e-8172a609f979.svg" width="16" height="16"> icon and panels with a 
+<img src="https://user-images.githubusercontent.com/50550971/221253486-90fa4dd0-7e6b-4cc8-9a65-38543dd75f36.svg" width="16" height="16"> icon. The entries are indented to show the heritage of the board/panel.
+- **Name**: This is the name of the board or panel's definition and is not editable here.
+- **Width**: This is the width of the board or panel. It is set by the board or panel's definition and is not editable here.
+- **Length**: This is the length of the board or panel. It is set by the board or panel's definition and is not editable here.
+- **Side**: This is the side of the board or panel that is facing up on the machine. The side can only be changed for top-level boards and panels, i.e., the side of boards and panels that are descendants of a higher-level panel can't be changed here (although changing the side of a top-level panel will automatically change the side of all of its descendants).
+- **X, Y, Z, Rot.**: This is location of the board or panel in machine coordinates. This can only be changed for top-level boards and panels, i.e., the location of boards and panels that are descendants of a higher-level panel can't be changed here (although changing the location of a top-level panel will automatically change the location of all of its descendants).
+- **Enabled?**: This tells OpenPnP whether or not to process the board or panel when the job is run. Disabling a panel also disables all of its descendants.
+- **Check Fids?**: This tells OpenPnP whether or not to perform a fiducial check on the board or panel prior to placing any parts on the boards (or the panel's descendant boards).
 
 
  
