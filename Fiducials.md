@@ -37,7 +37,7 @@ If OpenPnP is not finding your fiducials, try the following:
 1. Make sure you have set the Units Per Pixel values for your camera. A quick way to test this is to right click the camera view, turn on the Ruler Reticle and see if it matches a ruler placed on the machine.
 2. Use solder wick to put a thin coating of solder on the fiducial. This will give it a matte finish that can more easily be seen by the machine vision, compared to the reflective finish that is sometimes present on pads straight from manufacture.
 3. On HASL boards, try roughing up the fiducial with an eraser to remove the gloss.
-4. Make sure that the fiducial is within a certain distance from where it is expected to be; by now this distance is hardcoded to **5 mm**. This prevents from locking to something in the camera view which is recognized as fiducial, but really isn't.
+4. Make sure that the fiducial is within a certain distance from where it is expected to be. Go to Machine Setup / Vision / Fiducial Locator and adjust **Max. Distance** if needed. This prevents from locking to something in the camera view which is recognized as fiducial, but really isn't.
 5. Don't set a **body** width and length for fiducials, leave them 0.  You only need the pad definition.
 6. Change the log level to DEBUG or TRACE. See https://github.com/openpnp/openpnp/wiki/FAQ#how-do-i-turn-on-debug-logging for more information.
 7. Restart OpenPnP and try to run your fidicual check again.
