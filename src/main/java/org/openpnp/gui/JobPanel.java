@@ -98,6 +98,7 @@ import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.PlacementsHolderLocation;
 import org.openpnp.model.Job;
+import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 import org.openpnp.model.Panel;
 import org.openpnp.model.PanelLocation;
@@ -166,23 +167,24 @@ public class JobPanel extends JPanel {
         this.mainFrame = frame;
 
         singleSelectionActionGroup =
-                new ActionGroup(moveCameraToBoardLocationAction,
+                new ActionGroup(captureToolBoardLocationAction, moveCameraToBoardLocationAction,
                         moveCameraToBoardLocationNextAction, moveToolToBoardLocationAction,
                         twoPointLocateBoardLocationAction, fiducialCheckAction,
                         setEnabledAction, setCheckFidsAction, setSideAction);
         singleSelectionActionGroup.setEnabled(false);
         
-        multiSelectionActionGroup = new ActionGroup(setEnabledAction, setCheckFidsAction, setSideAction);
+        multiSelectionActionGroup = new ActionGroup(captureToolBoardLocationAction, setEnabledAction, 
+                setCheckFidsAction, setSideAction);
         multiSelectionActionGroup.setEnabled(false);
         
-        singleTopLevelSelectionActionGroup = new ActionGroup(removeBoardAction, captureCameraBoardLocationAction,
-                captureToolBoardLocationAction, moveCameraToBoardLocationAction,
+        singleTopLevelSelectionActionGroup = new ActionGroup(captureToolBoardLocationAction, removeBoardAction, captureCameraBoardLocationAction,
+                moveCameraToBoardLocationAction,
                 moveCameraToBoardLocationNextAction, moveToolToBoardLocationAction,
                 twoPointLocateBoardLocationAction, fiducialCheckAction,
                 setEnabledAction, setCheckFidsAction, setSideAction);
         singleTopLevelSelectionActionGroup.setEnabled(false);
         
-        multiTopLevelSelectionActionGroup = new ActionGroup(removeBoardAction, setEnabledAction, 
+        multiTopLevelSelectionActionGroup = new ActionGroup(captureToolBoardLocationAction, removeBoardAction, setEnabledAction, 
                 setCheckFidsAction, setSideAction);
         multiTopLevelSelectionActionGroup.setEnabled(false);
         
@@ -1281,14 +1283,17 @@ public class JobPanel extends JPanel {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.messageBoxOnException(() -> {
-                PlacementsHolderLocation<?> selectedLocation = getSelection();
-                if (selectedLocation.getParent() != job.getRootPanelLocation()) {
+                List<PlacementsHolderLocation<?>> selections = getSelections();
+                if (selections.size() == 1 && selections.get(0).getParent() != job.getRootPanelLocation()) {
                     throw new Exception(Translations.getString("JobPanel.Action.Job.Board.CaptureToolLocation.Exception.Message")); //$NON-NLS-1$
                 }
-                HeadMountable tool = MainFrame.get().getMachineControls().getSelectedTool();
-                double z = selectedLocation.getGlobalLocation().getZ();
-                selectedLocation.setLocation(tool.getLocation().derive(null, null, z, null));
-                refreshSelectedRow();
+                Length toolZ = MainFrame.get().getMachineControls().getSelectedTool().getLocation().getLengthZ();
+                for (PlacementsHolderLocation<?> selection : selections) {
+                    if (selection.getParent() == job.getRootPanelLocation()) {
+                        selection.setLocation(selection.getGlobalLocation().deriveLengths(null, null, toolZ, null));
+                        jobTableModel.fireTableCellDecendantsUpdated(selection, "Z"); //$NON-NLS-1$
+                    }
+                }
             });
         }
     };
