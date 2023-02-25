@@ -308,13 +308,34 @@ The columns shown in the job table are:
 - **Enabled?**: This tells OpenPnP whether or not to process the board or panel when the job is run. Disabling a panel also disables all of its descendants. Enabling a panel also enables all of its descendants that were previously enabled when the panel was disabled.
 - **Check Fids?**: This tells OpenPnP whether or not to perform an automatic fiducial check on the board or panel at the start of a job.
 
-Boards and/or panels are added to the job table by clicking the <img src="https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/general-add.svg" width="16" height="16"> button just above the list. If the [[Recommended Workflow]] is being followed, all board and/or panel definitions required for the job will have already been created so use the Existing Board... or Existing Panel... submenu options. Alternatively, boards and/or panels without existing definitions can be added with the New Board... or New Panel submenu options (new entries for these will be created on their respective tab and will require editing there to complete their definitions).
+Boards and/or panels are added to the job table by clicking the <img src="https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/general-add.svg" width="16" height="16"> button just above the list. If the [Recommended Workflow](#recommended-workflow) is being followed, all board and/or panel definitions required for the job will have already been created so use the Existing Board... or Existing Panel... submenu options. Alternatively, boards and/or panels without existing definitions can be added with the New Board... or New Panel submenu options (new entries for these will be created on their respective tab and will require editing there to complete their definitions).
 
-For each board or panel added to the job definition, use the dropdown menu to set the Side to match the side of the physical board or panel that is facing up on the machine.
+For each board or panel added to the job definition, use the dropdown menu to set the Side to match the side of the physical board or panel that is facing **up** on the machine.
 
-The location (X, Y, and Rot. fields) are generally set by jogging the top camera crosshairs over the appropriate spot on the physical board or panel, rotating them to match the orientation of the board, and then clicking the <img src="https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/capture-camera.svg" width="16" height="16"> button.
+The Z coordinate of the board or panel is set by jogging a nozzle tip somewhere over the board or panel, carefully lowering it until it just touches the top surface, and then clicking the <img src="https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/capture-nozzle.svg" width="16" height="16"> button.
 
-The Z coordinate of the board or panel is set by jogging a nozzle tip somewhere over the board or panel, carefully lowering it until it just touches the top surface, and then clicking the <img src="https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/capture-nozzle.svg" width="16" height="16"> button. 
+The X, Y, and Rot. fields are normally set by jogging the top camera crosshairs over the appropriate spot (see [[Understanding Board Locations]]) on the physical board or panel, rotating them to match the orientation of the board, and then clicking the <img src="https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/capture-camera.svg" width="16" height="16"> button.
+
+To obtain a more precise location for the board or panel, a fiducial check (assuming the board or panel has fiducials) can be performed by clicking the 
+<img src="https://user-images.githubusercontent.com/50550971/221361679-6c4ebd8b-5e87-4ef6-a1ae-48d1d07895f6.svg" width="16" height="16"> button. Alternatively, if the board or panel does not have fiducials, multiple placements can be used for the same purpose. This is a manual process that is started by clicking the 
+<img src="https://user-images.githubusercontent.com/50550971/221361810-1916dda3-fd78-4015-883d-9165d50acf1b.svg" width="16" height="16"> button. A series of instructions will appear below the camera view guiding the process.
+
+Clicking the 
+<img src="https://user-images.githubusercontent.com/50550971/221362638-1e14fe19-df5b-4403-a759-d2fa65445de3.svg" width="16" height="16"> button opens a viewer that displays a graphical representation of the boards and panels as they are laid-out on the machine. 
+
+When a single board or panel is selected in the job table, the lower half of the Job tab displays the list of placements for that board or panel.
+
+The columns shown in the Placements table are:
+- **Enabled**: Indicates whether or not this placement is active - only enabled placements will be placed (or in the case of fiducials, be checked during a fiducial check). Disable this if this placement should not be placed. This is often referred to DNU (Do Not Use) or DNI (Do Not Install). Note, changing this setting here only affects the placement on the specific board or panel that is selected in the job table - it does not change the setting for the placement on any other boards or panels in the job. If it is desired to change the setting for this placement on all boards in the job, make the change to the board or panel definition on its respective tab. 
+- **ID**: All placements on a board must have a unique ID (regardless of side). These are usually the same as the reference designators you set when designing the PCB. This value is set by the board or panel's definition and is not editable here.
+- **Part**: The part that should be placed at this location. This value is set by the board or panel's definition and is not editable here.
+- **Side**: The board side on which the placement occurs. Can be set to either _Top_ or _Bottom_. This value is set by the board or panel's definition and is not editable here.
+- **X, Y, Rot.**: The coordinates of the placement relative to the board or panel's coordinate system. The X and Y coordinates are measured viewing the board or panel from its top side regardless of which side the placement is located. Rotation is measured positive in the counterclockwise direction when viewing the placement from the side the placement is located. These values are set by the board or panel's definition and are not editable here.
+- **Type**: Sets the type of the placement to either _Placement_ (meaning a part is to be placed here) or _Fiducial_ (meaning it is only for visual reference). This value is set by the board or panel's definition and is not editable here.
+- **Placed**: Indicates whether the part has been placed or not. If this field is checked, OpenPnP assumes that the placement's location on the board is already occupied by a part and it will not attempt to place another part at that location. This field will be updated as the job runs. Note, this setting only applies to the placement on the specific board or panel that is selected in the job table - it does not apply to placements on any other boards or panels in the job.
+- **Status**: 
+- **Error Handling**: Sets the action to take if an error occurs during a job when this placement is being placed. Can be set to either _Alert_ (meaning to pause the job and wait for the operator to take action) or _Defer_ (meaning to skip the placement and to continue with the rest of the job). Note, this setting can be overridden on an instance-by-instance basis from the Job tab.
+- **Comments**: A freeform text field that can contain any user definable text.
 
 
 ## Placements
