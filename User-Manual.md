@@ -1,7 +1,7 @@
 - [Introduction](#introduction)
 - [The Basics](#the-basics)
 - [The User Interface](#the-user-interface)
-- [Job Setup](#job-setup)
+- [Recommended Workflow](#recommended-workflow)
 - [Running a Job](#running-a-job)
 - [Machine Setup](#machine-setup)
 - [Frequently Asked Questions](#frequently-asked-questions)
@@ -145,7 +145,7 @@ From the left, the buttons are:
 - Capture Camera Location ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/capture-camera.svg): Used to capture the location the camera is currently looking at. Will typically be used to fill in the X, Y, Z and Rotation fields of an associated value.
 - Capture Nozzle Location ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/capture-nozzle.svg): Same the above, but captures the nozzle location.
 - Move Camera to Location ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/position-camera.svg): Move the camera to a given location. Usually to the location identified by associated fields.
-- Move Nozzle to Location ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/position-nozzle.svg): Save as above, but moves the nozzle.
+- Move Nozzle to Location ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/position-nozzle.svg): Same as above, but moves the nozzle.
 
 You'll often see these buttons grouped together with a set of fields, like this:
 
@@ -194,25 +194,25 @@ OpenPnP makes extensive use of tooltips for it's help system. You can hover over
 
 # Recommended Workflow
 
-Before OpenPnP can be used to assemble parts onto PCBs, there are several items that must be setup. The recommended workflow for doing so is as follows:
+Before OpenPnP can be used to assemble parts onto PCBs, there are several items that must be setup. The recommended workflow is as follows:
 1. For any new board designs, create new definitions for them on the [Boards](#boards) tab.
 2. If the board PCBs have been fabricated as a panel, create a new definition for the panel on the [Panels](#panels) tab.
-3. Setup the job definition on the Job tab.
+3. Setup the job definition on the [Job](#job-definition) tab.
 4. Setup parts and packages on the [Parts](#parts) and [Packages](#packages) tabs.
 5. Setup feeders on the [Feeders](#feeders) tab.
 6. Run the job.
 
+While the above order of steps is recommended for those first starting out with OpenPnP, those with more experience will probably find a different workflow that works best for them. Some people prefer to import all their parts up front and then setup the job definition, and others will just import an existing job definition and touch up what is needed.
+
 ## Boards
 
-Board definitions are the "blueprints" or assembly instructions that tell OpenPnP how to assemble parts onto a PCB. Board definitions are stored in files with the extension `.board.xml`. A board definition contains a list of placements. Each placement tells OpenPnP which part to pick, on which side of the PCB, and at what coordinates and rotation to place the part.
+Board definitions are the "blueprints" or assembly instructions that tell OpenPnP how to assemble parts onto a physical PCB. Board definitions are stored in files with the extension `.board.xml`. A board definition contains a list of placements. Each placement tells OpenPnP which part to pick, on which side of the PCB, and at what coordinates and rotation to place the part.
 
 Board files are independent from any user or machine. You can share board files for a given PCB design and use the file to assemble it on another machine.
 
-You will typically create a new board definition on the Boards tab and [import placement data from your CAD software](https://github.com/openpnp/openpnp/wiki/Importing-Centroid-Data) such as Eagle or KiCAD. Once you've created a board definition for a design, there's no need to change it unless the design changes.
-
+New board definitions are typically created on the Boards tab and [placement data is imported from your CAD software](https://github.com/openpnp/openpnp/wiki/Importing-Centroid-Data) such as Eagle or KiCAD. Once a board definition has been created for a design, there's no need to change it unless the design changes.
 
 <img width="871" alt="boardsTab" src="https://user-images.githubusercontent.com/50550971/219440431-e4400002-c769-4c60-9321-21c9c82ff95a.png">
-
 
 At the top of the Boards tab is a list of board definitions currently loaded into OpenPnP (they are not all necessarily part of the currently loaded job). You can create a new board definition or add an existing board definition to OpenPnP by clicking the <img src="https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/general-add.svg" width="16" height="16"> button just above the list. You can remove one or more board definitions by selecting them in the list and clicking the <img src="https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/general-remove.svg" width="16" height="16"> button. Removing a board definition from the list is only allowed if it is not in use by the current job or by any of the panel definitions currently loaded into OpenPnP. Clicking the 
 <img src="https://user-images.githubusercontent.com/50550971/219974461-343ef570-4333-4623-ad08-bc2e0c4071c8.svg" width="16" height="16">
@@ -287,24 +287,24 @@ A dedicated panel fiducial can be manually added to the panel by clicking the <i
 
 ## Job Definition
 
-A job definition is a set of instructions that tells OpenPnP what boards and/or panels to assemble. The job definition consists of a list of one or more boards and/or panels, along with their locations, orientations, and other information. A job definition may contain any number of boards and/or panels and can include multiples of the same board and/or panel or multiple different boards and/or panels. Each entry in the job definition tells OpenPnP where to find one particular board or panel using machine coordinates. When the job is run, OpenPnP will process all of the placements for each board in the Job.
+A job definition is a set of instructions that tells OpenPnP what physical boards and/or panels to assemble. The job definition consists of a list of one or more boards and/or panels, along with their locations, orientations, and other information. A job definition may contain any number of boards and/or panels and can include multiples of the same board and/or panel or multiple different boards and/or panels. Each entry in the job definition tells OpenPnP where to find one particular board or panel using machine coordinates. When the job is run, OpenPnP will process all of the placements for each board in the Job.
 
 A new job definition is created from OpenPnP's mainframe menu by selecting File->New Job. The file menu also has options for opening recent jobs as well as saving them. Job definitions are stored in files with the extension `.job.xml`. The name of the currently loaded job definition is shown at the top of OpenPnP's frame.
 
 The job definition is edited on the Job tab: 
 <img width="954" alt="jobTab2" src="https://user-images.githubusercontent.com/50550971/221249180-fdb9523e-98e4-44ca-b3a8-a96a9c911889.png">
 
-At the top of the job tab is a table that lists all of the boards and panels that are in the currently loaded job definition (the name of the job definition is show at the top of the OpenPnP main frame).
+At the top of the Job tab is a table that lists all of the boards and panels that are in the currently loaded job definition.
 
 The columns shown in the job table are:
-- **Board/Panel ID**: This is a unique identifier for each board and/or panel. The IDs for top-level boards and panels can be edited here but they must be unique. The IDs for boards and panels that are descendants of an upper-level panel are set by their parent panel definition and are not editable here. Boards are shown with a 
+- **Board/Panel ID**: This is a unique identifier for each board and/or panel. The IDs for top-level boards and panels can be edited here but they must be unique. The IDs for boards and panels that are descendants of an upper-level panel are set by their parent's panel definition and are not editable here. Boards are shown with a 
 <img src="https://user-images.githubusercontent.com/50550971/221253312-bba51003-58b9-40e4-a88e-8172a609f979.svg" width="16" height="16"> icon and panels with a 
 <img src="https://user-images.githubusercontent.com/50550971/221253486-90fa4dd0-7e6b-4cc8-9a65-38543dd75f36.svg" width="16" height="16"> icon. The entries are indented to show the heritage of the board/panel.
 - **Name**: This is the name of the board or panel's definition and is not editable here.
 - **Width**: This is the width of the board or panel. It is set by the board or panel's definition and is not editable here.
 - **Length**: This is the length of the board or panel. It is set by the board or panel's definition and is not editable here.
 - **Side**: This is the side of the board or panel that is facing up on the machine. The side can only be changed for top-level boards and panels, i.e., the side of boards and panels that are descendants of a higher-level panel can't be changed here (although changing the side of a top-level panel will automatically change the side of all of its descendants).
-- **X, Y, Z, Rot.**: This is location of the board or panel in machine coordinates. This can only be changed for top-level boards and panels, i.e., the location of boards and panels that are descendants of a higher-level panel can't be changed here (although changing the location of a top-level panel will automatically change the location of all of its descendants). The X, Y, and Rotation coordinates are explained in great detail in [[Understanding Board Locations]]. The Z coordinate should be set to the Z coordinate of the nozzle tip when it is just barely touching the upper surface of the board when it is on the machine. Part height is added to this when placing a part so that the nozzle tip stops at the right height above the board.
+- **X, Y, Z, Rot.**: This is location of the board or panel in machine coordinates. This can only be changed for top-level boards and panels, i.e., the location of boards and panels that are descendants of a higher-level panel can't be changed here (although changing the location of a top-level panel will automatically change the location of all of its descendants). The X, Y, and Rotation coordinates are explained in great detail in [[Understanding Board Locations]]. The Z coordinate should be set to the Z coordinate of the nozzle tip when it is just barely touching the upper surface of the physical board when it is on the machine. Part height is added to this when placing a part so that the nozzle tip stops at the right height above the board.
 - **Enabled?**: This tells OpenPnP whether or not to process the board or panel when the job is run. Disabling a panel also disables all of its descendants. Enabling a panel also enables all of its descendants that were previously enabled when the panel was disabled.
 - **Check Fids?**: This tells OpenPnP whether or not to perform an automatic fiducial check on the board or panel at the start of a job.
 
@@ -327,41 +327,29 @@ When a single board or panel is selected in the job table, the lower half of the
 
 The columns shown in the Placements table are:
 - **Enabled**: Indicates whether or not this placement is active - only enabled placements will be placed (or in the case of fiducials, be checked during a fiducial check). Disable this if this placement should not be placed. This is often referred to DNU (Do Not Use) or DNI (Do Not Install). Note, changing this setting here only affects the placement on the specific board or panel that is selected in the job table - it does not change the setting for the placement on any other boards or panels in the job. If it is desired to change the setting for this placement on all boards in the job, make the change to the board or panel definition on its respective tab. 
-- **ID**: All placements on a board must have a unique ID (regardless of side). These are usually the same as the reference designators you set when designing the PCB. This value is set by the board or panel's definition and is not editable here.
-- **Part**: The part that should be placed at this location. This value is set by the board or panel's definition and is not editable here.
-- **Side**: The board side on which the placement occurs. Can be set to either _Top_ or _Bottom_. This value is set by the board or panel's definition and is not editable here.
-- **X, Y, Rot.**: The coordinates of the placement relative to the board or panel's coordinate system. The X and Y coordinates are measured viewing the board or panel from its top side regardless of which side the placement is located. Rotation is measured positive in the counterclockwise direction when viewing the placement from the side the placement is located. These values are set by the board or panel's definition and are not editable here.
-- **Type**: Sets the type of the placement to either _Placement_ (meaning a part is to be placed here) or _Fiducial_ (meaning it is only for visual reference). This value is set by the board or panel's definition and is not editable here.
+- **ID**: All placements on a board must have a unique ID (regardless of side). These are usually the same as the reference designators you set when designing the PCB. This value was set when the placement was created and added to the board or panel's definition and is not editable here.
+- **Part**: The part that should be placed at this location. This value is set by the board or panel's definition and is not editable here*.
+- **Side**: The board side on which the placement occurs. Can be set to either _Top_ or _Bottom_. This value is set by the board or panel's definition and is not editable here*.
+- **X, Y, Rot.**: The coordinates of the placement relative to the board or panel's coordinate system. The X and Y coordinates are measured viewing the board or panel from its top side regardless of which side the placement is located. Rotation is measured positive in the counterclockwise direction when viewing the placement from the side the placement is located. These values are set by the board or panel's definition and are not editable here*.
+- **Type**: Sets the type of the placement to either _Placement_ (meaning a part is to be placed here) or _Fiducial_ (meaning it is only for visual reference). This value is set by the board or panel's definition and is not editable here*.
 - **Placed**: Indicates whether the part has been placed or not. If this field is checked, OpenPnP assumes that the placement's location on the board is already occupied by a part and it will not attempt to place another part at that location. This field will be updated as the job runs. Note, this setting only applies to the placement on the specific board or panel that is selected in the job table - it does not apply to placements on any other boards or panels in the job.
-- **Status**: 
+- **Status**: Shows the current status of the placement - can be one of _Disabled_ (meaning the placement is disabled), _Missing Feeder_ (meaning no feeder is available to supply the part needed for this placement), _Missing Part_ (meaning a part has not been assigned for this placement), _Part Height_ (meaning the part's height has either not been set or is set to zero), or _Ready_ (meaning the placement is ready to be placed when the job is run). The goal is to have the status of all placements on all boards of the job be either _Disabled_ or _Ready_ prior to running the job.
 - **Error Handling**: Sets the action to take if an error occurs during a job when this placement is being placed. Can be set to either _Alert_ (meaning to pause the job and wait for the operator to take action) or _Defer_ (meaning to skip the placement and to continue with the rest of the job). Note, this setting can be overridden on an instance-by-instance basis from the Job tab.
-- **Comments**: A freeform text field that can contain any user definable text.
+- **Comments**: A freeform text field that can contain any user definable text. This value is set by the board or panel's definition and is not editable here*.
 
 
-## Placements
+*Actually, adding, editing, and deleting placements directly from the Job tab is supported under limited conditions - these fields can be edited only if there is exactly one instance of the board in the job and it is at the top-level of the job (not part of a panel).
 
-A placement is a single position on the board where you want to place a part. Placements usually correspond to the reference designators you created when you designed your PCB. Placements will often have names like R1, C1, U1, etc.
+A new placement is added to the table by <img src="https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/general-add.svg" width="16" height="16"> button just above the list. One or more placements can be deleted by selecting them in the table and then clicking the <img src="https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/general-remove.svg" width="16" height="16"> button. Note, these buttons are only enabled if there is exactly one instance of the board in the job and it is at the top-level of the job (not part of a panel). If those conditions are not met, adding or deleting placements must be done on the Boards or Panels tabs.
 
-Each placement has an X, and Y coordinate, a rotation in degrees, information about the part that should be placed and additional information specific to that placement.
+If a single placement is selected in the table, the top camera can be moved over its location by clicking the <img src="https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/position-camera.svg" width="16" height="16"> button. Subsequent clicks on the 
+<img src="https://user-images.githubusercontent.com/50550971/221439726-7008a2f0-9eb9-464c-84b5-830ead66baf5.svg" width="16" height="16"> button will select the next placement in the list and move the camera to its location. Similarly, the currently selected tool can be moved to the selected placement's location by clicking the <img src="https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/position-nozzle.svg" width="16" height="16"> button.
 
-![screen shot 2018-07-24 at 8 43 37 pm](https://user-images.githubusercontent.com/1182323/43174940-44b7c100-8f82-11e8-8ccc-ce26888b2dd2.png)
+Clicking the <img src="https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/capture-camera.svg" width="16" height="16"> or <img src="https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/capture-nozzle.svg" width="16" height="16"> buttons set the placement's X, Y, and Rotation fields to that of the top camera's or the currently selected tool's location respectively. Note, these buttons are only enabled if there is exactly one instance of the board in the job and it is at the top-level of the job (not part of a panel). If those conditions are not met, setting the coordinates of the placement must be done on the Boards or Panels tabs.
 
+Clicking the 
+<img src="https://user-images.githubusercontent.com/50550971/221439294-1d58aebf-3f7e-4464-98a0-3727b0a1498e.svg" width="16" height="16"> button opens the Feeders tab and selects the feeder that will supply the part for the placement.
 
-
-Placements are usually set up by importing a PCB CAD file, but you can also set them up manually by clicking the ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/general-add.svg) button to add one and then double clicking the fields in the table to edit them.
-
-When you select a part for a placement, you are telling OpenPnP that you want that part to be placed at that position. OpenPnP will find a feeder to pick the part automatically.
-
-The columns in the table are:
-
--  **ID**: The reference designator for the placement. These are usually the same as the reference designators you set when designing the PCB.
-- **Part**: The part that should be placed at this location.
-- **Side**: The side of the PCB the placement is on.
-- **X, Y, Rot**: The  X, Y, and Rotation coordinates of the placement in relation to the board's origin. These will usually match the coordinates in your PCB software.
-- **Type**: Sets the type of placement from one of Place, Ignore, or Fiducial. You can use Ignore if you don't ever want to place this placement for this board. This is often referred to DNU (Do Not Use) or DNI (Do Not Install). You can select Fiducial if the placement specifies a Fiducial mark, or Place if it's a normal placement.
-- **Placed**: Indicates that the placement has already been placed. When a job finishes, all the enabled placements will be marked Placed. You can use this checkbox for fine grained control of which placements OpenPnP will place during a run.
-- **Status**: Shows any errors associated with the placement to help you know of a job is ready to run. Common errors are things like a invalid part height, or a missing feeder.
-- **Check Fids**: Placement Check Fids is an advanced feature that will cause OpenPnP to re-check fiducials before placing that placement. It can help improve accuracy if your machine tends to lose accuracy over the course of a job.
 
 ## Parts
 
