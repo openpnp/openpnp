@@ -196,13 +196,13 @@ OpenPnP makes extensive use of tooltips for it's help system. You can hover over
 
 Before OpenPnP can be used to assemble parts onto PCBs, there are several items that must be setup. The recommended workflow is as follows:
 1. For any new board designs, create new definitions for them on the [Boards](#boards) tab.
-2. If the board PCBs have been fabricated as a panel, create a new definition for the panel on the [Panels](#panels) tab.
+2. If multiple board PCBs have been fabricated as a panel, create a definition for the panel on the [Panels](#panels) tab if one doesn't already exist.
 3. Setup the job definition on the [Job](#job-definition) tab.
 4. Setup parts and packages on the [Parts](#parts) and [Packages](#packages) tabs.
 5. Setup feeders on the [Feeders](#feeders) tab.
 6. Run the job.
 
-While the above order of steps is recommended for those first starting out with OpenPnP, those with more experience may find a different workflow that works better for them. Some prefer to import all their parts up front and then setup the job definition, and others will just import an existing job definition and touch up what is needed.
+While the above order of steps is recommended for those first starting out with OpenPnP, those with more experience may find a different workflow that works better for them. Some may prefer to setup all parts up-front and then setup board and job definitions, and others will just open an existing job definition and touch-up what is needed.
 
 ## Boards
 
@@ -308,7 +308,10 @@ The columns shown in the job table are:
 - **Enabled?**: This tells OpenPnP whether or not to process the board or panel when the job is run. Disabling a panel also disables all of its descendants. Enabling a panel also enables all of its descendants that were previously enabled when the panel was disabled.
 - **Check Fids?**: This tells OpenPnP whether or not to perform an automatic fiducial check on the board or panel at the start of a job.
 
-Boards and/or panels are added to the job table by clicking the <img src="https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/general-add.svg" width="16" height="16"> button just above the list. If the [Recommended Workflow](#recommended-workflow) is being followed, all board and/or panel definitions required for the job will have already been created so use the Existing Board... or Existing Panel... submenu options. Alternatively, boards and/or panels without existing definitions can be added with the New Board... or New Panel submenu options (new entries for these will be created on their respective tab and will require editing there to complete their definitions).
+
+*Actually, editing the width and length of a board directly from the Job tab is supported under limited conditions - these fields can be edited only if there are no other instances of the board definition in the job and it is at the top-level of the job (not part of a panel).
+
+Boards and/or panels are added to the job table by clicking the <img src="https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/general-add.svg" width="16" height="16"> button just above the list. If the [Recommended Workflow](#recommended-workflow) is being followed, all board and/or panel definitions required for the job will have already been created so use the Existing Board... or Existing Panel... submenu options. Alternatively, boards and/or panels without existing definitions can be added with the New Board... or New Panel... submenu options (new entries for these will be created on their respective tab and will require additional editing there to complete their definitions).
 
 For each board or panel added to the job definition, use the dropdown menu to set the Side to match the side of the physical board or panel that is facing **up** on the machine.
 
