@@ -454,7 +454,7 @@ public class PhotonFeeder extends ReferenceFeeder {
 
         for (int address = 1; address <= maxFeederAddress; address++) {
             Logger.debug("Querying Photon feeder address: " + address);
-            String command = commands.getFeederId(address);
+            String command = commands.getFeederId(address).toByteString();
             Logger.trace("Photon feeder command: " + command);
             String response = actuator.read(command);
             Logger.trace("Photon feeder response: " + command);

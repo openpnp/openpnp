@@ -1,12 +1,12 @@
 package org.openpnp.machine.photon.protocol;
 
 public class Packet {
-    int toAddress;
-    int fromAddress = 0;
-    int packetId = 0;
-    int payloadLength = 0;
-    int crc = 0;
-    int[] payload = new int[0];
+    public int toAddress;
+    public int fromAddress = 0;
+    public int packetId = 0;
+    public int payloadLength = 0;
+    public int crc = 0;
+    public int[] payload = new int[0];
 
     public String toByteString() {
         StringBuilder result = new StringBuilder();
