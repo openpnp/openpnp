@@ -66,7 +66,7 @@ import com.jgoodies.forms.layout.RowSpec;
 @SuppressWarnings("serial")
 public class DipTraceImporter implements BoardImporter {
     private final static String NAME = "Diptrace .csv"; //$NON-NLS-1$
-    private final static String DESCRIPTION = Translations.getString("DipTraceImporter.Importer.Name"); //$NON-NLS-1$
+    private final static String DESCRIPTION = Translations.getString("DipTraceImporter.Importer.Description"); //$NON-NLS-1$
 
     private Board board;
     private File fileName;
