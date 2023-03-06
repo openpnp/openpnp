@@ -11,6 +11,10 @@ public class PacketBuilder {
         payloadBuffer = IntBuffer.allocate(32);
     }
 
+    public static PacketBuilder command(int commandId, int toAddress) {
+        return command(toAddress, 0, 0, commandId);
+    }
+
     public static PacketBuilder command(int toAddress, int fromAddress, int packetId, int command_id) {
         PacketBuilder builder = new PacketBuilder();
         Packet packet = builder.packet;
@@ -23,11 +27,15 @@ public class PacketBuilder {
         return builder;
     }
 
-    public static PacketBuilder response(int feederAddress) {
-        return new PacketBuilder()
-                .putByte(0x00)
-                .putByte(0x00) // For length, will be updated later
-                .putByte(feederAddress);
+    // This should only be used in tests, but it didn't make sense to separate it from PacketBuilder
+    public static PacketBuilder response(int toAddress, int fromAddress) {
+        PacketBuilder builder = new PacketBuilder();
+        Packet packet = builder.packet;
+        packet.toAddress = toAddress;
+        packet.fromAddress = fromAddress;
+        packet.packetId = 0;
+
+        return builder;
     }
 
     public PacketBuilder putByte(int data) {
@@ -57,23 +65,10 @@ public class PacketBuilder {
         // into our dataBytes.
 
         payloadBuffer.flip();
-        int[] dataBytes = new int[payloadBuffer.remaining()];
-        payloadBuffer.get(dataBytes);
-        packet.payloadLength = dataBytes.length;
-        packet.payload = dataBytes;
+        packet.payload = new int[payloadBuffer.remaining()];
+        payloadBuffer.get(packet.payload);
 
-        CRC8_107 crc8 = new CRC8_107();
-
-        crc8.add(packet.toAddress);
-        crc8.add(packet.fromAddress);
-        crc8.add(packet.packetId);
-        crc8.add(packet.payloadLength);
-
-        for (int dataByte : dataBytes) {
-            crc8.add(dataByte);
-        }
-
-        packet.crc = crc8.getCRC();
+        packet.calculateCRC();
 
         return packet;
     }
