@@ -112,7 +112,7 @@ class SolderPasteGerberImporterDlg extends JDialog {
     private class SwingAction extends AbstractAction {
         public SwingAction() {
             putValue(NAME, Translations.getString("SolderPasteGerberImporterDlg.BrowseAction.Name")); //$NON-NLS-1$
-            putValue(SHORT_DESCRIPTION, Translations.getString("SolderPasteGerberImporterDlg.BrowseAction.ShortDescription.")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("SolderPasteGerberImporterDlg.BrowseAction.ShortDescription")); //$NON-NLS-1$
         }
 
         public void actionPerformed(ActionEvent e) {
