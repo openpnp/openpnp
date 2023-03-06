@@ -1,27 +1,29 @@
 package org.openpnp.machine.photon.protocol.commands;
 
-
 import org.openpnp.machine.photon.protocol.Command;
 import org.openpnp.machine.photon.protocol.ErrorTypes;
 import org.openpnp.machine.photon.protocol.Packet;
 import org.openpnp.machine.photon.protocol.PacketBuilder;
 
-public class GetFeederId extends Command<GetFeederId.Response> {
+public class InitializeFeeder extends Command<InitializeFeeder.Response> {
     private final int toAddress;
+    private final String uuid;
 
-    public GetFeederId(int toAddress) {
+    public InitializeFeeder(int toAddress, String uuid) {
         this.toAddress = toAddress;
+        this.uuid = uuid;
     }
 
     @Override
     protected Packet toPacket() {
-        return PacketBuilder
-                .command(0x01, toAddress)
+        return PacketBuilder.command(0x02, toAddress)
+                .putUuid(uuid)
                 .toPacket();
     }
 
-    protected Response decodePacket(Packet packet) {
-        return new Response(packet);
+    @Override
+    protected Response decodePacket(Packet responsePacket) {
+        return new Response(responsePacket);
     }
 
     static class Response {
@@ -43,7 +45,6 @@ public class GetFeederId extends Command<GetFeederId.Response> {
             }
 
             valid = true;
-
             error = ErrorTypes.fromId(packet.payload[0]);
             uuid = packet.uuid(1);
         }

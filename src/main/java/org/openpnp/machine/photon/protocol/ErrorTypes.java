@@ -1,6 +1,7 @@
 package org.openpnp.machine.photon.protocol;
 
 public enum ErrorTypes {
+    NONE(0x00),
     WRONG_FEEDER_UUID(0x01),
     MOTOR_FAULT(0x02),
     UNINITIALIZED_FEEDER(0x03),
