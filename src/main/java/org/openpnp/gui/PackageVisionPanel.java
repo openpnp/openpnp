@@ -90,7 +90,7 @@ public class PackageVisionPanel extends JPanel {
         JPanel propertiesPanel = new JPanel();
         add(propertiesPanel, BorderLayout.NORTH);
         propertiesPanel.setBorder(
-                new TitledBorder(null, Translations.getString("PackageVisionPanel.SettingsPanel.Boprder.title"), //$NON-NLS-1$
+                new TitledBorder(null, Translations.getString("PackageVisionPanel.SettingsPanel.Border.title"), //$NON-NLS-1$
                         TitledBorder.LEADING, TitledBorder.TOP, null));
         propertiesPanel.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
