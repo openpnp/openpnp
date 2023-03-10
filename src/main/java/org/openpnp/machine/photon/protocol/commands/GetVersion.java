@@ -6,6 +6,7 @@ import org.openpnp.machine.photon.protocol.Packet;
 import org.openpnp.machine.photon.protocol.PacketBuilder;
 
 public class GetVersion extends Command<GetVersion.Response> {
+    public static final int COMMAND_ID = 0x03;
     private final int toAddress;
 
     public GetVersion(int toAddress) {
@@ -15,7 +16,7 @@ public class GetVersion extends Command<GetVersion.Response> {
     @Override
     protected Packet toPacket() {
         return PacketBuilder
-                .command(0x03, toAddress)
+                .command(COMMAND_ID, toAddress)
                 .toPacket();
     }
 

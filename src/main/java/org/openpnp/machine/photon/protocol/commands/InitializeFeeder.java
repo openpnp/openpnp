@@ -6,6 +6,7 @@ import org.openpnp.machine.photon.protocol.Packet;
 import org.openpnp.machine.photon.protocol.PacketBuilder;
 
 public class InitializeFeeder extends Command<InitializeFeeder.Response> {
+    public static final int COMMAND_ID = 0x02;
     private final int toAddress;
     private final String uuid;
 
@@ -16,7 +17,7 @@ public class InitializeFeeder extends Command<InitializeFeeder.Response> {
 
     @Override
     protected Packet toPacket() {
-        return PacketBuilder.command(0x02, toAddress)
+        return PacketBuilder.command(COMMAND_ID, toAddress)
                 .putUuid(uuid)
                 .toPacket();
     }

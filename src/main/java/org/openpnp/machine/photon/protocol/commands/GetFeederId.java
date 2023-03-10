@@ -7,6 +7,7 @@ import org.openpnp.machine.photon.protocol.Packet;
 import org.openpnp.machine.photon.protocol.PacketBuilder;
 
 public class GetFeederId extends Command<GetFeederId.Response> {
+    public static final int COMMAND_ID = 0x01;
     private final int toAddress;
 
     public GetFeederId(int toAddress) {
@@ -16,7 +17,7 @@ public class GetFeederId extends Command<GetFeederId.Response> {
     @Override
     protected Packet toPacket() {
         return PacketBuilder
-                .command(0x01, toAddress)
+                .command(COMMAND_ID, toAddress)
                 .toPacket();
     }
 
