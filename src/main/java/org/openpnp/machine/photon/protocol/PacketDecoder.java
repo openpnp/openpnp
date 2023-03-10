@@ -65,7 +65,7 @@ public class PacketDecoder {
             case UNINITIALIZED_FEEDER:
                 this.matchUuid();
                 break;
-            case MOTOR_FAULT:
+            case COULD_NOT_REACH:
                 break;
         }
 

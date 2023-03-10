@@ -57,7 +57,7 @@ public class MoveFeedForwardTest {
         assertEquals(0, response.toAddress);
         assertEquals(39, response.fromAddress);
         assertTrue(response.valid);
-        assertEquals(ErrorTypes.MOTOR_FAULT, response.error);
+        assertEquals(ErrorTypes.COULD_NOT_REACH, response.error);
         assertEquals(0, response.expectedTimeToFeed);
     }
 
@@ -65,7 +65,7 @@ public class MoveFeedForwardTest {
     public void decodeLengthTooShort() {
         Packet responsePacket = new Packet();
         responsePacket.fromAddress = 17;
-        responsePacket.payload = new int[]{};
+        responsePacket.payload = new int[]{0x00, 0x00};
         responsePacket.calculateCRC();
         MoveFeedForward.Response response = new MoveFeedForward.Response(responsePacket);
 
@@ -80,7 +80,7 @@ public class MoveFeedForwardTest {
     public void decodeLengthTooLong() {
         Packet responsePacket = new Packet();
         responsePacket.fromAddress = 17;
-        responsePacket.payload = new int[]{0x00, 0x00};
+        responsePacket.payload = new int[]{0x00, 0x00, 0x00, 0x00};
         responsePacket.calculateCRC();
         MoveFeedForward.Response response = new MoveFeedForward.Response(responsePacket);
 

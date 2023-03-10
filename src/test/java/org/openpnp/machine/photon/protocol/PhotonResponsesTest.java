@@ -148,7 +148,7 @@ public class PhotonResponsesTest {
 
             assertTrue(response.isValid());
             assertFalse(response.isOk());
-            assertEquals(ErrorTypes.MOTOR_FAULT, response.getError());
+            assertEquals(ErrorTypes.COULD_NOT_REACH, response.getError());
             assertNull(response.getUuid());
             assertEquals(0, response.getTargetAddress());
             assertEquals(47, response.getFeederAddress());
@@ -195,7 +195,7 @@ public class PhotonResponsesTest {
 
             assertTrue(response.isValid());
             assertFalse(response.isOk());
-            assertEquals(ErrorTypes.MOTOR_FAULT, response.getError());
+            assertEquals(ErrorTypes.COULD_NOT_REACH, response.getError());
             assertNull(response.getUuid());
             assertEquals(0, response.getTargetAddress());
             assertEquals(57, response.getFeederAddress());
