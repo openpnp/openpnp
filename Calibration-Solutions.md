@@ -98,9 +98,9 @@ The graph also shows you how _effective_ the speed control is (green line). Idea
 
 # Calibrating Precision Camera to Nozzle Offsets
 
-
-
 To calibrate precision camera ↔ nozzle offsets, we let the nozzle pick, rotate and place a small round test object and then measure the result using the camera. By exploiting the effects of rotational symmetry and averaging, the precise nozzle axis can be determined. 
+
+Watch the [video sequence to understand how it work](https://youtu.be/md68n_J7uto?t=462). 
 
 The test object should be circular and flat on the top. The nozzle must be able to pick and place it precisely. There must be good contrast between test objects and background. As you are likely to lose or damage these little test objects, best make several. They can be as simple as punched out "confetti" from a hole punch, used on matte card stock. You can also create heavier ones made from metal sheet etc. Press them flat. Don't worry if they are not perfect, this will all be cancelled-out through circular symmetry. 
 
