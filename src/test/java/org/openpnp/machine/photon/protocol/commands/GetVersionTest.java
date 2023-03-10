@@ -36,13 +36,12 @@ public class GetVersionTest {
         responsePacket.fromAddress = 17;
         responsePacket.payload = new int[]{};
         responsePacket.calculateCRC();
-        GetFeederId.Response response = new GetFeederId.Response(responsePacket);
+        GetVersion.Response response = new GetVersion.Response(responsePacket);
 
         assertEquals(0, response.toAddress);
         assertEquals(17, response.fromAddress);
         assertFalse(response.valid);
         assertNull(response.error);
-        assertNull(response.uuid);
     }
 
     @Test
@@ -51,12 +50,11 @@ public class GetVersionTest {
         responsePacket.fromAddress = 17;
         responsePacket.payload = new int[]{0x00, 0x00};
         responsePacket.calculateCRC();
-        GetFeederId.Response response = new GetFeederId.Response(responsePacket);
+        GetVersion.Response response = new GetVersion.Response(responsePacket);
 
         assertEquals(0, response.toAddress);
         assertEquals(17, response.fromAddress);
         assertFalse(response.valid);
         assertNull(response.error);
-        assertNull(response.uuid);
     }
 }

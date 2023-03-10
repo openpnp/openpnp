@@ -58,4 +58,8 @@ public class Packet {
 
         return builder.toString();
     }
+
+    public int uint16(int startingAtIndex) {
+        return 256 * payload[startingAtIndex] + payload[startingAtIndex + 1];
+    }
 }
