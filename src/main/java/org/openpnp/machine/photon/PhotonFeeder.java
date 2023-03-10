@@ -7,6 +7,7 @@ import org.openpnp.machine.photon.exceptions.FeederHasNoLocationOffsetException;
 import org.openpnp.machine.photon.exceptions.NoSlotAddressException;
 import org.openpnp.machine.photon.exceptions.UnconfiguredSlotException;
 import org.openpnp.machine.photon.protocol.ErrorTypes;
+import org.openpnp.machine.photon.protocol.Packet;
 import org.openpnp.machine.photon.protocol.PhotonCommands;
 import org.openpnp.machine.photon.protocol.PacketResponse;
 import org.openpnp.machine.photon.sheets.FeederPropertySheet;

@@ -1,107 +1,80 @@
 package org.openpnp.machine.photon.protocol;
 
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.openpnp.machine.photon.protocol.PhotonResponses.*;
 
 public class PhotonResponsesTest {
-    protected static String uuid1 = "00112233445566778899AABB";
-    protected static String uuid2 = "FFEEDDCCBBAA998877665544";
+    protected static String uuid1_s = "00112233445566778899AABB";
+    protected static int[] uuid1_b = {0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xAA, 0xBB};
+    protected static String uuid2_s = "FFEEDDCCBBAA998877665544";
+    protected static int[] uuid2_b = {0xFF, 0xEE, 0xDD, 0xCC, 0xBB, 0xAA, 0x99, 0x88, 0x77, 0x66, 0x55, 0x44};
 
-    public static class ErrorsTest {
+    private TestResponsesHelper testResponses;
+    
+    @BeforeEach
+    public void setUp() {
+        testResponses = new TestResponsesHelper(0);
+    }
+
+    @Nested
+    public class ErrorsTest {
         @Test
         public void testWrongFeederUUID() {
-            assertEquals(
-                    "000E0301" + uuid1 + "B94C",
-                    Errors.wrongFeederUUID(3, uuid1)
-            );
+            Packet error = testResponses.errors.wrongFeederUUID(3, uuid1_s);
+
+            assertEquals(0, error.toAddress);
+            assertEquals(3, error.fromAddress);
+            assertEquals(0, error.packetId);
+            assertEquals(13, error.payloadLength);
+            assertEquals(0xCF, error.crc);
+            assertArrayEquals(new int[]{
+                    0x01, uuid1_b[0], uuid1_b[1], uuid1_b[2], uuid1_b[3],
+                    uuid1_b[4], uuid1_b[5], uuid1_b[6], uuid1_b[7],
+                    uuid1_b[8], uuid1_b[9], uuid1_b[10], uuid1_b[11]
+            }, error.payload);
+
+            assertEquals("0003000DCF01" + uuid1_s, error.toByteString());
         }
         
         @Test
         public void testMotorFault() {
-            assertEquals("000207022215", Errors.motorFault(7));
+            Packet error = testResponses.errors.motorFault(7);
+
+            assertEquals(0, error.toAddress);
+            assertEquals(7, error.fromAddress);
+            assertEquals(0, error.packetId);
+            assertEquals(1, error.payloadLength);
+            assertEquals(0x79, error.crc);
+            assertArrayEquals(new int[]{0x02}, error.payload);
+
+            assertEquals("000700017902", error.toByteString());
         }
 
         @Test
         public void testUninitializedFeeder() {
-            assertEquals(
-                    "000E0B03" + uuid1 + "B7C6",
-                    Errors.uninitializedFeeder(11, uuid1)
-            );
+            Packet error = testResponses.errors.uninitializedFeeder(11, uuid1_s);
+
+            assertEquals(0, error.toAddress);
+            assertEquals(11, error.fromAddress);
+            assertEquals(0, error.packetId);
+            assertEquals(13, error.payloadLength);
+            assertEquals(0xF0, error.crc);
+            assertArrayEquals(new int[]{
+                    0x03, uuid1_b[0], uuid1_b[1], uuid1_b[2], uuid1_b[3],
+                    uuid1_b[4], uuid1_b[5], uuid1_b[6], uuid1_b[7],
+                    uuid1_b[8], uuid1_b[9], uuid1_b[10], uuid1_b[11]
+            }, error.payload);
+
+            assertEquals("000B000DF003" + uuid1_s, error.toByteString());
         }
     }
 
-    public static class GetFeederIdTest {
-        @Test
-        public void testOk() {
-            assertEquals(
-                    "000E1100" + uuid2 + "FC5E",
-                    GetFeederId.ok(17, uuid2)
-            );
-        }
-        
-        @Test
-        public void decodeOk() {
-            String message = "000E1100" + uuid2 + "FC5E";
-            PacketResponse response = GetFeederId.decode(message);
-
-            assertTrue(response.isValid());
-            assertTrue(response.isOk());
-            assertNull(response.getError());
-            assertEquals(uuid2, response.getUuid());
-            assertEquals(0, response.getTargetAddress());
-            assertEquals(17, response.getFeederAddress());
-        }
-
-        @Test
-        public void decodeMissingUUID() {
-            String message = "00021100ADB4";
-            PacketResponse response = GetFeederId.decode(message);
-
-            assertFalse(response.isValid());
-            assertFalse(response.isOk());
-            assertNull(response.getError());
-            assertNull(response.getUuid());
-            assertEquals(0, response.getTargetAddress());
-            assertEquals(17, response.getFeederAddress());
-        }
-    }
-
-    public static class InitializeFeederTest {
-        @Test
-        public void testOK() {
-            assertEquals("00021B00AB14", InitializeFeeder.ok(27));
-        }
-
-        @Test
-        public void decodeOk() {
-            String message = "00021B00AB14";
-            PacketResponse response = InitializeFeeder.decode(message);
-
-            assertTrue(response.isValid());
-            assertTrue(response.isOk());
-            assertNull(response.getError());
-            assertNull(response.getUuid());
-            assertEquals(0, response.getTargetAddress());
-            assertEquals(27, response.getFeederAddress());
-        }
-
-        @Test
-        public void decodeWrongFeederUUID() {
-            String message = "000E1B01" + uuid2 + "F4D5";
-            PacketResponse response = InitializeFeeder.decode(message);
-
-            assertTrue(response.isValid());
-            assertFalse(response.isOk());
-            assertEquals(ErrorTypes.WRONG_FEEDER_UUID, response.getError());
-            assertEquals(uuid2, response.getUuid());
-            assertEquals(0, response.getTargetAddress());
-            assertEquals(27, response.getFeederAddress());
-        }
-    }
-
-    public static class GetVersionTest {
+    @Nested
+    public class GetVersionTest {
         @Test
         public void testOk() {
             assertEquals("0003250001F44F", GetVersion.ok(37, 1));
@@ -135,7 +108,8 @@ public class PhotonResponsesTest {
         }
     }
 
-    public static class MoveFeedForwardTest {
+    @Nested
+    public class MoveFeedForwardTest {
         @Test
         public void testOk() {
             assertEquals("00022F00BDD4", MoveFeedForward.ok(47));
@@ -156,13 +130,13 @@ public class PhotonResponsesTest {
 
         @Test
         public void decodeUninitialized() {
-            String message = "000E2F03" + uuid1 + "93E2";
+            String message = "000E2F03" + uuid1_s + "93E2";
             PacketResponse response = MoveFeedForward.decode(message);
 
             assertTrue(response.isValid());
             assertFalse(response.isOk());
             assertEquals(ErrorTypes.UNINITIALIZED_FEEDER, response.getError());
-            assertEquals(uuid1, response.getUuid());
+            assertEquals(uuid1_s, response.getUuid());
             assertEquals(0, response.getTargetAddress());
             assertEquals(47, response.getFeederAddress());
         }
@@ -181,7 +155,8 @@ public class PhotonResponsesTest {
         }
     }
 
-    public static class MoveFeedBackwardTest {
+    @Nested
+    public class MoveFeedBackwardTest {
         @Test
         public void testOk() {
             assertEquals("00023900B3B4", MoveFeedBackward.ok(57));
@@ -202,13 +177,13 @@ public class PhotonResponsesTest {
 
         @Test
         public void decodeUninitialized() {
-            String message = "000E3903" + uuid1 + "8434";
+            String message = "000E3903" + uuid1_s + "8434";
             PacketResponse response = MoveFeedBackward.decode(message);
 
             assertTrue(response.isValid());
             assertFalse(response.isOk());
             assertEquals(ErrorTypes.UNINITIALIZED_FEEDER, response.getError());
-            assertEquals(uuid1, response.getUuid());
+            assertEquals(uuid1_s, response.getUuid());
             assertEquals(0, response.getTargetAddress());
             assertEquals(57, response.getFeederAddress());
         }
@@ -227,24 +202,25 @@ public class PhotonResponsesTest {
         }
     }
 
-    public static class GetFeederAddressTest {
+    @Nested
+    public class GetFeederAddressTest {
         @Test
         public void testOk() {
             assertEquals(
-                    "000E4300" + uuid2 + "AFCC",
-                    GetFeederAddress.ok(67, uuid2)
+                    "000E4300" + uuid2_s + "AFCC",
+                    GetFeederAddress.ok(67, uuid2_s)
             );
         }
 
         @Test
         public void decodeOk() {
-            String message = "000E4300" + uuid2 + "AFCC";
+            String message = "000E4300" + uuid2_s + "AFCC";
             PacketResponse response = GetFeederAddress.decode(message);
 
             assertTrue(response.isValid());
             assertTrue(response.isOk());
             assertNull(response.getError());
-            assertEquals(uuid2, response.getUuid());
+            assertEquals(uuid2_s, response.getUuid());
             assertEquals(0, response.getTargetAddress());
             assertEquals(67, response.getFeederAddress());
         }
