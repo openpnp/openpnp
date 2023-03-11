@@ -67,7 +67,7 @@ public class SimulatedUpCamera extends ReferenceCamera {
     @Element(required = false)
     private Length sensorDiagonal = new Length(4.4, LengthUnit.Millimeters);
 
-    public enum BackgroundColor {
+    public enum BackgroundScenario {
         Black(0x000000, 0x00FF00),
         Dark(0x222222, 0x00DD00),
         Green(0x22AA22, 0x00DD00),
@@ -75,11 +75,11 @@ public class SimulatedUpCamera extends ReferenceCamera {
 
         final private int rgb;
         final private int rgbNozzleTip;
-        BackgroundColor(int rgb, int rgbNozzleTip) {
+        BackgroundScenario(int rgb, int rgbNozzleTip) {
             this.rgb = rgb;
             this.rgbNozzleTip = rgbNozzleTip;
         }
-        public Color getColor() {
+        public Color getShadeColor() {
             return new Color(rgb);
         }
         Color getNozzleTipColor() {
@@ -88,7 +88,7 @@ public class SimulatedUpCamera extends ReferenceCamera {
     }
 
     @Attribute(required=false)
-    protected BackgroundColor backgroundColor = BackgroundColor.Dark;
+    protected BackgroundScenario backgroundScenario = BackgroundScenario.Dark;
 
     public SimulatedUpCamera() {
         setUnitsPerPixel(new Location(LengthUnit.Millimeters, 0.0234375D, 0.0234375D, 0, 0));
@@ -102,7 +102,7 @@ public class SimulatedUpCamera extends ReferenceCamera {
         }
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g = (Graphics2D) image.getGraphics();
-        g.setColor(getBackgroundColor().getColor());
+        g.setColor(getBackgroundScenario().getShadeColor());
         g.fillRect(0, 0, width, height);
         AffineTransform tx = g.getTransform();
         // invert the image in Y so that Y+ is up
@@ -156,13 +156,15 @@ public class SimulatedUpCamera extends ReferenceCamera {
 
     private void drawNozzle(Graphics2D gView, Nozzle nozzle, Location l) {
         BufferedImage frame;
-        Graphics2D g; 
+        Graphics2D g;
+        Color bg = getBackgroundScenario().getShadeColor();
+        bg = new Color(bg.getRed(), bg.getGreen(), bg.getBlue(), 0);
         if (isSimulateFocalBlur()) {
-            frame = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+            frame = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB_PRE);
             g = frame.createGraphics();
             g.setTransform(gView.getTransform());
             // Clear with transparent background
-            g.setBackground(new Color(0, 0, 0, 0));
+            g.setBackground(bg);
             g.clearRect(-width/2, -height/2, width, height);
         }
         else {
@@ -183,13 +185,13 @@ public class SimulatedUpCamera extends ReferenceCamera {
         Location offsets = l.subtractWithRotation(getSimulatedLocation());
 
         // Create a nozzle shape
-        if (fillShape(g, new Ellipse2D.Double(-0.5, -0.5, 1, 1), getBackgroundColor().getNozzleTipColor(), unitsPerPixel, offsets, false)) {
+        if (fillShape(g, new Ellipse2D.Double(-0.5, -0.5, 1, 1), getBackgroundScenario().getNozzleTipColor(), unitsPerPixel, offsets, false)) {
             fillShape(g, new Ellipse2D.Double(-0.1, -0.1, 0.2, 0.2), new Color(32, 32, 32), unitsPerPixel, offsets, false);
             if (frame != null) {
                 blurObjectIntoView(gView, frame, nozzle, l);
 
                 // Clear with transparent background
-                g.setBackground(new Color(0, 0, 0, 0));
+                g.setBackground(bg);
                 g.clearRect(-width/2, -height/2, width, height);
             }
 
@@ -399,12 +401,12 @@ public class SimulatedUpCamera extends ReferenceCamera {
         this.errorOffsets = errorOffsets;
     }
 
-    public BackgroundColor getBackgroundColor() {
-        return backgroundColor;
+    public BackgroundScenario getBackgroundScenario() {
+        return backgroundScenario;
     }
 
-    public void setBackgroundColor(BackgroundColor backgroundColor) {
-        this.backgroundColor = backgroundColor;
+    public void setBackgroundScenario(BackgroundScenario backgroundScenario) {
+        this.backgroundScenario = backgroundScenario;
     }
 
     @Override

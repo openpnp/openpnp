@@ -78,8 +78,8 @@ public class SimulatedUpCameraConfigurationWizard extends AbstractConfigurationW
     private JTextField focalLength;
     private JLabel lblSensorDiagonal;
     private JTextField sensorDiagonal;
-    private JLabel lblBackgroundColor;
-    private JComboBox backgroundColor;
+    private JLabel lblBackgroundScenario;
+    private JComboBox backgroundScenario;
 
     public SimulatedUpCameraConfigurationWizard(SimulatedUpCamera camera) {
         this.camera = camera;
@@ -204,12 +204,12 @@ public class SimulatedUpCameraConfigurationWizard extends AbstractConfigurationW
         panelGeneral.add(sensorDiagonal, "4, 12, fill, default");
         sensorDiagonal.setColumns(10);
         
-        lblBackgroundColor = new JLabel(Translations.getString("SimulatedUpCameraConfigurationWizard.lblBackgroundColor.text")); //$NON-NLS-1$
-        lblBackgroundColor.setToolTipText(Translations.getString("SimulatedUpCameraConfigurationWizard.lblBackgroundColor.toolTipText")); //$NON-NLS-1$
-        panelGeneral.add(lblBackgroundColor, "2, 14, right, default");
+        lblBackgroundScenario = new JLabel(Translations.getString("SimulatedUpCameraConfigurationWizard.lblBackgroundColor.text")); //$NON-NLS-1$
+        lblBackgroundScenario.setToolTipText(Translations.getString("SimulatedUpCameraConfigurationWizard.lblBackgroundColor.toolTipText")); //$NON-NLS-1$
+        panelGeneral.add(lblBackgroundScenario, "2, 14, right, default");
         
-        backgroundColor = new JComboBox(SimulatedUpCamera.BackgroundColor.values());
-        panelGeneral.add(backgroundColor, "4, 14, fill, default");
+        backgroundScenario = new JComboBox(SimulatedUpCamera.BackgroundScenario.values());
+        panelGeneral.add(backgroundScenario, "4, 14, fill, default");
         
         lblErrorOffsets = new JLabel(Translations.getString(
                 "SimulatedUpCameraConfigurationWizard.GeneralPanel.PickErrorOffsetsLabel.text")); //$NON-NLS-1$
@@ -291,7 +291,7 @@ public class SimulatedUpCameraConfigurationWizard extends AbstractConfigurationW
 
         addWrappedBinding(camera, "focalLength", focalLength, "text", lengthConverter);
         addWrappedBinding(camera, "sensorDiagonal", sensorDiagonal, "text", lengthConverter);
-        addWrappedBinding(camera, "backgroundColor", backgroundColor, "selectedItem");
+        addWrappedBinding(camera, "backgroundScenario", backgroundScenario, "selectedItem");
 
         ComponentDecorators.decorateWithAutoSelect(width);
         ComponentDecorators.decorateWithAutoSelect(height);

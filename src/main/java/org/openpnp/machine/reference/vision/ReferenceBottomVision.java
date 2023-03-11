@@ -448,7 +448,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
         if (visionCompositing.getCompositingMethod().isEnforced() 
                 && composite.getCompositingSolution().isInvalid()) {
             throw new Exception("Vision Compositing has not found a valid solution for package "+pkg.getId()+". "
-                    + "Status: "+composite.getCompositingSolution()+". "
+                    + "Status: "+composite.getCompositingSolution()+", "+composite.getDiagnostics()+". "
                     + "For more diagnostic information go to the Vision Compositing tab on package "+pkg.getId()+". ");
         }
         pipeline.resetReusedPipeline();
