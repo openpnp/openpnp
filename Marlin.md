@@ -9,10 +9,21 @@ The proposed firmware was configured for a kit including an Arduino Mega, Ramps 
 
 By default Ramps 1.4 is only rated for 12V, but it can easily be modded that it can handle 24V which is what most OpenPnP users use. Remove the diode D1 (it passes power to the arduino which can handle only 12v max) and the polyfuse which is rated for 16V. A detailed explanation can be found [here](http://www.3d-druck-community.de/thread-4761.html) or with google.
 
-[[https://github.com/mgrl/MarlinOnRamps4OpenPnP/blob/openPnPoptimized/_images/ramps-wiring.png|alt=octocat]]
+[[https://github.com/lucasbrigida/MarlinOnRamps4OpenPnP/blob/openPnPoptimized/_images/ramps-wiring.png|alt=octocat]]
 
 # Firmware Configuration
-The [marlin-firmware](https://github.com/mgrl/MarlinOnRamps4OpenPnP) will be specific to your machine and has to be adjusted. Most of the changes needed to work well with OpenPnP summarizes [this commit](https://github.com/mgrl/MarlinOnRamps4OpenPnP/commit/4350a064b687e50f57dfbf211109dcf3d361b661). Changes were made to configuration.h, configuration_adv.h and pins_RAMPS.h. Usually digital out D8, D9, D10 would be reserved and controlled by marlin to heat extruders or the bed of a 3d printer. These pins were remapped to the unused pin 70 so that the functionality is taken off of the pins. The mosfets can now be used to turn on/off a vacuum pump, solenoids, or lights by issuing an M42 command.
+The [marlin-firmware](https://github.com/lucasbrigida/MarlinOnRamps4OpenPnP) will be specific to your machine and has to be adjusted. Generally speaking the following changes are helpful: 
+* Set the number of extruders to 2 (for each rotational axis on a head nozzle)
+* Set `TEMP_SENSOR_x` to 998, or 999 as dummy values.
+* Disable `PREVENT_COLD_EXTRUSION` (as there is no heater or temp sensor)
+* Disable `THERMAL_PROTECTION_HOTENDS` and `THERMAL_PROTECTION_BED`
+* Set your `DEFAULT_AXIS_STEPS_PER_UNIT` according to your motors/gearing
+* Set your `DEFAULT_MAX_FEEDRATE` (which will be your nozzle stepper motors) according to your motors/gearing
+* Change your `DEFAULT_MAX_ACCELERATION` to a value you're comfortable with.
+* Set `DISABLE_INACTIVE_EXTRUDER` to 0.
+* Move `RAMPS_Dx_PIN` to `70` (or another unused pin #) for `D8`, `D9`, and `D10`
+
+Most of the changes needed to work well with OpenPnP summarizes [this commit](https://github.com/lucasbrigida/MarlinOnRamps4OpenPnP/commit/4350a064b687e50f57dfbf211109dcf3d361b661). Changes were made to configuration.h, configuration_adv.h and pins_RAMPS.h. Usually digital out D8, D9, D10 would be reserved and controlled by marlin to heat extruders or the bed of a 3d printer. These pins were remapped to the unused pin 70 so that the functionality is taken off of the pins. The mosfets can now be used to turn on/off a vacuum pump, solenoids, or lights by issuing an M42 command.
 
 Output of M503 of a running machine:
 ```
