@@ -46,6 +46,7 @@ import org.openpnp.vision.pipeline.CvStage;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.core.Commit;
+import org.simpleframework.xml.core.Persist;
 
 
 /**
@@ -493,6 +494,12 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
                     Utils2D.angleNorm(getLocation().getRotation() - 90, 180)));
             standardEia481 = true;
         }
+    }
+
+    @Persist
+    private void persist() {
+        // Make sure the EIA-481 flag is initialized before persisting.
+        isStandardEia481(); // using side effect
     }
 
     public boolean isStandardEia481() {
