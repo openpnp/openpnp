@@ -43,6 +43,12 @@ public class PacketBuilder {
         return this;
     }
 
+    public PacketBuilder putUint16(int data) {
+        payloadBuffer.put((data >> 8) & 0xFF);
+        payloadBuffer.put(data & 0xFF);
+        return this;
+    }
+
     public PacketBuilder putUuid(String uuid) {
         for (int i = 0; i < 12; i++) {
             int data = PacketHelper.getByteAtPhoton(uuid, i);
