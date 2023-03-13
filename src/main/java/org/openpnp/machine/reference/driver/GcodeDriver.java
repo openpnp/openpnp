@@ -293,11 +293,18 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     static public class Line {
         final String line;
         final double transmissionTime;
+        boolean isError;
 
         public Line(String line) {
             super();
             this.line = line;
             this.transmissionTime = NanosecondTime.getRuntimeSeconds();
+            this.isError = false;
+        }
+
+        public Line(String line, boolean isError) {
+            this(line);
+            this.isError = isError;
         }
 
         public String getLine() {
@@ -396,10 +403,10 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
      * @throws Exception
      */
     protected void connectThreads() throws Exception {
+        errorResponse = null;
         readerThread = new ReaderThread();
         readerThread.setDaemon(true);
         readerThread.start();
-        errorResponse = null;
         receivedConfirmationsQueue = new LinkedBlockingQueue<>();
         reportedLocationsQueue = new LinkedBlockingQueue<>();
     }
@@ -1123,22 +1130,33 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         if (timeout == -1) {
             timeout = infinityTimeoutMilliseconds;
         }
+
         Line receivedConfirmation = receivedConfirmationsQueue.poll(timeout, TimeUnit.MILLISECONDS);
         if (receivedConfirmation != null) {
-            Logger.trace("[{}] confirmed {}", getCommunications().getConnectionName(), command);
+            if (receivedConfirmation.isError) {
+                Logger.trace("[{}] confirmed error {}", getCommunications().getConnectionName(), command);
+
+                // Set error response and bail out immediately
+                errorResponse = receivedConfirmation;
+                bailOnError();
+            } else {
+                Logger.trace("[{}] confirmed {}", getCommunications().getConnectionName(), command);
+            }
             return receivedConfirmation;
         }
+
         // Timeout expired.
         throw new Exception(getCommunications().getConnectionName()+" timeout waiting for response to "+command);
     }
 
     protected void bailOnError() throws Exception {
         if (errorResponse != null) {
-            Line error = errorResponse; 
+            Line error = errorResponse;
             errorResponse = null;
             throw new Exception(getCommunications().getConnectionName()+" error response from controller: " + error);
         }
         if (readerThread == null || !readerThread.isAlive()) {
+            connected = false; // Force disconnect when something happened with the reader thread
             throw new Exception(getCommunications().getConnectionName()+" IO Error on reading from the controller.");
         }
     }
@@ -1339,7 +1357,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
                 try {
                     receivedLine = getCommunications().readLine();
                     if (receivedLine == null) {
-                        // Line read failed eg. due to socket closure
+                        // Line read failed e.g. due to socket closure
                         Logger.error("Failed to read gcode response");
                         return;
                     }
@@ -1381,10 +1399,12 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         String regex = getCommand(null, CommandType.COMMAND_CONFIRM_REGEX);
         if (regex != null && line.getLine().matches(regex)) {
             receivedConfirmationsQueue.add(line);
-        }
-        regex = getCommand(null, CommandType.COMMAND_ERROR_REGEX);
-        if (regex != null && line.getLine().matches(regex)) {
-            errorResponse = line;
+        } else {
+            regex = getCommand(null, CommandType.COMMAND_ERROR_REGEX);
+            if (regex != null && line.getLine().matches(regex)) {
+                line.isError = true;
+                receivedConfirmationsQueue.add(line);
+            }
         }
         processPositionReport(line);
     }
