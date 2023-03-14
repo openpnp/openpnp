@@ -27,7 +27,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     name: Deploy
-    needs: test
+    # needs: test
     if: github.repository == 'openpnp/openpnp'
     # if: github.repository == 'openpnp/openpnp' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/test')
     steps:
