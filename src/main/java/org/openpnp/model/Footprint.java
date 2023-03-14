@@ -27,6 +27,8 @@ import java.awt.geom.RoundRectangle2D;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.openpnp.gui.support.KiCadImporter;
+
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.ElementList;
 
@@ -68,7 +70,8 @@ public class Footprint extends AbstractModelObject{
     public enum Generator {
         Dual,
         Quad,
-        Bga;
+        Bga,
+        KiCad;
     }
 
     public Shape getShape() {
@@ -493,6 +496,14 @@ public class Footprint extends AbstractModelObject{
                 if (bodyWidth == 0 && bodyHeight == 0) {
                     setBodyWidth(outerDimension+padPitch);
                     setBodyHeight(outerDimension+padPitch);
+                }
+                break;
+            }
+            case KiCad:
+            {
+                KiCadImporter importer = new KiCadImporter();
+                for (Pad pad : importer.getPads()) {
+                    addPad(pad);
                 }
                 break;
             }
