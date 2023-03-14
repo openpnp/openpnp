@@ -51,7 +51,7 @@ public class OpenCvVisionProvider implements VisionProvider {
 
 
     static {
-        nu.pattern.OpenCV.loadShared();
+        nu.pattern.OpenCV.loadLocally();
     }
 
     protected Camera camera;

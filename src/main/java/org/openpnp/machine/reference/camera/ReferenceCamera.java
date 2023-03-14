@@ -80,7 +80,7 @@ import org.simpleframework.xml.Element;
 
 public abstract class ReferenceCamera extends AbstractBroadcastingCamera implements ReferenceHeadMountable {
     static {
-        nu.pattern.OpenCV.loadShared();
+        nu.pattern.OpenCV.loadLocally();
     }
 
     @Attribute(required = false)
