@@ -53,7 +53,7 @@ jobs:
           # wget -q https://s3-us-west-2.amazonaws.com/openpnp/macosx-amd64-1.8.0_131.tar.gz
           # wget -q https://s3-us-west-2.amazonaws.com/openpnp/windows-amd64-1.8.0_131.tar.gz
           # wget -q https://s3-us-west-2.amazonaws.com/openpnp/windows-x86-1.8.0_131.tar.gz
-          VERSION=`java -cp target/openpnp-gui-0.0.1-alpha-SNAPSHOT.jar:target/lib org.openpnp.Main --version`
+          VERSION=`java --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.desktop/java.awt=ALL-UNNAMED --add-opens=java.desktop/java.awt.color=ALL-UNNAMED -cp target/openpnp-gui-0.0.1-alpha-SNAPSHOT.jar:target/lib org.openpnp.Main --version`
           ./install4j8.0.11/bin/install4jc -r $VERSION -d installers -D mediaFileVersion=$BRANCH_NAME OpenPnP.install4j
           mv installers/updates.xml installers/updates-$BRANCH_NAME.xml
           mkdir -p installers/$BRANCH_NAME/$VERSION
