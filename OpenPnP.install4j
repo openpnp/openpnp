@@ -956,7 +956,7 @@ if (context.isUnattended()) {
       </variables>
       <jreBundle jreBundleSource="generated" />
     </windows>
-    <macosArchive name="macOS Single Bundle Archive" id="308" launcherId="23">
+    <macosArchive name="macOS Single Bundle Archive" id="319" launcherId="23">
       <jreBundle jreBundleSource="generated" />
     </macosArchive>
     <unixInstaller name="Unix Installer" id="121" installDir="openpnp" />
@@ -964,7 +964,7 @@ if (context.isUnattended()) {
     <linuxRPM name="Linux RPM" id="123" installDir="/opt/openpnp" />
     <linuxDeb name="Linux Deb Archive" id="124" installDir="/opt/openpnp" bzip="true" description="Open Source SMT Pick and Place Software" maintainerEmail="jason@vonnieda.org" />
   </mediaSets>
-  <buildIds buildAll="false">
-    <mediaSet refId="308" />
+  <buildIds>
+    <mediaSet refId="319" />
   </buildIds>
 </install4j>
