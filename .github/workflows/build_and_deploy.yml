@@ -5,30 +5,30 @@ on:
   pull_request:
 
 jobs:
-  # test:
-  #   runs-on: ubuntu-latest
-  #   name: Java ${{ matrix.java }}
-  #   strategy:
-  #     matrix:
-  #       java: [11, 17, 19]
+  test:
+    runs-on: ubuntu-latest
+    name: Java ${{ matrix.java }}
+    strategy:
+      matrix:
+        java: [11, 17, 19]
 
-  #   steps:
-  #     - name: Checkout Repo
-  #       uses: actions/checkout@v2
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v2
 
-  #     - name: Setup JDK ${{ matrix.java }}
-  #       uses: actions/setup-java@v1
-  #       with:
-  #         java-version: ${{ matrix.java }}
+      - name: Setup JDK ${{ matrix.java }}
+        uses: actions/setup-java@v1
+        with:
+          java-version: ${{ matrix.java }}
 
-  #     - name: Build with Maven
-  #       run: mvn -q -B test
+      - name: Build with Maven
+        run: mvn -q -B test
         
   deploy:
     runs-on: ubuntu-latest
     name: Deploy
-    # needs: test
-    # if: github.repository == 'openpnp/openpnp' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/test')
+    needs: test
+    if: github.repository == 'openpnp/openpnp' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/test')
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v2
@@ -64,15 +64,15 @@ jobs:
           source_dir: 'installers'
           destination_dir: ''
           
-      # - name: Update API Docs
-      #   run: |
-      #     git config --global user.email "jason@vonnieda.org"
-      #     git config --global user.name "Jason von Nieda"
-      #     git clone --quiet --branch=gh-pages https://${{ secrets.GH_PAGES_TOKEN }}@github.com/openpnp/openpnp gh-pages
-      #     cd gh-pages
-      #     git rm --ignore-unmatch -rf $BRANCH_NAME
-      #     javadoc -sourcepath ../src/main/java -subpackages org.openpnp -d $BRANCH_NAME || true
-      #     git add -f .
-      #     git commit -m "Lastest javadoc on successful build $GITHUB_RUN_NUMBER auto-pushed to gh-pages"
-      #     git push -fq origin gh-pages
+      - name: Update API Docs
+        run: |
+          git config --global user.email "jason@vonnieda.org"
+          git config --global user.name "Jason von Nieda"
+          git clone --quiet --branch=gh-pages https://${{ secrets.GH_PAGES_TOKEN }}@github.com/openpnp/openpnp gh-pages
+          cd gh-pages
+          git rm --ignore-unmatch -rf $BRANCH_NAME
+          javadoc -sourcepath ../src/main/java -subpackages org.openpnp -d $BRANCH_NAME || true
+          git add -f .
+          git commit -m "Lastest javadoc on successful build $GITHUB_RUN_NUMBER auto-pushed to gh-pages"
+          git push -fq origin gh-pages
       

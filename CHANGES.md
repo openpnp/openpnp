@@ -23,8 +23,11 @@ openpnp-opencv.
 OpenPnP Capture Camera is now fixed on MacOS and should work correctly on both
 x86 and Apple Silicon.
 
-TODO: This version of OpenPnP changes from a installer to a single app archive.
+This version of OpenPnP changes from a installer to a single app archive.
 You can install it by dragging the app to your /Applications folder.
+
+The application and supporting files are now Code Signed so that they should
+run without having to disable security.
 
 # 2023-02-14
 
