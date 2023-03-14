@@ -6,7 +6,6 @@
       <variable name="native_path" />
       <variable name="mediaFileVersion" value="${compiler:sys.version}" />
     </variables>
-    <codeSigning macNotarize="true" />
     <jreBundles jdkProviderId="AdoptOpenJDK" release="openjdk17/jdk-17.0.6+10" />
   </application>
   <files>
@@ -70,8 +69,11 @@
         </nativeLibraryDirectories>
       </java>
       <macStaticAssociationActions mode="selected" />
-      <infoPlist>&lt;key&gt;com.apple.security.device.camera&lt;/key&gt;
-&lt;string&gt;openpnp-capture needs permission to access the camera to capture images.&lt;/string&gt;</infoPlist>
+      <infoPlist>
+&lt;key&gt;NSCameraUsageDescription&lt;/key&gt;
+&lt;string&gt;openpnp-capture needs permission to access the camera to capture images.&lt;/string&gt;
+
+</infoPlist>
       <iconImageFiles>
         <file path="./src/main/resources/icons/OpenPnP-logo.iconset/icon_32x32.png" />
         <file path="./src/main/resources/icons/OpenPnP-logo.iconset/icon_128x128.png" />
@@ -954,18 +956,15 @@ if (context.isUnattended()) {
       </variables>
       <jreBundle jreBundleSource="generated" />
     </windows>
-    <macosFolder name="Mac OS X Folder" id="119" installDir="OpenPnP">
-      <variables>
-        <variable name="native_path" value="mac/universal" />
-      </variables>
-      <jreBundle jreBundleSource="generated" bundleUrl="http://openpnp.org" />
-    </macosFolder>
+    <macosArchive name="macOS Single Bundle Archive" id="308" launcherId="23">
+      <jreBundle jreBundleSource="generated" />
+    </macosArchive>
     <unixInstaller name="Unix Installer" id="121" installDir="openpnp" />
     <unixArchive name="Unix Archive" id="122" installDir="openpnp" />
     <linuxRPM name="Linux RPM" id="123" installDir="/opt/openpnp" />
     <linuxDeb name="Linux Deb Archive" id="124" installDir="/opt/openpnp" bzip="true" description="Open Source SMT Pick and Place Software" maintainerEmail="jason@vonnieda.org" />
   </mediaSets>
   <buildIds buildAll="false">
-    <mediaSet refId="119" />
+    <mediaSet refId="308" />
   </buildIds>
 </install4j>
