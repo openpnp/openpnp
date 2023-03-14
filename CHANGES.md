@@ -1,6 +1,31 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2023-03-14
+
+## Java 17+ Support
+
+OpenPnP is now compatible with Java versions 11, 17, and 19. Thank you to @lags
+and others! See the PR at https://github.com/openpnp/openpnp/pull/1493 for more
+details.
+
+Other versions of Java are no longer explicity supported or tested but they may
+still work. In general, any version 11+ should work.
+
+The installers now include a current version of OpenJDK 17, rather than a very
+out of date JDK 8.
+
+## MacOS Silicon Support and Fixes
+
+OpenPnP now supports Apple Silicon natively, including in openpnp-capture and
+openpnp-opencv.
+
+OpenPnP Capture Camera is now fixed on MacOS and should work correctly on both
+x86 and Apple Silicon.
+
+TODO: This version of OpenPnP changes from a installer to a single app archive.
+You can install it by dragging the app to your /Applications folder.
+
 # 2023-02-14
 
 ## Panelization and other UI changes/improvements
