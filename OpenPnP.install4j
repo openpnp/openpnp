@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<install4j version="8.0.6" transformSequenceNumber="8">
+<install4j version="8.0.11" transformSequenceNumber="8">
   <directoryPresets config="./OPENPNP_2_0.md" />
-  <application name="OpenPnP" applicationId="9204-4030-0867-1434" mediaDir="./installers" mediaFilePattern="${compiler:sys.fullName}-${compiler:sys.platform}-${compiler:mediaFileVersion}" shortName="openpnp" publisher="OpenPnP" publisherWeb="http://openpnp.org" version="develop" allPathsRelative="true" macVolumeId="2f75d25b539292d5" javaMinVersion="1.7">
+  <application name="OpenPnP" applicationId="9204-4030-0867-1434" mediaDir="./installers" mediaFilePattern="${compiler:sys.fullName}-${compiler:sys.platform}-${compiler:mediaFileVersion}" shortName="openpnp" publisher="OpenPnP" publisherWeb="http://openpnp.org" version="develop" allPathsRelative="true" macVolumeId="2f75d25b539292d5" javaMinVersion="11">
     <variables>
       <variable name="native_path" />
       <variable name="mediaFileVersion" value="${compiler:sys.version}" />
     </variables>
+    <codeSigning macNotarize="true" />
+    <jreBundles jdkProviderId="AdoptOpenJDK" release="openjdk17/jdk-17.0.6+10" />
   </application>
   <files>
     <roots>
@@ -58,7 +60,7 @@
     <launcher name="OpenPnP" id="23" icnsFile="./src/main/resources/icons/OpenPnP-logo.icns">
       <executable name="OpenPnP" iconSet="true" executableMode="gui" singleInstance="true" dpiAware="false" />
       <splashScreen bitmapFile="./logo/OpenPnP-logo.iconset/icon_128x128.png" />
-      <java mainClass="org.openpnp.Main">
+      <java mainClass="org.openpnp.Main" vmParameters="--add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.desktop/java.awt=ALL-UNNAMED --add-opens=java.desktop/java.awt.color=ALL-UNNAMED">
         <classPath>
           <archive location="openpnp-gui-0.0.1-alpha-SNAPSHOT.jar" failOnError="false" />
           <scanDirectory location="lib" failOnError="false" />
@@ -68,6 +70,8 @@
         </nativeLibraryDirectories>
       </java>
       <macStaticAssociationActions mode="selected" />
+      <infoPlist>&lt;key&gt;com.apple.security.device.camera&lt;/key&gt;
+&lt;string&gt;openpnp-capture needs permission to access the camera to capture images.&lt;/string&gt;</infoPlist>
       <iconImageFiles>
         <file path="./src/main/resources/icons/OpenPnP-logo.iconset/icon_32x32.png" />
         <file path="./src/main/resources/icons/OpenPnP-logo.iconset/icon_128x128.png" />
@@ -942,27 +946,26 @@ if (context.isUnattended()) {
       <variables>
         <variable name="native_path" value="windows/x86" />
       </variables>
-      <jreBundle jreBundleSource="preCreated" includedJre="windows-x86-1.8.0_131" />
+      <jreBundle jreBundleSource="generated" manualJreEntry="true" />
     </windows>
     <windows name="Windows_64" id="28" installDir="openpnp">
       <variables>
         <variable name="native_path" value="windows/x64" />
       </variables>
-      <jreBundle jreBundleSource="preCreated" includedJre="windows-amd64-1.8.0_131" />
+      <jreBundle jreBundleSource="generated" />
     </windows>
     <macosFolder name="Mac OS X Folder" id="119" installDir="OpenPnP">
       <variables>
         <variable name="native_path" value="mac/universal" />
       </variables>
-      <jreBundle jreBundleSource="preCreated" includedJre="macosx-amd64-1.8.0_131" bundleUrl="http://openpnp.org" />
+      <jreBundle jreBundleSource="generated" bundleUrl="http://openpnp.org" />
     </macosFolder>
     <unixInstaller name="Unix Installer" id="121" installDir="openpnp" />
     <unixArchive name="Unix Archive" id="122" installDir="openpnp" />
     <linuxRPM name="Linux RPM" id="123" installDir="/opt/openpnp" />
     <linuxDeb name="Linux Deb Archive" id="124" installDir="/opt/openpnp" bzip="true" description="Open Source SMT Pick and Place Software" maintainerEmail="jason@vonnieda.org" />
   </mediaSets>
-  <buildIds>
+  <buildIds buildAll="false">
     <mediaSet refId="119" />
   </buildIds>
-  <buildOptions disableJreBundling="true" />
 </install4j>
