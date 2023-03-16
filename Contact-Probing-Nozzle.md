@@ -145,6 +145,8 @@ On your GCodeDriver choose the new contact probing Actuator and define the ACTUA
 
 ![grafik](https://user-images.githubusercontent.com/9963310/69479755-4f839100-0e01-11ea-89b7-201993ef22b7.png)
 
+Note, the probed Z coordinate is **not** read through the actuator. Instead, OpenPnP uses a regular position report and gets the current Z coordinate from the response. [[Issues and Solutions]] should already have configured the employed `POSITION_REPORT_COMMAND` and `POSITION_REPORT_REGEX` for you. 
+
 ### Testing the Contact Probing
 
 To test the contact probing, move your nozzle tip on top of an object not quite touching it. Then go to the machine controls, switch to the Actuators tab and click on the Probe Actuator:
@@ -152,7 +154,6 @@ To test the contact probing, move your nozzle tip on top of an object not quite 
 ![grafik](https://user-images.githubusercontent.com/9963310/69497687-2dad0b80-0ee0-11ea-85ed-852254c53f4f.png)
 
 You can now use the On and Off buttons to probe and (if applicable) retract. 
-
 
 ## Nozzle Tip Probing Configuration
 
