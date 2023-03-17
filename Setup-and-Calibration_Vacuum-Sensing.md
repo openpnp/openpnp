@@ -6,7 +6,9 @@ Instructions for OpenPnP 1.0 and 2.0 are different. See further down the page fo
 
 ## Actuator Setup
 
-Make sure to have [[configured the vacuum valve Actuator|Setup and Calibration_Vacuum Setup]]. The same Actuator can be reused to sense the vacuum, or you can create a second one (for instance if your actuator is on a different driver):
+Make sure to have [[configured the vacuum valve Actuator|Setup and Calibration_Vacuum Setup]]. The same Actuator can be reused to sense the vacuum (supported, but not recommended), or you can create a second one (for instance if your actuator is on a different driver).
+
+[[Issues and Solutions]] can help you configure the G-code, bur if you prefer manual setup or need to trouble-shoot, the following is the way to go:
 
 1. Set a ACTUATOR_READ_COMMAND in your GcodeDriver config on the new Actuator. This command will be sent to your controller when OpenPnP needs to read the vacuum level. See [actuator-read-command](https://github.com/openpnp/openpnp/wiki/GcodeDriver_Command-Reference#actuator_read_command) for more information.
 2. Set a ACTUATOR_READ_REGEX in your GcodeDriver config on the new Actuator. This regex will be used to read the response to the ACTUATOR_READ_COMMAND. See [actuator-read-regex](https://github.com/openpnp/openpnp/wiki/GcodeDriver#actuator_read_regex) for more information.
