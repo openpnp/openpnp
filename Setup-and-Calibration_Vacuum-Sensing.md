@@ -6,7 +6,7 @@ Instructions for OpenPnP 1.0 and 2.0 are different. See further down the page fo
 
 ## Actuator Setup
 
-If you used the [Nozzle solution](https://github.com/openpnp/openpnp/wiki/Issues-and-Solutions#welcome-milestone) from [[Issues and Solutions]] to set up the nozzles, all the right actuators are already cretaed and assigned correctly. [[Issues and Solutions]] can also help you configure the G-code, so the following is merely for trouble-shooting or older OpenPnP version.
+If you used the [Nozzle solution](https://github.com/openpnp/openpnp/wiki/Issues-and-Solutions#welcome-milestone) from [[Issues and Solutions]] to set up the nozzles, all the right actuators are already created and assigned correctly. [[Issues and Solutions]] can also help you configure the G-code, so the following is merely for trouble-shooting or older OpenPnP version.
 ___
 
 Make sure to have [[configured the vacuum valve Actuator|Setup and Calibration_Vacuum Setup]]. The same Actuator can be reused to sense the vacuum (supported, but no longer recommended), or you can create a second one (for instance if your actuator is on a different driver).
