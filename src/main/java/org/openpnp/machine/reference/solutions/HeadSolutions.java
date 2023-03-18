@@ -183,16 +183,16 @@ public class HeadSolutions implements Solutions.Subject {
                 });
             }
             if (solutions.isTargeting(Milestone.Basics)) {
-                if (camera.getAxisX() == null) {
+                if (camera.getAxisX() == null || camera.getAxisX() instanceof ReferenceVirtualAxis) {
                     addMissingAxisIssue(solutions, camera, Axis.Type.X);
                 }
-                if (camera.getAxisY() == null) {
+                if (camera.getAxisY() == null || camera.getAxisY() instanceof ReferenceVirtualAxis) {
                     addMissingAxisIssue(solutions, camera, Axis.Type.Y);
                 }
-                if (camera.getAxisZ() == null) {
+                if (!(camera.getAxisZ() instanceof ReferenceVirtualAxis)) {
                     addMissingAxisIssue(solutions, camera, Axis.Type.Z);
                 }
-                if (camera.getAxisRotation() == null) {
+                if (!(camera.getAxisRotation() instanceof ReferenceVirtualAxis)) {
                     addMissingAxisIssue(solutions, camera, Axis.Type.Rotation);
                 }
                 if (camera.getAxisX() != null && camera.getAxisY() != null) {
@@ -216,6 +216,13 @@ public class HeadSolutions implements Solutions.Subject {
     }
 
     protected void perNozzleSolutions(Solutions solutions, Nozzle nozzle) {
+        if (nozzle.getAxisZ() instanceof ReferenceVirtualAxis) {
+            addMissingAxisIssue(solutions, nozzle, Axis.Type.Z);
+        }
+        if (nozzle.getAxisRotation() instanceof ReferenceVirtualAxis) {
+            addMissingAxisIssue(solutions, nozzle, Axis.Type.Rotation);
+        }
+
         if (nozzle.getAxisZ() == null) {
             solutions.add(new Solutions.PlainIssue(
                     nozzle, 
@@ -283,16 +290,19 @@ public class HeadSolutions implements Solutions.Subject {
             }
         });
     }
-    protected void addMissingAxisIssue(Solutions solutions, final Camera camera, Axis.Type type) {
+    protected void addMissingAxisIssue(Solutions solutions, final HeadMountable hm, Axis.Type type) {
         // Find a default axis.
-        AbstractAxis suggestedAxis;
+        AbstractAxis suggestedAxis = null;
         boolean isNewAxis = false;
         boolean isXY = (type == Type.X || type == Type.Y);
-        if (isXY) {
-            suggestedAxis = head.getMachine().getDefaultAxis(type);
+        boolean isPhysical = (isXY || !(hm instanceof Camera));
+        if (isPhysical) {
+            if (isXY) {
+                suggestedAxis = head.getMachine().getDefaultAxis(type);
+            }
         }
         else {
-            suggestedAxis = null;
+            // Get a virtual axis.
             for (Axis axisCand : head.getMachine().getAxes()) {
                 if (axisCand.getType() == type && axisCand instanceof ReferenceVirtualAxis) {
                     suggestedAxis = (AbstractAxis) axisCand;
@@ -303,27 +313,28 @@ public class HeadSolutions implements Solutions.Subject {
                 ReferenceVirtualAxis virtualAxis = new ReferenceVirtualAxis();
                 isNewAxis = true;
                 virtualAxis.setType(type);
-                virtualAxis.setName(type+" "+camera.getName());
+                virtualAxis.setName(type+" "+hm.getName());
                 suggestedAxis = virtualAxis;
             }
         }
         final AbstractAxis axis = suggestedAxis;
         final boolean isNew = isNewAxis;
+        final Axis oldAxis = hm.getAxis(type);
         solutions.add(new Solutions.Issue(
-                camera, 
-                (isXY ? 
-                        "Missing "+type.name()+" axis assignment. Assign one to continue.":
-                            "Virtual "+type.name()+" axis recommended for camera "+camera.getName()+"."), 
+                hm, 
+                (oldAxis == null ? 
+                        "Missing "+type.name()+" axis assignment. Assign one to continue." :
+                            oldAxis.getClass().getSimpleName()+" "+oldAxis.getName()+" assigned as "+type.name()+" has wrong type."), 
                 (axis == null ? 
                         "Create and assign a "+type.name()+" axis manually."  
                         : "Assign "+(isNew ? "new " : "existing ")+axis.getClass().getSimpleName()+" "+axis.getName()+" as "+type.name()+"."), 
-                isXY ? Severity.Fundamental : Severity.Suggestion,
+                (isPhysical || oldAxis != null) ? Severity.Error : Severity.Warning,
                 "https://github.com/openpnp/openpnp/wiki/Mapping-Axes") {
 
             @Override
             public void setState(Solutions.State state) throws Exception {
-                ((AbstractHeadMountable) camera).setAxis(
-                        ((AbstractAxis)(state == State.Solved ? axis : null)),
+                ((AbstractHeadMountable) hm).setAxis(
+                        ((AbstractAxis)(state == State.Solved ? axis : oldAxis)),
                         type);
                 if (isNew) {
                     try {
