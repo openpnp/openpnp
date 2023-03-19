@@ -9,6 +9,8 @@ import org.openpnp.machine.photon.exceptions.FeederHasNoLocationOffsetException;
 import org.openpnp.machine.photon.exceptions.NoSlotAddressException;
 import org.openpnp.machine.photon.exceptions.UnconfiguredSlotException;
 import org.openpnp.machine.photon.protocol.PhotonCommands;
+import org.openpnp.machine.photon.protocol.helpers.ResponsesHelper;
+import org.openpnp.machine.photon.protocol.helpers.TestBus;
 import org.openpnp.machine.photon.sheets.FeederPropertySheet;
 import org.openpnp.machine.photon.sheets.SearchPropertySheet;
 import org.openpnp.machine.reference.ReferenceActuator;
@@ -27,271 +29,279 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 public class PhotonFeederTest {
-//    private final String hardwareId = "00112233445566778899AABB";
-//    private final int feederAddress = 5;
-//
-//    private PhotonFeeder feeder;
-//
-//    private Machine machine;
-//    private Actuator mockedActuator;
-//    private Nozzle mockedNozzle;
-//    private PhotonProperties photonProperties;
-//    private Location baseLocation;
-//    private Location feederOffset;
-//
-//    private PhotonCommands commands = new PhotonCommands(0);
-//
-//    @BeforeEach
-//    public void setUp() throws Exception {
-//        File workingDirectory = Files.createTempDir();
-//        workingDirectory = new File(workingDirectory, ".openpnp");
-//        System.out.println("Configuration directory: " + workingDirectory);
-//        Configuration.initialize(workingDirectory);
-//        Configuration.get().load();
-//
-//        machine = Configuration.get().getMachine();
-//        feeder = new PhotonFeeder();
-//        machine.addFeeder(feeder);
-//
-//        // First remove the Reference Actuator that was made when we created the PhotonFeeder
-//        machine.removeActuator(machine.getActuatorByName(PhotonFeeder.ACTUATOR_DATA_NAME));
-//
-//        // Then make a fake one for us to mock with
-//        mockedActuator = mock(Actuator.class);
-//        when(mockedActuator.getName()).thenReturn(PhotonFeeder.ACTUATOR_DATA_NAME);
-//        machine.addActuator(mockedActuator);
-//
-//        mockedNozzle = mock(Nozzle.class);
-//        when(mockedNozzle.getName()).thenReturn("Test Nozzle");
-//
-//        photonProperties = new PhotonProperties(machine);
-//
-//        baseLocation = new Location(LengthUnit.Millimeters, 1, 2, 3, 0);
-//        feederOffset = new Location(LengthUnit.Millimeters, 1, 1, 0, 45);
-//    }
-//
-//    private void setSlotLocation(int address, Location location) {
-//        photonProperties.getFeederSlots().getSlot(address).setLocation(location);
-//    }
-//
-//    @Test
-//    public void getJobPreparationLocationReturnsNull() {
-//        assertNull(feeder.getJobPreparationLocation());
-//    }
-//
-//    @Test
-//    public void getDataActuatorCreatesReferenceActuatorIfOneDoesNotExist() {
-//        machine.removeActuator(mockedActuator); // Start by removing the one we added for every other test
-//
-//        Actuator actuator = PhotonFeeder.getDataActuator();
-//        assertNotNull(actuator);
-//        assertTrue(actuator instanceof ReferenceActuator);
-//        assertEquals(PhotonFeeder.ACTUATOR_DATA_NAME, actuator.getName());
-//
-//        Actuator machineActuator = machine.getActuatorByName(PhotonFeeder.ACTUATOR_DATA_NAME);
-//        assertSame(actuator, machineActuator);
-//    }
-//
-//    @Test
-//    public void getSlotAddressReturnsNullByDefault() {
-//        assertNull(feeder.getSlotAddress());
-//    }
-//
-//    @Test
-//    public void isEnabledReturnsFalseIfSetEnabledToFalse() {
-//        feeder.setEnabled(false);
-//
-//        assertFalse(feeder.isEnabled());
-//    }
-//
-//    @Test
-//    public void isEnabledReturnsFalseIfNoHardwareIdSet() {
-//        feeder.setEnabled(true);
-//
-//        assertNull(feeder.getHardwareId());
-//        assertFalse(feeder.isEnabled());
-//    }
-//
-//    @Test
-//    public void isEnabledReturnsFalseIfNoPartIsSet() {
-//        feeder.setEnabled(true);
-//        feeder.setHardwareId(hardwareId);
-//
-//        assertNull(feeder.getPart());
-//        assertFalse(feeder.isEnabled());
-//    }
-//
-//    @Test
-//    public void isEnabledReturnsFalseIfNoAddressIsSet() {
-//        feeder.setEnabled(true);
-//        feeder.setHardwareId(hardwareId);
-//        feeder.setPart(new Part("test-part"));
-//
-//        assertNull(feeder.getSlot());
-//        assertFalse(feeder.isEnabled());
-//    }
-//
-//    @Test
-//    public void isEnabledReturnsFalseIfSlotHasNoLocation() {
-//        feeder.setEnabled(true);
-//        feeder.setHardwareId(hardwareId);
-//        feeder.setPart(new Part("test-part"));
-//        feeder.setSlotAddress(5);
-//
-//        assertNull(feeder.getSlot().getLocation());
-//        assertFalse(feeder.isEnabled());
-//    }
-//
-//    @Test
-//    public void isEnabledReturnsFalseIfFeederHasNoOffset() {
-//        feeder.setEnabled(true);
-//        feeder.setHardwareId(hardwareId);
-//        feeder.setPart(new Part("test-part"));
-//        feeder.setSlotAddress(feederAddress);
-//        setSlotLocation(feederAddress, baseLocation);
-//
-//        assertFalse(feeder.isEnabled());
-//    }
-//
-//    @Test
-//    public void isEnabledReturnsTrueIfEverythingIsSet() {
-//        feeder.setEnabled(true);
-//        feeder.setHardwareId(hardwareId);
-//        feeder.setPart(new Part("test-part"));
-//        feeder.setSlotAddress(feederAddress);
-//        setSlotLocation(feederAddress, baseLocation);
-//        feeder.setOffset(feederOffset);
-//
-//        assertTrue(feeder.isEnabled());
-//    }
-//
-//    @Test
-//    public void getNameByDefaultReturnsClassSimpleName() {
-//        assertEquals(
-//                "Unconfigured PhotonFeeder",
-//                feeder.getName()
-//        );
-//    }
-//
-//    @Test
-//    public void getNameUsesHardwareIdWhenThatIsSet() {
-//        feeder.setHardwareId(hardwareId);
-//        assertEquals(
-//                String.format("%s (Slot: None)", hardwareId),
-//                feeder.getName()
-//        );
-//    }
-//
-//    @Test
-//    public void getNameUsesHardwareIdAndSlotWhenBothAreSet() {
-//        int slot = 27;
-//        feeder.setHardwareId(hardwareId);
-//        feeder.setSlotAddress(slot);
-//        assertEquals(
-//                String.format("%s (Slot: %s)", hardwareId, slot),
-//                feeder.getName()
-//        );
-//    }
-//
-//    @Test
-//    public void setHardwareIdOverridesNameOnlyIfItIsNotAlreadySet() {
-//        feeder.setName("My Name");
-//        feeder.setHardwareId(hardwareId);
-//
-//        assertEquals("My Name (Slot: None)", feeder.getName());
-//    }
-//
-//    @Test
-//    public void setNameWorksWithoutSlotIncluded() {
-//        String name = "Some Test Name";
-//        feeder.setHardwareId(hardwareId);
-//        feeder.setName(name);
-//
-//        assertEquals(
-//                String.format("%s (Slot: None)", name),
-//                feeder.getName()
-//        );
-//    }
-//
-//    @Test
-//    public void setNameWorksWithSlotIncluded() {
-//        int slot = 13;
-//        String name = "Test Name";
-//        String nameWithSlot = String.format("%s (Slot: %s)", name, slot);
-//        feeder.setHardwareId(hardwareId);
-//        feeder.setSlotAddress(slot);
-//        feeder.setName(nameWithSlot);
-//
-//        assertEquals(nameWithSlot, feeder.getName());
-//    }
-//
-//    @Test
-//    public void setNameWorksWithOverridingNoneSlot() {
-//        int slot = 13;
-//        String name = "Test Name";
-//        String nameWithNoneSlot = String.format("%s (Slot: None)", name);
-//        feeder.setHardwareId(hardwareId);
-//        feeder.setSlotAddress(slot);
-//        feeder.setName(nameWithNoneSlot);
-//
-//        String nameWithSlot = String.format("%s (Slot: %s)", name, slot);
-//        assertEquals(nameWithSlot, feeder.getName());
-//    }
-//
-//    @Test
-//    public void setNameWorksWithUnexpectedSlotNumber() {
-//        String name = "Test Name";
-//        String nameWithOldSlot = String.format("%s (Slot: 13)", name);
-//
-//        int newSlot = 3;
-//        feeder.setHardwareId(hardwareId);
-//        feeder.setSlotAddress(newSlot);
-//        feeder.setName(nameWithOldSlot);
-//
-//        String nameWithNewSlot = String.format("%s (Slot: %s)", name, newSlot);
-//        assertEquals(nameWithNewSlot, feeder.getName());
-//    }
-//
-//    @Test
-//    public void setNameWithMalformedSlotKeepsMalformedSlot() {
-//        String name = "Test Name (Slot: No";
-//        feeder.setHardwareId(hardwareId);
-//        feeder.setName(name);
-//
-//        assertEquals(
-//                String.format("%s (Slot: None)", name),
-//                feeder.getName()
-//        );
-//    }
-//
-//    @Test
-//    public void setNameCorrectlyTrimsInputName() {
-//        String name = "Test Name ";
-//        feeder.setHardwareId(hardwareId);
-//        feeder.setName(name);
-//
-//        assertEquals(
-//                "Test Name (Slot: None)",
-//                feeder.getName()
-//        );
-//    }
-//
-//    @Test
-//    public void setNameWithMultipleRandomSlots() {
-//        feeder.setHardwareId(hardwareId);
-//        feeder.setName("This (Slot: 1) Is (Slot: 2) A (Slot: 3) Weird (Slot: None) Test");
-//
-//        /*
-//        We don't trim the spaces internally when a slot is removed. This is more or less intentional to keep everything
-//        simpler.
-//         */
-//        assertEquals("This  Is  A  Weird  Test (Slot: None)", feeder.getName());
-//    }
-//
-//    @Test
-//    public void isInitializedByDefaultReturnsFalse() {
-//        assertFalse(feeder.isInitialized());
-//    }
+    private final String hardwareId = "00112233445566778899AABB";
+    private final int feederAddress = 5;
+
+    private PhotonFeeder feeder;
+
+    private Machine machine;
+    private Actuator mockedActuator;
+    private Nozzle mockedNozzle;
+    private PhotonProperties photonProperties;
+    private Location baseLocation;
+    private Location feederOffset;
+
+    private TestBus bus;
+    private PhotonCommands commands;
+    private ResponsesHelper responses;
+
+    @BeforeEach
+    public void setUp() throws Exception {
+        File workingDirectory = Files.createTempDir();
+        workingDirectory = new File(workingDirectory, ".openpnp");
+        System.out.println("Configuration directory: " + workingDirectory);
+        Configuration.initialize(workingDirectory);
+        Configuration.get().load();
+
+        machine = Configuration.get().getMachine();
+        feeder = new PhotonFeeder();
+        machine.addFeeder(feeder);
+
+        // First remove the Reference Actuator that was made when we created the PhotonFeeder
+        machine.removeActuator(machine.getActuatorByName(PhotonFeeder.ACTUATOR_DATA_NAME));
+
+        // Then make a fake one for us to mock with
+        mockedActuator = mock(Actuator.class);
+        when(mockedActuator.getName()).thenReturn(PhotonFeeder.ACTUATOR_DATA_NAME);
+        machine.addActuator(mockedActuator);
+
+        mockedNozzle = mock(Nozzle.class);
+        when(mockedNozzle.getName()).thenReturn("Test Nozzle");
+
+        photonProperties = new PhotonProperties(machine);
+
+        baseLocation = new Location(LengthUnit.Millimeters, 1, 2, 3, 0);
+        feederOffset = new Location(LengthUnit.Millimeters, 1, 1, 0, 45);
+
+        bus = new TestBus();
+        PhotonFeeder.setBus(bus);
+
+        commands = new PhotonCommands(0);
+        responses = new ResponsesHelper(0);
+    }
+
+    private void setSlotLocation(int address, Location location) {
+        photonProperties.getFeederSlots().getSlot(address).setLocation(location);
+    }
+
+    @Test
+    public void getJobPreparationLocationReturnsNull() {
+        assertNull(feeder.getJobPreparationLocation());
+    }
+
+    @Test
+    public void getDataActuatorCreatesReferenceActuatorIfOneDoesNotExist() {
+        machine.removeActuator(mockedActuator); // Start by removing the one we added for every other test
+
+        Actuator actuator = PhotonFeeder.getDataActuator();
+        assertNotNull(actuator);
+        assertTrue(actuator instanceof ReferenceActuator);
+        assertEquals(PhotonFeeder.ACTUATOR_DATA_NAME, actuator.getName());
+
+        Actuator machineActuator = machine.getActuatorByName(PhotonFeeder.ACTUATOR_DATA_NAME);
+        assertSame(actuator, machineActuator);
+    }
+
+    @Test
+    public void getSlotAddressReturnsNullByDefault() {
+        assertNull(feeder.getSlotAddress());
+    }
+
+    @Test
+    public void isEnabledReturnsFalseIfSetEnabledToFalse() {
+        feeder.setEnabled(false);
+
+        assertFalse(feeder.isEnabled());
+    }
+
+    @Test
+    public void isEnabledReturnsFalseIfNoHardwareIdSet() {
+        feeder.setEnabled(true);
+
+        assertNull(feeder.getHardwareId());
+        assertFalse(feeder.isEnabled());
+    }
+
+    @Test
+    public void isEnabledReturnsFalseIfNoPartIsSet() {
+        feeder.setEnabled(true);
+        feeder.setHardwareId(hardwareId);
+
+        assertNull(feeder.getPart());
+        assertFalse(feeder.isEnabled());
+    }
+
+    @Test
+    public void isEnabledReturnsFalseIfNoAddressIsSet() {
+        feeder.setEnabled(true);
+        feeder.setHardwareId(hardwareId);
+        feeder.setPart(new Part("test-part"));
+
+        assertNull(feeder.getSlot());
+        assertFalse(feeder.isEnabled());
+    }
+
+    @Test
+    public void isEnabledReturnsFalseIfSlotHasNoLocation() {
+        feeder.setEnabled(true);
+        feeder.setHardwareId(hardwareId);
+        feeder.setPart(new Part("test-part"));
+        feeder.setSlotAddress(5);
+
+        assertNull(feeder.getSlot().getLocation());
+        assertFalse(feeder.isEnabled());
+    }
+
+    @Test
+    public void isEnabledReturnsFalseIfFeederHasNoOffset() {
+        feeder.setEnabled(true);
+        feeder.setHardwareId(hardwareId);
+        feeder.setPart(new Part("test-part"));
+        feeder.setSlotAddress(feederAddress);
+        setSlotLocation(feederAddress, baseLocation);
+
+        assertFalse(feeder.isEnabled());
+    }
+
+    @Test
+    public void isEnabledReturnsTrueIfEverythingIsSet() {
+        feeder.setEnabled(true);
+        feeder.setHardwareId(hardwareId);
+        feeder.setPart(new Part("test-part"));
+        feeder.setSlotAddress(feederAddress);
+        setSlotLocation(feederAddress, baseLocation);
+        feeder.setOffset(feederOffset);
+
+        assertTrue(feeder.isEnabled());
+    }
+
+    @Test
+    public void getNameByDefaultReturnsClassSimpleName() {
+        assertEquals(
+                "Unconfigured PhotonFeeder",
+                feeder.getName()
+        );
+    }
+
+    @Test
+    public void getNameUsesHardwareIdWhenThatIsSet() {
+        feeder.setHardwareId(hardwareId);
+        assertEquals(
+                String.format("%s (Slot: None)", hardwareId),
+                feeder.getName()
+        );
+    }
+
+    @Test
+    public void getNameUsesHardwareIdAndSlotWhenBothAreSet() {
+        int slot = 27;
+        feeder.setHardwareId(hardwareId);
+        feeder.setSlotAddress(slot);
+        assertEquals(
+                String.format("%s (Slot: %s)", hardwareId, slot),
+                feeder.getName()
+        );
+    }
+
+    @Test
+    public void setHardwareIdOverridesNameOnlyIfItIsNotAlreadySet() {
+        feeder.setName("My Name");
+        feeder.setHardwareId(hardwareId);
+
+        assertEquals("My Name (Slot: None)", feeder.getName());
+    }
+
+    @Test
+    public void setNameWorksWithoutSlotIncluded() {
+        String name = "Some Test Name";
+        feeder.setHardwareId(hardwareId);
+        feeder.setName(name);
+
+        assertEquals(
+                String.format("%s (Slot: None)", name),
+                feeder.getName()
+        );
+    }
+
+    @Test
+    public void setNameWorksWithSlotIncluded() {
+        int slot = 13;
+        String name = "Test Name";
+        String nameWithSlot = String.format("%s (Slot: %s)", name, slot);
+        feeder.setHardwareId(hardwareId);
+        feeder.setSlotAddress(slot);
+        feeder.setName(nameWithSlot);
+
+        assertEquals(nameWithSlot, feeder.getName());
+    }
+
+    @Test
+    public void setNameWorksWithOverridingNoneSlot() {
+        int slot = 13;
+        String name = "Test Name";
+        String nameWithNoneSlot = String.format("%s (Slot: None)", name);
+        feeder.setHardwareId(hardwareId);
+        feeder.setSlotAddress(slot);
+        feeder.setName(nameWithNoneSlot);
+
+        String nameWithSlot = String.format("%s (Slot: %s)", name, slot);
+        assertEquals(nameWithSlot, feeder.getName());
+    }
+
+    @Test
+    public void setNameWorksWithUnexpectedSlotNumber() {
+        String name = "Test Name";
+        String nameWithOldSlot = String.format("%s (Slot: 13)", name);
+
+        int newSlot = 3;
+        feeder.setHardwareId(hardwareId);
+        feeder.setSlotAddress(newSlot);
+        feeder.setName(nameWithOldSlot);
+
+        String nameWithNewSlot = String.format("%s (Slot: %s)", name, newSlot);
+        assertEquals(nameWithNewSlot, feeder.getName());
+    }
+
+    @Test
+    public void setNameWithMalformedSlotKeepsMalformedSlot() {
+        String name = "Test Name (Slot: No";
+        feeder.setHardwareId(hardwareId);
+        feeder.setName(name);
+
+        assertEquals(
+                String.format("%s (Slot: None)", name),
+                feeder.getName()
+        );
+    }
+
+    @Test
+    public void setNameCorrectlyTrimsInputName() {
+        String name = "Test Name ";
+        feeder.setHardwareId(hardwareId);
+        feeder.setName(name);
+
+        assertEquals(
+                "Test Name (Slot: None)",
+                feeder.getName()
+        );
+    }
+
+    @Test
+    public void setNameWithMultipleRandomSlots() {
+        feeder.setHardwareId(hardwareId);
+        feeder.setName("This (Slot: 1) Is (Slot: 2) A (Slot: 3) Weird (Slot: None) Test");
+
+        /*
+        We don't trim the spaces internally when a slot is removed. This is more or less intentional to keep everything
+        simpler.
+         */
+        assertEquals("This  Is  A  Weird  Test (Slot: None)", feeder.getName());
+    }
+
+    @Test
+    public void isInitializedByDefaultReturnsFalse() {
+        assertFalse(feeder.isInitialized());
+    }
 //
 //    @Test
 //    public void prepareForJobFindsFeederAddressAndInitializes() throws Exception {
@@ -299,24 +309,18 @@ public class PhotonFeederTest {
 //        feeder.setOffset(feederOffset);
 //        setSlotLocation(feederAddress, baseLocation);
 //
-//        String getFeederAddressCommand = commands.getFeederAddress(hardwareId).toByteString();
-//        when(mockedActuator.read(getFeederAddressCommand))
-//                .thenReturn(GetFeederAddress.ok(feederAddress, hardwareId));
+//        bus.when(commands.getFeederAddress(hardwareId))
+//                .reply(responses.getFeederAddress.ok(feederAddress));
 //
-//        String initializeFeederCommand = commands.initializeFeeder(feederAddress, hardwareId).toByteString();
-//        when(mockedActuator.read(initializeFeederCommand))
-//                .thenReturn(InitializeFeeder.ok(feederAddress));
+//        bus.when(commands.initializeFeeder(feederAddress, hardwareId))
+//                .reply(responses.initializeFeeder.ok(feederAddress, hardwareId));
 //
 //        feeder.prepareForJob(false);
-//
-//        InOrder inOrder = inOrder(mockedActuator);
-//        inOrder.verify(mockedActuator).read(getFeederAddressCommand);
-//        inOrder.verify(mockedActuator).read(initializeFeederCommand);
 //
 //        assertEquals(feederAddress, (int) feeder.getSlotAddress());
 //        assertTrue(feeder.isInitialized());
 //    }
-//
+
 //    @Test
 //    public void prepareForJobInitializesIfSlotAddressIsSet() throws Exception {
 //        feeder.setHardwareId(hardwareId);
