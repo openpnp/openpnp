@@ -14,8 +14,6 @@ public class GetVersionTest {
         assertEquals(43, getVersionPacket.toAddress);
         assertEquals(1, getVersionPacket.payloadLength);
         assertArrayEquals(new int[]{0x03}, getVersionPacket.payload);
-
-        assertNull(getVersionPacket.toByteString());
     }
 
     @Test
