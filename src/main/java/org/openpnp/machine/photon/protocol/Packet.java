@@ -1,5 +1,7 @@
 package org.openpnp.machine.photon.protocol;
 
+import java.util.Optional;
+
 public class Packet {
     public int toAddress = 0;
     public int fromAddress = 0;
@@ -61,5 +63,54 @@ public class Packet {
 
     public int uint16(int startingAtIndex) {
         return 256 * payload[startingAtIndex] + payload[startingAtIndex + 1];
+    }
+
+    public static Optional<Packet> decode(String packetString) {
+        if(packetString.equals("TIMEOUT")) {
+            return Optional.empty();
+        }
+
+        if(packetString.length() % 2 != 0) {
+            return Optional.empty();
+        }
+
+        // Minimum 5 bytes: <to address> <from address> <packet id> <length> <crc8>
+        if(packetString.length() < 10) {
+            return Optional.empty();
+        }
+
+        int[] data = new int[packetString.length() / 2];
+        for (int i = 0; i < data.length; i++) {
+            data[i] = PacketHelper.getByteAtPhoton(packetString, i);
+        }
+
+        Packet packet = new Packet();
+        packet.toAddress = data[0];
+        packet.fromAddress = data[1];
+        packet.packetId = data[2];
+        packet.payloadLength = data[3];
+        int expectedCrC = data[4];
+        int realPacketLength = data.length - 5;  // Header is 5 bytes
+
+        if(packet.payloadLength != realPacketLength) {
+            return Optional.empty();
+        }
+
+        packet.payload = new int[packet.payloadLength];
+
+        // Payload starts after 5 byte header
+        System.arraycopy(data, 5, packet.payload, 0, packet.payloadLength);
+
+        packet.calculateCRC();
+        if(expectedCrC != packet.crc) {
+            return Optional.empty();
+        }
+
+        return Optional.of(packet);
+    }
+
+    protected static int getByteAtPhoton(String s, int index) {
+        return (Character.digit(s.charAt(2 * index), 16) << 4) +
+                Character.digit(s.charAt(2 * index + 1), 16);
     }
 }
