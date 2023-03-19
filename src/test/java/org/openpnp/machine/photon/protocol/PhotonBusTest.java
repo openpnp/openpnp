@@ -3,7 +3,7 @@ package org.openpnp.machine.photon.protocol;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.stubbing.Answer;
-import org.openpnp.machine.photon.helpers.ResponsesHelper;
+import org.openpnp.machine.photon.protocol.helpers.ResponsesHelper;
 import org.openpnp.spi.Actuator;
 
 import java.util.Optional;

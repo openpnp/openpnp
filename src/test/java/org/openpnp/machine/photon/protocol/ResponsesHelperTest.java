@@ -3,7 +3,7 @@ package org.openpnp.machine.photon.protocol;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.openpnp.machine.photon.helpers.ResponsesHelper;
+import org.openpnp.machine.photon.protocol.helpers.ResponsesHelper;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;

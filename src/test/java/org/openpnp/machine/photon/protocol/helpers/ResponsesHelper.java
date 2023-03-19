@@ -1,4 +1,4 @@
-package org.openpnp.machine.photon.helpers;
+package org.openpnp.machine.photon.protocol.helpers;
 
 import org.openpnp.machine.photon.protocol.ErrorTypes;
 import org.openpnp.machine.photon.protocol.Packet;
