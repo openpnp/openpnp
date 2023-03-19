@@ -7,9 +7,7 @@ import org.openpnp.machine.photon.exceptions.FeederHasNoLocationOffsetException;
 import org.openpnp.machine.photon.exceptions.NoSlotAddressException;
 import org.openpnp.machine.photon.exceptions.UnconfiguredSlotException;
 import org.openpnp.machine.photon.protocol.ErrorTypes;
-import org.openpnp.machine.photon.protocol.Packet;
 import org.openpnp.machine.photon.protocol.PhotonCommands;
-import org.openpnp.machine.photon.protocol.PacketResponse;
 import org.openpnp.machine.photon.sheets.FeederPropertySheet;
 import org.openpnp.machine.photon.sheets.SearchPropertySheet;
 import org.openpnp.machine.reference.ReferenceActuator;
@@ -29,8 +27,6 @@ import java.util.List;
 import java.util.function.IntConsumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import static org.openpnp.machine.photon.protocol.PhotonResponses.*;
 
 public class PhotonFeeder extends ReferenceFeeder {
     public static final String ACTUATOR_DATA_NAME = "PhotonFeederData";

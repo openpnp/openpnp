@@ -25,7 +25,6 @@ import java.util.function.IntConsumer;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
-import static org.openpnp.machine.photon.protocol.PhotonResponses.*;
 
 public class PhotonFeederTest {
 //    private final String hardwareId = "00112233445566778899AABB";

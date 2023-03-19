@@ -51,7 +51,7 @@ public class PacketBuilder {
 
     public PacketBuilder putUuid(String uuid) {
         for (int i = 0; i < 12; i++) {
-            int data = PacketHelper.getByteAtPhoton(uuid, i);
+            int data = Packet.getByteAtPhoton(uuid, i);
             this.putByte(data);
         }
 

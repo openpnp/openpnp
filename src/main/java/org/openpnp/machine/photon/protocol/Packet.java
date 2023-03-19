@@ -121,7 +121,7 @@ public class Packet implements Cloneable {
         return Optional.of(packet);
     }
 
-    protected static int getByteAtPhoton(String s, int index) {
+    static int getByteAtPhoton(String s, int index) {
         return (Character.digit(s.charAt(2 * index), 16) << 4) +
                 Character.digit(s.charAt(2 * index + 1), 16);
     }
