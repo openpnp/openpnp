@@ -1,10 +1,14 @@
-package org.openpnp.machine.photon.protocol;
+package org.openpnp.machine.photon.helpers;
+
+import org.openpnp.machine.photon.protocol.ErrorTypes;
+import org.openpnp.machine.photon.protocol.Packet;
+import org.openpnp.machine.photon.protocol.PacketBuilder;
 
 /**
  * This class is for response generation that we don't need in any of our actual code, but that we do use in our tests.
  * Because we use it in our tests, we also verify that the responses are valid in PhotonResponsesTest.
  */
-public class TestResponsesHelper {
+public class ResponsesHelper {
     private final int toAddress;
     public final Errors errors = new Errors();
     public final GetFeederId getFeederId = new GetFeederId();
@@ -17,7 +21,7 @@ public class TestResponsesHelper {
     public final IdentifyFeeder identifyFeeder = new IdentifyFeeder();
     public final ProgramFeederFloor programFeederFloor = new ProgramFeederFloor();
 
-    public TestResponsesHelper(int toAddress) {
+    public ResponsesHelper(int toAddress) {
         this.toAddress = toAddress;
     }
 
