@@ -16,7 +16,7 @@ public class InitializeFeeder extends Command<InitializeFeeder.Response> {
     }
 
     @Override
-    protected Packet toPacket() {
+    public Packet toPacket() {
         return PacketBuilder.command(COMMAND_ID, toAddress)
                 .putUuid(uuid)
                 .toPacket();

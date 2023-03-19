@@ -13,7 +13,7 @@ public abstract class Command<Response> {
         return null;
     }
 
-    protected abstract Packet toPacket();
+    public abstract Packet toPacket();
 
     protected abstract Response decodePacket(Packet responsePacket);
 }

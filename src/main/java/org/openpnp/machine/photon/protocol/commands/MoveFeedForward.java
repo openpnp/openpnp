@@ -20,7 +20,7 @@ public class MoveFeedForward  extends Command<MoveFeedForward.Response> {
     }
 
     @Override
-    protected Packet toPacket() {
+    public Packet toPacket() {
         return PacketBuilder.command(COMMAND_ID, toAddress)
                 .putByte(distance)
                 .toPacket();

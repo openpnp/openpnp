@@ -2,6 +2,7 @@ package org.openpnp.machine.photon.protocol;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.openpnp.machine.photon.protocol.commands.GetVersion;
 import org.openpnp.machine.photon.protocol.helpers.ResponsesHelper;
 import org.openpnp.machine.photon.protocol.helpers.TestBus;
 
@@ -11,20 +12,18 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class TestBusTest {
     private TestBus bus;
-    private PhotonCommands commands;
     private ResponsesHelper responses;
 
     @BeforeEach
     public void setUp() {
         bus = new TestBus();
 
-        commands = new PhotonCommands(0);
         responses = new ResponsesHelper(0);
     }
 
     @Test
-    public void busRespondsWithReplyToRequestedCommand() throws Exception {
-        Packet commandPacket = commands.getVersion(0x47);
+    public void busRespondsWithReplyToRequestedCommandPacket() throws Exception {
+        Packet commandPacket = new GetVersion(0x47).toPacket();
         Packet responsePacket = responses.getVersion.ok(0x47, 3);
 
         bus.when(commandPacket).reply(responsePacket);
@@ -39,8 +38,24 @@ public class TestBusTest {
     }
 
     @Test
+    public void busRespondsWithReplyToRequestedCommand() throws Exception {
+        GetVersion getVersionCommand = new GetVersion(0x47);
+        Packet responsePacket = responses.getVersion.ok(0x47, 3);
+
+        bus.when(getVersionCommand).reply(responsePacket);
+
+        Optional<Packet> optionalResponse = bus.send(getVersionCommand.toPacket());
+
+        assertTrue(optionalResponse.isPresent());
+
+        Packet actualPacket = optionalResponse.get();
+
+        assertSame(responsePacket, actualPacket);
+    }
+
+    @Test
     public void busRespondsWithTimeout() throws Exception {
-        Packet commandPacket = commands.getVersion(0x47);
+        Packet commandPacket = new GetVersion(0x47).toPacket();
 
         bus.when(commandPacket).timeout();
 
@@ -51,7 +66,7 @@ public class TestBusTest {
 
     @Test
     public void busRespondsWithExceptionIfCommandHasNoReply(){
-        Packet commandPacket = commands.getVersion(0x47);
+        Packet commandPacket = new GetVersion(0x47).toPacket();
 
         bus.when(commandPacket);  // No reply specified
 
@@ -60,14 +75,14 @@ public class TestBusTest {
 
     @Test
     public void busRespondsWithExceptionIfCommandIsNotMockedAtAll(){
-        Packet commandPacket = commands.getVersion(0x47);
+        Packet commandPacket = new GetVersion(0x47).toPacket();
 
         assertThrows(TestBus.NoPacketMocking.class, () -> bus.send(commandPacket));
     }
 
     @Test
     public void busValidatesToAddress() throws Exception {
-        Packet sendingPacket = commands.getVersion(0x47);
+        Packet sendingPacket = new GetVersion(0x47).toPacket();
         Packet mockingPacket = sendingPacket.clone();
         mockingPacket.toAddress = 0x10;
 
@@ -78,7 +93,7 @@ public class TestBusTest {
 
     @Test
     public void busValidatesFromAddress() throws Exception {
-        Packet sendingPacket = commands.getVersion(0x47);
+        Packet sendingPacket = new GetVersion(0x47).toPacket();
         Packet mockingPacket = sendingPacket.clone();
         mockingPacket.fromAddress = 0x10;
 
@@ -89,7 +104,7 @@ public class TestBusTest {
 
     @Test
     public void busValidatesPayloadLength() throws Exception {
-        Packet sendingPacket = commands.getVersion(0x47);
+        Packet sendingPacket = new GetVersion(0x47).toPacket();
         Packet mockingPacket = sendingPacket.clone();
         mockingPacket.payloadLength = 0x02;
 
@@ -100,7 +115,7 @@ public class TestBusTest {
 
     @Test
     public void busValidatesPayloadDataLength() throws Exception {
-        Packet sendingPacket = commands.getVersion(0x47);
+        Packet sendingPacket = new GetVersion(0x47).toPacket();
         Packet mockingPacket = sendingPacket.clone();
         mockingPacket.payload = new int[] { 0x03, 0x05 };
 
@@ -111,7 +126,7 @@ public class TestBusTest {
 
     @Test
     public void busValidatesPayloadData() throws Exception {
-        Packet sendingPacket = commands.getVersion(0x47);
+        Packet sendingPacket = new GetVersion(0x47).toPacket();
         Packet mockingPacket = sendingPacket.clone();
         mockingPacket.payload = new int[] { 0x04 };
 
@@ -122,7 +137,7 @@ public class TestBusTest {
 
     @Test
     public void busAdjustsResponsePacketId() throws Exception {
-        Packet commandPacket = commands.getVersion(0x47);
+        Packet commandPacket = new GetVersion(0x47).toPacket();
         commandPacket.packetId = 0x43;
         Packet responsePacket = responses.getVersion.ok(0x47, 3);
 
@@ -143,10 +158,10 @@ public class TestBusTest {
 
     @Test
     public void busCanHandleRespondingDifferentlyToDifferentSendingPackets() throws Exception {
-        Packet firstSendingPacket = commands.getVersion(0x01);
+        Packet firstSendingPacket = new GetVersion(0x01).toPacket();
         Packet firstResponsePacket = responses.getVersion.ok(0x01, 3);
 
-        Packet secondSendingPacket = commands.getVersion(0x02);
+        Packet secondSendingPacket = new GetVersion(0x02).toPacket();
         Packet secondResponsePacket = responses.getVersion.ok(0x02, 4);
 
         bus.when(firstSendingPacket).reply(firstResponsePacket);

@@ -15,7 +15,7 @@ public class GetFeederId extends Command<GetFeederId.Response> {
     }
 
     @Override
-    protected Packet toPacket() {
+    public Packet toPacket() {
         return PacketBuilder
                 .command(COMMAND_ID, toAddress)
                 .toPacket();

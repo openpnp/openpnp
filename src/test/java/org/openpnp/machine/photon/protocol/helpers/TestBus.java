@@ -1,7 +1,9 @@
 package org.openpnp.machine.photon.protocol.helpers;
 
+import org.openpnp.machine.photon.protocol.Command;
 import org.openpnp.machine.photon.protocol.Packet;
 import org.openpnp.machine.photon.protocol.PhotonBusInterface;
+import org.openpnp.machine.photon.protocol.commands.GetVersion;
 
 import java.util.ArrayList;
 import java.util.Optional;
@@ -39,6 +41,10 @@ public class TestBus implements PhotonBusInterface {
         replies.add(testBusReply);
 
         return testBusReply;
+    }
+
+    public <T> TestBusReply when(Command<T> command) {
+        return when(command.toPacket());
     }
 
     public static class TestBusReply {

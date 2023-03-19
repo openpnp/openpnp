@@ -15,7 +15,7 @@ public class IdentifyFeeder extends Command<IdentifyFeeder.Response> {
     }
 
     @Override
-    protected Packet toPacket() {
+    public Packet toPacket() {
         return PacketBuilder.command(COMMAND_ID, BROADCAST_ID)
                 .putUuid(uuid)
                 .toPacket();

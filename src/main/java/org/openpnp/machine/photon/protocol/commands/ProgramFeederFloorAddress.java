@@ -17,7 +17,7 @@ public class ProgramFeederFloorAddress extends Command<ProgramFeederFloorAddress
     }
 
     @Override
-    protected Packet toPacket() {
+    public Packet toPacket() {
         return PacketBuilder.command(COMMAND_ID, BROADCAST_ID)
                 .putUuid(uuid)
                 .putByte(floorAddress)

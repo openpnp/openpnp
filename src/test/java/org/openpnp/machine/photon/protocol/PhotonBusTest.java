@@ -3,6 +3,7 @@ package org.openpnp.machine.photon.protocol;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.stubbing.Answer;
+import org.openpnp.machine.photon.protocol.commands.GetFeederId;
 import org.openpnp.machine.photon.protocol.helpers.ResponsesHelper;
 import org.openpnp.spi.Actuator;
 
@@ -18,7 +19,6 @@ public class PhotonBusTest {
     private Actuator mockedActuator;
 
     private PhotonBus bus;
-    private PhotonCommands commands;
     private ResponsesHelper responses;
 
     @BeforeEach
@@ -27,7 +27,6 @@ public class PhotonBusTest {
 
         bus = new PhotonBus(0, mockedActuator);
 
-        commands = new PhotonCommands(0);
         responses = new ResponsesHelper(0);
     }
 
@@ -61,7 +60,7 @@ public class PhotonBusTest {
 
     @Test
     public void busSendsPacketInStringForm() throws Exception {
-        Packet command = commands.getFeederId(0x42);
+        Packet command = new GetFeederId(0x42).toPacket();
         Packet generatedResponse = responses.getFeederId.ok(0x42, uuid_s);
 
         mockBusResponse(generatedResponse);
@@ -82,7 +81,7 @@ public class PhotonBusTest {
 
     @Test
     public void busReturnsEmptyOptionalIfTimeoutOccurs() throws Exception {
-        Packet command = commands.getFeederId(0x42);
+        Packet command = new GetFeederId(0x42).toPacket();
 
         when(mockedActuator.read(any(String.class))).thenReturn("TIMEOUT");
 
@@ -93,7 +92,7 @@ public class PhotonBusTest {
 
     @Test
     public void busReturnsEmptyOptionalIfWrongPacketId() throws Exception {
-        Packet command = commands.getFeederId(0x42);
+        Packet command = new GetFeederId(0x42).toPacket();
         Packet generatedResponse = responses.getFeederId.ok(0x42, uuid_s);
         generatedResponse.packetId = 0x47;
 
@@ -106,7 +105,7 @@ public class PhotonBusTest {
 
     @Test
     public void busIncrementsPacketId() throws Exception {
-        Packet firstCommand = commands.getFeederId(0x42);
+        Packet firstCommand = new GetFeederId(0x42).toPacket();
         Packet generatedResponse = responses.getFeederId.ok(0x42, uuid_s);
 
         mockBusResponse(generatedResponse);
@@ -119,7 +118,7 @@ public class PhotonBusTest {
 
         assertEquals(firstCommand.packetId, response.packetId);
 
-        Packet secondCommand = commands.getFeederId(0x42);
+        Packet secondCommand = new GetFeederId(0x42).toPacket();
         optionalResponse = bus.send(secondCommand);
 
         assertTrue(optionalResponse.isPresent());
@@ -131,7 +130,7 @@ public class PhotonBusTest {
 
     @Test
     public void busPacketIdRollsOver() throws Exception {
-        Packet firstCommand = commands.getFeederId(0x42);
+        Packet firstCommand = new GetFeederId(0x42).toPacket();
         Packet generatedResponse = responses.getFeederId.ok(0x42, uuid_s);
 
         mockBusResponse(generatedResponse);
@@ -145,7 +144,7 @@ public class PhotonBusTest {
         Packet response = optionalResponse.get();
         assertEquals(0xff, response.packetId);  // Make sure the last command put us in a state to roll over
 
-        Packet secondCommand = commands.getFeederId(0x42);
+        Packet secondCommand = new GetFeederId(0x42).toPacket();
         optionalResponse = bus.send(secondCommand);  // This command should roll over to 0
 
         assertTrue(optionalResponse.isPresent());

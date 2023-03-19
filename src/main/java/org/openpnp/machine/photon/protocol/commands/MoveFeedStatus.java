@@ -14,7 +14,7 @@ public class MoveFeedStatus extends Command<MoveFeedStatus.Response> {
     }
 
     @Override
-    protected Packet toPacket() {
+    public Packet toPacket() {
         return PacketBuilder.command(COMMAND_ID, toAddress)
                 .toPacket();
     }

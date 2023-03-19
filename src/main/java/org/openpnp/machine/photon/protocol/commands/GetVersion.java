@@ -14,7 +14,7 @@ public class GetVersion extends Command<GetVersion.Response> {
     }
 
     @Override
-    protected Packet toPacket() {
+    public Packet toPacket() {
         return PacketBuilder
                 .command(COMMAND_ID, toAddress)
                 .toPacket();

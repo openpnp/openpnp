@@ -3,27 +3,15 @@ package org.openpnp.machine.photon;
 import com.google.common.io.Files;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InOrder;
-import org.openpnp.machine.photon.exceptions.FeedFailureException;
-import org.openpnp.machine.photon.exceptions.FeederHasNoLocationOffsetException;
-import org.openpnp.machine.photon.exceptions.NoSlotAddressException;
-import org.openpnp.machine.photon.exceptions.UnconfiguredSlotException;
-import org.openpnp.machine.photon.protocol.PhotonCommands;
 import org.openpnp.machine.photon.protocol.helpers.ResponsesHelper;
 import org.openpnp.machine.photon.protocol.helpers.TestBus;
-import org.openpnp.machine.photon.sheets.FeederPropertySheet;
-import org.openpnp.machine.photon.sheets.SearchPropertySheet;
 import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.model.*;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;
-import org.openpnp.spi.PropertySheetHolder;
 
 import java.io.File;
-import java.util.List;
-import java.util.Optional;
-import java.util.function.IntConsumer;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -42,7 +30,6 @@ public class PhotonFeederTest {
     private Location feederOffset;
 
     private TestBus bus;
-    private PhotonCommands commands;
     private ResponsesHelper responses;
 
     @BeforeEach
@@ -76,7 +63,6 @@ public class PhotonFeederTest {
         bus = new TestBus();
         PhotonFeeder.setBus(bus);
 
-        commands = new PhotonCommands(0);
         responses = new ResponsesHelper(0);
     }
 
