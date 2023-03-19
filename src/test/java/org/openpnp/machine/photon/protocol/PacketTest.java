@@ -28,6 +28,27 @@ public class PacketTest {
     }
 
     @Test
+    public void cloningPacket() throws CloneNotSupportedException {
+        Packet packet = new Packet();
+        packet.toAddress = 0x2B;
+        packet.fromAddress = 0x13;
+        packet.packetId = 0x47;
+        packet.payload = new int[]{ 0x03 };
+        packet.calculateCRC();
+
+        Packet newPacket = packet.clone();
+
+        assertNotSame(packet, newPacket);
+        assertEquals(packet.toAddress, newPacket.toAddress);
+        assertEquals(packet.fromAddress, newPacket.fromAddress);
+        assertEquals(packet.packetId, newPacket.packetId);
+        assertEquals(packet.payloadLength, newPacket.payloadLength);
+        assertEquals(packet.crc, newPacket.crc);
+        assertArrayEquals(packet.payload, newPacket.payload);
+        assertNotSame(packet.payload, newPacket.payload);
+    }
+
+    @Test
     public void decodingValidPacket() {
         Optional<Packet> packetOptional = Packet.decode("2B1347010A03");
 

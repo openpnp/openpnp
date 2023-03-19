@@ -2,13 +2,23 @@ package org.openpnp.machine.photon.protocol;
 
 import java.util.Optional;
 
-public class Packet {
+public class Packet implements Cloneable {
     public int toAddress = 0;
     public int fromAddress = 0;
     public int packetId = 0;
     public int payloadLength = 0;
     public int crc = 0;
     public int[] payload = new int[0];
+
+    @Override
+    public Packet clone() throws CloneNotSupportedException{
+        Packet clone = (Packet) super.clone();
+
+        clone.payload = new int[this.payloadLength];
+        System.arraycopy(this.payload, 0, clone.payload, 0, this.payloadLength);
+
+        return clone;
+    }
 
     public String toByteString() {
         calculateCRC();
@@ -83,7 +93,7 @@ public class Packet {
 
         int[] data = new int[packetString.length() / 2];
         for (int i = 0; i < data.length; i++) {
-            data[i] = PacketHelper.getByteAtPhoton(packetString, i);
+            data[i] = getByteAtPhoton(packetString, i);
         }
 
         Packet packet = new Packet();
