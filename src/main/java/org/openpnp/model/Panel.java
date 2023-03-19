@@ -513,7 +513,6 @@ public class Panel extends PlacementsHolder<Panel> implements PropertyChangeList
         pseudoPlacements.remove(pseudoPlacement);
         fireIndexedPropertyChange("pseudoPlacement", index, pseudoPlacement, null);
         pseudoPlacement.removePropertyChangeListener(this);
-        pseudoPlacement.dispose();
     }
     
     /**

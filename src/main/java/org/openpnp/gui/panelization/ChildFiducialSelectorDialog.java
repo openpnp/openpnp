@@ -72,6 +72,7 @@ import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
 import org.openpnp.model.PlacementsHolderLocation;
 import org.openpnp.model.Point;
+import org.openpnp.model.PseudoPlacement;
 import org.openpnp.util.Collect;
 import org.openpnp.util.QuickHull;
 import org.openpnp.util.Utils2D;
@@ -400,15 +401,21 @@ public class ChildFiducialSelectorDialog extends JDialog {
                 pseudoPlacement.removePropertyChangeListener(pseudoPlacement);
                 pseudoPlacement.setDefinition(pseudoPlacement);
                 pseudoPlacement.setEnabled(true);
-                pseudoPlacement.setLocation(Utils2D.calculateBoardPlacementLocation(child, 
-                        placement).derive(null, null, 0.0, null));
-                pseudoPlacement.setId(id);
-                pseudoPlacement.setSide(placement.getSide().
-                        flip(child.getGlobalSide() == Side.Bottom));
-                pseudoPlacement.setComments(
-                        Translations.getString("ChildFiducialSelectorDialog.PseudoPlacement.Comment")); //$NON-NLS-1$
-                pseudoPlacement.addPropertyChangeListener(pseudoPlacement);
-                allPseudoPlacements.add(pseudoPlacement);
+                try {
+                    Location location = PseudoPlacement.computeLocation(this.panelLocation.getPanel(), id);
+                    pseudoPlacement.setLocation(location);
+                    pseudoPlacement.setId(id);
+                    pseudoPlacement.setSide(placement.getSide().
+                            flip(child.getGlobalSide() == Side.Bottom));
+                    pseudoPlacement.setComments(
+                            Translations.getString("ChildFiducialSelectorDialog.PseudoPlacement.Comment")); //$NON-NLS-1$
+                    pseudoPlacement.addPropertyChangeListener(pseudoPlacement);
+                    allPseudoPlacements.add(pseudoPlacement);
+                }
+                catch (Exception e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
             }
             if (child instanceof PanelLocation) {
                 generateAllPseudoPlacementsList((PanelLocation) child);
