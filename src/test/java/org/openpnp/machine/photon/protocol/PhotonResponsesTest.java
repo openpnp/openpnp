@@ -3,6 +3,7 @@ package org.openpnp.machine.photon.protocol;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.openpnp.machine.photon.helpers.ResponsesHelper;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.openpnp.machine.photon.protocol.PhotonResponses.*;
@@ -13,11 +14,11 @@ public class PhotonResponsesTest {
     protected static String uuid2_s = "FFEEDDCCBBAA998877665544";
     protected static int[] uuid2_b = {0xFF, 0xEE, 0xDD, 0xCC, 0xBB, 0xAA, 0x99, 0x88, 0x77, 0x66, 0x55, 0x44};
 
-    private TestResponsesHelper testResponses;
+    private ResponsesHelper testResponses;
     
     @BeforeEach
     public void setUp() {
-        testResponses = new TestResponsesHelper(0);
+        testResponses = new ResponsesHelper(0);
     }
 
     @Nested

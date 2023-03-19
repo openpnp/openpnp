@@ -11,6 +11,8 @@ public class Packet {
     public int[] payload = new int[0];
 
     public String toByteString() {
+        calculateCRC();
+
         StringBuilder result = new StringBuilder();
         // Header
         result.append(String.format(
