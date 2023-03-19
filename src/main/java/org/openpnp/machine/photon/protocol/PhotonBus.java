@@ -38,9 +38,9 @@ class PhotonBus implements PhotonBusInterface{
         Packet receivedPacket = optionalPacket.get();
 
         // Is this our packet?
-        // Is this a valid packet?
-        // Is this a timeout
-        // Essentially what's in PacketDecoder
+        if(receivedPacket.packetId != commandPacket.packetId) {
+            return Optional.empty();
+        }
 
         return optionalPacket;
     }
