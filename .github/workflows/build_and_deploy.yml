@@ -10,7 +10,7 @@ jobs:
     name: Java ${{ matrix.java }}
     strategy:
       matrix:
-        java: [8, 9, 11, 12, 13, 14, 15]
+        java: [11, 17, 19]
 
     steps:
       - name: Checkout Repo
@@ -33,10 +33,10 @@ jobs:
       - name: Checkout Repo
         uses: actions/checkout@v2
 
-      - name: Setup JDK 8 for Deployment
+      - name: Setup JDK for Deployment
         uses: actions/setup-java@v1
         with:
-          java-version: 8
+          java-version: 11
 
       - name: Build with Maven
         run: mvn -q -B package -DskipTests
@@ -46,14 +46,11 @@ jobs:
 
       - name: Build Installers
         run: |
-          wget -q https://openpnp.s3-us-west-2.amazonaws.com/install4j_unix_8_0_6.tar.gz
-          tar -xzf install4j_unix_8_0_6.tar.gz
-          ./install4j8.0.6/bin/install4jc -L ${{secrets.INSTALL4J_LICENSE_KEY }}
-          wget -q https://s3-us-west-2.amazonaws.com/openpnp/macosx-amd64-1.8.0_131.tar.gz
-          wget -q https://s3-us-west-2.amazonaws.com/openpnp/windows-amd64-1.8.0_131.tar.gz
-          wget -q https://s3-us-west-2.amazonaws.com/openpnp/windows-x86-1.8.0_131.tar.gz
-          VERSION=`java -cp target/openpnp-gui-0.0.1-alpha-SNAPSHOT.jar:target/lib org.openpnp.Main --version`
-          ./install4j8.0.6/bin/install4jc -r $VERSION -d installers -D mediaFileVersion=$BRANCH_NAME OpenPnP.install4j
+          wget -q https://openpnp.s3-us-west-2.amazonaws.com/install4j_unix_10_0_5.tar.gz
+          tar -xzf install4j_unix_10_0_5.tar.gz
+          ./install4j10.0.5/bin/install4jc -L ${{secrets.INSTALL4J_10_LICENSE_KEY }}
+          VERSION=`java --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.desktop/java.awt=ALL-UNNAMED --add-opens=java.desktop/java.awt.color=ALL-UNNAMED -cp target/openpnp-gui-0.0.1-alpha-SNAPSHOT.jar:target/lib org.openpnp.Main --version`
+          ./install4j10.0.5/bin/install4jc -r $VERSION -d installers -D mediaFileVersion=$BRANCH_NAME --mac-keystore-password "${{secrets.MAC_CODE_SIGNING_CERT_PASSWORD }}" OpenPnP.install4j
           mv installers/updates.xml installers/updates-$BRANCH_NAME.xml
           mkdir -p installers/$BRANCH_NAME/$VERSION
           cp installers/OpenPnP* installers/$BRANCH_NAME/$VERSION
