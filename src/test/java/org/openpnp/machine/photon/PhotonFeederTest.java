@@ -3,15 +3,27 @@ package org.openpnp.machine.photon;
 import com.google.common.io.Files;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.InOrder;
+import org.openpnp.machine.photon.exceptions.FeederHasNoLocationOffsetException;
+import org.openpnp.machine.photon.exceptions.NoSlotAddressException;
+import org.openpnp.machine.photon.exceptions.UnconfiguredSlotException;
+import org.openpnp.machine.photon.protocol.commands.GetFeederAddress;
+import org.openpnp.machine.photon.protocol.commands.GetFeederId;
+import org.openpnp.machine.photon.protocol.commands.InitializeFeeder;
 import org.openpnp.machine.photon.protocol.helpers.ResponsesHelper;
 import org.openpnp.machine.photon.protocol.helpers.TestBus;
+import org.openpnp.machine.photon.sheets.FeederPropertySheet;
+import org.openpnp.machine.photon.sheets.SearchPropertySheet;
 import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.model.*;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;
+import org.openpnp.spi.PropertySheetHolder;
 
 import java.io.File;
+import java.util.*;
+import java.util.function.IntConsumer;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -31,6 +43,8 @@ public class PhotonFeederTest {
 
     private TestBus bus;
     private ResponsesHelper responses;
+
+    private Random random;
 
     @BeforeEach
     public void setUp() throws Exception {
@@ -64,10 +78,24 @@ public class PhotonFeederTest {
         PhotonFeeder.setBus(bus);
 
         responses = new ResponsesHelper(0);
+
+        random = new Random();
     }
 
     private void setSlotLocation(int address, Location location) {
         photonProperties.getFeederSlots().getSlot(address).setLocation(location);
+    }
+
+    private String randomUUID() {
+        String hex = "0123456789ABCDEF";
+        StringBuilder result = new StringBuilder();
+
+        // 12 bytes is 24 characters
+        for (int i = 0; i < 24; i++) {
+            result.append(hex.charAt(random.nextInt(hex.length())));
+        }
+
+        return result.toString();
     }
 
     @Test
@@ -288,283 +316,256 @@ public class PhotonFeederTest {
     public void isInitializedByDefaultReturnsFalse() {
         assertFalse(feeder.isInitialized());
     }
-//
-//    @Test
-//    public void prepareForJobFindsFeederAddressAndInitializes() throws Exception {
-//        feeder.setHardwareId(hardwareId);
-//        feeder.setOffset(feederOffset);
-//        setSlotLocation(feederAddress, baseLocation);
-//
-//        bus.when(commands.getFeederAddress(hardwareId))
-//                .reply(responses.getFeederAddress.ok(feederAddress));
-//
-//        bus.when(commands.initializeFeeder(feederAddress, hardwareId))
-//                .reply(responses.initializeFeeder.ok(feederAddress, hardwareId));
-//
-//        feeder.prepareForJob(false);
-//
-//        assertEquals(feederAddress, (int) feeder.getSlotAddress());
-//        assertTrue(feeder.isInitialized());
-//    }
 
-//    @Test
-//    public void prepareForJobInitializesIfSlotAddressIsSet() throws Exception {
-//        feeder.setHardwareId(hardwareId);
-//        feeder.setOffset(feederOffset);
-//        feeder.setSlotAddress(feederAddress);
-//        setSlotLocation(feederAddress, baseLocation);
-//
-//        String initializeFeederCommand = commands.initializeFeeder(feederAddress, hardwareId).toByteString();
-//        when(mockedActuator.read(initializeFeederCommand))
-//                .thenReturn(InitializeFeeder.ok(feederAddress));
-//
-//        feeder.prepareForJob(false);
-//
-//        InOrder inOrder = inOrder(mockedActuator);
-//        inOrder.verify(mockedActuator).read(initializeFeederCommand);
-//
-//        assertEquals(feederAddress, (int) feeder.getSlotAddress());
-//        assertTrue(feeder.isInitialized());
-//    }
-//
-//    @Test
-//    public void prepareForJobDoesNotInitializeIfSlotCanNotBeFound() throws Exception {
-//        feeder.setHardwareId(hardwareId);
-//
-//        String getFeederAddressCommand = commands.getFeederAddress(hardwareId).toByteString();
-//        when(mockedActuator.read(getFeederAddressCommand))
-//                .thenReturn(Errors.timeout());
-//
-//        try {
-//            feeder.prepareForJob(false);
-//            fail("prepareForJob did not throw exception after max retries");
-//        } catch (Exception exception) {
-//            assertEquals("Failed to find and initialize the feeder", exception.getMessage());
-//        }
-//
-//        assertFalse(feeder.isInitialized());
-//        assertNull(feeder.getSlotAddress());
-//    }
-//
-//    @Test
-//    public void prepareForJobFindsFeederAgainIfLostToTimeout() throws Exception {
-//        feeder.setHardwareId(hardwareId);
-//        feeder.setOffset(feederOffset);
-//        feeder.setSlotAddress(feederAddress);
-//
-//        String initializeFeederCommand = commands.initializeFeeder(feederAddress, hardwareId).toByteString();
-//        when(mockedActuator.read(initializeFeederCommand))
-//                .thenReturn(Errors.timeout());
-//
-//        int newAddress = 11;
-//
-//        setSlotLocation(newAddress, baseLocation);
-//
-//        String newGetFeederAddressCommand = commands.getFeederAddress(hardwareId).toByteString();
-//        when(mockedActuator.read(newGetFeederAddressCommand))
-//                .thenReturn(GetFeederAddress.ok(newAddress, hardwareId));
-//
-//        String newInitializeFeederCommand = commands.initializeFeeder(newAddress, hardwareId).toByteString();
-//        when(mockedActuator.read(newInitializeFeederCommand))
-//                .thenReturn(InitializeFeeder.ok(newAddress));
-//
-//        feeder.prepareForJob(false);
-//
-//        InOrder inOrder = inOrder(mockedActuator);
-//        inOrder.verify(mockedActuator).read(initializeFeederCommand);
-//        inOrder.verify(mockedActuator).read(newGetFeederAddressCommand);
-//        inOrder.verify(mockedActuator).read(newInitializeFeederCommand);
-//
-//        assertEquals(newAddress, (int) feeder.getSlotAddress());
-//        assertTrue(feeder.isInitialized());
-//    }
-//
-//    @Test
-//    public void prepareForJobFindsFeederAgainIfWrongFeederUUIDAndMakesNewFeeder() throws Exception {
-//        feeder.setHardwareId(hardwareId);
-//        feeder.setOffset(feederOffset);
-//        feeder.setSlotAddress(feederAddress);
-//        String otherHardwareId = "445566778899AABBCCDDEEFF";
-//
-//        assertNull(PhotonFeeder.findByHardwareId(otherHardwareId));
-//
-//        String initializeFeederCommand = commands.initializeFeeder(feederAddress, hardwareId).toByteString();
-//        when(mockedActuator.read(initializeFeederCommand))
-//                .thenReturn(Errors.wrongFeederUUID(feederAddress, otherHardwareId));
-//
-//        int newAddress = 11;
-//
-//        setSlotLocation(newAddress, baseLocation);
-//
-//        String newGetFeederAddressCommand = commands.getFeederAddress(hardwareId).toByteString();
-//        when(mockedActuator.read(newGetFeederAddressCommand))
-//                .thenReturn(GetFeederAddress.ok(newAddress, hardwareId));
-//
-//        String newInitializeFeederCommand = commands.initializeFeeder(newAddress, hardwareId).toByteString();
-//        when(mockedActuator.read(newInitializeFeederCommand))
-//                .thenReturn(InitializeFeeder.ok(newAddress));
-//
-//        feeder.prepareForJob(false);
-//
-//        InOrder inOrder = inOrder(mockedActuator);
-//        inOrder.verify(mockedActuator).read(initializeFeederCommand);
-//        inOrder.verify(mockedActuator).read(newGetFeederAddressCommand);
-//        inOrder.verify(mockedActuator).read(newInitializeFeederCommand);
-//
-//        assertEquals(newAddress, (int) feeder.getSlotAddress());
-//        assertTrue(feeder.isInitialized());
-//
-//        PhotonFeeder otherFeeder = PhotonFeeder.findByHardwareId(otherHardwareId);
-//        assertNotNull(otherFeeder);
-//        assertFalse(otherFeeder.initialized);
-//        assertEquals(feederAddress, (int) otherFeeder.slotAddress);
-//    }
-//
-//    @Test
-//    public void prepareForJobFindsFeederAgainIfWrongFeederUUIDAndUsesExistingFeeder() throws Exception {
-//        feeder.setHardwareId(hardwareId);
-//        feeder.setOffset(feederOffset);
-//        feeder.setSlotAddress(feederAddress);
-//
-//        String otherHardwareId = "445566778899AABBCCDDEEFF";
-//        PhotonFeeder otherFeeder = new PhotonFeeder();
-//        otherFeeder.setHardwareId(otherHardwareId);
-//        machine.addFeeder(otherFeeder);
-//
-//        assertSame(otherFeeder, PhotonFeeder.findByHardwareId(otherHardwareId));
-//
-//        String initializeFeederCommand = commands.initializeFeeder(feederAddress, hardwareId).toByteString();
-//        when(mockedActuator.read(initializeFeederCommand))
-//                .thenReturn(Errors.wrongFeederUUID(feederAddress, otherHardwareId));
-//
-//        int newAddress = 11;
-//
-//        setSlotLocation(newAddress, baseLocation);
-//
-//        String newGetFeederAddressCommand = commands.getFeederAddress(hardwareId).toByteString();
-//        when(mockedActuator.read(newGetFeederAddressCommand))
-//                .thenReturn(GetFeederAddress.ok(newAddress, hardwareId));
-//
-//        String newInitializeFeederCommand = commands.initializeFeeder(newAddress, hardwareId).toByteString();
-//        when(mockedActuator.read(newInitializeFeederCommand))
-//                .thenReturn(InitializeFeeder.ok(newAddress));
-//
-//        feeder.prepareForJob(false);
-//
-//        InOrder inOrder = inOrder(mockedActuator);
-//        inOrder.verify(mockedActuator).read(initializeFeederCommand);
-//        inOrder.verify(mockedActuator).read(newGetFeederAddressCommand);
-//        inOrder.verify(mockedActuator).read(newInitializeFeederCommand);
-//
-//        assertEquals(newAddress, (int) feeder.getSlotAddress());
-//        assertTrue(feeder.isInitialized());
-//
-//        PhotonFeeder recalledOtherFeeder = PhotonFeeder.findByHardwareId(otherHardwareId);
-//        assertSame(otherFeeder, recalledOtherFeeder);
-//        assertFalse(otherFeeder.initialized);
-//        assertEquals(feederAddress, (int) otherFeeder.slotAddress);
-//    }
-//
-//    @Test
-//    public void prepareForJobThrowsExceptionIfNewSlotHasNoLocation() throws Exception {
-//        feeder.setHardwareId(hardwareId);
-//        feeder.setSlotAddress(feederAddress);
-//        setSlotLocation(feederAddress, baseLocation);
-//
-//        String firstInitializeCommand = commands.initializeFeeder(feederAddress, hardwareId).toByteString();
-//        when(mockedActuator.read(firstInitializeCommand))
-//                .thenReturn(Errors.timeout());
-//
-//        int newFeederAddress = 11;
-//        String getFeederAddressCommand = commands.getFeederAddress(hardwareId).toByteString();
-//        when(mockedActuator.read(getFeederAddressCommand))
-//                .thenReturn(GetFeederAddress.ok(newFeederAddress, hardwareId));
-//
-//        String newInitializeCommand = commands.initializeFeeder(newFeederAddress, hardwareId).toByteString();
-//        when(mockedActuator.read(newInitializeCommand))
-//                .thenReturn(InitializeFeeder.ok(newFeederAddress));
-//
-//
-//        assertThrows(UnconfiguredSlotException.class, () -> feeder.prepareForJob(false));
-//
-//        assertTrue(feeder.isInitialized());
-//        assertEquals(newFeederAddress, feeder.getSlotAddress());
-//    }
-//
-//    @Test
-//    public void prepareForJobThrowsExceptionIfFeederHasNoOffset() throws Exception {
-//        feeder.setHardwareId(hardwareId);
-//        feeder.setSlotAddress(feederAddress);
-//        setSlotLocation(feederAddress, baseLocation);
-//
-//        String initializeCommand = commands.initializeFeeder(feederAddress, hardwareId).toByteString();
-//        when(mockedActuator.read(initializeCommand))
-//                .thenReturn(InitializeFeeder.ok(feederAddress));
-//
-//
-//        assertThrows(FeederHasNoLocationOffsetException.class, () -> feeder.prepareForJob(false));
-//
-//        assertTrue(feeder.isInitialized());
-//    }
-//
-//    @Test
-//    public void prepareForJobThrowsExceptionAfterOneRetry() throws Exception {
-//        feeder.setHardwareId(hardwareId);
-//        feeder.setSlotAddress(feederAddress);
-//        photonProperties.setFeederCommunicationMaxRetry(1);
-//
-//        int newAddress = 11;
-//
-//        String initializeFeederCommand = commands.initializeFeeder(feederAddress, hardwareId).toByteString();
-//        when(mockedActuator.read(initializeFeederCommand))
-//                .thenReturn(Errors.wrongFeederUUID(newAddress, hardwareId));
-//
-//        String newInitializeFeederCommand = commands.initializeFeeder(newAddress, hardwareId).toByteString();
-//        when(mockedActuator.read(newInitializeFeederCommand))
-//                .thenReturn(Errors.wrongFeederUUID(newAddress, hardwareId));
-//
-//        try {
-//            feeder.prepareForJob(false);
-//            fail("prepareForJob did not throw exception after max retries");
-//        } catch (Exception exception) {
-//            assertEquals("Failed to find and initialize the feeder", exception.getMessage());
-//        }
-//
-//        InOrder inOrder = inOrder(mockedActuator);
-//        inOrder.verify(mockedActuator).read(initializeFeederCommand);
-//        inOrder.verify(mockedActuator).read(newInitializeFeederCommand);
-//        inOrder.verify(mockedActuator, never()).read(any());
-//    }
-//
-//    @Test
-//    public void prepareForJobThrowsExceptionAfterNoRetries() throws Exception {
-//        feeder.setHardwareId(hardwareId);
-//        feeder.setSlotAddress(feederAddress);
-//        photonProperties.setFeederCommunicationMaxRetry(0);
-//
-//        int newAddress = 11;
-//
-//        String initializeFeederCommand = commands.initializeFeeder(feederAddress, hardwareId).toByteString();
-//        when(mockedActuator.read(initializeFeederCommand))
-//                .thenReturn(Errors.wrongFeederUUID(newAddress, hardwareId));
-//
-//        try {
-//            feeder.prepareForJob(false);
-//            fail("prepareForJob did not throw exception after max retries");
-//        } catch (Exception exception) {
-//            assertEquals("Failed to find and initialize the feeder", exception.getMessage());
-//        }
-//
-//        InOrder inOrder = inOrder(mockedActuator);
-//        inOrder.verify(mockedActuator).read(initializeFeederCommand);
-//        inOrder.verify(mockedActuator, never()).read(any());
-//    }
-//
-//    @Test
-//    public void getPartPitchByDefaultReturnsFourMillimeters() {
-//        assertEquals(4, feeder.getPartPitch());
-//    }
-//
+    @Test
+    public void prepareForJobFindsFeederAddressAndInitializes() throws Exception {
+        feeder.setHardwareId(hardwareId);
+        feeder.setOffset(feederOffset);
+        setSlotLocation(feederAddress, baseLocation);
+
+        bus.when(new GetFeederAddress(hardwareId))
+                .reply(responses.getFeederAddress.ok(feederAddress));
+
+        bus.when(new InitializeFeeder(feederAddress, hardwareId))
+                .reply(responses.initializeFeeder.ok(feederAddress, hardwareId));
+
+        feeder.prepareForJob(false);
+
+        assertEquals(feederAddress, (int) feeder.getSlotAddress());
+        assertTrue(feeder.isInitialized());
+    }
+
+    @Test
+    public void prepareForJobInitializesIfSlotAddressIsSet() throws Exception {
+        feeder.setHardwareId(hardwareId);
+        feeder.setOffset(feederOffset);
+        feeder.setSlotAddress(feederAddress);
+        setSlotLocation(feederAddress, baseLocation);
+
+        bus.when(new InitializeFeeder(feederAddress, hardwareId))
+                .reply(responses.initializeFeeder.ok(feederAddress, hardwareId));
+
+        feeder.prepareForJob(false);
+
+        assertEquals(feederAddress, (int) feeder.getSlotAddress());
+        assertTrue(feeder.isInitialized());
+    }
+
+    @Test
+    public void prepareForJobDoesNotInitializeIfSlotCanNotBeFound() throws Exception {
+        feeder.setHardwareId(hardwareId);
+
+        bus.when(new GetFeederAddress(hardwareId)).timeout();
+
+        try {
+            feeder.prepareForJob(false);
+            fail("prepareForJob did not throw exception after max retries");
+        } catch (Exception exception) {
+            assertEquals("Failed to find and initialize the feeder", exception.getMessage());
+        }
+
+        assertFalse(feeder.isInitialized());
+        assertNull(feeder.getSlotAddress());
+    }
+
+    @Test
+    public void prepareForJobFindsFeederAgainIfLostToTimeout() throws Exception {
+        feeder.setHardwareId(hardwareId);
+        feeder.setOffset(feederOffset);
+        feeder.setSlotAddress(feederAddress);
+
+        bus.when(new InitializeFeeder(feederAddress, hardwareId)).timeout();
+
+        int newAddress = 11;
+
+        setSlotLocation(newAddress, baseLocation);
+
+        bus.when(new GetFeederAddress(hardwareId))
+                .reply(responses.getFeederAddress.ok(newAddress));
+
+        bus.when(new InitializeFeeder(newAddress, hardwareId))
+                .reply(responses.initializeFeeder.ok(newAddress, hardwareId));
+
+        feeder.prepareForJob(false);
+
+        assertEquals(newAddress, (int) feeder.getSlotAddress());
+        assertTrue(feeder.isInitialized());
+    }
+
+    @Test
+    public void prepareForJobFindsFeederAgainIfWrongFeederUUIDAndMakesNewFeeder() throws Exception {
+        feeder.setHardwareId(hardwareId);
+        feeder.setOffset(feederOffset);
+        feeder.setSlotAddress(feederAddress);
+        String otherHardwareId = "445566778899AABBCCDDEEFF";
+
+        assertNull(PhotonFeeder.findByHardwareId(otherHardwareId));
+
+        bus.when(new InitializeFeeder(feederAddress, hardwareId))
+                .reply(responses.errors.wrongFeederUUID(feederAddress, otherHardwareId));
+
+        int newAddress = 11;
+
+        setSlotLocation(newAddress, baseLocation);
+
+        bus.when(new GetFeederAddress(hardwareId))
+                .reply(responses.getFeederAddress.ok(newAddress));
+
+        bus.when(new InitializeFeeder(newAddress, hardwareId))
+                .reply(responses.initializeFeeder.ok(newAddress, hardwareId));
+
+        feeder.prepareForJob(false);
+
+        assertEquals(newAddress, (int) feeder.getSlotAddress());
+        assertTrue(feeder.isInitialized());
+
+        PhotonFeeder otherFeeder = PhotonFeeder.findByHardwareId(otherHardwareId);
+        assertNotNull(otherFeeder);
+        assertFalse(otherFeeder.initialized);
+        assertEquals(feederAddress, (int) otherFeeder.slotAddress);
+    }
+
+    @Test
+    public void prepareForJobFindsFeederAgainIfWrongFeederUUIDAndUsesExistingFeeder() throws Exception {
+        feeder.setHardwareId(hardwareId);
+        feeder.setOffset(feederOffset);
+        feeder.setSlotAddress(feederAddress);
+
+        String otherHardwareId = "445566778899AABBCCDDEEFF";
+        PhotonFeeder otherFeeder = new PhotonFeeder();
+        otherFeeder.setHardwareId(otherHardwareId);
+        machine.addFeeder(otherFeeder);
+
+        assertSame(otherFeeder, PhotonFeeder.findByHardwareId(otherHardwareId));
+
+        bus.when(new InitializeFeeder(feederAddress, hardwareId))
+                .reply(responses.errors.wrongFeederUUID(feederAddress, otherHardwareId));
+
+        int newAddress = 11;
+
+        setSlotLocation(newAddress, baseLocation);
+
+        bus.when(new GetFeederAddress(hardwareId))
+                .reply(responses.getFeederAddress.ok(newAddress));
+
+        bus.when(new InitializeFeeder(newAddress, hardwareId))
+                .reply(responses.initializeFeeder.ok(newAddress, hardwareId));
+
+        feeder.prepareForJob(false);
+
+        assertEquals(newAddress, (int) feeder.getSlotAddress());
+        assertTrue(feeder.isInitialized());
+
+        PhotonFeeder recalledOtherFeeder = PhotonFeeder.findByHardwareId(otherHardwareId);
+        assertSame(otherFeeder, recalledOtherFeeder);
+        assertFalse(otherFeeder.initialized);
+        assertEquals(feederAddress, (int) otherFeeder.slotAddress);
+    }
+
+    @Test
+    public void prepareForJobThrowsExceptionIfNewSlotHasNoLocation() {
+        feeder.setHardwareId(hardwareId);
+        feeder.setSlotAddress(feederAddress);
+        setSlotLocation(feederAddress, baseLocation);
+
+        bus.when(new InitializeFeeder(feederAddress, hardwareId)).timeout();
+
+        int newFeederAddress = 11;
+        bus.when(new GetFeederAddress(hardwareId))
+                .reply(responses.getFeederAddress.ok(newFeederAddress));
+
+        bus.when(new InitializeFeeder(newFeederAddress, hardwareId))
+                .reply(responses.initializeFeeder.ok(newFeederAddress, hardwareId));
+
+        assertThrows(UnconfiguredSlotException.class, () -> feeder.prepareForJob(false));
+
+        assertTrue(feeder.isInitialized());
+        assertEquals(newFeederAddress, feeder.getSlotAddress());
+    }
+
+    @Test
+    public void prepareForJobThrowsExceptionIfFeederHasNoOffset() throws Exception {
+        feeder.setHardwareId(hardwareId);
+        feeder.setSlotAddress(feederAddress);
+        setSlotLocation(feederAddress, baseLocation);
+
+        bus.when(new InitializeFeeder(feederAddress, hardwareId))
+                .reply(responses.initializeFeeder.ok(feederAddress, hardwareId));
+
+        assertThrows(FeederHasNoLocationOffsetException.class, () -> feeder.prepareForJob(false));
+
+        assertTrue(feeder.isInitialized());
+    }
+
+    /**
+     * This test has some behavior that we wouldn't see in the real world, but is the easiest way to test
+     * this functionality. Essentially, this test relies on the fact that returning a different slot address
+     * for the same hardware ID will update our feeder's slot address. This way we can call initialize feeder
+     * multiple times in a row.
+     * <p>
+     * If InitializeFeeder is called on secondNewAddress, we know that our feeder retry is incorrect. If
+     * the feeder slot address is not secondNewAddress, we know that not all of our expected Initialize
+     * Feeder commands were called.
+     */
+    @Test
+    public void prepareForJobThrowsExceptionAfterOneRetry() {
+        feeder.setHardwareId(hardwareId);
+        feeder.setSlotAddress(feederAddress);
+        photonProperties.setFeederCommunicationMaxRetry(1);
+
+        int firstNewAddress = 11;
+        int secondNewAddress = 12;
+
+        bus.when(new InitializeFeeder(feederAddress, hardwareId))
+                .reply(responses.errors.wrongFeederUUID(firstNewAddress, hardwareId));
+        bus.when(new InitializeFeeder(firstNewAddress, hardwareId))
+                .reply(responses.errors.wrongFeederUUID(secondNewAddress, hardwareId));
+
+        try {
+            feeder.prepareForJob(false);
+            fail("prepareForJob did not throw exception after max retries");
+        } catch (TestBus.NoPacketMocking exception) {
+            // This means the feeder tried to call initialize on secondNewAddress
+            fail("Bus was called on non-mocked packet");
+        } catch (Exception exception) {
+            assertEquals("Failed to find and initialize the feeder", exception.getMessage());
+        }
+
+        assertEquals(secondNewAddress, feeder.getSlotAddress());
+    }
+
+    /**
+     * See {@code prepareForJobThrowsExceptionAfterOneRetry}. This method works similarly but with no retries.
+     */
+    @Test
+    public void prepareForJobThrowsExceptionAfterNoRetries() {
+        feeder.setHardwareId(hardwareId);
+        feeder.setSlotAddress(feederAddress);
+        photonProperties.setFeederCommunicationMaxRetry(0);
+
+        int newAddress = 11;
+
+        bus.when(new InitializeFeeder(feederAddress, hardwareId))
+                .reply(responses.errors.wrongFeederUUID(newAddress, hardwareId));
+
+        try {
+            feeder.prepareForJob(false);
+            fail("prepareForJob did not throw exception after max retries");
+        } catch (TestBus.NoPacketMocking exception) {
+            // This means the feeder tried to call initialize on newAddress
+            fail("Bus was called on non-mocked packet");
+        } catch (Exception exception) {
+            assertEquals("Failed to find and initialize the feeder", exception.getMessage());
+        }
+
+        assertEquals(newAddress, feeder.getSlotAddress());
+    }
+
+    @Test
+    public void getPartPitchByDefaultReturnsFourMillimeters() {
+        assertEquals(4, feeder.getPartPitch());
+    }
+
 //    @Test
 //    public void feedMovesPartForwardByPitch() throws Exception {
 //        feeder.setHardwareId(hardwareId);
@@ -923,336 +924,317 @@ public class PhotonFeederTest {
 //        assertTrue(feederB.isInitialized());
 //        assertEquals(1, (int) feederB.getSlotAddress());
 //    }
-//
-//    @Test
-//    public void findSlotAddressForcesFind() throws Exception{
-//        feeder.setHardwareId(hardwareId);
-//
-//        int newAddress = 11;
-//
-//        String getFeederAddressCommand = commands.getFeederAddress(hardwareId).toByteString();
-//        when(mockedActuator.read(getFeederAddressCommand))
-//                .thenReturn(
-//                        GetFeederAddress.ok(feederAddress, hardwareId),
-//                        GetFeederAddress.ok(newAddress, hardwareId)
-//                );
-//
-//        feeder.findSlotAddress();
-//
-//        InOrder inOrder = inOrder(mockedActuator);
-//        inOrder.verify(mockedActuator).read(getFeederAddressCommand);
-//        inOrder.verify(mockedActuator, never()).read(any());
-//
-//        assertEquals(feederAddress, (int) feeder.getSlotAddress());
-//
-//        feeder.findSlotAddress();
-//
-//        inOrder.verify(mockedActuator).read(getFeederAddressCommand);
-//
-//        assertEquals(newAddress, (int) feeder.getSlotAddress());
-//    }
-//
-//    @Test
-//    public void findSlotAddressClearsSlotAddressOnTimeout() throws Exception {
-//        feeder.setHardwareId(hardwareId);
-//        feeder.setSlotAddress(feederAddress);
-//
-//        String getFeederAddressCommand = commands.getFeederAddress(hardwareId).toByteString();
-//        when(mockedActuator.read(getFeederAddressCommand))
-//                .thenReturn(Errors.timeout());
-//
-//        feeder.findSlotAddress();
-//
-//        InOrder inOrder = inOrder(mockedActuator);
-//        inOrder.verify(mockedActuator).read(getFeederAddressCommand);
-//        inOrder.verify(mockedActuator, never()).read(any());
-//
-//        assertNull(feeder.getSlotAddress());
-//    }
-//
-//    @Test
-//    public void findAllFeedersUsingMaxFeederAddress() throws Exception {
-//        int maxFeederAddress = 5;
-//        photonProperties.setMaxFeederAddress(maxFeederAddress);
-//
-//        for (int i = 1; i <= maxFeederAddress; i++) {
-//            when(mockedActuator.read(commands.getFeederId(i)))
-//                    .thenReturn(Errors.timeout());
-//        }
-//
-//        PhotonFeeder.findAllFeeders(null);
-//
-//        InOrder inOrder = inOrder(mockedActuator);
-//        for (int i = 1; i <= maxFeederAddress; i++) {
-//            inOrder.verify(mockedActuator).read(commands.getFeederId(i));
-//        }
-//        inOrder.verify(mockedActuator, never()).read(any());
-//    }
-//
-//    @Test
-//    public void findAllFeedersFindsNewAndExistingFeeders() throws Exception {
-//        int maxFeederAddress = 5;
-//        photonProperties.setMaxFeederAddress(maxFeederAddress);
-//
-//        /*
-//        - Existing feeder has address 1 internally, but responds on address 2
-//        - New feeder responds on address 1
-//        - Address 3-5 responds with timeout
-//         */
-//
-//        String newHardwareUuid = "FFEEDDCCBBAA998877665544";
-//        feeder.setName(hardwareId);
-//        feeder.setHardwareId(hardwareId);
-//        feeder.setSlotAddress(1);
-//
-//        when(mockedActuator.read(commands.getFeederId(1)))
-//                .thenReturn(GetFeederId.ok(1, newHardwareUuid));
-//
-//        when(mockedActuator.read(commands.getFeederId(2)))
-//                .thenReturn(GetFeederId.ok(2, hardwareId));
-//
-//        for (int i = 3; i <= maxFeederAddress; i++) {
-//            when(mockedActuator.read(commands.getFeederId(i)))
-//                    .thenReturn(Errors.timeout());
-//        }
-//
-//        PhotonFeeder.findAllFeeders(null);
-//
-//        InOrder inOrder = inOrder(mockedActuator);
-//        for (int i = 1; i <= maxFeederAddress; i++) {
-//            inOrder.verify(mockedActuator).read(commands.getFeederId(i));
-//        }
-//        inOrder.verify(mockedActuator, never()).read(any());
-//
-//        assertEquals(2, (int) feeder.getSlotAddress());
-//        assertEquals(
-//                String.format("%s (Slot: %s)", hardwareId, 2),
-//                feeder.getName()
-//        );
-//
-//        PhotonFeeder newFeeder = PhotonFeeder.findByHardwareId(newHardwareUuid);
-//        assertNotNull(newFeeder);
-//        assertEquals(1, (int) newFeeder.getSlotAddress());
-//        assertEquals(newHardwareUuid, newFeeder.getHardwareId());
-//        assertEquals(
-//                String.format("%s (Slot: %s)", newHardwareUuid, 1),
-//                newFeeder.getName()
-//        );
-//    }
-//
-//    @Test
-//    public void findAllFeedersFillsNullHardwareIdFeedersBeforeCreatingNewOnes() throws Exception {
-//        int maxFeederAddress = 2;
-//        photonProperties.setMaxFeederAddress(maxFeederAddress);
-//
-//        /*
-//        - Existing feeder has no hardware id, should be filled with hardwareId
-//        - New feeder responds on address 2
-//        - Address 3-5 responds with timeout
-//         */
-//
-//        String newHardwareUuid = "FFEEDDCCBBAA998877665544";
-//
-//        when(mockedActuator.read(commands.getFeederId(1)))
-//                .thenReturn(GetFeederId.ok(1, hardwareId));
-//
-//        when(mockedActuator.read(commands.getFeederId(2)))
-//                .thenReturn(GetFeederId.ok(2, newHardwareUuid));
-//
-//        PhotonFeeder.findAllFeeders(null);
-//
-//        InOrder inOrder = inOrder(mockedActuator);
-//        for (int i = 1; i <= maxFeederAddress; i++) {
-//            inOrder.verify(mockedActuator).read(commands.getFeederId(i));
-//        }
-//        inOrder.verify(mockedActuator, never()).read(any());
-//
-//        assertEquals(1, (int) feeder.getSlotAddress());
-//        assertEquals(hardwareId, feeder.getHardwareId());
-//        assertEquals(
-//                String.format("%s (Slot: %s)", hardwareId, 1),
-//                feeder.getName()
-//        );
-//
-//        PhotonFeeder newFeeder = PhotonFeeder.findByHardwareId(newHardwareUuid);
-//        assertNotNull(newFeeder);
-//        assertEquals(2, (int) newFeeder.getSlotAddress());
-//        assertEquals(newHardwareUuid, newFeeder.getHardwareId());
-//        assertEquals(
-//                String.format("%s (Slot: %s)", newHardwareUuid, 2),
-//                newFeeder.getName()
-//        );
-//    }
-//
-//    @Test
-//    public void findAllFeedersRemovesFeederAddressIfTimeoutOccurs() throws Exception {
-//        int maxFeederAddress = 5;
-//        photonProperties.setMaxFeederAddress(maxFeederAddress);
-//
-//        feeder.setHardwareId(hardwareId);
-//        feeder.setSlotAddress(1);
-//        for (int i = 1; i <= maxFeederAddress; i++) {
-//            when(mockedActuator.read(commands.getFeederId(i)))
-//                    .thenReturn(Errors.timeout());
-//        }
-//
-//        PhotonFeeder.findAllFeeders(null);
-//
-//        InOrder inOrder = inOrder(mockedActuator);
-//        for (int i = 1; i <= maxFeederAddress; i++) {
-//            inOrder.verify(mockedActuator).read(commands.getFeederId(i));
-//        }
-//        inOrder.verify(mockedActuator, never()).read(any());
-//
-//        assertNull(feeder.getSlotAddress());
-//    }
-//
-//    @Test
-//    public void findAllFeedersGivesProgressUpdates() throws Exception {
-//        int maxFeederAddress = 5;
-//        photonProperties.setMaxFeederAddress(maxFeederAddress);
-//
-//        for (int i = 1; i <= maxFeederAddress; i++) {
-//            when(mockedActuator.read(commands.getFeederId(i)))
-//                    .thenReturn(Errors.timeout());
-//        }
-//
-//        IntConsumer progressUpdates = mock(IntConsumer.class);
-//
-//        PhotonFeeder.findAllFeeders(progressUpdates);
-//
-//        InOrder inOrder = inOrder(mockedActuator, progressUpdates);
-//        for (int i = 1; i <= maxFeederAddress; i++) {
-//            inOrder.verify(mockedActuator).read(commands.getFeederId(i));
-//            inOrder.verify(progressUpdates).accept((i * 100) / maxFeederAddress);
-//        }
-//        inOrder.verify(mockedActuator, never()).read(any());
-//    }
-//
-//    @Test
-//    public void getPropertySheetHolderTitleDefault() {
-//        assertEquals("Unconfigured PhotonFeeder", feeder.getPropertySheetHolderTitle());
-//    }
-//
-//    @Test
-//    public void getPropertySheetHolderTitleUsesHardwareIdNameIfConfigured() {
-//        feeder.setHardwareId(hardwareId);
-//        feeder.setSlotAddress(15);
-//
-//        assertEquals(
-//                String.format("PhotonFeeder %s", feeder.getName()),
-//                feeder.getPropertySheetHolderTitle()
-//        );
-//    }
-//
-//    @Test
-//    public void getPropertySheetsOnlyReturnsSearchWithNullHardwareId() {
-//        PropertySheetHolder.PropertySheet[] sheets = feeder.getPropertySheets();
-//
-//        assertEquals(1, sheets.length);
-//        assertTrue(sheets[0] instanceof SearchPropertySheet);
-//    }
-//
-//    @Test
-//    public void getPropertySheetsAlsoReturnsFeederConfigurationWithHardwareIdSet() {
-//        feeder.setHardwareId(hardwareId);
-//
-//        PropertySheetHolder.PropertySheet[] sheets = feeder.getPropertySheets();
-//
-//        assertEquals(2, sheets.length);
-//        assertTrue(sheets[0] instanceof FeederPropertySheet);
-//        assertTrue(sheets[1] instanceof SearchPropertySheet);
-//    }
-//
-//    @Test
-//    public void findIssuesGivesNothingIfNoHardwareIdIsPresent() {
-//        feeder.setSlotAddress(feederAddress);
-//
-//        Solutions solutions = new Solutions();
-//        solutions.findIssues();
-//        solutions.publishIssues();
-//
-//        List<Solutions.Issue> issues = solutions.getIssues();
-//        Optional<Solutions.Issue> maybeIssue = issues.stream().filter(i -> i.getSubject() == feeder).findFirst();
-//
-//        assertFalse(maybeIssue.isPresent());
-//    }
-//
-//    @Test
-//    public void findIssuesAddsIssueIfSlotHasNoLocationSet() {
-//        feeder.setHardwareId(hardwareId);
-//        feeder.setOffset(feederOffset);
-//        feeder.setSlotAddress(feederAddress);
-//        assertNull(feeder.getSlot().getLocation());
-//
-//        Solutions solutions = new Solutions();
-//        solutions.findIssues();
-//        solutions.publishIssues();
-//
-//        List<Solutions.Issue> issues = solutions.getIssues();
-//        Optional<Solutions.Issue> maybeIssue = issues.stream().filter(i -> i.getSubject() == feeder).findFirst();
-//
-//        assertTrue(maybeIssue.isPresent());
-//        Solutions.Issue issue = maybeIssue.get();
-//
-//        assertEquals(feeder, issue.getSubject());
-//        assertEquals("Feeder slot has no configured location", issue.getIssue());
-//        assertEquals(Solutions.Severity.Error, issue.getSeverity());
-//        assertEquals(Solutions.State.Open, issue.getState());
-//    }
-//
-//    @Test
-//    public void findIssuesAddsIssueIfFeederHasNoOffsetSet() {
-//        feeder.setHardwareId(hardwareId);
-//        feeder.setSlotAddress(feederAddress);
-//        setSlotLocation(feederAddress, baseLocation);
-//
-//        Solutions solutions = new Solutions();
-//        solutions.findIssues();
-//        solutions.publishIssues();
-//
-//        List<Solutions.Issue> issues = solutions.getIssues();
-//        Optional<Solutions.Issue> maybeIssue = issues.stream().filter(i -> i.getSubject() == feeder).findFirst();
-//
-//        assertTrue(maybeIssue.isPresent());
-//        Solutions.Issue issue = maybeIssue.get();
-//
-//        assertEquals(feeder, issue.getSubject());
-//        assertEquals("Feeder has no configured offset", issue.getIssue());
-//        assertEquals(Solutions.Severity.Error, issue.getSeverity());
-//        assertEquals(Solutions.State.Open, issue.getState());
-//    }
-//
-//    @Test
-//    public void getPickLocationThrowsExceptionIfNoSlotAddressIsSet() {
-//        assertThrows(NoSlotAddressException.class, () -> feeder.getPickLocation());
-//    }
-//
-//    @Test
-//    public void getPickLocationThrowsExceptionIfSlotHasNoLocation() {
-//        feeder.setSlotAddress(feederAddress);
-//
-//        assertThrows(UnconfiguredSlotException.class, () -> feeder.getPickLocation());
-//    }
-//
-//    @Test
-//    public void getPickLocationThrowsExceptionIfFeederHasNoOffset() {
-//        feeder.setSlotAddress(feederAddress);
-//        setSlotLocation(feederAddress, baseLocation);
-//
-//        assertThrows(FeederHasNoLocationOffsetException.class, () -> feeder.getPickLocation());
-//    }
-//
-//    @Test
-//    public void getPickLocationUsesOffsetWithRotation() throws Exception {
-//        feeder.setSlotAddress(feederAddress);
-//        setSlotLocation(feederAddress, baseLocation);
-//
-//        feeder.setOffset(feederOffset);
-//
-//        Location actualLocation = feeder.getPickLocation();
-//        Location expectedLocation = new Location(LengthUnit.Millimeters, 2, 3, 3, 45);
-//
-//        assertEquals(expectedLocation, actualLocation);
-//    }
+
+    @Test
+    public void findSlotAddressForcesFind() throws Exception{
+        feeder.setHardwareId(hardwareId);
+
+        int newAddress = 11;
+
+        bus.when(new GetFeederAddress(hardwareId))
+                .reply(responses.getFeederAddress.ok(feederAddress));
+
+        feeder.findSlotAddress();
+
+        assertEquals(feederAddress, (int) feeder.getSlotAddress());
+
+        bus.when(new GetFeederAddress(hardwareId))
+                .reply(responses.getFeederAddress.ok(newAddress));
+
+        feeder.findSlotAddress();
+
+        assertEquals(newAddress, (int) feeder.getSlotAddress());
+    }
+
+    @Test
+    public void findSlotAddressClearsSlotAddressOnTimeout() throws Exception {
+        feeder.setHardwareId(hardwareId);
+        feeder.setSlotAddress(feederAddress);
+
+        bus.when(new GetFeederAddress(hardwareId)).timeout();
+
+        feeder.findSlotAddress();
+
+        assertNull(feeder.getSlotAddress());
+    }
+
+    /**
+     * If we go past our max feeder address, we will get an exception from the test bus
+     * since it has no mock set up. For everything in range, we just verify that it
+     * creates the feeder correctly.
+     *
+     * @throws Exception if findAllFeeders fails
+     */
+    @Test
+    public void findAllFeedersUsingMaxFeederAddress() throws Exception {
+        int maxFeederAddress = 5;
+        photonProperties.setMaxFeederAddress(maxFeederAddress);
+
+        Map<Integer, String> uuids = new HashMap<>();
+
+        for (int address = 1; address <= maxFeederAddress; address++) {
+            String uuid = randomUUID();
+            uuids.put(address, uuid);
+            bus.when(new GetFeederId(address))
+                    .reply(responses.getFeederId.ok(address, uuid));
+        }
+
+        PhotonFeeder.findAllFeeders(null);
+
+        for (int address = 1; address <= maxFeederAddress; address++) {
+            String expectedUUID = uuids.get(address);
+            PhotonFeeder byUUID = PhotonFeeder.findByHardwareId(expectedUUID);
+            PhotonFeeder byAddress = PhotonFeeder.findBySlotAddress(address);
+
+            assertNotNull(byUUID);
+            assertNotNull(byAddress);
+            assertSame(byUUID, byAddress);
+            assertEquals(address, byUUID.getSlotAddress());
+            assertEquals(expectedUUID, byAddress.getHardwareId());
+        }
+    }
+
+    @Test
+    public void findAllFeedersFindsNewAndExistingFeeders() throws Exception {
+        int maxFeederAddress = 5;
+        photonProperties.setMaxFeederAddress(maxFeederAddress);
+
+        /*
+        - Existing feeder has address 1 internally, but responds on address 2
+        - New feeder responds on address 1
+        - Address 3-5 responds with timeout
+         */
+
+        String newHardwareUuid = "FFEEDDCCBBAA998877665544";
+        feeder.setName(hardwareId);
+        feeder.setHardwareId(hardwareId);
+        feeder.setSlotAddress(1);
+
+        bus.when(new GetFeederId(1))
+                .reply(responses.getFeederId.ok(1, newHardwareUuid));
+
+        bus.when(new GetFeederId(2))
+                .reply(responses.getFeederId.ok(2, hardwareId));
+
+        for (int i = 3; i <= maxFeederAddress; i++) {
+            bus.when(new GetFeederId(i)).timeout();
+        }
+
+        PhotonFeeder.findAllFeeders(null);
+
+        assertEquals(2, (int) feeder.getSlotAddress());
+        assertEquals(
+                String.format("%s (Slot: %s)", hardwareId, 2),
+                feeder.getName()
+        );
+
+        PhotonFeeder newFeeder = PhotonFeeder.findByHardwareId(newHardwareUuid);
+        assertNotNull(newFeeder);
+        assertEquals(1, (int) newFeeder.getSlotAddress());
+        assertEquals(newHardwareUuid, newFeeder.getHardwareId());
+        assertEquals(
+                String.format("%s (Slot: %s)", newHardwareUuid, 1),
+                newFeeder.getName()
+        );
+    }
+
+    @Test
+    public void findAllFeedersFillsNullHardwareIdFeedersBeforeCreatingNewOnes() throws Exception {
+        int maxFeederAddress = 2;
+        photonProperties.setMaxFeederAddress(maxFeederAddress);
+
+        /*
+        - Existing feeder has no hardware id, should be filled with hardwareId
+        - New feeder responds on address 2
+        - Address 3-5 responds with timeout
+         */
+
+        String newHardwareUuid = "FFEEDDCCBBAA998877665544";
+
+        bus.when(new GetFeederId(1))
+                .reply(responses.getFeederId.ok(1, hardwareId));
+
+        bus.when(new GetFeederId(2))
+                .reply(responses.getFeederId.ok(2, newHardwareUuid));
+
+        PhotonFeeder.findAllFeeders(null);
+
+        assertEquals(1, (int) feeder.getSlotAddress());
+        assertEquals(hardwareId, feeder.getHardwareId());
+        assertEquals(
+                String.format("%s (Slot: %s)", hardwareId, 1),
+                feeder.getName()
+        );
+
+        PhotonFeeder newFeeder = PhotonFeeder.findByHardwareId(newHardwareUuid);
+        assertNotNull(newFeeder);
+        assertEquals(2, (int) newFeeder.getSlotAddress());
+        assertEquals(newHardwareUuid, newFeeder.getHardwareId());
+        assertEquals(
+                String.format("%s (Slot: %s)", newHardwareUuid, 2),
+                newFeeder.getName()
+        );
+    }
+
+    @Test
+    public void findAllFeedersRemovesFeederAddressIfTimeoutOccurs() throws Exception {
+        int maxFeederAddress = 5;
+        photonProperties.setMaxFeederAddress(maxFeederAddress);
+
+        feeder.setHardwareId(hardwareId);
+        feeder.setSlotAddress(1);
+        for (int i = 1; i <= maxFeederAddress; i++) {
+            bus.when(new GetFeederId(i)).timeout();
+        }
+
+        PhotonFeeder.findAllFeeders(null);
+
+        assertNull(feeder.getSlotAddress());
+    }
+
+    @Test
+    public void findAllFeedersGivesProgressUpdates() throws Exception {
+        int maxFeederAddress = 5;
+        photonProperties.setMaxFeederAddress(maxFeederAddress);
+
+        for (int i = 1; i <= maxFeederAddress; i++) {
+            bus.when(new GetFeederId(i)).timeout();
+        }
+
+        IntConsumer progressUpdates = mock(IntConsumer.class);
+
+        PhotonFeeder.findAllFeeders(progressUpdates);
+
+        InOrder inOrder = inOrder(progressUpdates);
+        for (int i = 1; i <= maxFeederAddress; i++) {
+            inOrder.verify(progressUpdates).accept((i * 100) / maxFeederAddress);
+        }
+    }
+
+    @Test
+    public void getPropertySheetHolderTitleDefault() {
+        assertEquals("Unconfigured PhotonFeeder", feeder.getPropertySheetHolderTitle());
+    }
+
+    @Test
+    public void getPropertySheetHolderTitleUsesHardwareIdNameIfConfigured() {
+        feeder.setHardwareId(hardwareId);
+        feeder.setSlotAddress(15);
+
+        assertEquals(
+                String.format("PhotonFeeder %s", feeder.getName()),
+                feeder.getPropertySheetHolderTitle()
+        );
+    }
+
+    @Test
+    public void getPropertySheetsOnlyReturnsSearchWithNullHardwareId() {
+        PropertySheetHolder.PropertySheet[] sheets = feeder.getPropertySheets();
+
+        assertEquals(1, sheets.length);
+        assertTrue(sheets[0] instanceof SearchPropertySheet);
+    }
+
+    @Test
+    public void getPropertySheetsAlsoReturnsFeederConfigurationWithHardwareIdSet() {
+        feeder.setHardwareId(hardwareId);
+
+        PropertySheetHolder.PropertySheet[] sheets = feeder.getPropertySheets();
+
+        assertEquals(2, sheets.length);
+        assertTrue(sheets[0] instanceof FeederPropertySheet);
+        assertTrue(sheets[1] instanceof SearchPropertySheet);
+    }
+
+    @Test
+    public void findIssuesGivesNothingIfNoHardwareIdIsPresent() {
+        feeder.setSlotAddress(feederAddress);
+
+        Solutions solutions = new Solutions();
+        solutions.findIssues();
+        solutions.publishIssues();
+
+        List<Solutions.Issue> issues = solutions.getIssues();
+        Optional<Solutions.Issue> maybeIssue = issues.stream().filter(i -> i.getSubject() == feeder).findFirst();
+
+        assertFalse(maybeIssue.isPresent());
+    }
+
+    @Test
+    public void findIssuesAddsIssueIfSlotHasNoLocationSet() {
+        feeder.setHardwareId(hardwareId);
+        feeder.setOffset(feederOffset);
+        feeder.setSlotAddress(feederAddress);
+        assertNull(feeder.getSlot().getLocation());
+
+        Solutions solutions = new Solutions();
+        solutions.findIssues();
+        solutions.publishIssues();
+
+        List<Solutions.Issue> issues = solutions.getIssues();
+        Optional<Solutions.Issue> maybeIssue = issues.stream().filter(i -> i.getSubject() == feeder).findFirst();
+
+        assertTrue(maybeIssue.isPresent());
+        Solutions.Issue issue = maybeIssue.get();
+
+        assertEquals(feeder, issue.getSubject());
+        assertEquals("Feeder slot has no configured location", issue.getIssue());
+        assertEquals(Solutions.Severity.Error, issue.getSeverity());
+        assertEquals(Solutions.State.Open, issue.getState());
+    }
+
+    @Test
+    public void findIssuesAddsIssueIfFeederHasNoOffsetSet() {
+        feeder.setHardwareId(hardwareId);
+        feeder.setSlotAddress(feederAddress);
+        setSlotLocation(feederAddress, baseLocation);
+
+        Solutions solutions = new Solutions();
+        solutions.findIssues();
+        solutions.publishIssues();
+
+        List<Solutions.Issue> issues = solutions.getIssues();
+        Optional<Solutions.Issue> maybeIssue = issues.stream().filter(i -> i.getSubject() == feeder).findFirst();
+
+        assertTrue(maybeIssue.isPresent());
+        Solutions.Issue issue = maybeIssue.get();
+
+        assertEquals(feeder, issue.getSubject());
+        assertEquals("Feeder has no configured offset", issue.getIssue());
+        assertEquals(Solutions.Severity.Error, issue.getSeverity());
+        assertEquals(Solutions.State.Open, issue.getState());
+    }
+
+    @Test
+    public void getPickLocationThrowsExceptionIfNoSlotAddressIsSet() {
+        assertThrows(NoSlotAddressException.class, () -> feeder.getPickLocation());
+    }
+
+    @Test
+    public void getPickLocationThrowsExceptionIfSlotHasNoLocation() {
+        feeder.setSlotAddress(feederAddress);
+
+        assertThrows(UnconfiguredSlotException.class, () -> feeder.getPickLocation());
+    }
+
+    @Test
+    public void getPickLocationThrowsExceptionIfFeederHasNoOffset() {
+        feeder.setSlotAddress(feederAddress);
+        setSlotLocation(feederAddress, baseLocation);
+
+        assertThrows(FeederHasNoLocationOffsetException.class, () -> feeder.getPickLocation());
+    }
+
+    @Test
+    public void getPickLocationUsesOffsetWithRotation() throws Exception {
+        feeder.setSlotAddress(feederAddress);
+        setSlotLocation(feederAddress, baseLocation);
+
+        feeder.setOffset(feederOffset);
+
+        Location actualLocation = feeder.getPickLocation();
+        Location expectedLocation = new Location(LengthUnit.Millimeters, 2, 3, 3, 45);
+
+        assertEquals(expectedLocation, actualLocation);
+    }
 }

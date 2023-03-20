@@ -5,7 +5,11 @@ import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.photon.exceptions.FeederHasNoLocationOffsetException;
 import org.openpnp.machine.photon.exceptions.NoSlotAddressException;
 import org.openpnp.machine.photon.exceptions.UnconfiguredSlotException;
+import org.openpnp.machine.photon.protocol.ErrorTypes;
 import org.openpnp.machine.photon.protocol.PhotonBusInterface;
+import org.openpnp.machine.photon.protocol.commands.GetFeederAddress;
+import org.openpnp.machine.photon.protocol.commands.GetFeederId;
+import org.openpnp.machine.photon.protocol.commands.InitializeFeeder;
 import org.openpnp.machine.photon.sheets.FeederPropertySheet;
 import org.openpnp.machine.photon.sheets.SearchPropertySheet;
 import org.openpnp.machine.reference.ReferenceActuator;
@@ -14,6 +18,7 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 import org.openpnp.model.Solutions;
 import org.openpnp.spi.*;
+import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 
@@ -150,23 +155,18 @@ public class PhotonFeeder extends ReferenceFeeder {
     }
 
     private void findSlotAddress(boolean force) throws Exception {
-//        if (slotAddress != null && !force) {
-//            return;
-//        }
-//
-//        Actuator actuator = getDataActuator();
-//        String feederAddressResponseString = actuator.read(commands.getFeederAddress(hardwareId));
-//
-//        PacketResponse response = GetFeederAddress.decode(feederAddressResponseString);
-//        if (!response.isOk()) {
-//            ErrorTypes error = response.getError();
-//
-//            if (error == ErrorTypes.TIMEOUT) {
-//                setSlotAddress(null);
-//                return;
-//            }
-//        }
-//        setSlotAddress(response.getFeederAddress());
+        if (slotAddress != null && !force) {
+            return;
+        }
+
+        GetFeederAddress getFeederAddress = new GetFeederAddress(hardwareId);
+        GetFeederAddress.Response response = getFeederAddress.send(photonBus);
+
+        if(response == null) {
+            setSlotAddress(null);
+            return;
+        }
+        setSlotAddress(response.fromAddress);
     }
 
     private void findSlotAddressIfNeeded() throws Exception {
@@ -174,34 +174,30 @@ public class PhotonFeeder extends ReferenceFeeder {
     }
 
     private void initializeIfNeeded() throws Exception {
-//        if (initialized || slotAddress == null) {
-//            return;
-//        }
-//
-//        Actuator actuator = getDataActuator();
-//        String responseString = actuator.read(commands.initializeFeeder(slotAddress, hardwareId));
-//        PacketResponse response = InitializeFeeder.decode(responseString);
-//
-//        if (!response.isOk()) {
-//            if (response.getError() == ErrorTypes.TIMEOUT) {
-//                slotAddress = null;
-//                return;
-//            } else if (response.getError() == ErrorTypes.WRONG_FEEDER_UUID) {
-//                PhotonFeeder otherFeeder = findByHardwareId(response.getUuid());
-//                if (otherFeeder == null) {
-//                    otherFeeder = new PhotonFeeder();
-//                    otherFeeder.setHardwareId(response.getUuid());
-//                    Configuration.get().getMachine().addFeeder(otherFeeder);
-//                }
-//
-//                // This other feeder is in the slot we thought we were
-//                otherFeeder.setSlotAddress(response.getFeederAddress());
-//
-//                return;
-//            }
-//        }
-//
-//        initialized = true;
+        if (initialized || slotAddress == null) {
+            return;
+        }
+
+        InitializeFeeder initializeFeeder = new InitializeFeeder(slotAddress, hardwareId);
+        InitializeFeeder.Response response = initializeFeeder.send(photonBus);
+
+        if(response == null) {
+            slotAddress = null;
+        } else if (response.error == ErrorTypes.WRONG_FEEDER_UUID){
+            PhotonFeeder otherFeeder = findByHardwareId(response.uuid);
+
+            // If we don't know about that feeder, let's go ahead and create it
+            if (otherFeeder == null) {
+                otherFeeder = new PhotonFeeder();
+                otherFeeder.setHardwareId(response.uuid);
+                Configuration.get().getMachine().addFeeder(otherFeeder);
+            }
+
+            // This other feeder is in the slot we thought we were
+            otherFeeder.setSlotAddress(response.fromAddress);
+        } else {
+            initialized = true;
+        }
     }
 
     static Actuator getDataActuator() {
@@ -441,56 +437,52 @@ public class PhotonFeeder extends ReferenceFeeder {
     }
 
     public static void findAllFeeders(IntConsumer progressUpdate) throws Exception {
-//        Logger.info("Searching for Photon Feeders");
-//        Machine machine = Configuration.get().getMachine();
-//        PhotonProperties photonProperties = new PhotonProperties(machine);
-//        Actuator actuator = getDataActuator();
-//        int maxFeederAddress = photonProperties.getMaxFeederAddress();
-//        Logger.debug("Max Photon feeder address: " + maxFeederAddress);
-//
-//        List<PhotonFeeder> feedersToAdd = new ArrayList<>();
-//
-//        for (int address = 1; address <= maxFeederAddress; address++) {
-//            Logger.debug("Querying Photon feeder address: " + address);
-//            String command = commands.getFeederId(address).toByteString();
-//            Logger.trace("Photon feeder command: " + command);
-//            String response = actuator.read(command);
-//            Logger.trace("Photon feeder response: " + command);
-//            PacketResponse packetResponse = GetFeederId.decode(response);
-//
-//            if (progressUpdate != null) {
-//                int progress = (address * 100) / maxFeederAddress;
-//                progressUpdate.accept(progress);
-//            }
-//
-//            if (packetResponse.isOk()) {
-//                PhotonFeeder otherFeeder = findByHardwareId(packetResponse.getUuid());
-//                if (otherFeeder == null) {
-//                    // Try to find an existing feeder without a hardware id before making a new one
-//                    otherFeeder = findByHardwareId(null);
-//                    if (otherFeeder == null) {
-//                        otherFeeder = new PhotonFeeder();
-//                        feedersToAdd.add(otherFeeder);
-//                    }
-//                }
-//
-//                Logger.trace("Found feeder with hardware uuid " + otherFeeder.slotAddress + " at address " + otherFeeder.getSlotAddress());
-//
-//                otherFeeder.setHardwareId(packetResponse.getUuid());
-//                otherFeeder.setSlotAddress(address);
-//            } else if (packetResponse.getError() == ErrorTypes.TIMEOUT) {
-//                PhotonFeeder otherFeeder = findBySlotAddress(address);
-//                if (otherFeeder != null) {
-//                    otherFeeder.slotAddress = null;
-//                    otherFeeder.initialized = false;
-//                }
-//            } else {
-//                Logger.debug("Unknown error from packet response: " + packetResponse.getError().toString());
-//            }
-//        }
-//
-//        for (PhotonFeeder feeder : feedersToAdd) {
-//            Configuration.get().getMachine().addFeeder(feeder);
-//        }
+        Logger.info("Searching for Photon Feeders");
+        Machine machine = Configuration.get().getMachine();
+        PhotonProperties photonProperties = new PhotonProperties(machine);
+        Actuator actuator = getDataActuator();
+        int maxFeederAddress = photonProperties.getMaxFeederAddress();
+        Logger.debug("Max Photon feeder address: " + maxFeederAddress);
+
+        List<PhotonFeeder> feedersToAdd = new ArrayList<>();
+
+        for (int address = 1; address <= maxFeederAddress; address++) {
+            Logger.debug("Querying Photon feeder address: " + address);
+
+            GetFeederId getFeederId = new GetFeederId(address);
+            GetFeederId.Response response = getFeederId.send(photonBus);
+
+            if (progressUpdate != null) {
+                int progress = (address * 100) / maxFeederAddress;
+                progressUpdate.accept(progress);
+            }
+
+            if (response == null) {
+                PhotonFeeder otherFeeder = findBySlotAddress(address);
+                if (otherFeeder != null) {
+                    otherFeeder.slotAddress = null;
+                    otherFeeder.initialized = false;
+                }
+            } else {
+                PhotonFeeder otherFeeder = findByHardwareId(response.uuid);
+                if (otherFeeder == null) {
+                    // Try to find an existing feeder without a hardware id before making a new one
+                    otherFeeder = findByHardwareId(null);
+                    if (otherFeeder == null) {
+                        otherFeeder = new PhotonFeeder();
+                        feedersToAdd.add(otherFeeder);
+                    }
+                }
+
+                Logger.trace("Found feeder with hardware uuid " + otherFeeder.slotAddress + " at address " + otherFeeder.getSlotAddress());
+
+                otherFeeder.setHardwareId(response.uuid);
+                otherFeeder.setSlotAddress(address);
+            }
+        }
+
+        for (PhotonFeeder feeder : feedersToAdd) {
+            Configuration.get().getMachine().addFeeder(feeder);
+        }
     }
 }

@@ -36,6 +36,12 @@ public class TestBus implements PhotonBusInterface {
     }
 
     public TestBusReply when(Packet command) {
+        for (TestBusReply testBusReply : replies) {
+            if(testBusReply.isCommand(command)) {
+                return testBusReply;
+            }
+        }
+
         TestBusReply testBusReply = new TestBusReply(command);
 
         replies.add(testBusReply);

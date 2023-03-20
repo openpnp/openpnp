@@ -183,4 +183,30 @@ public class TestBusTest {
         Packet actualSecondResponse = secondOptionalPacket.get();
         assertSame(secondResponsePacket, actualSecondResponse);
     }
+
+    /**
+     * This test intentionally creates 2 objects that would otherwise be exactly the same. This verifies
+     * that we're checking on data values in the "when" method instead of on it being the same object.
+     *
+     * @throws Exception if send throws
+     */
+    @Test
+    public void busWillOverrideReplyIfCommandIsSpecifiedAgain() throws Exception {
+        GetVersion firstCommand = new GetVersion(5);
+        Packet response = responses.getVersion.ok(5, 1);
+        bus.when(firstCommand)
+                .reply(response);
+
+        Optional<Packet> optionalPacket = bus.send(firstCommand.toPacket());
+
+        assertTrue(optionalPacket.isPresent());
+        assertSame(response, optionalPacket.get());
+
+        GetVersion secondCommand = new GetVersion(5);
+        bus.when(secondCommand).timeout();
+
+        optionalPacket = bus.send(secondCommand.toPacket());
+
+        assertFalse(optionalPacket.isPresent());
+    }
 }

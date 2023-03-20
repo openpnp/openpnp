@@ -3,7 +3,7 @@ package org.openpnp.machine.photon.protocol;
 import java.util.Optional;
 
 public abstract class Command<Response> {
-    public Response send(PhotonBus bus) throws Exception {
+    public Response send(PhotonBusInterface bus) throws Exception {
         Optional<Packet> optionalPacket = bus.send(this.toPacket());
 
         if(optionalPacket.isPresent()) {

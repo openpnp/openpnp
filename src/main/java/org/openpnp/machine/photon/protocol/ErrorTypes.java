@@ -6,7 +6,7 @@ public enum ErrorTypes {
     COULD_NOT_REACH(0x02),
     UNINITIALIZED_FEEDER(0x03),
     FEEDING_IN_PROGRESS(0x04),
-    TIMEOUT(0xFE),
+    // TIMEOUT(0xFE),
     UNKNOWN(0xFF);
 
     private final int id;
