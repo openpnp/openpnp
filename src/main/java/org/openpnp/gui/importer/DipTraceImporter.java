@@ -47,6 +47,7 @@ import javax.swing.JTextField;
 import javax.swing.KeyStroke;
 import javax.swing.border.TitledBorder;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.model.Board;
 import org.openpnp.model.Abstract2DLocatable.Side;
@@ -64,8 +65,8 @@ import com.jgoodies.forms.layout.RowSpec;
 
 @SuppressWarnings("serial")
 public class DipTraceImporter implements BoardImporter {
-    private final static String NAME = "Diptrace .csv";
-    private final static String DESCRIPTION = "Import Diptrace .csv Files.";
+    private final static String NAME = "Diptrace .csv"; //$NON-NLS-1$
+    private final static String DESCRIPTION = Translations.getString("DipTraceImporter.Importer.Description"); //$NON-NLS-1$
 
     private Board board;
     private File fileName;
@@ -111,7 +112,7 @@ public class DipTraceImporter implements BoardImporter {
             }
             line = line.trim();
             
-            String[] tokens = line.split(",");
+            String[] tokens = line.split(","); //$NON-NLS-1$
             
             String placementId = tokens[0];  							// RefDes in Diptrace export
             String partValue = tokens[6];    							// Value in Diptrace export
@@ -126,7 +127,7 @@ public class DipTraceImporter implements BoardImporter {
                     placementRotation));
             Configuration cfg = Configuration.get();
             if (cfg != null && createMissingParts) {
-                String partId = pkgName + "-" + partValue;
+                String partId = pkgName + "-" + partValue; //$NON-NLS-1$
                 Part part = cfg.getPart(partId);
                 if (part == null) {
                     part = new Part(partId);
@@ -163,38 +164,38 @@ public class DipTraceImporter implements BoardImporter {
             getContentPane().setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
 
             JPanel panel = new JPanel();
-            panel.setBorder(new TitledBorder(null, "Files", TitledBorder.LEADING, TitledBorder.TOP,
+            panel.setBorder(new TitledBorder(null, Translations.getString("DipTraceImporter.FilesPanel.Border.title"), TitledBorder.LEADING, TitledBorder.TOP, //$NON-NLS-1$
                     null, null));
             getContentPane().add(panel);
             panel.setLayout(new FormLayout(
                     new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                            FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"),
+                            FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"), //$NON-NLS-1$
                             FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
                     new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                             FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
 
-            JLabel lblTopFilemnt = new JLabel("Export File (.csv)");
-            panel.add(lblTopFilemnt, "2, 2, right, default");
+            JLabel lblTopFilemnt = new JLabel(Translations.getString("DipTraceImporter.FilesPanel.TopFilemntLabel.text")); //$NON-NLS-1$
+            panel.add(lblTopFilemnt, "2, 2, right, default"); //$NON-NLS-1$
 
             textFieldFileName = new JTextField();
-            panel.add(textFieldFileName, "4, 2, fill, default");
+            panel.add(textFieldFileName, "4, 2, fill, default"); //$NON-NLS-1$
             textFieldFileName.setColumns(10);
 
-            JButton btnBrowse = new JButton("Browse");
+            JButton btnBrowse = new JButton(Translations.getString("DipTraceImporter.FilesPanel.browseButton.text")); //$NON-NLS-1$
             btnBrowse.setAction(browseTopFileAction);
-            panel.add(btnBrowse, "6, 2");
+            panel.add(btnBrowse, "6, 2"); //$NON-NLS-1$
 
             JPanel panel_1 = new JPanel();
-            panel_1.setBorder(new TitledBorder(null, "Options", TitledBorder.LEADING,
+            panel_1.setBorder(new TitledBorder(null, Translations.getString("DipTraceImporter.OptionsPanel.Border.title"), TitledBorder.LEADING, //$NON-NLS-1$
                     TitledBorder.TOP, null, null));
             getContentPane().add(panel_1);
             panel_1.setLayout(new FormLayout(
                     new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
                     new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
 
-            chckbxCreateMissingParts = new JCheckBox("Create Missing Parts");
+            chckbxCreateMissingParts = new JCheckBox(Translations.getString("DipTraceImporter.OptionsPanel.createMissingPartsCheckbox.text")); //$NON-NLS-1$
             chckbxCreateMissingParts.setSelected(true);
-            panel_1.add(chckbxCreateMissingParts, "2, 2");
+            panel_1.add(chckbxCreateMissingParts, "2, 2"); //$NON-NLS-1$
 
             JSeparator separator = new JSeparator();
             getContentPane().add(separator);
@@ -204,11 +205,11 @@ public class DipTraceImporter implements BoardImporter {
             flowLayout.setAlignment(FlowLayout.RIGHT);
             getContentPane().add(panel_2);
 
-            JButton btnCancel = new JButton("Cancel");
+            JButton btnCancel = new JButton(Translations.getString("DipTraceImporter.ButtonsPanel.cancelButton.text")); //$NON-NLS-1$
             btnCancel.setAction(cancelAction);
             panel_2.add(btnCancel);
 
-            JButton btnImport = new JButton("Import");
+            JButton btnImport = new JButton(Translations.getString("DipTraceImporter.ButtonsPanel.importButton.text")); //$NON-NLS-1$
             btnImport.setAction(importAction);
             panel_2.add(btnImport);
 
@@ -216,16 +217,16 @@ public class DipTraceImporter implements BoardImporter {
             setLocationRelativeTo(parent);
 
             JRootPane rootPane = getRootPane();
-            KeyStroke stroke = KeyStroke.getKeyStroke("ESCAPE");
+            KeyStroke stroke = KeyStroke.getKeyStroke("ESCAPE"); //$NON-NLS-1$
             InputMap inputMap = rootPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
-            inputMap.put(stroke, "ESCAPE");
-            rootPane.getActionMap().put("ESCAPE", cancelAction);
+            inputMap.put(stroke, "ESCAPE"); //$NON-NLS-1$
+            rootPane.getActionMap().put("ESCAPE", cancelAction); //$NON-NLS-1$
         }
 
         private class SwingAction extends AbstractAction {
             public SwingAction() {
-                putValue(NAME, "Browse");
-                putValue(SHORT_DESCRIPTION, "Browse");
+                putValue(NAME, Translations.getString("DipTraceImporter.BrowseAction.Name")); //$NON-NLS-1$
+                putValue(SHORT_DESCRIPTION, Translations.getString("DipTraceImporter.BrowseAction.ShortDescription")); //$NON-NLS-1$
             }
 
             public void actionPerformed(ActionEvent e) {
@@ -233,7 +234,7 @@ public class DipTraceImporter implements BoardImporter {
                 fileDialog.setFilenameFilter(new FilenameFilter() {
                     @Override
                     public boolean accept(File dir, String name) {
-                        return name.toLowerCase().endsWith(".csv");
+                        return name.toLowerCase().endsWith(".csv"); //$NON-NLS-1$
                     }
                 });
                 fileDialog.setVisible(true);
@@ -247,8 +248,8 @@ public class DipTraceImporter implements BoardImporter {
 
         private class SwingAction_2 extends AbstractAction {
             public SwingAction_2() {
-                putValue(NAME, "Import");
-                putValue(SHORT_DESCRIPTION, "Import");
+                putValue(NAME, Translations.getString("DipTraceImporter.ImportAction.Name")); //$NON-NLS-1$
+                putValue(SHORT_DESCRIPTION, Translations.getString("DipTraceImporter.ImportAction.ShortDescription")); //$NON-NLS-1$
             }
 
             public void actionPerformed(ActionEvent e) {
@@ -262,9 +263,9 @@ public class DipTraceImporter implements BoardImporter {
                     }
                 }
                 catch (Exception e1) {
-                    MessageBoxes.errorBox(Dlg.this, "Import Error", "The expected file format is the default file export in DipTrace "
-                    		+ "PCB: File -> Export -> Pick and Place. The first line indicates RefDes, Name, X (mm), Y (mm), Side, Rotate, Value."
-                    		+ "The lines that follow are data.");
+                    MessageBoxes.errorBox(Dlg.this, "Import Error", "The expected file format is the default file export in DipTrace " //$NON-NLS-1$ //$NON-NLS-2$
+                    		+ "PCB: File -> Export -> Pick and Place. The first line indicates RefDes, Name, X (mm), Y (mm), Side, Rotate, Value." //$NON-NLS-1$
+                    		+ "The lines that follow are data."); //$NON-NLS-1$
                     return;
                 }
                 for (Placement placement : placements) {
@@ -276,8 +277,8 @@ public class DipTraceImporter implements BoardImporter {
 
         private class SwingAction_3 extends AbstractAction {
             public SwingAction_3() {
-                putValue(NAME, "Cancel");
-                putValue(SHORT_DESCRIPTION, "Cancel");
+                putValue(NAME, Translations.getString("DipTraceImporter.CancelAction.Name")); //$NON-NLS-1$
+                putValue(SHORT_DESCRIPTION, Translations.getString("DipTraceImporter.CancelAction.ShortDescription")); //$NON-NLS-1$
             }
 
             public void actionPerformed(ActionEvent e) {

@@ -22,12 +22,13 @@ package org.openpnp.gui.importer;
 import java.awt.Frame;
 import java.io.File;
 
+import org.openpnp.Translations;
 import org.openpnp.model.Board;
 
 @SuppressWarnings("serial")
 public class SolderPasteGerberImporter implements BoardImporter {
-    private final static String NAME = "Gerber Solder Paste Layer";
-    final static String DESCRIPTION = "Import RS-274X Gerber solder paste layers.";
+    private final static String NAME = "Gerber Solder Paste Layer"; //$NON-NLS-1$
+    final static String DESCRIPTION = Translations.getString("SolderPasteGerberImporter.Importer.Description"); //$NON-NLS-1$
 
     Board board;
     File topFile;
