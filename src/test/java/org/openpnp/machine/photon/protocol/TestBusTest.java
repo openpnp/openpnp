@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.openpnp.machine.photon.protocol.commands.GetVersion;
 import org.openpnp.machine.photon.protocol.helpers.ResponsesHelper;
 import org.openpnp.machine.photon.protocol.helpers.TestBus;
+import org.opentest4j.AssertionFailedError;
 
 import java.util.Optional;
 
@@ -65,7 +66,7 @@ public class TestBusTest {
     }
 
     @Test
-    public void busRespondsWithExceptionIfCommandHasNoReply(){
+    public void busRespondsWithExceptionIfCommandHasNoReply() {
         Packet commandPacket = new GetVersion(0x47).toPacket();
 
         bus.when(commandPacket);  // No reply specified
@@ -74,7 +75,7 @@ public class TestBusTest {
     }
 
     @Test
-    public void busRespondsWithExceptionIfCommandIsNotMockedAtAll(){
+    public void busRespondsWithExceptionIfCommandIsNotMockedAtAll() {
         Packet commandPacket = new GetVersion(0x47).toPacket();
 
         assertThrows(TestBus.NoPacketMocking.class, () -> bus.send(commandPacket));
@@ -117,7 +118,7 @@ public class TestBusTest {
     public void busValidatesPayloadDataLength() throws Exception {
         Packet sendingPacket = new GetVersion(0x47).toPacket();
         Packet mockingPacket = sendingPacket.clone();
-        mockingPacket.payload = new int[] { 0x03, 0x05 };
+        mockingPacket.payload = new int[]{0x03, 0x05};
 
         bus.when(mockingPacket).timeout();
 
@@ -128,7 +129,7 @@ public class TestBusTest {
     public void busValidatesPayloadData() throws Exception {
         Packet sendingPacket = new GetVersion(0x47).toPacket();
         Packet mockingPacket = sendingPacket.clone();
-        mockingPacket.payload = new int[] { 0x04 };
+        mockingPacket.payload = new int[]{0x04};
 
         bus.when(mockingPacket).timeout();
 
@@ -208,5 +209,107 @@ public class TestBusTest {
         optionalPacket = bus.send(secondCommand.toPacket());
 
         assertFalse(optionalPacket.isPresent());
+    }
+
+    @Test
+    public void busThrowsAssertionFailedErrorIfCommandNotInvoked() {
+        GetVersion command = new GetVersion(5);
+        bus.when(command).timeout();
+
+        // Nothing ever calls this bus command
+
+        assertThrows(AssertionFailedError.class, () -> bus.verify(command));
+    }
+
+    @Test
+    public void busDoesNotThrowAssertionFailedErrorIfCommandIsInvoked() throws Exception {
+        GetVersion command = new GetVersion(5);
+        bus.when(command).timeout();
+
+        bus.send(command);
+
+        bus.verify(command);  // This should not throw an Assertion Failed
+    }
+
+    @Test
+    public void busVerifiesContentOfCalls() throws Exception {
+        GetVersion firstCommand = new GetVersion(5);
+        GetVersion secondCommand = new GetVersion(10);
+
+        bus.when(firstCommand).timeout();
+        bus.when(secondCommand).timeout();
+
+        bus.send(secondCommand);
+
+        assertThrows(AssertionFailedError.class, () -> bus.verify(firstCommand));
+    }
+
+    @Test
+    public void busVerifiesOrderOfCalls() throws Exception {
+        GetVersion firstCommand = new GetVersion(5);
+        GetVersion secondCommand = new GetVersion(10);
+
+        bus.when(firstCommand).timeout();
+        bus.when(secondCommand).timeout();
+
+        bus.send(firstCommand);
+        bus.send(secondCommand);
+        bus.verify(firstCommand)
+                .then(secondCommand);
+    }
+
+    @Test
+    public void busWillFailWithNoMoreCalls() throws Exception {
+        GetVersion firstCommand = new GetVersion(5);
+        GetVersion secondCommand = new GetVersion(10);
+
+        bus.when(firstCommand).timeout();
+        bus.when(secondCommand).timeout();
+
+        bus.send(firstCommand);
+        bus.send(secondCommand);
+
+        assertThrows(AssertionFailedError.class, () -> {
+            bus.verify(firstCommand)
+                    .noMoreSent();
+        });
+    }
+
+    @Test
+    public void canVerifyCallsThenVerifyNoMore() throws Exception {
+        GetVersion firstCommand = new GetVersion(5);
+        GetVersion secondCommand = new GetVersion(10);
+
+        bus.when(firstCommand).timeout();
+        bus.when(secondCommand).timeout();
+
+        bus.send(firstCommand);
+        bus.send(secondCommand);
+
+        bus.verify(firstCommand)
+                .then(secondCommand)
+                .noMoreSent();
+    }
+
+    @Test
+    public void canImmediatelyVerifyNoMoreCalls() {
+        GetVersion firstCommand = new GetVersion(5);
+        GetVersion secondCommand = new GetVersion(10);
+
+        bus.when(firstCommand).timeout();
+        bus.when(secondCommand).timeout();
+
+        bus.verifyNothingSent();
+    }
+
+    @Test
+    public void canImmediatelyFailIfSomethingSentAndNothingSent() throws Exception {
+        GetVersion command = new GetVersion(5);
+
+        bus.when(command).timeout();
+
+        bus.send(command);
+
+        assertThrows(AssertionFailedError.class, () -> bus.verifyNothingSent());
     }
 }
