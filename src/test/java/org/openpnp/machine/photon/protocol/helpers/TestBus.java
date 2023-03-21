@@ -14,11 +14,13 @@ import static org.junit.jupiter.api.Assertions.fail;
 public class TestBus implements PhotonBusInterface {
     private final List<TestBusReply> replies;
     private final List<Packet> calls;
+    private final List<Packet> mockedPackets;
     private final ContinuedVerification continuedVerification;
 
     public TestBus() {
         replies = new ArrayList<>();
         calls = new ArrayList<>();
+        mockedPackets = new ArrayList<>();
         continuedVerification = new ContinuedVerification();
     }
 
@@ -48,7 +50,11 @@ public class TestBus implements PhotonBusInterface {
         throw new NoPacketMocking("Command packet did not match any requested mock.");
     }
 
-    public TestBusReply when(Packet packet) {
+    public TestBusReply when(Packet packet) throws Exception {
+        packet = packet.clone();
+
+        mockedPackets.add(packet);
+
         for (TestBusReply testBusReply : replies) {
             if (testBusReply.isCommand(packet)) {
                 return testBusReply;
@@ -62,7 +68,7 @@ public class TestBus implements PhotonBusInterface {
         return testBusReply;
     }
 
-    public <T> TestBusReply when(Command<T> command) {
+    public <T> TestBusReply when(Command<T> command) throws Exception {
         return when(command.toPacket());
     }
 
@@ -77,7 +83,13 @@ public class TestBus implements PhotonBusInterface {
     }
 
     public void verifyNothingSent() {
-        continuedVerification.noMoreSent();
+        continuedVerification.nothingElseSent();
+    }
+
+    public void verifyInMockedOrder() {
+        for (Packet packet : mockedPackets) {
+            continuedVerification.then(packet);
+        }
     }
 
     public static class TestBusReply {
@@ -162,7 +174,7 @@ public class TestBus implements PhotonBusInterface {
             return this;
         }
 
-        public void noMoreSent() {
+        public void nothingElseSent() {
             if (calls.size() > currentVerificationIndex) {
                 int howManyMore = calls.size() - currentVerificationIndex;
 

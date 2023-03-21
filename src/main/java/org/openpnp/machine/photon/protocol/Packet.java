@@ -14,8 +14,8 @@ public class Packet implements Cloneable {
     public Packet clone() throws CloneNotSupportedException{
         Packet clone = (Packet) super.clone();
 
-        clone.payload = new int[this.payloadLength];
-        System.arraycopy(this.payload, 0, clone.payload, 0, this.payloadLength);
+        clone.payload = new int[this.payload.length];
+        System.arraycopy(this.payload, 0, clone.payload, 0, this.payload.length);
 
         return clone;
     }

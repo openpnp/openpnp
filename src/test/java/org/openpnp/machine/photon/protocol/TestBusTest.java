@@ -66,7 +66,7 @@ public class TestBusTest {
     }
 
     @Test
-    public void busRespondsWithExceptionIfCommandHasNoReply() {
+    public void busRespondsWithExceptionIfCommandHasNoReply() throws Exception {
         Packet commandPacket = new GetVersion(0x47).toPacket();
 
         bus.when(commandPacket);  // No reply specified
@@ -212,7 +212,7 @@ public class TestBusTest {
     }
 
     @Test
-    public void busThrowsAssertionFailedErrorIfCommandNotInvoked() {
+    public void busThrowsAssertionFailedErrorIfCommandNotInvoked() throws Exception {
         GetVersion command = new GetVersion(5);
         bus.when(command).timeout();
 
@@ -271,7 +271,7 @@ public class TestBusTest {
 
         assertThrows(AssertionFailedError.class, () -> {
             bus.verify(firstCommand)
-                    .noMoreSent();
+                    .nothingElseSent();
         });
     }
 
@@ -288,11 +288,11 @@ public class TestBusTest {
 
         bus.verify(firstCommand)
                 .then(secondCommand)
-                .noMoreSent();
+                .nothingElseSent();
     }
 
     @Test
-    public void canImmediatelyVerifyNoMoreCalls() {
+    public void canImmediatelyVerifyNoMoreCalls() throws Exception {
         GetVersion firstCommand = new GetVersion(5);
         GetVersion secondCommand = new GetVersion(10);
 
@@ -311,5 +311,95 @@ public class TestBusTest {
         bus.send(command);
 
         assertThrows(AssertionFailedError.class, () -> bus.verifyNothingSent());
+    }
+
+    @Test
+    public void callVerificationStillWorksIfReplyIsChanged() throws Exception {
+        GetVersion command = new GetVersion(5);
+        Packet responsePacket = responses.getVersion.ok(0x47, 3);
+
+        bus.when(command).timeout();
+
+        bus.send(command);
+
+        bus.when(command).reply(responsePacket);
+
+        bus.send(command);
+
+        bus.verify(command)
+                .then(command)
+                .nothingElseSent();
+    }
+
+    @Test
+    public void canVerifyInMockedOrder() throws Exception{
+        GetVersion firstCommand = new GetVersion(5);
+        GetVersion secondCommand = new GetVersion(10);
+
+        bus.when(firstCommand).timeout();
+        bus.when(secondCommand).timeout();
+
+        bus.send(firstCommand);
+        bus.send(secondCommand);
+
+        bus.verifyInMockedOrder();
+    }
+
+    @Test
+    public void willFailVerifyInMockedOrder() throws Exception{
+        GetVersion firstCommand = new GetVersion(5);
+        GetVersion secondCommand = new GetVersion(10);
+
+        bus.when(firstCommand).timeout();
+        bus.when(secondCommand).timeout();
+
+        bus.send(secondCommand);
+        bus.send(firstCommand);
+
+        assertThrows(AssertionFailedError.class, () -> bus.verifyInMockedOrder());
+    }
+
+    @Test
+    public void whenReliesOnPacketContentEvenIfContentChanges() throws Exception {
+        Packet packet = new GetVersion(5).toPacket();
+
+        bus.when(packet).timeout();
+
+        // Change the packet, so it's no longer what we mocked
+        packet.toAddress = 10;
+        packet.calculateCRC();
+
+        assertThrows(TestBus.NoPacketMocking.class, () -> bus.send(packet));
+    }
+
+    @Test
+    public void verifyReliesOnPacketContentEvenIfContentChanges() throws Exception {
+        Packet packet = new GetVersion(5).toPacket();
+
+        bus.when(packet).timeout();
+
+        bus.send(packet);
+
+        // Change the packet, so it's no longer what we mocked
+        packet.toAddress = 10;
+        packet.calculateCRC();
+
+        assertThrows(AssertionFailedError.class, () -> bus.verify(packet));
+    }
+
+    @Test
+    public void verifyMockedOrderReliesOnPacketContentEvenIfContentChanges() throws Exception {
+        Packet packet = new GetVersion(5).toPacket();
+
+        bus.when(packet).timeout();
+
+        bus.send(packet);
+
+        // Change the packet, so it's no longer what we mocked
+        packet.toAddress = 10;
+        packet.calculateCRC();
+
+        // This shouldn't fail with an assertion because we sent what we mocked and THEN changed it.
+        bus.verifyInMockedOrder();
     }
 }

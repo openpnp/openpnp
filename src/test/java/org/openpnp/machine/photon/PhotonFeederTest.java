@@ -463,7 +463,7 @@ public class PhotonFeederTest {
     }
 
     @Test
-    public void prepareForJobThrowsExceptionIfNewSlotHasNoLocation() {
+    public void prepareForJobThrowsExceptionIfNewSlotHasNoLocation() throws Exception {
         feeder.setHardwareId(hardwareId);
         feeder.setSlotAddress(feederAddress);
         setSlotLocation(feederAddress, baseLocation);
@@ -508,7 +508,7 @@ public class PhotonFeederTest {
      * Feeder commands were called.
      */
     @Test
-    public void prepareForJobThrowsExceptionAfterOneRetry() {
+    public void prepareForJobThrowsExceptionAfterOneRetry() throws Exception {
         feeder.setHardwareId(hardwareId);
         feeder.setSlotAddress(feederAddress);
         photonProperties.setFeederCommunicationMaxRetry(1);
@@ -538,7 +538,7 @@ public class PhotonFeederTest {
      * See {@code prepareForJobThrowsExceptionAfterOneRetry}. This method works similarly but with no retries.
      */
     @Test
-    public void prepareForJobThrowsExceptionAfterNoRetries() {
+    public void prepareForJobThrowsExceptionAfterNoRetries() throws Exception {
         feeder.setHardwareId(hardwareId);
         feeder.setSlotAddress(feederAddress);
         photonProperties.setFeederCommunicationMaxRetry(0);
@@ -574,13 +574,11 @@ public class PhotonFeederTest {
 //        feeder.setSlotAddress(feederAddress);
 //        setSlotLocation(feederAddress, baseLocation);
 //
-//        String initializeFeederCommand = commands.initializeFeeder(feederAddress, hardwareId).toByteString();
-//        when(mockedActuator.read(initializeFeederCommand))
-//                .thenReturn(InitializeFeeder.ok(feederAddress));
+//        bus.when(new InitializeFeeder(feederAddress, hardwareId))
+//                .reply(responses.initializeFeeder.ok(feederAddress, hardwareId));
 //
-//        String moveFeedForwardCommand = commands.moveFeedForward(feederAddress, 20).toByteString();
-//        when(mockedActuator.read(moveFeedForwardCommand))
-//                .thenReturn(MoveFeedForward.ok(feederAddress));
+//        bus.when(new MoveFeedForward(feederAddress, 20))
+//                .reply(responses.moveFeedForward.ok(feederAddress, 0));
 //
 //        feeder.feed(mockedNozzle);
 //
@@ -588,7 +586,7 @@ public class PhotonFeederTest {
 //        inOrder.verify(mockedActuator).read(initializeFeederCommand);
 //        inOrder.verify(mockedActuator).read(moveFeedForwardCommand);
 //    }
-//
+
 //    @Test
 //    public void feedInitializesIfUninitializedErrorIsReturned() throws Exception {
 //        feeder.setHardwareId(hardwareId);
