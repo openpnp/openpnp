@@ -7,7 +7,7 @@ More information about LitePlacer and OpenPnP can be found in the links below:
 * http://liteplacer.com/phpBB/viewtopic.php?f=13&t=308&p=2872&hilit=openpnp#p2872
 * http://liteplacer.com/phpBB/viewtopic.php?f=10&t=308
 
-The following information may be a bit outdated, but a LitePlacer forum user named sebastian has also provided instructions and a sample configuration file at https://wiki.apertus.org/index.php/Liteplacer_PnP_Machine_Notes#OpenPnP_Setup.
+**The following information is outdated but is being left here for reference**, but a LitePlacer forum user named sebastian has also provided instructions and a sample configuration file at https://wiki.apertus.org/index.php/Liteplacer_PnP_Machine_Notes#OpenPnP_Setup.
 
 For archival purposes, the driver section from sebastian's machine.xml is reproduced below. His Wiki is a better source for this information, but in case it is not available the XML below should serve as a good starting point.
 
