@@ -2,7 +2,7 @@ LitePlacer is "The Low Cost Prototype Builder’s Pick and Place Machine". It's 
 
 **To use OpenPnP with LitePlacer you have to physically swap the zmin and zmax limit switch wires on the included TinyG** and then you can use [[GcodeDriver]] to power the machine.
 
-Some of the TinyG settings also need to be modified. See [TinyG Configuration Settings](https://github.com/openpnp/openpnp/wiki/TinyG-Configuation-Settings) for an initial set that is known to work with OpenPnP.
+**Some of the TinyG settings also need to be modified.** See [TinyG Configuration Settings](https://github.com/openpnp/openpnp/wiki/TinyG-Configuation-Settings) for an initial set that is known to work with OpenPnP.
 
 More information about LitePlacer and OpenPnP can be found in the links below:
 
