@@ -7,6 +7,7 @@ import org.openpnp.machine.photon.exceptions.FeederHasNoLocationOffsetException;
 import org.openpnp.machine.photon.exceptions.NoSlotAddressException;
 import org.openpnp.machine.photon.exceptions.UnconfiguredSlotException;
 import org.openpnp.machine.photon.protocol.ErrorTypes;
+import org.openpnp.machine.photon.protocol.PhotonBus;
 import org.openpnp.machine.photon.protocol.PhotonBusInterface;
 import org.openpnp.machine.photon.protocol.commands.*;
 import org.openpnp.machine.photon.sheets.FeederPropertySheet;
@@ -56,12 +57,24 @@ public class PhotonFeeder extends ReferenceFeeder {
 
                 // Ensure actuators are added to the machine when it has PhotonFeeders
                 getDataActuator();
+                populatePhotonBus();
             }
         });
+
+        // If it fails to populate here, it will succeed when the configuration is loaded.
+        populatePhotonBus();
     }
 
     public static void setBus(PhotonBusInterface bus) {
         photonBus = bus;
+    }
+
+    private static void populatePhotonBus() {
+        if(! Configuration.isInstanceInitialized()) {
+            return;  // We can't do anything until the instance is initialized
+        }
+
+        photonBus = new PhotonBus(0, getDataActuator());
     }
 
     @Override

@@ -4,7 +4,7 @@ import org.openpnp.spi.Actuator;
 
 import java.util.Optional;
 
-class PhotonBus implements PhotonBusInterface{
+public class PhotonBus implements PhotonBusInterface{
     private final int fromAddress;
     private final Actuator photonActuator;
     private int packetId;

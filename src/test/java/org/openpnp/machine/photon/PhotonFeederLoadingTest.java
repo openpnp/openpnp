@@ -42,7 +42,8 @@ public class PhotonFeederLoadingTest {
     }
 
     @Test
-    public void loadingOfDataActuator() throws Exception {Configuration.get().load();
+    public void loadingOfDataActuator() throws Exception {
+        Configuration.get().load();
         Machine machine = Configuration.get().getMachine();
 
         Actuator actuator = machine.getActuatorByName(PhotonFeeder.ACTUATOR_DATA_NAME);
