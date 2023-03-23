@@ -4,6 +4,7 @@ import com.google.common.io.Files;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InOrder;
+import org.openpnp.machine.photon.exceptions.FeedFailureException;
 import org.openpnp.machine.photon.exceptions.FeederHasNoLocationOffsetException;
 import org.openpnp.machine.photon.exceptions.NoSlotAddressException;
 import org.openpnp.machine.photon.exceptions.UnconfiguredSlotException;
@@ -611,341 +612,269 @@ public class PhotonFeederTest {
         bus.verifyInMockedOrder();
     }
 
-//    @Test
-//    public void feedInitializesIfUninitializedErrorIsReturned() throws Exception {
-//        feeder.setHardwareId(hardwareId);
-//        feeder.setPartPitch(2);
-//        feeder.setOffset(feederOffset);
-//        feeder.setSlotAddress(feederAddress);
-//        setSlotLocation(feederAddress, baseLocation);
-//
-//        String oldInitializeFeederCommand = commands.initializeFeeder(feederAddress, hardwareId).toByteString();
-//        when(mockedActuator.read(oldInitializeFeederCommand))
-//                .thenReturn(InitializeFeeder.ok(feederAddress));
-//
-//        String oldMoveFeederForwardCommand = commands.moveFeedForward(feederAddress, 20).toByteString();
-//        when(mockedActuator.read(oldMoveFeederForwardCommand))
-//                .thenReturn(Errors.uninitializedFeeder(feederAddress, hardwareId));
-//
-//        int newAddress = 11;
-//
-//        setSlotLocation(newAddress, baseLocation);
-//
-//        String newGetFeederAddressCommand = commands.getFeederAddress(hardwareId).toByteString();
-//        when(mockedActuator.read(newGetFeederAddressCommand))
-//                .thenReturn(GetFeederAddress.ok(newAddress, hardwareId));
-//
-//        String newInitializeFeederCommand = commands.initializeFeeder(newAddress, hardwareId).toByteString();
-//        when(mockedActuator.read(newInitializeFeederCommand))
-//                .thenReturn(InitializeFeeder.ok(newAddress));
-//
-//        String newMoveFeedForwardCommand = commands.moveFeedForward(newAddress, 20).toByteString();
-//        when(mockedActuator.read(newMoveFeedForwardCommand))
-//                .thenReturn(MoveFeedForward.ok(newAddress));
-//
-//        feeder.feed(mockedNozzle);
-//
-//        InOrder inOrder = inOrder(mockedActuator);
-//        inOrder.verify(mockedActuator).read(oldInitializeFeederCommand); // First initialization
-//        inOrder.verify(mockedActuator).read(oldMoveFeederForwardCommand); // Uninitialized feeder error
-//        inOrder.verify(mockedActuator).read(newGetFeederAddressCommand); // New address
-//        inOrder.verify(mockedActuator).read(newInitializeFeederCommand); // Second initialization in new slot
-//        inOrder.verify(mockedActuator).read(newMoveFeedForwardCommand); // Finally move the feeder
-//
-//        assertEquals(newAddress, (int) feeder.getSlotAddress());
-//    }
-//
-//    @Test
-//    public void feedThrowsExceptionAfterOneRetry() throws Exception {
-//        feeder.setHardwareId(hardwareId);
-//        feeder.setPartPitch(2);
-//        feeder.setOffset(feederOffset);
-//        feeder.setSlotAddress(feederAddress);
-//        setSlotLocation(feederAddress, baseLocation);
-//        photonProperties.setFeederCommunicationMaxRetry(1);
-//
-//        String initializeFeederCommand = commands.initializeFeeder(feederAddress, hardwareId).toByteString();
-//        when(mockedActuator.read(initializeFeederCommand))
-//                .thenReturn(InitializeFeeder.ok(feederAddress));
-//
-//        String getFeederAddressCommand = commands.getFeederAddress(hardwareId).toByteString();
-//        when(mockedActuator.read(getFeederAddressCommand))
-//                .thenReturn(GetFeederAddress.ok(feederAddress, hardwareId));
-//
-//        String moveFeederForwardCommand = commands.moveFeedForward(feederAddress, 20).toByteString();
-//        when(mockedActuator.read(moveFeederForwardCommand))
-//                .thenReturn(Errors.timeout());
-//
-//        assertThrows(FeedFailureException.class, () -> feeder.feed(mockedNozzle));
-//
-//        InOrder inOrder = inOrder(mockedActuator);
-//        inOrder.verify(mockedActuator).read(initializeFeederCommand);
-//        inOrder.verify(mockedActuator).read(moveFeederForwardCommand);
-//        inOrder.verify(mockedActuator, never()).read(any());
-//
-//        assertThrows(FeedFailureException.class, () -> feeder.feed(mockedNozzle));
-//
-//        inOrder.verify(mockedActuator).read(getFeederAddressCommand);
-//        inOrder.verify(mockedActuator).read(initializeFeederCommand);
-//        inOrder.verify(mockedActuator).read(moveFeederForwardCommand);
-//        inOrder.verify(mockedActuator, never()).read(any());
-//    }
-//
-//    @Test
-//    public void feedThrowsExceptionAfterNoRetries() throws Exception {
-//        feeder.setHardwareId(hardwareId);
-//        feeder.setPartPitch(2);
-//        feeder.setOffset(feederOffset);
-//        feeder.setSlotAddress(feederAddress);
-//        setSlotLocation(feederAddress, baseLocation);
-//        photonProperties.setFeederCommunicationMaxRetry(0);
-//
-//        String initializeFeederCommand = commands.initializeFeeder(feederAddress, hardwareId).toByteString();
-//        when(mockedActuator.read(initializeFeederCommand))
-//                .thenReturn(InitializeFeeder.ok(feederAddress));
-//
-//        String getFeederAddressCommand = commands.getFeederAddress(hardwareId).toByteString();
-//        when(mockedActuator.read(getFeederAddressCommand))
-//                .thenReturn(GetFeederAddress.ok(feederAddress, hardwareId));
-//
-//        String moveFeederForwardCommand = commands.moveFeedForward(feederAddress, 20).toByteString();
-//        when(mockedActuator.read(moveFeederForwardCommand))
-//                .thenReturn(Errors.timeout());
-//
-//        assertThrows(FeedFailureException.class, () -> feeder.feed(mockedNozzle));
-//
-//        InOrder inOrder = inOrder(mockedActuator);
-//        inOrder.verify(mockedActuator).read(initializeFeederCommand);
-//        inOrder.verify(mockedActuator).read(moveFeederForwardCommand);
-//        inOrder.verify(mockedActuator, never()).read(any());
-//    }
-//
-//    @Test
-//    public void feedThrowsExceptionWhenFeederCannotBeInitialized() throws Exception {
-//        feeder.setHardwareId(hardwareId);
-//        feeder.setSlotAddress(feederAddress);
-//        feeder.setPartPitch(2);
-//        photonProperties.setFeederCommunicationMaxRetry(1);
-//
-//        String initializeFeederCommand = commands.initializeFeeder(feederAddress, hardwareId).toByteString();
-//        when(mockedActuator.read(initializeFeederCommand))
-//                .thenReturn(Errors.timeout());
-//
-//        String getFeederAddressCommand = commands.getFeederAddress(hardwareId).toByteString();
-//        when(mockedActuator.read(getFeederAddressCommand))
-//                .thenReturn(GetFeederAddress.ok(feederAddress, hardwareId));
-//
-//        assertThrows(FeedFailureException.class, () -> feeder.feed(mockedNozzle));
-//
-//        InOrder inOrder = inOrder(mockedActuator);
-//        inOrder.verify(mockedActuator).read(initializeFeederCommand);
-//        inOrder.verify(mockedActuator).read(getFeederAddressCommand);
-//        inOrder.verify(mockedActuator).read(initializeFeederCommand);
-//        inOrder.verify(mockedActuator, never()).read(any());
-//    }
-//
-//    /**
-//     * We only use our internal retry counts if get address / initialize fails. We don't want to
-//     * use it if the feed command fails because OpenPnP itself has its own retries.
-//     */
-//    @Test
-//    public void feedThrowsExceptionIfTheFeedTimesOut() throws Exception {
-//        feeder.setHardwareId(hardwareId);
-//        feeder.setPartPitch(2);
-//        feeder.setOffset(feederOffset);
-//        feeder.setSlotAddress(feederAddress);
-//        setSlotLocation(feederAddress, baseLocation);
-//
-//        String initializeFeederCommand = commands.initializeFeeder(feederAddress, hardwareId).toByteString();
-//        when(mockedActuator.read(initializeFeederCommand))
-//                .thenReturn(InitializeFeeder.ok(feederAddress));
-//
-//        String moveFeedForwardCommand = commands.moveFeedForward(feederAddress, 20).toByteString();
-//        when(mockedActuator.read(moveFeedForwardCommand))
-//                .thenReturn(Errors.timeout());
-//
-//        assertThrows(FeedFailureException.class, () -> feeder.feed(mockedNozzle));
-//
-//        InOrder inOrder = inOrder(mockedActuator);
-//        inOrder.verify(mockedActuator).read(initializeFeederCommand);
-//        inOrder.verify(mockedActuator).read(moveFeedForwardCommand);
-//        inOrder.verify(mockedActuator, never()).read(any());
-//    }
-//
-//    @Test
-//    public void feedInitializesOnUninitializedFeeder() throws Exception {
-//        feeder.setHardwareId(hardwareId);
-//        feeder.setPartPitch(2);
-//        feeder.setOffset(feederOffset);
-//        feeder.setSlotAddress(feederAddress);
-//        setSlotLocation(feederAddress, baseLocation);
-//
-//        String oldInitializeFeederCommand = commands.initializeFeeder(feederAddress, hardwareId).toByteString();
-//        when(mockedActuator.read(oldInitializeFeederCommand))
-//                .thenReturn(InitializeFeeder.ok(feederAddress));
-//
-//        String oldMoveFeederForwardCommand = commands.moveFeedForward(feederAddress, 20).toByteString();
-//        when(mockedActuator.read(oldMoveFeederForwardCommand))
-//                .thenReturn(Errors.uninitializedFeeder(feederAddress, "FFEEDDCCBBAA998877665544"));
-//
-//        int newAddress = 11;
-//
-//        setSlotLocation(newAddress, baseLocation);
-//
-//        String newGetFeederAddressCommand = commands.getFeederAddress(hardwareId).toByteString();
-//        when(mockedActuator.read(newGetFeederAddressCommand))
-//                .thenReturn(GetFeederAddress.ok(newAddress, hardwareId));
-//
-//        String newInitializeFeederCommand = commands.initializeFeeder(newAddress, hardwareId).toByteString();
-//        when(mockedActuator.read(newInitializeFeederCommand))
-//                .thenReturn(InitializeFeeder.ok(newAddress));
-//
-//        String newMoveFeedForwardCommand = commands.moveFeedForward(newAddress, 20).toByteString();
-//        when(mockedActuator.read(newMoveFeedForwardCommand))
-//                .thenReturn(MoveFeedForward.ok(newAddress));
-//
-//        feeder.feed(mockedNozzle);
-//
-//        InOrder inOrder = inOrder(mockedActuator);
-//        inOrder.verify(mockedActuator).read(oldInitializeFeederCommand); // First initialization
-//        inOrder.verify(mockedActuator).read(oldMoveFeederForwardCommand); // Uninitialized feeder error
-//        inOrder.verify(mockedActuator).read(newGetFeederAddressCommand); // New address
-//        inOrder.verify(mockedActuator).read(newInitializeFeederCommand); // Second initialization in new slot
-//        inOrder.verify(mockedActuator).read(newMoveFeedForwardCommand); // Finally move the feeder
-//
-//        assertEquals(newAddress, (int) feeder.getSlotAddress());
-//    }
-//
-//    /**
-//     * The important thing to note here is that the feed command is never issued because we have no location.
-//     * Technically, the feeder could feed, but then we couldn't go pick up the part. When the issue is fixed,
-//     * feed would be called again essentially wasting a part. So we don't feed at all.
-//     */
-//    @Test
-//    public void feedThrowsExceptionIfSlotHasNoLocation() throws Exception {
-//        feeder.setHardwareId(hardwareId);
-//        feeder.setSlotAddress(feederAddress);
-//        feeder.setPartPitch(2);
-//
-//        String initializeFeederCommand = commands.initializeFeeder(feederAddress, hardwareId).toByteString();
-//        when(mockedActuator.read(initializeFeederCommand))
-//                .thenReturn(InitializeFeeder.ok(feederAddress));
-//
-//        String moveFeedForwardCommand = commands.moveFeedForward(feederAddress, 20).toByteString();
-//        when(mockedActuator.read(moveFeedForwardCommand))
-//                .thenReturn(MoveFeedForward.ok(feederAddress));
-//
-//        assertThrows(UnconfiguredSlotException.class, () -> feeder.feed(mockedNozzle));
-//
-//        InOrder inOrder = inOrder(mockedActuator);
-//        inOrder.verify(mockedActuator).read(initializeFeederCommand);
-//        inOrder.verify(mockedActuator, never()).read(any());
-//    }
-//
-//    @Test
-//    public void feedThrowsExceptionIfFeederHasNoOffset() throws Exception {
-//        feeder.setHardwareId(hardwareId);
-//        feeder.setSlotAddress(feederAddress);
-//        setSlotLocation(feederAddress, baseLocation);
-//        feeder.setPartPitch(2);
-//
-//        String initializeFeederCommand = commands.initializeFeeder(feederAddress, hardwareId).toByteString();
-//        when(mockedActuator.read(initializeFeederCommand))
-//                .thenReturn(InitializeFeeder.ok(feederAddress));
-//
-//        String moveFeedForwardCommand = commands.moveFeedForward(feederAddress, 20).toByteString();
-//        when(mockedActuator.read(moveFeedForwardCommand))
-//                .thenReturn(MoveFeedForward.ok(feederAddress));
-//
-//        assertThrows(FeederHasNoLocationOffsetException.class, () -> feeder.feed(mockedNozzle));
-//
-//        InOrder inOrder = inOrder(mockedActuator);
-//        inOrder.verify(mockedActuator).read(initializeFeederCommand);
-//        inOrder.verify(mockedActuator, never()).read(any());
-//    }
-//
-//    @Test
-//    public void twoFeedersCanNotHaveTheSameAddress() throws Exception {
-//        // Remove the main feeder so we can make two of our own in this test
-//        machine.removeFeeder(feeder);
-//
-//        // Feeder A -> Slot 1
-//        PhotonFeeder feederA = new PhotonFeeder();
-//        String hardwareIdA = "445566778899AABBCCDDEEFF";
-//        feederA.setHardwareId(hardwareIdA);
-//        feederA.setOffset(feederOffset);
-//        feederA.setSlotAddress(1);
-//        setSlotLocation(1, baseLocation);
-//        machine.addFeeder(feederA);
-//
-//        // Feeder B -> Slot 2
-//        PhotonFeeder feederB = new PhotonFeeder();
-//        String hardwareIdB = "FFEEDDCCBBAA998877665544";
-//        feederB.setHardwareId(hardwareIdB);
-//        feederB.setOffset(feederOffset);
-//        feederB.setSlotAddress(2);
-//        setSlotLocation(2, baseLocation);
-//        feederB.setPartPitch(2);
-//        machine.addFeeder(feederB);
-//
-//        // Both feeders initialized in their known slot
-//        String feederASlot1InitializationCommand = commands.initializeFeeder(1, hardwareIdA).toByteString();
-//        when(mockedActuator.read(feederASlot1InitializationCommand))
-//                .thenReturn(InitializeFeeder.ok(1));
-//
-//        String feederBSlot2InitializationCommand = commands.initializeFeeder(2, hardwareIdB).toByteString();
-//        when(mockedActuator.read(feederBSlot2InitializationCommand))
-//                .thenReturn(InitializeFeeder.ok(2));
-//
-//        // Prepare both feeders for the job
-//        feederA.prepareForJob(false);
-//        feederB.prepareForJob(false);
-//
-//        // At this point, in the real world, the job would have been started. Feeder A is removed and feeder B is put
-//        // into slot 1. This causes the next move command to timeout for feeder B. We don't need to be running a job in
-//        // this unit test, we just need to call move manually below.
-//
-//        String feederBSlot2FeedCommand = commands.moveFeedForward(2, 20).toByteString();
-//        when(mockedActuator.read(feederBSlot2FeedCommand))
-//                .thenReturn(Errors.timeout());
-//
-//        // Feeder B is now in slot 1
-//        String feederBGetAddressCommand = commands.getFeederAddress(hardwareIdB).toByteString();
-//        when(mockedActuator.read(feederBGetAddressCommand))
-//                .thenReturn(GetFeederAddress.ok(1, hardwareIdB));
-//
-//        String feederBSlot1InitializationCommand = commands.initializeFeeder(1, hardwareIdB).toByteString();
-//        when(mockedActuator.read(feederBSlot1InitializationCommand))
-//                .thenReturn(InitializeFeeder.ok(1));
-//
-//        // We can finally try feeding in the correct slot!
-//        String feederBSlot1FeedCommand = commands.moveFeedForward(1, 20).toByteString();
-//        when(mockedActuator.read(feederBSlot1FeedCommand))
-//                .thenReturn(MoveFeedForward.ok(1));
-//
-//        // Actually try to feed on feeder B
-//        assertThrows(FeedFailureException.class, () -> feederB.feed(mockedNozzle));
-//
-//        // Verify all of the calls in order
-//        InOrder inOrder = inOrder(mockedActuator);
-//        inOrder.verify(mockedActuator).read(feederASlot1InitializationCommand); // First initialization Feeder A
-//        inOrder.verify(mockedActuator).read(feederBSlot2InitializationCommand); // First initialization Feeder B
-//        inOrder.verify(mockedActuator).read(feederBSlot2FeedCommand); // Feeder B timeout
-//        inOrder.verify(mockedActuator, never()).read(any());
-//
-//        feederB.feed(mockedNozzle);
-//
-//        inOrder.verify(mockedActuator).read(feederBGetAddressCommand); // Find feeder B slot
-//        inOrder.verify(mockedActuator).read(feederBSlot1InitializationCommand); // Initialize feeder B
-//        inOrder.verify(mockedActuator).read(feederBSlot1FeedCommand); // Finally move the feeder
-//
-//        // Verify the state of the two feeders
-//        assertFalse(feederA.isInitialized());
-//        assertNull(feeder.getSlotAddress());
-//
-//        assertTrue(feederB.isInitialized());
-//        assertEquals(1, (int) feederB.getSlotAddress());
-//    }
+    @Test
+    public void feedInitializesIfUninitializedErrorIsReturned() throws Exception {
+        feeder.setHardwareId(hardwareId);
+        feeder.setPartPitch(2);
+        feeder.setOffset(feederOffset);
+        feeder.setSlotAddress(feederAddress);
+        setSlotLocation(feederAddress, baseLocation);
+
+        bus.when(new InitializeFeeder(feederAddress, hardwareId))
+                .reply(responses.initializeFeeder.ok(feederAddress, hardwareId));
+
+        bus.when(new MoveFeedForward(feederAddress, 20))
+                .reply(responses.errors.uninitializedFeeder(feederAddress, hardwareId));
+
+        int newAddress = 11;
+
+        setSlotLocation(newAddress, baseLocation);
+
+        bus.when(new GetFeederAddress(hardwareId))
+                .reply(responses.getFeederAddress.ok(newAddress));
+
+        bus.when(new InitializeFeeder(newAddress, hardwareId))
+                .reply(responses.initializeFeeder.ok(newAddress, hardwareId));
+
+        bus.when(new MoveFeedForward(newAddress, 20))
+                .reply(responses.moveFeedForward.ok(newAddress, 0));
+
+        bus.when(new MoveFeedStatus(newAddress))
+                .reply(responses.moveFeedStatus.ok(newAddress));
+
+        feeder.feed(mockedNozzle);
+
+        bus.verifyInMockedOrder();
+
+        assertEquals(newAddress, (int) feeder.getSlotAddress());
+    }
+
+    @Test
+    public void feedThrowsExceptionAfterOneRetry() throws Exception {
+        feeder.setHardwareId(hardwareId);
+        feeder.setPartPitch(2);
+        feeder.setOffset(feederOffset);
+        feeder.setSlotAddress(feederAddress);
+        setSlotLocation(feederAddress, baseLocation);
+        photonProperties.setFeederCommunicationMaxRetry(1);
+
+        InitializeFeeder initializeFeeder = new InitializeFeeder(feederAddress, hardwareId);
+        bus.when(initializeFeeder)
+                .reply(responses.initializeFeeder.ok(feederAddress, hardwareId));
+
+        GetFeederAddress getFeederAddress = new GetFeederAddress(hardwareId);
+        bus.when(getFeederAddress)
+                .reply(responses.getFeederAddress.ok(feederAddress));
+
+        MoveFeedForward moveFeedForward = new MoveFeedForward(feederAddress, 20);
+        bus.when(moveFeedForward).timeout();
+
+        assertThrows(FeedFailureException.class, () -> feeder.feed(mockedNozzle));
+
+        bus.verify(initializeFeeder)
+                .then(moveFeedForward)
+                .nothingElseSent();
+
+        assertThrows(FeedFailureException.class, () -> feeder.feed(mockedNozzle));
+
+        bus.verify(getFeederAddress)
+                .then(initializeFeeder)
+                .then(moveFeedForward)
+                .nothingElseSent();
+    }
+
+    @Test
+    public void feedThrowsExceptionAfterNoRetries() throws Exception {
+        feeder.setHardwareId(hardwareId);
+        feeder.setPartPitch(2);
+        feeder.setOffset(feederOffset);
+        feeder.setSlotAddress(feederAddress);
+        setSlotLocation(feederAddress, baseLocation);
+        photonProperties.setFeederCommunicationMaxRetry(0);
+
+        bus.when(new InitializeFeeder(feederAddress, hardwareId))
+                .reply(responses.initializeFeeder.ok(feederAddress, hardwareId));
+
+        bus.when(new MoveFeedForward(feederAddress, 20)).timeout();
+
+        assertThrows(FeedFailureException.class, () -> feeder.feed(mockedNozzle));
+
+        bus.verifyInMockedOrder();
+    }
+
+    @Test
+    public void feedThrowsExceptionWhenFeederCannotBeInitialized() throws Exception {
+        feeder.setHardwareId(hardwareId);
+        feeder.setSlotAddress(feederAddress);
+        feeder.setPartPitch(2);
+        photonProperties.setFeederCommunicationMaxRetry(1);
+
+        InitializeFeeder initializeFeeder = new InitializeFeeder(feederAddress, hardwareId);
+        bus.when(initializeFeeder).timeout();
+
+        GetFeederAddress getFeederAddress = new GetFeederAddress(hardwareId);
+        bus.when(getFeederAddress)
+                .reply(responses.getFeederAddress.ok(feederAddress));
+
+        assertThrows(FeedFailureException.class, () -> feeder.feed(mockedNozzle));
+
+        bus.verify(initializeFeeder)
+                .then(getFeederAddress)
+                .then(initializeFeeder)
+                .nothingElseSent();
+    }
+
+    /**
+     * We only use our internal retry counts if get address / initialize fails. We don't want to
+     * use it if the feed command fails because OpenPnP itself has its own retries.
+     */
+    @Test
+    public void feedThrowsExceptionIfTheFeedTimesOut() throws Exception {
+        feeder.setHardwareId(hardwareId);
+        feeder.setPartPitch(2);
+        feeder.setOffset(feederOffset);
+        feeder.setSlotAddress(feederAddress);
+        setSlotLocation(feederAddress, baseLocation);
+
+        bus.when(new InitializeFeeder(feederAddress, hardwareId))
+                .reply(responses.initializeFeeder.ok(feederAddress, hardwareId));
+
+        bus.when(new MoveFeedForward(feederAddress, 20)).timeout();
+
+        assertThrows(FeedFailureException.class, () -> feeder.feed(mockedNozzle));
+
+        bus.verifyInMockedOrder();
+    }
+
+    @Test
+    public void feedInitializesOnUninitializedFeeder() throws Exception {
+        feeder.setHardwareId(hardwareId);
+        feeder.setPartPitch(2);
+        feeder.setOffset(feederOffset);
+        feeder.setSlotAddress(feederAddress);
+        setSlotLocation(feederAddress, baseLocation);
+
+        bus.when(new InitializeFeeder(feederAddress, hardwareId))
+                .reply(responses.initializeFeeder.ok(feederAddress, hardwareId));
+
+        bus.when(new MoveFeedForward(feederAddress, 20))
+                .reply(responses.errors.uninitializedFeeder(feederAddress, "FFEEDDCCBBAA998877665544"));
+
+        int newAddress = 11;
+
+        setSlotLocation(newAddress, baseLocation);
+
+        bus.when(new GetFeederAddress(hardwareId))
+                .reply(responses.getFeederAddress.ok(newAddress));
+
+        bus.when(new InitializeFeeder(newAddress, hardwareId))
+                .reply(responses.initializeFeeder.ok(newAddress, hardwareId));
+
+        bus.when(new MoveFeedForward(newAddress, 20))
+                .reply(responses.moveFeedForward.ok(newAddress, 0));
+
+        bus.when(new MoveFeedStatus(newAddress))
+                .reply(responses.moveFeedStatus.ok(newAddress));
+
+        feeder.feed(mockedNozzle);
+
+        bus.verifyInMockedOrder();
+
+        assertEquals(newAddress, (int) feeder.getSlotAddress());
+    }
+
+    @Test
+    public void twoFeedersCanNotHaveTheSameAddress() throws Exception {
+        // Remove the main feeder, so we can make two of our own in this test
+        machine.removeFeeder(feeder);
+
+        // Feeder A -> Slot 1
+        PhotonFeeder feederA = new PhotonFeeder();
+        String hardwareIdA = "445566778899AABBCCDDEEFF";
+        feederA.setHardwareId(hardwareIdA);
+        feederA.setOffset(feederOffset);
+        feederA.setSlotAddress(1);
+        setSlotLocation(1, baseLocation);
+        machine.addFeeder(feederA);
+
+        // Feeder B -> Slot 2
+        PhotonFeeder feederB = new PhotonFeeder();
+        String hardwareIdB = "FFEEDDCCBBAA998877665544";
+        feederB.setHardwareId(hardwareIdB);
+        feederB.setOffset(feederOffset);
+        feederB.setSlotAddress(2);
+        setSlotLocation(2, baseLocation);
+        feederB.setPartPitch(2);
+        machine.addFeeder(feederB);
+
+        // Both feeders initialized in their known slot
+        InitializeFeeder initializeFeederAInSlot1 = new InitializeFeeder(1, hardwareIdA);
+        bus.when(initializeFeederAInSlot1)
+                .reply(responses.initializeFeeder.ok(1, hardwareId));
+
+        InitializeFeeder initializeFeederBInSlot2 = new InitializeFeeder(2, hardwareIdB);
+        bus.when(initializeFeederBInSlot2)
+                .reply(responses.initializeFeeder.ok(2, hardwareIdB));
+
+        // Prepare both feeders for the job
+        feederA.prepareForJob(false);
+        bus.verify(initializeFeederAInSlot1);
+
+        feederB.prepareForJob(false);
+        bus.verify(initializeFeederBInSlot2);
+
+        bus.verifyNothingSent();  // No more calls yet
+
+        // At this point, in the real world, the job would have been started. Feeder A is removed and feeder B is put
+        // into slot 1. This causes the next move command to timeout for feeder B. We don't need to be running a job in
+        // this unit test, we just need to call move manually below.
+
+        MoveFeedForward moveFeedForwardSlot2 = new MoveFeedForward(2, 20);
+        bus.when(moveFeedForwardSlot2).timeout();
+
+        // Feeder B is now in slot 1 but our code needs to broadcast to find it.
+        GetFeederAddress getFeederAddressB = new GetFeederAddress(hardwareIdB);
+        bus.when(getFeederAddressB)
+                .reply(responses.getFeederAddress.ok(1));
+
+        // Since it moved, we have to initialize it again
+        InitializeFeeder initializeFeederBInSlot1 = new InitializeFeeder(1, hardwareIdB);
+        bus.when(initializeFeederBInSlot1)
+                .reply(responses.initializeFeeder.ok(1, hardwareIdB));
+
+        // We can finally try feeding in the correct slot!
+        MoveFeedForward moveFeedForwardSlot1 = new MoveFeedForward(1, 20);
+        bus.when(moveFeedForwardSlot1)
+                .reply(responses.moveFeedForward.ok(1, 0));
+
+        // Check the status
+        MoveFeedStatus moveFeedStatusSlot1 = new MoveFeedStatus(1);
+        bus.when(moveFeedStatusSlot1)
+                .reply(responses.moveFeedStatus.ok(1));
+
+        // Actually try to feed on feeder B
+        assertThrows(FeedFailureException.class, () -> feederB.feed(mockedNozzle));
+
+        // Verify all the calls are in order
+
+        bus.verify(moveFeedForwardSlot2)
+                .nothingElseSent();  // We didn't search just yet
+
+        feederB.feed(mockedNozzle);
+
+        bus.verify(getFeederAddressB)
+                .then(initializeFeederBInSlot1)
+                .then(moveFeedForwardSlot1)
+                .then(moveFeedStatusSlot1)
+                .nothingElseSent();
+
+        // Verify the state of the two feeders
+        assertFalse(feederA.isInitialized());
+        assertNull(feeder.getSlotAddress());
+
+        assertTrue(feederB.isInitialized());
+        assertEquals(1, (int) feederB.getSlotAddress());
+    }
 
     @Test
     public void findSlotAddressForcesFind() throws Exception {

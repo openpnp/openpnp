@@ -243,6 +243,8 @@ public class PhotonFeeder extends ReferenceFeeder {
             MoveFeedForward.Response moveFeedForwardResponse = moveFeedForward.send(photonBus);
 
             if(moveFeedForwardResponse == null) {
+                slotAddress = null;
+                initialized = false;
                 throw new FeedFailureException("Feed command timed out");
             } else if (moveFeedForwardResponse.error == ErrorTypes.UNINITIALIZED_FEEDER) {
                 slotAddress = null;
@@ -259,11 +261,12 @@ public class PhotonFeeder extends ReferenceFeeder {
                 MoveFeedStatus.Response moveFeedStatusResponse = moveFeedStatus.send(photonBus);
 
                 if(moveFeedStatusResponse == null) {
-                    // Timeout, uh... retry after delay?
+                    // Timeout. retry after delay?
                 } else if (moveFeedStatusResponse.error == ErrorTypes.NONE) {
                     break;
-                } else {
-                    // TODO Handle errors\
+                } else if (moveFeedStatusResponse.error == ErrorTypes.COULD_NOT_REACH) {
+                    // TODO Handle errors
+                    throw new Exception("Feeder could not reach its destination.");
                 }
             }
 

@@ -159,16 +159,16 @@ public class TestBus implements PhotonBusInterface {
             return then(command.toPacket());
         }
 
-        public ContinuedVerification then(Packet packet) {
+        public ContinuedVerification then(Packet expectedPacket) {
             if (currentVerificationIndex >= calls.size()) {
-                fail("No more calls on this test bus, but wanted " + packet.toByteString());
+                fail("No more calls on this test bus, but wanted " + expectedPacket.toByteString());
             }
 
-            Packet expectedPacket = calls.get(currentVerificationIndex);
+            Packet actualPacket = calls.get(currentVerificationIndex);
 
-            if (!expectedPacket.toByteString().equals(packet.toByteString())) {
+            if (!actualPacket.toByteString().equals(expectedPacket.toByteString())) {
                 // fail method doesn't have the right arguments, throw the exception directly.
-                throw new AssertionFailedError("Did not find expected packet", expectedPacket.toByteString(), packet.toByteString());
+                throw new AssertionFailedError("Did not find expected packet", expectedPacket.toByteString(), actualPacket.toByteString());
             }
 
             currentVerificationIndex++;
