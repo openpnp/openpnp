@@ -67,6 +67,10 @@ public class PhotonFeeder extends ReferenceFeeder {
     }
 
     private static void populatePhotonBus() {
+        if(photonBus != null) {
+            return;
+        }
+
         photonBus = new PhotonBus(0, getDataActuator());
     }
 
@@ -246,14 +250,21 @@ public class PhotonFeeder extends ReferenceFeeder {
                 continue;  // We'll initialize it on a retry
             }
 
-            MoveFeedStatus moveFeedStatus = new MoveFeedStatus(slotAddress);
-            MoveFeedStatus.Response moveFeedStatusResponse = moveFeedStatus.send(photonBus);
+            int timeToWaitMillis = moveFeedForwardResponse.expectedTimeToFeed;
 
-            if(moveFeedStatusResponse == null) {
-                // Timeout, uh... retry after delay?
-            } else {
-                // TODO Handle errors
-                // TODO Handle OK
+            for (int j = 0; j < 3; j++) {
+                Thread.sleep(timeToWaitMillis);
+
+                MoveFeedStatus moveFeedStatus = new MoveFeedStatus(slotAddress);
+                MoveFeedStatus.Response moveFeedStatusResponse = moveFeedStatus.send(photonBus);
+
+                if(moveFeedStatusResponse == null) {
+                    // Timeout, uh... retry after delay?
+                } else if (moveFeedStatusResponse.error == ErrorTypes.NONE) {
+                    break;
+                } else {
+                    // TODO Handle errors\
+                }
             }
 
             return;
