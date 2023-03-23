@@ -53,14 +53,11 @@ public class MoveFeedForward  extends Command<MoveFeedForward.Response> {
 
             if(error == ErrorTypes.NONE) {
                 expectedTimeToFeed = packet.uint16(1);
-                valid = true;
-            } else if(error == ErrorTypes.UNINITIALIZED_FEEDER) {
-                expectedTimeToFeed = 0;
-                valid = true;
             } else {
                 expectedTimeToFeed = 0;
-                valid = false;
             }
+
+            valid = true;
         }
     }
 }

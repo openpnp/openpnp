@@ -46,22 +46,22 @@ public class MoveFeedForwardTest {
         assertEquals(0, response.expectedTimeToFeed);
     }
 
-    // TODO
-//    @Test
-//    public void decodeMotorFault() {
-//        Packet responsePacket = new Packet();
-//        responsePacket.fromAddress = 39;
-//        responsePacket.payload = new int[]{0x02, 0x00, 0x00};
-//        responsePacket.calculateCRC();
-//        MoveFeedForward.Response response = new MoveFeedForward.Response(responsePacket);
-//
-//        assertEquals(0, response.toAddress);
-//        assertEquals(39, response.fromAddress);
-//        assertTrue(response.valid);
-//        assertEquals(ErrorTypes.COULD_NOT_REACH, response.error);
-//        assertEquals(0, response.expectedTimeToFeed);
-//    }
-//
+    @Test
+    public void decodeMotorFault() {
+        Packet responsePacket = new Packet();
+        responsePacket.fromAddress = 39;
+        responsePacket.payload = new int[]{0x02, 0x00, 0x00};
+        responsePacket.calculateCRC();
+        MoveFeedForward.Response response = new MoveFeedForward.Response(responsePacket);
+
+        assertEquals(0, response.toAddress);
+        assertEquals(39, response.fromAddress);
+        assertTrue(response.valid);
+        assertEquals(ErrorTypes.COULD_NOT_REACH, response.error);
+        assertEquals(0, response.expectedTimeToFeed);
+    }
+
+    // TODO Fix these
 //    @Test
 //    public void decodeLengthTooShort() {
 //        Packet responsePacket = new Packet();
