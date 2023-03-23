@@ -60,9 +60,6 @@ public class PhotonFeeder extends ReferenceFeeder {
                 populatePhotonBus();
             }
         });
-
-        // If it fails to populate here, it will succeed when the configuration is loaded.
-        populatePhotonBus();
     }
 
     public static void setBus(PhotonBusInterface bus) {
@@ -70,10 +67,6 @@ public class PhotonFeeder extends ReferenceFeeder {
     }
 
     private static void populatePhotonBus() {
-        if(! Configuration.isInstanceInitialized()) {
-            return;  // We can't do anything until the instance is initialized
-        }
-
         photonBus = new PhotonBus(0, getDataActuator());
     }
 
