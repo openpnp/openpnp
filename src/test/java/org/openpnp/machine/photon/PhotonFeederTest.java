@@ -7,9 +7,7 @@ import org.mockito.InOrder;
 import org.openpnp.machine.photon.exceptions.FeederHasNoLocationOffsetException;
 import org.openpnp.machine.photon.exceptions.NoSlotAddressException;
 import org.openpnp.machine.photon.exceptions.UnconfiguredSlotException;
-import org.openpnp.machine.photon.protocol.commands.GetFeederAddress;
-import org.openpnp.machine.photon.protocol.commands.GetFeederId;
-import org.openpnp.machine.photon.protocol.commands.InitializeFeeder;
+import org.openpnp.machine.photon.protocol.commands.*;
 import org.openpnp.machine.photon.protocol.helpers.ResponsesHelper;
 import org.openpnp.machine.photon.protocol.helpers.TestBus;
 import org.openpnp.machine.photon.sheets.FeederPropertySheet;
@@ -333,6 +331,8 @@ public class PhotonFeederTest {
 
         assertEquals(feederAddress, (int) feeder.getSlotAddress());
         assertTrue(feeder.isInitialized());
+
+        bus.verifyInMockedOrder();
     }
 
     @Test
@@ -349,13 +349,16 @@ public class PhotonFeederTest {
 
         assertEquals(feederAddress, (int) feeder.getSlotAddress());
         assertTrue(feeder.isInitialized());
+
+        bus.verifyInMockedOrder();
     }
 
     @Test
     public void prepareForJobDoesNotInitializeIfSlotCanNotBeFound() throws Exception {
         feeder.setHardwareId(hardwareId);
 
-        bus.when(new GetFeederAddress(hardwareId)).timeout();
+        GetFeederAddress getFeederAddress = new GetFeederAddress(hardwareId);
+        bus.when(getFeederAddress).timeout();
 
         try {
             feeder.prepareForJob(false);
@@ -366,6 +369,12 @@ public class PhotonFeederTest {
 
         assertFalse(feeder.isInitialized());
         assertNull(feeder.getSlotAddress());
+
+        for (int i = 0; i <= photonProperties.getFeederCommunicationMaxRetry(); i++) {
+            bus.verify(getFeederAddress);
+        }
+
+        bus.verifyNothingSent();
     }
 
     @Test
@@ -390,6 +399,8 @@ public class PhotonFeederTest {
 
         assertEquals(newAddress, (int) feeder.getSlotAddress());
         assertTrue(feeder.isInitialized());
+
+        bus.verifyInMockedOrder();
     }
 
     @Test
@@ -423,6 +434,8 @@ public class PhotonFeederTest {
         assertNotNull(otherFeeder);
         assertFalse(otherFeeder.initialized);
         assertEquals(feederAddress, (int) otherFeeder.slotAddress);
+
+        bus.verifyInMockedOrder();
     }
 
     @Test
@@ -460,6 +473,8 @@ public class PhotonFeederTest {
         assertSame(otherFeeder, recalledOtherFeeder);
         assertFalse(otherFeeder.initialized);
         assertEquals(feederAddress, (int) otherFeeder.slotAddress);
+
+        bus.verifyInMockedOrder();
     }
 
     @Test
@@ -481,6 +496,8 @@ public class PhotonFeederTest {
 
         assertTrue(feeder.isInitialized());
         assertEquals(newFeederAddress, feeder.getSlotAddress());
+
+        bus.verifyInMockedOrder();
     }
 
     @Test
@@ -495,6 +512,8 @@ public class PhotonFeederTest {
         assertThrows(FeederHasNoLocationOffsetException.class, () -> feeder.prepareForJob(false));
 
         assertTrue(feeder.isInitialized());
+
+        bus.verifyInMockedOrder();
     }
 
     /**
@@ -532,6 +551,8 @@ public class PhotonFeederTest {
         }
 
         assertEquals(secondNewAddress, feeder.getSlotAddress());
+
+        bus.verifyInMockedOrder();
     }
 
     /**
@@ -559,6 +580,8 @@ public class PhotonFeederTest {
         }
 
         assertEquals(newAddress, feeder.getSlotAddress());
+
+        bus.verifyInMockedOrder();
     }
 
     @Test
@@ -566,26 +589,27 @@ public class PhotonFeederTest {
         assertEquals(4, feeder.getPartPitch());
     }
 
-//    @Test
-//    public void feedMovesPartForwardByPitch() throws Exception {
-//        feeder.setHardwareId(hardwareId);
-//        feeder.setPartPitch(2);
-//        feeder.setOffset(feederOffset);
-//        feeder.setSlotAddress(feederAddress);
-//        setSlotLocation(feederAddress, baseLocation);
-//
-//        bus.when(new InitializeFeeder(feederAddress, hardwareId))
-//                .reply(responses.initializeFeeder.ok(feederAddress, hardwareId));
-//
-//        bus.when(new MoveFeedForward(feederAddress, 20))
-//                .reply(responses.moveFeedForward.ok(feederAddress, 0));
-//
-//        feeder.feed(mockedNozzle);
-//
-//        InOrder inOrder = inOrder(mockedActuator);
-//        inOrder.verify(mockedActuator).read(initializeFeederCommand);
-//        inOrder.verify(mockedActuator).read(moveFeedForwardCommand);
-//    }
+    @Test
+    public void feedMovesPartForwardByPitch() throws Exception {
+        feeder.setHardwareId(hardwareId);
+        feeder.setPartPitch(2);
+        feeder.setOffset(feederOffset);
+        feeder.setSlotAddress(feederAddress);
+        setSlotLocation(feederAddress, baseLocation);
+
+        bus.when(new InitializeFeeder(feederAddress, hardwareId))
+                .reply(responses.initializeFeeder.ok(feederAddress, hardwareId));
+
+        bus.when(new MoveFeedForward(feederAddress, 20))
+                .reply(responses.moveFeedForward.ok(feederAddress, 0));
+
+        bus.when(new MoveFeedStatus(feederAddress))
+                .reply(responses.moveFeedStatus.ok(feederAddress));
+
+        feeder.feed(mockedNozzle);
+
+        bus.verifyInMockedOrder();
+    }
 
 //    @Test
 //    public void feedInitializesIfUninitializedErrorIsReturned() throws Exception {
@@ -924,7 +948,7 @@ public class PhotonFeederTest {
 //    }
 
     @Test
-    public void findSlotAddressForcesFind() throws Exception{
+    public void findSlotAddressForcesFind() throws Exception {
         feeder.setHardwareId(hardwareId);
 
         int newAddress = 11;
@@ -942,6 +966,8 @@ public class PhotonFeederTest {
         feeder.findSlotAddress();
 
         assertEquals(newAddress, (int) feeder.getSlotAddress());
+
+        bus.verifyInMockedOrder();
     }
 
     @Test
@@ -954,6 +980,8 @@ public class PhotonFeederTest {
         feeder.findSlotAddress();
 
         assertNull(feeder.getSlotAddress());
+
+        bus.verifyInMockedOrder();
     }
 
     /**
@@ -990,6 +1018,8 @@ public class PhotonFeederTest {
             assertEquals(address, byUUID.getSlotAddress());
             assertEquals(expectedUUID, byAddress.getHardwareId());
         }
+
+        bus.verifyInMockedOrder();
     }
 
     @Test
@@ -1034,6 +1064,8 @@ public class PhotonFeederTest {
                 String.format("%s (Slot: %s)", newHardwareUuid, 1),
                 newFeeder.getName()
         );
+
+        bus.verifyInMockedOrder();
     }
 
     @Test
@@ -1072,6 +1104,8 @@ public class PhotonFeederTest {
                 String.format("%s (Slot: %s)", newHardwareUuid, 2),
                 newFeeder.getName()
         );
+
+        bus.verifyInMockedOrder();
     }
 
     @Test
@@ -1088,6 +1122,8 @@ public class PhotonFeederTest {
         PhotonFeeder.findAllFeeders(null);
 
         assertNull(feeder.getSlotAddress());
+
+        bus.verifyInMockedOrder();
     }
 
     @Test
@@ -1107,6 +1143,8 @@ public class PhotonFeederTest {
         for (int i = 1; i <= maxFeederAddress; i++) {
             inOrder.verify(progressUpdates).accept((i * 100) / maxFeederAddress);
         }
+
+        bus.verifyInMockedOrder();
     }
 
     @Test

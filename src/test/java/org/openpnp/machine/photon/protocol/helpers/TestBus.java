@@ -90,6 +90,8 @@ public class TestBus implements PhotonBusInterface {
         for (Packet packet : mockedPackets) {
             continuedVerification.then(packet);
         }
+
+        continuedVerification.nothingElseSent();
     }
 
     public static class TestBusReply {
@@ -159,7 +161,7 @@ public class TestBus implements PhotonBusInterface {
 
         public ContinuedVerification then(Packet packet) {
             if (currentVerificationIndex >= calls.size()) {
-                fail("No more calls on this test bus");
+                fail("No more calls on this test bus, but wanted " + packet.toByteString());
             }
 
             Packet expectedPacket = calls.get(currentVerificationIndex);

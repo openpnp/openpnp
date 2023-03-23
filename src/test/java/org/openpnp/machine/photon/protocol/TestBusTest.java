@@ -402,4 +402,19 @@ public class TestBusTest {
         // This shouldn't fail with an assertion because we sent what we mocked and THEN changed it.
         bus.verifyInMockedOrder();
     }
+
+    @Test
+    public void verifyInMockedOrderCallsNothingElseSent() throws Exception{
+        GetVersion firstCommand = new GetVersion(5);
+        GetVersion secondCommand = new GetVersion(10);
+
+        bus.when(firstCommand).timeout();
+        bus.when(secondCommand).timeout();
+
+        bus.send(firstCommand);
+        bus.send(secondCommand);
+        bus.send(firstCommand);
+
+        assertThrows(AssertionFailedError.class, () -> bus.verifyInMockedOrder());
+    }
 }

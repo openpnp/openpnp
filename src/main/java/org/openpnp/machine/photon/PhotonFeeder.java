@@ -2,14 +2,13 @@ package org.openpnp.machine.photon;
 
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.Wizard;
+import org.openpnp.machine.photon.exceptions.FeedFailureException;
 import org.openpnp.machine.photon.exceptions.FeederHasNoLocationOffsetException;
 import org.openpnp.machine.photon.exceptions.NoSlotAddressException;
 import org.openpnp.machine.photon.exceptions.UnconfiguredSlotException;
 import org.openpnp.machine.photon.protocol.ErrorTypes;
 import org.openpnp.machine.photon.protocol.PhotonBusInterface;
-import org.openpnp.machine.photon.protocol.commands.GetFeederAddress;
-import org.openpnp.machine.photon.protocol.commands.GetFeederId;
-import org.openpnp.machine.photon.protocol.commands.InitializeFeeder;
+import org.openpnp.machine.photon.protocol.commands.*;
 import org.openpnp.machine.photon.sheets.FeederPropertySheet;
 import org.openpnp.machine.photon.sheets.SearchPropertySheet;
 import org.openpnp.machine.reference.ReferenceActuator;
@@ -220,35 +219,41 @@ public class PhotonFeeder extends ReferenceFeeder {
 
     @Override
     public void feed(Nozzle nozzle) throws Exception {
-//        for (int i = 0; i <= photonProperties.getFeederCommunicationMaxRetry(); i++) {
-//            findSlotAddressIfNeeded();
-//            initializeIfNeeded();
-//
-//            if (!initialized) {
-//                continue;
-//            }
-//
-//            verifyFeederLocationIsFullyConfigured();
-//
-//            Actuator actuator = getDataActuator();
-//            String ackResponseString = actuator.read(commands.moveFeedForward(slotAddress, partPitch * 10));
-//
-//            PacketResponse ackResponse = MoveFeedForward.decode(ackResponseString);
-//            if (!ackResponse.isOk()) {
-//                slotAddress = null;
-//                initialized = false;
-//                ErrorTypes error = ackResponse.getError();
-//                if (error == ErrorTypes.TIMEOUT) {
-//                    throw new FeedFailureException("Feed command timed out");
-//                } else if (error == ErrorTypes.UNINITIALIZED_FEEDER) {
-//                    continue;
-//                }
-//            }
-//
-//            return;
-//        }
-//
-//        throw new FeedFailureException("Failed to feed for an unknown reason. Is the feeder inserted?");
+        for (int i = 0; i <= photonProperties.getFeederCommunicationMaxRetry(); i++) {
+            findSlotAddressIfNeeded();
+            initializeIfNeeded();
+
+            if (!initialized) {
+                continue;
+            }
+
+            verifyFeederLocationIsFullyConfigured();
+
+            MoveFeedForward moveFeedForward = new MoveFeedForward(slotAddress, partPitch * 10);
+            MoveFeedForward.Response moveFeedForwardResponse = moveFeedForward.send(photonBus);
+
+            if(moveFeedForwardResponse == null) {
+                throw new FeedFailureException("Feed command timed out");
+            } else if (moveFeedForwardResponse.error == ErrorTypes.UNINITIALIZED_FEEDER) {
+                slotAddress = null;
+                initialized = false;
+                continue;  // We'll initialize it on a retry
+            }
+
+            MoveFeedStatus moveFeedStatus = new MoveFeedStatus(slotAddress);
+            MoveFeedStatus.Response moveFeedStatusResponse = moveFeedStatus.send(photonBus);
+
+            if(moveFeedStatusResponse == null) {
+                // Timeout, uh... retry after delay?
+            } else {
+                // TODO Handle errors
+                // TODO Handle OK
+            }
+
+            return;
+        }
+
+        throw new FeedFailureException("Failed to feed for an unknown reason. Is the feeder inserted?");
     }
 
     @Override
