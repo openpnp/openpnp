@@ -10,10 +10,10 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 public class MoveFeedForwardTest {
     @Test
     public void createCommand() {
-        Packet getVersionPacket = new MoveFeedForward(29, 20).toPacket();
-        assertEquals(29, getVersionPacket.toAddress);
-        assertEquals(2, getVersionPacket.payloadLength);
-        assertArrayEquals(new int[]{0x04, 0x14}, getVersionPacket.payload);
+        Packet moveFeedForward = new MoveFeedForward(29, 20).toPacket();
+        assertEquals(29, moveFeedForward.toAddress);
+        assertEquals(2, moveFeedForward.payloadLength);
+        assertArrayEquals(new int[]{0x04, 0x14}, moveFeedForward.payload);
     }
 
     @Test

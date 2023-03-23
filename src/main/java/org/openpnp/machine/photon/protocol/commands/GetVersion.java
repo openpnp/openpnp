@@ -25,7 +25,7 @@ public class GetVersion extends Command<GetVersion.Response> {
         return new Response(packet);
     }
 
-    static class Response {
+    public static class Response {
         public final boolean valid;
         public final int toAddress;
         public final int fromAddress;

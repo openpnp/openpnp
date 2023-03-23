@@ -26,7 +26,7 @@ public class IdentifyFeeder extends Command<IdentifyFeeder.Response> {
         return new Response(responsePacket);
     }
 
-    static class Response {
+    public static class Response {
         public final boolean valid;
         public final int toAddress;
         public final int fromAddress;

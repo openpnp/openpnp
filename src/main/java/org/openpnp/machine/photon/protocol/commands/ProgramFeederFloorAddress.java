@@ -29,7 +29,7 @@ public class ProgramFeederFloorAddress extends Command<ProgramFeederFloorAddress
         return new Response(responsePacket);
     }
 
-    static class Response {
+    public static class Response {
         public final boolean valid;
         public final int toAddress;
         public final int fromAddress;
