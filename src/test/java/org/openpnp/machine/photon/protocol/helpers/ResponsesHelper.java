@@ -33,7 +33,7 @@ public class ResponsesHelper {
                     .toPacket();
         }
 
-        public Packet motorFault(int feederAddress) {
+        public Packet couldNotReach(int feederAddress) {
             return PacketBuilder.response(toAddress, feederAddress)
                     .putError(ErrorTypes.COULD_NOT_REACH)
                     .toPacket();

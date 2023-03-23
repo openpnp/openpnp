@@ -784,6 +784,60 @@ public class PhotonFeederTest {
     }
 
     @Test
+    public void feedWillCheckTheStatusUpToThreeTimesBeforeFailing() throws Exception {
+        feeder.setHardwareId(hardwareId);
+        feeder.setPartPitch(2);
+        feeder.setOffset(feederOffset);
+        feeder.setSlotAddress(feederAddress);
+        setSlotLocation(feederAddress, baseLocation);
+
+        InitializeFeeder initializeFeeder = new InitializeFeeder(feederAddress, hardwareId);
+        bus.when(initializeFeeder)
+                .reply(responses.initializeFeeder.ok(feederAddress, hardwareId));
+
+        MoveFeedForward moveFeedForward = new MoveFeedForward(feederAddress, 20);
+        bus.when(moveFeedForward)
+                .reply(responses.moveFeedForward.ok(feederAddress, 0));
+
+        MoveFeedStatus moveFeedStatus = new MoveFeedStatus(feederAddress);
+        bus.when(moveFeedStatus).timeout();
+
+        assertThrows(FeedFailureException.class, () -> feeder.feed(mockedNozzle));
+
+        bus.verify(initializeFeeder)
+                .then(moveFeedForward)
+                .then(moveFeedStatus)
+                .then(moveFeedStatus)
+                .then(moveFeedStatus)
+                .nothingElseSent();
+    }
+
+    @Test
+    public void feedWillFailIfMotorCouldNotReachDestination() throws Exception {
+        feeder.setHardwareId(hardwareId);
+        feeder.setPartPitch(2);
+        feeder.setOffset(feederOffset);
+        feeder.setSlotAddress(feederAddress);
+        setSlotLocation(feederAddress, baseLocation);
+
+        InitializeFeeder initializeFeeder = new InitializeFeeder(feederAddress, hardwareId);
+        bus.when(initializeFeeder)
+                .reply(responses.initializeFeeder.ok(feederAddress, hardwareId));
+
+        MoveFeedForward moveFeedForward = new MoveFeedForward(feederAddress, 20);
+        bus.when(moveFeedForward)
+                .reply(responses.moveFeedForward.ok(feederAddress, 0));
+
+        MoveFeedStatus moveFeedStatus = new MoveFeedStatus(feederAddress);
+        bus.when(moveFeedStatus)
+                .reply(responses.errors.couldNotReach(feederAddress));
+
+        assertThrows(FeedFailureException.class, () -> feeder.feed(mockedNozzle));
+
+        bus.verifyInMockedOrder();
+    }
+
+    @Test
     public void twoFeedersCanNotHaveTheSameAddress() throws Exception {
         // Remove the main feeder, so we can make two of our own in this test
         machine.removeFeeder(feeder);

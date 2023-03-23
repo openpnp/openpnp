@@ -40,7 +40,7 @@ public class ResponsesHelperTest {
 
         @Test
         public void testMotorFault() {
-            Packet error = testResponses.errors.motorFault(7);
+            Packet error = testResponses.errors.couldNotReach(7);
 
             assertEquals(7, error.fromAddress);
             assertEquals(1, error.payloadLength);

@@ -67,7 +67,7 @@ public class PhotonFeeder extends ReferenceFeeder {
     }
 
     private static void populatePhotonBus() {
-        if(photonBus != null) {
+        if (photonBus != null) {
             return;
         }
 
@@ -171,7 +171,7 @@ public class PhotonFeeder extends ReferenceFeeder {
         GetFeederAddress getFeederAddress = new GetFeederAddress(hardwareId);
         GetFeederAddress.Response response = getFeederAddress.send(photonBus);
 
-        if(response == null) {
+        if (response == null) {
             setSlotAddress(null);
             return;
         }
@@ -190,9 +190,9 @@ public class PhotonFeeder extends ReferenceFeeder {
         InitializeFeeder initializeFeeder = new InitializeFeeder(slotAddress, hardwareId);
         InitializeFeeder.Response response = initializeFeeder.send(photonBus);
 
-        if(response == null) {
+        if (response == null) {
             slotAddress = null;
-        } else if (response.error == ErrorTypes.WRONG_FEEDER_UUID){
+        } else if (response.error == ErrorTypes.WRONG_FEEDER_UUID) {
             PhotonFeeder otherFeeder = findByHardwareId(response.uuid);
 
             // If we don't know about that feeder, let's go ahead and create it
@@ -242,7 +242,7 @@ public class PhotonFeeder extends ReferenceFeeder {
             MoveFeedForward moveFeedForward = new MoveFeedForward(slotAddress, partPitch * 10);
             MoveFeedForward.Response moveFeedForwardResponse = moveFeedForward.send(photonBus);
 
-            if(moveFeedForwardResponse == null) {
+            if (moveFeedForwardResponse == null) {
                 slotAddress = null;
                 initialized = false;
                 throw new FeedFailureException("Feed command timed out");
@@ -255,22 +255,24 @@ public class PhotonFeeder extends ReferenceFeeder {
             int timeToWaitMillis = moveFeedForwardResponse.expectedTimeToFeed;
 
             for (int j = 0; j < 3; j++) {
+                //noinspection BusyWait
                 Thread.sleep(timeToWaitMillis);
 
                 MoveFeedStatus moveFeedStatus = new MoveFeedStatus(slotAddress);
                 MoveFeedStatus.Response moveFeedStatusResponse = moveFeedStatus.send(photonBus);
 
-                if(moveFeedStatusResponse == null) {
-                    // Timeout. retry after delay?
-                } else if (moveFeedStatusResponse.error == ErrorTypes.NONE) {
-                    break;
+                if (moveFeedStatusResponse == null) {
+                    continue; // Timeout. retry after delay.
+                }
+
+                if (moveFeedStatusResponse.error == ErrorTypes.NONE) {
+                    return;
                 } else if (moveFeedStatusResponse.error == ErrorTypes.COULD_NOT_REACH) {
-                    // TODO Handle errors
-                    throw new Exception("Feeder could not reach its destination.");
+                    throw new FeedFailureException("Feeder could not reach its destination.");
                 }
             }
 
-            return;
+            throw new FeedFailureException("Feeder timed out when we requested a feed status update.");
         }
 
         throw new FeedFailureException("Failed to feed for an unknown reason. Is the feeder inserted?");
