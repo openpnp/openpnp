@@ -42,17 +42,25 @@ public class MoveFeedForward  extends Command<MoveFeedForward.Response> {
             toAddress = packet.toAddress;
             fromAddress = packet.fromAddress;
 
-            if(packet.payloadLength != 3) {
+            if(packet.payloadLength < 1) {  // Can't even get the error bytes
                 valid = false;
                 error = null;
                 expectedTimeToFeed = 0;
                 return;
             }
 
-            valid = true;
-
             error = ErrorTypes.fromId(packet.payload[0]);
-            expectedTimeToFeed = packet.uint16(1);
+
+            if(error == ErrorTypes.NONE) {
+                expectedTimeToFeed = packet.uint16(1);
+                valid = true;
+            } else if(error == ErrorTypes.UNINITIALIZED_FEEDER) {
+                expectedTimeToFeed = 0;
+                valid = true;
+            } else {
+                expectedTimeToFeed = 0;
+                valid = false;
+            }
         }
     }
 }
