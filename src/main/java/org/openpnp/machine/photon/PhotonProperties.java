@@ -32,7 +32,7 @@ public class PhotonProperties {
         Integer maxFeederAddress = (Integer) machine.getProperty(MAX_FEEDER_ADDRESS);
 
         if(maxFeederAddress == null) {
-            maxFeederAddress = 32;
+            maxFeederAddress = 50;
             setMaxFeederAddress(maxFeederAddress);
         }
 

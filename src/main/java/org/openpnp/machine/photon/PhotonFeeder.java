@@ -463,7 +463,18 @@ public class PhotonFeeder extends ReferenceFeeder {
         return null;
     }
 
-    public static void findAllFeeders(IntConsumer progressUpdate) throws Exception {
+    public enum FeederSearchState {
+        UNKNOWN,
+        SEARCHING,
+        FOUND,
+        MISSING
+    }
+
+    public interface FeederSearchProgressConsumer {
+        void accept(int feederAddress, FeederSearchState feederSearchState);
+    }
+
+    public static void findAllFeeders(FeederSearchProgressConsumer progressUpdate) throws Exception {
         Logger.info("Searching for Photon Feeders");
         Machine machine = Configuration.get().getMachine();
         PhotonProperties photonProperties = new PhotonProperties(machine);
@@ -476,12 +487,15 @@ public class PhotonFeeder extends ReferenceFeeder {
         for (int address = 1; address <= maxFeederAddress; address++) {
             Logger.debug("Querying Photon feeder address: " + address);
 
+            if (progressUpdate != null) {
+                progressUpdate.accept(address, FeederSearchState.SEARCHING);
+            }
+
             GetFeederId getFeederId = new GetFeederId(address);
             GetFeederId.Response response = getFeederId.send(photonBus);
 
             if (progressUpdate != null) {
-                int progress = (address * 100) / maxFeederAddress;
-                progressUpdate.accept(progress);
+                progressUpdate.accept(address, response == null ? FeederSearchState.MISSING : FeederSearchState.FOUND);
             }
 
             if (response == null) {

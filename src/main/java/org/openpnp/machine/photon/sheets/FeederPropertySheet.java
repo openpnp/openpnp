@@ -10,7 +10,6 @@ public class FeederPropertySheet implements PropertySheetHolder.PropertySheet {
     private final PhotonFeeder feeder;
 
     public FeederPropertySheet(PhotonFeeder feeder) {
-
         this.feeder = feeder;
     }
 

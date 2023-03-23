@@ -36,7 +36,6 @@ import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
 
 public class FeederConfigurationWizard extends AbstractConfigurationWizard {
-
 	private final PhotonFeeder feeder;
 	
 	private final JLabel hardwareIdValue;
