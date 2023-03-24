@@ -593,6 +593,9 @@ public class PlacementsHolderLocationViewer extends JPanel implements PropertyCh
     }
     
     public void regenerate() {
+        if (isJob) {
+            placementsHolderLocation = MainFrame.get().getJobTab().getJob().getRootPanelLocation();
+        }
         Rectangle2D oldBounds = graphicsBounds;
         generateGraphicalObjects(placementsHolderLocation);
         if (!graphicsBounds.equals(oldBounds)) {
@@ -812,6 +815,7 @@ public class PlacementsHolderLocationViewer extends JPanel implements PropertyCh
         GeometricPath2D profile = placementsHolderLocation.getPlacementsHolder().getProfile().convertToUnits(units);
         profile.transform(at);
         boolean atRoot = placementsHolderLocation == this.placementsHolderLocation;
+        boolean jobTopChild = isJob && placementsHolderLocation.getParent() == this.placementsHolderLocation;
         if (atRoot) {
             profileMap = new HashMap<>();
             placementMap = new HashMap<>();
@@ -832,7 +836,7 @@ public class PlacementsHolderLocationViewer extends JPanel implements PropertyCh
                 graphicsBounds.add(profile.getBounds2D());
             }
             List<Placement> placements = new ArrayList<>(placementsHolderLocation.getPlacementsHolder().getPlacements());
-            if (placementsHolderLocation instanceof PanelLocation) {
+            if ((atRoot || jobTopChild) && placementsHolderLocation instanceof PanelLocation) {
                 placements.addAll(((PanelLocation) placementsHolderLocation).getPanel().getPseudoPlacements()); 
             }
             for (Placement placement : placements) {
@@ -842,7 +846,12 @@ public class PlacementsHolderLocationViewer extends JPanel implements PropertyCh
                 
                 AffineTransform at2 = new AffineTransform();
                 at2.translate(loc.getX(), loc.getY());
-                at2.rotate(Math.toRadians(loc.getRotation()));
+                if (atRoot && placementsHolderLocation.getGlobalSide() != placement.getSide()) {
+                    at2.rotate(-Math.toRadians(loc.getRotation()));
+                }
+                else {
+                    at2.rotate(Math.toRadians(loc.getRotation()));
+                }
                 double d = (new Length(1, LengthUnit.Millimeters)).convertToUnits(units).getValue() * 0.5;
                 //In the future, we probably should use the actual shape of the footprint here - will
                 //probably wait until we can import Gerber files and get the true footprint from there
@@ -900,7 +909,10 @@ public class PlacementsHolderLocationViewer extends JPanel implements PropertyCh
                         offScr.setStroke(new BasicStroke(2, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_ROUND));
                         PlacementsHolder<?> ph = phl.getPlacementsHolder();
                         List<Placement> placements = new ArrayList<>(ph.getPlacements());
-                        if (phl instanceof PanelLocation) {
+                        boolean atRoot = phl == this.placementsHolderLocation;
+                        boolean jobTopChild = isJob && phl.getParent() == this.placementsHolderLocation;
+
+                        if ((atRoot || jobTopChild) && phl instanceof PanelLocation) {
                             placements.addAll(((PanelLocation) phl).getPanel().getPseudoPlacements()); 
                         }
                         for (Placement placement : placements) {
@@ -1058,7 +1070,9 @@ public class PlacementsHolderLocationViewer extends JPanel implements PropertyCh
         for (Area profileArea : profileMap.keySet()) {
             PlacementsHolderLocation<?> placementsHolderLocation = profileMap.get(profileArea);
             List<Placement> placements = new ArrayList<>(placementsHolderLocation.getPlacementsHolder().getPlacements());
-            if (placementsHolderLocation instanceof PanelLocation) {
+            boolean atRoot = placementsHolderLocation == this.placementsHolderLocation;
+            boolean jobTopChild = isJob && placementsHolderLocation.getParent() == this.placementsHolderLocation;
+            if ((atRoot || jobTopChild) && placementsHolderLocation instanceof PanelLocation) {
                 placements.addAll(((PanelLocation) placementsHolderLocation).getPanel().getPseudoPlacements()); 
             }
             for (Placement placement : placements) {
@@ -1078,7 +1092,9 @@ public class PlacementsHolderLocationViewer extends JPanel implements PropertyCh
         for (Area profileArea : profileMap.keySet()) {
             PlacementsHolderLocation<?> placementsHolderLocation = profileMap.get(profileArea);
             List<Placement> placements = new ArrayList<>(placementsHolderLocation.getPlacementsHolder().getPlacements());
-            if (placementsHolderLocation instanceof PanelLocation) {
+            boolean atRoot = placementsHolderLocation == this.placementsHolderLocation;
+            boolean jobTopChild = isJob && placementsHolderLocation.getParent() == this.placementsHolderLocation;
+            if ((atRoot || jobTopChild) && placementsHolderLocation instanceof PanelLocation) {
                 placements.addAll(((PanelLocation) placementsHolderLocation).getPanel().getPseudoPlacements()); 
             }
             for (Placement placement : placements) {

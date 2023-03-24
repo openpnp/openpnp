@@ -55,17 +55,9 @@ public class PseudoPlacement extends Placement {
         }
         branches = pair.first;
         leaf = pair.second;
-        tip = pair.first.get(pair.first.size()-1);
-        Location location = Utils2D.calculateBoardPlacementLocation(tip, leaf).derive(null, null, 0.0, null);
+        tip = branches.get(branches.size()-1);
+        Location location = computeLocation(branches, tip, leaf);
         Side side = leaf.getSide().flip(tip.getGlobalSide() == Side.Bottom);
-        if (panel.children.get(0).getParent() != null) {
-            if (panel.children.get(0).getParent().getGlobalSide() == Side.Bottom) {
-                location = location.invert(false, false, false, true);
-            }
-        }
-        else if (side == Side.Bottom) {
-            location = location.invert(false, false, false, true);
-        }
         setPart(leaf.getPart());
         setType(leaf.getType());
         setLocation(location);
@@ -210,16 +202,8 @@ public class PseudoPlacement extends Placement {
                 }
             }
             else if ((evt.getPropertyName().equals("location") || evt.getPropertyName().equals("side")) && evt.getSource() != this){
-                Location location = Utils2D.calculateBoardPlacementLocation(tip, leaf).derive(null, null, 0.0, null);
+                Location location = computeLocation(branches, tip, leaf);
                 Side side = leaf.getSide().flip(tip.getGlobalSide() == Side.Bottom);
-                if (panel.children.get(0).getParent() != null) {
-                    if (panel.children.get(0).getParent().getGlobalSide() == Side.Bottom) {
-                        location = location.invert(false, false, false, true);
-                    }
-                }
-                else if (side == Side.Bottom) {
-                    location = location.invert(false, false, false, true);
-                }
                 setLocation(location);
                 setSide(side);
             }
@@ -229,4 +213,28 @@ public class PseudoPlacement extends Placement {
         }
     }
     
+    private static Location computeLocation(List<PlacementsHolderLocation<?>> branches, 
+            PlacementsHolderLocation<?> tip, Placement leaf) {
+        Location location = Utils2D.calculateBoardPlacementLocation(tip, leaf)
+                .derive(null, null, 0.0, null);
+        if (tip.getGlobalSide() != leaf.getSide()) {
+            double angle = location.getRotation();
+            angle = -angle + 2*leaf.getLocation().getRotation();
+            location = location.derive(null, null, null, Utils2D.normalizeAngle180(angle));
+        }
+        return location;
+    }
+    
+    public static Location computeLocation(Panel panel, String pseudoPlacementId) throws Exception {
+        Pair<List<PlacementsHolderLocation<?>>, Placement> pair = 
+                panel.getDescendantPlacement(pseudoPlacementId);
+        if (pair == null || pair.second == null) {
+            throw new Exception(String.format("Invalid pseudoPlacementId \"%s\" for %s", 
+                    pseudoPlacementId, panel.toString()));
+        }
+        List<PlacementsHolderLocation<?>> branches = pair.first;
+        Placement leaf = pair.second;
+        PlacementsHolderLocation<?> tip = branches.get(branches.size()-1);
+        return computeLocation(branches, tip, leaf);
+    }
 }
