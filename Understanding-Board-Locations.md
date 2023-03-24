@@ -43,11 +43,19 @@ Note that while the above discussion pertains to rectangular boards, many other 
 ## Non-Rectangular Boards
 Even though OpenPnP is setup to make placing of parts on both sides of rectangular boards easy, it can be used to place parts on both sides of any arbitrarily shaped board with just a little more effort by the operator. 
 
-In the CAD tool, place the origin of the board's coordinate system at some convenient location on the surface of the board. As discussed above, be sure that it is located and aligned with some feature on the board so that its location and orientation are easy to identify when viewed through the top camera. If there are placements on both sides of the board, be sure there is an identifiable feature on both sides directly opposite each other so that the origin is visible no matter which side of the board is facing up on the machine. In OpenPnP, on the Boards tab, set the width of the board to zero - this is necessary so that OpenPnP "knows" that the board is not rectangular and can't be handled as such. 
+In the CAD tool, place the origin of the board's coordinate system at some convenient location on the surface of the board. As discussed above, be sure that it is located and aligned with some feature on the board so that its location and orientation are easy to identify when viewed through the top camera. If there are placements on both sides of the board, be sure there is an identifiable feature on both sides directly opposite each other so that the origin is visible no matter which side of the board is facing up on the machine.
 
-Then, regardless of which side of the board is facing up on the machine, the alignment process is the same. In OpenPnP, on the Job tab, set the Side column to match the side of the board that is facing up; and, set the board's location by aligning the top camera's crosshairs to the board's coordinate system and capturing its location. This is an important distinction from the rectangular board case - in this case, the location and rotation of the board is in general different for each side and needs to be set after each flip of the board:
+As an example, the board shown below has its coordinate system origin at the center of C13 with its positive Y-axis passing through the center of C41. On its bottom side, U22 has been placed so that its center is directly beneath the center of C13 (on the top side) and rotated so that its pin 1 is aligned with the board's positive Y-axis.
 
-<img width="400" alt="nonRectBoardTopOnMachine" src="https://user-images.githubusercontent.com/50550971/224577765-9e497890-2432-4a68-9f58-57f9597639d7.png"> 
-<img width="469" alt="nonRectBoardBottomOnMachine" src="https://user-images.githubusercontent.com/50550971/224577776-cb3337ea-1468-4873-b825-db9176ec8f05.png">
+<img width="400" alt="nonRectBoardTop" src="https://user-images.githubusercontent.com/50550971/227647675-f76cb11d-e0a6-433e-be66-0e03f41e182d.png">    
+&nbsp;  &nbsp;  &nbsp;  &nbsp;  &nbsp;  <img width="370" alt="nonRectBoardBottom" src="https://user-images.githubusercontent.com/50550971/227647707-5708f74e-21e8-4ad4-bace-080730feda32.png">&nbsp;  
+ 
+In OpenPnP, on the Boards tab, set the width of the board to zero - this is necessary so that OpenPnP "knows" that the board is not rectangular and can't be handled as such. 
+
+Then, regardless of which side of the board is placed facing up on the machine, the process is the same. In OpenPnP, on the Job tab, set the Side column to match the side of the board that is facing up; and, set the board's location by aligning the top camera's crosshairs to the board's coordinate system and capturing its location. This is an important distinction from the rectangular board case - in this case, the location and rotation of the board is in general different for each side and needs to be set after each flip of the board:
+
+<img width="400" alt="nonRectBoardTopOnMachine" src="https://user-images.githubusercontent.com/50550971/227652918-2f1bc5e8-eefa-47d2-87c4-d26380a7f59a.png">
+<img width="400" alt="nonRectBoardBottomOnMachine" src="https://user-images.githubusercontent.com/50550971/227652978-2d2c5b25-5534-496c-82ff-47afe444dd9e.png">
+
 
 
