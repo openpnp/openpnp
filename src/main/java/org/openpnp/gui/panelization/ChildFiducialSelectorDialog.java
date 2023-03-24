@@ -76,6 +76,7 @@ import org.openpnp.model.PseudoPlacement;
 import org.openpnp.util.Collect;
 import org.openpnp.util.QuickHull;
 import org.openpnp.util.Utils2D;
+import org.pmw.tinylog.Logger;
 
 @SuppressWarnings("serial")
 public class ChildFiducialSelectorDialog extends JDialog {
@@ -370,6 +371,10 @@ public class ChildFiducialSelectorDialog extends JDialog {
             }
             catch (Exception e) {
                 // TODO Auto-generated catch block
+                Logger.error("Unable to create pseudo-placement {}, please send this log file to " //$NON-NLS-1$
+                        + "the developers as this should never occur:", fiducial.getId()); //$NON-NLS-1$
+                Logger.info(panelLocation);
+                Logger.info(panelLocation.getPanel());
                 e.printStackTrace();
             }
         }
@@ -414,6 +419,9 @@ public class ChildFiducialSelectorDialog extends JDialog {
                 }
                 catch (Exception e) {
                     // TODO Auto-generated catch block
+                    Logger.error("Unable to compute location of pseudo-placement {}, please send " //$NON-NLS-1$
+                            + "this log file to the developers as this should never occur:", id); //$NON-NLS-1$
+                    Logger.info(this.panelLocation);
                     e.printStackTrace();
                 }
             }

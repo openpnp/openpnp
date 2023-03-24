@@ -521,7 +521,7 @@ public class Panel extends PlacementsHolder<Panel> implements PropertyChangeList
      * alignment. This method should only be called on panel definitions.
      * @param pseudoPlacementId - the id of the pseudo-placement to create
      * @return - the pseudo-placement
-     * @throws Exception 
+     * @throws Exception if pseudoPlacementId is invalid
      * @throws UnsupportedOperationException if called on a non-panel definition
      */
     public Placement createPseudoPlacement(String pseudoPlacementId) throws Exception {
