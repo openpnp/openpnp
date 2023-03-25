@@ -1,0 +1,39 @@
+site_name: OpenPnP Wiki
+site_description: Wiki content for OpenPnP
+copyright: OpenPnP
+repo_url: https://github.com/openpnp/openpnp
+edit_uri: edit/master/docs/
+docs_dir: docs
+extra:
+  homepage: https://openpnp.org
+  version:
+    provider: mike
+  social:
+    - icon: fontawesome/brands/youtube
+      link: https://www.youtube.com/c/OpenPnPSMT
+    - icon: fontawesome/brands/twitter
+      link: https://twitter.com/openpnp
+    - icon: fontawesome/brands/instagram
+      link: https://www.instagram.com/openpnp/
+    - icon: fontawesome/brands/github
+      link: https://github.com/openpnp/openpnp
+    - icon: material/rss
+      link: https://openpnp.org/feed/
+theme:
+  name: material
+  features:
+    - search.suggest
+    - search.highlight
+    - navigation.tabs
+    - navigation.tracking
+    - navigation.indexes
+    - navigation.footer
+    - content.action.edit
+  palette:
+    primary: white
+  logo: assets/logo.png
+plugins:
+  - search:
+      lang: en
+  - awesome-pages
+  - offline
