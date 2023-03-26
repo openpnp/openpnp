@@ -4,11 +4,14 @@ import com.google.common.io.Files;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.openpnp.machine.reference.ReferenceActuator;
+import org.openpnp.machine.reference.driver.GcodeDriver;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Actuator;
+import org.openpnp.spi.Driver;
 import org.openpnp.spi.Machine;
 
 import java.io.File;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -50,5 +53,23 @@ public class PhotonFeederLoadingTest {
         assertNotNull(actuator);
         assertTrue(actuator instanceof ReferenceActuator);
         assertEquals(PhotonFeeder.ACTUATOR_DATA_NAME, actuator.getName());
+    }
+
+    @Test
+    public void loadingOfDataActuatorFillsInGcodeForGcodeDrivers() throws Exception {
+        Configuration.get().load();
+        Machine machine = Configuration.get().getMachine();
+
+        // First remove the Reference Actuator that was made when we loaded the configuration
+        machine.removeActuator(machine.getActuatorByName(PhotonFeeder.ACTUATOR_DATA_NAME));
+
+        GcodeDriver gcodeDriver = new GcodeDriver();
+        machine.addDriver(gcodeDriver);
+
+        feeder = new PhotonFeeder();  // New feeder forces Actuator creation
+
+        Actuator actuator = machine.getActuatorByName(PhotonFeeder.ACTUATOR_DATA_NAME);
+        assertEquals("M485 {value}", gcodeDriver.getCommand(actuator, GcodeDriver.CommandType.ACTUATOR_READ_COMMAND));
+        assertEquals("rs485-reply: (?<Value>.*)", gcodeDriver.getCommand(actuator, GcodeDriver.CommandType.ACTUATOR_READ_REGEX));
     }
 }

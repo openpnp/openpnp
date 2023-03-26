@@ -14,6 +14,7 @@ import org.openpnp.machine.photon.sheets.FeederPropertySheet;
 import org.openpnp.machine.photon.sheets.SearchPropertySheet;
 import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.machine.reference.ReferenceFeeder;
+import org.openpnp.machine.reference.driver.GcodeDriver;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 import org.openpnp.model.Solutions;
@@ -215,15 +216,32 @@ public class PhotonFeeder extends ReferenceFeeder {
         Actuator actuator = machine.getActuatorByName(ACTUATOR_DATA_NAME);
 
         if (actuator == null) {
-            actuator = new ReferenceActuator();
-            actuator.setName(ACTUATOR_DATA_NAME);
-            try {
-                machine.addActuator(actuator);
-            } catch (Exception exception) {
-                exception.printStackTrace(); // TODO Probably need to log this, figure out why it can happen first
-            }
+            actuator = createDefaultActuator(machine);
         }
 
+        return actuator;
+    }
+
+    private static Actuator createDefaultActuator(Machine machine) {
+        Actuator actuator;
+        actuator = new ReferenceActuator();
+        actuator.setName(ACTUATOR_DATA_NAME);
+
+        for (Driver driver : machine.getDrivers()) {
+            if(! (driver instanceof GcodeDriver)) {
+                continue;
+            }
+            GcodeDriver gcodeDriver = (GcodeDriver) driver;
+            gcodeDriver.setCommand(actuator, GcodeDriver.CommandType.ACTUATOR_READ_COMMAND, "M485 {value}");
+            gcodeDriver.setCommand(actuator, GcodeDriver.CommandType.ACTUATOR_READ_REGEX, "rs485-reply: (?<Value>.*)");
+            break;  // Only set this on 1 GCodeDriver
+        }
+
+        try {
+            machine.addActuator(actuator);
+        } catch (Exception exception) {
+            exception.printStackTrace(); // TODO Probably need to log this, figure out why it can happen first
+        }
         return actuator;
     }
 
