@@ -4,20 +4,19 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
-import org.jdesktop.beansbinding.AutoBinding;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.JBindings;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.machine.photon.PhotonFeeder;
 import org.openpnp.machine.photon.PhotonProperties;
 import org.openpnp.model.Configuration;
-import org.openpnp.util.BeanUtils;
 import org.openpnp.util.UiUtils;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 public class GlobalConfigConfigurationWizard extends JPanel {
 
@@ -87,8 +86,28 @@ public class GlobalConfigConfigurationWizard extends JPanel {
         JPanel programFeederFloorsPanel = new JPanel();
         programFeederFloorsPanel.setBorder(new TitledBorder(null, "Program Feeder Floors", TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(programFeederFloorsPanel);
-        programFeederFloorsPanel.setLayout(new FormLayout(new ColumnSpec[]{},
-                new RowSpec[]{}));
+        programFeederFloorsPanel.setLayout(new FormLayout(new ColumnSpec[]{
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("4dlu:grow"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,},
+                new RowSpec[]{
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        RowSpec.decode("6dlu:grow"),
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,}));
+
+        lblNewLabel = new JLabel("If you've built your own slots and need to program them, use this wizard.");
+        programFeederFloorsPanel.add(lblNewLabel, "2, 2, 3, 1");
+
+        btnStartFeedFloorWizard = new JButton("Start Wizard");
+        btnStartFeedFloorWizard.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent arg0) {
+            }
+        });
+        programFeederFloorsPanel.add(btnStartFeedFloorWizard, "4, 4");
 
         createBindings();
     }
@@ -131,4 +150,6 @@ public class GlobalConfigConfigurationWizard extends JPanel {
             maxFeederSpinner.setEnabled(true);
         }
     };
+    private JButton btnStartFeedFloorWizard;
+    private JLabel lblNewLabel;
 }
