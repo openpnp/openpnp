@@ -434,7 +434,7 @@ public class PhotonFeeder extends ReferenceFeeder {
 
             PhotonFeeder photonFeeder = (PhotonFeeder) feeder;
 
-            // Are we explicitly asking for feeders with null hardware Id?
+            // Are we explicitly asking for feeders with null hardware ID?
             if (photonFeeder.hardwareId == null && hardwareId == null) {
                 return photonFeeder;
             }
@@ -478,7 +478,6 @@ public class PhotonFeeder extends ReferenceFeeder {
         Logger.info("Searching for Photon Feeders");
         Machine machine = Configuration.get().getMachine();
         PhotonProperties photonProperties = new PhotonProperties(machine);
-        Actuator actuator = getDataActuator();
         int maxFeederAddress = photonProperties.getMaxFeederAddress();
         Logger.debug("Max Photon feeder address: " + maxFeederAddress);
 
@@ -515,10 +514,10 @@ public class PhotonFeeder extends ReferenceFeeder {
                     }
                 }
 
-                Logger.trace("Found feeder with hardware uuid " + otherFeeder.slotAddress + " at address " + otherFeeder.getSlotAddress());
-
                 otherFeeder.setHardwareId(response.uuid);
                 otherFeeder.setSlotAddress(address);
+
+                Logger.trace("Found feeder with hardware uuid " + otherFeeder.getHardwareId() + " at address " + otherFeeder.getSlotAddress());
             }
         }
 

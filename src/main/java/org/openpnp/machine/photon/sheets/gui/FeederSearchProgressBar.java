@@ -11,9 +11,22 @@ public class FeederSearchProgressBar extends JPanel {
     private int numberOfElements;
     private final Map<Integer, PhotonFeeder.FeederSearchState> feederSearchStateMap;
 
+    private static final Color searching_color = new Color(0x6495ED);
+    private static final Color missing_color = new Color(0xCD5C5C);
+    private static final Color found_color = new Color(0x3CB371);
+
     public FeederSearchProgressBar() {
-        numberOfElements = 50;
+        numberOfElements = 0;
         feederSearchStateMap = new HashMap<>();
+    }
+
+    private Rectangle getRectangleForElement(int elementNumber) {
+        int totalWidth = getWidth();
+        int totalHeight = getHeight();
+
+        int startX = (elementNumber * totalWidth) / numberOfElements;
+        int endX = ((elementNumber + 1) * totalWidth) / numberOfElements;
+        return new Rectangle(startX, 0, endX - startX, totalHeight);
     }
 
     @Override
@@ -23,9 +36,7 @@ public class FeederSearchProgressBar extends JPanel {
         int totalWidth = getWidth();
         int totalHeight = getHeight();
 
-        int currentX = 0;
         for (int elementNumber = 0; elementNumber < numberOfElements; elementNumber++) {
-            int endX = ((elementNumber + 1) * totalWidth) / numberOfElements;
             PhotonFeeder.FeederSearchState feederSearchState;
             feederSearchState = feederSearchStateMap.getOrDefault(elementNumber, PhotonFeeder.FeederSearchState.UNKNOWN);
             switch (feederSearchState) {
@@ -33,17 +44,17 @@ public class FeederSearchProgressBar extends JPanel {
                     g.setColor(Color.LIGHT_GRAY);
                     break;
                 case SEARCHING:
-                    g.setColor(Color.CYAN);
+                    g.setColor(searching_color);
                     break;
                 case FOUND:
-                    g.setColor(Color.GREEN);
+                    g.setColor(found_color);
                     break;
                 case MISSING:
-                    g.setColor(Color.RED);
+                    g.setColor(missing_color);
                     break;
             }
-            g.fillRect(currentX, 0, endX - currentX, totalHeight);
-            currentX = endX;
+            Rectangle rectangle = getRectangleForElement(elementNumber);
+            g.fillRect(rectangle.x, rectangle.y, rectangle.width, rectangle.height);
         }
 
         g.setColor(Color.black);
@@ -62,5 +73,6 @@ public class FeederSearchProgressBar extends JPanel {
 
     public void setNumberOfElements(int numberOfElements) {
         this.numberOfElements = numberOfElements;
+        this.repaint();
     }
 }
