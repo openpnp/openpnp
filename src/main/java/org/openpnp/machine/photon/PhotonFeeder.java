@@ -11,7 +11,7 @@ import org.openpnp.machine.photon.protocol.PhotonBus;
 import org.openpnp.machine.photon.protocol.PhotonBusInterface;
 import org.openpnp.machine.photon.protocol.commands.*;
 import org.openpnp.machine.photon.sheets.FeederPropertySheet;
-import org.openpnp.machine.photon.sheets.SearchPropertySheet;
+import org.openpnp.machine.photon.sheets.GlobalConfigPropertySheet;
 import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.machine.reference.driver.GcodeDriver;
@@ -317,7 +317,7 @@ public class PhotonFeeder extends ReferenceFeeder {
             sheets.add(new FeederPropertySheet(this));
         }
 
-        sheets.add(new SearchPropertySheet());
+        sheets.add(new GlobalConfigPropertySheet());
 
         return sheets.toArray(new PropertySheet[0]);
     }

@@ -3,7 +3,6 @@ package org.openpnp.machine.photon;
 import com.google.common.io.Files;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InOrder;
 import org.openpnp.machine.photon.exceptions.FeedFailureException;
 import org.openpnp.machine.photon.exceptions.FeederHasNoLocationOffsetException;
 import org.openpnp.machine.photon.exceptions.NoSlotAddressException;
@@ -12,7 +11,7 @@ import org.openpnp.machine.photon.protocol.commands.*;
 import org.openpnp.machine.photon.protocol.helpers.ResponsesHelper;
 import org.openpnp.machine.photon.protocol.helpers.TestBus;
 import org.openpnp.machine.photon.sheets.FeederPropertySheet;
-import org.openpnp.machine.photon.sheets.SearchPropertySheet;
+import org.openpnp.machine.photon.sheets.GlobalConfigPropertySheet;
 import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.model.*;
 import org.openpnp.spi.Actuator;
@@ -22,7 +21,6 @@ import org.openpnp.spi.PropertySheetHolder;
 
 import java.io.File;
 import java.util.*;
-import java.util.function.IntConsumer;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -1148,11 +1146,11 @@ public class PhotonFeederTest {
     }
 
     @Test
-    public void getPropertySheetsOnlyReturnsSearchWithNullHardwareId() {
+    public void getPropertySheetsOnlyReturnsGlobalConfigWithNullHardwareId() {
         PropertySheetHolder.PropertySheet[] sheets = feeder.getPropertySheets();
 
         assertEquals(1, sheets.length);
-        assertTrue(sheets[0] instanceof SearchPropertySheet);
+        assertTrue(sheets[0] instanceof GlobalConfigPropertySheet);
     }
 
     @Test
@@ -1163,7 +1161,7 @@ public class PhotonFeederTest {
 
         assertEquals(2, sheets.length);
         assertTrue(sheets[0] instanceof FeederPropertySheet);
-        assertTrue(sheets[1] instanceof SearchPropertySheet);
+        assertTrue(sheets[1] instanceof GlobalConfigPropertySheet);
     }
 
     @Test
