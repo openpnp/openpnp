@@ -235,7 +235,7 @@ public class PhotonFeeder extends ReferenceFeeder {
                 continue;
             }
             GcodeDriver gcodeDriver = (GcodeDriver) driver;
-            gcodeDriver.setCommand(actuator, GcodeDriver.CommandType.ACTUATOR_READ_COMMAND, "M485 {value}");
+            gcodeDriver.setCommand(actuator, GcodeDriver.CommandType.ACTUATOR_READ_COMMAND, "M485 {Value}");
             gcodeDriver.setCommand(actuator, GcodeDriver.CommandType.ACTUATOR_READ_REGEX, "rs485-reply: (?<Value>.*)");
             break;  // Only set this on 1 GCodeDriver
         }

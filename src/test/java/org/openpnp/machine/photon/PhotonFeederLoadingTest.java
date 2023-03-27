@@ -69,7 +69,7 @@ public class PhotonFeederLoadingTest {
         feeder = new PhotonFeeder();  // New feeder forces Actuator creation
 
         Actuator actuator = machine.getActuatorByName(PhotonFeeder.ACTUATOR_DATA_NAME);
-        assertEquals("M485 {value}", gcodeDriver.getCommand(actuator, GcodeDriver.CommandType.ACTUATOR_READ_COMMAND));
+        assertEquals("M485 {Value}", gcodeDriver.getCommand(actuator, GcodeDriver.CommandType.ACTUATOR_READ_COMMAND));
         assertEquals("rs485-reply: (?<Value>.*)", gcodeDriver.getCommand(actuator, GcodeDriver.CommandType.ACTUATOR_READ_REGEX));
     }
 }
