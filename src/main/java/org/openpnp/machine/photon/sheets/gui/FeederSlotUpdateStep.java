@@ -110,13 +110,14 @@ public class FeederSlotUpdateStep extends JPanel {
         public void run() {
             while (!shouldStopThread) {
                 try {
-                    int feederAddress = (int) feederAddressSpinner.getValue();
-
                     String uuid = findUninitializedFeeder();
 
                     if (uuid == null) {
                         continue;
                     }
+
+                    feederAddressSpinner.setEnabled(false);
+                    int feederAddress = (int) feederAddressSpinner.getValue();
 
                     statusLabel.setText(String.format(FOUND_FEEDER, feederAddress));
 
@@ -150,8 +151,6 @@ public class FeederSlotUpdateStep extends JPanel {
         }
 
         private void updateFeederAddress(String uuid, int feederAddress) throws ExecutionException, InterruptedException {
-            feederAddressSpinner.setEnabled(false);
-
             Future<Void> voidFuture = UiUtils.submitUiMachineTask(() -> {
                 ProgramFeederFloorAddress command = new ProgramFeederFloorAddress(uuid, feederAddress);
                 ProgramFeederFloorAddress.Response response = command.send(photonBus);
