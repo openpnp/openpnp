@@ -114,6 +114,8 @@ public class FeederSlotUpdateStep extends JPanel {
 
                     if (uuid == null) {
                         continue;
+                    } else if (shouldStopThread) {
+                        break;  // We don't want to accidentally program a feeder floor after they clicked finish
                     }
 
                     feederAddressSpinner.setEnabled(false);
