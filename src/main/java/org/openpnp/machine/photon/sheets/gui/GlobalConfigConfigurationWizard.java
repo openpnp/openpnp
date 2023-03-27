@@ -28,7 +28,7 @@ public class GlobalConfigConfigurationWizard extends JPanel {
     private final FeederSearchProgressBar progressBarPanel;
     private final JButton searchButton;
     private final JSpinner maxFeederSpinner;
-    private final JButton btnStartFeedFloorWizard;
+    private final JButton btnStartFeedSlotsWizard;
     private final JLabel lblNewLabel;
 
     /**
@@ -84,10 +84,10 @@ public class GlobalConfigConfigurationWizard extends JPanel {
         progressBarPanel.setVisible(false);
         progressBarPanel.setNumberOfElements(initialMaxFeederAddress);
 
-        JPanel programFeederFloorsPanel = new JPanel();
-        programFeederFloorsPanel.setBorder(new TitledBorder(null, "Program Feeder Floors", TitledBorder.LEADING, TitledBorder.TOP, null, null));
-        contentPanel.add(programFeederFloorsPanel);
-        programFeederFloorsPanel.setLayout(new FormLayout(new ColumnSpec[]{
+        JPanel programFeederSlotsPanel = new JPanel();
+        programFeederSlotsPanel.setBorder(new TitledBorder(null, "Program Feeder Slots", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        contentPanel.add(programFeederSlotsPanel);
+        programFeederSlotsPanel.setLayout(new FormLayout(new ColumnSpec[]{
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("4dlu:grow"),
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -101,10 +101,10 @@ public class GlobalConfigConfigurationWizard extends JPanel {
                         FormSpecs.RELATED_GAP_ROWSPEC,}));
 
         lblNewLabel = new JLabel("If you've built your own slots and need to program them, use this wizard.");
-        programFeederFloorsPanel.add(lblNewLabel, "2, 2, 3, 1");
+        programFeederSlotsPanel.add(lblNewLabel, "2, 2, 3, 1");
 
-        btnStartFeedFloorWizard = new JButton("Start Wizard");
-        btnStartFeedFloorWizard.addActionListener(new ActionListener() {
+        btnStartFeedSlotsWizard = new JButton("Start Wizard");
+        btnStartFeedSlotsWizard.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent arg0) {
                 if(! Configuration.get().getMachine().isEnabled()) {
                     UiUtils.showError(new Exception("Please connect to the machine before running this wizard."));
@@ -116,7 +116,7 @@ public class GlobalConfigConfigurationWizard extends JPanel {
                 wizard.setVisible(true);
             }
         });
-        programFeederFloorsPanel.add(btnStartFeedFloorWizard, "4, 4");
+        programFeederSlotsPanel.add(btnStartFeedSlotsWizard, "4, 4");
 
         createBindings();
     }
