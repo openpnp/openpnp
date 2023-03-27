@@ -23,11 +23,13 @@ public class GlobalConfigConfigurationWizard extends JPanel {
     private final PhotonProperties photonProperties;
 
     protected JPanel contentPanel;
-    private JScrollPane scrollPane;
+    private final JScrollPane scrollPane;
 
     private final FeederSearchProgressBar progressBarPanel;
     private final JButton searchButton;
     private final JSpinner maxFeederSpinner;
+    private final JButton btnStartFeedFloorWizard;
+    private final JLabel lblNewLabel;
 
     /**
      * Create the panel.
@@ -81,7 +83,6 @@ public class GlobalConfigConfigurationWizard extends JPanel {
         searchPanel.add(progressBarPanel, "2, 4, 5, 1, fill, fill");
         progressBarPanel.setVisible(false);
         progressBarPanel.setNumberOfElements(initialMaxFeederAddress);
-        progressBarPanel.setToolTipText("Hello!");
 
         JPanel programFeederFloorsPanel = new JPanel();
         programFeederFloorsPanel.setBorder(new TitledBorder(null, "Program Feeder Floors", TitledBorder.LEADING, TitledBorder.TOP, null, null));
@@ -105,6 +106,14 @@ public class GlobalConfigConfigurationWizard extends JPanel {
         btnStartFeedFloorWizard = new JButton("Start Wizard");
         btnStartFeedFloorWizard.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent arg0) {
+                if(! Configuration.get().getMachine().isEnabled()) {
+                    UiUtils.showError(new Exception("Please connect to the machine before running this wizard."));
+                    return;
+                }
+
+                ProgramFeederSlotWizard wizard = new ProgramFeederSlotWizard();
+                wizard.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+                wizard.setVisible(true);
             }
         });
         programFeederFloorsPanel.add(btnStartFeedFloorWizard, "4, 4");
@@ -150,6 +159,4 @@ public class GlobalConfigConfigurationWizard extends JPanel {
             maxFeederSpinner.setEnabled(true);
         }
     };
-    private JButton btnStartFeedFloorWizard;
-    private JLabel lblNewLabel;
 }

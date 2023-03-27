@@ -24,10 +24,8 @@ import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 
 import javax.swing.*;
-
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.IntConsumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -65,6 +63,11 @@ public class PhotonFeeder extends ReferenceFeeder {
 
     public static void setBus(PhotonBusInterface bus) {
         photonBus = bus;
+    }
+
+    public static PhotonBusInterface getBus() {
+        populatePhotonBus();
+        return photonBus;
     }
 
     private static void populatePhotonBus() {
@@ -183,7 +186,7 @@ public class PhotonFeeder extends ReferenceFeeder {
         findSlotAddress(false);
     }
 
-    private void initializeIfNeeded() throws Exception {
+    public void initializeIfNeeded() throws Exception {
         if (initialized || slotAddress == null) {
             return;
         }

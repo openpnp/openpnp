@@ -11,8 +11,8 @@ public class FeederSearchProgressBar extends JPanel {
     private int numberOfElements;
     private final Map<Integer, PhotonFeeder.FeederSearchState> feederSearchStateMap;
 
-    private static final Color searching_color = new Color(0x6495ED);
-    private static final Color missing_color = new Color(0xCD5C5C);
+    private static final Color searching_color = new Color(0xDAA520);
+    private static final Color missing_color = new Color(0x6495ED);
     private static final Color found_color = new Color(0x3CB371);
 
     public FeederSearchProgressBar() {
