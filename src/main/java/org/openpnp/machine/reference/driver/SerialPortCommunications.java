@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.concurrent.TimeoutException;
 
-import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 
 import com.fazecast.jSerialComm.SerialPort;
