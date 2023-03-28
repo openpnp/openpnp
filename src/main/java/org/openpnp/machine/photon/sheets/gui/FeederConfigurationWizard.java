@@ -241,7 +241,7 @@ public class FeederConfigurationWizard extends AbstractConfigurationWizard {
 				new DoubleConverter(Configuration.get().getLengthDisplayFormat());
 
 		SlotProxy slotProxy = new SlotProxy();
-		AutoBinding<IndexFeeder, Object, SlotProxy, Object> binding = Bindings.createAutoBinding(UpdateStrategy.READ,
+		AutoBinding<PhotonFeeder, Object, SlotProxy, Object> binding = Bindings.createAutoBinding(UpdateStrategy.READ,
 				feeder, BeanProperty.create("slot"), //$NON-NLS-1$
 				slotProxy, BeanProperty.create("slot")); //$NON-NLS-1$
 		binding.setSourceNullValue(null);
