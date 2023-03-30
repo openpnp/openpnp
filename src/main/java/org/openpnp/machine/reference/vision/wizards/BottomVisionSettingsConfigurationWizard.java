@@ -511,22 +511,28 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
                 .convertReverse(testAlignmentAngle.getText());
         Part part = nozzle.getPart();
         Package pkg = null;
+        String packageSource = null;
         if (part != null) {
             pkg = part.getPackage();
+            packageSource = "selected through part "+part.getId()+" loaded on "+nozzle.getName();
         }
         else if (settingsHolder instanceof Part) {
             part = (Part) settingsHolder;
             pkg = part.getPackage();
+            packageSource = "selected through part "+part.getId()+" here";
         }
         else if (settingsHolder instanceof Package) {
             pkg = (Package) settingsHolder;
+            packageSource = "selected here";
         }
         else if (MainFrame.get().getPartsTab().getSelectedPart() != null) {
             part = MainFrame.get().getPartsTab().getSelectedPart();
             pkg = part.getPackage();
+            packageSource = "selected through part "+part.getId()+" in the Parts tab";
         }
         else if (MainFrame.get().getPackagesTab().getSelectedPackage() != null) {
             pkg = MainFrame.get().getPackagesTab().getSelectedPackage();
+            packageSource = "selected in the Packages tab";
         }
         if (pkg == null) {
             throw new Exception("A package must be designated to configure the pipeline. "
@@ -540,7 +546,7 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
         }
         if (! pkg.getCompatibleNozzleTips().contains(nt)) {
             throw new Exception("Nozzle tip "+nt.getName()+" loaded on selected nozzle "+nozzle.getName()
-            +" is not compatible with package "+pkg.getId()+".");
+            +" is not compatible with package "+pkg.getId()+" "+packageSource+".");
         }
         Location location = bottomVision.getCameraLocationAtPartHeight(part, 
                 camera,
