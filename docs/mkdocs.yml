@@ -2,8 +2,8 @@ site_name: OpenPnP Wiki
 site_description: Wiki content for OpenPnP
 copyright: OpenPnP
 repo_url: https://github.com/openpnp/openpnp
-edit_uri: edit/master/docs/
-docs_dir: docs
+edit_uri: edit/master/docs/src
+docs_dir: src
 nav:
     - Sidebar:
       - Sidebar/index.md
