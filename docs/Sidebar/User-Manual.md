@@ -1,14 +1,4 @@
-- [Introduction](#introduction)
-- [The Basics](#the-basics)
-- [The User Interface](#the-user-interface)
-- [Recommended Workflow](#recommended-workflow)
-- [Running a Job](#running-a-job)
-- [Machine Setup](#machine-setup)
-- [Frequently Asked Questions](#frequently-asked-questions)
-- [Advanced Topics](#advanced-topics)
-- [Getting Help](#getting-help)
-
-# Introduction
+## Introduction
 
 OpenPnP is an Open Source SMT pick and place system designed and built with the hobbyist in mind but with the features and power to run commercial pick and place operations. Its goal is to bring pick and place to the desktop of anyone who needs to make more than a few of something.
 
@@ -16,11 +6,11 @@ OpenPnP is made up of three components. The hardware, the firmware and the softw
 
 The purpose of this manual is to help you get the software up and running, and to teach you how to configure and operate it.
 
-## Getting Started
+### Getting Started
 
 If you are brand new to OpenPnP have a look at the [[Quick Start]] guide to quickly get up and running and comfortable with the software. Once you are done there it will guide you back here to get into the details.
 
-## Setup and Calibration
+### Setup and Calibration
 
 To setup OpenPnP with your own machine, see the [[Setup and Calibration]] guide. If you don't have a machine yet you can still work through this manual using OpenPnP in simulator mode. OpenPnP starts this way by default.
 

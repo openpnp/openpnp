@@ -1,9 +1,5 @@
-[![Search](https://user-images.githubusercontent.com/9963310/182446869-7a6e5ab4-6547-4a5b-9dbe-8a5a4588cf35.png) Search the Wiki](/openpnp/openpnp/search?type=wikis)
 
-[Leave a request to edit the Wiki 🠊](https://github.com/openpnp/openpnp/issues/1526)
-
-OpenPnP
--------
+## Sidebar
 
 * [[Quick Start]]
 * [Hardware Build FAQ](https://github.com/openpnp/openpnp/wiki/Build-FAQ)
@@ -35,19 +31,20 @@ OpenPnP
     * [Axis Config](https://github.com/openpnp/openpnp/wiki/GcodeDriver_Axis-Mapping)
     * [Sub-Drivers](https://github.com/openpnp/openpnp/wiki/GcodeDriver#sub-drivers)
     * [Examples](https://github.com/openpnp/openpnp/wiki/GcodeDriver_Example-Configurations)
-* [[User Manual]]
-    * [Installation](https://github.com/openpnp/openpnp/wiki/User-Manual#installation)
-    * [Coordinate System](https://github.com/openpnp/openpnp/wiki/User-Manual#coordinate-system)
-    * [The User Interface](https://github.com/openpnp/openpnp/wiki/User-Manual#the-user-interface)
-    * [Shortcuts & Keys](https://github.com/openpnp/openpnp/wiki/User-Manual#keyboard-shortcuts)
-    * [Your First Job](https://github.com/openpnp/openpnp/wiki/User-Manual#your-first-job)
-    * [Getting Help](https://github.com/openpnp/openpnp/wiki/User-Manual#getting-help)
-* [Video Tutorials](https://github.com/openpnp/openpnp/wiki/Video-Tutorials)
+
+* [User Manual](User-Manual.md)
+    * [Installation](User-Manual.md#installation)
+    * [Coordinate System](User-Manual.md#coordinate-system)
+    * [The User Interface](User-Manual.md#the-user-interface)
+    * [Shortcuts & Keys](User-Manual.md#keyboard-shortcuts)
+    * [Your First Job](User-Manual.md#your-first-job)
+    * [Getting Help](User-Manual.md#getting-help)
+* [Video Tutorials](Video-Tutorials.md)
 * Development Resources
-    * [Developer's Guide](https://github.com/openpnp/openpnp/wiki/Developers-Guide)
-    * [Your First Pull Request](https://github.com/openpnp/openpnp/wiki/Your-First-Pull-Request)
+    * [Developer's Guide](Development Resources/Developers-Guide.md)
+    * [Your First Pull Request](Development Resources/Your-First-Pull-Request.md)
     * [API Documentation](http://openpnp.org/api)
     * [Language Translations](https://github.com/openpnp/openpnp/blob/test/TRANSLATIONS.md)
-* [FAQ](https://github.com/openpnp/openpnp/wiki/FAQ)
-* [Getting Help](https://github.com/openpnp/openpnp/wiki/Getting-Help)
+* [FAQ](FAQ.md)
+* [Getting Help](Getting-Help.md)
 

@@ -4,6 +4,22 @@ copyright: OpenPnP
 repo_url: https://github.com/openpnp/openpnp
 edit_uri: edit/master/docs/
 docs_dir: docs
+nav:
+    - Sidebar:
+      - Sidebar/index.md
+      - User Manual: Sidebar/User-Manual.md
+      - Video Tutorials: Sidebar/Video-Tutorials.md
+      - Development Resources:
+        - Developer's Guide: Sidebar/Development Resources/Developers-Guide.md
+        - Your First Pull Request: Sidebar/Development Resources/Your-First-Pull-Request.md
+        - API Documentation: http://openpnp.org/api
+        - Language Translations: https://github.com/openpnp/openpnp/blob/test/TRANSLATIONS.md
+      - FAQ: Sidebar/FAQ.md
+      - Getting Help: Sidebar/Getting-Help.md
+    - Wiki Content:
+      - ... | wiki/*.md
+    - Code: 'https://github.com/openpnp/openpnp'
+    - Downloads: 'https://openpnp.org/downloads/'
 extra:
   homepage: https://openpnp.org
   version:
