@@ -150,6 +150,26 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
                 currentLocation
                 .put(axesLocation);
 
+        if (!getMachine().isHomed()) {
+            // Machine is unhomed, check if move is legal.
+            int optionFlags = Motion.optionFlags(options);
+            AxesLocation segment = currentLocation.motionSegmentTo(newLocation);
+            for (Driver driver : segment.getAxesDrivers(getMachine())) {
+                if (Motion.MotionOption.JogMotion.isSetIn(optionFlags)) {
+                    // This is a jog move, allow if initial position was synced.
+                    if (!driver.isSyncInitialLocation()) {
+                        throw new Exception("Machine not homed. Jogging only allowed if driver "+driver.getName()+" has option \"Sync. Initial Location\" enabled.");
+                    }
+                }
+                else {
+                    // Not a jog move.
+                    if (!(driver.isSyncInitialLocation() && driver.isAllowUnhomedMotion())) {
+                        throw new Exception("Machine not homed. Motion only allowed if driver "+driver.getName()+" has option \"Allow Unhomed Motion\" enabled.");
+                    }
+                }
+            }
+        }
+
         // Make sure we don't collide axes across multiple drivers.
         interlockMotionAcrossDrivers(hm, currentLocation, newLocation);
         // Perform InterlockActuator before-move actuations.

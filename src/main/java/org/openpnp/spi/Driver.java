@@ -98,6 +98,13 @@ import org.openpnp.spi.MotionPlanner.CompletionType;
     boolean isSyncInitialLocation();
 
     /**
+     * @return true if the driver allows motion on an unhomed machine.
+     */
+    default boolean isAllowUnhomedMotion() {
+        return false;
+    }
+
+    /**
      * @return true if a motion is still assumed to be pending, i.e. waitForCompletion() has not yet been called.  
      * 
      */
