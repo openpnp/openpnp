@@ -64,6 +64,7 @@ public class ReferenceBottomVisionTest {
 
         camera.setErrorOffsets(error);
         machine.setEnabled(true);
+        machine.home();
         machine.execute(() -> {
             nozzle.pick(part);
             PartAlignmentOffset offset = bottomVision.findOffsets(part, null, null, nozzle);
