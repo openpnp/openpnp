@@ -88,7 +88,9 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
     protected TreeMap<Double, Motion> motionPlan = new TreeMap<Double, Motion>();
 
     private AxesLocation lastDirectionalBacklashOffset = new AxesLocation();
-    private List<Driver> lastPlannedDrivers = new ArrayList<Driver>(); 
+    private List<Driver> lastPlannedDrivers = new ArrayList<Driver>();
+
+    private boolean homed = false; 
 
     @Override
     public synchronized void home() throws Exception {
@@ -111,6 +113,12 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
         }
         // Make sure we're on the same page with the controller and wait for still-stand.
         waitForCompletion(null, CompletionType.WaitForStillstandIndefinitely);
+        homed = true;
+    }
+
+    @Override
+    public void unhome() {
+        homed  = false;
     }
 
     @Override
@@ -150,7 +158,7 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
                 currentLocation
                 .put(axesLocation);
 
-        if (!getMachine().isHomed()) {
+        if (!homed) {
             // Machine is unhomed, check if move is legal.
             int optionFlags = Motion.optionFlags(options);
             AxesLocation segment = currentLocation.motionSegmentTo(newLocation);

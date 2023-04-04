@@ -89,6 +89,11 @@ public interface MotionPlanner extends PropertySheetHolder, Solutions.Subject {
     public void home() throws Exception;
 
     /**
+     * Mark the motion planner as unhomed.
+     */
+    public void unhome();
+
+    /**
      * Set the current physical or virtual axis positions to be reinterpreted as the specified coordinates. 
      * Used after visual homing and to reset a rotation angle after it has wrapped around. 
      * 
