@@ -63,16 +63,18 @@ jobs:
           aws_bucket: openpnp
           source_dir: 'installers'
           destination_dir: ''
-          
-      - name: Update API Docs
-        run: |
-          git config --global user.email "jason@vonnieda.org"
-          git config --global user.name "Jason von Nieda"
-          git clone --quiet --branch=gh-pages https://${{ secrets.GH_PAGES_TOKEN }}@github.com/openpnp/openpnp gh-pages
-          cd gh-pages
-          git rm --ignore-unmatch -rf $BRANCH_NAME
-          javadoc -sourcepath ../src/main/java -subpackages org.openpnp -d $BRANCH_NAME || true
-          git add -f .
-          git commit -m "Lastest javadoc on successful build $GITHUB_RUN_NUMBER auto-pushed to gh-pages"
-          git push -fq origin gh-pages
+
+      # TODO this was broken during the updates to Java 17. See 
+      # https://github.com/openpnp/openpnp/issues/1541          
+      # - name: Update API Docs
+      #   run: |
+      #     git config --global user.email "jason@vonnieda.org"
+      #     git config --global user.name "Jason von Nieda"
+      #     git clone --quiet --branch=gh-pages https://${{ secrets.GH_PAGES_TOKEN }}@github.com/openpnp/openpnp gh-pages
+      #     cd gh-pages
+      #     git rm --ignore-unmatch -rf $BRANCH_NAME
+      #     javadoc -sourcepath ../src/main/java -subpackages org.openpnp -d $BRANCH_NAME || true
+      #     git add -f .
+      #     git commit -m "Lastest javadoc on successful build $GITHUB_RUN_NUMBER auto-pushed to gh-pages"
+      #     git push -fq origin gh-pages
       
