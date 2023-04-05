@@ -89,9 +89,14 @@ public interface MotionPlanner extends PropertySheetHolder, Solutions.Subject {
     public void home() throws Exception;
 
     /**
-     * Mark the motion planner as unhomed.
+     * Mark the motion planner and underlying drivers as unhomed.
      */
     public void unhome();
+
+    /**
+     * @return true when the motion planner has homed all drivers.
+     */
+    boolean isHomed();
 
     /**
      * Set the current physical or virtual axis positions to be reinterpreted as the specified coordinates. 

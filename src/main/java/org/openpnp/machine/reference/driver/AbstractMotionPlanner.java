@@ -122,6 +122,11 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
     }
 
     @Override
+    public boolean isHomed() {
+        return homed;
+    }
+
+    @Override
     public synchronized void setGlobalOffsets(AxesLocation axesLocation) throws Exception {
         // Make sure we're on the same page with the controller, but there is no need to  wait for it to physically complete.
         executeMotionPlan(CompletionType.CommandStillstand);
