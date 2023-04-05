@@ -9,9 +9,9 @@ import org.openpnp.machine.reference.ReferencePnpJobProcessor;
 import org.openpnp.machine.reference.driver.test.TestDriver;
 import org.openpnp.machine.reference.driver.test.TestDriver.TestDriverDelegate;
 import org.openpnp.machine.reference.feeder.ReferenceTubeFeeder;
+import org.openpnp.model.Abstract2DLocatable.Side;
 import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Board;
-import org.openpnp.model.Abstract2DLocatable.Side;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Job;
@@ -119,6 +119,7 @@ public class BasicJobTest {
 
         ReferencePnpJobProcessor jobProcessor = (ReferencePnpJobProcessor) machine.getPnpJobProcessor();
         machine.setEnabled(true);
+        machine.home();
         machine.execute(() -> { 
             jobProcessor.addTextStatusListener(text -> {
                 System.out.println(text);

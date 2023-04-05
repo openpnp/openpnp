@@ -254,6 +254,7 @@ public class ReferenceMachine extends AbstractMachine {
         }
         else {
             // remove homed-flag if machine is disabled
+            getMotionPlanner().unhome();
             this.setHomed(false);
             fireMachineAboutToBeDisabled("User requested stop.");
             // In a multi-driver machine, we must try to disable all drivers even if one throws.
@@ -512,6 +513,7 @@ public class ReferenceMachine extends AbstractMachine {
 
         if (isHomed()) {
             // if one rehomes, the isHomed flag has to be removed
+            getMotionPlanner().unhome();
             this.setHomed(false);
         }
 
