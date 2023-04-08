@@ -1,0 +1,16 @@
+<openpnp-packages>
+   <package id="SW-TACT-5.25MM">
+   </package>
+   <package id="JEDEC-MS-013-AB" description="18 SOIC 0.300in / 7.5mm Wide">
+   </package>
+   <package id="0805" description="0805">
+     <footprint units="Millimeters">
+         <pad name="1" x="-0.95" y="0.0" width="1.3" height="1.5" rotation="90.0" roundness="0.0"/>
+         <pad name="2" x="0.95" y="0.0" width="1.3" height="1.5" rotation="90.0" roundness="0.0"/>
+     </footprint>
+      <compatible-nozzle-tip-ids class="java.util.ArrayList">
+         <string>NT1</string>
+         <string>NT2</string>
+      </compatible-nozzle-tip-ids>
+   </package>
+</openpnp-packages>

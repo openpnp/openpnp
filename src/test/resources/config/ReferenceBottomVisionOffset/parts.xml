@@ -1,0 +1,6 @@
+<openpnp-parts>
+   <part id="R0805-1K" height-units="Millimeters" height="1.0" package-id="R0805" speed="1.0" pick-retry-count="0"/>
+   <part id="R0805-2K" height-units="Millimeters" height="1.0" package-id="R0805" speed="1.0" pick-retry-count="0"/>
+   <part id="FIDUCIAL-HOME" height-units="Millimeters" height="0.0" package-id="FIDUCIAL-1X2" speed="1.0" pick-retry-count="0"/>
+   <part id="DoubleAsymPart" height-units="Millimeters" height="2.0" package-id="doubleAsym" speed="1.0" pick-retry-count="0"/>
+</openpnp-parts>

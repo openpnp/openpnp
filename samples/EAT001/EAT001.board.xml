@@ -1,0 +1,99 @@
+<openpnp-board name="EAT001.board.xml">
+   <outline units="Millimeters"/>
+   <fiducials/>
+   <placements>
+      <placement version="1.1" id="C5" side="Top" part-id="16V 0805-0.1" type="Ignore">
+         <location units="Millimeters" x="23.7" y="23.5" z="0.0" rotation="180.0"/>
+      </placement>
+      <placement version="1.1" id="C7" side="Top" part-id="0805-0.1" type="Place">
+         <location units="Millimeters" x="12.4" y="24.4" z="0.0" rotation="180.0"/>
+      </placement>
+      <placement version="1.1" id="C8" side="Top" part-id="0805-0.1" type="Place">
+         <location units="Millimeters" x="24.0" y="17.6" z="0.0" rotation="270.0"/>
+      </placement>
+      <placement version="1.1" id="C9" side="Top" part-id="6.3V 0805-0.47" type="Ignore">
+         <location units="Millimeters" x="12.3" y="13.9" z="0.0" rotation="270.0"/>
+      </placement>
+      <placement version="1.1" id="C28" side="Top" part-id="uF UD-6,3X7,7_NICHICON-100" type="Ignore">
+         <location units="Millimeters" x="9.31" y="8.66" z="0.0" rotation="0.0"/>
+      </placement>
+      <placement version="1.1" id="C111" side="Top" part-id="50V 0805-0.01" type="Ignore">
+         <location units="Millimeters" x="24.0" y="20.8" z="0.0" rotation="90.0"/>
+      </placement>
+      <placement version="1.1" id="FID1" side="Top" part-id="FIDUCIAL-1X2-FIDUCIAL1X2" type="Fiducial">
+         <location units="Millimeters" x="23.6" y="15.2" z="0.0" rotation="0.0"/>
+      </placement>
+      <placement version="1.1" id="FID2" side="Top" part-id="FIDUCIAL-1X2-FIDUCIAL1X2" type="Fiducial">
+         <location units="Millimeters" x="12.4" y="20.8" z="0.0" rotation="0.0"/>
+      </placement>
+      <placement version="1.1" id="FID3" side="Top" part-id="FIDUCIAL-1X2-FIDUCIAL1X2" type="Fiducial">
+         <location units="Millimeters" x="1.6" y="31.4" z="0.0" rotation="0.0"/>
+      </placement>
+      <placement version="1.1" id="FID4" side="Top" part-id="FIDUCIAL-1X2-FIDUCIAL1X2" type="Fiducial">
+         <location units="Millimeters" x="24.6" y="7.2" z="0.0" rotation="0.0"/>
+      </placement>
+      <placement version="1.1" id="J1" side="Top" part-id="CONN-RECT-2.54MM-16PIN-2ROW-SIDE-CONN-RECT-16PIN-2ROWSIDE" type="Ignore">
+         <location units="Millimeters" x="14.6" y="2.98" z="0.0" rotation="0.0"/>
+      </placement>
+      <placement version="1.1" id="M1" side="Top" part-id="DPAK-FQD13N06LTM" type="Ignore">
+         <location units="Millimeters" x="7.6" y="18.6" z="0.0" rotation="0.0"/>
+      </placement>
+      <placement version="1.1" id="R3" side="Top" part-id="0805-10K" type="Place">
+         <location units="Millimeters" x="5.0" y="11.2" z="0.0" rotation="90.0"/>
+      </placement>
+      <placement version="1.1" id="R6" side="Top" part-id="0805-0.2" type="Place">
+         <location units="Millimeters" x="16.1" y="24.5" z="0.0" rotation="0.0"/>
+      </placement>
+      <placement version="1.1" id="R7" side="Top" part-id="0805-0.2" type="Place">
+         <location units="Millimeters" x="20.3" y="24.5" z="0.0" rotation="180.0"/>
+      </placement>
+      <placement version="1.1" id="U1" side="Top" part-id="TSSOP28_PAD-IC-DRV8825" type="Ignore">
+         <location units="Millimeters" x="18.21" y="18.2" z="0.0" rotation="270.0"/>
+      </placement>
+      <placement version="1.1" id="C1" side="Bottom" part-id="uF 0805-10" type="Place">
+         <location units="Millimeters" x="7.4" y="16.4" z="0.0" rotation="180.0"/>
+      </placement>
+      <placement version="1.1" id="C2" side="Bottom" part-id="0805-1" type="Place">
+         <location units="Millimeters" x="13.8" y="13.0" z="0.0" rotation="90.0"/>
+      </placement>
+      <placement version="1.1" id="FID5" side="Bottom" part-id="FIDUCIAL-1X2-FIDUCIAL1X2" type="Fiducial">
+         <location units="Millimeters" x="24.4" y="10.2" z="0.0" rotation="0.0"/>
+      </placement>
+      <placement version="1.1" id="FID6" side="Bottom" part-id="FIDUCIAL-1X2-FIDUCIAL1X2" type="Fiducial">
+         <location units="Millimeters" x="1.6" y="31.4" z="0.0" rotation="0.0"/>
+      </placement>
+      <placement version="1.1" id="J1" side="Bottom" part-id="CONN-RECT-2.54MM-16PIN-2ROW-SIDE-CONN-RECT-16PIN-2ROWSIDE" type="Place">
+         <location units="Millimeters" x="14.6" y="2.98" z="0.0" rotation="0.0"/>
+      </placement>
+      <placement version="1.1" id="R1" side="Bottom" part-id="0805-20K" type="Place">
+         <location units="Millimeters" x="21.4" y="25.1" z="0.0" rotation="180.0"/>
+      </placement>
+      <placement version="1.1" id="R4" side="Bottom" part-id="0805-10K" type="Place">
+         <location units="Millimeters" x="8.4" y="7.0" z="0.0" rotation="0.0"/>
+      </placement>
+      <placement version="1.1" id="R5" side="Bottom" part-id="0805-10K" type="Place">
+         <location units="Millimeters" x="22.6" y="6.8" z="0.0" rotation="180.0"/>
+      </placement>
+      <placement version="1.1" id="R8" side="Bottom" part-id="0805-4.7K" type="Place">
+         <location units="Millimeters" x="7.4" y="14.8" z="0.0" rotation="180.0"/>
+      </placement>
+      <placement version="1.1" id="SJ1" side="Bottom" part-id="JUMPER-NC-JUMPER" type="Place">
+         <location units="Millimeters" x="18.6" y="12.6" z="0.0" rotation="90.0"/>
+      </placement>
+      <placement version="1.1" id="SJ2" side="Bottom" part-id="JUMPER-NC-JUMPER" type="Place">
+         <location units="Millimeters" x="20.6" y="12.6" z="0.0" rotation="90.0"/>
+      </placement>
+      <placement version="1.1" id="SJ3" side="Bottom" part-id="JUMPER-NC-JUMPER" type="Place">
+         <location units="Millimeters" x="22.6" y="12.6" z="0.0" rotation="90.0"/>
+      </placement>
+      <placement version="1.1" id="U2" side="Bottom" part-id="SOT23-6-24AA014" type="Place">
+         <location units="Millimeters" x="8.56" y="11.0" z="0.0" rotation="180.0"/>
+      </placement>
+      <placement version="1.1" id="U3" side="Bottom" part-id="SOT23-5-MIC5205" type="Place">
+         <location units="Millimeters" x="15.0" y="8.8" z="0.0" rotation="90.0"/>
+      </placement>
+      <placement version="1.1" id="VR1" side="Bottom" part-id="TC33X-10K" type="Place">
+         <location units="Millimeters" x="17.2" y="23.36" z="0.0" rotation="180.0"/>
+      </placement>
+   </placements>
+</openpnp-board>

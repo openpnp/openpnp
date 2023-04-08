@@ -1,0 +1,81 @@
+name: Build and Deploy OpenPnP
+
+on: 
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    name: Java ${{ matrix.java }}
+    strategy:
+      matrix:
+        java: [8, 9, 11, 12, 13, 14, 15]
+
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v2
+
+      - name: Setup JDK ${{ matrix.java }}
+        uses: actions/setup-java@v1
+        with:
+          java-version: ${{ matrix.java }}
+
+      - name: Build with Maven
+        run: mvn -q -B test
+        
+  deploy:
+    runs-on: ubuntu-latest
+    name: Deploy
+    needs: test
+    if: github.repository == 'openpnp/openpnp' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/test')
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v2
+
+      - name: Setup JDK 8 for Deployment
+        uses: actions/setup-java@v1
+        with:
+          java-version: 8
+
+      - name: Build with Maven
+        run: mvn -q -B package -DskipTests
+        
+      - name: Get Branch Name
+        uses: nelonoel/branch-name@v1.0.1
+
+      - name: Build Installers
+        run: |
+          wget -q https://openpnp.s3-us-west-2.amazonaws.com/install4j_unix_8_0_6.tar.gz
+          tar -xzf install4j_unix_8_0_6.tar.gz
+          ./install4j8.0.6/bin/install4jc -L ${{secrets.INSTALL4J_LICENSE_KEY }}
+          wget -q https://s3-us-west-2.amazonaws.com/openpnp/macosx-amd64-1.8.0_131.tar.gz
+          wget -q https://s3-us-west-2.amazonaws.com/openpnp/windows-amd64-1.8.0_131.tar.gz
+          wget -q https://s3-us-west-2.amazonaws.com/openpnp/windows-x86-1.8.0_131.tar.gz
+          VERSION=`java -cp target/openpnp-gui-0.0.1-alpha-SNAPSHOT.jar:target/lib org.openpnp.Main --version`
+          ./install4j8.0.6/bin/install4jc -r $VERSION -d installers -D mediaFileVersion=$BRANCH_NAME OpenPnP.install4j
+          mv installers/updates.xml installers/updates-$BRANCH_NAME.xml
+          mkdir -p installers/$BRANCH_NAME/$VERSION
+          cp installers/OpenPnP* installers/$BRANCH_NAME/$VERSION
+          
+      - name: Upload Installers to S3
+        uses: shallwefootball/upload-s3-action@v1.1.3
+        with:
+          aws_key_id: ${{ secrets.S3_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.S3_SECRET_ACCESS_KEY }}
+          aws_bucket: openpnp
+          source_dir: 'installers'
+          destination_dir: ''
+          
+      - name: Update API Docs
+        run: |
+          git config --global user.email "jason@vonnieda.org"
+          git config --global user.name "Jason von Nieda"
+          git clone --quiet --branch=gh-pages https://${{ secrets.GH_PAGES_TOKEN }}@github.com/openpnp/openpnp gh-pages
+          cd gh-pages
+          git rm --ignore-unmatch -rf $BRANCH_NAME
+          javadoc -sourcepath ../src/main/java -subpackages org.openpnp -d $BRANCH_NAME || true
+          git add -f .
+          git commit -m "Lastest javadoc on successful build $GITHUB_RUN_NUMBER auto-pushed to gh-pages"
+          git push -fq origin gh-pages
+      

@@ -1,0 +1,969 @@
+<openpnp-packages>
+   <package version="1.1" id="FIDUCIAL-HOME" pick-vacuum-level="0.0" place-blow-off-level="0.0">
+      <footprint units="Millimeters" body-width="0.0" body-height="0.0" outer-dimension="0.0" inner-dimension="0.0" pad-count="0" pad-pitch="0.0" pad-across="0.0" pad-roundness="0.0">
+         <pad name="FID" x="0.0" y="0.0" width="1.0158730158730158" height="1.0158730158730158" rotation="0.0" roundness="100.0"/>
+      </footprint>
+      <vision-compositing compositing-method="Restricted" min-leverage-factor="0.2" extra-shots="0" allow-inside="true">
+         <max-pick-tolerance value="0.0" units="Millimeters"/>
+      </vision-compositing>
+      <compatible-nozzle-tip-ids class="java.util.ArrayList"/>
+   </package>
+   <package version="1.1" id="LQFP144" pick-vacuum-level="0.0" place-blow-off-level="0.0">
+      <footprint units="Millimeters" body-width="19.9" body-height="19.9" outer-dimension="22.6" inner-dimension="19.9" pad-count="144" pad-pitch="0.5" pad-across="0.35" pad-roundness="-100.0">
+         <pad name="1" x="-10.625" y="8.75" width="1.3500000000000014" height="0.35" rotation="180.0" roundness="-100.0"/>
+         <pad name="2" x="-10.625" y="8.25" width="1.3500000000000014" height="0.35" rotation="180.0" roundness="-100.0"/>
+         <pad name="3" x="-10.625" y="7.75" width="1.3500000000000014" height="0.35" rotation="180.0" roundness="-100.0"/>
+         <pad name="4" x="-10.625" y="7.25" width="1.3500000000000014" height="0.35" rotation="180.0" roundness="-100.0"/>
+         <pad name="5" x="-10.625" y="6.75" width="1.3500000000000014" height="0.35" rotation="180.0" roundness="-100.0"/>
+         <pad name="6" x="-10.625" y="6.25" width="1.3500000000000014" height="0.35" rotation="180.0" roundness="-100.0"/>
+         <pad name="7" x="-10.625" y="5.75" width="1.3500000000000014" height="0.35" rotation="180.0" roundness="-100.0"/>
+         <pad name="8" x="-10.625" y="5.25" width="1.3500000000000014" height="0.35" rotation="180.0" roundness="-100.0"/>
+         <pad name="9" x="-10.625" y="4.75" width="1.3500000000000014" height="0.35" rotation="180.0" roundness="-100.0"/>
+         <pad name="10" x="-10.625" y="4.25" width="1.3500000000000014" height="0.35" rotation="180.0" roundness="-100.0"/>
+         <pad name="11" x="-10.625" y="3.75" width="1.3500000000000014" height="0.35" rotation="180.0" roundness="-100.0"/>
+         <pad name="12" x="-10.625" y="3.25" width="1.3500000000000014" height="0.35" rotation="180.0" roundness="-100.0"/>
+         <pad name="13" x="-10.625" y="2.75" width="1.3500000000000014" height="0.35" rotation="180.0" roundness="-100.0"/>
+         <pad name="14" x="-10.625" y="2.25" width="1.3500000000000014" height="0.35" rotation="180.0" roundness="-100.0"/>
+         <pad name="15" x="-10.625" y="1.75" width="1.3500000000000014" height="0.35" rotation="180.0" roundness="-100.0"/>
+         <pad name="16" x="-10.625" y="1.25" width="1.3500000000000014" height="0.35" rotation="180.0" roundness="-100.0"/>
+         <pad name="17" x="-10.625" y="0.75" width="1.3500000000000014" height="0.35" rotation="180.0" roundness="-100.0"/>
+         <pad name="18" x="-10.625" y="0.25" width="1.3500000000000014" height="0.35" rotation="180.0" roundness="-100.0"/>
+         <pad name="19" x="-10.625" y="-0.25" width="1.3500000000000014" height="0.35" rotation="180.0" roundness="-100.0"/>
+         <pad name="20" x="-10.625" y="-0.75" width="1.3500000000000014" height="0.35" rotation="180.0" roundness="-100.0"/>
+         <pad name="21" x="-10.625" y="-1.25" width="1.3500000000000014" height="0.35" rotation="180.0" roundness="-100.0"/>
+         <pad name="22" x="-10.625" y="-1.75" width="1.3500000000000014" height="0.35" rotation="180.0" roundness="-100.0"/>
+         <pad name="23" x="-10.625" y="-2.25" width="1.3500000000000014" height="0.35" rotation="180.0" roundness="-100.0"/>
+         <pad name="24" x="-10.625" y="-2.75" width="1.3500000000000014" height="0.35" rotation="180.0" roundness="-100.0"/>
+         <pad name="25" x="-10.625" y="-3.25" width="1.3500000000000014" height="0.35" rotation="180.0" roundness="-100.0"/>
+         <pad name="26" x="-10.625" y="-3.75" width="1.3500000000000014" height="0.35" rotation="180.0" roundness="-100.0"/>
+         <pad name="27" x="-10.625" y="-4.25" width="1.3500000000000014" height="0.35" rotation="180.0" roundness="-100.0"/>
+         <pad name="28" x="-10.625" y="-4.75" width="1.3500000000000014" height="0.35" rotation="180.0" roundness="-100.0"/>
+         <pad name="29" x="-10.625" y="-5.25" width="1.3500000000000014" height="0.35" rotation="180.0" roundness="-100.0"/>
+         <pad name="30" x="-10.625" y="-5.75" width="1.3500000000000014" height="0.35" rotation="180.0" roundness="-100.0"/>
+         <pad name="31" x="-10.625" y="-6.25" width="1.3500000000000014" height="0.35" rotation="180.0" roundness="-100.0"/>
+         <pad name="32" x="-10.625" y="-6.75" width="1.3500000000000014" height="0.35" rotation="180.0" roundness="-100.0"/>
+         <pad name="33" x="-10.625" y="-7.25" width="1.3500000000000014" height="0.35" rotation="180.0" roundness="-100.0"/>
+         <pad name="34" x="-10.625" y="-7.75" width="1.3500000000000014" height="0.35" rotation="180.0" roundness="-100.0"/>
+         <pad name="35" x="-10.625" y="-8.25" width="1.3500000000000014" height="0.35" rotation="180.0" roundness="-100.0"/>
+         <pad name="36" x="-10.625" y="-8.75" width="1.3500000000000014" height="0.35" rotation="180.0" roundness="-100.0"/>
+         <pad name="37" x="-8.75" y="-10.625" width="1.3500000000000014" height="0.35" rotation="-90.0" roundness="-100.0"/>
+         <pad name="38" x="-8.25" y="-10.625" width="1.3500000000000014" height="0.35" rotation="-90.0" roundness="-100.0"/>
+         <pad name="39" x="-7.75" y="-10.625" width="1.3500000000000014" height="0.35" rotation="-90.0" roundness="-100.0"/>
+         <pad name="40" x="-7.25" y="-10.625" width="1.3500000000000014" height="0.35" rotation="-90.0" roundness="-100.0"/>
+         <pad name="41" x="-6.75" y="-10.625" width="1.3500000000000014" height="0.35" rotation="-90.0" roundness="-100.0"/>
+         <pad name="42" x="-6.25" y="-10.625" width="1.3500000000000014" height="0.35" rotation="-90.0" roundness="-100.0"/>
+         <pad name="43" x="-5.75" y="-10.625" width="1.3500000000000014" height="0.35" rotation="-90.0" roundness="-100.0"/>
+         <pad name="44" x="-5.25" y="-10.625" width="1.3500000000000014" height="0.35" rotation="-90.0" roundness="-100.0"/>
+         <pad name="45" x="-4.75" y="-10.625" width="1.3500000000000014" height="0.35" rotation="-90.0" roundness="-100.0"/>
+         <pad name="46" x="-4.25" y="-10.625" width="1.3500000000000014" height="0.35" rotation="-90.0" roundness="-100.0"/>
+         <pad name="47" x="-3.75" y="-10.625" width="1.3500000000000014" height="0.35" rotation="-90.0" roundness="-100.0"/>
+         <pad name="48" x="-3.25" y="-10.625" width="1.3500000000000014" height="0.35" rotation="-90.0" roundness="-100.0"/>
+         <pad name="49" x="-2.75" y="-10.625" width="1.3500000000000014" height="0.35" rotation="-90.0" roundness="-100.0"/>
+         <pad name="50" x="-2.25" y="-10.625" width="1.3500000000000014" height="0.35" rotation="-90.0" roundness="-100.0"/>
+         <pad name="51" x="-1.75" y="-10.625" width="1.3500000000000014" height="0.35" rotation="-90.0" roundness="-100.0"/>
+         <pad name="52" x="-1.25" y="-10.625" width="1.3500000000000014" height="0.35" rotation="-90.0" roundness="-100.0"/>
+         <pad name="53" x="-0.75" y="-10.625" width="1.3500000000000014" height="0.35" rotation="-90.0" roundness="-100.0"/>
+         <pad name="54" x="-0.25" y="-10.625" width="1.3500000000000014" height="0.35" rotation="-90.0" roundness="-100.0"/>
+         <pad name="55" x="0.25" y="-10.625" width="1.3500000000000014" height="0.35" rotation="-90.0" roundness="-100.0"/>
+         <pad name="56" x="0.75" y="-10.625" width="1.3500000000000014" height="0.35" rotation="-90.0" roundness="-100.0"/>
+         <pad name="57" x="1.25" y="-10.625" width="1.3500000000000014" height="0.35" rotation="-90.0" roundness="-100.0"/>
+         <pad name="58" x="1.75" y="-10.625" width="1.3500000000000014" height="0.35" rotation="-90.0" roundness="-100.0"/>
+         <pad name="59" x="2.25" y="-10.625" width="1.3500000000000014" height="0.35" rotation="-90.0" roundness="-100.0"/>
+         <pad name="60" x="2.75" y="-10.625" width="1.3500000000000014" height="0.35" rotation="-90.0" roundness="-100.0"/>
+         <pad name="61" x="3.25" y="-10.625" width="1.3500000000000014" height="0.35" rotation="-90.0" roundness="-100.0"/>
+         <pad name="62" x="3.75" y="-10.625" width="1.3500000000000014" height="0.35" rotation="-90.0" roundness="-100.0"/>
+         <pad name="63" x="4.25" y="-10.625" width="1.3500000000000014" height="0.35" rotation="-90.0" roundness="-100.0"/>
+         <pad name="64" x="4.75" y="-10.625" width="1.3500000000000014" height="0.35" rotation="-90.0" roundness="-100.0"/>
+         <pad name="65" x="5.25" y="-10.625" width="1.3500000000000014" height="0.35" rotation="-90.0" roundness="-100.0"/>
+         <pad name="66" x="5.75" y="-10.625" width="1.3500000000000014" height="0.35" rotation="-90.0" roundness="-100.0"/>
+         <pad name="67" x="6.25" y="-10.625" width="1.3500000000000014" height="0.35" rotation="-90.0" roundness="-100.0"/>
+         <pad name="68" x="6.75" y="-10.625" width="1.3500000000000014" height="0.35" rotation="-90.0" roundness="-100.0"/>
+         <pad name="69" x="7.25" y="-10.625" width="1.3500000000000014" height="0.35" rotation="-90.0" roundness="-100.0"/>
+         <pad name="70" x="7.75" y="-10.625" width="1.3500000000000014" height="0.35" rotation="-90.0" roundness="-100.0"/>
+         <pad name="71" x="8.25" y="-10.625" width="1.3500000000000014" height="0.35" rotation="-90.0" roundness="-100.0"/>
+         <pad name="72" x="8.75" y="-10.625" width="1.3500000000000014" height="0.35" rotation="-90.0" roundness="-100.0"/>
+         <pad name="73" x="10.625" y="-8.75" width="1.3500000000000014" height="0.35" rotation="0.0" roundness="-100.0"/>
+         <pad name="74" x="10.625" y="-8.25" width="1.3500000000000014" height="0.35" rotation="0.0" roundness="-100.0"/>
+         <pad name="75" x="10.625" y="-7.75" width="1.3500000000000014" height="0.35" rotation="0.0" roundness="-100.0"/>
+         <pad name="76" x="10.625" y="-7.25" width="1.3500000000000014" height="0.35" rotation="0.0" roundness="-100.0"/>
+         <pad name="77" x="10.625" y="-6.75" width="1.3500000000000014" height="0.35" rotation="0.0" roundness="-100.0"/>
+         <pad name="78" x="10.625" y="-6.25" width="1.3500000000000014" height="0.35" rotation="0.0" roundness="-100.0"/>
+         <pad name="79" x="10.625" y="-5.75" width="1.3500000000000014" height="0.35" rotation="0.0" roundness="-100.0"/>
+         <pad name="80" x="10.625" y="-5.25" width="1.3500000000000014" height="0.35" rotation="0.0" roundness="-100.0"/>
+         <pad name="81" x="10.625" y="-4.75" width="1.3500000000000014" height="0.35" rotation="0.0" roundness="-100.0"/>
+         <pad name="82" x="10.625" y="-4.25" width="1.3500000000000014" height="0.35" rotation="0.0" roundness="-100.0"/>
+         <pad name="83" x="10.625" y="-3.75" width="1.3500000000000014" height="0.35" rotation="0.0" roundness="-100.0"/>
+         <pad name="84" x="10.625" y="-3.25" width="1.3500000000000014" height="0.35" rotation="0.0" roundness="-100.0"/>
+         <pad name="85" x="10.625" y="-2.75" width="1.3500000000000014" height="0.35" rotation="0.0" roundness="-100.0"/>
+         <pad name="86" x="10.625" y="-2.25" width="1.3500000000000014" height="0.35" rotation="0.0" roundness="-100.0"/>
+         <pad name="87" x="10.625" y="-1.75" width="1.3500000000000014" height="0.35" rotation="0.0" roundness="-100.0"/>
+         <pad name="88" x="10.625" y="-1.25" width="1.3500000000000014" height="0.35" rotation="0.0" roundness="-100.0"/>
+         <pad name="89" x="10.625" y="-0.75" width="1.3500000000000014" height="0.35" rotation="0.0" roundness="-100.0"/>
+         <pad name="90" x="10.625" y="-0.25" width="1.3500000000000014" height="0.35" rotation="0.0" roundness="-100.0"/>
+         <pad name="91" x="10.625" y="0.25" width="1.3500000000000014" height="0.35" rotation="0.0" roundness="-100.0"/>
+         <pad name="92" x="10.625" y="0.75" width="1.3500000000000014" height="0.35" rotation="0.0" roundness="-100.0"/>
+         <pad name="93" x="10.625" y="1.25" width="1.3500000000000014" height="0.35" rotation="0.0" roundness="-100.0"/>
+         <pad name="94" x="10.625" y="1.75" width="1.3500000000000014" height="0.35" rotation="0.0" roundness="-100.0"/>
+         <pad name="95" x="10.625" y="2.25" width="1.3500000000000014" height="0.35" rotation="0.0" roundness="-100.0"/>
+         <pad name="96" x="10.625" y="2.75" width="1.3500000000000014" height="0.35" rotation="0.0" roundness="-100.0"/>
+         <pad name="97" x="10.625" y="3.25" width="1.3500000000000014" height="0.35" rotation="0.0" roundness="-100.0"/>
+         <pad name="98" x="10.625" y="3.75" width="1.3500000000000014" height="0.35" rotation="0.0" roundness="-100.0"/>
+         <pad name="99" x="10.625" y="4.25" width="1.3500000000000014" height="0.35" rotation="0.0" roundness="-100.0"/>
+         <pad name="100" x="10.625" y="4.75" width="1.3500000000000014" height="0.35" rotation="0.0" roundness="-100.0"/>
+         <pad name="101" x="10.625" y="5.25" width="1.3500000000000014" height="0.35" rotation="0.0" roundness="-100.0"/>
+         <pad name="102" x="10.625" y="5.75" width="1.3500000000000014" height="0.35" rotation="0.0" roundness="-100.0"/>
+         <pad name="103" x="10.625" y="6.25" width="1.3500000000000014" height="0.35" rotation="0.0" roundness="-100.0"/>
+         <pad name="104" x="10.625" y="6.75" width="1.3500000000000014" height="0.35" rotation="0.0" roundness="-100.0"/>
+         <pad name="105" x="10.625" y="7.25" width="1.3500000000000014" height="0.35" rotation="0.0" roundness="-100.0"/>
+         <pad name="106" x="10.625" y="7.75" width="1.3500000000000014" height="0.35" rotation="0.0" roundness="-100.0"/>
+         <pad name="107" x="10.625" y="8.25" width="1.3500000000000014" height="0.35" rotation="0.0" roundness="-100.0"/>
+         <pad name="108" x="10.625" y="8.75" width="1.3500000000000014" height="0.35" rotation="0.0" roundness="-100.0"/>
+         <pad name="109" x="8.75" y="10.625" width="1.3500000000000014" height="0.35" rotation="90.0" roundness="-100.0"/>
+         <pad name="110" x="8.25" y="10.625" width="1.3500000000000014" height="0.35" rotation="90.0" roundness="-100.0"/>
+         <pad name="111" x="7.75" y="10.625" width="1.3500000000000014" height="0.35" rotation="90.0" roundness="-100.0"/>
+         <pad name="112" x="7.25" y="10.625" width="1.3500000000000014" height="0.35" rotation="90.0" roundness="-100.0"/>
+         <pad name="113" x="6.75" y="10.625" width="1.3500000000000014" height="0.35" rotation="90.0" roundness="-100.0"/>
+         <pad name="114" x="6.25" y="10.625" width="1.3500000000000014" height="0.35" rotation="90.0" roundness="-100.0"/>
+         <pad name="115" x="5.75" y="10.625" width="1.3500000000000014" height="0.35" rotation="90.0" roundness="-100.0"/>
+         <pad name="116" x="5.25" y="10.625" width="1.3500000000000014" height="0.35" rotation="90.0" roundness="-100.0"/>
+         <pad name="117" x="4.75" y="10.625" width="1.3500000000000014" height="0.35" rotation="90.0" roundness="-100.0"/>
+         <pad name="118" x="4.25" y="10.625" width="1.3500000000000014" height="0.35" rotation="90.0" roundness="-100.0"/>
+         <pad name="119" x="3.75" y="10.625" width="1.3500000000000014" height="0.35" rotation="90.0" roundness="-100.0"/>
+         <pad name="120" x="3.25" y="10.625" width="1.3500000000000014" height="0.35" rotation="90.0" roundness="-100.0"/>
+         <pad name="121" x="2.75" y="10.625" width="1.3500000000000014" height="0.35" rotation="90.0" roundness="-100.0"/>
+         <pad name="122" x="2.25" y="10.625" width="1.3500000000000014" height="0.35" rotation="90.0" roundness="-100.0"/>
+         <pad name="123" x="1.75" y="10.625" width="1.3500000000000014" height="0.35" rotation="90.0" roundness="-100.0"/>
+         <pad name="124" x="1.25" y="10.625" width="1.3500000000000014" height="0.35" rotation="90.0" roundness="-100.0"/>
+         <pad name="125" x="0.75" y="10.625" width="1.3500000000000014" height="0.35" rotation="90.0" roundness="-100.0"/>
+         <pad name="126" x="0.25" y="10.625" width="1.3500000000000014" height="0.35" rotation="90.0" roundness="-100.0"/>
+         <pad name="127" x="-0.25" y="10.625" width="1.3500000000000014" height="0.35" rotation="90.0" roundness="-100.0"/>
+         <pad name="128" x="-0.75" y="10.625" width="1.3500000000000014" height="0.35" rotation="90.0" roundness="-100.0"/>
+         <pad name="129" x="-1.25" y="10.625" width="1.3500000000000014" height="0.35" rotation="90.0" roundness="-100.0"/>
+         <pad name="130" x="-1.75" y="10.625" width="1.3500000000000014" height="0.35" rotation="90.0" roundness="-100.0"/>
+         <pad name="131" x="-2.25" y="10.625" width="1.3500000000000014" height="0.35" rotation="90.0" roundness="-100.0"/>
+         <pad name="132" x="-2.75" y="10.625" width="1.3500000000000014" height="0.35" rotation="90.0" roundness="-100.0"/>
+         <pad name="133" x="-3.25" y="10.625" width="1.3500000000000014" height="0.35" rotation="90.0" roundness="-100.0"/>
+         <pad name="134" x="-3.75" y="10.625" width="1.3500000000000014" height="0.35" rotation="90.0" roundness="-100.0"/>
+         <pad name="135" x="-4.25" y="10.625" width="1.3500000000000014" height="0.35" rotation="90.0" roundness="-100.0"/>
+         <pad name="136" x="-4.75" y="10.625" width="1.3500000000000014" height="0.35" rotation="90.0" roundness="-100.0"/>
+         <pad name="137" x="-5.25" y="10.625" width="1.3500000000000014" height="0.35" rotation="90.0" roundness="-100.0"/>
+         <pad name="138" x="-5.75" y="10.625" width="1.3500000000000014" height="0.35" rotation="90.0" roundness="-100.0"/>
+         <pad name="139" x="-6.25" y="10.625" width="1.3500000000000014" height="0.35" rotation="90.0" roundness="-100.0"/>
+         <pad name="140" x="-6.75" y="10.625" width="1.3500000000000014" height="0.35" rotation="90.0" roundness="-100.0"/>
+         <pad name="141" x="-7.25" y="10.625" width="1.3500000000000014" height="0.35" rotation="90.0" roundness="-100.0"/>
+         <pad name="142" x="-7.75" y="10.625" width="1.3500000000000014" height="0.35" rotation="90.0" roundness="-100.0"/>
+         <pad name="143" x="-8.25" y="10.625" width="1.3500000000000014" height="0.35" rotation="90.0" roundness="-100.0"/>
+         <pad name="144" x="-8.75" y="10.625" width="1.3500000000000014" height="0.35" rotation="90.0" roundness="-100.0"/>
+      </footprint>
+      <vision-compositing compositing-method="Restricted" min-leverage-factor="0.0" extra-shots="0" allow-inside="true">
+         <max-pick-tolerance value="0.0" units="Millimeters"/>
+      </vision-compositing>
+      <compatible-nozzle-tip-ids class="java.util.ArrayList">
+         <string>TIP1523387528835</string>
+      </compatible-nozzle-tip-ids>
+   </package>
+   <package version="1.1" id="TEST_CROSS" pick-vacuum-level="0.0" place-blow-off-level="0.0">
+      <footprint units="Millimeters" body-width="8.0" body-height="8.0" outer-dimension="0.0" inner-dimension="0.0" pad-count="0" pad-pitch="0.0" pad-across="0.0" pad-roundness="0.0">
+         <pad name="1" x="-5.0" y="0.0" width="1.27" height="2.54" rotation="90.0" roundness="0.0"/>
+         <pad name="2" x="0.0" y="-5.0" width="1.27" height="2.54" rotation="0.0" roundness="0.0"/>
+         <pad name="3" x="5.0" y="0.0" width="1.27" height="2.54" rotation="90.0" roundness="0.0"/>
+         <pad name="4" x="0.0" y="5.0" width="1.27" height="2.54" rotation="0.0" roundness="0.0"/>
+      </footprint>
+      <vision-compositing compositing-method="Restricted" min-leverage-factor="0.1" extra-shots="0" allow-inside="true">
+         <max-pick-tolerance value="0.0" units="Millimeters"/>
+      </vision-compositing>
+      <compatible-nozzle-tip-ids class="java.util.ArrayList">
+         <string>TIP169e9ec2b003e294</string>
+      </compatible-nozzle-tip-ids>
+   </package>
+   <package version="1.1" id="SOIC-36-N" pick-vacuum-level="0.0" place-blow-off-level="0.0">
+      <footprint units="Millimeters" body-width="4.3" body-height="23.0" outer-dimension="6.0" inner-dimension="4.0" pad-count="36" pad-pitch="1.27" pad-across="0.45" pad-roundness="-10.0">
+         <pad name="1" x="-2.5" y="10.795" width="1.0" height="0.45" rotation="180.0" roundness="-10.0"/>
+         <pad name="2" x="-2.5" y="9.525" width="1.0" height="0.45" rotation="180.0" roundness="-10.0"/>
+         <pad name="3" x="-2.5" y="8.255" width="1.0" height="0.45" rotation="180.0" roundness="-10.0"/>
+         <pad name="4" x="-2.5" y="6.985" width="1.0" height="0.45" rotation="180.0" roundness="-10.0"/>
+         <pad name="5" x="-2.5" y="5.715" width="1.0" height="0.45" rotation="180.0" roundness="-10.0"/>
+         <pad name="6" x="-2.5" y="4.445" width="1.0" height="0.45" rotation="180.0" roundness="-10.0"/>
+         <pad name="7" x="-2.5" y="3.175" width="1.0" height="0.45" rotation="180.0" roundness="-10.0"/>
+         <pad name="8" x="-2.5" y="1.905" width="1.0" height="0.45" rotation="180.0" roundness="-10.0"/>
+         <pad name="9" x="-2.5" y="0.635" width="1.0" height="0.45" rotation="180.0" roundness="-10.0"/>
+         <pad name="10" x="-2.5" y="-0.635" width="1.0" height="0.45" rotation="180.0" roundness="-10.0"/>
+         <pad name="11" x="-2.5" y="-1.905" width="1.0" height="0.45" rotation="180.0" roundness="-10.0"/>
+         <pad name="12" x="-2.5" y="-3.175" width="1.0" height="0.45" rotation="180.0" roundness="-10.0"/>
+         <pad name="13" x="-2.5" y="-4.445" width="1.0" height="0.45" rotation="180.0" roundness="-10.0"/>
+         <pad name="14" x="-2.5" y="-5.715" width="1.0" height="0.45" rotation="180.0" roundness="-10.0"/>
+         <pad name="15" x="-2.5" y="-6.985" width="1.0" height="0.45" rotation="180.0" roundness="-10.0"/>
+         <pad name="16" x="-2.5" y="-8.255" width="1.0" height="0.45" rotation="180.0" roundness="-10.0"/>
+         <pad name="17" x="-2.5" y="-9.525" width="1.0" height="0.45" rotation="180.0" roundness="-10.0"/>
+         <pad name="18" x="-2.5" y="-10.795" width="1.0" height="0.45" rotation="180.0" roundness="-10.0"/>
+         <pad name="19" x="2.5" y="-10.795" width="1.0" height="0.45" rotation="0.0" roundness="-10.0"/>
+         <pad name="20" x="2.5" y="-9.525" width="1.0" height="0.45" rotation="0.0" roundness="-10.0"/>
+         <pad name="21" x="2.5" y="-8.255" width="1.0" height="0.45" rotation="0.0" roundness="-10.0"/>
+         <pad name="22" x="2.5" y="-6.985" width="1.0" height="0.45" rotation="0.0" roundness="-10.0"/>
+         <pad name="23" x="2.5" y="-5.715" width="1.0" height="0.45" rotation="0.0" roundness="-10.0"/>
+         <pad name="24" x="2.5" y="-4.445" width="1.0" height="0.45" rotation="0.0" roundness="-10.0"/>
+         <pad name="25" x="2.5" y="-3.175" width="1.0" height="0.45" rotation="0.0" roundness="-10.0"/>
+         <pad name="26" x="2.5" y="-1.905" width="1.0" height="0.45" rotation="0.0" roundness="-10.0"/>
+         <pad name="27" x="2.5" y="-0.635" width="1.0" height="0.45" rotation="0.0" roundness="-10.0"/>
+         <pad name="28" x="2.5" y="0.635" width="1.0" height="0.45" rotation="0.0" roundness="-10.0"/>
+         <pad name="29" x="2.5" y="1.905" width="1.0" height="0.45" rotation="0.0" roundness="-10.0"/>
+         <pad name="30" x="2.5" y="3.175" width="1.0" height="0.45" rotation="0.0" roundness="-10.0"/>
+         <pad name="31" x="2.5" y="4.445" width="1.0" height="0.45" rotation="0.0" roundness="-10.0"/>
+         <pad name="32" x="2.5" y="5.715" width="1.0" height="0.45" rotation="0.0" roundness="-10.0"/>
+         <pad name="33" x="2.5" y="6.985" width="1.0" height="0.45" rotation="0.0" roundness="-10.0"/>
+         <pad name="34" x="2.5" y="8.255" width="1.0" height="0.45" rotation="0.0" roundness="-10.0"/>
+         <pad name="35" x="2.5" y="9.525" width="1.0" height="0.45" rotation="0.0" roundness="-10.0"/>
+         <pad name="36" x="2.5" y="10.795" width="1.0" height="0.45" rotation="0.0" roundness="-10.0"/>
+      </footprint>
+      <vision-compositing compositing-method="Automatic" min-leverage-factor="0.2" extra-shots="1" allow-inside="false">
+         <max-pick-tolerance value="0.0" units="Millimeters"/>
+      </vision-compositing>
+      <compatible-nozzle-tip-ids class="java.util.ArrayList">
+         <string>TIP169e9ec2b003e294</string>
+      </compatible-nozzle-tip-ids>
+   </package>
+   <package version="1.1" id="HeadPhone" pick-vacuum-level="0.0" place-blow-off-level="0.0">
+      <footprint units="Millimeters" body-width="5.0" body-height="20.0" outer-dimension="0.0" inner-dimension="0.0" pad-count="0" pad-pitch="0.0" pad-across="0.0" pad-roundness="0.0">
+         <pad name="1" x="-2.0" y="7.0" width="3.0" height="3.0" rotation="0.0" roundness="0.0"/>
+         <pad name="2" x="-2.0" y="-5.0" width="3.0" height="3.0" rotation="0.0" roundness="0.0"/>
+         <pad name="3" x="2.0" y="-7.0" width="3.0" height="3.0" rotation="0.0" roundness="0.0"/>
+         <pad name="4" x="2.0" y="5.0" width="3.0" height="3.0" rotation="0.0" roundness="0.0"/>
+      </footprint>
+      <vision-compositing compositing-method="Restricted" min-leverage-factor="0.2" extra-shots="0" allow-inside="false">
+         <max-pick-tolerance value="0.0" units="Millimeters"/>
+      </vision-compositing>
+      <compatible-nozzle-tip-ids class="java.util.ArrayList">
+         <string>TIP169e9ec2b003e294</string>
+      </compatible-nozzle-tip-ids>
+   </package>
+   <package version="1.1" id="HeadPhone2" pick-vacuum-level="0.0" place-blow-off-level="0.0">
+      <footprint units="Millimeters" body-width="3.0" body-height="20.0" outer-dimension="0.0" inner-dimension="0.0" pad-count="0" pad-pitch="0.0" pad-across="0.0" pad-roundness="0.0">
+         <pad name="1" x="-2.0" y="5.0" width="3.0" height="3.0" rotation="0.0" roundness="0.0"/>
+         <pad name="2" x="-2.0" y="-3.0" width="3.0" height="3.0" rotation="0.0" roundness="0.0"/>
+         <pad name="3" x="2.0" y="-5.0" width="3.0" height="3.0" rotation="0.0" roundness="0.0"/>
+         <pad name="4" x="2.0" y="3.0" width="3.0" height="3.0" rotation="0.0" roundness="0.0"/>
+      </footprint>
+      <vision-compositing compositing-method="Restricted" min-leverage-factor="0.2" extra-shots="0" allow-inside="false">
+         <max-pick-tolerance value="0.0" units="Millimeters"/>
+      </vision-compositing>
+      <compatible-nozzle-tip-ids class="java.util.ArrayList">
+         <string>TIP169e9ec2b003e294</string>
+      </compatible-nozzle-tip-ids>
+   </package>
+   <package version="1.1" id="FET" pick-vacuum-level="0.0" place-blow-off-level="0.0">
+      <footprint units="Millimeters" body-width="3.5" body-height="3.6" outer-dimension="0.0" inner-dimension="0.0" pad-count="0" pad-pitch="0.0" pad-across="0.0" pad-roundness="0.0">
+         <pad name="1" x="-2.54" y="1.27" width="3.0" height="0.5" rotation="0.0" roundness="0.0"/>
+         <pad name="2" x="-2.54" y="0.0" width="3.0" height="0.5" rotation="0.0" roundness="0.0"/>
+         <pad name="3" x="-2.54" y="-1.27" width="3.0" height="0.5" rotation="0.0" roundness="0.0"/>
+         <pad name="4" x="2.54" y="0.0" width="3.0" height="2.0" rotation="0.0" roundness="0.0"/>
+      </footprint>
+      <vision-compositing compositing-method="Automatic" min-leverage-factor="0.2" extra-shots="0" allow-inside="false">
+         <max-pick-tolerance value="0.0" units="Millimeters"/>
+      </vision-compositing>
+      <compatible-nozzle-tip-ids class="java.util.ArrayList">
+         <string>TIP169e9ec2b003e294</string>
+      </compatible-nozzle-tip-ids>
+   </package>
+   <package version="1.1" id="SMALL-FET" pick-vacuum-level="0.0" place-blow-off-level="0.0">
+      <footprint units="Millimeters" body-width="0.7" body-height="2.75" outer-dimension="0.0" inner-dimension="0.0" pad-count="0" pad-pitch="0.0" pad-across="0.0" pad-roundness="-100.0">
+         <pad name="1" x="-0.65" y="1.0" width="0.5" height="0.5" rotation="0.0" roundness="-100.0"/>
+         <pad name="2" x="-0.65" y="0.0" width="0.5" height="0.5" rotation="0.0" roundness="-100.0"/>
+         <pad name="3" x="-0.65" y="-1.0" width="0.5" height="0.5" rotation="0.0" roundness="-100.0"/>
+         <pad name="4" x="0.65" y="0.0" width="0.5" height="0.5" rotation="180.0" roundness="-100.0"/>
+      </footprint>
+      <vision-compositing compositing-method="Automatic" min-leverage-factor="0.0" extra-shots="0" allow-inside="false">
+         <max-pick-tolerance value="0.25" units="Millimeters"/>
+      </vision-compositing>
+      <compatible-nozzle-tip-ids class="java.util.ArrayList">
+         <string>TIP169e9ec2b003e294</string>
+      </compatible-nozzle-tip-ids>
+   </package>
+   <package version="1.1" id="STRANGER" pick-vacuum-level="0.0" place-blow-off-level="0.0">
+      <footprint units="Millimeters" body-width="5.0" body-height="5.0" outer-dimension="0.0" inner-dimension="0.0" pad-count="0" pad-pitch="0.0" pad-across="0.0" pad-roundness="0.0">
+         <pad name="1" x="-2.0" y="2.0" width="1.0" height="1.0" rotation="0.0" roundness="0.0"/>
+         <pad name="2" x="-2.5" y="-2.0" width="2.0" height="1.0" rotation="0.0" roundness="0.0"/>
+         <pad name="3" x="2.0" y="-2.25" width="1.0" height="1.5" rotation="0.0" roundness="0.0"/>
+         <pad name="4" x="2.25" y="2.25" width="1.5" height="1.5" rotation="0.0" roundness="0.0"/>
+      </footprint>
+      <vision-compositing compositing-method="Restricted" min-leverage-factor="0.2" extra-shots="0" allow-inside="true">
+         <max-pick-tolerance value="0.0" units="Millimeters"/>
+      </vision-compositing>
+      <compatible-nozzle-tip-ids class="java.util.ArrayList">
+         <string>TIP169e9ec2b003e294</string>
+      </compatible-nozzle-tip-ids>
+   </package>
+   <package version="1.1" id="BGA" pick-vacuum-level="0.0" place-blow-off-level="0.0">
+      <footprint units="Millimeters" body-width="12.25" body-height="12.25" outer-dimension="11.75" inner-dimension="0.0" pad-count="576" pad-pitch="0.5" pad-across="0.25" pad-roundness="100.0">
+         <pad name="A0" x="-5.75" y="5.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="A1" x="-5.25" y="5.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="A2" x="-4.75" y="5.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="A3" x="-4.25" y="5.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="A4" x="-3.75" y="5.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="A5" x="-3.25" y="5.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="A6" x="-2.75" y="5.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="A7" x="-2.25" y="5.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="A8" x="-1.75" y="5.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="A9" x="-1.25" y="5.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="A10" x="-0.75" y="5.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="A11" x="-0.25" y="5.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="A12" x="0.25" y="5.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="A13" x="0.75" y="5.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="A14" x="1.25" y="5.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="A15" x="1.75" y="5.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="A16" x="2.25" y="5.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="A17" x="2.75" y="5.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="A18" x="3.25" y="5.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="A19" x="3.75" y="5.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="A20" x="4.25" y="5.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="A21" x="4.75" y="5.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="A22" x="5.25" y="5.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="A23" x="5.75" y="5.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="B0" x="-5.75" y="5.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="B1" x="-5.25" y="5.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="B2" x="-4.75" y="5.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="B3" x="-4.25" y="5.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="B4" x="-3.75" y="5.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="B5" x="-3.25" y="5.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="B6" x="-2.75" y="5.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="B7" x="-2.25" y="5.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="B8" x="-1.75" y="5.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="B9" x="-1.25" y="5.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="B10" x="-0.75" y="5.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="B11" x="-0.25" y="5.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="B12" x="0.25" y="5.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="B13" x="0.75" y="5.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="B14" x="1.25" y="5.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="B15" x="1.75" y="5.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="B16" x="2.25" y="5.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="B17" x="2.75" y="5.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="B18" x="3.25" y="5.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="B19" x="3.75" y="5.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="B20" x="4.25" y="5.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="B21" x="4.75" y="5.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="B22" x="5.25" y="5.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="B23" x="5.75" y="5.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="C0" x="-5.75" y="4.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="C1" x="-5.25" y="4.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="C2" x="-4.75" y="4.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="C3" x="-4.25" y="4.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="C4" x="-3.75" y="4.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="C5" x="-3.25" y="4.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="C6" x="-2.75" y="4.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="C7" x="-2.25" y="4.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="C8" x="-1.75" y="4.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="C9" x="-1.25" y="4.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="C10" x="-0.75" y="4.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="C11" x="-0.25" y="4.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="C12" x="0.25" y="4.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="C13" x="0.75" y="4.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="C14" x="1.25" y="4.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="C15" x="1.75" y="4.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="C16" x="2.25" y="4.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="C17" x="2.75" y="4.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="C18" x="3.25" y="4.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="C19" x="3.75" y="4.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="C20" x="4.25" y="4.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="C21" x="4.75" y="4.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="C22" x="5.25" y="4.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="C23" x="5.75" y="4.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="D0" x="-5.75" y="4.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="D1" x="-5.25" y="4.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="D2" x="-4.75" y="4.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="D3" x="-4.25" y="4.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="D4" x="-3.75" y="4.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="D5" x="-3.25" y="4.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="D6" x="-2.75" y="4.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="D7" x="-2.25" y="4.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="D8" x="-1.75" y="4.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="D9" x="-1.25" y="4.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="D10" x="-0.75" y="4.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="D11" x="-0.25" y="4.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="D12" x="0.25" y="4.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="D13" x="0.75" y="4.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="D14" x="1.25" y="4.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="D15" x="1.75" y="4.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="D16" x="2.25" y="4.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="D17" x="2.75" y="4.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="D18" x="3.25" y="4.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="D19" x="3.75" y="4.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="D20" x="4.25" y="4.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="D21" x="4.75" y="4.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="D22" x="5.25" y="4.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="D23" x="5.75" y="4.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="E0" x="-5.75" y="3.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="E1" x="-5.25" y="3.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="E2" x="-4.75" y="3.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="E3" x="-4.25" y="3.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="E4" x="-3.75" y="3.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="E5" x="-3.25" y="3.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="E6" x="-2.75" y="3.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="E7" x="-2.25" y="3.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="E8" x="-1.75" y="3.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="E9" x="-1.25" y="3.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="E10" x="-0.75" y="3.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="E11" x="-0.25" y="3.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="E12" x="0.25" y="3.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="E13" x="0.75" y="3.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="E14" x="1.25" y="3.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="E15" x="1.75" y="3.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="E16" x="2.25" y="3.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="E17" x="2.75" y="3.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="E18" x="3.25" y="3.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="E19" x="3.75" y="3.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="E20" x="4.25" y="3.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="E21" x="4.75" y="3.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="E22" x="5.25" y="3.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="E23" x="5.75" y="3.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="F0" x="-5.75" y="3.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="F1" x="-5.25" y="3.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="F2" x="-4.75" y="3.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="F3" x="-4.25" y="3.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="F4" x="-3.75" y="3.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="F5" x="-3.25" y="3.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="F6" x="-2.75" y="3.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="F7" x="-2.25" y="3.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="F8" x="-1.75" y="3.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="F9" x="-1.25" y="3.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="F10" x="-0.75" y="3.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="F11" x="-0.25" y="3.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="F12" x="0.25" y="3.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="F13" x="0.75" y="3.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="F14" x="1.25" y="3.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="F15" x="1.75" y="3.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="F16" x="2.25" y="3.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="F17" x="2.75" y="3.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="F18" x="3.25" y="3.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="F19" x="3.75" y="3.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="F20" x="4.25" y="3.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="F21" x="4.75" y="3.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="F22" x="5.25" y="3.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="F23" x="5.75" y="3.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="G0" x="-5.75" y="2.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="G1" x="-5.25" y="2.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="G2" x="-4.75" y="2.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="G3" x="-4.25" y="2.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="G4" x="-3.75" y="2.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="G5" x="-3.25" y="2.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="G6" x="-2.75" y="2.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="G7" x="-2.25" y="2.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="G8" x="-1.75" y="2.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="G9" x="-1.25" y="2.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="G10" x="-0.75" y="2.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="G11" x="-0.25" y="2.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="G12" x="0.25" y="2.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="G13" x="0.75" y="2.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="G14" x="1.25" y="2.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="G15" x="1.75" y="2.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="G16" x="2.25" y="2.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="G17" x="2.75" y="2.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="G18" x="3.25" y="2.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="G19" x="3.75" y="2.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="G20" x="4.25" y="2.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="G21" x="4.75" y="2.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="G22" x="5.25" y="2.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="G23" x="5.75" y="2.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="H0" x="-5.75" y="2.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="H1" x="-5.25" y="2.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="H2" x="-4.75" y="2.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="H3" x="-4.25" y="2.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="H4" x="-3.75" y="2.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="H5" x="-3.25" y="2.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="H6" x="-2.75" y="2.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="H7" x="-2.25" y="2.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="H8" x="-1.75" y="2.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="H9" x="-1.25" y="2.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="H10" x="-0.75" y="2.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="H11" x="-0.25" y="2.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="H12" x="0.25" y="2.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="H13" x="0.75" y="2.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="H14" x="1.25" y="2.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="H15" x="1.75" y="2.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="H16" x="2.25" y="2.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="H17" x="2.75" y="2.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="H18" x="3.25" y="2.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="H19" x="3.75" y="2.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="H20" x="4.25" y="2.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="H21" x="4.75" y="2.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="H22" x="5.25" y="2.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="H23" x="5.75" y="2.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="I0" x="-5.75" y="1.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="I1" x="-5.25" y="1.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="I2" x="-4.75" y="1.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="I3" x="-4.25" y="1.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="I4" x="-3.75" y="1.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="I5" x="-3.25" y="1.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="I6" x="-2.75" y="1.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="I7" x="-2.25" y="1.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="I8" x="-1.75" y="1.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="I9" x="-1.25" y="1.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="I10" x="-0.75" y="1.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="I11" x="-0.25" y="1.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="I12" x="0.25" y="1.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="I13" x="0.75" y="1.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="I14" x="1.25" y="1.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="I15" x="1.75" y="1.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="I16" x="2.25" y="1.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="I17" x="2.75" y="1.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="I18" x="3.25" y="1.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="I19" x="3.75" y="1.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="I20" x="4.25" y="1.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="I21" x="4.75" y="1.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="I22" x="5.25" y="1.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="I23" x="5.75" y="1.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="J0" x="-5.75" y="1.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="J1" x="-5.25" y="1.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="J2" x="-4.75" y="1.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="J3" x="-4.25" y="1.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="J4" x="-3.75" y="1.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="J5" x="-3.25" y="1.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="J6" x="-2.75" y="1.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="J7" x="-2.25" y="1.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="J8" x="-1.75" y="1.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="J9" x="-1.25" y="1.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="J10" x="-0.75" y="1.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="J11" x="-0.25" y="1.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="J12" x="0.25" y="1.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="J13" x="0.75" y="1.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="J14" x="1.25" y="1.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="J15" x="1.75" y="1.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="J16" x="2.25" y="1.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="J17" x="2.75" y="1.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="J18" x="3.25" y="1.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="J19" x="3.75" y="1.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="J20" x="4.25" y="1.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="J21" x="4.75" y="1.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="J22" x="5.25" y="1.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="J23" x="5.75" y="1.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="K0" x="-5.75" y="0.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="K1" x="-5.25" y="0.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="K2" x="-4.75" y="0.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="K3" x="-4.25" y="0.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="K4" x="-3.75" y="0.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="K5" x="-3.25" y="0.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="K6" x="-2.75" y="0.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="K7" x="-2.25" y="0.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="K8" x="-1.75" y="0.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="K9" x="-1.25" y="0.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="K10" x="-0.75" y="0.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="K11" x="-0.25" y="0.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="K12" x="0.25" y="0.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="K13" x="0.75" y="0.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="K14" x="1.25" y="0.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="K15" x="1.75" y="0.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="K16" x="2.25" y="0.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="K17" x="2.75" y="0.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="K18" x="3.25" y="0.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="K19" x="3.75" y="0.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="K20" x="4.25" y="0.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="K21" x="4.75" y="0.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="K22" x="5.25" y="0.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="K23" x="5.75" y="0.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="L0" x="-5.75" y="0.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="L1" x="-5.25" y="0.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="L2" x="-4.75" y="0.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="L3" x="-4.25" y="0.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="L4" x="-3.75" y="0.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="L5" x="-3.25" y="0.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="L6" x="-2.75" y="0.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="L7" x="-2.25" y="0.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="L8" x="-1.75" y="0.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="L9" x="-1.25" y="0.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="L10" x="-0.75" y="0.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="L11" x="-0.25" y="0.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="L12" x="0.25" y="0.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="L13" x="0.75" y="0.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="L14" x="1.25" y="0.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="L15" x="1.75" y="0.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="L16" x="2.25" y="0.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="L17" x="2.75" y="0.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="L18" x="3.25" y="0.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="L19" x="3.75" y="0.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="L20" x="4.25" y="0.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="L21" x="4.75" y="0.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="L22" x="5.25" y="0.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="L23" x="5.75" y="0.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="M0" x="-5.75" y="-0.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="M1" x="-5.25" y="-0.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="M2" x="-4.75" y="-0.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="M3" x="-4.25" y="-0.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="M4" x="-3.75" y="-0.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="M5" x="-3.25" y="-0.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="M6" x="-2.75" y="-0.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="M7" x="-2.25" y="-0.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="M8" x="-1.75" y="-0.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="M9" x="-1.25" y="-0.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="M10" x="-0.75" y="-0.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="M11" x="-0.25" y="-0.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="M12" x="0.25" y="-0.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="M13" x="0.75" y="-0.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="M14" x="1.25" y="-0.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="M15" x="1.75" y="-0.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="M16" x="2.25" y="-0.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="M17" x="2.75" y="-0.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="M18" x="3.25" y="-0.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="M19" x="3.75" y="-0.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="M20" x="4.25" y="-0.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="M21" x="4.75" y="-0.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="M22" x="5.25" y="-0.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="M23" x="5.75" y="-0.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="N0" x="-5.75" y="-0.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="N1" x="-5.25" y="-0.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="N2" x="-4.75" y="-0.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="N3" x="-4.25" y="-0.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="N4" x="-3.75" y="-0.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="N5" x="-3.25" y="-0.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="N6" x="-2.75" y="-0.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="N7" x="-2.25" y="-0.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="N8" x="-1.75" y="-0.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="N9" x="-1.25" y="-0.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="N10" x="-0.75" y="-0.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="N11" x="-0.25" y="-0.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="N12" x="0.25" y="-0.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="N13" x="0.75" y="-0.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="N14" x="1.25" y="-0.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="N15" x="1.75" y="-0.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="N16" x="2.25" y="-0.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="N17" x="2.75" y="-0.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="N18" x="3.25" y="-0.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="N19" x="3.75" y="-0.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="N20" x="4.25" y="-0.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="N21" x="4.75" y="-0.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="N22" x="5.25" y="-0.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="N23" x="5.75" y="-0.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="O0" x="-5.75" y="-1.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="O1" x="-5.25" y="-1.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="O2" x="-4.75" y="-1.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="O3" x="-4.25" y="-1.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="O4" x="-3.75" y="-1.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="O5" x="-3.25" y="-1.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="O6" x="-2.75" y="-1.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="O7" x="-2.25" y="-1.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="O8" x="-1.75" y="-1.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="O9" x="-1.25" y="-1.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="O10" x="-0.75" y="-1.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="O11" x="-0.25" y="-1.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="O12" x="0.25" y="-1.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="O13" x="0.75" y="-1.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="O14" x="1.25" y="-1.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="O15" x="1.75" y="-1.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="O16" x="2.25" y="-1.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="O17" x="2.75" y="-1.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="O18" x="3.25" y="-1.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="O19" x="3.75" y="-1.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="O20" x="4.25" y="-1.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="O21" x="4.75" y="-1.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="O22" x="5.25" y="-1.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="O23" x="5.75" y="-1.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="P0" x="-5.75" y="-1.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="P1" x="-5.25" y="-1.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="P2" x="-4.75" y="-1.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="P3" x="-4.25" y="-1.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="P4" x="-3.75" y="-1.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="P5" x="-3.25" y="-1.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="P6" x="-2.75" y="-1.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="P7" x="-2.25" y="-1.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="P8" x="-1.75" y="-1.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="P9" x="-1.25" y="-1.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="P10" x="-0.75" y="-1.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="P11" x="-0.25" y="-1.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="P12" x="0.25" y="-1.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="P13" x="0.75" y="-1.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="P14" x="1.25" y="-1.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="P15" x="1.75" y="-1.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="P16" x="2.25" y="-1.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="P17" x="2.75" y="-1.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="P18" x="3.25" y="-1.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="P19" x="3.75" y="-1.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="P20" x="4.25" y="-1.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="P21" x="4.75" y="-1.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="P22" x="5.25" y="-1.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="P23" x="5.75" y="-1.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="Q0" x="-5.75" y="-2.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="Q1" x="-5.25" y="-2.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="Q2" x="-4.75" y="-2.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="Q3" x="-4.25" y="-2.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="Q4" x="-3.75" y="-2.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="Q5" x="-3.25" y="-2.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="Q6" x="-2.75" y="-2.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="Q7" x="-2.25" y="-2.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="Q8" x="-1.75" y="-2.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="Q9" x="-1.25" y="-2.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="Q10" x="-0.75" y="-2.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="Q11" x="-0.25" y="-2.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="Q12" x="0.25" y="-2.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="Q13" x="0.75" y="-2.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="Q14" x="1.25" y="-2.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="Q15" x="1.75" y="-2.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="Q16" x="2.25" y="-2.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="Q17" x="2.75" y="-2.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="Q18" x="3.25" y="-2.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="Q19" x="3.75" y="-2.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="Q20" x="4.25" y="-2.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="Q21" x="4.75" y="-2.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="Q22" x="5.25" y="-2.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="Q23" x="5.75" y="-2.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="R0" x="-5.75" y="-2.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="R1" x="-5.25" y="-2.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="R2" x="-4.75" y="-2.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="R3" x="-4.25" y="-2.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="R4" x="-3.75" y="-2.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="R5" x="-3.25" y="-2.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="R6" x="-2.75" y="-2.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="R7" x="-2.25" y="-2.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="R8" x="-1.75" y="-2.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="R9" x="-1.25" y="-2.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="R10" x="-0.75" y="-2.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="R11" x="-0.25" y="-2.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="R12" x="0.25" y="-2.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="R13" x="0.75" y="-2.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="R14" x="1.25" y="-2.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="R15" x="1.75" y="-2.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="R16" x="2.25" y="-2.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="R17" x="2.75" y="-2.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="R18" x="3.25" y="-2.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="R19" x="3.75" y="-2.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="R20" x="4.25" y="-2.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="R21" x="4.75" y="-2.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="R22" x="5.25" y="-2.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="R23" x="5.75" y="-2.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="S0" x="-5.75" y="-3.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="S1" x="-5.25" y="-3.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="S2" x="-4.75" y="-3.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="S3" x="-4.25" y="-3.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="S4" x="-3.75" y="-3.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="S5" x="-3.25" y="-3.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="S6" x="-2.75" y="-3.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="S7" x="-2.25" y="-3.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="S8" x="-1.75" y="-3.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="S9" x="-1.25" y="-3.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="S10" x="-0.75" y="-3.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="S11" x="-0.25" y="-3.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="S12" x="0.25" y="-3.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="S13" x="0.75" y="-3.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="S14" x="1.25" y="-3.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="S15" x="1.75" y="-3.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="S16" x="2.25" y="-3.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="S17" x="2.75" y="-3.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="S18" x="3.25" y="-3.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="S19" x="3.75" y="-3.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="S20" x="4.25" y="-3.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="S21" x="4.75" y="-3.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="S22" x="5.25" y="-3.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="S23" x="5.75" y="-3.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="T0" x="-5.75" y="-3.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="T1" x="-5.25" y="-3.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="T2" x="-4.75" y="-3.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="T3" x="-4.25" y="-3.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="T4" x="-3.75" y="-3.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="T5" x="-3.25" y="-3.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="T6" x="-2.75" y="-3.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="T7" x="-2.25" y="-3.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="T8" x="-1.75" y="-3.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="T9" x="-1.25" y="-3.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="T10" x="-0.75" y="-3.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="T11" x="-0.25" y="-3.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="T12" x="0.25" y="-3.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="T13" x="0.75" y="-3.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="T14" x="1.25" y="-3.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="T15" x="1.75" y="-3.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="T16" x="2.25" y="-3.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="T17" x="2.75" y="-3.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="T18" x="3.25" y="-3.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="T19" x="3.75" y="-3.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="T20" x="4.25" y="-3.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="T21" x="4.75" y="-3.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="T22" x="5.25" y="-3.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="T23" x="5.75" y="-3.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="U0" x="-5.75" y="-4.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="U1" x="-5.25" y="-4.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="U2" x="-4.75" y="-4.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="U3" x="-4.25" y="-4.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="U4" x="-3.75" y="-4.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="U5" x="-3.25" y="-4.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="U6" x="-2.75" y="-4.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="U7" x="-2.25" y="-4.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="U8" x="-1.75" y="-4.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="U9" x="-1.25" y="-4.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="U10" x="-0.75" y="-4.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="U11" x="-0.25" y="-4.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="U12" x="0.25" y="-4.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="U13" x="0.75" y="-4.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="U14" x="1.25" y="-4.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="U15" x="1.75" y="-4.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="U16" x="2.25" y="-4.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="U17" x="2.75" y="-4.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="U18" x="3.25" y="-4.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="U19" x="3.75" y="-4.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="U20" x="4.25" y="-4.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="U21" x="4.75" y="-4.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="U22" x="5.25" y="-4.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="U23" x="5.75" y="-4.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="V0" x="-5.75" y="-4.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="V1" x="-5.25" y="-4.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="V2" x="-4.75" y="-4.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="V3" x="-4.25" y="-4.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="V4" x="-3.75" y="-4.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="V5" x="-3.25" y="-4.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="V6" x="-2.75" y="-4.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="V7" x="-2.25" y="-4.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="V8" x="-1.75" y="-4.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="V9" x="-1.25" y="-4.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="V10" x="-0.75" y="-4.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="V11" x="-0.25" y="-4.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="V12" x="0.25" y="-4.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="V13" x="0.75" y="-4.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="V14" x="1.25" y="-4.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="V15" x="1.75" y="-4.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="V16" x="2.25" y="-4.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="V17" x="2.75" y="-4.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="V18" x="3.25" y="-4.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="V19" x="3.75" y="-4.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="V20" x="4.25" y="-4.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="V21" x="4.75" y="-4.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="V22" x="5.25" y="-4.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="V23" x="5.75" y="-4.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="W0" x="-5.75" y="-5.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="W1" x="-5.25" y="-5.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="W2" x="-4.75" y="-5.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="W3" x="-4.25" y="-5.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="W4" x="-3.75" y="-5.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="W5" x="-3.25" y="-5.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="W6" x="-2.75" y="-5.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="W7" x="-2.25" y="-5.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="W8" x="-1.75" y="-5.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="W9" x="-1.25" y="-5.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="W10" x="-0.75" y="-5.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="W11" x="-0.25" y="-5.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="W12" x="0.25" y="-5.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="W13" x="0.75" y="-5.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="W14" x="1.25" y="-5.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="W15" x="1.75" y="-5.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="W16" x="2.25" y="-5.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="W17" x="2.75" y="-5.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="W18" x="3.25" y="-5.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="W19" x="3.75" y="-5.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="W20" x="4.25" y="-5.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="W21" x="4.75" y="-5.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="W22" x="5.25" y="-5.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="W23" x="5.75" y="-5.25" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="X0" x="-5.75" y="-5.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="X1" x="-5.25" y="-5.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="X2" x="-4.75" y="-5.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="X3" x="-4.25" y="-5.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="X4" x="-3.75" y="-5.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="X5" x="-3.25" y="-5.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="X6" x="-2.75" y="-5.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="X7" x="-2.25" y="-5.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="X8" x="-1.75" y="-5.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="X9" x="-1.25" y="-5.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="X10" x="-0.75" y="-5.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="X11" x="-0.25" y="-5.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="X12" x="0.25" y="-5.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="X13" x="0.75" y="-5.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="X14" x="1.25" y="-5.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="X15" x="1.75" y="-5.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="X16" x="2.25" y="-5.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="X17" x="2.75" y="-5.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="X18" x="3.25" y="-5.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="X19" x="3.75" y="-5.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="X20" x="4.25" y="-5.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="X21" x="4.75" y="-5.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="X22" x="5.25" y="-5.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+         <pad name="X23" x="5.75" y="-5.75" width="0.25" height="0.25" rotation="0.0" roundness="100.0"/>
+      </footprint>
+      <vision-compositing compositing-method="Restricted" min-leverage-factor="0.2" extra-shots="2" allow-inside="false">
+         <max-pick-tolerance value="0.0" units="Millimeters"/>
+      </vision-compositing>
+      <compatible-nozzle-tip-ids class="java.util.ArrayList">
+         <string>TIP169e9ec2b003e294</string>
+      </compatible-nozzle-tip-ids>
+   </package>
+   <package version="1.1" id="RECTIFIER" pick-vacuum-level="0.0" place-blow-off-level="0.0">
+      <footprint units="Millimeters" body-width="31.0" body-height="34.0" outer-dimension="30.0" inner-dimension="5.0" pad-count="4" pad-pitch="18.0" pad-across="15.0" pad-roundness="0.0">
+         <pad name="1" x="-8.75" y="9.0" width="12.5" height="15.0" rotation="180.0" roundness="10.0"/>
+         <pad name="2" x="-8.75" y="-9.0" width="12.5" height="15.0" rotation="180.0" roundness="0.0"/>
+         <pad name="3" x="8.75" y="-9.0" width="12.5" height="15.0" rotation="0.0" roundness="0.0"/>
+         <pad name="4" x="8.75" y="9.0" width="12.5" height="15.0" rotation="0.0" roundness="0.0"/>
+      </footprint>
+      <vision-compositing compositing-method="Restricted" min-leverage-factor="0.05" extra-shots="0" allow-inside="true">
+         <max-pick-tolerance value="0.0" units="Millimeters"/>
+      </vision-compositing>
+      <compatible-nozzle-tip-ids class="java.util.ArrayList">
+         <string>TIP1523383732566</string>
+      </compatible-nozzle-tip-ids>
+   </package>
+   <package version="1.1" id="LQFP64" pick-vacuum-level="0.0" place-blow-off-level="0.0">
+      <footprint units="Millimeters" body-width="10.0" body-height="10.0" outer-dimension="12.0" inner-dimension="10.0" pad-count="64" pad-pitch="0.5" pad-across="0.3" pad-roundness="-100.0">
+         <pad name="1" x="-5.5" y="3.75" width="1.0" height="0.3" rotation="180.0" roundness="-100.0"/>
+         <pad name="2" x="-5.5" y="3.25" width="1.0" height="0.3" rotation="180.0" roundness="-100.0"/>
+         <pad name="3" x="-5.5" y="2.75" width="1.0" height="0.3" rotation="180.0" roundness="-100.0"/>
+         <pad name="4" x="-5.5" y="2.25" width="1.0" height="0.3" rotation="180.0" roundness="-100.0"/>
+         <pad name="5" x="-5.5" y="1.75" width="1.0" height="0.3" rotation="180.0" roundness="-100.0"/>
+         <pad name="6" x="-5.5" y="1.25" width="1.0" height="0.3" rotation="180.0" roundness="-100.0"/>
+         <pad name="7" x="-5.5" y="0.75" width="1.0" height="0.3" rotation="180.0" roundness="-100.0"/>
+         <pad name="8" x="-5.5" y="0.25" width="1.0" height="0.3" rotation="180.0" roundness="-100.0"/>
+         <pad name="9" x="-5.5" y="-0.25" width="1.0" height="0.3" rotation="180.0" roundness="-100.0"/>
+         <pad name="10" x="-5.5" y="-0.75" width="1.0" height="0.3" rotation="180.0" roundness="-100.0"/>
+         <pad name="11" x="-5.5" y="-1.25" width="1.0" height="0.3" rotation="180.0" roundness="-100.0"/>
+         <pad name="12" x="-5.5" y="-1.75" width="1.0" height="0.3" rotation="180.0" roundness="-100.0"/>
+         <pad name="13" x="-5.5" y="-2.25" width="1.0" height="0.3" rotation="180.0" roundness="-100.0"/>
+         <pad name="14" x="-5.5" y="-2.75" width="1.0" height="0.3" rotation="180.0" roundness="-100.0"/>
+         <pad name="15" x="-5.5" y="-3.25" width="1.0" height="0.3" rotation="180.0" roundness="-100.0"/>
+         <pad name="16" x="-5.5" y="-3.75" width="1.0" height="0.3" rotation="180.0" roundness="-100.0"/>
+         <pad name="17" x="-3.75" y="-5.5" width="1.0" height="0.3" rotation="-90.0" roundness="-100.0"/>
+         <pad name="18" x="-3.25" y="-5.5" width="1.0" height="0.3" rotation="-90.0" roundness="-100.0"/>
+         <pad name="19" x="-2.75" y="-5.5" width="1.0" height="0.3" rotation="-90.0" roundness="-100.0"/>
+         <pad name="20" x="-2.25" y="-5.5" width="1.0" height="0.3" rotation="-90.0" roundness="-100.0"/>
+         <pad name="21" x="-1.75" y="-5.5" width="1.0" height="0.3" rotation="-90.0" roundness="-100.0"/>
+         <pad name="22" x="-1.25" y="-5.5" width="1.0" height="0.3" rotation="-90.0" roundness="-100.0"/>
+         <pad name="23" x="-0.75" y="-5.5" width="1.0" height="0.3" rotation="-90.0" roundness="-100.0"/>
+         <pad name="24" x="-0.25" y="-5.5" width="1.0" height="0.3" rotation="-90.0" roundness="-100.0"/>
+         <pad name="25" x="0.25" y="-5.5" width="1.0" height="0.3" rotation="-90.0" roundness="-100.0"/>
+         <pad name="26" x="0.75" y="-5.5" width="1.0" height="0.3" rotation="-90.0" roundness="-100.0"/>
+         <pad name="27" x="1.25" y="-5.5" width="1.0" height="0.3" rotation="-90.0" roundness="-100.0"/>
+         <pad name="28" x="1.75" y="-5.5" width="1.0" height="0.3" rotation="-90.0" roundness="-100.0"/>
+         <pad name="29" x="2.25" y="-5.5" width="1.0" height="0.3" rotation="-90.0" roundness="-100.0"/>
+         <pad name="30" x="2.75" y="-5.5" width="1.0" height="0.3" rotation="-90.0" roundness="-100.0"/>
+         <pad name="31" x="3.25" y="-5.5" width="1.0" height="0.3" rotation="-90.0" roundness="-100.0"/>
+         <pad name="32" x="3.75" y="-5.5" width="1.0" height="0.3" rotation="-90.0" roundness="-100.0"/>
+         <pad name="33" x="5.5" y="-3.75" width="1.0" height="0.3" rotation="0.0" roundness="-100.0"/>
+         <pad name="34" x="5.5" y="-3.25" width="1.0" height="0.3" rotation="0.0" roundness="-100.0"/>
+         <pad name="35" x="5.5" y="-2.75" width="1.0" height="0.3" rotation="0.0" roundness="-100.0"/>
+         <pad name="36" x="5.5" y="-2.25" width="1.0" height="0.3" rotation="0.0" roundness="-100.0"/>
+         <pad name="37" x="5.5" y="-1.75" width="1.0" height="0.3" rotation="0.0" roundness="-100.0"/>
+         <pad name="38" x="5.5" y="-1.25" width="1.0" height="0.3" rotation="0.0" roundness="-100.0"/>
+         <pad name="39" x="5.5" y="-0.75" width="1.0" height="0.3" rotation="0.0" roundness="-100.0"/>
+         <pad name="40" x="5.5" y="-0.25" width="1.0" height="0.3" rotation="0.0" roundness="-100.0"/>
+         <pad name="41" x="5.5" y="0.25" width="1.0" height="0.3" rotation="0.0" roundness="-100.0"/>
+         <pad name="42" x="5.5" y="0.75" width="1.0" height="0.3" rotation="0.0" roundness="-100.0"/>
+         <pad name="43" x="5.5" y="1.25" width="1.0" height="0.3" rotation="0.0" roundness="-100.0"/>
+         <pad name="44" x="5.5" y="1.75" width="1.0" height="0.3" rotation="0.0" roundness="-100.0"/>
+         <pad name="45" x="5.5" y="2.25" width="1.0" height="0.3" rotation="0.0" roundness="-100.0"/>
+         <pad name="46" x="5.5" y="2.75" width="1.0" height="0.3" rotation="0.0" roundness="-100.0"/>
+         <pad name="47" x="5.5" y="3.25" width="1.0" height="0.3" rotation="0.0" roundness="-100.0"/>
+         <pad name="48" x="5.5" y="3.75" width="1.0" height="0.3" rotation="0.0" roundness="-100.0"/>
+         <pad name="49" x="3.75" y="5.5" width="1.0" height="0.3" rotation="90.0" roundness="-100.0"/>
+         <pad name="50" x="3.25" y="5.5" width="1.0" height="0.3" rotation="90.0" roundness="-100.0"/>
+         <pad name="51" x="2.75" y="5.5" width="1.0" height="0.3" rotation="90.0" roundness="-100.0"/>
+         <pad name="52" x="2.25" y="5.5" width="1.0" height="0.3" rotation="90.0" roundness="-100.0"/>
+         <pad name="53" x="1.75" y="5.5" width="1.0" height="0.3" rotation="90.0" roundness="-100.0"/>
+         <pad name="54" x="1.25" y="5.5" width="1.0" height="0.3" rotation="90.0" roundness="-100.0"/>
+         <pad name="55" x="0.75" y="5.5" width="1.0" height="0.3" rotation="90.0" roundness="-100.0"/>
+         <pad name="56" x="0.25" y="5.5" width="1.0" height="0.3" rotation="90.0" roundness="-100.0"/>
+         <pad name="57" x="-0.25" y="5.5" width="1.0" height="0.3" rotation="90.0" roundness="-100.0"/>
+         <pad name="58" x="-0.75" y="5.5" width="1.0" height="0.3" rotation="90.0" roundness="-100.0"/>
+         <pad name="59" x="-1.25" y="5.5" width="1.0" height="0.3" rotation="90.0" roundness="-100.0"/>
+         <pad name="60" x="-1.75" y="5.5" width="1.0" height="0.3" rotation="90.0" roundness="-100.0"/>
+         <pad name="61" x="-2.25" y="5.5" width="1.0" height="0.3" rotation="90.0" roundness="-100.0"/>
+         <pad name="62" x="-2.75" y="5.5" width="1.0" height="0.3" rotation="90.0" roundness="-100.0"/>
+         <pad name="63" x="-3.25" y="5.5" width="1.0" height="0.3" rotation="90.0" roundness="-100.0"/>
+         <pad name="64" x="-3.75" y="5.5" width="1.0" height="0.3" rotation="90.0" roundness="-100.0"/>
+      </footprint>
+      <vision-compositing compositing-method="Restricted" min-leverage-factor="0.2" extra-shots="2" allow-inside="true">
+         <max-pick-tolerance value="0.0" units="Millimeters"/>
+      </vision-compositing>
+      <compatible-nozzle-tip-ids class="java.util.ArrayList">
+         <string>TIP1523387517931</string>
+      </compatible-nozzle-tip-ids>
+   </package>
+</openpnp-packages>

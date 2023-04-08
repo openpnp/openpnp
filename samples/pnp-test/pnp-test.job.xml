@@ -1,0 +1,28 @@
+<openpnp-job>
+   <board-locations>
+      <board-location side="Top" board-file="pnp-test.board.xml" check-fiducials="true" enabled="true">
+         <location units="Millimeters" x="3.994594817218938" y="4.4131849081484384" z="0.0" rotation="0.007894774268749627"/>
+      </board-location>
+      <board-location side="Top" board-file="pnp-test.board.xml" check-fiducials="true" enabled="true">
+         <location units="Millimeters" x="5.138645360146414" y="62.743654819512436" z="0.0" rotation="-19.94736168620408"/>
+      </board-location>
+      <board-location side="Bottom" board-file="pnp-test.board.xml" check-fiducials="true" enabled="true">
+         <location units="Millimeters" x="64.48980804864823" y="7.2482734113499765" z="0.0" rotation="0.6048032510190048"/>
+      </board-location>
+      <board-location side="Bottom" board-file="pnp-test.board.xml" check-fiducials="true" enabled="true">
+         <location units="Millimeters" x="84.33637163496286" y="46.6502699745692" z="0.0" rotation="36.608756253218274"/>
+      </board-location>
+      <board-location side="Bottom" board-file="pnp-test.board.xml" check-fiducials="true" enabled="true">
+         <location units="Millimeters" x="59.177394383230755" y="120.83863474379999" z="0.0" rotation="-28.17927507558783"/>
+      </board-location>
+      <board-location side="Top" board-file="pnp-test.board.xml" check-fiducials="true" enabled="true">
+         <location units="Millimeters" x="155.01759462879448" y="151.33155026843272" z="0.0" rotation="157.09296869993602"/>
+      </board-location>
+      <board-location side="Bottom" board-file="pnp-test.board.xml" check-fiducials="true" enabled="true">
+         <location units="Millimeters" x="183.95466039866614" y="146.59700013532986" z="0.0" rotation="-140.606916294328"/>
+      </board-location>
+      <board-location side="Top" board-file="pnp-test.board.xml" check-fiducials="true" enabled="true">
+         <location units="Millimeters" x="38.02044332572783" y="100.91206331241432" z="0.0" rotation="76.64603235413277"/>
+      </board-location>
+   </board-locations>
+</openpnp-job>
