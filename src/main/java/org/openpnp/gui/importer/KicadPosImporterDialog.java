@@ -25,6 +25,7 @@ import javax.swing.JTextField;
 import javax.swing.KeyStroke;
 import javax.swing.border.TitledBorder;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.model.Board;
 import org.openpnp.model.Abstract2DLocatable.Side;
@@ -55,40 +56,40 @@ class KicadPosImporterDialog extends JDialog {
         getContentPane().setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
 
         JPanel panel = new JPanel();
-        panel.setBorder(new TitledBorder(null, "Files", TitledBorder.LEADING, TitledBorder.TOP,
+        panel.setBorder(new TitledBorder(null, Translations.getString("KicadPosImporterDialog.FilesPanel.Border.title"), TitledBorder.LEADING, TitledBorder.TOP, //$NON-NLS-1$
                 null, null));
         getContentPane().add(panel);
         panel.setLayout(new FormLayout(
                 new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"),
+                        FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"), //$NON-NLS-1$
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
                 new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
 
-        JLabel lblTopFilemnt = new JLabel("Top File (.pos)");
-        panel.add(lblTopFilemnt, "2, 2, right, default");
+        JLabel lblTopFilemnt = new JLabel(Translations.getString("KicadPosImporterDialog.FilesPanel.topFilemntLabel.text")); //$NON-NLS-1$
+        panel.add(lblTopFilemnt, "2, 2, right, default"); //$NON-NLS-1$
 
         textFieldTopFile = new JTextField();
-        panel.add(textFieldTopFile, "4, 2, fill, default");
+        panel.add(textFieldTopFile, "4, 2, fill, default"); //$NON-NLS-1$
         textFieldTopFile.setColumns(10);
 
-        JButton btnBrowse = new JButton("Browse");
+        JButton btnBrowse = new JButton(Translations.getString("KicadPosImporterDialog.FilesPanel.browseButton.text")); //$NON-NLS-1$
         btnBrowse.setAction(browseTopFileAction);
-        panel.add(btnBrowse, "6, 2");
+        panel.add(btnBrowse, "6, 2"); //$NON-NLS-1$
 
-        JLabel lblBottomFilemnb = new JLabel("Bottom File (.pos)");
-        panel.add(lblBottomFilemnb, "2, 4, right, default");
+        JLabel lblBottomFilemnb = new JLabel(Translations.getString("KicadPosImporterDialog.FilesPanel.bottomFilemnbLabel.text")); //$NON-NLS-1$
+        panel.add(lblBottomFilemnb, "2, 4, right, default"); //$NON-NLS-1$
 
         textFieldBottomFile = new JTextField();
-        panel.add(textFieldBottomFile, "4, 4, fill, default");
+        panel.add(textFieldBottomFile, "4, 4, fill, default"); //$NON-NLS-1$
         textFieldBottomFile.setColumns(10);
 
-        JButton btnBrowse_1 = new JButton("Browse");
+        JButton btnBrowse_1 = new JButton(Translations.getString("KicadPosImporterDialog.FilesPanel.browseButton.text")); //$NON-NLS-1$
         btnBrowse_1.setAction(browseBottomFileAction);
-        panel.add(btnBrowse_1, "6, 4");
+        panel.add(btnBrowse_1, "6, 4"); //$NON-NLS-1$
 
         JPanel panel_1 = new JPanel();
-        panel_1.setBorder(new TitledBorder(null, "Options", TitledBorder.LEADING,
+        panel_1.setBorder(new TitledBorder(null, Translations.getString("KicadPosImporterDialog.OptionsPanel.Border.title"), TitledBorder.LEADING, //$NON-NLS-1$
                 TitledBorder.TOP, null, null));
         getContentPane().add(panel_1);
         panel_1.setLayout(new FormLayout(new ColumnSpec[] {
@@ -102,19 +103,19 @@ class KicadPosImporterDialog extends JDialog {
                         FormSpecs.RELATED_GAP_ROWSPEC,
                         FormSpecs.DEFAULT_ROWSPEC,}));
 
-        chckbxAssignParts = new JCheckBox("Assign Parts");
+        chckbxAssignParts = new JCheckBox(Translations.getString("KicadPosImporterDialog.OptionsPanel.assignPartsChkbox.text")); //$NON-NLS-1$
         chckbxAssignParts.setSelected(true);
-        panel_1.add(chckbxAssignParts, "2, 2");
+        panel_1.add(chckbxAssignParts, "2, 2"); //$NON-NLS-1$
 
-        chckbxCreateMissingParts = new JCheckBox("Create Missing Parts");
+        chckbxCreateMissingParts = new JCheckBox(Translations.getString("KicadPosImporterDialog.OptionsPanel.createMissingPartsChkbox.text")); //$NON-NLS-1$
         chckbxCreateMissingParts.setSelected(false);
-        chckbxCreateMissingParts.setToolTipText("PartId = 'Package'-'Value'");
-        panel_1.add(chckbxCreateMissingParts, "2, 4");
+        chckbxCreateMissingParts.setToolTipText("PartId = 'Package'-'Value'"); //$NON-NLS-1$
+        panel_1.add(chckbxCreateMissingParts, "2, 4"); //$NON-NLS-1$
 
-        chckbxUseValueOnlyAsPartId = new JCheckBox("Use only Value as PartId");
+        chckbxUseValueOnlyAsPartId = new JCheckBox(Translations.getString("KicadPosImporterDialog.OptionsPanel.useValueOnlyAsPartIdChkbox.text")); //$NON-NLS-1$
         chckbxUseValueOnlyAsPartId.setSelected(false);
-        chckbxUseValueOnlyAsPartId.setToolTipText("Check this, if Value is unique (e.g. company internal part number)");
-        panel_1.add(chckbxUseValueOnlyAsPartId, "2, 6");
+        chckbxUseValueOnlyAsPartId.setToolTipText(Translations.getString("KicadPosImporterDialog.OptionsPanel.useValueOnlyAsPartIdChkbox.toolTipText")); //$NON-NLS-1$
+        panel_1.add(chckbxUseValueOnlyAsPartId, "2, 6"); //$NON-NLS-1$
 
         JSeparator separator = new JSeparator();
         getContentPane().add(separator);
@@ -124,11 +125,11 @@ class KicadPosImporterDialog extends JDialog {
         flowLayout.setAlignment(FlowLayout.RIGHT);
         getContentPane().add(panel_2);
 
-        JButton btnCancel = new JButton("Cancel");
+        JButton btnCancel = new JButton(Translations.getString("KicadPosImporterDialog.ButtonsPanel.cancelButton.text")); //$NON-NLS-1$
         btnCancel.setAction(cancelAction);
         panel_2.add(btnCancel);
 
-        JButton btnImport = new JButton("Import");
+        JButton btnImport = new JButton(Translations.getString("KicadPosImporterDialog.ButtonsPanel.importButton.text")); //$NON-NLS-1$
         btnImport.setAction(importAction);
         panel_2.add(btnImport);
 
@@ -136,16 +137,16 @@ class KicadPosImporterDialog extends JDialog {
         setLocationRelativeTo(parent);
 
         JRootPane rootPane = getRootPane();
-        KeyStroke stroke = KeyStroke.getKeyStroke("ESCAPE");
+        KeyStroke stroke = KeyStroke.getKeyStroke("ESCAPE"); //$NON-NLS-1$
         InputMap inputMap = rootPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
-        inputMap.put(stroke, "ESCAPE");
-        rootPane.getActionMap().put("ESCAPE", cancelAction);
+        inputMap.put(stroke, "ESCAPE"); //$NON-NLS-1$
+        rootPane.getActionMap().put("ESCAPE", cancelAction); //$NON-NLS-1$
     }
 
     private class SwingAction extends AbstractAction {
         public SwingAction() {
-            putValue(NAME, "Browse");
-            putValue(SHORT_DESCRIPTION, "Browse");
+            putValue(NAME, Translations.getString("KicadPosImporterDialog.BrowseAction.Name")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("KicadPosImporterDialog.BrowseAction.ShortDescription")); //$NON-NLS-1$
         }
 
         public void actionPerformed(ActionEvent e) {
@@ -153,7 +154,7 @@ class KicadPosImporterDialog extends JDialog {
             fileDialog.setFilenameFilter(new FilenameFilter() {
                 @Override
                 public boolean accept(File dir, String name) {
-                    return name.toLowerCase().endsWith(".pos");
+                    return name.toLowerCase().endsWith(".pos"); //$NON-NLS-1$
                 }
             });
             fileDialog.setVisible(true);
@@ -167,8 +168,8 @@ class KicadPosImporterDialog extends JDialog {
 
     private class SwingAction_1 extends AbstractAction {
         public SwingAction_1() {
-            putValue(NAME, "Browse");
-            putValue(SHORT_DESCRIPTION, "Browse");
+            putValue(NAME, Translations.getString("KicadPosImporterDialog.Browse1Action.Name")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("KicadPosImporterDialog.Browse1Action.ShortDescription")); //$NON-NLS-1$
         }
 
         public void actionPerformed(ActionEvent e) {
@@ -176,7 +177,7 @@ class KicadPosImporterDialog extends JDialog {
             fileDialog.setFilenameFilter(new FilenameFilter() {
                 @Override
                 public boolean accept(File dir, String name) {
-                    return name.toLowerCase().endsWith(".pos");
+                    return name.toLowerCase().endsWith(".pos"); //$NON-NLS-1$
                 }
             });
             fileDialog.setVisible(true);
@@ -190,8 +191,8 @@ class KicadPosImporterDialog extends JDialog {
 
     private class SwingAction_2 extends AbstractAction {
         public SwingAction_2() {
-            putValue(NAME, "Import");
-            putValue(SHORT_DESCRIPTION, "Import");
+            putValue(NAME, Translations.getString("KicadPosImporterDialog.ImportAction.Name")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("KicadPosImporterDialog.ImportAction.ShortDescription")); //$NON-NLS-1$
         }
 
         public void actionPerformed(ActionEvent e) {
@@ -214,7 +215,7 @@ class KicadPosImporterDialog extends JDialog {
                 }
             }
             catch (Exception e1) {
-                MessageBoxes.errorBox(KicadPosImporterDialog.this, "Import Error", e1);
+                MessageBoxes.errorBox(KicadPosImporterDialog.this, Translations.getString("KicadPosImporterDialog.ImportErrorMessage"), e1); //$NON-NLS-1$
                 return;
             }
             for (Placement placement : placements) {
@@ -226,8 +227,8 @@ class KicadPosImporterDialog extends JDialog {
 
     private class SwingAction_3 extends AbstractAction {
         public SwingAction_3() {
-            putValue(NAME, "Cancel");
-            putValue(SHORT_DESCRIPTION, "Cancel");
+            putValue(NAME, Translations.getString("KicadPosImporterDialog.CancelAction.Name")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("KicadPosImporterDialog.CancelAction.ShortDescription")); //$NON-NLS-1$
         }
 
         public void actionPerformed(ActionEvent e) {

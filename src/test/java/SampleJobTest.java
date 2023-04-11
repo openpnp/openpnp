@@ -117,6 +117,7 @@ public class SampleJobTest {
         Job job = Configuration.get().loadJob(jobFile);
 
         machine.setEnabled(true);
+        machine.home();
         machine.execute(() -> {
             machine.home();
             jobProcessor.initialize(job);

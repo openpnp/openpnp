@@ -104,7 +104,7 @@ import org.pmw.tinylog.Logger;
  */
 public class FluentCv {
     static {
-        nu.pattern.OpenCV.loadShared();
+        nu.pattern.OpenCV.loadLocally();
     }
 
     public enum ColorSpace {

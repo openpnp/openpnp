@@ -34,6 +34,8 @@ import org.openpnp.gui.tablemodel.ColumnAlignable;
 
 public class TableUtils {
 
+    public static final int MIN_COLUMN_WIDTH = 10;
+    
     /**
      * Sets the horizontal alignment of each of the columns of the specified table..
      * @param tableModel - the table model for the table. Must implement ColumnAlignable.
@@ -109,8 +111,9 @@ public class TableUtils {
         for (int iCol=0; iCol<nCols; iCol++) {
             int iModelCol = table.getColumnModel().getColumn(iCol).getModelIndex();
             prefWidths[iCol] = prefs.getInt(prefKey + iModelCol, -1);
-            if (prefWidths[iCol] < 0) {
-                prefWidths[iCol] = table.getColumnModel().getColumn(iCol).getWidth();
+            if (prefWidths[iCol] < MIN_COLUMN_WIDTH) {
+                prefWidths[iCol] = Math.max(MIN_COLUMN_WIDTH,
+                        table.getColumnModel().getColumn(iCol).getWidth());
                 prefs.putInt(prefKey + iModelCol, prefWidths[iCol]);
             }
             if (widthTypes[iModelCol] == ColumnWidthSaveable.FIXED) {

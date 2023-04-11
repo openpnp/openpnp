@@ -37,7 +37,7 @@ public class OpenCvUtils {
 
 
     static {
-        nu.pattern.OpenCV.loadShared();
+        nu.pattern.OpenCV.loadLocally();
     }
 
     public static BufferedImage toBufferedImage(Mat m) {

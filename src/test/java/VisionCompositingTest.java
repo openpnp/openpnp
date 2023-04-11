@@ -91,6 +91,7 @@ public class VisionCompositingTest {
         bottomVision.setMaxLinearOffset(new Length(0.1, LengthUnit.Millimeters));
 
         machine.setEnabled(true);
+        machine.home();
         machine.execute(() -> {
             for (Part part: Configuration.get().getParts()) {
                 if (!part.getId().startsWith("FID")) {

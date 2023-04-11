@@ -1,3 +1,5 @@
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -7,13 +9,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.openpnp.machine.reference.HttpActuator;
 import org.openpnp.model.Configuration;
+import org.openpnp.spi.Machine;
 
 import com.google.common.io.Files;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 
 public class HttpActuatorTest {
@@ -43,8 +44,10 @@ public class HttpActuatorTest {
         
         String stringResult="";
         try {
-            Configuration.get().getMachine().setEnabled(true);
-            stringResult= Configuration.get().getMachine().execute(() -> {
+            Machine machine = Configuration.get().getMachine();
+            machine.setEnabled(true);
+            machine.home();
+            stringResult= machine.execute(() -> {
                  return  actuator.read();
             }, false, 0);
       

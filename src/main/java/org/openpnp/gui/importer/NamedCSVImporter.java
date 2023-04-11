@@ -48,6 +48,7 @@ import javax.swing.JTextField;
 import javax.swing.KeyStroke;
 import javax.swing.border.TitledBorder;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.model.Board;
 import org.openpnp.model.Abstract2DLocatable.Side;
@@ -69,8 +70,8 @@ import com.jgoodies.forms.layout.RowSpec;
 
 @SuppressWarnings("serial")
 public class NamedCSVImporter implements BoardImporter {
-    private final static String NAME = "Named CSV";
-    private final static String DESCRIPTION = "Import Named Comma Separated Values Files.";
+    private final static String NAME = "Named CSV"; //$NON-NLS-1$
+    private final static String DESCRIPTION = Translations.getString("NamedCSVImporter.Importer.Description"); //$NON-NLS-1$
 
 
 
@@ -112,15 +113,15 @@ public class NamedCSVImporter implements BoardImporter {
     // if((str.indexOf("val")!=-1||str.indexOf("comment"))&&str.indexOf("val")!=-1&&str.indexOf("val")!=-1&&
 
     private static final String Refs[] =
-            {"DESIGNATOR", "PART", "COMPONENT", "REFDES", "REF"};
-    private static final String Vals[] = {"VALUE", "VAL", "COMMENT", "COMP_VALUE"};
-    private static final String Packs[] = {"FOOTPRINT", "PACKAGE", "PATTERN", "COMP_PACKAGE"};
-    private static final String Xs[] = {"X", "X (MM)", "REF X", "POSX", "REF-X(MM)", "REF-X(MIL)", "SYM_X"};
-    private static final String Ys[] = {"Y", "Y (MM)", "REF Y", "POSY", "REF-Y(MM)", "REF-Y(MIL)", "SYM_Y"};
-    private static final String Rots[] = {"ROTATION", "ROT", "ROTATE", "SYM_ROTATE"};
-    private static final String TBs[] = {"LAYER", "SIDE", "TB", "SYM_MIRROR"};
-    private static final String Heights[] = {"HEIGHT", "HEIGHT(MIL)", "HEIGHT(MM)"};
-    private static final String Comments[] = {"ADDCOMMENT"};
+            {"DESIGNATOR", "PART", "COMPONENT", "REFDES", "REF"}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+    private static final String Vals[] = {"VALUE", "VAL", "COMMENT", "COMP_VALUE"}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+    private static final String Packs[] = {"FOOTPRINT", "PACKAGE", "PATTERN", "COMP_PACKAGE"}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+    private static final String Xs[] = {"X", "X (MM)", "REF X", "POSX", "REF-X(MM)", "REF-X(MIL)", "SYM_X"}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
+    private static final String Ys[] = {"Y", "Y (MM)", "REF Y", "POSY", "REF-Y(MM)", "REF-Y(MIL)", "SYM_Y"}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
+    private static final String Rots[] = {"ROTATION", "ROT", "ROTATE", "SYM_ROTATE"}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+    private static final String TBs[] = {"LAYER", "SIDE", "TB", "SYM_MIRROR"}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+    private static final String Heights[] = {"HEIGHT", "HEIGHT(MIL)", "HEIGHT(MM)"}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+    private static final String Comments[] = {"ADDCOMMENT"}; //$NON-NLS-1$
     //////////////////////////////////////////////////////////
     static private int Ref = -1, Val = -1, Pack = -1, X = -1, Y = -1, Rot = -1, TB = -1, HT = -1, Comment = -1,
             Len = 0;
@@ -136,23 +137,23 @@ public class NamedCSVImporter implements BoardImporter {
         for (int i = 0; i < str.length; i++) {
             for (int j = 0; j < val.length; j++) {
                 if (str[i].equals(val[j])) {
-                    Logger.trace("checkCSV: " + val[j] + " = " + j);
+                    Logger.trace("checkCSV: " + val[j] + " = " + j); //$NON-NLS-1$ //$NON-NLS-2$
 
                     // check for mil units
                     // TODO This should be done better, but at moment I don't know a better way...
                     // -trampas
-                    if (val[j].equals("REF-X(MIL)")) {
+                    if (val[j].equals("REF-X(MIL)")) { //$NON-NLS-1$
                         units_mils_x = 1;
-                        Logger.trace("X units are in mils");
+                        Logger.trace("X units are in mils"); //$NON-NLS-1$
                     }
-                    if (val[j].equals("REF-Y(MIL)")) {
+                    if (val[j].equals("REF-Y(MIL)")) { //$NON-NLS-1$
                         units_mils_y = 1;
-                        Logger.trace("Y units are in mils");
+                        Logger.trace("Y units are in mils"); //$NON-NLS-1$
                     }
 
-                    if (val[j].equals("HEIGHT(MIL)")) {
+                    if (val[j].equals("HEIGHT(MIL)")) { //$NON-NLS-1$
                         units_mils_height = 1;
-                        Logger.trace("Height units are in mils");
+                        Logger.trace("Height units are in mils"); //$NON-NLS-1$
                     }
 
                     return j;
@@ -182,18 +183,18 @@ public class NamedCSVImporter implements BoardImporter {
             Len = Rot <= Len ? Len : Rot;
             Len = TB <= Len ? Len : TB;
             Len = HT <= Len ? Len : HT;
-            Logger.trace("checkCSV: Len = " + Len);
+            Logger.trace("checkCSV: Len = " + Len); //$NON-NLS-1$
             return true;
         }
-        Logger.trace("checkCSV: Ref = " + Ref);
-        Logger.trace("checkCSV: Val = " + Val);
-        Logger.trace("checkCSV: Pack = " + Pack);
-        Logger.trace("checkCSV: X = " + X);
-        Logger.trace("checkCSV: Y = " + Y);
-        Logger.trace("checkCSV: Rot = " + Rot);
-        Logger.trace("checkCSV: TB = " + TB);
-        Logger.trace("checkCSV: HT = " + HT);
-        Logger.trace("checkCSV: Comment = " + Comment);
+        Logger.trace("checkCSV: Ref = " + Ref); //$NON-NLS-1$
+        Logger.trace("checkCSV: Val = " + Val); //$NON-NLS-1$
+        Logger.trace("checkCSV: Pack = " + Pack); //$NON-NLS-1$
+        Logger.trace("checkCSV: X = " + X); //$NON-NLS-1$
+        Logger.trace("checkCSV: Y = " + Y); //$NON-NLS-1$
+        Logger.trace("checkCSV: Rot = " + Rot); //$NON-NLS-1$
+        Logger.trace("checkCSV: TB = " + TB); //$NON-NLS-1$
+        Logger.trace("checkCSV: HT = " + HT); //$NON-NLS-1$
+        Logger.trace("checkCSV: Comment = " + Comment); //$NON-NLS-1$
         Ref = -1;
         Val = -1;
         Pack = -1;
@@ -208,7 +209,7 @@ public class NamedCSVImporter implements BoardImporter {
     }
 
     private static boolean checkLine(String str) throws Exception {
-        Logger.trace("checkLine: " + str);
+        Logger.trace("checkLine: " + str); //$NON-NLS-1$
         String input_str = str.toUpperCase();
         int e = 0;
         if (input_str.charAt(0) == '#') {
@@ -217,28 +218,28 @@ public class NamedCSVImporter implements BoardImporter {
         if (input_str == null) {
             return false;
         }
-        if (input_str.indexOf("X") == -1) {
+        if (input_str.indexOf("X") == -1) { //$NON-NLS-1$
             return false;
         }
-        if (input_str.indexOf("Y") == -1) {
+        if (input_str.indexOf("Y") == -1) { //$NON-NLS-1$
             return false;
         }
-        if (input_str.indexOf("ROT") == -1) {
+        if (input_str.indexOf("ROT") == -1) { //$NON-NLS-1$
             return false;
         }
-        if (input_str.indexOf("VAL") == -1 
-        		&& input_str.indexOf("COMMENT") == -1) {
+        if (input_str.indexOf("VAL") == -1  //$NON-NLS-1$
+        		&& input_str.indexOf("COMMENT") == -1) { //$NON-NLS-1$
             return false;
         }
-        if (input_str.indexOf("FOOTPRINT") == -1 
-        		&& input_str.indexOf("PACKAGE") == -1
-                && input_str.indexOf("PATTERN") == -1) {
+        if (input_str.indexOf("FOOTPRINT") == -1  //$NON-NLS-1$
+        		&& input_str.indexOf("PACKAGE") == -1 //$NON-NLS-1$
+                && input_str.indexOf("PATTERN") == -1) { //$NON-NLS-1$
             return false;
         }
-        if (input_str.indexOf("DESIGNATOR") == -1
-                && input_str.indexOf("PART") == -1
-                && input_str.indexOf("COMP") == -1
-                && input_str.indexOf("REF") == -1) {
+        if (input_str.indexOf("DESIGNATOR") == -1 //$NON-NLS-1$
+                && input_str.indexOf("PART") == -1 //$NON-NLS-1$
+                && input_str.indexOf("COMP") == -1 //$NON-NLS-1$
+                && input_str.indexOf("REF") == -1) { //$NON-NLS-1$
             return false;
         }
         // seems to have data
@@ -270,7 +271,7 @@ public class NamedCSVImporter implements BoardImporter {
     private static List<Placement> parseFile(File file, boolean createMissingParts,
             boolean updateHeights) throws Exception {
         BufferedReader reader =
-                new BufferedReader(new InputStreamReader(new FileInputStream(file), "ISO-8859-1"));
+                new BufferedReader(new InputStreamReader(new FileInputStream(file), "ISO-8859-1")); //$NON-NLS-1$
         ArrayList<Placement> placements = new ArrayList<>();
         String line;
 
@@ -287,7 +288,7 @@ public class NamedCSVImporter implements BoardImporter {
 
         if (Len == 0) {
             reader.close();
-            throw new Exception("Unable to find relevant headers' names.\n See https://github.com/openpnp/openpnp/wiki/Importing-Centroid-Data for more.");
+            throw new Exception("Unable to find relevant headers' names.\n See https://github.com/openpnp/openpnp/wiki/Importing-Centroid-Data for more."); //$NON-NLS-1$
         }
 
         // CSVParser csvParser = new CSVParser(new FileInputStream(file));
@@ -297,14 +298,14 @@ public class NamedCSVImporter implements BoardImporter {
                 continue;
             }
             else {
-                double placementX = Double.parseDouble(as[X].replace(",", ".").replace(" ", "")
-                        .replace("mm", "").replace("mil", ""));
+                double placementX = Double.parseDouble(as[X].replace(",", ".").replace(" ", "") //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+                        .replace("mm", "").replace("mil", "")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
                 // convert mils to mmm
                 if (units_mils_x == 1) {
                     placementX = placementX * 0.0254;
                 }
-                double placementY = Double.parseDouble(as[Y].replace(",", ".").replace(" ", "")
-                        .replace("mm", "").replace("mil", ""));
+                double placementY = Double.parseDouble(as[Y].replace(",", ".").replace(" ", "") //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+                        .replace("mm", "").replace("mil", "")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 
                 // convert mils to mmm
                 if (units_mils_y == 1) {
@@ -314,8 +315,8 @@ public class NamedCSVImporter implements BoardImporter {
 
                 double heightZ = 0.0; // set default height to zero in case not included in CSV
                 if (HT != -1) {
-                    heightZ = Double.parseDouble(as[HT].replace(",", ".").replace(" ", "")
-                            .replace("mm", "").replace("mil", ""));
+                    heightZ = Double.parseDouble(as[HT].replace(",", ".").replace(" ", "") //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+                            .replace("mm", "").replace("mil", "")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 
                     // convert mils to mmm
                     if (units_mils_height == 1) {
@@ -324,7 +325,7 @@ public class NamedCSVImporter implements BoardImporter {
                 }
 
                 double placementRotation =
-                        Double.parseDouble(as[Rot].replace(",", ".").replace(" ", ""));
+                        Double.parseDouble(as[Rot].replace(",", ".").replace(" ", "")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
                 while (placementRotation > 180.0) {
                     placementRotation -= 360.0;
                 }
@@ -338,7 +339,7 @@ public class NamedCSVImporter implements BoardImporter {
                         0, placementRotation));
                 Configuration cfg = Configuration.get();
                 if (cfg != null && createMissingParts) {
-                    String partId = as[Pack] + "-" + as[Val];
+                    String partId = as[Pack] + "-" + as[Val]; //$NON-NLS-1$
                     Part part = cfg.getPart(partId);
 
                     if (part == null) {
@@ -357,7 +358,7 @@ public class NamedCSVImporter implements BoardImporter {
 
                     // if part exists and height exist and user wants height updated do it.
                     if (cfg != null && updateHeights && HT != -1) {
-                        String partId2 = as[Pack] + "-" + as[Val];
+                        String partId2 = as[Pack] + "-" + as[Val]; //$NON-NLS-1$
                         Part part2 = cfg.getPart(partId2);
                         if (part2 != null) {
                             Length l = new Length(heightZ, LengthUnit.Millimeters);
@@ -398,43 +399,43 @@ public class NamedCSVImporter implements BoardImporter {
             getContentPane().setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
 
             JPanel panel = new JPanel();
-            panel.setBorder(new TitledBorder(null, "Files", TitledBorder.LEADING, TitledBorder.TOP,
+            panel.setBorder(new TitledBorder(null, Translations.getString("NamedCSVImporter.FilesPanel.Border.title"), TitledBorder.LEADING, TitledBorder.TOP, //$NON-NLS-1$
                     null, null));
             getContentPane().add(panel);
             panel.setLayout(new FormLayout(
                     new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                            FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"),
+                            FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"), //$NON-NLS-1$
                             FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
                     new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                             FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
 
-            JLabel lblTopFilemnt = new JLabel("Centroid File (.csv)");
-            panel.add(lblTopFilemnt, "2, 2, right, default");
+            JLabel lblTopFilemnt = new JLabel(Translations.getString("NamedCSVImporter.FilesPanel.topFilemntLabel.text")); //$NON-NLS-1$
+            panel.add(lblTopFilemnt, "2, 2, right, default"); //$NON-NLS-1$
 
             textFieldTopFile = new JTextField();
-            panel.add(textFieldTopFile, "4, 2, fill, default");
+            panel.add(textFieldTopFile, "4, 2, fill, default"); //$NON-NLS-1$
             textFieldTopFile.setColumns(10);
 
-            JButton btnBrowse = new JButton("Browse");
+            JButton btnBrowse = new JButton(Translations.getString("NamedCSVImporter.FilesPanel.browseButton.text")); //$NON-NLS-1$
             btnBrowse.setAction(browseTopFileAction);
-            panel.add(btnBrowse, "6, 2");
+            panel.add(btnBrowse, "6, 2"); //$NON-NLS-1$
 
             JPanel panel_1 = new JPanel();
-            panel_1.setBorder(new TitledBorder(null, "Options", TitledBorder.LEADING,
+            panel_1.setBorder(new TitledBorder(null, Translations.getString("NamedCSVImporter.OptionsPanel.Border.title"), TitledBorder.LEADING, //$NON-NLS-1$
                     TitledBorder.TOP, null, null));
             getContentPane().add(panel_1);
             panel_1.setLayout(new FormLayout(
                     new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
                     new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                            RowSpec.decode("default:grow")}));
+                            RowSpec.decode("default:grow")})); //$NON-NLS-1$
 
-            chckbxCreateMissingParts = new JCheckBox("Create Missing Parts");
+            chckbxCreateMissingParts = new JCheckBox(Translations.getString("NamedCSVImporter.OptionsPanel.createMissingPartsChkbox.text")); //$NON-NLS-1$
             chckbxCreateMissingParts.setSelected(true);
-            panel_1.add(chckbxCreateMissingParts, "2, 2");
+            panel_1.add(chckbxCreateMissingParts, "2, 2"); //$NON-NLS-1$
 
-            chckbxUpdatePartHeight = new JCheckBox("Update Existing Part Heights");
+            chckbxUpdatePartHeight = new JCheckBox(Translations.getString("NamedCSVImporter.OptionsPanel.updatePartHeightChkbox.text")); //$NON-NLS-1$
             chckbxUpdatePartHeight.setSelected(true);
-            panel_1.add(chckbxUpdatePartHeight, "2, 3");
+            panel_1.add(chckbxUpdatePartHeight, "2, 3"); //$NON-NLS-1$
 
             JSeparator separator = new JSeparator();
             getContentPane().add(separator);
@@ -444,11 +445,11 @@ public class NamedCSVImporter implements BoardImporter {
             flowLayout.setAlignment(FlowLayout.RIGHT);
             getContentPane().add(panel_2);
 
-            JButton btnCancel = new JButton("Cancel");
+            JButton btnCancel = new JButton(Translations.getString("NamedCSVImporter.ButtonsPanel.cancelButton.text")); //$NON-NLS-1$
             btnCancel.setAction(cancelAction);
             panel_2.add(btnCancel);
 
-            JButton btnImport = new JButton("Import");
+            JButton btnImport = new JButton(Translations.getString("NamedCSVImporter.ButtonsPanel.importButton.text")); //$NON-NLS-1$
             btnImport.setAction(importAction);
             panel_2.add(btnImport);
 
@@ -456,16 +457,16 @@ public class NamedCSVImporter implements BoardImporter {
             setLocationRelativeTo(parent);
 
             JRootPane rootPane = getRootPane();
-            KeyStroke stroke = KeyStroke.getKeyStroke("ESCAPE");
+            KeyStroke stroke = KeyStroke.getKeyStroke("ESCAPE"); //$NON-NLS-1$
             InputMap inputMap = rootPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
-            inputMap.put(stroke, "ESCAPE");
-            rootPane.getActionMap().put("ESCAPE", cancelAction);
+            inputMap.put(stroke, "ESCAPE"); //$NON-NLS-1$
+            rootPane.getActionMap().put("ESCAPE", cancelAction); //$NON-NLS-1$
         }
 
         private class SwingAction extends AbstractAction {
             public SwingAction() {
-                putValue(NAME, "Browse");
-                putValue(SHORT_DESCRIPTION, "Browse");
+                putValue(NAME, Translations.getString("NamedCSVImporter.BrowseAction.Name")); //$NON-NLS-1$
+                putValue(SHORT_DESCRIPTION, Translations.getString("NamedCSVImporter.BrowseAction.ShortDescription")); //$NON-NLS-1$
             }
 
             public void actionPerformed(ActionEvent e) {
@@ -473,9 +474,9 @@ public class NamedCSVImporter implements BoardImporter {
                 fileDialog.setFilenameFilter(new FilenameFilter() {
                     @Override
                     public boolean accept(File dir, String name) {
-                        return false || name.toLowerCase().endsWith(".csv")
-                                || name.toLowerCase().endsWith(".txt")
-                                || name.toLowerCase().endsWith(".dat");
+                        return false || name.toLowerCase().endsWith(".csv") //$NON-NLS-1$
+                                || name.toLowerCase().endsWith(".txt") //$NON-NLS-1$
+                                || name.toLowerCase().endsWith(".dat"); //$NON-NLS-1$
                     }
                 });
                 fileDialog.setVisible(true);
@@ -491,12 +492,12 @@ public class NamedCSVImporter implements BoardImporter {
 
         private class SwingAction_2 extends AbstractAction {
             public SwingAction_2() {
-                putValue(NAME, "Import");
-                putValue(SHORT_DESCRIPTION, "Import");
+                putValue(NAME, Translations.getString("NamedCSVImporter.Import2Action.Name")); //$NON-NLS-1$
+                putValue(SHORT_DESCRIPTION, Translations.getString("NamedCSVImporter.Import2Action.ShortDescription")); //$NON-NLS-1$
             }
 
             public void actionPerformed(ActionEvent e) {
-                Logger.debug("Parsing " + textFieldTopFile.getText() + " CSV FIle");
+                Logger.debug("Parsing " + textFieldTopFile.getText() + " CSV FIle"); //$NON-NLS-1$ //$NON-NLS-2$
                 topFile = new File(textFieldTopFile.getText());
                 board = new Board();
                 List<Placement> placements = new ArrayList<>();
@@ -507,7 +508,7 @@ public class NamedCSVImporter implements BoardImporter {
                     }
                 }
                 catch (Exception e1) {
-                    MessageBoxes.errorBox(Dlg.this, "Import Error", e1);
+                    MessageBoxes.errorBox(Dlg.this, Translations.getString("NamedCSVImporter.ImportErrorMessage"), e1); //$NON-NLS-1$
                     return;
                 }
                 for (Placement placement : placements) {
@@ -519,8 +520,8 @@ public class NamedCSVImporter implements BoardImporter {
 
         private class SwingAction_3 extends AbstractAction {
             public SwingAction_3() {
-                putValue(NAME, "Cancel");
-                putValue(SHORT_DESCRIPTION, "Cancel");
+                putValue(NAME, Translations.getString("NamedCSVImporter.CancelAction.Name")); //$NON-NLS-1$
+                putValue(SHORT_DESCRIPTION, Translations.getString("NamedCSVImporter.CancelAction.ShortDescription")); //$NON-NLS-1$
             }
 
             public void actionPerformed(ActionEvent e) {

@@ -97,6 +97,7 @@ public class ReferenceBottomVisionOffsetTest {
         };
         
         machine.setEnabled(true);
+        machine.home();
         Location maxError = new Location(LengthUnit.Millimeters, 0.1, 0.1, 0, 0.07);
         for (Location[] testPair: testData) {
             machine.execute(() -> {
@@ -142,6 +143,7 @@ public class ReferenceBottomVisionOffsetTest {
         };
         
         machine.setEnabled(true);
+        machine.home();
         Location maxError = new Location(LengthUnit.Millimeters, 0.1, 0.1, 0, 0.07);
         for (Location[] testPair: testData) {
             machine.execute(() -> {
@@ -188,6 +190,7 @@ public class ReferenceBottomVisionOffsetTest {
         };
         
         machine.setEnabled(true);
+        machine.home();
         Location maxError = new Location(LengthUnit.Millimeters, 0.1, 0.1, 0, 0.07);
         for (Location[] testPair: testData) {
             machine.execute(() -> {
@@ -236,6 +239,7 @@ public class ReferenceBottomVisionOffsetTest {
         };
         
         machine.setEnabled(true);
+        machine.home();
         Location maxError = new Location(LengthUnit.Millimeters, 0.1, 0.1, 0, 0.07);
         for (Location[] testPair: testData) {
             machine.execute(() -> {
@@ -283,6 +287,7 @@ public class ReferenceBottomVisionOffsetTest {
         };
         
         machine.setEnabled(true);
+        machine.home();
         Location maxError = new Location(LengthUnit.Millimeters, 0.1, 0.1, 0, 0.07);
         for (Location[] testPair: testData) {
             machine.execute(() -> {
@@ -329,6 +334,7 @@ public class ReferenceBottomVisionOffsetTest {
         };
         
         machine.setEnabled(true);
+        machine.home();
         Location maxError = new Location(LengthUnit.Millimeters, 0.1, 0.1, 0, 0.07);
         for (Location[] testPair: testData) {
             machine.execute(() -> {
@@ -375,6 +381,7 @@ public class ReferenceBottomVisionOffsetTest {
         };
         
         machine.setEnabled(true);
+        machine.home();
         Location maxError = new Location(LengthUnit.Millimeters, 0.1, 0.1, 0, 0.07);
         for (Location[] testPair: testData) {
             machine.execute(() -> {
@@ -425,6 +432,7 @@ public class ReferenceBottomVisionOffsetTest {
         camera.setErrorOffsets(error);
         
         machine.setEnabled(true);
+        machine.home();
         Location maxError = new Location(LengthUnit.Millimeters, 0.1, 0.1, 0, 0.07);
         for (Location[] testPair: testData) {
             machine.execute(() -> {
@@ -478,6 +486,7 @@ public class ReferenceBottomVisionOffsetTest {
         camera.setErrorOffsets(error);
 
         machine.setEnabled(true);
+        machine.home();
         Location maxError = new Location(LengthUnit.Millimeters, 0.1, 0.1, 0, 0.07);
         for (Location[] testPair: testData) {
             machine.execute(() -> {

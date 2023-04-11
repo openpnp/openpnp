@@ -184,6 +184,8 @@ public class MultiPlacementBoardLocationProcess {
         //Get ready for the first placement
         idxPlacement = 0;
         placementId = placements.get(0).getId();
+        jobPanel.getJobPlacementsPanel().selectPlacement(
+                placements.get(0).getDefinition());
         expectedLocations.add(placements.get(0).getLocation()
                 .invert(boardSide==Side.Bottom, false, false, false));
         
@@ -228,6 +230,8 @@ public class MultiPlacementBoardLocationProcess {
             }
 
             //Get ready for the next placement
+            jobPanel.getJobPlacementsPanel().selectPlacement(
+                    placements.get(idxPlacement).getDefinition());
             placementId = placements.get(idxPlacement).getId();
             expectedLocations.add(placements.get(idxPlacement).getLocation()
                     .invert(boardSide==Side.Bottom, false, false, false));
