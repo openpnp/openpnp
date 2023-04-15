@@ -379,7 +379,7 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
         return getFiducialLocation(location, part);
     }
 
-    public CvPipeline getFiducialPipeline(Camera camera, PartSettingsHolder partSettingsHolder) throws Exception {
+    public CvPipeline getFiducialPipeline(Camera camera, PartSettingsHolder partSettingsHolder, Location nominalLocation) throws Exception {
         FiducialVisionSettings visionSettings = getInheritedVisionSettings(partSettingsHolder);
         if (!visionSettings.isEnabled()) {
             throw new  Exception(String.format(
@@ -387,12 +387,12 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
                     partSettingsHolder.getClass().getSimpleName(), partSettingsHolder.getShortName(), visionSettings.getName()));
         }
         CvPipeline pipeline = visionSettings.getPipeline(); 
-        preparePipeline(pipeline, visionSettings.getPipelineParameterAssignments(), camera, partSettingsHolder);
+        preparePipeline(pipeline, visionSettings.getPipelineParameterAssignments(), camera, partSettingsHolder, nominalLocation);
         return pipeline;
     }
 
     public void preparePipeline(CvPipeline pipeline, Map<String, Object> pipelineParameterAssignments, Camera camera,
-            PartSettingsHolder partSettingsHolder) throws Exception {
+            PartSettingsHolder partSettingsHolder, Location nominalLocation) throws Exception {
         org.openpnp.model.Package pkg = null;
         Footprint footprint = null;
         if (partSettingsHolder instanceof Part) {
@@ -426,6 +426,7 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
         pipeline.setProperty("package", pkg);
         if (footprint != null) {
             pipeline.setProperty("footprint", footprint);
+            pipeline.setProperty("footprint.rotation", nominalLocation.getRotation());
             Rectangle2D bounds = footprint.getPadsShape().getBounds2D();
             Length diameter = new Length(Math.max(bounds.getWidth(), bounds.getHeight()), footprint.getUnits());
             pipeline.setProperty("fiducial.diameter", diameter);
@@ -448,7 +449,7 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
 
         List<Location> matchedLocations = new ArrayList<Location>();
 
-        try(CvPipeline pipeline = getFiducialPipeline(camera, partSettingsHolder)) {
+        try(CvPipeline pipeline = getFiducialPipeline(camera, partSettingsHolder, nominalLocation)) {
             for (int i = 0; i < repeatFiducialRecognition; i++) {
                 // Perform vision operation
                 pipeline.process();

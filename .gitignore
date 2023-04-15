@@ -14,3 +14,4 @@ hs_err*
 *.log
 
 .vscode/
+/src/main/resources/org/openpnp/translations.properties.bak

@@ -62,13 +62,13 @@ public class FootprintReticle implements Reticle {
         AffineTransform tx = new AffineTransform();
 
         tx.translate(viewPortCenterX, viewPortCenterY);
-        // AffineTransform rotates positive clockwise, so we invert the value.
+        // Left-hand coordinate system rotates positive clockwise, so we invert the value.
         tx.rotate(Math.toRadians(-rotation));
 
-        // First we scale by units to convert the units and then we scale
+        // First we scale by units to convert the units and then we divide
         // by the camera X and Y units per pixels to get pixel locations.
-        tx.scale(unitScale, unitScale);
-        tx.scale(1.0 / cameraUnitsPerPixelX, 1.0 / cameraUnitsPerPixelY);
+        // Left-hand coordinate system, Y inverted.
+        tx.scale(unitScale / cameraUnitsPerPixelX, -unitScale / cameraUnitsPerPixelY);
 
         // Transform the Shape and draw it out.
         shape = tx.createTransformedShape(shape);

@@ -50,22 +50,24 @@ public class ReferenceBottomVisionOffsetTest {
 
         Configuration.initialize(workingDirectory);
         Configuration.get().load();
-        // Save back migrated.
-        Configuration.get().save();
-    }
 
-    
-    @BeforeEach
-    public void before() throws Exception {
-        Configuration.initialize(workingDirectory);
-        Configuration.get().load();
+        SampleJobTest.makeMachineFastest();
+
         // Set nozzle tip pick tolerances for large offsets.
         for (NozzleTip tip : Configuration.get().getMachine().getNozzleTips()) {
             ((ReferenceNozzleTip) tip).setMaxPickTolerance(new Length(2, LengthUnit.Millimeters));
         }
+
+        // Save back migrated.
+        Configuration.get().save();
     }
 
-    
+    @BeforeEach
+    public void before() throws Exception {
+        Configuration.initialize(workingDirectory);
+        Configuration.get().load();
+    }
+
     @Test
     public void testSymetricPartNoOffsetNoPreRotation() throws Exception {
 
@@ -230,10 +232,10 @@ public class ReferenceBottomVisionOffsetTest {
         
         // test data
         Location[][] testData = {
-                {new Location(LengthUnit.Millimeters, 10.0, 10.0, 0.0, 000.0), new Location(LengthUnit.Millimeters, 0.5, -0.5, 0.0, 0.0)},
-                {new Location(LengthUnit.Millimeters, 10.0, 10.0, 0.0, 045.0), new Location(LengthUnit.Millimeters, 0.5, -0.5, 0.0, 0.0)},
-                {new Location(LengthUnit.Millimeters, 10.0, 10.0, 0.0, 090.0), new Location(LengthUnit.Millimeters, 0.5, -0.5, 0.0, 0.0)},
-                {new Location(LengthUnit.Millimeters, 10.0, 10.0, 0.0, 180.0), new Location(LengthUnit.Millimeters, 0.5, -0.5, 0.0, 0.0)},
+                {new Location(LengthUnit.Millimeters, 10.0, 10.0, 0.0, 000.0), new Location(LengthUnit.Millimeters, 0.5, 0.5, 0.0, 0.0)},
+                {new Location(LengthUnit.Millimeters, 10.0, 10.0, 0.0, 045.0), new Location(LengthUnit.Millimeters, 0.5, 0.5, 0.0, 0.0)},
+                {new Location(LengthUnit.Millimeters, 10.0, 10.0, 0.0, 090.0), new Location(LengthUnit.Millimeters, 0.5, 0.5, 0.0, 0.0)},
+                {new Location(LengthUnit.Millimeters, 10.0, 10.0, 0.0, 180.0), new Location(LengthUnit.Millimeters, 0.5, 0.5, 0.0, 0.0)},
         };
         
         machine.setEnabled(true);
@@ -278,10 +280,10 @@ public class ReferenceBottomVisionOffsetTest {
         
         // test data
         Location[][] testData = {
-                {new Location(LengthUnit.Millimeters, 10.0, 10.0, 0.0, 000.0), new Location(LengthUnit.Millimeters, 0.5, -0.5, 0.0, 0.0)},
-                {new Location(LengthUnit.Millimeters, 10.0, 10.0, 0.0, 045.0), new Location(LengthUnit.Millimeters, Math.sqrt(0.5), 0.0, 0.0, 0.0)},
-                {new Location(LengthUnit.Millimeters, 10.0, 10.0, 0.0, 090.0), new Location(LengthUnit.Millimeters, 0.5, 0.5, 0.0, 0.0)},
-                {new Location(LengthUnit.Millimeters, 10.0, 10.0, 0.0, 180.0), new Location(LengthUnit.Millimeters, -0.5, 0.5, 0.0, 0.0)}
+                {new Location(LengthUnit.Millimeters, 10.0, 10.0, 0.0, 000.0), new Location(LengthUnit.Millimeters, 0.5, 0.5, 0.0, 0.0)},
+                {new Location(LengthUnit.Millimeters, 10.0, 10.0, 0.0, 045.0), new Location(LengthUnit.Millimeters, 0.5, 0.5, 0.0, 0.0).rotateXy(45)},
+                {new Location(LengthUnit.Millimeters, 10.0, 10.0, 0.0, 090.0), new Location(LengthUnit.Millimeters, 0.5, 0.5, 0.0, 0.0).rotateXy(90)},
+                {new Location(LengthUnit.Millimeters, 10.0, 10.0, 0.0, 180.0), new Location(LengthUnit.Millimeters, 0.5, 0.5, 0.0, 0.0).rotateXy(180)}
         };
         
         machine.setEnabled(true);
@@ -317,8 +319,8 @@ public class ReferenceBottomVisionOffsetTest {
         boardLocation.setLocation(new Location(LengthUnit.Millimeters, 0, 0, -10, 0));
         boardLocation.setGlobalSide(Side.Top);
 
-        // no offset
-        bottomVisionSettings.setVisionOffset(new Location(LengthUnit.Millimeters, 0.5, -0.5, 0.0, 0.0));
+        // 0.5mm offset in both directions
+        bottomVisionSettings.setVisionOffset(new Location(LengthUnit.Millimeters, 0.5, 0.5, 0.0, 0.0));
         
         // No pre rotate
         bottomVisionSettings.setPreRotateUsage(AlwaysOff);
@@ -364,8 +366,8 @@ public class ReferenceBottomVisionOffsetTest {
         boardLocation.setLocation(new Location(LengthUnit.Millimeters, 0, 0, -10, 0));
         boardLocation.setGlobalSide(Side.Top);
 
-        // 1mm offset in both directions
-        bottomVisionSettings.setVisionOffset(new Location(LengthUnit.Millimeters, 0.5, -0.5, 0.0, 0.0));
+        // 0.5mm offset in both directions
+        bottomVisionSettings.setVisionOffset(new Location(LengthUnit.Millimeters, 0.5, 0.5, 0.0, 0.0));
         
         // With pre rotate
         bottomVisionSettings.setPreRotateUsage(AlwaysOn);
@@ -410,8 +412,8 @@ public class ReferenceBottomVisionOffsetTest {
         boardLocation.setLocation(new Location(LengthUnit.Millimeters, 0, 0, -10, 0));
         boardLocation.setGlobalSide(Side.Top);
 
-        // no offset
-        bottomVisionSettings.setVisionOffset(new Location(LengthUnit.Millimeters, 0.5, -0.5, 0.0, 0.0));
+        // 0.5mm offset in both directions
+        bottomVisionSettings.setVisionOffset(new Location(LengthUnit.Millimeters, 0.5, 0.5, 0.0, 0.0));
         
         // No pre rotate
         bottomVisionSettings.setPreRotateUsage(AlwaysOff);
@@ -463,7 +465,7 @@ public class ReferenceBottomVisionOffsetTest {
         boardLocation.setGlobalSide(Side.Top);
 
         // 0.5mm offset in both directions
-        Location partVisionOffset = new Location(LengthUnit.Millimeters, 0.5, -0.5, 0.0, 0.0);
+        Location partVisionOffset = new Location(LengthUnit.Millimeters, 0.5, 0.5, 0.0, 0.0);
         bottomVisionSettings.setVisionOffset(partVisionOffset);
         
         // With pre rotate

@@ -35,6 +35,7 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Area;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Line2D;
+import java.awt.geom.Path2D;
 import java.awt.geom.Rectangle2D;
 import java.util.List;
 
@@ -102,7 +103,10 @@ public class VisionCompositingPreview extends JComponent implements MouseMotionL
             txShape.scale(1, -1);
             padsShape = txShape.createTransformedShape(padsShape);
             bodyShape = txShape.createTransformedShape(bodyShape);
-            Rectangle2D bounds = padsShape.getBounds2D();
+            Path2D.Double unionShape = new Path2D.Double();
+            unionShape.append(bodyShape, false);
+            unionShape.append(padsShape, false);
+            Rectangle2D bounds = unionShape.getBounds2D();
             // Compute scale.
             Location upp = camera.getUnitsPerPixel().convertToUnits(footprint.getUnits());
             double cameraWidth = camera.getWidth()*upp.getX();
@@ -116,7 +120,7 @@ public class VisionCompositingPreview extends JComponent implements MouseMotionL
             // Create a transform to scale the shape by
             AffineTransform tx = new AffineTransform(txOld);
             tx.translate(width/2, height/2);
-            tx.scale(scale, -scale);
+            tx.scale(scale, scale);
             g2d.setTransform(tx);
 
             // Draw the package.

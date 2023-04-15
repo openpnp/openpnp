@@ -344,7 +344,7 @@ public class FiducialVisionSettingsConfigurationWizard extends AbstractConfigura
     }
 
     private void pipelineConfiguration(CvPipeline pipeline, Map<String, Object> pipelineParameterAssignments, boolean edit) throws Exception {
-        fiducialLocator.preparePipeline(pipeline, pipelineParameterAssignments, fiducialLocator.getVisionCamera(), settingsHolder);
+        fiducialLocator.preparePipeline(pipeline, pipelineParameterAssignments, fiducialLocator.getVisionCamera(), settingsHolder, Location.origin);
 
         if (edit) {
             pipelinePanel.openPipelineEditor("Fiducial Vision Pipeline", pipeline);

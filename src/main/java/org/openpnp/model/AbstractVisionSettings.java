@@ -23,6 +23,7 @@ import org.simpleframework.xml.Serializer;
 public abstract class AbstractVisionSettings extends AbstractModelObject implements VisionSettings {
     public static final String STOCK_BOTTOM_ID = "BVS_Stock";
     public static final String STOCK_BOTTOM_RECTLINEAR_ID = "BVS_Stock_R";
+    public static final String STOCK_BOTTOM_BODY_ID = "BVS_Stock_B";
     public static final String STOCK_FIDUCIAL_ID = "FVS_Stock";
     public static final String STOCK_FIDUCIAL_TEMPLATE_ID = "FVS_Stock_T";
     public static final String DEFAULT_BOTTOM_ID = "BVS_Default";

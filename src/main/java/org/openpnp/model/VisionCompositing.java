@@ -49,11 +49,20 @@ public class VisionCompositing extends AbstractModelObject{
     public enum CompositingMethod {
         None,
         Restricted,
+        Body,
         Automatic,
         SingleCorners;
 
         public boolean isEnforced() {
-            return this == Automatic || this == SingleCorners;
+            return this == Body || this == Automatic || this == SingleCorners;
+        }
+
+        boolean isBody() {
+            return this == Body;
+        }
+
+        boolean isSingleCorners() {
+            return this == CompositingMethod.SingleCorners;
         }
     }
 
@@ -810,7 +819,18 @@ public class VisionCompositing extends AbstractModelObject{
                     + 2*tolerance;
             // Note, the effective camera view radius is limited to maxPartDiameter 
             cameraViewRadius = Math.min(maxPartDiameter, Math.min(camera.getWidth()*upp.getX(), camera.getHeight()*upp.getY())) / 2; 
-            if (footprint.getPads().isEmpty() 
+            Pad body = new Pad();
+            body.setWidth(footprint.getBodyWidth());
+            body.setHeight(footprint.getBodyHeight());
+            List<Pad> pads;
+            if (compositingMethod.isBody()) {
+                pads = new ArrayList<>();
+                pads.add(body);
+            }
+            else {
+                pads = footprint.getPads();
+            }
+            if (pads.isEmpty() 
                     || visionSettings.getVisionOffset().isInitialized()
                     || !camera.getRoamingRadius().isInitialized()) {
                 // No footprint, or vision offsets present, or no roaming radius set.
@@ -836,15 +856,12 @@ public class VisionCompositing extends AbstractModelObject{
                 }
                 return;
             }
-            // Add the body to the octogonal hull.
-            Pad body = new Pad();
-            body.setWidth(footprint.getBodyWidth());
-            body.setHeight(footprint.getBodyHeight());
+            // Add the body to the octogonal hull (must not collide in roaming radius).
             addPadToOctogalHull(body);
             // Rectify and fuse pads.
             // As a heuristic, we assume pads are ordered in lines. If not, it will be less performant bus still ok.  
             ArrayList<Footprint.Pad> rectPads = new ArrayList<>();
-            for (Footprint.Pad pad : footprint.getPads()) {
+            for (Footprint.Pad pad : pads) {
                 if (Math.abs(pad.getRotation() % 90) > eps) {
                     if (compositingMethod.isEnforced()) { 
                         throw new Exception("Package "+pkg.getId()+" pad "+pad.getName()+" not at 90° step angle.");
@@ -1034,7 +1051,7 @@ public class VisionCompositing extends AbstractModelObject{
                 Corner bestBuddy = null;
                 Corner bestBuddy2 = null;
                 Corner bestBuddy3 = null;
-                if (compositingMethod != CompositingMethod.SingleCorners) {
+                if (!compositingMethod.isSingleCorners()) {
                     for (Corner buddy : solution) {
                         if (corner.pairsInOneShotWith(buddy)) {
                             ShotConfiguration config = null;

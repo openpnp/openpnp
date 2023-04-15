@@ -57,12 +57,8 @@ public class ReferenceMachineConfigurationWizard extends AbstractConfigurationWi
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,},
+                ColumnSpec.decode("default:grow"),},
             new RowSpec[] {
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
@@ -103,34 +99,35 @@ public class ReferenceMachineConfigurationWizard extends AbstractConfigurationWi
         
         JLabel lblAutoToolSelect = new JLabel(Translations.getString(
                 "ReferenceMachineConfigurationWizard.PanelGeneral.AutoToolSelectLabel.text")); //$NON-NLS-1$
-        panelGeneral.add(lblAutoToolSelect, "2, 10, right, default");
+        lblAutoToolSelect.setToolTipText(Translations.getString("ReferenceMachineConfigurationWizard.lblAutoToolSelect.toolTipText")); //$NON-NLS-1$
+        panelGeneral.add(lblAutoToolSelect, "2, 8, right, default");
         
         autoToolSelect = new JCheckBox("");
-        panelGeneral.add(autoToolSelect, "4, 10");
+        panelGeneral.add(autoToolSelect, "4, 8");
         
         JLabel lblNewLabel = new JLabel(Translations.getString(
                 "ReferenceMachineConfigurationWizard.PanelGeneral.UnsafeZRoamingLabel.text")); //$NON-NLS-1$
         lblNewLabel.setToolTipText("<html>Maximum allowable roaming distance at unsafe Z.<br/><br/>\r\nVirtual Z axes (typically on cameras) are invisible, therefore it can easily be overlooked<br/>\r\nthat you are at unsafe Z. When you later press the <strong>Move tool to camera location</strong><br/>\r\nbutton, an unexpected Z down-move will result, potentially crashing the tool.<br/>\r\nThe maximum allowable roaming distance at unsafe Z therefore limits the jogging area<br/>\r\nwithin which an unsafe virtual Z is kept, it should be enough to fine-adjust a captured<br/>\r\nlocation. Jogging further away will automatically move the virtual axis to Safe Z.\r\n</html>");
-        panelGeneral.add(lblNewLabel, "2, 12, right, default");
+        panelGeneral.add(lblNewLabel, "2, 10, right, default");
         
         unsafeZRoamingDistance = new JTextField();
-        panelGeneral.add(unsafeZRoamingDistance, "4, 12, fill, default");
+        panelGeneral.add(unsafeZRoamingDistance, "4, 10, left, default");
         unsafeZRoamingDistance.setColumns(10);
         
         JLabel lblMotionPlanning = new JLabel(Translations.getString(
                 "ReferenceMachineConfigurationWizard.PanelGeneral.MotionPlanningLabel.text")); //$NON-NLS-1$
-        panelGeneral.add(lblMotionPlanning, "2, 16, right, default");
+        panelGeneral.add(lblMotionPlanning, "2, 12, right, default");
 
         Object[] classNames = machine.getCompatibleMotionPlannerClasses().stream()
         .map(c -> c.getSimpleName()).toArray();
         motionPlannerClass = new JComboBox(classNames);
-        panelGeneral.add(motionPlannerClass, "4, 16, fill, default");
+        panelGeneral.add(motionPlannerClass, "4, 12, fill, default");
         
         JLabel lblPoolScriptingEngines = new JLabel("Pool scripting engines?");
-        panelGeneral.add(lblPoolScriptingEngines, "2, 18, right, default");
+        panelGeneral.add(lblPoolScriptingEngines, "2, 14, right, default");
 
         poolScriptingEngines = new JCheckBox("");
-        panelGeneral.add(poolScriptingEngines, "4, 18");
+        panelGeneral.add(poolScriptingEngines, "4, 14");
 
                 JPanel panelLocations = new JPanel();
         panelLocations.setBorder(new TitledBorder(null, Translations.getString(

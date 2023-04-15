@@ -354,30 +354,30 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
         }
 
         double pxWidth = VisionUtils.toPixels(partSize.getLengthX(), camera);
-        double pxHeight = VisionUtils.toPixels(partSize.getLengthY(), camera);
+        double pxLength = VisionUtils.toPixels(partSize.getLengthY(), camera);
 
         // Make sure width is the longest dimension
         Size measuredSize = partRect.size;
         if (measuredSize.height > measuredSize.width) {
-            double mHeight = measuredSize.height;
+            double mLength = measuredSize.height;
             double mWidth = measuredSize.width;
             measuredSize.height = mWidth;
-            measuredSize.width = mHeight;
+            measuredSize.width = mLength;
         }
 
         double widthTolerance = pxWidth * 0.01 * (double) bottomVisionSettings.getCheckSizeTolerancePercent();
-        double heightTolerance = pxHeight * 0.01 * (double) bottomVisionSettings.getCheckSizeTolerancePercent();
+        double heightTolerance = pxLength * 0.01 * (double) bottomVisionSettings.getCheckSizeTolerancePercent();
         double pxMaxWidth = pxWidth + widthTolerance;
         double pxMinWidth = pxWidth - widthTolerance;
-        double pxMaxHeight = pxHeight + heightTolerance;
-        double pxMinHeight = pxHeight - heightTolerance;
+        double pxMaxLength = pxLength + heightTolerance;
+        double pxMinLength = pxLength - heightTolerance;
         boolean ret;
         Location upp = camera.getUnitsPerPixelAtZ();
         LengthConverter lengthConverter = new LengthConverter();
         String measuredWidth = lengthConverter.convertForward(upp.getLengthX().multiply(measuredSize.width));
-        String measuredHeight = lengthConverter.convertForward(upp.getLengthY().multiply(measuredSize.height));
+        String measuredLength = lengthConverter.convertForward(upp.getLengthY().multiply(measuredSize.height));
         String nominalWidth = lengthConverter.convertForward(partSize.getLengthX());
-        String nominalHeight = lengthConverter.convertForward(partSize.getLengthY());
+        String nominalLength = lengthConverter.convertForward(partSize.getLengthY());
         String msg;
         if (measuredSize.width > pxMaxWidth) {
             msg = String.format("Part %s width too large: nominal %s, limit %s, measured %s", part.getId(), 
@@ -389,19 +389,20 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                     nominalWidth, lengthConverter.convertForward(upp.getLengthX().multiply(pxMinWidth)), 
                     measuredWidth);
             ret = false;
-        } else if (measuredSize.height > pxMaxHeight) {
-            msg = String.format("Part %s height too large: nominal %s, limit %s, measured %s", part.getId(), 
-                    nominalHeight, lengthConverter.convertForward(upp.getLengthY().multiply(pxMaxHeight)),
-                    measuredHeight);
+        } else if (measuredSize.height > pxMaxLength) {
+            msg = String.format("Part %s length too large: nominal %s, limit %s, measured %s", part.getId(), 
+                    nominalLength, lengthConverter.convertForward(upp.getLengthY().multiply(pxMaxLength)),
+                    measuredLength);
             ret = false;
-        } else if (measuredSize.height < pxMinHeight) {
-            msg = String.format("Part %s height too small: nominal %s, limit %s, measured %s", part.getId(), 
-                    nominalHeight, lengthConverter.convertForward(upp.getLengthY().multiply(pxMinHeight)),
-                    measuredHeight);
+        } else if (measuredSize.height < pxMinLength) {
+            msg = String.format("Part %s length too small: nominal %s, limit %s, measured %s", part.getId(), 
+                    nominalLength, lengthConverter.convertForward(upp.getLengthY().multiply(pxMinLength)),
+                    measuredLength);
             ret = false;
         }
         else {
-            msg = String.format("Part %s size ok. Width %s, Height %s", part.getId(), measuredWidth, measuredHeight);
+            msg = String.format("Part %s size ok. Width %s, Length %s", part.getId(), 
+                    measuredWidth, measuredLength);
             ret = true;
         }
         Logger.debug(msg);
@@ -448,7 +449,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
         if (visionCompositing.getCompositingMethod().isEnforced() 
                 && composite.getCompositingSolution().isInvalid()) {
             throw new Exception("Vision Compositing has not found a valid solution for package "+pkg.getId()+". "
-                    + "Status: "+composite.getCompositingSolution()+". "
+                    + "Status: "+composite.getCompositingSolution()+", "+composite.getDiagnostics()+". "
                     + "For more diagnostic information go to the Vision Compositing tab on package "+pkg.getId()+". ");
         }
         pipeline.resetReusedPipeline();
@@ -458,6 +459,15 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
             Length samplingSize = new Length(0.1, LengthUnit.Millimeters); // Default, if no setting on nozzle tip. 
             // Set the footprint.
             pipeline.setProperty("footprint", composite.getFootprint());
+            pipeline.setProperty("footprint.rotation", wantedLocation.getRotation());
+            pipeline.setProperty("footprint.xOffset", new Length(shot.getX(), composite.getUnits()));
+            pipeline.setProperty("footprint.yOffset", new Length(shot.getY(), composite.getUnits()));
+            // Crop to fit into the mask. 
+            // TODO: make the template circular. 
+            Length maxDim = new Length(Math.sqrt(2)*shot.getMaxMaskRadius(), composite.getUnits())
+                    .subtract(nozzleTip.getMaxPickTolerance().multiply(1.2));
+            pipeline.setProperty("footprint.maxWidth", maxDim);
+            pipeline.setProperty("footprint.maxHeight", maxDim);
             // Set alignment parameters.
             pipeline.setProperty("MinAreaRect.center", wantedLocation);
             pipeline.setProperty("MinAreaRect.expectedAngle", wantedLocation.getRotation());
@@ -812,14 +822,9 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
             else { 
                 // Reassign the stock pipeline.
                 stockVisionSettings.setPipeline(createStockPipeline("Default"));
-                // Add the reclinear symmetry pipeline if missing.
-                AbstractVisionSettings rectlinearVisionSettings = configuration.getVisionSettings(AbstractVisionSettings.STOCK_BOTTOM_RECTLINEAR_ID);
-                if (rectlinearVisionSettings == null) {
-                    rectlinearVisionSettings = createRectlinearBottomVisionSettings();
-                    configuration.addVisionSettings(rectlinearVisionSettings);
-                }
-                // Reassign the stock pipeline.
-                rectlinearVisionSettings.setPipeline(createStockPipeline("Rectlinear"));
+                // Create other stock pipelines.
+                createStockVisionSettings(configuration, AbstractVisionSettings.STOCK_BOTTOM_RECTLINEAR_ID, "Rectlinear", "- Rectlinear Symmetry Bottom Vision Settings -");
+                createStockVisionSettings(configuration, AbstractVisionSettings.STOCK_BOTTOM_BODY_ID, "Body", "- Whole Part Body Bottom Vision Settings -");
                 return;
             }
         }
@@ -885,6 +890,20 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
         partSettingsByPartId = null;
 
         optimizeVisionSettings(configuration);
+    }
+
+    public AbstractVisionSettings createStockVisionSettings(Configuration configuration, String id, String tag, String description) {
+        // Add the vision settings if missing.
+        AbstractVisionSettings visionSettings = configuration.getVisionSettings(id);
+        if (visionSettings == null) {
+            visionSettings = createBottomVisionSettings(id, description, createStockPipeline(tag));
+            configuration.addVisionSettings(visionSettings);
+        }
+        else {
+            // Reassign the stock pipeline.
+            visionSettings.setPipeline(createStockPipeline(tag));
+        }
+        return visionSettings;
     }
 
     protected BottomVisionSettings createRectlinearBottomVisionSettings() {

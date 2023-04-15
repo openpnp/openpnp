@@ -9,14 +9,9 @@ import org.junit.jupiter.api.Test;
 import org.openpnp.CameraListener;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.ReferencePnpJobProcessor;
-import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
 import org.openpnp.machine.reference.camera.AbstractSettlingCamera;
-import org.openpnp.machine.reference.driver.NullDriver;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Job;
-import org.openpnp.model.Length;
-import org.openpnp.model.LengthUnit;
-import org.openpnp.spi.Axis;
 import org.pmw.tinylog.Configurator;
 import org.pmw.tinylog.Level;
 
@@ -86,19 +81,7 @@ public class SamplePanelizedJobTest {
         }
 
         if (!imperfectMachine) {
-            NullDriver driver = (NullDriver) machine.getDefaultDriver();
-            // Make it faster for the test (now including axes).
-            driver.setFeedRateMmPerMinute(0);
-            for (Axis axis : machine.getAxes()) {
-                if (axis instanceof ReferenceControllerAxis) {
-                    ((ReferenceControllerAxis) axis).setFeedratePerSecond(new Length(1000000, LengthUnit.Millimeters));
-                    ((ReferenceControllerAxis) axis).setAccelerationPerSecond2(new Length(2000000, LengthUnit.Millimeters));
-                    ((ReferenceControllerAxis) axis).setJerkPerSecond3(new Length(0, LengthUnit.Millimeters));
-                }
-            }
-
-            camera.setSettleMethod(AbstractSettlingCamera.SettleMethod.FixedTime);
-            camera.setSettleTimeMs(0);
+            SampleJobTest.makeMachineFastest();
         }
         else {
             System.out.println("SamplePanelizedJobTest runs with imperfect machine in real-time, please be patient...");

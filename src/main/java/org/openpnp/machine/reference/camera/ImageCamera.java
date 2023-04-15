@@ -562,7 +562,7 @@ public class ImageCamera extends ReferenceCamera {
             }
 
             BufferedImage template = OpenCvUtils.createFootprintTemplate(this, footprint, physicalLocation.getRotation(),
-                    topView, padsColor, bodyColor, backgroundColor, 1.5, 8);
+                    0, 0, 0, 0, topView, padsColor, bodyColor, backgroundColor, 1.5, 8);
             int templateDimension = (int)Math.sqrt(Math.pow(template.getWidth(), 2)+Math.pow(template.getHeight(), 2));
             templateMat = OpenCvUtils.toMat(template);
             int kernelSize = (templateDimension/4)|1;

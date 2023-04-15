@@ -310,8 +310,8 @@ public class Footprint extends AbstractModelObject{
                     r, r);
             }
             AffineTransform tx = new AffineTransform();
-            tx.translate(x, -y);
-            tx.rotate(Math.toRadians(-rotation));
+            tx.translate(x, y);
+            tx.rotate(Math.toRadians(rotation));
             return tx.createTransformedShape(shape);
         }
 
