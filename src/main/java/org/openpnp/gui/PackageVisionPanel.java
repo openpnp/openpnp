@@ -140,8 +140,8 @@ public class PackageVisionPanel extends JPanel {
         JButton generateBga = new JButton(generateBgaAction);
         panelGenerate.add(generateBga);
 
-        JButton generateKiCad = new JButton(generateFromKiCad);
-        panelGenerate.add(generateKiCad);
+        JButton generateKicad = new JButton(generateFromKicad);
+        panelGenerate.add(generateKicad);
 
         JLabel lblBodyWidth = new JLabel(Translations.getString("PackageVisionPanel.SettingsPanel.BodyWidthLabel.text")); //$NON-NLS-1$
         propertiesPanel.add(lblBodyWidth, "2, 4, right, default");
@@ -362,14 +362,14 @@ public class PackageVisionPanel extends JPanel {
         }
     };
 
-    public final Action generateFromKiCad = new AbstractAction() {
+    public final Action generateFromKicad = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.kicad);
             putValue(SHORT_DESCRIPTION, "Import a footprint from KiCad module.");
         }
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            generatePads(Generator.KiCad);
+            generatePads(Generator.Kicad);
         }
     };
 

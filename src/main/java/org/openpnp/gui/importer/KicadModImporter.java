@@ -17,7 +17,7 @@
  * For more information about OpenPnP visit http://openpnp.org
  */
 
-package org.openpnp.gui.support;
+package org.openpnp.gui.importer;
 
 import java.awt.FileDialog;
 import java.io.BufferedReader;
@@ -40,18 +40,20 @@ import org.openpnp.model.Footprint.Pad;
  * Rectangular, rounded rectangular, circular and oval pad shapes are supported. Trapezoid and custom 
  * pad shapes are ignored. A FileDialog is openened to select a file once this class is instantiated. 
  * Imported pads are available as List<Pad>.
+ * 
+ * This module may become part of an all-in-one KiCad board import one day.
  */
 
  
-public class KiCadImporter {
+public class KicadModImporter {
 
     Footprint footprint = new Footprint();
 
-    public class KiCadPad {
+    public class KicadPad {
     
         String padDefinition;
 
-        public KiCadPad(String definition) {
+        public KicadPad(String definition) {
             padDefinition = definition;
         }
 
@@ -148,7 +150,7 @@ public class KiCadImporter {
         }
     }
 
-    public KiCadImporter() {
+    public KicadModImporter() {
         try {
             FileDialog fileDialog = new FileDialog(MainFrame.get());
             fileDialog.setFilenameFilter(new FilenameFilter() {
@@ -168,7 +170,7 @@ public class KiCadImporter {
             String line = reader.readLine();
             while (line != null) {
                 if (line.trim().startsWith("(pad ")) {
-                    KiCadPad kipad = new KiCadPad(line.trim());
+                    KicadPad kipad = new KicadPad(line.trim());
                     if (kipad.getType().equals("smd") && kipad.isTopCu()) {
                         Pad pad = new Pad();
                         pad.setName(kipad.getName());
@@ -202,7 +204,7 @@ public class KiCadImporter {
             reader.close();
         }
         catch (Exception e) {
-            MessageBoxes.errorBox(MainFrame.get(), "KiCad Footprint Load Error", e.getMessage());
+            MessageBoxes.errorBox(MainFrame.get(), "Kicad Footprint Load Error", e.getMessage());
         }
     }
 
