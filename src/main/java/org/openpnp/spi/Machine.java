@@ -340,6 +340,8 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
 
     public Location getDiscardLocation();
 
+    public Location getDefaultBoardLocation();
+
     public void setSpeed(double speed);
 
     public double getSpeed();

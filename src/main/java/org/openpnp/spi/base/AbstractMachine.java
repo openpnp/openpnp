@@ -91,6 +91,9 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
     @Element(required = false)
     protected Location discardLocation = new Location(LengthUnit.Millimeters);
 
+    @Element(required = false)
+    protected Location defaultBoardLocation = new Location(LengthUnit.Millimeters);
+
     @Attribute(required = false)
     protected double speed = 1.0D;
     
@@ -736,6 +739,14 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
 
     public void setDiscardLocation(Location discardLocation) {
         this.discardLocation = discardLocation;
+    }
+
+    public Location getDefaultBoardLocation() {
+        return defaultBoardLocation;
+    }
+
+    public void setDefaultBoardLocation(Location defaultBoardLocation) {
+        this.defaultBoardLocation = defaultBoardLocation;
     }
 
     @Override

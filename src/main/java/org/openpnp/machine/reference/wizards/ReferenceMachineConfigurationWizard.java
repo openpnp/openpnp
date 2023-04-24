@@ -35,6 +35,10 @@ public class ReferenceMachineConfigurationWizard extends AbstractConfigurationWi
     private JTextField discardYTf;
     private JTextField discardZTf;
     private JTextField discardCTf;
+    private JTextField defaultBoardXTf;
+    private JTextField defaultBoardYTf;
+    private JTextField defaultBoardZTf;
+    private JTextField defaultBoardCTf;
     private JComboBox motionPlannerClass;
     private boolean reloadWizard;
     private JCheckBox autoToolSelect;
@@ -151,6 +155,8 @@ public class ReferenceMachineConfigurationWizard extends AbstractConfigurationWi
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
                 JLabel lblX = new JLabel("X");
@@ -190,9 +196,33 @@ public class ReferenceMachineConfigurationWizard extends AbstractConfigurationWi
         panelLocations.add(discardCTf, "10, 4");
         discardCTf.setColumns(5);
         
-                LocationButtonsPanel locationButtonsPanel =
+                LocationButtonsPanel discardLocationButtonsPanel =
                         new LocationButtonsPanel(discardXTf, discardYTf, discardZTf, discardCTf);
-        panelLocations.add(locationButtonsPanel, "12, 4");
+        panelLocations.add(discardLocationButtonsPanel, "12, 4");
+
+		        JLabel lblDefaultBoardPoint = new JLabel(Translations.getString(
+		                "ReferenceMachineConfigurationWizard.PanelLocations.DefaultBoardLocationLabel.text")); //$NON-NLS-1$
+		panelLocations.add(lblDefaultBoardPoint, "2, 6");
+		
+		        defaultBoardXTf = new JTextField();
+		panelLocations.add(defaultBoardXTf, "4, 6");
+		defaultBoardXTf.setColumns(5);
+		
+		        defaultBoardYTf = new JTextField();
+		panelLocations.add(defaultBoardYTf, "6, 6");
+		defaultBoardYTf.setColumns(5);
+		
+		        defaultBoardZTf = new JTextField();
+		panelLocations.add(defaultBoardZTf, "8, 6");
+		defaultBoardZTf.setColumns(5);
+		
+		        defaultBoardCTf = new JTextField();
+		panelLocations.add(defaultBoardCTf, "10, 6");
+		defaultBoardCTf.setColumns(5);
+		
+		        LocationButtonsPanel defaultBoardLocationButtonsPanel =
+		                new LocationButtonsPanel(defaultBoardXTf, defaultBoardYTf, defaultBoardZTf, defaultBoardCTf);
+		panelLocations.add(defaultBoardLocationButtonsPanel, "12, 6");
     }
 
     @Override
@@ -224,6 +254,19 @@ public class ReferenceMachineConfigurationWizard extends AbstractConfigurationWi
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(discardYTf);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(discardZTf);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(discardCTf);
+
+        MutableLocationProxy defaultBoardLocation = new MutableLocationProxy();
+        bind(UpdateStrategy.READ_WRITE, machine, "defaultBoardLocation", defaultBoardLocation, "location");
+        addWrappedBinding(defaultBoardLocation, "lengthX", defaultBoardXTf, "text", lengthConverter);
+        addWrappedBinding(defaultBoardLocation, "lengthY", defaultBoardYTf, "text", lengthConverter);
+        addWrappedBinding(defaultBoardLocation, "lengthZ", defaultBoardZTf, "text", lengthConverter);
+        addWrappedBinding(defaultBoardLocation, "rotation", defaultBoardCTf, "text", doubleConverter);
+
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(unsafeZRoamingDistance);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(defaultBoardXTf);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(defaultBoardYTf);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(defaultBoardZTf);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(defaultBoardCTf);
     }
 
     public String getMotionPlannerClassName() {
