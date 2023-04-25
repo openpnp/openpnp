@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.model.Footprint;
@@ -58,7 +59,7 @@ public class KicadModImporter {
         }
 
         String getName() {
-            Pattern p = Pattern.compile("^\\(pad\\s\"(\\w*)\"\\s(\\w*)\\s(\\w*)");
+            Pattern p = Pattern.compile("^\\(pad\\s\"?(\\w*)\"?\\s(\\w*)\\s(\\w*)");
             Matcher m = p.matcher(padDefinition);
             if(m.find()) {
                 return m.group(1);
@@ -67,7 +68,7 @@ public class KicadModImporter {
         }
 
         String getType() {
-            Pattern p = Pattern.compile("^\\(pad\\s\"(\\w*)\"\\s(\\w*)\\s(\\w*)");
+            Pattern p = Pattern.compile("^\\(pad\\s\"?(\\w*)\"?\\s(\\w*)\\s(\\w*)");
             Matcher m = p.matcher(padDefinition);
             if(m.find()) {
                 return m.group(2);
@@ -76,7 +77,7 @@ public class KicadModImporter {
         }
 
         String getShape() {
-            Pattern p = Pattern.compile("^\\(pad\\s\"(\\w*)\"\\s(\\w*)\\s(\\w*)");
+            Pattern p = Pattern.compile("^\\(pad\\s\"?(\\w*)\"?\\s(\\w*)\\s(\\w*)");
             Matcher m = p.matcher(padDefinition);
             if(m.find()) {
                 return m.group(3);
@@ -150,13 +151,13 @@ public class KicadModImporter {
         }
     }
 
-    public KicadModImporter() {
+    public KicadModImporter() throws Exception {
         try {
             FileDialog fileDialog = new FileDialog(MainFrame.get());
             fileDialog.setFilenameFilter(new FilenameFilter() {
                 @Override
                 public boolean accept(File dir, String name) {
-                    return name.toLowerCase().endsWith(".kicad_mod");
+                    return name.toLowerCase().endsWith(".kicad_mod"); //$NON-NLS-1$
                 }
             });
             fileDialog.setVisible(true);
@@ -204,7 +205,7 @@ public class KicadModImporter {
             reader.close();
         }
         catch (Exception e) {
-            MessageBoxes.errorBox(MainFrame.get(), "Kicad Footprint Load Error", e.getMessage());
+            throw new Exception(Translations.getString("KicadModImporter.LoadFile.Fail") + e.getMessage()); //$NON-NLS-1$
         }
     }
 
