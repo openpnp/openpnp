@@ -83,22 +83,13 @@ public class AltiumCSVImporter extends CSVImporter implements BoardImporter {
     private static final String cComments[] = {"DESCRIPTION"}; //$NON-NLS-1$
 
     // provide methods to read the string arrays above
-    @Override
     public String[] getRefs()     { return cRefs; }
-    @Override
     public String[] getVals()     { return cVals; }
-    @Override
     public String[] getPacks()    { return cPacks; }
-    @Override
     public String[] getXs()       { return cXs; }
-    @Override
     public String[] getYs()       { return cYs; }
-    @Override
     public String[] getRots()     { return cRots; }
-    @Override
     public String[] getTBs()      { return cTBs; }
-    @Override
     public String[] getHeights()  { return cHeights; }
-    @Override
     public String[] getComments() { return cComments; }
 }

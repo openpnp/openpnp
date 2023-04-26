@@ -99,16 +99,28 @@ public abstract class CSVImporter {
     	TBs      = getTBs();
     	Heights  = getHeights();
     	Comments = getComments();
+
+    	// reset any previous result to allow the importer to detect a failure
+        Ref = -1;
+        Val = -1;
+        Pack = -1;
+        X = -1;
+        Y = -1;
+        Rot = -1;
+        TB = -1;
+        HT = -1;
+        Comment = -1;
+        Len = 0;
     	
         Dlg dlg = new Dlg(parent);
         dlg.setVisible(true);
         return board;
     }
 
-    // maximum number of lines at start of file to search for heading line describing the content
-    private static final int MAX_HEADER_LINES = 50;
-
-    // provide methods to read the string arrays above
+    // provide methods to read the string arrays that are used to decode the header line
+    // each array contains possible values/string for that type.
+    // This converter converts the data read from file to upper case before compare. So 
+    // provide upper case pattern only.
     abstract String[] getRefs();
     abstract String[] getVals();
     abstract String[] getPacks();
@@ -119,11 +131,12 @@ public abstract class CSVImporter {
     abstract String[] getHeights();
     abstract String[] getComments();
     
-    // Column in data one of the above strings have been found in the header line.
+    // Column in data, one of the above strings have been found in the header line.
     // This indexes are used to detect if all required properties have been found
+    // and to extract the data by its function.
     static private int Ref = -1, Val = -1, Pack = -1, X = -1, Y = -1, Rot = -1, TB = -1, HT = -1, Comment = -1, Len = 0;
 
-    // automatic mil to mm conversion: if a property if the header ends in the specified
+    // automatic mil to mm conversion: if a property of the header ends in the specified
     // string, all values are converted from mil to mm. Again, the conversion is done with the
     // data read from file converted to upper case, so specify an upper case value here.
     static private final String MilToMM = "(MIL)";	//$NON-NLS-1$
@@ -132,6 +145,9 @@ public abstract class CSVImporter {
                                                                                   // mm
 
     static private char comma = ',';
+
+    // maximum number of lines at start of file to search for heading line describing the content
+    private static final int maxHeaderLines = 50;
 
     //////////////////////////////////////////////////////////
 
@@ -210,38 +226,13 @@ public abstract class CSVImporter {
     private static boolean checkLine(String str) throws Exception {
         Logger.trace("checkLine: " + str); //$NON-NLS-1$
         String input_str = str.toUpperCase();
-        int e = 0;
         if (input_str.charAt(0) == '#') {
             input_str = input_str.substring(1);
         }
         if (input_str == null) {
             return false;
         }
-        if (input_str.indexOf("X") == -1) { //$NON-NLS-1$
-            return false;
-        }
-        if (input_str.indexOf("Y") == -1) { //$NON-NLS-1$
-            return false;
-        }
-        if (input_str.indexOf("ROT") == -1) { //$NON-NLS-1$
-            return false;
-        }
-        if (input_str.indexOf("VAL") == -1  //$NON-NLS-1$
-        		&& input_str.indexOf("COMMENT") == -1) { //$NON-NLS-1$
-            return false;
-        }
-        if (input_str.indexOf("FOOTPRINT") == -1  //$NON-NLS-1$
-        		&& input_str.indexOf("PACKAGE") == -1 //$NON-NLS-1$
-                && input_str.indexOf("PATTERN") == -1) { //$NON-NLS-1$
-            return false;
-        }
-        if (input_str.indexOf("DESIGNATOR") == -1 //$NON-NLS-1$
-                && input_str.indexOf("PART") == -1 //$NON-NLS-1$
-                && input_str.indexOf("COMP") == -1 //$NON-NLS-1$
-                && input_str.indexOf("REF") == -1) { //$NON-NLS-1$
-            return false;
-        }
-        // seems to have data
+        // sting not empty, try to decode it as header line
         String as[], at[][];
         CSVParser csvParser = new CSVParser(new StringReader(input_str));
         as = csvParser.getLine();
@@ -275,7 +266,7 @@ public abstract class CSVImporter {
         String line;
 
         // search for a maximum number of lines for headings describing the content
-        for (int i = 0; i++ < MAX_HEADER_LINES && (line = reader.readLine()) != null;) {
+        for (int i = 0; i++ < maxHeaderLines && (line = reader.readLine()) != null;) {
             line = line.trim();
             if (line.length() == 0) {
                 continue;

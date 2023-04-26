@@ -19,56 +19,11 @@
 
 package org.openpnp.gui.importer;
 
-import java.awt.FileDialog;
-import java.awt.FlowLayout;
 import java.awt.Frame;
-import java.awt.event.ActionEvent;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FilenameFilter;
-import java.io.InputStreamReader;
-import java.io.StringReader;
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.swing.AbstractAction;
-import javax.swing.Action;
-import javax.swing.BoxLayout;
-import javax.swing.InputMap;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JComponent;
-import javax.swing.JDialog;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JRootPane;
-import javax.swing.JSeparator;
-import javax.swing.JTextField;
-import javax.swing.KeyStroke;
-import javax.swing.border.TitledBorder;
 
 import org.openpnp.Translations;
-import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.model.Board;
-import org.openpnp.model.Abstract2DLocatable.Side;
-import org.openpnp.model.Configuration;
-import org.openpnp.model.Length;
-import org.openpnp.model.LengthUnit;
-import org.openpnp.model.Location;
-import org.openpnp.model.Package;
-import org.openpnp.model.Part;
-import org.openpnp.model.Placement;
-import org.pmw.tinylog.Logger;
 
-import com.Ostermiller.util.CSVParser;
-import com.jgoodies.forms.layout.ColumnSpec;
-import com.jgoodies.forms.layout.FormLayout;
-import com.jgoodies.forms.layout.FormSpecs;
-import com.jgoodies.forms.layout.RowSpec;
-
-
-@SuppressWarnings("serial")
 public class NamedCSVImporter extends CSVImporter implements BoardImporter {
     private final static String NAME = "Named CSV"; //$NON-NLS-1$
     private final static String DESCRIPTION = Translations.getString("NamedCSVImporter.Importer.Description"); //$NON-NLS-1$
