@@ -96,24 +96,12 @@ public class NamedCSVImporter implements BoardImporter {
     }
 
 
-    //////////////////////////////////////////////////////////
-    /*
-     * public class CSVParseDemo { public static void main(String[] args) throws IOException { if
-     * (args.length < 1) { System.out.println("Usage: java CSVParseDemo <csv_file>"); return; }
-     * 
-     * CSVParser parser = new CSVParser(new FileReader(args[0]), CSVStrategy.DEFAULT); String[]
-     * values = parser.getLine(); while (values != null) { printValues(parser.getLineNumber(),
-     * values); values = parser.getLine(); } }
-     * 
-     * private static void printValues(int lineNumber, String[] as) { System.out.println("Line " +
-     * lineNumber + " has " + as.length + " values:"); for (String s: as) { System.out.println("\t|"
-     * + s + "|"); } System.out.println(); } }
-     */
-    //////////////////////////////////////////////////////////
-    // if((str.indexOf("val")!=-1||str.indexOf("comment"))&&str.indexOf("val")!=-1&&str.indexOf("val")!=-1&&
+    // maximum number of lines at start of file to search for heading line describing the content
+    private static final int MAX_HEADER_LINES = 50;
 
-    private static final String Refs[] =
-            {"DESIGNATOR", "PART", "COMPONENT", "REFDES", "REF"}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+    // lists of strings for each purpose to be found in the heading line
+    // data read from file is converted to upper case before compare -> only list upper case pattern here
+    private static final String Refs[] = {"DESIGNATOR", "PART", "COMPONENT", "REFDES", "REF"}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
     private static final String Vals[] = {"VALUE", "VAL", "COMMENT", "COMP_VALUE"}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
     private static final String Packs[] = {"FOOTPRINT", "PACKAGE", "PATTERN", "COMP_PACKAGE"}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
     private static final String Xs[] = {"X", "X (MM)", "REF X", "POSX", "REF-X(MM)", "REF-X(MIL)", "SYM_X"}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
@@ -122,9 +110,15 @@ public class NamedCSVImporter implements BoardImporter {
     private static final String TBs[] = {"LAYER", "SIDE", "TB", "SYM_MIRROR"}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
     private static final String Heights[] = {"HEIGHT", "HEIGHT(MIL)", "HEIGHT(MM)"}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     private static final String Comments[] = {"ADDCOMMENT"}; //$NON-NLS-1$
-    //////////////////////////////////////////////////////////
-    static private int Ref = -1, Val = -1, Pack = -1, X = -1, Y = -1, Rot = -1, TB = -1, HT = -1, Comment = -1,
-            Len = 0;
+
+    // Column in data one of the above strings have been found in the header line.
+    // This indexes are used to detect if all required properties have been found
+    static private int Ref = -1, Val = -1, Pack = -1, X = -1, Y = -1, Rot = -1, TB = -1, HT = -1, Comment = -1, Len = 0;
+
+    // automatic mil to mm conversion: if a property if the header ends in the specified
+    // string, all values are converted from mil to mm. Again, the conversion is done with the
+    // data read from file converted to upper case, so specify an upper case value here.
+    static private final String MilToMM = "(MIL)";	//$NON-NLS-1$
     static private int units_mils_x = 0, units_mils_y = 0, units_mils_height = 0; // set if units
                                                                                   // are in mils not
                                                                                   // mm
@@ -138,23 +132,6 @@ public class NamedCSVImporter implements BoardImporter {
             for (int j = 0; j < val.length; j++) {
                 if (str[i].equals(val[j])) {
                     Logger.trace("checkCSV: " + val[j] + " = " + j); //$NON-NLS-1$ //$NON-NLS-2$
-
-                    // check for mil units
-                    // TODO This should be done better, but at moment I don't know a better way...
-                    // -trampas
-                    if (val[j].equals("REF-X(MIL)")) { //$NON-NLS-1$
-                        units_mils_x = 1;
-                        Logger.trace("X units are in mils"); //$NON-NLS-1$
-                    }
-                    if (val[j].equals("REF-Y(MIL)")) { //$NON-NLS-1$
-                        units_mils_y = 1;
-                        Logger.trace("Y units are in mils"); //$NON-NLS-1$
-                    }
-
-                    if (val[j].equals("HEIGHT(MIL)")) { //$NON-NLS-1$
-                        units_mils_height = 1;
-                        Logger.trace("Height units are in mils"); //$NON-NLS-1$
-                    }
 
                     return j;
                 }
@@ -175,6 +152,20 @@ public class NamedCSVImporter implements BoardImporter {
             TB = checkCSV(TBs, str); // optional top/bottom layer field
             Comment = checkCSV(Comments, str); // optional comment field
 
+        	// test if any value requires mil to mm conversion
+            if (str[X].endsWith(MilToMM)) {
+                units_mils_x = 1;
+                Logger.trace("X units are in mils"); //$NON-NLS-1$
+            }
+            if (str[Y].endsWith(MilToMM)) {
+                units_mils_y = 1;
+                Logger.trace("Y units are in mils"); //$NON-NLS-1$
+            }
+            if (HT != -1 && str[HT].endsWith(MilToMM)) {
+                units_mils_height = 1;
+                Logger.trace("Height units are in mils"); //$NON-NLS-1$
+            }
+        	
             Len = Ref <= Len ? Len : Ref;
             Len = Val <= Len ? Len : Val;
             Len = Pack <= Len ? Len : Pack;
@@ -275,7 +266,8 @@ public class NamedCSVImporter implements BoardImporter {
         ArrayList<Placement> placements = new ArrayList<>();
         String line;
 
-        for (int i = 0; i++ < 50 && (line = reader.readLine()) != null;) {
+        // search for a maximum number of lines for headings describing the content
+        for (int i = 0; i++ < MAX_HEADER_LINES && (line = reader.readLine()) != null;) {
             line = line.trim();
             if (line.length() == 0) {
                 continue;
