@@ -73,11 +73,22 @@ public class NamedCSVImporter implements BoardImporter {
     private final static String NAME = "Named CSV"; //$NON-NLS-1$
     private final static String DESCRIPTION = Translations.getString("NamedCSVImporter.Importer.Description"); //$NON-NLS-1$
 
-
-
     private Board board;
-    private File topFile, bottomFile;
+    private File file;
 
+    // provide arrays of strings for header detection
+    // has to be local here to allow overwriting later using dedicated values
+    // from derived clases
+    private static String Refs[];
+    private static String Vals[];
+    private static String Packs[];
+    private static String Xs[];
+    private static String Ys[];
+    private static String Rots[];
+    private static String TBs[];
+    private static String Heights[];
+    private static String Comments[];
+    
     @Override
     public String getImporterName() {
         return NAME;
@@ -90,27 +101,49 @@ public class NamedCSVImporter implements BoardImporter {
 
     @Override
     public Board importBoard(Frame parent) throws Exception {
+    	// get strings to parse CSV context
+    	Refs     = getRefs();
+    	Vals     = getVals();
+    	Packs    = getPacks();
+    	Xs       = getXs();
+    	Ys       = getYs();
+    	Rots     = getRots();
+    	TBs      = getTBs();
+    	Heights  = getHeights();
+    	Comments = getComments();
+    	
         Dlg dlg = new Dlg(parent);
         dlg.setVisible(true);
         return board;
     }
-
 
     // maximum number of lines at start of file to search for heading line describing the content
     private static final int MAX_HEADER_LINES = 50;
 
     // lists of strings for each purpose to be found in the heading line
     // data read from file is converted to upper case before compare -> only list upper case pattern here
-    private static final String Refs[] = {"DESIGNATOR", "PART", "COMPONENT", "REFDES", "REF"}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
-    private static final String Vals[] = {"VALUE", "VAL", "COMMENT", "COMP_VALUE"}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-    private static final String Packs[] = {"FOOTPRINT", "PACKAGE", "PATTERN", "COMP_PACKAGE"}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-    private static final String Xs[] = {"X", "X (MM)", "REF X", "POSX", "REF-X(MM)", "REF-X(MIL)", "SYM_X"}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
-    private static final String Ys[] = {"Y", "Y (MM)", "REF Y", "POSY", "REF-Y(MM)", "REF-Y(MIL)", "SYM_Y"}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
-    private static final String Rots[] = {"ROTATION", "ROT", "ROTATE", "SYM_ROTATE"}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-    private static final String TBs[] = {"LAYER", "SIDE", "TB", "SYM_MIRROR"}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-    private static final String Heights[] = {"HEIGHT", "HEIGHT(MIL)", "HEIGHT(MM)"}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-    private static final String Comments[] = {"ADDCOMMENT"}; //$NON-NLS-1$
+    // this is the list that is used by the default Named CSV importer
+    private static final String cRefs[] = {"DESIGNATOR", "PART", "COMPONENT", "REFDES", "REF"}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+    private static final String cVals[] = {"VALUE", "VAL", "COMMENT", "COMP_VALUE"}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+    private static final String cPacks[] = {"FOOTPRINT", "PACKAGE", "PATTERN", "COMP_PACKAGE"}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+    private static final String cXs[] = {"X", "X (MM)", "REF X", "POSX", "REF-X(MM)", "REF-X(MIL)", "SYM_X"}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
+    private static final String cYs[] = {"Y", "Y (MM)", "REF Y", "POSY", "REF-Y(MM)", "REF-Y(MIL)", "SYM_Y"}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
+    private static final String cRots[] = {"ROTATION", "ROT", "ROTATE", "SYM_ROTATE"}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+    private static final String cTBs[] = {"LAYER", "SIDE", "TB", "SYM_MIRROR"}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+    private static final String cHeights[] = {"HEIGHT", "HEIGHT(MIL)", "HEIGHT(MM)"}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+    private static final String cComments[] = {"ADDCOMMENT"}; //$NON-NLS-1$
 
+    // provide methods to read the string arrays above
+    public String[] getRefs()     { return cRefs; }
+    public String[] getVals()     { return cVals; }
+    public String[] getPacks()    { return cPacks; }
+    public String[] getXs()       { return cXs; }
+    public String[] getYs()       { return cYs; }
+    public String[] getRots()     { return cRots; }
+    public String[] getTBs()      { return cTBs; }
+    public String[] getHeights()  { return cHeights; }
+    public String[] getComments() { return cComments; }
+    
     // Column in data one of the above strings have been found in the header line.
     // This indexes are used to detect if all required properties have been found
     static private int Ref = -1, Val = -1, Pack = -1, X = -1, Y = -1, Rot = -1, TB = -1, HT = -1, Comment = -1, Len = 0;
@@ -387,7 +420,7 @@ public class NamedCSVImporter implements BoardImporter {
         private JCheckBox chckbxUpdatePartHeight;
 
         public Dlg(Frame parent) {
-            super(parent, DESCRIPTION, true);
+            super(parent, getImporterDescription(), true);
             getContentPane().setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
 
             JPanel panel = new JPanel();
@@ -490,12 +523,12 @@ public class NamedCSVImporter implements BoardImporter {
 
             public void actionPerformed(ActionEvent e) {
                 Logger.debug("Parsing " + textFieldTopFile.getText() + " CSV FIle"); //$NON-NLS-1$ //$NON-NLS-2$
-                topFile = new File(textFieldTopFile.getText());
+                file = new File(textFieldTopFile.getText());
                 board = new Board();
                 List<Placement> placements = new ArrayList<>();
                 try {
-                    if (topFile.exists()) {
-                        placements.addAll(parseFile(topFile, chckbxCreateMissingParts.isSelected(),
+                    if (file.exists()) {
+                        placements.addAll(parseFile(file, chckbxCreateMissingParts.isSelected(),
                                 chckbxUpdatePartHeight.isSelected()));
                     }
                 }
