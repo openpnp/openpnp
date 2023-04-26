@@ -34,7 +34,7 @@ import org.openpnp.model.Board;
 import org.openpnp.model.Location;
 import org.openpnp.model.Placement;
 
-public class AltiumCSVImporter extends NamedCSVImporter implements BoardImporter {
+public class AltiumCSVImporter extends CSVImporter implements BoardImporter {
     private final static String NAME = "Altium .csv"; //$NON-NLS-1$
     private final static String DESCRIPTION = Translations.getString("AltiumCSVImporter.Importer.Description"); //$NON-NLS-1$
 
