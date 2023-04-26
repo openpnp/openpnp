@@ -30,7 +30,6 @@ import java.util.regex.Matcher;
 
 import org.openpnp.Translations;
 import org.openpnp.gui.MainFrame;
-import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.model.Footprint;
 import org.openpnp.model.Footprint.Pad;
 
