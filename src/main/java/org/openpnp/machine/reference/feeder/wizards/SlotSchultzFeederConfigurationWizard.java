@@ -712,7 +712,9 @@ extends AbstractConfigurationWizard {
                             "Failed, unable to find an actuator named " + feeder.getIdActuatorName());
                 }
                 String s = actuator.read(feeder.getActuatorValue());
-                idText.setText(s == null ? "" : s);
+                SwingUtilities.invokeLater(() -> {
+                    idText.setText(s == null ? "" : s);
+                });
             });
         }
     };
@@ -773,7 +775,9 @@ extends AbstractConfigurationWizard {
                             "Failed, unable to find an actuator named " + feeder.getFeedCountActuatorName());
                 }
                 String s = actuator.read(feeder.getActuatorValue());
-                feedCountValue.setText(s == null ? "" : s);
+                SwingUtilities.invokeLater(() -> {
+                    feedCountValue.setText(s == null ? "" : s);
+                });
             });
         }
     };
@@ -795,7 +799,9 @@ extends AbstractConfigurationWizard {
                 }
                 AbstractActuator.suggestValueType(actuator, Actuator.ActuatorValueType.Double);
                 actuator.actuate(feeder.getActuatorValue());
-                feedCountValue.setText("");
+                SwingUtilities.invokeLater(() -> {
+                    feedCountValue.setText("");
+                });
             });
         }
     };
@@ -816,7 +822,9 @@ extends AbstractConfigurationWizard {
                             "Failed, unable to find an actuator named " + feeder.getPitchActuatorName());
                 }
                 String s = actuator.read(feeder.getActuatorValue());
-                pitchValue.setText(s == null ? "" : s);
+                SwingUtilities.invokeLater(() -> {
+                    pitchValue.setText(s == null ? "" : s);
+                });
             });
         }
     };
@@ -859,7 +867,9 @@ extends AbstractConfigurationWizard {
                             "Failed, unable to find an actuator named " + feeder.getStatusActuatorName());
                 }
                 String s = actuator.read(feeder.getActuatorValue());
-                statusText.setText(s == null ? "" : s);
+                SwingUtilities.invokeLater(() -> {
+                    statusText.setText(s == null ? "" : s);
+                });
             });
         }
     };
@@ -876,8 +886,10 @@ extends AbstractConfigurationWizard {
                 if (newLocation == null) {
                     throw new Exception("Unable to locate fiducial");
                 } else {
-                    xPickLocTf.setText(newLocation.getLengthX().toString());
-                    yPickLocTf.setText(newLocation.getLengthY().toString());
+                    SwingUtilities.invokeLater(() -> {
+                        xPickLocTf.setText(newLocation.getLengthX().toString());
+                        yPickLocTf.setText(newLocation.getLengthY().toString());
+                    });
                 }
             });
         }

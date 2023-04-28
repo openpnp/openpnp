@@ -28,6 +28,7 @@ import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
@@ -286,7 +287,9 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
                             "Failed, unable to find an actuator named " + feeder.getIdActuatorName());
                 }
                 String s = actuator.read(feeder.getActuatorValue());
-                idText.setText(s == null ? "" : s);
+                SwingUtilities.invokeLater(() -> {
+                    idText.setText(s == null ? "" : s);
+                });
             });
         }
     };
@@ -348,7 +351,9 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
                             "Failed, unable to find an actuator named " + feeder.getFeedCountActuatorName());
                 }
                 String s = actuator.read(feeder.getActuatorValue());
-                feedCountValue.setText(s == null ? "" : s);
+                SwingUtilities.invokeLater(() -> {
+                    feedCountValue.setText(s == null ? "" : s);
+                });
             });
         }
     };
@@ -371,7 +376,9 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
 
                 AbstractActuator.suggestValueType(actuator, Actuator.ActuatorValueType.Double);
                 actuator.actuate(feeder.getActuatorValue());
-                feedCountValue.setText("");
+                SwingUtilities.invokeLater(() -> {
+                    feedCountValue.setText("");
+                });
             });
         }
     };
@@ -392,7 +399,9 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
                             "Failed, unable to find an actuator named " + feeder.getPitchActuatorName());
                 }
                 String s = actuator.read(feeder.getActuatorValue());
-                pitchValue.setText(s == null ? "" : s);
+                SwingUtilities.invokeLater(() -> {
+                    pitchValue.setText(s == null ? "" : s);
+                });
             });
         }
     };
@@ -435,7 +444,9 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
                             "Failed, unable to find an actuator named " + feeder.getStatusActuatorName());
                 }
                 String s = actuator.read(feeder.getActuatorValue());
-                statusText.setText(s == null ? "" : s);
+                SwingUtilities.invokeLater(() -> {
+                    statusText.setText(s == null ? "" : s);
+                });
             });
         }
     };
