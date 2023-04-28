@@ -700,9 +700,6 @@ extends AbstractConfigurationWizard {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
-                if (!(Configuration.get().getMachine().isEnabled())) {
-                    throw new Exception ("Start machine first.");
-                }
                 if (feeder.getIdActuatorName() == null || feeder.getIdActuatorName().equals("")) {
                     Logger.warn("No getIdActuatorName specified for feeder {}.", feeder.getName());
                     return;
@@ -724,9 +721,6 @@ extends AbstractConfigurationWizard {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
-                if (!(Configuration.get().getMachine().isEnabled())) {
-                    throw new Exception ("Start machine first.");
-                }
                 if (feeder.getActuatorName() == null || feeder.getActuatorName().equals("")) {
                     Logger.warn("No actuatorName specified for feeder {}.", feeder.getName());
                     return;
@@ -746,9 +740,6 @@ extends AbstractConfigurationWizard {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
-                if (!(Configuration.get().getMachine().isEnabled())) {
-                    throw new Exception ("Start machine first.");
-                }
                 if (feeder.getPostPickActuatorName() == null || feeder.getPostPickActuatorName().equals("")) {
                     Logger.warn("No postPickActuatorName specified for feeder {}.", feeder.getName());
                     return;
@@ -770,9 +761,6 @@ extends AbstractConfigurationWizard {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
-                if (!(Configuration.get().getMachine().isEnabled())) {
-                    throw new Exception ("Start machine first.");
-                }
                 if (feeder.getFeedCountActuatorName() == null || feeder.getFeedCountActuatorName().equals("")) {
                     Logger.warn("No feedCountActuatorName specified for feeder {}.", feeder.getName());
                     return;
@@ -793,10 +781,7 @@ extends AbstractConfigurationWizard {
     private Action clearCountActuatorAction = new AbstractAction("Clear feed count") {
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            UiUtils.messageBoxOnException(() -> {
-                if (!(Configuration.get().getMachine().isEnabled())) {
-                    throw new Exception ("Start machine first.");
-                }
+            UiUtils.submitUiMachineTask(() -> {
                 if (feeder.getClearCountActuatorName() == null || feeder.getClearCountActuatorName().equals("")) {
                     Logger.warn("No clearCountActuatorName specified for feeder {}.", feeder.getName());
                     return;
@@ -818,10 +803,7 @@ extends AbstractConfigurationWizard {
     private Action pitchActuatorAction = new AbstractAction("Get pitch") {
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            UiUtils.messageBoxOnException(() -> {
-                if (!(Configuration.get().getMachine().isEnabled())) {
-                    throw new Exception ("Start machine first.");
-                }
+            UiUtils.submitUiMachineTask(() -> {
                 if (feeder.getPitchActuatorName() == null || feeder.getPitchActuatorName().equals("")) {
                     Logger.warn("No feedCountActuatorName specified for feeder {}.", feeder.getName());
                     return;
@@ -843,9 +825,6 @@ extends AbstractConfigurationWizard {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
-                if (!(Configuration.get().getMachine().isEnabled())) {
-                    throw new Exception ("Start machine first.");
-                }
                 if (feeder.getTogglePitchActuatorName() == null || feeder.getTogglePitchActuatorName().equals("")) {
                     Logger.warn("No togglePitchActuatorName specified for feeder {}.", feeder.getName());
                     return;
@@ -868,9 +847,6 @@ extends AbstractConfigurationWizard {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
-                if (!(Configuration.get().getMachine().isEnabled())) {
-                    throw new Exception ("Start machine first.");
-                }
                 if (feeder.getStatusActuatorName() == null || feeder.getStatusActuatorName().equals("")) {
                     Logger.warn("No statusActuatorName specified for feeder {}.", feeder.getName());
                     return;
@@ -892,19 +868,16 @@ extends AbstractConfigurationWizard {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
-                // make sure machine is powered on
-                if(Configuration.get().getMachine().isEnabled()) {
-                    if (feeder.getFiducialPart() == null) {
-                        Logger.warn("No fiducial defined for feeder {}.", feeder.getName());
-                        return;
-                    }
-                    Location newLocation = feeder.getFiducialLocation(feeder.getLocation(), feeder.getFiducialPart());
-                    if (newLocation == null) {
-                        throw new Exception("Unable to locate fiducial");
-                    } else {
-                        xPickLocTf.setText(newLocation.getLengthX().toString());
-                        yPickLocTf.setText(newLocation.getLengthY().toString());
-                    }
+                if (feeder.getFiducialPart() == null) {
+                    Logger.warn("No fiducial defined for feeder {}.", feeder.getName());
+                    return;
+                }
+                Location newLocation = feeder.getFiducialLocation(feeder.getLocation(), feeder.getFiducialPart());
+                if (newLocation == null) {
+                    throw new Exception("Unable to locate fiducial");
+                } else {
+                    xPickLocTf.setText(newLocation.getLengthX().toString());
+                    yPickLocTf.setText(newLocation.getLengthY().toString());
                 }
             });
         }
