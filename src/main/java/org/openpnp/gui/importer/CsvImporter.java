@@ -67,9 +67,8 @@ import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
 
-
 @SuppressWarnings("serial")
-public abstract class CSVImporter {
+public abstract class CsvImporter {
     private Board board;
     private File file;
 
@@ -390,7 +389,7 @@ public abstract class CSVImporter {
             getContentPane().setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
 
             JPanel panel = new JPanel();
-            panel.setBorder(new TitledBorder(null, Translations.getString("NamedCSVImporter.FilesPanel.Border.title"), TitledBorder.LEADING, TitledBorder.TOP, //$NON-NLS-1$
+            panel.setBorder(new TitledBorder(null, Translations.getString("CsvImporter.FilesPanel.Border.title"), TitledBorder.LEADING, TitledBorder.TOP, //$NON-NLS-1$
                     null, null));
             getContentPane().add(panel);
             panel.setLayout(new FormLayout(
@@ -400,19 +399,19 @@ public abstract class CSVImporter {
                     new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                             FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
 
-            JLabel lblTopFilemnt = new JLabel(Translations.getString("NamedCSVImporter.FilesPanel.topFilemntLabel.text")); //$NON-NLS-1$
+            JLabel lblTopFilemnt = new JLabel(Translations.getString("CsvImporter.FilesPanel.topFilemntLabel.text")); //$NON-NLS-1$
             panel.add(lblTopFilemnt, "2, 2, right, default"); //$NON-NLS-1$
 
             textFieldTopFile = new JTextField();
             panel.add(textFieldTopFile, "4, 2, fill, default"); //$NON-NLS-1$
             textFieldTopFile.setColumns(10);
 
-            JButton btnBrowse = new JButton(Translations.getString("NamedCSVImporter.FilesPanel.browseButton.text")); //$NON-NLS-1$
+            JButton btnBrowse = new JButton(Translations.getString("CsvImporter.FilesPanel.browseButton.text")); //$NON-NLS-1$
             btnBrowse.setAction(browseTopFileAction);
             panel.add(btnBrowse, "6, 2"); //$NON-NLS-1$
 
             JPanel panel_1 = new JPanel();
-            panel_1.setBorder(new TitledBorder(null, Translations.getString("NamedCSVImporter.OptionsPanel.Border.title"), TitledBorder.LEADING, //$NON-NLS-1$
+            panel_1.setBorder(new TitledBorder(null, Translations.getString("CsvImporter.OptionsPanel.Border.title"), TitledBorder.LEADING, //$NON-NLS-1$
                     TitledBorder.TOP, null, null));
             getContentPane().add(panel_1);
             panel_1.setLayout(new FormLayout(
@@ -420,11 +419,11 @@ public abstract class CSVImporter {
                     new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                             RowSpec.decode("default:grow")})); //$NON-NLS-1$
 
-            chckbxCreateMissingParts = new JCheckBox(Translations.getString("NamedCSVImporter.OptionsPanel.createMissingPartsChkbox.text")); //$NON-NLS-1$
+            chckbxCreateMissingParts = new JCheckBox(Translations.getString("CsvImporter.OptionsPanel.createMissingPartsChkbox.text")); //$NON-NLS-1$
             chckbxCreateMissingParts.setSelected(true);
             panel_1.add(chckbxCreateMissingParts, "2, 2"); //$NON-NLS-1$
 
-            chckbxUpdatePartHeight = new JCheckBox(Translations.getString("NamedCSVImporter.OptionsPanel.updatePartHeightChkbox.text")); //$NON-NLS-1$
+            chckbxUpdatePartHeight = new JCheckBox(Translations.getString("CsvImporter.OptionsPanel.updatePartHeightChkbox.text")); //$NON-NLS-1$
             chckbxUpdatePartHeight.setSelected(true);
             panel_1.add(chckbxUpdatePartHeight, "2, 3"); //$NON-NLS-1$
 
@@ -436,11 +435,11 @@ public abstract class CSVImporter {
             flowLayout.setAlignment(FlowLayout.RIGHT);
             getContentPane().add(panel_2);
 
-            JButton btnCancel = new JButton(Translations.getString("NamedCSVImporter.ButtonsPanel.cancelButton.text")); //$NON-NLS-1$
+            JButton btnCancel = new JButton(Translations.getString("CsvImporter.ButtonsPanel.cancelButton.text")); //$NON-NLS-1$
             btnCancel.setAction(cancelAction);
             panel_2.add(btnCancel);
 
-            JButton btnImport = new JButton(Translations.getString("NamedCSVImporter.ButtonsPanel.importButton.text")); //$NON-NLS-1$
+            JButton btnImport = new JButton(Translations.getString("CsvImporter.ButtonsPanel.importButton.text")); //$NON-NLS-1$
             btnImport.setAction(importAction);
             panel_2.add(btnImport);
 
@@ -456,8 +455,8 @@ public abstract class CSVImporter {
 
         private class SwingAction extends AbstractAction {
             public SwingAction() {
-                putValue(NAME, Translations.getString("NamedCSVImporter.BrowseAction.Name")); //$NON-NLS-1$
-                putValue(SHORT_DESCRIPTION, Translations.getString("NamedCSVImporter.BrowseAction.ShortDescription")); //$NON-NLS-1$
+                putValue(NAME, Translations.getString("CsvImporter.BrowseAction.Name")); //$NON-NLS-1$
+                putValue(SHORT_DESCRIPTION, Translations.getString("CsvImporter.BrowseAction.ShortDescription")); //$NON-NLS-1$
             }
 
             public void actionPerformed(ActionEvent e) {
@@ -483,8 +482,8 @@ public abstract class CSVImporter {
 
         private class SwingAction_2 extends AbstractAction {
             public SwingAction_2() {
-                putValue(NAME, Translations.getString("NamedCSVImporter.Import2Action.Name")); //$NON-NLS-1$
-                putValue(SHORT_DESCRIPTION, Translations.getString("NamedCSVImporter.Import2Action.ShortDescription")); //$NON-NLS-1$
+                putValue(NAME, Translations.getString("CsvImporter.Import2Action.Name")); //$NON-NLS-1$
+                putValue(SHORT_DESCRIPTION, Translations.getString("CsvImporter.Import2Action.ShortDescription")); //$NON-NLS-1$
             }
 
             public void actionPerformed(ActionEvent e) {
@@ -499,7 +498,7 @@ public abstract class CSVImporter {
                     }
                 }
                 catch (Exception e1) {
-                    MessageBoxes.errorBox(Dlg.this, Translations.getString("NamedCSVImporter.ImportErrorMessage"), e1); //$NON-NLS-1$
+                    MessageBoxes.errorBox(Dlg.this, Translations.getString("CsvImporter.ImportErrorMessage"), e1); //$NON-NLS-1$
                     return;
                 }
                 for (Placement placement : placements) {
@@ -511,8 +510,8 @@ public abstract class CSVImporter {
 
         private class SwingAction_3 extends AbstractAction {
             public SwingAction_3() {
-                putValue(NAME, Translations.getString("NamedCSVImporter.CancelAction.Name")); //$NON-NLS-1$
-                putValue(SHORT_DESCRIPTION, Translations.getString("NamedCSVImporter.CancelAction.ShortDescription")); //$NON-NLS-1$
+                putValue(NAME, Translations.getString("CsvImporter.CancelAction.Name")); //$NON-NLS-1$
+                putValue(SHORT_DESCRIPTION, Translations.getString("CsvImporter.CancelAction.ShortDescription")); //$NON-NLS-1$
             }
 
             public void actionPerformed(ActionEvent e) {

@@ -24,9 +24,9 @@ import java.awt.Frame;
 import org.openpnp.Translations;
 import org.openpnp.model.Board;
 
-public class NamedCSVImporter extends CSVImporter implements BoardImporter {
-    private final static String NAME = "Named CSV"; //$NON-NLS-1$
-    private final static String DESCRIPTION = Translations.getString("NamedCSVImporter.Importer.Description"); //$NON-NLS-1$
+public class ReferenceCsvImporter extends CsvImporter implements BoardImporter {
+    private final static String NAME = "Reference CSV"; //$NON-NLS-1$
+    private final static String DESCRIPTION = Translations.getString("ReferenceCsvImporter.Importer.Description"); //$NON-NLS-1$
     
     @Override
     public String getImporterName() {
