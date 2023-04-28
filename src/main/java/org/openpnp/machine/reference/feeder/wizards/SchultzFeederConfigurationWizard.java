@@ -28,6 +28,7 @@ import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
@@ -274,9 +275,6 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
-                if (!(Configuration.get().getMachine().isEnabled())) {
-                    throw new Exception ("Start machine first.");
-                }
                 if (feeder.getIdActuatorName() == null || feeder.getIdActuatorName().equals("")) {
                     Logger.warn("No getIdActuatorName specified for feeder {}.", feeder.getName());
                     return;
@@ -289,7 +287,9 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
                             "Failed, unable to find an actuator named " + feeder.getIdActuatorName());
                 }
                 String s = actuator.read(feeder.getActuatorValue());
-                idText.setText(s == null ? "" : s);
+                SwingUtilities.invokeLater(() -> {
+                    idText.setText(s == null ? "" : s);
+                });
             });
         }
     };
@@ -298,9 +298,6 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
-                if (!(Configuration.get().getMachine().isEnabled())) {
-                    throw new Exception ("Start machine first.");
-                }
                 if (feeder.getActuatorName() == null || feeder.getActuatorName().equals("")) {
                     Logger.warn("No actuatorName specified for feeder {}.", feeder.getName());
                     return;
@@ -320,9 +317,6 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
-                if (!(Configuration.get().getMachine().isEnabled())) {
-                    throw new Exception ("Start machine first.");
-                }
                 if (feeder.getPostPickActuatorName() == null || feeder.getPostPickActuatorName().equals("")) {
                     Logger.warn("No postPickActuatorName specified for feeder {}.", feeder.getName());
                     return;
@@ -345,9 +339,6 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
-                if (!(Configuration.get().getMachine().isEnabled())) {
-                    throw new Exception ("Start machine first.");
-                }
                 if (feeder.getFeedCountActuatorName() == null || feeder.getFeedCountActuatorName().equals("")) {
                     Logger.warn("No feedCountActuatorName specified for feeder {}.", feeder.getName());
                     return;
@@ -360,7 +351,9 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
                             "Failed, unable to find an actuator named " + feeder.getFeedCountActuatorName());
                 }
                 String s = actuator.read(feeder.getActuatorValue());
-                feedCountValue.setText(s == null ? "" : s);
+                SwingUtilities.invokeLater(() -> {
+                    feedCountValue.setText(s == null ? "" : s);
+                });
             });
         }
     };
@@ -369,9 +362,6 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
-                if (!(Configuration.get().getMachine().isEnabled())) {
-                    throw new Exception ("Start machine first.");
-                }
                 if (feeder.getClearCountActuatorName() == null || feeder.getClearCountActuatorName().equals("")) {
                     Logger.warn("No clearCountActuatorName specified for feeder {}.", feeder.getName());
                     return;
@@ -386,7 +376,9 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
 
                 AbstractActuator.suggestValueType(actuator, Actuator.ActuatorValueType.Double);
                 actuator.actuate(feeder.getActuatorValue());
-                feedCountValue.setText("");
+                SwingUtilities.invokeLater(() -> {
+                    feedCountValue.setText("");
+                });
             });
         }
     };
@@ -395,9 +387,6 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
-                if (!(Configuration.get().getMachine().isEnabled())) {
-                    throw new Exception ("Start machine first.");
-                }
                 if (feeder.getPitchActuatorName() == null || feeder.getPitchActuatorName().equals("")) {
                     Logger.warn("No pitchActuatorName specified for feeder {}.", feeder.getName());
                     return;
@@ -410,7 +399,9 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
                             "Failed, unable to find an actuator named " + feeder.getPitchActuatorName());
                 }
                 String s = actuator.read(feeder.getActuatorValue());
-                pitchValue.setText(s == null ? "" : s);
+                SwingUtilities.invokeLater(() -> {
+                    pitchValue.setText(s == null ? "" : s);
+                });
             });
         }
     };
@@ -419,9 +410,6 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
-                if (!(Configuration.get().getMachine().isEnabled())) {
-                    throw new Exception ("Start machine first.");
-                }
                 if (feeder.getTogglePitchActuatorName() == null || feeder.getTogglePitchActuatorName().equals("")) {
                     Logger.warn("No togglePitchActuatorName specified for feeder {}.", feeder.getName());
                     return;
@@ -444,9 +432,6 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
-                if (!(Configuration.get().getMachine().isEnabled())) {
-                    throw new Exception ("Start machine first.");
-                }
                 if (feeder.getStatusActuatorName() == null || feeder.getStatusActuatorName().equals("")) {
                     Logger.warn("No statusActuatorName specified for feeder {}.", feeder.getName());
                     return;
@@ -459,7 +444,9 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
                             "Failed, unable to find an actuator named " + feeder.getStatusActuatorName());
                 }
                 String s = actuator.read(feeder.getActuatorValue());
-                statusText.setText(s == null ? "" : s);
+                SwingUtilities.invokeLater(() -> {
+                    statusText.setText(s == null ? "" : s);
+                });
             });
         }
     };
