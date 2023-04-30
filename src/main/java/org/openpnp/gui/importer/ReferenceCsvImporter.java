@@ -45,27 +45,82 @@ public class ReferenceCsvImporter extends CsvImporter implements BoardImporter {
         return super.importBoard(parent);
     }
 
-    // lists of strings for each purpose to be found in the heading line
+    // methods to read of strings for each purpose to be found in the heading line
     // data read from file is converted to upper case before compare -> only list upper case pattern here
     // this is the list that is used by the default Named CSV importer
-    private static final String cRefs[] = {"DESIGNATOR", "PART", "COMPONENT", "REFDES", "REF"}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
-    private static final String cVals[] = {"VALUE", "VAL", "COMMENT", "COMP_VALUE"}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-    private static final String cPacks[] = {"FOOTPRINT", "PACKAGE", "PATTERN", "COMP_PACKAGE"}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-    private static final String cXs[] = {"X", "X (MM)", "REF X", "POSX", "REF-X(MM)", "REF-X(MIL)", "SYM_X"}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
-    private static final String cYs[] = {"Y", "Y (MM)", "REF Y", "POSY", "REF-Y(MM)", "REF-Y(MIL)", "SYM_Y"}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
-    private static final String cRots[] = {"ROTATION", "ROT", "ROTATE", "SYM_ROTATE"}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-    private static final String cTBs[] = {"LAYER", "SIDE", "TB", "SYM_MIRROR"}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-    private static final String cHeights[] = {"HEIGHT", "HEIGHT(MIL)", "HEIGHT(MM)"}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-    private static final String cComments[] = {"ADDCOMMENT"}; //$NON-NLS-1$
-
-    // provide methods to read the string arrays above
-    public String[] getReferencePattern() { return cRefs; }
-    public String[] getValuePattern()     { return cVals; }
-    public String[] getPackagePattern()   { return cPacks; }
-    public String[] getXPattern()         { return cXs; }
-    public String[] getYPattern()         { return cYs; }
-    public String[] getRotationPattern()  { return cRots; }
-    public String[] getSidePattern()      { return cTBs; }
-    public String[] getHeightPattern()    { return cHeights; }
-    public String[] getCommentPattern()   { return cComments; }
+    public String[] getReferencePattern() { 
+    	return new String[] {
+    			"DESIGNATOR",	//$NON-NLS-1$
+    			"PART",  		//$NON-NLS-1$
+    			"COMPONENT",	//$NON-NLS-1$
+    			"REFDES",		//$NON-NLS-1$
+    			"REF"			//$NON-NLS-1$
+    		};
+    }
+    public String[] getValuePattern() { 
+    	return new String[] {
+    			"VALUE",  		//$NON-NLS-1$
+    			"VAL",  		//$NON-NLS-1$
+    			"COMMENT",		//$NON-NLS-1$
+    			"COMP_VALUE"	//$NON-NLS-1$
+    		};
+    }
+    public String[] getPackagePattern() {
+    	return new String[] {
+    			"FOOTPRINT",  	//$NON-NLS-1$
+    			"PACKAGE",  	//$NON-NLS-1$
+    			"PATTERN",  	//$NON-NLS-1$
+    			"COMP_PACKAGE" 	//$NON-NLS-1$
+    		};
+    }
+    public String[] getXPattern() { 
+    	return new String[] {
+    			"X",  			//$NON-NLS-1$
+    			"X (MM)", 		//$NON-NLS-1$
+    			"REF X", 		//$NON-NLS-1$
+    			"POSX", 		//$NON-NLS-1$
+    			"REF-X(MM)", 	//$NON-NLS-1$
+    			"REF-X(MIL)", 	//$NON-NLS-1$
+    			"SYM_X"			//$NON-NLS-1$
+    		};
+    }
+    public String[] getYPattern() {
+    	return new String[] {
+    			"Y", 			//$NON-NLS-1$
+    			"Y (MM)", 		//$NON-NLS-1$
+    			"REF Y", 		//$NON-NLS-1$
+    			"POSY", 		//$NON-NLS-1$
+    			"REF-Y(MM)", 	//$NON-NLS-1$
+    			"REF-Y(MIL)", 	//$NON-NLS-1$
+    			"SYM_Y"			//$NON-NLS-1$
+    		};
+    }
+    public String[] getRotationPattern() { 
+    	return new String[] {
+    			"ROTATION",		//$NON-NLS-1$
+    			"ROT", 			//$NON-NLS-1$
+    			"ROTATE", 		//$NON-NLS-1$
+    			"SYM_ROTATE"	//$NON-NLS-1$
+    		};
+    }
+    public String[] getSidePattern() {
+    	return new String[] {
+    			"LAYER", 		//$NON-NLS-1$
+    			"SIDE", 		//$NON-NLS-1$
+    			"TB", 			//$NON-NLS-1$
+    			"SYM_MIRROR"	//$NON-NLS-1$
+    		};
+    }
+    public String[] getHeightPattern() {
+    	return new String[] {
+    			"HEIGHT", 		//$NON-NLS-1$
+    			"HEIGHT(MIL)", 	//$NON-NLS-1$
+    			"HEIGHT(MM)"	//$NON-NLS-1$
+    		};
+    }
+    public String[] getCommentPattern() { 
+    	return new String[] {
+    			"ADDCOMMENT"	//$NON-NLS-1$
+    		};
+    }
 }
