@@ -399,8 +399,8 @@ public abstract class CsvImporter {
     }
 
     class Dlg extends JDialog {
-        private JTextField textFieldTopFile;
-        private final Action browseTopFileAction = new SwingAction();
+        private JTextField textFieldFile;
+        private final Action browseFileAction = new SwingAction();
         private final Action importAction = new SwingAction_2();
         private final Action cancelAction = new SwingAction_3();
         private JCheckBox chckbxCreateMissingParts;
@@ -424,12 +424,12 @@ public abstract class CsvImporter {
             JLabel lblTopFilemnt = new JLabel(Translations.getString("CsvImporter.FilesPanel.topFilemntLabel.text")); //$NON-NLS-1$
             panel.add(lblTopFilemnt, "2, 2, right, default"); //$NON-NLS-1$
 
-            textFieldTopFile = new JTextField();
-            panel.add(textFieldTopFile, "4, 2, fill, default"); //$NON-NLS-1$
-            textFieldTopFile.setColumns(10);
+            textFieldFile = new JTextField();
+            panel.add(textFieldFile, "4, 2, fill, default"); //$NON-NLS-1$
+            textFieldFile.setColumns(30);
 
             JButton btnBrowse = new JButton(Translations.getString("CsvImporter.FilesPanel.browseButton.text")); //$NON-NLS-1$
-            btnBrowse.setAction(browseTopFileAction);
+            btnBrowse.setAction(browseFileAction);
             panel.add(btnBrowse, "6, 2"); //$NON-NLS-1$
 
             JPanel panel_1 = new JPanel();
@@ -465,7 +465,8 @@ public abstract class CsvImporter {
             btnImport.setAction(importAction);
             panel_2.add(btnImport);
 
-            setSize(400, 400);
+            // resize to the window to its preferred size
+            pack();
             setLocationRelativeTo(parent);
 
             JRootPane rootPane = getRootPane();
@@ -496,7 +497,7 @@ public abstract class CsvImporter {
                     return;
                 }
                 File file = new File(new File(fileDialog.getDirectory()), fileDialog.getFile());
-                textFieldTopFile.setText(file.getAbsolutePath());
+                textFieldFile.setText(file.getAbsolutePath());
             }
         }
 
@@ -509,8 +510,8 @@ public abstract class CsvImporter {
             }
 
             public void actionPerformed(ActionEvent e) {
-                Logger.debug("Parsing " + textFieldTopFile.getText() + " CSV FIle"); //$NON-NLS-1$ //$NON-NLS-2$
-                file = new File(textFieldTopFile.getText());
+                Logger.debug("Parsing " + textFieldFile.getText() + " CSV FIle"); //$NON-NLS-1$ //$NON-NLS-2$
+                file = new File(textFieldFile.getText());
                 board = new Board();
                 List<Placement> placements = new ArrayList<>();
                 try {
