@@ -1,4 +1,6 @@
 /*
+ * Copyright (C) 2023 <99149230+janm012012@users.noreply.github.com> 
+ * inspired and based on work
  * Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org> and Cri.S <phone.cri@gmail.com>
  * 
  * This file is part of OpenPnP.
@@ -57,13 +59,13 @@ public class ReferenceCsvImporter extends CsvImporter implements BoardImporter {
     private static final String cComments[] = {"ADDCOMMENT"}; //$NON-NLS-1$
 
     // provide methods to read the string arrays above
-    public String[] getRefs()     { return cRefs; }
-    public String[] getVals()     { return cVals; }
-    public String[] getPacks()    { return cPacks; }
-    public String[] getXs()       { return cXs; }
-    public String[] getYs()       { return cYs; }
-    public String[] getRots()     { return cRots; }
-    public String[] getTBs()      { return cTBs; }
-    public String[] getHeights()  { return cHeights; }
-    public String[] getComments() { return cComments; }
+    public String[] getReferencePattern() { return cRefs; }
+    public String[] getValuePattern()     { return cVals; }
+    public String[] getPackagePattern()   { return cPacks; }
+    public String[] getXPattern()         { return cXs; }
+    public String[] getYPattern()         { return cYs; }
+    public String[] getRotationPattern()  { return cRots; }
+    public String[] getSidePattern()      { return cTBs; }
+    public String[] getHeightPattern()    { return cHeights; }
+    public String[] getCommentPattern()   { return cComments; }
 }

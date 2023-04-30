@@ -1,4 +1,6 @@
 /*
+ * Copyright (C) 2023 <99149230+janm012012@users.noreply.github.com> 
+ * inspired and based on work
  * Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org> and Cri.S <phone.cri@gmail.com>
  * 
  * This file is part of OpenPnP.
@@ -69,85 +71,97 @@ import com.jgoodies.forms.layout.RowSpec;
 
 @SuppressWarnings("serial")
 public abstract class CsvImporter {
+    // this method provides a string that is used by the GUI
+    abstract String getImporterDescription();
+
+    // the following methods are called to get the pattern used to decode the data
+    // each array contains possible strings that might appear in the header line.
+    // If any appears, the corresponding column is decoded as the respective type.
+    // This class converts the data read from file to upper case before compare. So 
+    // provide upper case pattern only.
+    abstract String[] getReferencePattern();
+    abstract String[] getValuePattern();
+    abstract String[] getPackagePattern();
+    abstract String[] getXPattern();
+    abstract String[] getYPattern();
+    abstract String[] getRotationPattern();
+    abstract String[] getSidePattern();
+    abstract String[] getHeightPattern();
+    abstract String[] getCommentPattern();
+    
+    // this variables hold the pattern to decode the data
+    private String referencePattern[];
+    private String valuePattern[];
+    private String packagePattern[];
+    private String xPattern[];
+    private String yPattern[];
+    private String rotationPattern[];
+    private String sidePattern[];
+    private String heightPattern[];
+    private String commentPattern[];
+    
     private Board board;
     private File file;
 
-    abstract String getImporterDescription();
-
-    // provide arrays of strings for header detection
-    // has to be local here to allow overwriting later using dedicated values
-    // from derived clases
-    private static String Refs[];
-    private static String Vals[];
-    private static String Packs[];
-    private static String Xs[];
-    private static String Ys[];
-    private static String Rots[];
-    private static String TBs[];
-    private static String Heights[];
-    private static String Comments[];
-    
+    // this method shall be called by the parent to open a file open dialog and import
+    // the selected file.
     public Board importBoard(Frame parent) throws Exception {
     	// get strings to parse CSV context
-    	Refs     = getRefs();
-    	Vals     = getVals();
-    	Packs    = getPacks();
-    	Xs       = getXs();
-    	Ys       = getYs();
-    	Rots     = getRots();
-    	TBs      = getTBs();
-    	Heights  = getHeights();
-    	Comments = getComments();
+    	referencePattern = getReferencePattern();
+    	valuePattern     = getValuePattern();
+    	packagePattern   = getPackagePattern();
+    	xPattern         = getXPattern();
+    	yPattern         = getYPattern();
+    	rotationPattern  = getRotationPattern();
+    	sidePattern      = getSidePattern();
+    	heightPattern    = getHeightPattern();
+    	commentPattern   = getCommentPattern();
 
-    	// reset any previous result to allow the importer to detect a failure
-        Ref = -1;
-        Val = -1;
-        Pack = -1;
-        X = -1;
-        Y = -1;
-        Rot = -1;
-        TB = -1;
-        HT = -1;
-        Comment = -1;
-        Len = 0;
-    	
+    	// open the file import dialog
         Dlg dlg = new Dlg(parent);
         dlg.setVisible(true);
         return board;
     }
 
-    // provide methods to read the string arrays that are used to decode the header line
-    // each array contains possible values/string for that type.
-    // This converter converts the data read from file to upper case before compare. So 
-    // provide upper case pattern only.
-    abstract String[] getRefs();
-    abstract String[] getVals();
-    abstract String[] getPacks();
-    abstract String[] getXs();
-    abstract String[] getYs();
-    abstract String[] getRots();
-    abstract String[] getTBs();
-    abstract String[] getHeights();
-    abstract String[] getComments();
-    
-    // Column in data, one of the above strings have been found in the header line.
+    // the following variable will contain the column indexes in which that data has
+    // been detected using the string arrays define above.
     // This indexes are used to detect if all required properties have been found
     // and to extract the data by its function.
-    static private int Ref = -1, Val = -1, Pack = -1, X = -1, Y = -1, Rot = -1, TB = -1, HT = -1, Comment = -1, Len = 0;
+    private int referenceIndex;
+    private int valueIndex;
+    private int packageIndex;
+    private int xIndex;
+    private int yIndex;
+    private int rotationIndex;
+    private int sideIndex;
+    private int heightIndex;
+    private int commentIndex;
+    
+    // the length field contains the amount of columns required in data after the
+    // header line has been detected and decoded
+    private int len = 0;
 
     // automatic mil to mm conversion: if a property of the header ends in the specified
     // string, all values are converted from mil to mm. Again, the conversion is done with the
     // data read from file converted to upper case, so specify an upper case value here.
     static private final String MilToMM = "(MIL)";	//$NON-NLS-1$
-    static private int units_mils_x = 0, units_mils_y = 0, units_mils_height = 0; // set if units
-                                                                                  // are in mils not
-                                                                                  // mm
-
-    static private char comma = ',';
+    
+    // this flags are used to remember if mil to mm conversion is required
+    private boolean xUnitsMil;
+    private boolean yUnitsMil;
+    private boolean heightUnitsMil;
+    
+    // this character is used as separator when decoding the data
+    // on a first pass, data is decoded using ','. On a second pass '\t' is used
+    static private char separator = ',';
 
     // maximum number of lines at start of file to search for heading line describing the content
     private static final int maxHeaderLines = 50;
 
+    // define that the data has to contain at least 6 columns. This is given by the fact
+    // that reference, value, package, x, y and rotation are mandatory.
+    private static final int minNumColumns = 6;
+    
     //////////////////////////////////////////////////////////
 
     private static int checkCSV(String str[], String val[]) {
@@ -160,69 +174,68 @@ public abstract class CsvImporter {
                 }
             }
         }
+        // not found: return an invalid column index
         return -1;
     }
 
-    private static boolean checkCSV(String str[]) {
+    private boolean checkCSV(String str[]) {
 
-        // note that layer (TB) and Height (HT) are optional and thus checked against -2
-        if ((Ref = checkCSV(Refs, str)) != -1 && (Val = checkCSV(Vals, str)) != -1
-                && (Pack = checkCSV(Packs, str)) != -1 && (X = checkCSV(Xs, str)) != -1
-                && (Y = checkCSV(Ys, str)) != -1 && (Rot = checkCSV(Rots, str)) != -1) {
+        // note that layer/side, height and comment are optional
+        if (       (referenceIndex = checkCSV(referencePattern, str)) >= 0 
+        		&& (valueIndex     = checkCSV(valuePattern,     str)) >= 0
+                && (packageIndex   = checkCSV(packagePattern,   str)) >= 0  
+                && (xIndex         = checkCSV(xPattern,         str)) >= 0
+                && (yIndex         = checkCSV(yPattern,         str)) >= 0 
+                && (rotationIndex  = checkCSV(rotationPattern,  str)) >= 0) {
 
             // the following fields are optional
-            HT = checkCSV(Heights, str); // optional height field
-            TB = checkCSV(TBs, str); // optional top/bottom layer field
-            Comment = checkCSV(Comments, str); // optional comment field
+            heightIndex  = checkCSV(heightPattern , str); // optional height field
+            sideIndex    = checkCSV(sidePattern,    str); // optional top/bottom layer field
+            commentIndex = checkCSV(commentPattern, str); // optional comment field
 
         	// test if any value requires mil to mm conversion
-            if (str[X].endsWith(MilToMM)) {
-                units_mils_x = 1;
+            xUnitsMil = str[xIndex].endsWith(MilToMM);
+			if (xUnitsMil) {
                 Logger.trace("X units are in mils"); //$NON-NLS-1$
             }
-            if (str[Y].endsWith(MilToMM)) {
-                units_mils_y = 1;
+			yUnitsMil = str[yIndex].endsWith(MilToMM);
+			if (yUnitsMil) {
                 Logger.trace("Y units are in mils"); //$NON-NLS-1$
             }
-            if (HT != -1 && str[HT].endsWith(MilToMM)) {
-                units_mils_height = 1;
+			heightUnitsMil = heightIndex >= 0 && str[heightIndex].endsWith(MilToMM);
+			if (heightUnitsMil) {
                 Logger.trace("Height units are in mils"); //$NON-NLS-1$
             }
         	
-            Len = Ref <= Len ? Len : Ref;
-            Len = Val <= Len ? Len : Val;
-            Len = Pack <= Len ? Len : Pack;
-            Len = X <= Len ? Len : X;
-            Len = Y <= Len ? Len : Y;
-            Len = Rot <= Len ? Len : Rot;
-            Len = TB <= Len ? Len : TB;
-            Len = HT <= Len ? Len : HT;
-            Logger.trace("checkCSV: Len = " + Len); //$NON-NLS-1$
+			// find the largest index, which defines the required line length
+			len = 0;
+			len = Math.max(len, referenceIndex);
+            len = Math.max(len, valueIndex);
+            len = Math.max(len, packageIndex);
+            len = Math.max(len, xIndex);
+            len = Math.max(len, yIndex);
+            len = Math.max(len, rotationIndex);
+            len = Math.max(len, sideIndex);
+            len = Math.max(len, heightIndex);
+            Logger.trace("checkCSV: Len = " + len); //$NON-NLS-1$
             return true;
         }
-        Logger.trace("checkCSV: Ref = " + Ref); //$NON-NLS-1$
-        Logger.trace("checkCSV: Val = " + Val); //$NON-NLS-1$
-        Logger.trace("checkCSV: Pack = " + Pack); //$NON-NLS-1$
-        Logger.trace("checkCSV: X = " + X); //$NON-NLS-1$
-        Logger.trace("checkCSV: Y = " + Y); //$NON-NLS-1$
-        Logger.trace("checkCSV: Rot = " + Rot); //$NON-NLS-1$
-        Logger.trace("checkCSV: TB = " + TB); //$NON-NLS-1$
-        Logger.trace("checkCSV: HT = " + HT); //$NON-NLS-1$
-        Logger.trace("checkCSV: Comment = " + Comment); //$NON-NLS-1$
-        Ref = -1;
-        Val = -1;
-        Pack = -1;
-        X = -1;
-        Y = -1;
-        Rot = -1;
-        TB = -1;
-        HT = -1;
-        Comment = -1;
-        Len = 0;
+        // output values found
+        Logger.trace("checkCSV: referenceIndex = " + referenceIndex); //$NON-NLS-1$
+        Logger.trace("checkCSV: valueIndex = "     + valueIndex);     //$NON-NLS-1$
+        Logger.trace("checkCSV: packageIndex = "   + packageIndex);   //$NON-NLS-1$
+        Logger.trace("checkCSV: xIndex = "         + xIndex);         //$NON-NLS-1$
+        Logger.trace("checkCSV: yIndex = "         + yIndex);         //$NON-NLS-1$
+        Logger.trace("checkCSV: rotationIndex = "  + rotationIndex);  //$NON-NLS-1$
+        Logger.trace("checkCSV: sideIndex = "      + sideIndex);      //$NON-NLS-1$
+        Logger.trace("checkCSV: heightIndex = "    + heightIndex);    //$NON-NLS-1$
+        Logger.trace("checkCSV: commentIndex = "   + commentIndex);   //$NON-NLS-1$
+        // force length to invalid for following stages
+        len = 0;
         return false;
     }
 
-    private static boolean checkLine(String str) throws Exception {
+    private boolean checkLine(String str) throws Exception {
         Logger.trace("checkLine: " + str); //$NON-NLS-1$
         String input_str = str.toUpperCase();
         if (input_str.charAt(0) == '#') {
@@ -232,15 +245,21 @@ public abstract class CsvImporter {
             return false;
         }
         // sting not empty, try to decode it as header line
-        String as[], at[][];
+        String as[];		// a line of the file as string
+        String at[][];		// the line as split into fields
         CSVParser csvParser = new CSVParser(new StringReader(input_str));
         as = csvParser.getLine();
-        comma = ',';
-        if (as.length >= 6 && checkCSV(as)) {
+        
+        // first pass: try with ',' separator
+        separator = ',';
+        if (as.length >= minNumColumns && checkCSV(as)) {
             return true;
         }
-        at = CSVParser.parse(input_str, comma = '\t');
-        if (at.length > 0 && at[0].length >= 6 && checkCSV(at[0])) {
+        
+        // second pass: try with '\t' separator
+        separator = '\t';
+        at = CSVParser.parse(input_str, separator);
+        if (at.length > 0 && at[0].length >= minNumColumns && checkCSV(at[0])) {
             return true;
         }
         /*
@@ -257,7 +276,27 @@ public abstract class CsvImporter {
      */
     //////////////////////////////////////////////////////////
 
-    private static List<Placement> parseFile(File file, boolean createMissingParts,
+    // convert given string taken from a .csv files field into a double
+    // unified method to handle all conversions identical
+    private double convert(String s) {
+    	return Double.parseDouble(s
+    			.replace(",", ".")    //$NON-NLS-1$ //$NON-NLS-2$
+    			.replace(" ", ""));   //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    // convert length string to double incl. units removal and mil to mm conversion
+    private double convert(String s, boolean unitsInMil) {
+    	double v = Double.parseDouble(s
+    			.replace(",", ".")    //$NON-NLS-1$ //$NON-NLS-2$
+    			.replace(" ", "")     //$NON-NLS-1$ //$NON-NLS-2$
+                .replace("mm", "")    //$NON-NLS-1$ //$NON-NLS-2$
+                .replace("mil", "")); //$NON-NLS-1$ //$NON-NLS-2$
+    	// if units are in mil, convert them to the OpenPnP standard millimeter
+    	if (unitsInMil)
+    		v = v * 0.0254;
+    	return v;
+    }
+    
+    private List<Placement> parseFile(File file, boolean createMissingParts,
             boolean updateHeights) throws Exception {
         BufferedReader reader =
                 new BufferedReader(new InputStreamReader(new FileInputStream(file), "ISO-8859-1")); //$NON-NLS-1$
@@ -275,47 +314,30 @@ public abstract class CsvImporter {
             }
         }
 
-
-        if (Len == 0) {
+        if (len <= 0) {
             reader.close();
             throw new Exception("Unable to find relevant headers' names.\n See https://github.com/openpnp/openpnp/wiki/Importing-Centroid-Data for more."); //$NON-NLS-1$
         }
 
         // CSVParser csvParser = new CSVParser(new FileInputStream(file));
-        CSVParser csvParser = new CSVParser(reader, comma);
+        CSVParser csvParser = new CSVParser(reader, separator);
         for (String as[]; (as = csvParser.getLine()) != null;) {
-            if (as.length <= Len) {
+            if (as.length <= len) {
                 continue;
             }
             else {
-                double placementX = Double.parseDouble(as[X].replace(",", ".").replace(" ", "") //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-                        .replace("mm", "").replace("mil", "")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-                // convert mils to mmm
-                if (units_mils_x == 1) {
-                    placementX = placementX * 0.0254;
-                }
-                double placementY = Double.parseDouble(as[Y].replace(",", ".").replace(" ", "") //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-                        .replace("mm", "").replace("mil", "")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+                double placementX = convert(as[xIndex], xUnitsMil);
+                double placementY = convert(as[yIndex], yUnitsMil);
 
-                // convert mils to mmm
-                if (units_mils_y == 1) {
-                    placementY = placementY * 0.0254;
+                double heightZ = 0.0; // set default height to zero in case its not included in CSV
+                if (heightIndex >= 0) {
+                    heightZ = convert(as[heightIndex], heightUnitsMil);
                 }
 
-
-                double heightZ = 0.0; // set default height to zero in case not included in CSV
-                if (HT != -1) {
-                    heightZ = Double.parseDouble(as[HT].replace(",", ".").replace(" ", "") //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-                            .replace("mm", "").replace("mil", "")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-
-                    // convert mils to mmm
-                    if (units_mils_height == 1) {
-                        heightZ = heightZ * 0.0254;
-                    }
-                }
-
-                double placementRotation =
-                        Double.parseDouble(as[Rot].replace(",", ".").replace(" ", "")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+                double placementRotation = convert(as[rotationIndex]);
+                // convert rotation to [-180 .. 180]
+                // FIXME: this range is invalid as -180° == 180°. Whats the OpenPnP convention?
+                // FIXME: does OpenPnP provide a unified method to limit angles?
                 while (placementRotation > 180.0) {
                     placementRotation -= 360.0;
                 }
@@ -323,22 +345,22 @@ public abstract class CsvImporter {
                     placementRotation += 360.0;
                 }
 
-
-                Placement placement = new Placement(as[Ref]);
+                Placement placement = new Placement(as[referenceIndex]);
                 placement.setLocation(new Location(LengthUnit.Millimeters, placementX, placementY,
                         0, placementRotation));
                 Configuration cfg = Configuration.get();
                 if (cfg != null && createMissingParts) {
-                    String partId = as[Pack] + "-" + as[Val]; //$NON-NLS-1$
+                    String partId = as[packageIndex] + "-" + as[valueIndex]; //$NON-NLS-1$
                     Part part = cfg.getPart(partId);
 
+                    // if part does not exist, create it
                     if (part == null) {
                         part = new Part(partId);
                         Length l = new Length(heightZ, LengthUnit.Millimeters);
                         part.setHeight(l);
-                        Package pkg = cfg.getPackage(as[Pack]);
+                        Package pkg = cfg.getPackage(as[packageIndex]);
                         if (pkg == null) {
-                            pkg = new Package(as[Pack]);
+                            pkg = new Package(as[packageIndex]);
                             cfg.addPackage(pkg);
                         }
                         part.setPackage(pkg);
@@ -347,28 +369,28 @@ public abstract class CsvImporter {
                     }
 
                     // if part exists and height exist and user wants height updated do it.
-                    if (cfg != null && updateHeights && HT != -1) {
-                        String partId2 = as[Pack] + "-" + as[Val]; //$NON-NLS-1$
-                        Part part2 = cfg.getPart(partId2);
-                        if (part2 != null) {
+                    if (updateHeights && heightIndex >= 0) {
+                        if (part != null) {
                             Length l = new Length(heightZ, LengthUnit.Millimeters);
-                            part2.setHeight(l);
+                            part.setHeight(l);
                         }
                     }
                     placement.setPart(part);
 
                 }
 
-                if(Comment != -1) {
-                    placement.setComments(as[Comment]);
+                // get optional comment
+                if(commentIndex >= 0) {
+                    placement.setComments(as[commentIndex]);
                 }
 
+
+                // get optional side
                 char c = 0;
-                if (TB != -1) {
-                    c = as[TB].toUpperCase().charAt(0);
+                if (sideIndex >= 0) {
+                    c = as[sideIndex].toUpperCase().charAt(0);
                 }
                 placement.setSide(c == 'B' || c == 'Y' ? Side.Bottom : Side.Top);
-                c = 0;
                 placements.add(placement);
             }
         }
