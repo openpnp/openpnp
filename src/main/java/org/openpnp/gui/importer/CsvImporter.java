@@ -291,8 +291,9 @@ public abstract class CsvImporter {
                 .replace("mm", "")    //$NON-NLS-1$ //$NON-NLS-2$
                 .replace("mil", "")); //$NON-NLS-1$ //$NON-NLS-2$
     	// if units are in mil, convert them to the OpenPnP standard millimeter
-    	if (unitsInMil)
+    	if (unitsInMil) {
     		v = v * 0.0254;
+    	}
     	return v;
     }
     
