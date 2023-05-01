@@ -12,6 +12,7 @@ import java.util.function.Consumer;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
+import org.apache.commons.lang3.SystemUtils;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.model.Configuration;
@@ -265,16 +266,15 @@ public class UiUtils {
                     // No luck, try a more direct & hacky method. 
                     // Adapted from Teocci's https://stackoverflow.com/a/51758886 CC BY-SA 4.0
                     Runtime rt = Runtime.getRuntime();
-                    String os = System.getProperty("os.name").toLowerCase();
-                    if (os.contains("win")) {
+                    if (SystemUtils.IS_OS_WINDOWS) {
                         rt.exec("rundll32 url.dll,FileProtocolHandler " + uri).waitFor();
                     } 
-                    else if (os.contains("mac")) {
+                    else if (SystemUtils.IS_OS_MAC) {
                         String[] cmd = {"open", uri};
                         rt.exec(cmd).waitFor();
                     } 
                     else {
-                        // Default to unix flavor.
+                        // Default to Unix flavor.
                         // See https://portland.freedesktop.org/doc/xdg-open.html
                         String[] cmd = {"xdg-open", uri};
                         rt.exec(cmd).waitFor();
