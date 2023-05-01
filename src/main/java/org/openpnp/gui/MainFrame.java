@@ -76,6 +76,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.undo.UndoManager;
 
+import org.openpnp.Main;
 import org.openpnp.Translations;
 import org.openpnp.gui.components.CameraPanel;
 import org.openpnp.gui.components.ThemeDialog;
@@ -1294,7 +1295,7 @@ public class MainFrame extends JFrame {
     private Action changeLogAction = new AbstractAction(Translations.getString("Menu.Help.ChangeLog")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            UiUtils.browseUri("https://github.com/openpnp/openpnp/blob/develop/CHANGES.md"); //$NON-NLS-1$
+            UiUtils.browseUri(Main.getSourceUri()+"CHANGES.md"); //$NON-NLS-1$
         }
     };
     

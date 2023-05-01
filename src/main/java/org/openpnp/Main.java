@@ -61,7 +61,8 @@ public class Main {
     public static String getSourceUri() {
         String version = Main.class.getPackage().getImplementationVersion();
         if (version == null) {
-            version = "-"; // default branch is selected
+            // Select the test branch, as this is likely a developer running OpenPnP.
+            version = "test"; 
         }
         else {
             // Take the hash.
