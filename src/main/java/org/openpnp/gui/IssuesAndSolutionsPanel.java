@@ -23,7 +23,6 @@ package org.openpnp.gui;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Desktop;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ItemEvent;
@@ -31,7 +30,6 @@ import java.awt.event.ItemListener;
 import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.prefs.Preferences;
@@ -523,15 +521,12 @@ public class IssuesAndSolutionsPanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            UiUtils.messageBoxOnException(() -> { 
-                List<Solutions.Issue> issues = getSelections();
-                for (Solutions.Issue issue : issues) {
-                    if (issue.getUri() != null) {
-                        Desktop dt = Desktop.getDesktop();
-                        dt.browse(new URI(issue.getUri()));;
-                    }
+            List<Solutions.Issue> issues = getSelections();
+            for (Solutions.Issue issue : issues) {
+                if (issue.getUri() != null) {
+                    UiUtils.browseUri(issue.getUri());
                 }
-            });
+            }
         }
     };
 
@@ -544,10 +539,7 @@ public class IssuesAndSolutionsPanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            UiUtils.messageBoxOnException(() -> { 
-                Desktop dt = Desktop.getDesktop();
-                dt.browse(new URI("https://github.com/openpnp/openpnp/wiki/Issues-and-Solutions"));;
-            });
+            UiUtils.browseUri("https://github.com/openpnp/openpnp/wiki/Issues-and-Solutions"); 
         }
     };
 

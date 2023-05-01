@@ -2,7 +2,6 @@ package org.openpnp.gui;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Desktop;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.Robot;
@@ -10,7 +9,6 @@ import java.awt.event.ActionEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FilenameFilter;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -29,10 +27,11 @@ import javax.swing.JProgressBar;
 import javax.swing.JTextArea;
 import javax.swing.JTextPane;
 import javax.swing.UIManager;
+import javax.swing.border.BevelBorder;
 import javax.swing.border.EmptyBorder;
+import javax.swing.border.SoftBevelBorder;
 
 import org.apache.commons.io.FileUtils;
-import org.onvif.ver10.device.wsdl.GetSystemSupportInformation;
 import org.openpnp.Main;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.imgur.Imgur;
@@ -42,6 +41,7 @@ import org.openpnp.model.Board;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Job;
+import org.openpnp.util.UiUtils;
 import org.pmw.tinylog.Logger;
 
 import com.github.kennedyoliveira.pastebin4j.AccountCredentials;
@@ -53,8 +53,6 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
-import javax.swing.border.SoftBevelBorder;
-import javax.swing.border.BevelBorder;
 
 public class SubmitDiagnosticsDialog extends JDialog {
 
@@ -351,9 +349,7 @@ public class SubmitDiagnosticsDialog extends JDialog {
                         return;
                     }
                     Logger.info("Created diagnostics package at: " + url);
-                    if (Desktop.isDesktopSupported()) {
-                        Desktop.getDesktop().browse(new URI(url));
-                    }
+                    UiUtils.browseUri(url);
                     setVisible(false);
                 }
                 catch (Exception e1) {

@@ -1,6 +1,10 @@
 package org.openpnp.util;
 
 import java.awt.Component;
+import java.awt.Desktop;
+import java.awt.Toolkit;
+import java.awt.datatransfer.StringSelection;
+import java.net.URI;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import java.util.function.Consumer;
@@ -8,6 +12,7 @@ import java.util.function.Consumer;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
+import org.apache.commons.lang3.SystemUtils;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.model.Configuration;
@@ -239,6 +244,59 @@ public class UiUtils {
                     if (result == JOptionPane.YES_OPTION) {
                         actionThrunnable.thrun();
                     }
+                }
+            }
+        });
+    }
+
+    /**
+     * Browse to the given uri, trying different methods.
+     * 
+     * @param uri
+     */
+    public static void browseUri(String uri) {
+        UiUtils.messageBoxOnException(() -> {
+            Logger.trace("Browse to "+uri);
+            try {
+                // First try the official desktop method.
+                if (Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
+                    Desktop.getDesktop().browse(new URI(uri));
+                }
+                else {
+                    // No luck, try a more direct & hacky method. 
+                    // Adapted from Teocci's https://stackoverflow.com/a/51758886 CC BY-SA 4.0
+                    Runtime rt = Runtime.getRuntime();
+                    if (SystemUtils.IS_OS_WINDOWS) {
+                        rt.exec("rundll32 url.dll,FileProtocolHandler " + uri).waitFor();
+                    } 
+                    else if (SystemUtils.IS_OS_MAC) {
+                        String[] cmd = {"open", uri};
+                        rt.exec(cmd).waitFor();
+                    } 
+                    else {
+                        // Default to Unix flavor.
+                        // See https://portland.freedesktop.org/doc/xdg-open.html
+                        String[] cmd = {"xdg-open", uri};
+                        rt.exec(cmd).waitFor();
+                    }
+                }
+            }
+            catch (Exception e) {
+                try {
+                    // Still no luck, at least copy the uri to the clipboard.
+                    Toolkit.getDefaultToolkit().getSystemClipboard()
+                    .setContents(new StringSelection(uri), null);
+                    // And tell the user.
+                    MessageBoxes.infoBox("Open Web Browser", 
+                            "<html>"
+                                    + "<p>This platform does not support direct web browsing.</p><br/>"
+                                    + "<p>However, the URI was copied to the clipboard, please paste into your favorite browser's address line.</p><br/>"
+                                    + "<p><a href=\""+uri+"\">"+uri+"</a></p>"
+                                    + "</html>");
+                }
+                catch (Exception e1) {
+                    // Even that failed, nothing left but to lament.
+                    throw new Exception("No system support for URI browsing found. See the log. "+uri, e1);
                 }
             }
         });
