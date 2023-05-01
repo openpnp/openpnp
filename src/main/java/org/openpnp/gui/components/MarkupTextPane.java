@@ -21,7 +21,6 @@
 
 package org.openpnp.gui.components;
 
-import java.awt.Desktop;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.net.URI;
@@ -30,6 +29,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
+import org.openpnp.util.UiUtils;
 import org.openpnp.util.XmlSerialize;
 
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -55,14 +55,9 @@ public class MarkupTextPane extends JScrollPane {
             @Override
             public void mouseClicked(MouseEvent e) {
                 if (uri != null) {
-                    Desktop desk = Desktop.getDesktop();
-                    try {
-                        // HACK: can't truly pinpoint hyperlinks in the text, so this is usually
-                        // just a link to the original online version, where links can be followed up.
-                        desk.browse(uri);
-                    }
-                    catch (Exception e1) {
-                    }
+                    // HACK: can't truly pinpoint hyperlinks in the text, so this is usually
+                    // just a link to the original online version, where links can be followed up.
+                    UiUtils.browseUri(uri.toString());
                 }
             }
         });
