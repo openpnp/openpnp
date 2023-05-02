@@ -1,6 +1,13 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2023-05-02
+
+Named CSV importer renamed to Reference CSV importer
+
+Altium CSV importer added which accepts the default center-x/center-y columns and
+correctly handles the rotation of bottom side parts.
+
 # 2023-03-14
 
 ## Java 17+ Support
