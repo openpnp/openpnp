@@ -1,6 +1,10 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2023-05-03
+
+Behaviour of ActuatorSignaler changed to only call the actuator if the job state has changed.
+
 # 2023-05-02
 
 Named CSV importer renamed to Reference CSV importer

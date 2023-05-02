@@ -19,6 +19,7 @@ public class ActuatorSignaler extends AbstractSignaler {
 
     protected Machine machine;
     protected Actuator actuator;
+    protected AbstractJobProcessor.State lastJobState;	// last job state, used to only call the actuator if the job state has changed
 
     @Attribute(required = false)
     protected String actuatorId;
@@ -64,15 +65,23 @@ public class ActuatorSignaler extends AbstractSignaler {
     @Override
     public void signalJobProcessorState(AbstractJobProcessor.State state) {
         if(actuator != null && jobState != null) {
-            try {
-                if(state == jobState) {
-                    this.actuator.actuate(true);
-                } else {
-                    this.actuator.actuate(false);
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+        	// only call the underlying actuator if the state has changed
+        	// lastJobState is null on start so the first state change is always send to the actuator
+        	if (lastJobState != state) {
+        		// remember this state as last
+        		lastJobState = state;
+        		
+        		// call the actuator
+	            try {
+	                if(state == jobState) {
+	                    this.actuator.actuate(true);
+	                } else {
+	                    this.actuator.actuate(false);
+	                }
+	            } catch (Exception e) {
+	                e.printStackTrace();
+	            }
+        	}
         }
     }
     
