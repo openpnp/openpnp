@@ -49,28 +49,28 @@ public class ActuatorSignaler extends AbstractSignaler {
     // update given actuator to newState
     // only execute an update if the state changes
     private void updateActuatorState(boolean newState) {
-    	if (actuator != null									// make sure an actuator is defined
-    			&& (   actuator.isActuated() == null			// some actuator don't provide isActuated()
-    				|| actuator.isActuated() != newState)) {	// if they do, check if the new state is different
-	        try {
-	        	actuator.actuate(newState);						// then set new state
-	        } catch (Exception e) {
-	            e.printStackTrace();
-	        }
+        if (actuator != null                                 // make sure an actuator is defined
+                && (   actuator.isActuated() == null         // some actuator don't provide isActuated()
+                    || actuator.isActuated() != newState)) { // if they do, check if the new state is different
+            try {
+            	actuator.actuate(newState);                  // then set new state
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
     	}
     }
     
     @Override
     public void signalMachineState(AbstractMachine.State state) {
         if(actuator != null && machineState != null) {
-        	updateActuatorState(state == machineState);
+            updateActuatorState(state == machineState);
         }
     }
 
     @Override
     public void signalJobProcessorState(AbstractJobProcessor.State state) {
         if(actuator != null && jobState != null) {
-        	updateActuatorState(state == jobState);
+            updateActuatorState(state == jobState);
         }
     }
     
