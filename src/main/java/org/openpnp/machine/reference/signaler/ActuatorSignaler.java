@@ -7,7 +7,6 @@ import org.openpnp.model.Configuration;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.base.AbstractJobProcessor;
-import org.openpnp.spi.base.AbstractMachine;
 import org.openpnp.spi.base.AbstractSignaler;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.core.Persist;
@@ -24,10 +23,6 @@ public class ActuatorSignaler extends AbstractSignaler {
 
     @Attribute(required = false)
     protected AbstractJobProcessor.State jobState;
-
-    @Attribute(required = false)
-    @Deprecated // not used anymore, but in place because the current xml parser can not handle extra data
-    protected AbstractMachine.State machineState;
 
     public ActuatorSignaler() {
         Configuration.get().addListener(new ConfigurationListener.Adapter() {

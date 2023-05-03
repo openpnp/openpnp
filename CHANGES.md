@@ -3,6 +3,11 @@ a complete change list, only those that may directly interest or affect users.
 
 # 2023-05-03
 
+Removed state from AbstractMachine. This might cause problems loading machine.xml in
+the unlikely event that you configured a ActuatorSignaler with a non empty machine state.
+To fix this, either remove the binding to machine state be setting it to empty before 
+the upgrade or remove "MachineState" manually from the signalers section of your machine.xml.
+
 Behaviour of ActuatorSignaler changed to only call the actuator if the job state has changed.
 
 # 2023-05-02

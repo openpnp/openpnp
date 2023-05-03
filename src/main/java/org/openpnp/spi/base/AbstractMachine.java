@@ -1,7 +1,6 @@
 package org.openpnp.spi.base;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -46,7 +45,6 @@ import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.ElementMap;
 import org.simpleframework.xml.core.Commit;
 
-import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.FutureCallback;
 
 public abstract class AbstractMachine extends AbstractModelObject implements Machine {
@@ -59,10 +57,6 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
      * 1.0: Initial revision. 1.1: Added jobProcessors Map and deprecated JobProcesor and
      * JobPlanner.
      */
-
-    public enum State {
-        ERROR
-    }
 
     @ElementList(required = false)
     protected IdentifiableList<Axis> axes = new IdentifiableList<>();
