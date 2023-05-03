@@ -9,7 +9,6 @@ import org.openpnp.machine.neoden4.wizards.Neoden4SignalerConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Driver;
 import org.openpnp.spi.base.AbstractJobProcessor;
-import org.openpnp.spi.base.AbstractMachine;
 import org.openpnp.spi.base.AbstractSignaler;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
@@ -21,8 +20,6 @@ public class Neoden4Signaler extends AbstractSignaler implements Runnable {
 
     @Attribute
     protected boolean enableFinishedSound;
-
-    private ClassLoader classLoader = getClass().getClassLoader();
 
 	private boolean playError = false;
 	private boolean playSuccess = false;
@@ -112,16 +109,7 @@ public class Neoden4Signaler extends AbstractSignaler implements Runnable {
 		}
 	}
 
-    @Override
-    public void signalMachineState(AbstractMachine.State state) {
-        switch (state) {
-            case ERROR: {
-                playError = true;
-                break;
-            }
-        }
-    }
-
+    @SuppressWarnings("incomplete-switch")
     @Override
     public void signalJobProcessorState(AbstractJobProcessor.State state) {
         switch (state) {
