@@ -33,9 +33,6 @@ public abstract class AbstractSignaler extends AbstractModelObject implements Si
     }
 
     @Override
-    public void signalMachineState(AbstractMachine.State state) {}
-
-    @Override
     public void signalJobProcessorState(AbstractJobProcessor.State state) {}
 
     @Override
@@ -84,6 +81,8 @@ public abstract class AbstractSignaler extends AbstractModelObject implements Si
     }
     
     public Action deleteAction = new AbstractAction("Delete Signaler") {
+        private static final long serialVersionUID = 1L;
+
         {
             putValue(SMALL_ICON, Icons.delete);
             putValue(NAME, "Delete Signaler");
