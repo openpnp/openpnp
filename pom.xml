@@ -183,7 +183,7 @@
 		<dependency>
 			<groupId>org.openpnp</groupId>
 			<artifactId>openpnp-capture-java</artifactId>
-			<version>0.0.27-0</version>
+			<version>0.0.24</version>
 		</dependency>
 		<dependency>
 		    <groupId>javax.xml.bind</groupId>
