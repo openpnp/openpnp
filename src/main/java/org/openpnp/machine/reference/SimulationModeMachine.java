@@ -114,6 +114,9 @@ public class SimulationModeMachine extends ReferenceMachine {
     @Attribute(required = false)
     private SimulationMode simulationMode = SimulationMode.Off;
 
+    @Attribute(required = false)
+    private boolean replacingDrivers = true;
+
     /**
      * The simulated non-squareness is applied to what the simulated cameras see.
      * Works on the ImageCamera.
@@ -199,6 +202,14 @@ public class SimulationModeMachine extends ReferenceMachine {
             }
         }
         this.simulationMode = simulationMode;
+    }
+
+    public boolean isReplacingDrivers() {
+        return replacingDrivers;
+    }
+
+    public void setReplacingDrivers(boolean replacingDrivers) {
+        this.replacingDrivers = replacingDrivers;
     }
 
     public double getSimulatedNonSquarenessFactor() {

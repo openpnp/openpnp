@@ -65,6 +65,7 @@ public class SimulationModeMachineConfigurationWizard extends AbstractConfigurat
     private JTextField simulatedCameraLag;
     private JTextField machineTableZ;
     private JTextField simulatedVibrationDuration;
+    private JCheckBox replacingDrivers;
 
     public SimulationModeMachineConfigurationWizard(SimulationModeMachine machine) {
         this.machine = machine;
@@ -80,6 +81,8 @@ public class SimulationModeMachineConfigurationWizard extends AbstractConfigurat
                 ColumnSpec.decode("max(50dlu;default)"),},
             new RowSpec[] {
                 FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
 
         JLabel lblSimulationMode = new JLabel("Simulation Mode");
@@ -87,6 +90,13 @@ public class SimulationModeMachineConfigurationWizard extends AbstractConfigurat
 
         simulationMode = new JComboBox(SimulationMode.values());
         panelGeneral.add(simulationMode, "4, 2, fill, default");
+        
+        JLabel lblReplaceDrivers = new JLabel("Replace Drivers?");
+        lblReplaceDrivers.setToolTipText("<html>\nReplace driver connections with a built-in GcodeServer, simulating the real driver.<br/>\nWill only become effective when you disable/enable the machine.\n</html>");
+        panelGeneral.add(lblReplaceDrivers, "2, 4, right, default");
+        
+        replacingDrivers = new JCheckBox("");
+        panelGeneral.add(replacingDrivers, "4, 4");
 
         JPanel panelLocations = new JPanel();
         panelLocations.setBorder(new TitledBorder(null, "Simulated Imperfections", TitledBorder.LEADING,
@@ -263,6 +273,7 @@ public class SimulationModeMachineConfigurationWizard extends AbstractConfigurat
         LengthConverter lengthConverter = new LengthConverter();
 
         addWrappedBinding(machine, "simulationMode", simulationMode, "selectedItem");
+        addWrappedBinding(machine, "replacingDrivers", replacingDrivers, "selected");
 
         addWrappedBinding(machine, "simulatedNonSquarenessFactor", simulatedNonSquarenessFactor, "text", doubleConverter);
 
