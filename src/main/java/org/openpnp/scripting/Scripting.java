@@ -19,6 +19,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.pool2.impl.DefaultPooledObjectInfo;
 import org.apache.commons.pool2.impl.GenericKeyedObjectPool;
+import org.openjdk.nashorn.api.scripting.NashornScriptEngineFactory;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.model.Configuration;
 import org.pmw.tinylog.Logger;
@@ -70,13 +71,20 @@ public class Scripting {
         // Central yet: https://github.com/beanshell/beanshell/issues/603.
         ScriptEngineFactory bshFactory = new BshScriptEngineFactory();
         manager.registerEngineName(bshFactory.getNames()
-                                             .get(0),
+                .get(0),
                 bshFactory);
         extensionToEngineNameMap.put("bsh", bshFactory.getNames()
-                                                      .get(0));
+                .get(0));
         extensionToEngineNameMap.put("java", bshFactory.getNames()
-                                                       .get(0));
+                .get(0));
 
+        // Hack to make sure Nashorn is there.
+        ScriptEngineFactory jsFactory = new NashornScriptEngineFactory();
+        manager.registerEngineName(jsFactory.getNames()
+                .get(0),
+                jsFactory);
+        extensionToEngineNameMap.put("js", jsFactory.getNames()
+                .get(0));
 
         // Create the scripts directory if it doesn't exist.
         if (!scriptsDirectory.exists()) {
