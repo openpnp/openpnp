@@ -380,7 +380,7 @@ public class SimulationModeMachine extends ReferenceMachine {
                                             && (location.getLinearDistanceTo(machine.getDiscardLocation()) > 4.0); 
                                     if ((Boolean)value == true) {
                                         // Pick
-                                        if (checkPnP) {
+                                        if (checkPnP && !nozzle.getPart().getId().equals("TEST-OBJECT")) {
                                             if (!((ImageCamera) camera).isPickLocation(location, nozzle)) {
                                                 throw new Exception("Nozzle "+nozzle.getName()+" part "+nozzle.getPart().getId()
                                                         +" pick location not recognized.");
@@ -393,7 +393,7 @@ public class SimulationModeMachine extends ReferenceMachine {
                                     }
                                     else {
                                         // Place
-                                        if (checkPnP) {
+                                        if (checkPnP && !nozzle.getPart().getId().equals("TEST-OBJECT")) {
                                             rotationModeOffsetAtPick.remove(nozzle);
                                             if (!((ImageCamera) camera).isPlaceLocation(location, nozzle)) {
                                                 throw new Exception("Nozzle "+nozzle.getName()+" part "+nozzle.getPart().getId()

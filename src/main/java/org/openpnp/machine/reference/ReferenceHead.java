@@ -79,6 +79,9 @@ public class ReferenceHead extends AbstractHead {
                 // Homing failed
                 throw new Exception("Visual homing failed");
             }
+            // The optimized fiducial locator no longer positions to the final detected location, so for homing, 
+            // we must.
+            hm.moveTo(homingLocation);
 
             if (apply) {
                 AxesLocation axesHomingLocation;
