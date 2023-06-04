@@ -76,9 +76,10 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
 
     @Attribute(required = false)
     protected boolean enabledAveraging = false;
-    
+
+    @Deprecated
     @Attribute(required = false)
-    protected int repeatFiducialRecognition = 3;
+    protected Integer repeatFiducialRecognition = null;
 
     @Element(required = false)
     protected Length maxDistance = new Length(4, LengthUnit.Millimeters);
@@ -393,6 +394,7 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
 
     public void preparePipeline(CvPipeline pipeline, Map<String, Object> pipelineParameterAssignments, Camera camera,
             PartSettingsHolder partSettingsHolder, Location nominalLocation) throws Exception {
+        pipeline.resetReusedPipeline();
         org.openpnp.model.Package pkg = null;
         Footprint footprint = null;
         if (partSettingsHolder instanceof Part) {
@@ -438,70 +440,57 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
     public Location getFiducialLocation(Location nominalLocation, PartSettingsHolder partSettingsHolder) throws Exception {
         Location location = nominalLocation;
         Camera camera = getVisionCamera();
-
-        int repeatFiducialRecognition = 3;
-        if ( this.repeatFiducialRecognition > 3 ) {
-            repeatFiducialRecognition = this.repeatFiducialRecognition;
-        }
+        FiducialVisionSettings visionSettings = getInheritedVisionSettings(partSettingsHolder);
 
         Logger.debug("Looking for {} at {}", partSettingsHolder.getShortName(), location);
-        MovableUtils.moveToLocationAtSafeZ(camera, location);
+        boolean parallaxOperation = visionSettings.getParallaxDiameter().getValue() != 0;
+        Location parallaxDisplacement = new Location(visionSettings.getParallaxDiameter().getUnits(), visionSettings.getParallaxDiameter().getValue(), 0, 0, 0)
+                .multiply(0.5) // Diameter -> Radius
+                .rotateXy(visionSettings.getParallaxAngle());
+        if (camera.getLocation().getLinearLengthTo(location.add(parallaxDisplacement))
+                .compareTo(camera.getLocation().getLinearLengthTo(location.subtract(parallaxDisplacement))) > 0) {
+            // Go to the closer view-point first.
+            parallaxDisplacement = parallaxDisplacement.multiply(-1);
+        }
+        Location viewPointLocation = location.add(parallaxDisplacement);
+        MovableUtils.moveToLocationAtSafeZ(camera, viewPointLocation);
 
         List<Location> matchedLocations = new ArrayList<Location>();
 
         try(CvPipeline pipeline = getFiducialPipeline(camera, partSettingsHolder, nominalLocation)) {
+            int repeatFiducialRecognition = visionSettings.getMaxVisionPasses();
             for (int i = 0; i < repeatFiducialRecognition; i++) {
-                // Perform vision operation
-                pipeline.process();
-
-                // Get the results
-                List<KeyPoint> keypoints = pipeline.getExpectedResult(VisionUtils.PIPELINE_RESULTS_NAME)
-                        .getExpectedListModel(KeyPoint.class, 
-                                new Exception(partSettingsHolder.getId()+" no matches found."));
-
-                // Convert to Locations
-                List<Location> locations = new ArrayList<Location>();
-                for (KeyPoint keypoint : keypoints) {
-                    locations.add(VisionUtils.getPixelLocation(camera, keypoint.pt.x, keypoint.pt.y));
+                Location newLocation = detectFiducialFromViewpoint(camera, location, pipeline,
+                        partSettingsHolder);
+                if (parallaxOperation) {
+                    Location viewPointLocation2 = location.subtract(parallaxDisplacement);
+                    camera.moveTo(viewPointLocation2);
+                    Location newLocation2 = detectFiducialFromViewpoint(camera, location, pipeline,
+                            partSettingsHolder);
+                    // Mid-point is the detected location, canceling out any errors.
+                    newLocation = newLocation.add(newLocation2).multiply(0.5);
+                    // Next iteration will go to the second point first.
+                    parallaxDisplacement = parallaxDisplacement.multiply(-1);
+                }
+                Length offset = location.getLinearLengthTo(newLocation);
+                location = newLocation;
+                if (offset.compareTo(visionSettings.getMaxLinearOffset()) < 0) {
+                    // We already reached sufficient accuracy.
+                    Logger.trace("{} less than max. linear offset {} < {}, locator satisfied.", partSettingsHolder.getId(), offset, visionSettings.getMaxLinearOffset());
+                    break;
                 }
 
-                // Sort by distance from center.
-                Collections.sort(locations, new Comparator<Location>() {
-                    @Override
-                    public int compare(Location o1, Location o2) {
-                        double d1 = o1.getLinearDistanceTo(camera.getLocation());
-                        double d2 = o2.getLinearDistanceTo(camera.getLocation());
-                        return Double.compare(d1, d2);
-                    }
-                });
+                // Move to the next location.
+                viewPointLocation = location.add(parallaxDisplacement);
+                camera.moveTo(viewPointLocation);
 
-                // And use the closest result
-                location = locations.get(0);
-
-                MainFrame frame = MainFrame.get(); 
-                if (frame != null) {
-                    CameraView cameraView = frame.getCameraViews().getCameraView(camera);
-                    if (cameraView != null) {    
-                        LengthConverter lengthConverter = new LengthConverter();
-                        cameraView.showFilteredImage(OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), 
-                                lengthConverter.convertForward(location.getLengthX())+", "
-                                        +lengthConverter.convertForward(location.getLengthY())+" "
-                                        +location.getUnits().getShortName(),
-                                1500);
-                    }
-                }
-
-                Logger.debug("{} located at {}", partSettingsHolder.getId(), location);
-                // Move to where we actually found the fid
-                camera.moveTo(location);
-    
                 if (i > 0) {
-                	//to average, keep a list of all matches except the first, since its probably most off
-                	matchedLocations.add(location);
+                    //to average, keep a list of all matches except the first, since its probably most off
+                    matchedLocations.add(location);
                 }
             }
         }
-        
+
         if (this.enabledAveraging && matchedLocations.size() >= 2) {
             // the arithmetic average is calculated if user wishes to do so and there were at least
             // 2 matches
@@ -518,15 +507,67 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
                     sumY / matchedLocations.size(), null, null);
 
             Logger.debug("{} averaged location is at {}", partSettingsHolder.getId(), location);
-
-            camera.moveTo(location);
         }
         if (location.convertToUnits(maxDistance.getUnits()).getLinearDistanceTo(nominalLocation) > maxDistance.getValue()) {
             throw new Exception("Fiducial "+partSettingsHolder.getShortName()+" detected too far away.");
         }
         return location;
     }
-    
+
+    private Location detectFiducialFromViewpoint(Camera camera, Location location,
+            CvPipeline pipeline, PartSettingsHolder partSettingsHolder) throws Exception {
+        // Perform vision operation
+        try {
+            pipeline.setProperty("fiducial.center", location);
+            pipeline.setProperty("MaskCircle.center", location);
+            pipeline.process();
+
+            // Get the results
+            List<KeyPoint> keypoints = pipeline.getExpectedResult(VisionUtils.PIPELINE_RESULTS_NAME)
+                    .getExpectedListModel(KeyPoint.class,
+                            new Exception(partSettingsHolder.getId()+" no matches found."));
+
+            // Convert to Locations
+            List<Location> locations = new ArrayList<Location>();
+            for (KeyPoint keypoint : keypoints) {
+                locations.add(VisionUtils.getPixelLocation(camera, keypoint.pt.x, keypoint.pt.y));
+            }
+
+            // Sort by distance from center.
+            Collections.sort(locations, new Comparator<Location>() {
+                @Override
+                public int compare(Location o1, Location o2) {
+                    double d1 = o1.getLinearDistanceTo(location);
+                    double d2 = o2.getLinearDistanceTo(location);
+                    return Double.compare(d1, d2);
+                }
+            });
+
+            // And use the closest result
+            Location newLocation = locations.get(0);
+
+            MainFrame frame = MainFrame.get();
+            if (frame != null) {
+                CameraView cameraView = frame.getCameraViews().getCameraView(camera);
+                if (cameraView != null) {
+                    LengthConverter lengthConverter = new LengthConverter();
+                    cameraView.showFilteredImage(OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()),
+                            lengthConverter.convertForward(newLocation.getLengthX())+", "
+                                    +lengthConverter.convertForward(newLocation.getLengthY())+" "
+                                    +newLocation.getUnits().getShortName(),
+                                    1500);
+                }
+            }
+
+            Logger.debug("{} located at {}", partSettingsHolder.getId(), newLocation);
+            return newLocation;
+        }
+        finally {
+            pipeline.setProperty("fiducial.center", null);
+            pipeline.setProperty("MaskCircle.center", null);
+        }
+    }
+
     private static IdentifiableList<Placement> getFiducials(PlacementsHolderLocation<?> placementsHolderLocation) {
         PlacementsHolder<?> placementsHolder = placementsHolderLocation.getPlacementsHolder();
         IdentifiableList<Placement> placements = new IdentifiableList<>(placementsHolder.getPlacements());
@@ -555,14 +596,6 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
 
     public void setEnabledAveraging(boolean enabledAveraging) {
         this.enabledAveraging = enabledAveraging;
-    }
-
-    public int getRepeatFiducialRecognition() {
-    	return this.repeatFiducialRecognition;
-    }
-    
-    public void setRepeatFiducialRecognition(int repeatFiducialRecognition) {
-        this.repeatFiducialRecognition = repeatFiducialRecognition;
     }
 
     public Length getMaxDistance() {

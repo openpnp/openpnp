@@ -145,6 +145,14 @@ public class BottomVisionSettings extends AbstractVisionSettings {
         Configuration.get().fireVisionSettingsChanged();
     }
 
+    @Override
+    public void resetToDefault() {
+        // Reset to stock settings.
+        BottomVisionSettings stockVisionSettings = (BottomVisionSettings) Configuration.get()
+                .getVisionSettings(AbstractVisionSettings.STOCK_BOTTOM_ID);
+        setValues(stockVisionSettings);
+    }
+
     public Location getPartCheckSize(Part part, boolean addTolerance) {
         Footprint footprint = part.getPackage().getFootprint();
         double checkWidth = 0.0;

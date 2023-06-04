@@ -222,9 +222,7 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
                     ReferenceBottomVision bottomVision = ReferenceBottomVision.getDefault();
                     if (bottomVision.getBottomVisionSettings() == visionSettings) {
                         // Already the default. Set stock.
-                        BottomVisionSettings stockVisionSettings = (BottomVisionSettings) Configuration.get()
-                                .getVisionSettings(AbstractVisionSettings.STOCK_BOTTOM_ID);
-                        visionSettings.setValues(stockVisionSettings);
+                        visionSettings.resetToDefault();
                     }
                     else {
                         visionSettings.setValues(bottomVision.getBottomVisionSettings());

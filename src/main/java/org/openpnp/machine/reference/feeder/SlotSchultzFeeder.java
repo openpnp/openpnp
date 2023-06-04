@@ -330,20 +330,10 @@ public class SlotSchultzFeeder extends SchultzFeeder {
         }
     }
 
-	public Location getFiducialLocation(Location location, String part) {
-		Location fiducialLocation = null;
-		Part fiducialPart = Configuration.get().getPart(part);
-		if (fiducialPart != null) {
-	        try {
-				fiducialLocation = Configuration.get().getMachine().getFiducialLocator()
-				.getHomeFiducialLocation(location, fiducialPart);
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				//e.printStackTrace();
-			}
-		}
-		
-        return fiducialLocation;
-	}
+    public Location getFiducialLocation(Location location, String part) throws Exception {
+        Part fiducialPart = Configuration.get().getPart(part);
+        return Configuration.get().getMachine().getFiducialLocator()
+                    .getHomeFiducialLocation(location, fiducialPart);
+    }
 
 }

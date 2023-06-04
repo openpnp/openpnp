@@ -193,8 +193,18 @@ public class VisionSettingsPanel extends JPanel implements WizardContainer {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            AbstractVisionSettings visionSettings = new BottomVisionSettings();
-            visionSettings.setName(BottomVisionSettings.class.getSimpleName());
+            final VisionTypeFilter filterType = (VisionTypeFilter) visionTypeFilter.getSelectedItem();
+            AbstractVisionSettings visionSettings = null;
+            switch (filterType) {
+                case BottomVision:
+                    visionSettings = new BottomVisionSettings();
+                    break;
+                case FiducialVision:
+                    visionSettings = new FiducialVisionSettings();
+                    break;
+            }
+            visionSettings.resetToDefault();
+            visionSettings.setName(visionSettings.getClass().getSimpleName());
             Configuration.get().addVisionSettings(visionSettings);
             Helpers.selectObjectTableRow(table, visionSettings);
         }
