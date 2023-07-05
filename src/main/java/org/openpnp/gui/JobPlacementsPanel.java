@@ -118,6 +118,7 @@ public class JobPlacementsPanel extends JPanel {
     private ActionGroup editFeederActionGroup;
     private Preferences prefs = Preferences.userNodeForPackage(JobPlacementsPanel.class);
     private Configuration configuration;
+    private boolean editDefinition;
 
 
     private static Color typeColorFiducial = new Color(157, 188, 255);
@@ -491,9 +492,9 @@ public class JobPlacementsPanel extends JPanel {
                     boardOrPanelLocation.getParent() == jobPanel.getJob().getRootPanelLocation();
             singleInstance = boardOrPanelLocation != null && 
                     1 == jobPanel.getJob().instanceCount(boardOrPanelLocation.getPlacementsHolder());
-            tableModel.setPlacementsHolderLocation(boardOrPanelLocation, topLevel && singleInstance && 
-                    (boardOrPanelLocation instanceof BoardLocation));
-            topLevelSingleInstanceActionGroup.setEnabled(topLevel && singleInstance && (boardOrPanelLocation instanceof BoardLocation));
+            editDefinition = topLevel && singleInstance && (boardOrPanelLocation instanceof BoardLocation);
+            tableModel.setPlacementsHolderLocation(boardOrPanelLocation, editDefinition);
+            topLevelSingleInstanceActionGroup.setEnabled(editDefinition);
 
             updateRowFilter();
         }
@@ -769,7 +770,12 @@ public class JobPlacementsPanel extends JPanel {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             for (Placement placement : getSelections()) {
-                placement.setType(type);
+                if (editDefinition) {
+                    placement.getDefinition().setType(type);
+                }
+                else {
+                    placement.setType(type);
+                }
                 tableModel.fireTableDataChanged();
                 updateActivePlacements();
             }
@@ -806,7 +812,12 @@ public class JobPlacementsPanel extends JPanel {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             for (Placement placement : getSelections()) {
-                placement.setSide(side);
+                if (editDefinition) {
+                    placement.getDefinition().setSide(side);
+                }
+                else {
+                    placement.setSide(side);
+                }
                 tableModel.fireTableCellUpdated(placement, 
                         Translations.getString("PlacementsTableModel.ColumnName.Side")); //$NON-NLS-1$
                 updateActivePlacements();
@@ -844,8 +855,12 @@ public class JobPlacementsPanel extends JPanel {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             for (Placement placement : getSelections()) {
-                Object oldValue = placement.getErrorHandling();
-                placement.setErrorHandling(errorHandling);
+                if (editDefinition) {
+                    placement.getDefinition().setErrorHandling(errorHandling);
+                }
+                else {
+                    placement.setErrorHandling(errorHandling);
+                }
                 tableModel.fireTableCellUpdated(placement, 
                         Translations.getString("PlacementsTableModel.ColumnName.ErrorHandling")); //$NON-NLS-1$
                 updateActivePlacements();
@@ -915,8 +930,12 @@ public class JobPlacementsPanel extends JPanel {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             for (Placement placement : getSelections()) {
-                Object oldValue = placement.isEnabled();
-                placement.setEnabled(enabled);
+                if (editDefinition) {
+                    placement.getDefinition().setEnabled(enabled);
+                }
+                else {
+                    placement.setEnabled(enabled);
+                }
                 tableModel.fireTableCellUpdated(placement,
                         Translations.getString("PlacementsTableModel.ColumnName.Enabled")); //$NON-NLS-1$
                 updateActivePlacements();
