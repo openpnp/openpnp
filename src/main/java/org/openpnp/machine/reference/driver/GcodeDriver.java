@@ -1350,7 +1350,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
                 }
                 catch (IOException e) {
                     if (disconnectRequested) {
-                        Logger.trace("Read error while disconnecting (normal)");
+                        Logger.trace("Read error while disconnecting (expected)");
                         return;
                     }
                     else {
@@ -1420,10 +1420,10 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
             }
             catch (IllegalArgumentException e) {
                 // Axis is not present in pattern. That's a warning, but might not be supported by controller, so we let it go. 
-                Logger.warn("Axis {} letter {} missing in POSITION_REPORT_REGEX groups.", axis.getName(), axis.getLetter());
+                Logger.warn("{}: Axis {} letter {} missing in POSITION_REPORT_REGEX groups.", getName(), axis.getName(), axis.getLetter());
             }
             catch (Exception e) {
-                Logger.warn("Error processing position report for axis {}: {}", axis.getName(), e);
+                Logger.warn("{}: Error processing position report for axis {}: {}", getName(), axis.getName(), e);
             }
         }
         // Store the latest momentary position.
@@ -1681,15 +1681,15 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
                 detectFirmwareSequence();
                 return null;
             }, 
-                    false, 100, 1000);
+                    false, 2000, 2000);
         }
         else {
             // If the machine is not enabled, use an ad hoc connection.
             boolean wasConnected = connected;
-            if (!wasConnected) {
-                connect();
-            }
             try {
+                if (!wasConnected) {
+                    connect();
+                }
                 detectFirmwareSequence();
             }
             finally {
