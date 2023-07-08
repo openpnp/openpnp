@@ -1334,10 +1334,14 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     protected class ReaderThread extends Thread {
         @Override
         public void run() {
+            // Get the copies that are valid for this thread.
+            LinkedBlockingQueue<Line> responseQueue = GcodeDriver.this.responseQueue;
+            ReferenceDriverCommunications comms = getCommunications();
+            String connectionName = comms.getConnectionName();
             while (!disconnectRequested) {
                 String receivedLine;
                 try {
-                    receivedLine = getCommunications().readLine();
+                    receivedLine = comms.readLine();
                     if (receivedLine == null) {
                         // Line read failed eg. due to socket closure
                         Logger.error("Failed to read gcode response");
@@ -1359,13 +1363,13 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
                     }
                 }
                 Line line = new Line(receivedLine);
-                Logger.trace("[{}] << {}", getCommunications().getConnectionName(), line);
+                Logger.trace("[{}] << {}", connectionName, line);
                 // Process the response.
                 processResponse(line);
                 // Add to the responseQueue for further processing by the caller.
                 responseQueue.offer(line);
             }
-            Logger.trace("[{}] disconnectRequested, bye-bye.", getCommunications().getConnectionName());
+            Logger.trace("[{}] disconnectRequested, bye-bye.", connectionName);
             if (connected) {
                 connected = false;
             }
