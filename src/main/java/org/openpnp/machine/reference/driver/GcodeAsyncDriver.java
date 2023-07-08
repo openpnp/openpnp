@@ -229,10 +229,12 @@ public class GcodeAsyncDriver extends GcodeDriver {
 
         @Override
         public void run() {
-            // Get the copy that is valid for this thread. 
+            // Get the copies that are valid for this thread.
             LinkedBlockingQueue<CommandLine> commandQueue = GcodeAsyncDriver.this.commandQueue;
-            CommandLine lastCommand = null;
+            ReferenceDriverCommunications comms = getCommunications();
+            String connectionName = comms.getConnectionName();
 
+            CommandLine lastCommand = null;
             while (!disconnectRequested) {
                 CommandLine command;
                 try {
@@ -260,8 +262,8 @@ public class GcodeAsyncDriver extends GcodeDriver {
                         // Set up the wanted confirmations for next time.
                         lastCommand = command;
                         receivedConfirmationsQueue.clear();
-                        getCommunications().writeLine(command.line);
-                        Logger.trace("[{}] >> {}", getCommunications().getConnectionName(), command);
+                        comms.writeLine(command.line);
+                        Logger.trace("[{}] >> {}", connectionName, command);
                     }
                     else {
                         confirmationComplete = true;
@@ -272,7 +274,7 @@ public class GcodeAsyncDriver extends GcodeDriver {
                     }
                 }
                 catch (IOException e) {
-                    Logger.error("Write error on {}: {}", getCommunications().getConnectionName(), e);
+                    Logger.error("Write error on {}: {}", connectionName, e);
                     return;
                 }
                 catch (Exception e) {
@@ -282,7 +284,7 @@ public class GcodeAsyncDriver extends GcodeDriver {
                     //Logger.error("[{}] {}", getCommunications().getConnectionName(), e);
                 }
             }
-            Logger.trace("[{}] disconnectRequested, bye-bye.", getCommunications().getConnectionName());
+            Logger.trace("[{}] disconnectRequested, bye-bye.", connectionName);
         }
     }
 

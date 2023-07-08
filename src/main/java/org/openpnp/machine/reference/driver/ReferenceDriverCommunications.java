@@ -21,10 +21,13 @@ package org.openpnp.machine.reference.driver;
 
 import java.io.IOException;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.jfree.chart.util.ArrayUtils;
 import org.openpnp.util.Collect;
 import org.openpnp.util.GcodeServer;
+import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 
 /**
@@ -61,6 +64,8 @@ public abstract class ReferenceDriverCommunications {
     abstract protected void writeBytes(byte[] data) throws IOException;
 
     abstract public int read() throws TimeoutException, IOException;
+    
+    public static AtomicInteger readsTimedOut = new AtomicInteger();
 
     /**
      * Read a line from the input stream. Blocks for the default timeout. If the read times out a
@@ -76,7 +81,12 @@ public abstract class ReferenceDriverCommunications {
 
     public void writeLine(String data) throws IOException {
         byte [] line = Collect.concat(data.getBytes(), getLineEndingType().getLineEnding().getBytes());
+        int readsTimedOut = ReferenceDriverCommunications.readsTimedOut.get();
         writeBytes(line);
+        if (ReferenceDriverCommunications.readsTimedOut.get() > readsTimedOut) {
+            Logger.warn("{} read timeout {} during write may (or may not) indicate internal serial read/write/full-duplex deadlock", 
+                    getConnectionName(), readsTimedOut+1);
+        }
     }
 
     /**
@@ -91,7 +101,15 @@ public abstract class ReferenceDriverCommunications {
     protected String readUntil(String characters) throws TimeoutException, IOException {
         StringBuffer line = new StringBuffer();
         while (true) {
-            int ch = read();
+            int ch = -1;
+            try {
+                ch = read();
+            }
+            catch (TimeoutException e) {
+                // In case an implementation has a read timeout, we must not stop reading.
+                ReferenceDriverCommunications.readsTimedOut.incrementAndGet();
+                continue;
+            }
             if (ch == -1) {
                 return null;
             }
