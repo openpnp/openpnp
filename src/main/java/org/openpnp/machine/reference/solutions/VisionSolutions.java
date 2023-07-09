@@ -1433,8 +1433,8 @@ public class VisionSolutions implements Solutions.Subject {
             int minDiameter = (int) (expectedOffsetAndDiameter != null ? 
                     expectedDiameter/fiducialMargin - 1
                     : 7);
-            int searchDiameter = (int) (Math.max(subjectAreaDiameter/2, maxDiameter*fiducialMargin)
-                    + Math.min(image.cols(), image.rows())*extraSearchRange);
+            int searchDiameter = (int) (Math.max(subjectAreaDiameter, maxDiameter*fiducialMargin*2)
+                    + Math.min(image.cols(), image.rows())*extraSearchRange*2);
             int expectedX = bufferedImage.getWidth()/2 + (int) (expectedOffsetAndDiameter != null ? expectedOffsetAndDiameter.getX() : 0);
             int expectedY = bufferedImage.getHeight()/2 + (int) (expectedOffsetAndDiameter != null ? expectedOffsetAndDiameter.getY() : 0);
 

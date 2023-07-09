@@ -178,8 +178,6 @@ public class SimulatedUpCamera extends ReferenceCamera {
         LengthUnit units = LengthUnit.Millimeters;
         Location unitsPerPixel = getSimulatedUnitsPerPixel().convertToUnits(units);
 
-        boolean hasDrawn;
-
         // Draw the nozzle
         // Get nozzle offsets from camera
         Location offsets = l.subtractWithRotation(getSimulatedLocation());
