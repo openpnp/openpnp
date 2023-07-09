@@ -363,6 +363,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
 
     public synchronized void connect() throws Exception {
         disconnectRequested = false;
+        getCommunications().setDriverName(getName());
         getCommunications().connect();
         connected = false;
 
@@ -1344,7 +1345,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
                     receivedLine = comms.readLine();
                     if (receivedLine == null) {
                         // Line read failed eg. due to socket closure
-                        Logger.error("Failed to read gcode response");
+                        Logger.error("[{}] Failed to read gcode response", connectionName);
                         return;
                     }
                     receivedLine = receivedLine.trim();
@@ -1354,11 +1355,11 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
                 }
                 catch (IOException e) {
                     if (disconnectRequested) {
-                        Logger.trace("Read error while disconnecting (expected)");
+                        Logger.trace("[{}] Read error while disconnecting (expected)", connectionName);
                         return;
                     }
                     else {
-                        Logger.error(e, "Read error");
+                        Logger.error(e, "[{}] Read error", connectionName);
                         return;
                     }
                 }

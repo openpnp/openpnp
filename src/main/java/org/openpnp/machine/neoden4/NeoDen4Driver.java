@@ -222,6 +222,7 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
     public synchronized void connect() throws Exception {
         createMachineObjects();
 
+        getCommunications().setDriverName(getName());
         getCommunications().connect();
 
         connected = false;

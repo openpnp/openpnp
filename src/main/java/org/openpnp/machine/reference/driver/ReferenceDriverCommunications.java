@@ -25,6 +25,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.jfree.chart.util.ArrayUtils;
+import org.openpnp.model.Named;
 import org.openpnp.util.Collect;
 import org.openpnp.util.GcodeServer;
 import org.pmw.tinylog.Logger;
@@ -56,16 +57,22 @@ public abstract class ReferenceDriverCommunications {
     @Attribute(required=false)
     protected LineEndingType lineEndingType = LineEndingType.LF;
 
+    protected String driverName;
+
     abstract public void connect() throws Exception;
     abstract public void disconnect() throws Exception;
 
+    /**
+     * Set the driver name, so the connection can be easily associated with the driver.
+     */
+    public void setDriverName(String driverName) {
+        this.driverName = driverName;
+    }
     abstract public String getConnectionName();
 
     abstract protected void writeBytes(byte[] data) throws IOException;
 
     abstract public int read() throws TimeoutException, IOException;
-    
-    public static AtomicInteger readsTimedOut = new AtomicInteger();
 
     /**
      * Read a line from the input stream. Blocks for the default timeout. If the read times out a
@@ -81,12 +88,7 @@ public abstract class ReferenceDriverCommunications {
 
     public void writeLine(String data) throws IOException {
         byte [] line = Collect.concat(data.getBytes(), getLineEndingType().getLineEnding().getBytes());
-        int readsTimedOut = ReferenceDriverCommunications.readsTimedOut.get();
         writeBytes(line);
-        if (ReferenceDriverCommunications.readsTimedOut.get() > readsTimedOut) {
-            Logger.warn("{} read timeout {} during write may (or may not) indicate internal serial read/write/full-duplex deadlock", 
-                    getConnectionName(), readsTimedOut+1);
-        }
     }
 
     /**
@@ -107,7 +109,6 @@ public abstract class ReferenceDriverCommunications {
             }
             catch (TimeoutException e) {
                 // In case an implementation has a read timeout, we must not stop reading.
-                ReferenceDriverCommunications.readsTimedOut.incrementAndGet();
                 continue;
             }
             if (ch == -1) {
