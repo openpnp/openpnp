@@ -364,6 +364,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     public synchronized void connect() throws Exception {
         disconnectRequested = false;
         getCommunications().setDriverName(getName());
+        Logger.debug("[{}] Connect", getCommunications().getConnectionName());
         getCommunications().connect();
         connected = false;
 
@@ -382,7 +383,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
 
         }
 
-        // Disable the machine
+        // Disable the driver
         setEnabled(false);
 
         // Send startup Gcode
