@@ -217,6 +217,7 @@ public abstract class CsvImporter {
             len = Math.max(len, rotationIndex);
             len = Math.max(len, sideIndex);
             len = Math.max(len, heightIndex);
+            len = Math.max(len, commentIndex);
             Logger.trace("checkCSV: Len = " + len); //$NON-NLS-1$
             return true;
         }
@@ -346,45 +347,65 @@ public abstract class CsvImporter {
                     placementRotation += 360.0;
                 }
 
+                // create new placement
                 Placement placement = new Placement(as[referenceIndex]);
+
+                // change placement type to Fiducial if the reference/id starts with "FID" or "REF" followed by a digit
+                String id = placement.getId().toUpperCase();
+                if (   (id.startsWith("FID") || id.startsWith("REF"))
+                	&& Character.isDigit(id.charAt(3))) {
+                	placement.setType(Placement.Type.Fiducial);
+                }
+                
+                // set placements location
                 placement.setLocation(new Location(LengthUnit.Millimeters, placementX, placementY,
                         0, placementRotation));
+                
                 Configuration cfg = Configuration.get();
-                if (cfg != null && createMissingParts) {
-                    String partId = as[packageIndex] + "-" + as[valueIndex]; //$NON-NLS-1$
-                    Part part = cfg.getPart(partId);
+                if (cfg == null) {
+                	// no configuration -> skip placement
+                    Logger.warn("no configuration available placement " + placement.getId() + " skipped.");   //$NON-NLS-1$
+                	continue;
+                }
+                	
+                String partId = as[packageIndex] + "-" + as[valueIndex]; //$NON-NLS-1$
+                Part part = cfg.getPart(partId);
 
-                    // if part does not exist, create it
-                    if (part == null) {
-                        part = new Part(partId);
+                // if part does not exist, create it
+                if (part == null && createMissingParts) {
+                    part = new Part(partId);
+                    Length l = new Length(heightZ, LengthUnit.Millimeters);
+                    part.setHeight(l);
+                    Package pkg = cfg.getPackage(as[packageIndex]);
+                    if (pkg == null) {
+                        pkg = new Package(as[packageIndex]);
+                        cfg.addPackage(pkg);
+                    }
+                    part.setPackage(pkg);
+
+                    cfg.addPart(part);
+                }
+
+                // if we still don't have a part, skip this placement
+                if (part == null) {
+                    // no configuration -> skip placement
+                    Logger.warn("no part for placement " + placement.getId() + " (" + partId + ") found, skipped.");   //$NON-NLS-1$
+                    continue;
+                }
+                
+                // if part exists and height exist and user wants height updated do it.
+                if (updateHeights && heightIndex >= 0) {
+                    if (part != null) {
                         Length l = new Length(heightZ, LengthUnit.Millimeters);
                         part.setHeight(l);
-                        Package pkg = cfg.getPackage(as[packageIndex]);
-                        if (pkg == null) {
-                            pkg = new Package(as[packageIndex]);
-                            cfg.addPackage(pkg);
-                        }
-                        part.setPackage(pkg);
-
-                        cfg.addPart(part);
                     }
-
-                    // if part exists and height exist and user wants height updated do it.
-                    if (updateHeights && heightIndex >= 0) {
-                        if (part != null) {
-                            Length l = new Length(heightZ, LengthUnit.Millimeters);
-                            part.setHeight(l);
-                        }
-                    }
-                    placement.setPart(part);
-
                 }
+                placement.setPart(part);
 
                 // get optional comment
                 if(commentIndex >= 0) {
                     placement.setComments(as[commentIndex]);
                 }
-
 
                 // get optional side
                 char c = 0;
