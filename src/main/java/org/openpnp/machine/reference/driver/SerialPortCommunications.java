@@ -94,9 +94,11 @@ public class SerialPortCommunications extends ReferenceDriverCommunications {
 
     private SerialPort serialPort;
 
+    @Override
     public synchronized void connect() throws Exception {
         disconnect();
         serialPort = SerialPort.getCommPort(portName);
+        serialPort.flushIOBuffers();
         serialPort.openPort(0);
         serialPort.setComPortParameters(baud, dataBits.mask, stopBits.mask, parity.mask);
         serialPort.setFlowControl(flowControl.mask);
@@ -107,9 +109,10 @@ public class SerialPortCommunications extends ReferenceDriverCommunications {
             serialPort.setRTS();
         }
         serialPort.setComPortTimeouts(
-                SerialPort.TIMEOUT_READ_SEMI_BLOCKING | SerialPort.TIMEOUT_WRITE_BLOCKING, 500, 0);
+                SerialPort.TIMEOUT_READ_SEMI_BLOCKING | SerialPort.TIMEOUT_WRITE_BLOCKING, 0, 0);
     }
 
+    @Override
     public synchronized void disconnect() throws Exception {
         if (serialPort != null && serialPort.isOpen()) {
             serialPort.closePort();
@@ -163,7 +166,7 @@ public class SerialPortCommunications extends ReferenceDriverCommunications {
 
     @Override
     public String getConnectionName() {
-        return "serial://" + portName;
+        return (driverName != null ? driverName +":" : "") + portName;
     }
 
     public String getPortName() {

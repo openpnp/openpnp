@@ -62,7 +62,7 @@ public class SimulatedCommunications extends ReferenceDriverCommunications {
     @Override
     public String getConnectionName(){
         GcodeServer server = gcodeServer; // prevent race by taking a copy
-        return "simulated: "+(server == null ? "off" : "port "+server.getListenerPort());
+        return (driverName != null ? driverName +":" : "") + "simulated: "+(server == null ? "off" : "port "+server.getListenerPort());
     }
 
     @Override

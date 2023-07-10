@@ -64,7 +64,7 @@ public class TcpCommunications extends ReferenceDriverCommunications {
 
     @Override
     public String getConnectionName(){
-        return "tcp://" + ipAddress + ":" + port;
+        return (driverName != null ? driverName +":" : "") + ipAddress + ":" + port;
     }
 
     @Override

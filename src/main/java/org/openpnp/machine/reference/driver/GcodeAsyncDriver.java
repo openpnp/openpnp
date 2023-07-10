@@ -274,7 +274,7 @@ public class GcodeAsyncDriver extends GcodeDriver {
                     }
                 }
                 catch (IOException e) {
-                    Logger.error("Write error on {}: {}", connectionName, e);
+                    Logger.error(e, "[{}] Write error", connectionName);
                     return;
                 }
                 catch (Exception e) {
@@ -312,7 +312,7 @@ public class GcodeAsyncDriver extends GcodeDriver {
             return;
         }
 
-        Logger.debug("{} commandQueue.offer({}, {})...", getCommunications().getConnectionName(), command, timeout);
+        Logger.debug("[{}] commandQueue offer >> {}", getCommunications().getConnectionName(), command);
         command = preProcessCommand(command);
         if (command.isEmpty()) {
             Logger.debug("{} empty command after pre process", getCommunications().getConnectionName());
@@ -343,13 +343,17 @@ public class GcodeAsyncDriver extends GcodeDriver {
      * @throws InterruptedException
      */
     protected void waitForEmptyCommandQueue() {
-        long t1 = System.currentTimeMillis() + getTimeoutAtMachineSpeed();
+        long t0 = System.currentTimeMillis();
+        long t1 = t0 + getTimeoutAtMachineSpeed();
         while (System.currentTimeMillis() < t1) {
             if (commandQueue.size() == 0) {
+                long dt = System.currentTimeMillis() - t0;
+                if (dt > 20) {
+                        Logger.trace("{} waited {}ms for empty command queue.", getName(), dt);
+                }
                 return; // --->
             }
             try {
-                Logger.trace("{} wait for empty command queue.", getName());
                 Thread.sleep(10);
             }
             catch (InterruptedException e) {
