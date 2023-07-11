@@ -304,6 +304,7 @@ public abstract class CsvImporter {
                 new BufferedReader(new InputStreamReader(new FileInputStream(file), "ISO-8859-1")); //$NON-NLS-1$
         ArrayList<Placement> placements = new ArrayList<>();
         String line;
+        Configuration cfg = Configuration.get();
 
         // search for a maximum number of lines for headings describing the content
         for (int i = 0; i++ < maxHeaderLines && (line = reader.readLine()) != null;) {
@@ -328,6 +329,7 @@ public abstract class CsvImporter {
                 continue;
             }
             else {
+                String placementId = as[referenceIndex];
                 double placementX = convert(as[xIndex], xUnitsMil);
                 double placementY = convert(as[yIndex], yUnitsMil);
 
@@ -346,28 +348,7 @@ public abstract class CsvImporter {
                 while (placementRotation < -180.0) {
                     placementRotation += 360.0;
                 }
-
-                // create new placement
-                Placement placement = new Placement(as[referenceIndex]);
-
-                // change placement type to Fiducial if the reference/id starts with "FID" or "REF" followed by a digit
-                String id = placement.getId().toUpperCase();
-                if (   (id.startsWith("FID") || id.startsWith("REF"))
-                	&& Character.isDigit(id.charAt(3))) {
-                	placement.setType(Placement.Type.Fiducial);
-                }
                 
-                // set placements location
-                placement.setLocation(new Location(LengthUnit.Millimeters, placementX, placementY,
-                        0, placementRotation));
-                
-                Configuration cfg = Configuration.get();
-                if (cfg == null) {
-                	// no configuration -> skip placement
-                    Logger.warn("no configuration available placement " + placement.getId() + " skipped.");   //$NON-NLS-1$
-                	continue;
-                }
-                	
                 String partId = as[packageIndex] + "-" + as[valueIndex]; //$NON-NLS-1$
                 Part part = cfg.getPart(partId);
 
@@ -389,17 +370,30 @@ public abstract class CsvImporter {
                 // if we still don't have a part, skip this placement
                 if (part == null) {
                     // no configuration -> skip placement
-                    Logger.warn("no part for placement " + placement.getId() + " (" + partId + ") found, skipped.");   //$NON-NLS-1$
+                    Logger.warn("no part for placement " + placementId + " (" + partId + ") found, skipped.");   //$NON-NLS-1$
                     continue;
                 }
                 
                 // if part exists and height exist and user wants height updated do it.
                 if (updateHeights && heightIndex >= 0) {
-                    if (part != null) {
-                        Length l = new Length(heightZ, LengthUnit.Millimeters);
-                        part.setHeight(l);
-                    }
+                    Length l = new Length(heightZ, LengthUnit.Millimeters);
+                    part.setHeight(l);
                 }
+
+                // create new placement
+                Placement placement = new Placement(placementId);
+
+                // change placement type to Fiducial if the reference/id starts with "FID" or "REF" followed by a digit
+                String id = placement.getId().toUpperCase();
+                if (   (id.startsWith("FID") || id.startsWith("REF"))
+                    && Character.isDigit(id.charAt(3))) {
+                    placement.setType(Placement.Type.Fiducial);
+                }
+                
+                // set placements location
+                placement.setLocation(new Location(LengthUnit.Millimeters, placementX, placementY,
+                        0, placementRotation));
+                
                 placement.setPart(part);
 
                 // get optional comment
