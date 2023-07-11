@@ -41,6 +41,7 @@ import org.openpnp.model.Location;
 import org.openpnp.model.PanelLocation;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
+import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.FiducialLocator;
 import org.openpnp.spi.Head;
@@ -551,6 +552,9 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         }
     }
 
+    /**
+     * Pick step - pick parts using all nozzles
+     */
     protected class Pick extends PlannedPlacementStep {
         HashMap<PlannedPlacement, Integer> retries = new HashMap<>();
         
@@ -558,6 +562,22 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             super(plannedPlacements);
         }
         
+        // provide a location to allow nozzle path optimization
+        @Override
+        public Location getLocation(PlannedPlacement plannedPlacement) {
+            // FIXME: optimizing the pick step is more difficult then other steps:
+            //        the location the action is start/take place depends on the
+            //        type of feeder and there is a path between feed and pick, that
+            //        is not considered here. For now, we'll just use the pick location.
+            return getPickLocation(plannedPlacement);
+        }
+
+        // provide a next location: use the location of the first part on the board
+        @Override
+        public Location getNextLocation(List<PlannedPlacement>plannedPlacements) {
+            return getAlignLocation(plannedPlacements.get(0));
+        }
+
         @Override
         public Step stepImpl(PlannedPlacement plannedPlacement) throws JobProcessorException {
             if (plannedPlacement == null) {
@@ -750,11 +770,26 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         }
     }
 
+    /**
+     * Alignment step - align all parts on all nozzles
+     */
     protected class Align extends PlannedPlacementStep {
         public Align(List<PlannedPlacement> plannedPlacements) {
             super(plannedPlacements);
         }
 
+        // provide a location to allow nozzle path optimization
+        @Override
+        public Location getLocation(PlannedPlacement plannedPlacement) {
+            return getAlignLocation(plannedPlacement);
+        }
+        
+        // provide a next location: use the location of the first part on the board
+        @Override
+        public Location getNextLocation(List<PlannedPlacement>plannedPlacements) {
+            return getRawPlaceLocation(plannedPlacements.get(0));
+        }
+        
         @Override
         public Step stepImpl(PlannedPlacement plannedPlacement) throws JobProcessorException {
             if (plannedPlacement == null) {
@@ -825,9 +860,18 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         }
     }
 
+    /**
+     * Placement step - place all parts on all nozzles on the board
+     */
     protected class Place extends PlannedPlacementStep {
         public Place(List<PlannedPlacement> plannedPlacements) {
             super(plannedPlacements);
+        }
+
+        // provide a location to allow nozzle path optimization
+        @Override
+        public Location getLocation(PlannedPlacement plannedPlacement) {
+            return getRawPlaceLocation(plannedPlacement);
         }
 
         @Override
@@ -1171,7 +1215,186 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         private Set<PlannedPlacement> completed = new HashSet<>();
         
         protected PlannedPlacementStep(List<PlannedPlacement> plannedPlacements) {
+            // sort placements order for better performance
+            if (plannedPlacements.size() > 1) {
+                long t = System.currentTimeMillis();
+                plannedPlacements = sortPlacements(plannedPlacements);
+                Logger.debug("Optimization complete in {}ms: {}", (System.currentTimeMillis() - t), plannedPlacements);
+            }
+        
             this.plannedPlacements = plannedPlacements;
+        }
+
+        /**
+         * Sort the list of planned placements for better performance
+         * this is done by first collecting the locations where the head will move
+         * to when executing this step and then using a traveling salesman to 
+         * optimize the list.
+         * 
+         * Steps that support optimization, have to implement getLocation() to
+         * allow the optimizer to read the location the head will move to to
+         * perform the step for the placement.
+         * 
+         * In addition, steps my implement getNextLocation() to allow the
+         * optimizer to get a location where the head will move to after this
+         * step has been executed for all placements.
+         * 
+         * @param plannedPlacements
+         * @return
+         */
+        private List<PlannedPlacement> sortPlacements(List<PlannedPlacement> plannedPlacements) {
+            Location start; // start location of traveling salesman, current location of the head
+            Location end;   // end location of traveling salesman, location of the next step
+        
+            // a) collect data: sortLocation, start and end point
+            for (PlannedPlacement plannedPlacement : plannedPlacements) {
+                plannedPlacement.sortLocation = getLocation(plannedPlacement);
+            }
+        
+            // if all sort locations are now empty, revert the list to its original order
+            if (plannedPlacements.stream().filter(p -> {return p.sortLocation != null;}).count() == 0) {
+                plannedPlacements.sort(Comparator.comparing(plannedPlacement -> {
+                    return plannedPlacement.nozzle.getName();
+                }));
+                
+            } else {
+                
+                // b) get the heads current location as starting point
+                // all nozzles are expected to be mounted on the same head so using
+                // any nozzle as reference shall provide the same head location.
+                start = getHeadLocation(plannedPlacements.get(0).nozzle);
+                    
+                // c) get the location the next step will take place as end point
+                end = getNextLocation(plannedPlacements);
+                
+                // c) sort PlanndPlacements according to sortLocation
+                // Use a traveling salesman algorithm to optimize the path to visit the placements
+                // FIXME: use a more realistic metric then just the distance between points to
+                //        rate possible solutions. On a physical machine one axis is usually stronger
+                //        and faster then the other. That means that the optimal solution might be
+                //        a longer path on one axis compared to the other.
+                TravellingSalesman<PlannedPlacement> tsm = new TravellingSalesman<>(
+                        plannedPlacements, 
+                        new TravellingSalesman.Locator<PlannedPlacement>() { 
+                            @Override
+                            public Location getLocation(PlannedPlacement locatable) {
+                                return locatable.sortLocation;
+                            }
+                        }, 
+                        start,
+                        end);
+                
+                // Solve it using the default heuristics.
+                tsm.solve();
+                
+                // set new order of placements
+                plannedPlacements = tsm.getTravel();
+            }
+            
+            return plannedPlacements;
+        }
+	    
+        /**
+         * Return the location the head will move to when executing this step
+         * for this placement.
+         * The location is used to optimize the head movement.
+         * 
+         * @param plannedPlacement
+         * @return
+         */
+        protected Location getLocation(PlannedPlacement plannedPlacement) {
+            return null;
+        }
+        
+        /**
+         * Return the location the head will move to after this step has been
+         * executed for all placements. The location my be approximative assuming
+         * the distance between nozzles is small compared to the distance to that
+         * location.
+         * The location is used to optimize the head movement.
+         * 
+         * @param plannedPlacement
+         * @return
+         */
+        protected Location getNextLocation(List<PlannedPlacement> plannedPlacements) {
+            return null;
+        }
+        
+        /**
+         * Get the location of the head the nozzle is on
+         */
+        public Location getHeadLocation(Nozzle nozzle)
+        {
+            Location location;
+            
+            try {
+                // this translates the nozzles current location into the location of the head
+                location = nozzle.toHeadLocation(nozzle.getLocation());
+            } catch (Exception e) {
+                location = null;
+            }
+            
+            return location;
+        }
+        
+        /**
+         * Get the location the the part for this placement will be picked from.
+         * This is used to generate locations for the optimizer.
+         */
+        public Location getPickLocation(PlannedPlacement plannedPlacement) {
+            Location location;
+            final Nozzle nozzle = plannedPlacement.nozzle;
+            final JobPlacement jobPlacement = plannedPlacement.jobPlacement;
+            final Placement placement = jobPlacement.getPlacement();
+            final Part part = placement.getPart();
+
+            // try to get the location where the alignment will take place
+            try {
+                final Feeder feeder = findFeeder(machine, part);
+
+                location = nozzle.toHeadLocation(feeder.getPickLocation());
+            } catch (Exception e) {
+                // ignore exceptions
+                location = null;
+            }
+            
+            return location;
+        }
+        
+        /**
+         * Get the location where the alignment will take place.
+         * This is used to generate locations for the optimizer.
+         */
+        public Location getAlignLocation(PlannedPlacement plannedPlacement) {
+            Location location;
+            final Camera camera;
+            final Nozzle nozzle = plannedPlacement.nozzle;
+
+            // try to get the location where the alignment will take place
+            try {
+                camera = VisionUtils.getBottomVisionCamera();
+                location = nozzle.toHeadLocation(camera.getLocation());
+            } catch (Exception e) {
+                // ignore exceptions
+                location = null;
+            }
+            
+            return location;
+        }
+        
+        /**
+         * Get the raw/uncorrected location of the placement on the board.
+         * This is used to generate locations for the optimizer.
+         */
+        public Location getRawPlaceLocation(PlannedPlacement plannedPlacement) {
+            final JobPlacement jobPlacement = plannedPlacement.jobPlacement;
+            final Placement placement = jobPlacement.getPlacement();
+            final BoardLocation boardLocation = plannedPlacement.jobPlacement.getBoardLocation();
+        
+            Location location = Utils2D.calculateBoardPlacementLocation(boardLocation,
+                    placement.getLocation());
+            
+            return location;
         }
         
         /**
