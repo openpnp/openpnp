@@ -61,6 +61,7 @@ import org.openpnp.model.Location;
 import org.openpnp.model.Package;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
+import org.openpnp.util.Utils2D;
 import org.pmw.tinylog.Logger;
 
 import com.Ostermiller.util.CSVParser;
@@ -340,14 +341,7 @@ public abstract class CsvImporter {
 
                 double placementRotation = convert(as[rotationIndex]);
                 // convert rotation to [-180 .. 180]
-                // FIXME: this range is invalid as -180° == 180°. Whats the OpenPnP convention?
-                // FIXME: does OpenPnP provide a unified method to limit angles?
-                while (placementRotation > 180.0) {
-                    placementRotation -= 360.0;
-                }
-                while (placementRotation < -180.0) {
-                    placementRotation += 360.0;
-                }
+                placementRotation = Utils2D.angleNorm(placementRotation, 180);
                 
                 String partId = as[packageIndex] + "-" + as[valueIndex]; //$NON-NLS-1$
                 Part part = cfg.getPart(partId);
