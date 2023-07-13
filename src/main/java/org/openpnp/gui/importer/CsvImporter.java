@@ -299,10 +299,31 @@ public abstract class CsvImporter {
     	return v;
     }
     
+    // detect the character set required to read the file by searching for a byte order mark
+    private String detectCharacterSet(File file) throws Exception {
+        FileInputStream f = new FileInputStream(file);
+        
+        // read the first two characters and test if its a byte order mark
+        // (https://en.wikipedia.org/wiki/Byte_order_mark)
+        int b1 = f.read();
+        int b2 = f.read();
+        
+        // if the file starts with 0xff 0xfe, its a byte order mark for UTF-16 encoding
+        if (b1 == 0xff && b2 == 0xfe) {
+            Logger.trace("Byte Order Mark detected, will read " + file + " using UTF-16 character set");
+            return "UTF-16"; //$NON-NLS-1$
+        }
+
+        // return default character set
+        Logger.trace("No Byte Order Mark detected, will read " + file + " using the default ISO-8859-1 character set");
+        return "ISO-8859-1"; //$NON-NLS-1$
+    }
+    
     private List<Placement> parseFile(File file, boolean createMissingParts,
             boolean updateHeights) throws Exception {
+        String characterset = detectCharacterSet(file);
         BufferedReader reader =
-                new BufferedReader(new InputStreamReader(new FileInputStream(file), "ISO-8859-1")); //$NON-NLS-1$
+                new BufferedReader(new InputStreamReader(new FileInputStream(file), characterset));
         ArrayList<Placement> placements = new ArrayList<>();
         String line;
         Configuration cfg = Configuration.get();
