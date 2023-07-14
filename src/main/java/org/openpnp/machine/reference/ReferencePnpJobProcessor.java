@@ -83,6 +83,9 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     @Attribute(required = false)
     boolean steppingToNextMotion = true;
 
+    @Attribute(required = false)
+    boolean optimizeMultipleNozzles = true;
+
     @Element(required = false)
     public PnpJobPlanner planner = new SimplePnpJobPlanner();
 
@@ -1210,13 +1213,21 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         this.steppingToNextMotion = steppingToNextMotion;
     }
 
+    public boolean isOptimizeMultipleNozzles() {
+        return optimizeMultipleNozzles;
+    }
+
+    public void setOptimizeMultipleNozzles(boolean optimizeMultipleNozzles) {
+        this.optimizeMultipleNozzles = optimizeMultipleNozzles;
+    }
+
     protected abstract class PlannedPlacementStep implements Step {
         protected final List<PlannedPlacement> plannedPlacements;
         private Set<PlannedPlacement> completed = new HashSet<>();
         
         protected PlannedPlacementStep(List<PlannedPlacement> plannedPlacements) {
             // sort placements order for better performance
-            if (plannedPlacements.size() > 1) {
+            if (plannedPlacements.size() > 1 && optimizeMultipleNozzles) {
                 long t = System.currentTimeMillis();
                 plannedPlacements = sortPlacements(plannedPlacements);
                 Logger.debug("Optimization complete in {}ms: {}", (System.currentTimeMillis() - t), plannedPlacements);
