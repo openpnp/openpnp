@@ -1228,9 +1228,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         protected PlannedPlacementStep(List<PlannedPlacement> plannedPlacements) {
             // sort placements order for better performance
             if (plannedPlacements.size() > 1 && optimizeMultipleNozzles) {
-                long t = System.currentTimeMillis();
                 plannedPlacements = sortPlacements(plannedPlacements);
-                Logger.debug("Optimization complete in {}ms: {}", (System.currentTimeMillis() - t), plannedPlacements);
             }
         
             this.plannedPlacements = plannedPlacements;
@@ -1254,6 +1252,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
          * @return
          */
         private List<PlannedPlacement> sortPlacements(List<PlannedPlacement> plannedPlacements) {
+            long t = System.currentTimeMillis();
             Location start; // start location of traveling salesman, current location of the head
             Location end;   // end location of traveling salesman, location of the next step
         
@@ -1300,6 +1299,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 
                 // set new order of placements
                 plannedPlacements = tsm.getTravel();
+                
+                Logger.debug("Optimization completed in {}ms: {}", (System.currentTimeMillis() - t), plannedPlacements);
             }
             
             return plannedPlacements;
