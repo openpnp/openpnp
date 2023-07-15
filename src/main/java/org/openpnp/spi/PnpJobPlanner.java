@@ -28,4 +28,5 @@ public interface PnpJobPlanner {
 
     
     public List<PlannedPlacement> plan(Head head, List<JobPlacement> placements);
+    public List<PlannedPlacement> planNext(Head head, List<JobPlacement> jobPlacements);
 }

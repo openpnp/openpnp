@@ -100,14 +100,6 @@ public class BasicJobTest {
 
         delegate.expectMove("Move N2 to F1, Safe Z", n2, new Location(LengthUnit.Millimeters, -20, 0, 0, 0),
                 1.0);
-        delegate.expectMove("Move N1 to R1, Safe-Z", n1,
-                new Location(LengthUnit.Millimeters, 0, 10, 0, 45), 1.0);
-        delegate.expectMove("Move N1 to R1, Z", n1,
-                new Location(LengthUnit.Millimeters, 0, 10, 0.825500 - 10, 45), 1.0);
-        delegate.expectedActuate();
-        delegate.expectMove("Move N1 to R1, Safe-Z", n1,
-                new Location(LengthUnit.Millimeters, 0, 10, 0, 45), 1.0);
-
         delegate.expectMove("Move N2 to R2, Safe-Z", n2,
                 new Location(LengthUnit.Millimeters, 00, 20, 0, 90), 1.0);
         delegate.expectMove("Move N2 to R2, Z", n2,
@@ -115,6 +107,14 @@ public class BasicJobTest {
         delegate.expectedActuate();
         delegate.expectMove("Move N2 to R2, Safe-Z", n2,
                 new Location(LengthUnit.Millimeters, 00, 20, 0, 90), 1.0);
+
+        delegate.expectMove("Move N1 to R1, Safe-Z", n1,
+                new Location(LengthUnit.Millimeters, 0, 10, 0, 45), 1.0);
+        delegate.expectMove("Move N1 to R1, Z", n1,
+                new Location(LengthUnit.Millimeters, 0, 10, 0.825500 - 10, 45), 1.0);
+        delegate.expectedActuate();
+        delegate.expectMove("Move N1 to R1, Safe-Z", n1,
+                new Location(LengthUnit.Millimeters, 0, 10, 0, 45), 1.0);
         delegate.expectMove("Park", c1, new Location(LengthUnit.Millimeters, 0, 0, 0, 90), 1.0);
 
         ReferencePnpJobProcessor jobProcessor = (ReferencePnpJobProcessor) machine.getPnpJobProcessor();
