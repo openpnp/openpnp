@@ -1276,14 +1276,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 plannedPlacement.sortLocation = getLocation(plannedPlacement);
             }
         
-            // if all sort locations are now empty, revert the list to its original order
-            if (plannedPlacements.stream().filter(p -> {return p.sortLocation != null;}).count() == 0) {
-                plannedPlacements.sort(Comparator.comparing(plannedPlacement -> {
-                    return plannedPlacement.nozzle.getName();
-                }));
-                
-            } else {
-                
+            // if all sort locations are now empty, skip the optimization
+            if (plannedPlacements.stream().filter(p -> {return p.sortLocation != null;}).count() > 0) {
                 // b) get the heads current location as starting point
                 // all nozzles are expected to be mounted on the same head so using
                 // any nozzle as reference shall provide the same head location.
