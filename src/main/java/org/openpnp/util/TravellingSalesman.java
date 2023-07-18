@@ -133,7 +133,7 @@ public class TravellingSalesman<T> {
         return la.getLinearDistanceTo(lb);
     }
 
-    private double getTravellingDistance() {
+    public double getTravellingDistance() {
         double distance = 0.0;
         for (int i = 0; i <= this.travelSize; i++) {
             distance += this.getDistance(i-1,  i);

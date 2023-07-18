@@ -1303,13 +1303,21 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                         start,
                         end);
                 
+                // read distance before optimization
+                double distance_ref = tsm.getTravellingDistance();
+                
                 // Solve it using the default heuristics.
                 tsm.solve();
+                
+                double distance_optimized = tsm.getTravellingDistance();
                 
                 // set new order of placements
                 plannedPlacements = tsm.getTravel();
                 
-                Logger.debug("Optimization completed in {}ms: {}", (System.currentTimeMillis() - t), plannedPlacements);
+                double optimization_advantage = 100 - 100 * distance_optimized / distance_ref;
+                final DecimalFormat df = new DecimalFormat("0.0");
+                
+                Logger.debug("Optimization completed in {}ms: {}, {}% gain", (System.currentTimeMillis() - t), plannedPlacements, df.format(optimization_advantage));
             }
             
             return plannedPlacements;
