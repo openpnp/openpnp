@@ -1314,7 +1314,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 // set new order of placements
                 plannedPlacements = tsm.getTravel();
                 
-                double optimization_advantage = 100 - 100 * distance_optimized / distance_ref;
+                double optimization_advantage = Math.max(100 * (1 - distance_optimized / distance_ref), 0);
                 final DecimalFormat df = new DecimalFormat("0.0");
                 
                 Logger.debug("Optimization completed in {}ms: {}, {}% gain", (System.currentTimeMillis() - t), plannedPlacements, df.format(optimization_advantage));
