@@ -265,11 +265,18 @@ public class JobPlacementsPanel extends JPanel {
         });
         table.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent mouseEvent) {
+                int row = table.rowAtPoint(new Point(mouseEvent.getX(), mouseEvent.getY()));
+                int col = table.columnAtPoint(new Point(mouseEvent.getX(), mouseEvent.getY()));
+
+                // if enabled column is clicked, refresh the row to update status immediately
+                if (col == 0) {
+                    refreshSelectedRow();
+                    updateActivePlacements();
+                }
+
                 if (mouseEvent.getClickCount() != 2) {
                     return;
                 }
-                int row = table.rowAtPoint(new Point(mouseEvent.getX(), mouseEvent.getY()));
-                int col = table.columnAtPoint(new Point(mouseEvent.getX(), mouseEvent.getY()));
                 if (tableModel.getColumnClass(col) == Status.class) {
                     Status status = (Status) tableModel.getValueAt(row, col);
                     // TODO: This is some sample code for handling the user
