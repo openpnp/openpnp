@@ -954,14 +954,15 @@ public class JobPanel extends JPanel {
              */
             if (t.getClass() == JobProcessorException.class) {
                 JobProcessorException jpe = (JobProcessorException)t;
-                Class<?> c = jpe.getSource().getClass();
+                Object s = jpe.getSource();
+                Class<?> c = s.getClass();
                 
                 // decode the source of the exception and try to select as much as possible
                 if (c == BoardLocation.class) {
-                    BoardLocation b = (BoardLocation)jpe.getSource();
+                    BoardLocation b = (BoardLocation)s;
                     Helpers.selectObjectTableRow(jobTable, b);
                 } else if (c == Placement.class) {
-                    Placement p = (Placement)jpe.getSource();
+                    Placement p = (Placement)s;
 
                     // select the board this placement belongs to
                     for (BoardLocation boardLocation : job.getBoardLocations()) {
@@ -974,13 +975,13 @@ public class JobPanel extends JPanel {
                     // select the placement itself
                     Helpers.selectObjectTableRow(jobPlacementsPanel.getTable(), p);
                 } else if (c == Part.class) {
-                    Part p = (Part)jpe.getSource();
+                    Part p = (Part)s;
                     MainFrame.get().getPartsTab().selectPartInTable(p);
-                } else if (jpe.getSource() instanceof Feeder) {
-                    Feeder f = (Feeder)jpe.getSource();
+                } else if (s instanceof Feeder) {
+                    Feeder f = (Feeder)s;
                     MainFrame.get().getFeedersTab().selectFeederInTable(f);
                 } else {
-                    Logger.debug("Exception contains an unsupported source: {}", jpe.getSource().getClass());
+                    Logger.debug("Exception contains an unsupported source: {}", c);
                 }
             }
             
