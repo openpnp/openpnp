@@ -952,17 +952,16 @@ public class JobPanel extends JPanel {
              * both dispense and PnP this is not possible. Once dispense is removed we can include
              * the current placement in the thrown error and add this feature.
              */
-            if (t.getClass() == JobProcessorException.class) {
+            if (t instanceof JobProcessorException) {
                 JobProcessorException jpe = (JobProcessorException)t;
-                Object s = jpe.getSource();
-                Class<?> c = s.getClass();
+                Object source = jpe.getSource();
                 
                 // decode the source of the exception and try to select as much as possible
-                if (c == BoardLocation.class) {
-                    BoardLocation b = (BoardLocation)s;
+                if (source instanceof BoardLocation) {
+                    BoardLocation b = (BoardLocation)source;
                     Helpers.selectObjectTableRow(jobTable, b);
-                } else if (c == Placement.class) {
-                    Placement p = (Placement)s;
+                } else if (source instanceof Placement) {
+                    Placement p = (Placement)source;
 
                     // select the board this placement belongs to
                     for (BoardLocation boardLocation : job.getBoardLocations()) {
@@ -974,14 +973,20 @@ public class JobPanel extends JPanel {
 
                     // select the placement itself
                     Helpers.selectObjectTableRow(jobPlacementsPanel.getTable(), p);
-                } else if (c == Part.class) {
-                    Part p = (Part)s;
+                } else if (source instanceof Part) {
+                    Part p = (Part)source;
+                    // select part in parts tab
                     MainFrame.get().getPartsTab().selectPartInTable(p);
-                } else if (s instanceof Feeder) {
-                    Feeder f = (Feeder)s;
+                    // focus the parts tab
+                    MainFrame.get().getTabs().setSelectedComponent(MainFrame.get().getPartsTab());
+                } else if (source instanceof Feeder) {
+                    Feeder f = (Feeder)source;
+                    // select the feeder in the feeders tab
                     MainFrame.get().getFeedersTab().selectFeederInTable(f);
+                    // focus the feeder tab
+                    MainFrame.get().getTabs().setSelectedComponent(MainFrame.get().getFeedersTab());
                 } else {
-                    Logger.debug("Exception contains an unsupported source: {}", c);
+                    Logger.debug("Exception contains an unsupported source: {}", source.getClass());
                 }
             }
             
