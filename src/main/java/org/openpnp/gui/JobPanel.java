@@ -959,7 +959,10 @@ public class JobPanel extends JPanel {
                 // decode the source of the exception and try to select as much as possible
                 if (source instanceof BoardLocation) {
                     BoardLocation b = (BoardLocation)source;
+                    // select the board
                     Helpers.selectObjectTableRow(jobTable, b);
+                    // focus the job tab
+                    MainFrame.get().getTabs().setSelectedComponent(MainFrame.get().getJobTab());
                 } else if (source instanceof Placement) {
                     Placement p = (Placement)source;
 
@@ -973,6 +976,8 @@ public class JobPanel extends JPanel {
 
                     // select the placement itself
                     Helpers.selectObjectTableRow(jobPlacementsPanel.getTable(), p);
+                    // focus the job tab
+                    MainFrame.get().getTabs().setSelectedComponent(MainFrame.get().getJobTab());
                 } else if (source instanceof Part) {
                     Part p = (Part)source;
                     // select part in parts tab
