@@ -76,10 +76,7 @@ public class BoardLocation extends PlacementsHolderLocation<BoardLocation> {
      * Default constructor
      */
     public BoardLocation() {
-    	/**
-    	 * use the location defined as default board location for the reference machine
-    	 */
-        setLocation(Configuration.get().getMachine().getDefaultBoardLocation());
+        setLocation(new Location(LengthUnit.Millimeters));
     }
 
     /**

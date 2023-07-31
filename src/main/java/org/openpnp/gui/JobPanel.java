@@ -1136,6 +1136,7 @@ public class JobPanel extends JPanel {
     protected void addBoard(File file) throws Exception {
         Board board = new Board(configuration.getBoard(file));
         BoardLocation boardLocation = new BoardLocation(board);
+        boardLocation.setLocation(Configuration.get().getMachine().getDefaultBoardLocation());
         
         Configuration.get().resolveBoard(job, boardLocation);
         
@@ -1220,6 +1221,7 @@ public class JobPanel extends JPanel {
     protected void addPanel(File file) throws Exception {
         Panel panel = new Panel(configuration.getPanel(file));
         PanelLocation panelLocation = new PanelLocation(panel);
+        panelLocation.setLocation(Configuration.get().getMachine().getDefaultBoardLocation());
         
         Configuration.get().resolvePanel(job, panelLocation);
         
