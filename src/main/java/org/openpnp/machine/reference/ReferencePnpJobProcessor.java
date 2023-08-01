@@ -567,7 +567,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         
         // provide a location to allow nozzle path optimization
         @Override
-        public Location getLocation(PlannedPlacement plannedPlacement) {
+        public Location getPlanningLocation(PlannedPlacement plannedPlacement) {
             // FIXME: optimizing the pick step is more difficult then other steps:
             //        the location the action is start/take place depends on the
             //        type of feeder and there is a path between feed and pick, that
@@ -577,7 +577,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
         // provide a next location: use the location of the first part on the board
         @Override
-        public Location getNextLocation(List<PlannedPlacement>plannedPlacements) {
+        public Location getNextPlanningLocation(List<PlannedPlacement>plannedPlacements) {
             return getAlignLocation(plannedPlacements.get(0));
         }
 
@@ -783,13 +783,13 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
         // provide a location to allow nozzle path optimization
         @Override
-        public Location getLocation(PlannedPlacement plannedPlacement) {
+        public Location getPlanningLocation(PlannedPlacement plannedPlacement) {
             return getAlignLocation(plannedPlacement);
         }
         
         // provide a next location: use the location of the first part on the board
         @Override
-        public Location getNextLocation(List<PlannedPlacement>plannedPlacements) {
+        public Location getNextPlanningLocation(List<PlannedPlacement>plannedPlacements) {
             return getRawPlaceLocation(plannedPlacements.get(0));
         }
         
@@ -873,13 +873,13 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
         // provide a location to allow nozzle path optimization
         @Override
-        public Location getLocation(PlannedPlacement plannedPlacement) {
+        public Location getPlanningLocation(PlannedPlacement plannedPlacement) {
             return getRawPlaceLocation(plannedPlacement);
         }
 
         // provide a next location: use the location of the first part on the board
         @Override
-        public Location getNextLocation(List<PlannedPlacement>plannedPlacements) {
+        public Location getNextPlanningLocation(List<PlannedPlacement>plannedPlacements) {
             // get the next planned placements
             List<PlannedPlacement>plannedNextPlacements = planner.planNext(head, jobPlacements);
             
@@ -1255,11 +1255,11 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
          * to when executing this step and then using a traveling salesman to 
          * optimize the list.
          * 
-         * Steps that support optimization, have to implement getLocation() to
+         * Steps that support optimization, have to implement getPlanningLocation() to
          * allow the optimizer to read the location the head will move to to
          * perform the step for the placement.
          * 
-         * In addition, steps my implement getNextLocation() to allow the
+         * In addition, steps my implement getNextPlanningLocation() to allow the
          * optimizer to get a location where the head will move to after this
          * step has been executed for all placements.
          * 
@@ -1273,7 +1273,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         
             // a) collect data: sortLocation, start and end point
             for (PlannedPlacement plannedPlacement : plannedPlacements) {
-                plannedPlacement.sortLocation = getLocation(plannedPlacement);
+                plannedPlacement.sortLocation = getPlanningLocation(plannedPlacement);
             }
         
             // if all sort locations are now empty, skip the optimization
@@ -1284,7 +1284,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 start = getHeadLocation(plannedPlacements.get(0).nozzle);
                     
                 // c) get the location the next step will take place as end point
-                end = getNextLocation(plannedPlacements);
+                end = getNextPlanningLocation(plannedPlacements);
                 
                 // c) sort PlanndPlacements according to sortLocation
                 // Use a traveling salesman algorithm to optimize the path to visit the placements
@@ -1331,7 +1331,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
          * @param plannedPlacement
          * @return
          */
-        protected Location getLocation(PlannedPlacement plannedPlacement) {
+        protected Location getPlanningLocation(PlannedPlacement plannedPlacement) {
             return null;
         }
         
@@ -1345,7 +1345,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
          * @param plannedPlacement
          * @return
          */
-        protected Location getNextLocation(List<PlannedPlacement> plannedPlacements) {
+        protected Location getNextPlanningLocation(List<PlannedPlacement> plannedPlacements) {
             return null;
         }
         
