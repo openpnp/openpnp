@@ -45,6 +45,7 @@ import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.FiducialLocator;
 import org.openpnp.spi.Head;
+import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
@@ -1281,7 +1282,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 // b) get the heads current location as starting point
                 // all nozzles are expected to be mounted on the same head so using
                 // any nozzle as reference shall provide the same head location.
-                start = getHeadLocation(plannedPlacements.get(0).nozzle);
+                Nozzle nozzle = plannedPlacements.get(0).nozzle;
+                start = getHeadLocation(nozzle, nozzle.getLocation());
                     
                 // c) get the location the next step will take place as end point
                 end = getNextPlanningLocation(plannedPlacements);
@@ -1350,15 +1352,14 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         }
         
         /**
-         * Get the location of the head the nozzle is on
+         * Get the location of ref with respect to the head mountable hm
          */
-        public Location getHeadLocation(Nozzle nozzle)
+        protected Location getHeadLocation(HeadMountable hm, Location ref)
         {
             Location location;
             
             try {
-                // this translates the nozzles current location into the location of the head
-                location = nozzle.toHeadLocation(nozzle.getLocation());
+                location = hm.toHeadLocation(ref);
             } catch (Exception e) {
                 location = null;
             }
@@ -1370,7 +1371,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
          * Get the location the the part for this placement will be picked from.
          * This is used to generate locations for the optimizer.
          */
-        public Location getPickLocation(PlannedPlacement plannedPlacement) {
+        protected Location getPickLocation(PlannedPlacement plannedPlacement) {
             Location location;
             final Nozzle nozzle = plannedPlacement.nozzle;
             final JobPlacement jobPlacement = plannedPlacement.jobPlacement;
@@ -1381,7 +1382,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             try {
                 final Feeder feeder = findFeeder(machine, part);
 
-                location = nozzle.toHeadLocation(feeder.getPickLocation());
+                location = getHeadLocation(nozzle, feeder.getPickLocation());
             } catch (Exception e) {
                 // ignore exceptions
                 location = null;
@@ -1394,7 +1395,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
          * Get the location where the alignment will take place.
          * This is used to generate locations for the optimizer.
          */
-        public Location getAlignLocation(PlannedPlacement plannedPlacement) {
+        protected Location getAlignLocation(PlannedPlacement plannedPlacement) {
             Location location;
             final Camera camera;
             final Nozzle nozzle = plannedPlacement.nozzle;
@@ -1402,7 +1403,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             // try to get the location where the alignment will take place
             try {
                 camera = VisionUtils.getBottomVisionCamera();
-                location = nozzle.toHeadLocation(camera.getLocation());
+                
+                location = getHeadLocation(nozzle, camera.getLocation());
             } catch (Exception e) {
                 // ignore exceptions
                 location = null;
@@ -1415,7 +1417,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
          * Get the raw/uncorrected location of the placement on the board.
          * This is used to generate locations for the optimizer.
          */
-        public Location getRawPlaceLocation(PlannedPlacement plannedPlacement) {
+        protected Location getRawPlaceLocation(PlannedPlacement plannedPlacement) {
             final Nozzle nozzle = plannedPlacement.nozzle;
             final JobPlacement jobPlacement = plannedPlacement.jobPlacement;
             final Placement placement = jobPlacement.getPlacement();
@@ -1425,14 +1427,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                     placement.getLocation());
             
             // convert location to where the head will move to to place the part
-            try {
-                location = nozzle.toHeadLocation(location);
-            } catch (Exception e) {
-                // ignore exceptions
-                location = null;
-            }
-            
-            return location;
+            return getHeadLocation(nozzle, location);
         }
         
         /**
