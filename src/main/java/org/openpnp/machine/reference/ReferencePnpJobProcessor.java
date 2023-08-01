@@ -1418,15 +1418,6 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     public static class TrivialPnpJobPlanner implements PnpJobPlanner {
         @Override
         public List<PlannedPlacement> plan(Head head, List<JobPlacement> jobPlacements) {
-            return planDo(head, jobPlacements, true);
-        }
-
-        @Override
-        public List<PlannedPlacement> planNext(Head head, List<JobPlacement> jobPlacements) {
-            return planDo(head, jobPlacements, false);
-        }
-
-        private List<PlannedPlacement> planDo(Head head, List<JobPlacement> jobPlacements, boolean removeFromList) {
             /**
              * Create a List<PlannedPlacement> that we will fill up and then return.
              */
@@ -1491,13 +1482,11 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                          */
                         plannedPlacements.add(plannedPlacement);
                         
-                        if (removeFromList) {
-                            /**
-                             * And remove the job placement from the list. This ensures we don't process
-                             * the same one again later.
-                             */
-                            iterator.remove();
-                        }
+                        /**
+                         * And remove the job placement from the list. This ensures we don't process
+                         * the same one again later.
+                         */
+                        iterator.remove();
                         
                         /**
                          * And exit the loop, because we are done with this nozzle.
@@ -1528,33 +1517,6 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     public static class SimplePnpJobPlanner implements PnpJobPlanner {
         @Override
         public List<PlannedPlacement> plan(Head head, List<JobPlacement> jobPlacements) {
-            return planDo(head, jobPlacements, true);
-        }
-        
-        /**
-         * Plan the next placement by looking ahead. This is used to optimize the head movement
-         * in the place step by using the pick location of the placement as end point.
-         * 
-         * The code is identical to plan(), except that the planned placements are not removed.
-         * 
-         * @param head
-         * @param jobPlacements
-         * @return
-         */
-        @Override
-        public List<PlannedPlacement> planNext(Head head, List<JobPlacement> jobPlacements) {
-            return planDo(head, jobPlacements, false);
-        }
-
-        /**
-         * Execute the placement planning. This method is used my plan() to really plan placements and
-         * planNext() to look ahead what will be the next placement.
-         *
-         * @param head
-         * @param jobPlacements
-         * @return
-         */
-        private List<PlannedPlacement> planDo(Head head, List<JobPlacement> jobPlacements, boolean removeFromLists) {
             /**
              * Create an empty List<PlannedPlacement> which will hold the results.
              */
@@ -1582,11 +1544,9 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 PlannedPlacement plannedPlacement = planWithoutNozzleTipChange(nozzle, jobPlacements);
                 if (plannedPlacement != null) {
                     plannedPlacements.add(plannedPlacement);
-                    if (removeFromLists) {
-                        jobPlacements.remove(plannedPlacement.jobPlacement);
-                        nozzles.remove(plannedPlacement.nozzle);
-                        nozzleTips.remove(plannedPlacement.nozzleTip);
-                    }
+                    jobPlacements.remove(plannedPlacement.jobPlacement);
+                    nozzles.remove(plannedPlacement.nozzle);
+                    nozzleTips.remove(plannedPlacement.nozzleTip);
                 }
             }
             
@@ -1599,11 +1559,9 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 PlannedPlacement plannedPlacement = planWithNozzleTipChange(nozzle, jobPlacements, nozzleTips);
                 if (plannedPlacement != null) {
                     plannedPlacements.add(plannedPlacement);
-                    if (removeFromLists) {
-                        jobPlacements.remove(plannedPlacement.jobPlacement);
-                        nozzles.remove(plannedPlacement.nozzle);
-                        nozzleTips.remove(plannedPlacement.nozzleTip);
-                    }
+                    jobPlacements.remove(plannedPlacement.jobPlacement);
+                    nozzles.remove(plannedPlacement.nozzle);
+                    nozzleTips.remove(plannedPlacement.nozzleTip);
                 }
             }
 
