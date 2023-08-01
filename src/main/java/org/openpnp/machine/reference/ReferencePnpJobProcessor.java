@@ -569,11 +569,23 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         // provide a location to allow nozzle path optimization
         @Override
         public Location getPlanningLocation(PlannedPlacement plannedPlacement) {
-            // FIXME: optimizing the pick step is more difficult then other steps:
-            //        the location the action is start/take place depends on the
-            //        type of feeder and there is a path between feed and pick, that
-            //        is not considered here. For now, we'll just use the pick location.
-            return getPickLocation(plannedPlacement);
+            Location location;
+            final Nozzle nozzle = plannedPlacement.nozzle;
+            final JobPlacement jobPlacement = plannedPlacement.jobPlacement;
+            final Placement placement = jobPlacement.getPlacement();
+            final Part part = placement.getPart();
+
+            // try to get the location where the alignment will take place
+            try {
+                final Feeder feeder = findFeeder(machine, part);
+
+                location = getHeadLocation(nozzle, feeder.getPickLocation());
+            } catch (Exception e) {
+                // ignore exceptions
+                location = null;
+            }
+            
+            return location;
         }
 
         @Override
@@ -779,7 +791,21 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         // provide a location to allow nozzle path optimization
         @Override
         public Location getPlanningLocation(PlannedPlacement plannedPlacement) {
-            return getAlignLocation(plannedPlacement);
+            Location location;
+            final Camera camera;
+            final Nozzle nozzle = plannedPlacement.nozzle;
+
+            // try to get the location where the alignment will take place
+            try {
+                camera = VisionUtils.getBottomVisionCamera();
+                
+                location = getHeadLocation(nozzle, camera.getLocation());
+            } catch (Exception e) {
+                // ignore exceptions
+                location = null;
+            }
+            
+            return location;
         }
         
         @Override
@@ -863,7 +889,16 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         // provide a location to allow nozzle path optimization
         @Override
         public Location getPlanningLocation(PlannedPlacement plannedPlacement) {
-            return getRawPlaceLocation(plannedPlacement);
+            final Nozzle nozzle = plannedPlacement.nozzle;
+            final JobPlacement jobPlacement = plannedPlacement.jobPlacement;
+            final Placement placement = jobPlacement.getPlacement();
+            final BoardLocation boardLocation = plannedPlacement.jobPlacement.getBoardLocation();
+        
+            Location location = Utils2D.calculateBoardPlacementLocation(boardLocation,
+                    placement.getLocation());
+            
+            // convert location to where the head will move to to place the part
+            return getHeadLocation(nozzle, location);
         }
 
         @Override
@@ -1316,69 +1351,6 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             }
             
             return location;
-        }
-        
-        /**
-         * Get the location the the part for this placement will be picked from.
-         * This is used to generate locations for the optimizer.
-         */
-        protected Location getPickLocation(PlannedPlacement plannedPlacement) {
-            Location location;
-            final Nozzle nozzle = plannedPlacement.nozzle;
-            final JobPlacement jobPlacement = plannedPlacement.jobPlacement;
-            final Placement placement = jobPlacement.getPlacement();
-            final Part part = placement.getPart();
-
-            // try to get the location where the alignment will take place
-            try {
-                final Feeder feeder = findFeeder(machine, part);
-
-                location = getHeadLocation(nozzle, feeder.getPickLocation());
-            } catch (Exception e) {
-                // ignore exceptions
-                location = null;
-            }
-            
-            return location;
-        }
-        
-        /**
-         * Get the location where the alignment will take place.
-         * This is used to generate locations for the optimizer.
-         */
-        protected Location getAlignLocation(PlannedPlacement plannedPlacement) {
-            Location location;
-            final Camera camera;
-            final Nozzle nozzle = plannedPlacement.nozzle;
-
-            // try to get the location where the alignment will take place
-            try {
-                camera = VisionUtils.getBottomVisionCamera();
-                
-                location = getHeadLocation(nozzle, camera.getLocation());
-            } catch (Exception e) {
-                // ignore exceptions
-                location = null;
-            }
-            
-            return location;
-        }
-        
-        /**
-         * Get the raw/uncorrected location of the placement on the board.
-         * This is used to generate locations for the optimizer.
-         */
-        protected Location getRawPlaceLocation(PlannedPlacement plannedPlacement) {
-            final Nozzle nozzle = plannedPlacement.nozzle;
-            final JobPlacement jobPlacement = plannedPlacement.jobPlacement;
-            final Placement placement = jobPlacement.getPlacement();
-            final BoardLocation boardLocation = plannedPlacement.jobPlacement.getBoardLocation();
-        
-            Location location = Utils2D.calculateBoardPlacementLocation(boardLocation,
-                    placement.getLocation());
-            
-            // convert location to where the head will move to to place the part
-            return getHeadLocation(nozzle, location);
         }
         
         /**
