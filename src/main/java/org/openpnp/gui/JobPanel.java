@@ -102,18 +102,22 @@ import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 import org.openpnp.model.Panel;
 import org.openpnp.model.PanelLocation;
+import org.openpnp.model.Part;
 import org.openpnp.model.Motion;
 import org.openpnp.model.Placement;
 import org.openpnp.model.Placement.Type;
 import org.openpnp.spi.Camera;
+import org.openpnp.spi.Feeder;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.JobProcessor;
+import org.openpnp.spi.JobProcessor.JobProcessorException;
 import org.openpnp.spi.JobProcessor.TextStatusListener;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
 import org.openpnp.spi.MotionPlanner;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
+import org.pmw.tinylog.Logger;
 import com.google.common.eventbus.Subscribe;
 
 @SuppressWarnings("serial")  //$NON-NLS-1$
@@ -948,6 +952,48 @@ public class JobPanel extends JPanel {
              * both dispense and PnP this is not possible. Once dispense is removed we can include
              * the current placement in the thrown error and add this feature.
              */
+            if (t instanceof JobProcessorException) {
+                JobProcessorException jpe = (JobProcessorException)t;
+                Object source = jpe.getSource();
+                
+                // decode the source of the exception and try to select as much as possible
+                if (source instanceof BoardLocation) {
+                    BoardLocation b = (BoardLocation)source;
+                    // select the board
+                    Helpers.selectObjectTableRow(jobTable, b);
+                    // focus the job tab
+                    MainFrame.get().getTabs().setSelectedComponent(MainFrame.get().getJobTab());
+                } else if (source instanceof Placement) {
+                    Placement p = (Placement)source;
+
+                    // select the board this placement belongs to
+                    for (BoardLocation boardLocation : job.getBoardLocations()) {
+                        if (boardLocation.getBoard().getPlacements().contains(p)) {
+                            // this is the board, that contains the placement that caused the error
+                            Helpers.selectObjectTableRow(jobTable, boardLocation);
+                        }
+                    }
+
+                    // select the placement itself
+                    Helpers.selectObjectTableRow(jobPlacementsPanel.getTable(), p);
+                    // focus the job tab
+                    MainFrame.get().getTabs().setSelectedComponent(MainFrame.get().getJobTab());
+                } else if (source instanceof Part) {
+                    Part p = (Part)source;
+                    // select part in parts tab
+                    MainFrame.get().getPartsTab().selectPartInTable(p);
+                    // focus the parts tab
+                    MainFrame.get().getTabs().setSelectedComponent(MainFrame.get().getPartsTab());
+                } else if (source instanceof Feeder) {
+                    Feeder f = (Feeder)source;
+                    // select the feeder in the feeders tab
+                    MainFrame.get().getFeedersTab().selectFeederInTable(f);
+                    // focus the feeder tab
+                    MainFrame.get().getTabs().setSelectedComponent(MainFrame.get().getFeedersTab());
+                } else {
+                    Logger.debug("Exception contains an unsupported source: {}", source.getClass());
+                }
+            }
             
             MessageBoxes.errorBox(getTopLevelAncestor(), 
                     Translations.getString("JobPanel.JobRun.Error.ErrorBox.Title"), t.getMessage()); //$NON-NLS-1$
