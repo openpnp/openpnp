@@ -576,12 +576,6 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             return getPickLocation(plannedPlacement);
         }
 
-        // provide a next location: use the location of the first part on the board
-        @Override
-        public Location getNextPlanningLocation(List<PlannedPlacement>plannedPlacements) {
-            return getAlignLocation(plannedPlacements.get(0));
-        }
-
         @Override
         public Step stepImpl(PlannedPlacement plannedPlacement) throws JobProcessorException {
             if (plannedPlacement == null) {
@@ -788,12 +782,6 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             return getAlignLocation(plannedPlacement);
         }
         
-        // provide a next location: use the location of the first part on the board
-        @Override
-        public Location getNextPlanningLocation(List<PlannedPlacement>plannedPlacements) {
-            return getRawPlaceLocation(plannedPlacements.get(0));
-        }
-        
         @Override
         public Step stepImpl(PlannedPlacement plannedPlacement) throws JobProcessorException {
             if (plannedPlacement == null) {
@@ -876,21 +864,6 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         @Override
         public Location getPlanningLocation(PlannedPlacement plannedPlacement) {
             return getRawPlaceLocation(plannedPlacement);
-        }
-
-        // provide a next location: use the location of the first part on the board
-        @Override
-        public Location getNextPlanningLocation(List<PlannedPlacement>plannedPlacements) {
-            // get the next planned placements
-            List<PlannedPlacement>plannedNextPlacements = planner.planNext(head, jobPlacements);
-            
-            // if the list of planned next placements is empty, return the park location
-            if (plannedNextPlacements.isEmpty()) {
-                return head.getParkLocation();
-            }
-            
-            // else use the pick location of the first as next location after this step
-            return getPickLocation(plannedNextPlacements.get(0));
         }
 
         @Override
@@ -1260,17 +1233,12 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
          * allow the optimizer to read the location the head will move to to
          * perform the step for the placement.
          * 
-         * In addition, steps my implement getNextPlanningLocation() to allow the
-         * optimizer to get a location where the head will move to after this
-         * step has been executed for all placements.
-         * 
          * @param plannedPlacements
          * @return
          */
         private List<PlannedPlacement> sortPlacements(List<PlannedPlacement> plannedPlacements) {
             long t = System.currentTimeMillis();
             Location start; // start location of traveling salesman, current location of the head
-            Location end;   // end location of traveling salesman, location of the next step
         
             // a) collect data: sortLocation, start and end point
             for (PlannedPlacement plannedPlacement : plannedPlacements) {
@@ -1284,9 +1252,6 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 // any nozzle as reference shall provide the same head location.
                 Nozzle nozzle = plannedPlacements.get(0).nozzle;
                 start = getHeadLocation(nozzle, nozzle.getLocation());
-                    
-                // c) get the location the next step will take place as end point
-                end = getNextPlanningLocation(plannedPlacements);
                 
                 // c) sort PlanndPlacements according to sortLocation
                 // Use a traveling salesman algorithm to optimize the path to visit the placements
@@ -1303,7 +1268,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                             }
                         }, 
                         start,
-                        end);
+                        null);
                 
                 // read distance before optimization
                 double distance_ref = tsm.getTravellingDistance();
@@ -1334,20 +1299,6 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
          * @return
          */
         protected Location getPlanningLocation(PlannedPlacement plannedPlacement) {
-            return null;
-        }
-        
-        /**
-         * Return the location the head will move to after this step has been
-         * executed for all placements. The location my be approximative assuming
-         * the distance between nozzles is small compared to the distance to that
-         * location.
-         * The location is used to optimize the head movement.
-         * 
-         * @param plannedPlacement
-         * @return
-         */
-        protected Location getNextPlanningLocation(List<PlannedPlacement> plannedPlacements) {
             return null;
         }
         
