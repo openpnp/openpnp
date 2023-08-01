@@ -1416,12 +1416,21 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
          * This is used to generate locations for the optimizer.
          */
         public Location getRawPlaceLocation(PlannedPlacement plannedPlacement) {
+            final Nozzle nozzle = plannedPlacement.nozzle;
             final JobPlacement jobPlacement = plannedPlacement.jobPlacement;
             final Placement placement = jobPlacement.getPlacement();
             final BoardLocation boardLocation = plannedPlacement.jobPlacement.getBoardLocation();
         
             Location location = Utils2D.calculateBoardPlacementLocation(boardLocation,
                     placement.getLocation());
+            
+            // convert location to where the head will move to to place the part
+            try {
+                location = nozzle.toHeadLocation(location);
+            } catch (Exception e) {
+                // ignore exceptions
+                location = null;
+            }
             
             return location;
         }
