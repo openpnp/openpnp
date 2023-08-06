@@ -579,7 +579,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             try {
                 final Feeder feeder = findFeeder(machine, part);
 
-                location = getHeadLocation(nozzle, feeder.getPickLocation());
+                location = getHeadLocation(nozzle, feeder.getPickLocationWithoutMovement());
             } catch (Exception e) {
                 // ignore exceptions
                 location = null;
