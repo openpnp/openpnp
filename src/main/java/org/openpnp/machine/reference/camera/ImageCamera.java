@@ -75,6 +75,9 @@ public class ImageCamera extends ReferenceCamera {
     @Element(required = false)
     private Location imageUnitsPerPixel;
 
+    @Element(required = false)
+    private Location imageOffset = new Location(LengthUnit.Millimeters, 0, 0, 0, 0);
+
     @Attribute(required = false)
     private double simulatedRotation = 0;
 
@@ -161,7 +164,7 @@ public class ImageCamera extends ReferenceCamera {
     }
 
     public void setSimulatedScale(double simulatedScale) {
-        this.simulatedScale = simulatedScale;
+         this.simulatedScale = simulatedScale;
     }
 
     public double getSimulatedDistortion() {
@@ -197,6 +200,14 @@ public class ImageCamera extends ReferenceCamera {
 
     public void setImageUnitsPerPixel(Location imageUnitsPerPixel) {
         this.imageUnitsPerPixel = imageUnitsPerPixel;
+    }
+
+    public Location getImageOffset() {
+        return imageOffset;
+    }
+
+    public void setImageOffset(Location imageOffset) {
+        this.imageOffset = imageOffset;
     }
 
     public String getSourceUri() {
@@ -280,6 +291,10 @@ public class ImageCamera extends ReferenceCamera {
         double pixelX = locationX / upp.getX();
         double pixelY = locationY / upp.getY();
 
+        // apply configured offset
+        pixelX += imageOffset.getX();
+        pixelY += imageOffset.getY();
+        
         // Draw the image with sub-pixel rendering.
         double dx = (pixelX - (width / 2.0));
         double dy = (source.getHeight() - (pixelY + (height / 2.0)));
