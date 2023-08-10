@@ -287,14 +287,14 @@ public class ImageCamera extends ReferenceCamera {
         double locationX = location.getX();
         double locationY = location.getY();
 
+        // apply configured offset
+        locationX += imageOffset.getX();
+        locationY += imageOffset.getY();
+        
         Location upp = getImageUnitsPerPixel().convertToUnits(AxesLocation.getUnits());
         double pixelX = locationX / upp.getX();
         double pixelY = locationY / upp.getY();
 
-        // apply configured offset
-        pixelX += imageOffset.getX();
-        pixelY += imageOffset.getY();
-        
         // Draw the image with sub-pixel rendering.
         double dx = (pixelX - (width / 2.0));
         double dy = (source.getHeight() - (pixelY + (height / 2.0)));
