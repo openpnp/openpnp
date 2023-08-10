@@ -164,11 +164,7 @@ public class ImageCamera extends ReferenceCamera {
     }
 
     public void setSimulatedScale(double simulatedScale) {
-        // update the cameras units per pixel setting automatically here to keep all overlays and camera jogging correct
-        Location unitsPerPixel = getUnitsPerPixel();
-        unitsPerPixel = unitsPerPixel.multiply(this.simulatedScale / simulatedScale);
-        setUnitsPerPixel(unitsPerPixel);
-        this.simulatedScale = simulatedScale;
+         this.simulatedScale = simulatedScale;
     }
 
     public double getSimulatedDistortion() {
