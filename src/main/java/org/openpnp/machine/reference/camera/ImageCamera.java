@@ -284,13 +284,12 @@ public class ImageCamera extends ReferenceCamera {
         Graphics2D gFrame = frame.createGraphics();
         AffineTransform tx = gFrame.getTransform();
 
+        // apply configured offset
+        location = location.add(imageOffset);
+        
         double locationX = location.getX();
         double locationY = location.getY();
 
-        // apply configured offset
-        locationX += imageOffset.getX();
-        locationY += imageOffset.getY();
-        
         Location upp = getImageUnitsPerPixel().convertToUnits(AxesLocation.getUnits());
         double pixelX = locationX / upp.getX();
         double pixelY = locationY / upp.getY();
