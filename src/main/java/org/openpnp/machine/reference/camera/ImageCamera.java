@@ -75,6 +75,9 @@ public class ImageCamera extends ReferenceCamera {
     @Element(required = false)
     private Location imageUnitsPerPixel;
 
+    @Element(required = false)
+    private Location imageOffset = new Location(LengthUnit.Millimeters, 0, 0, 0, 0);
+
     @Attribute(required = false)
     private double simulatedRotation = 0;
 
@@ -161,7 +164,7 @@ public class ImageCamera extends ReferenceCamera {
     }
 
     public void setSimulatedScale(double simulatedScale) {
-        this.simulatedScale = simulatedScale;
+         this.simulatedScale = simulatedScale;
     }
 
     public double getSimulatedDistortion() {
@@ -197,6 +200,14 @@ public class ImageCamera extends ReferenceCamera {
 
     public void setImageUnitsPerPixel(Location imageUnitsPerPixel) {
         this.imageUnitsPerPixel = imageUnitsPerPixel;
+    }
+
+    public Location getImageOffset() {
+        return imageOffset;
+    }
+
+    public void setImageOffset(Location imageOffset) {
+        this.imageOffset = imageOffset;
     }
 
     public String getSourceUri() {
@@ -273,8 +284,11 @@ public class ImageCamera extends ReferenceCamera {
         Graphics2D gFrame = frame.createGraphics();
         AffineTransform tx = gFrame.getTransform();
 
-        double locationX = location.getX();
-        double locationY = location.getY();
+        // apply configured offset
+        Location imageLocation = location.add(imageOffset);
+        
+        double locationX = imageLocation.getX();
+        double locationY = imageLocation.getY();
 
         Location upp = getImageUnitsPerPixel().convertToUnits(AxesLocation.getUnits());
         double pixelX = locationX / upp.getX();
