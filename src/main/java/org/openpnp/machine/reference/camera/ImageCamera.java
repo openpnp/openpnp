@@ -285,10 +285,10 @@ public class ImageCamera extends ReferenceCamera {
         AffineTransform tx = gFrame.getTransform();
 
         // apply configured offset
-        location = location.add(imageOffset);
+        Location imageLocation = location.add(imageOffset);
         
-        double locationX = location.getX();
-        double locationY = location.getY();
+        double locationX = imageLocation.getX();
+        double locationY = imageLocation.getY();
 
         Location upp = getImageUnitsPerPixel().convertToUnits(AxesLocation.getUnits());
         double pixelX = locationX / upp.getX();
