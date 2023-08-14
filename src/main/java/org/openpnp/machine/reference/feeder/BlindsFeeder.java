@@ -309,25 +309,14 @@ public class BlindsFeeder extends ReferenceFeeder {
         return machineLocation;
     } 
 
-    private Location getPickLocation(double pocketNumber, boolean withVision) throws Exception {
-        if (withVision) {
-            assertCalibration();
-        }
-        return getUncalibratedPickLocation(pocketNumber);
-    }
-
     public Location getPickLocation(double pocketNumber) throws Exception {
-        return getPickLocation(pocketNumber, true);
+        assertCalibration();
+        return getUncalibratedPickLocation(pocketNumber);
     }
 
     @Override
     public Location getPickLocation() throws Exception {
-        return getPickLocation(this.getFedPocketNumber(), true);
-    }
-
-    @Override
-    public Location getPickLocationWithoutMovement() throws Exception {
-        return getPickLocation(this.getFedPocketNumber(), false);
+        return getPickLocation(this.getFedPocketNumber());
     }
 
     private int getFedPocketNumber() {

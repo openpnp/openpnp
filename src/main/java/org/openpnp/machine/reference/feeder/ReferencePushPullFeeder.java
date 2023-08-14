@@ -369,27 +369,15 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         return calibrationTrigger != CalibrationTrigger.None;
     }
 
-    // unified getPickLocation method to return the location as before or without vision
-    private Location getPickLocation(boolean withVision) throws Exception {
-        if (withVision) {
-            assertCalibrated(false);
-        }
+    @Override
+    public Location getPickLocation() throws Exception {
+        assertCalibrated(false);
         // Numbers are 1-based (a feed is needed before the very first part can be picked),
         // therefore the modulo calculation is a bit gnarly.
         // The 1-based approach has the benefit, that at feed count 0 (reset) the part closest to the reel 
         // is the pick location which is the last part in a multi-part feed cycle, which is the one we want for setup.  
         long partInCycle = ((getFeedCount()+getPartsPerFeedCycle()-1) % getPartsPerFeedCycle())+1;
         return getPickLocation(partInCycle, visionOffset);
-    }
-    
-    @Override
-    public Location getPickLocation() throws Exception {
-        return getPickLocation(true);
-    }
-
-    @Override
-    public Location getPickLocationWithoutMovement() throws Exception {
-        return getPickLocation(false);
     }
 
     @Override

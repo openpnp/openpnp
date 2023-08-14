@@ -64,16 +64,6 @@ public interface Feeder extends Identifiable, Named, WizardConfigurable, Propert
      */
     public Location getPickLocation() throws Exception;
 
-
-    /**
-     * Same as {@link #getPickLocation()} but guaranteed to not move the machine.
-     * 
-     * @return
-     */
-    default Location getPickLocationWithoutMovement() throws Exception {
-        return getPickLocation();
-    };
-    
     /**
      * @return True if the part height needs to be added to the pick location. The distinction is
      * needed for part height probing 
