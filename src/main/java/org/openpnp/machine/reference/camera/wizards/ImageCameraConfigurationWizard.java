@@ -98,6 +98,8 @@ public class ImageCameraConfigurationWizard extends AbstractConfigurationWizard 
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
         lblWidth = new JLabel("X");
@@ -135,42 +137,56 @@ public class ImageCameraConfigurationWizard extends AbstractConfigurationWizard 
         panelGeneral.add(imageUnitsPerPixelY, "6, 6");
         imageUnitsPerPixelY.setColumns(10);
 
+        lblOffset = new JLabel(Translations.getString(
+                "ImageCameraConfigurationWizard.GeneralPanel.OffsetLabel.text")); //$NON-NLS-1$
+        panelGeneral.add(lblOffset, "2, 8, right, default");
+        lblOffset.setToolTipText(Translations.getString(
+                "ImageCameraConfigurationWizard.GeneralPanel.OffsetLabel.toolTipText")); //$NON-NLS-1$
+
+        imageOffsetX = new JTextField();
+        panelGeneral.add(imageOffsetX, "4, 8");
+        imageOffsetX.setColumns(10);
+        
+        imageOffsetY = new JTextField();
+        panelGeneral.add(imageOffsetY, "6, 8");
+        imageOffsetY.setColumns(10);
+
         lblRotation = new JLabel(Translations.getString(
                 "ImageCameraConfigurationWizard.GeneralPanel.ZRotationLabel.text")); //$NON-NLS-1$
         lblRotation.setToolTipText(Translations.getString(
                 "ImageCameraConfigurationWizard.GeneralPanel.ZRotationLabel.toolTipText")); //$NON-NLS-1$
-        panelGeneral.add(lblRotation, "2, 8, right, default");
+        panelGeneral.add(lblRotation, "2, 10, right, default");
 
         simulatedRotation = new JTextField();
-        panelGeneral.add(simulatedRotation, "4, 8, fill, default");
+        panelGeneral.add(simulatedRotation, "4, 10, fill, default");
         simulatedRotation.setColumns(10);
         
         lblYaw = new JLabel(Translations.getString(
                 "ImageCameraConfigurationWizard.GeneralPanel.YRotationLabel.text")); //$NON-NLS-1$
         lblYaw.setToolTipText(Translations.getString(
                 "ImageCameraConfigurationWizard.GeneralPanel.YRotationLabel.toolTipText")); //$NON-NLS-1$
-        panelGeneral.add(lblYaw, "2, 10, right, default");
+        panelGeneral.add(lblYaw, "2, 12, right, default");
         
         simulatedYRotation = new JTextField();
-        panelGeneral.add(simulatedYRotation, "4, 10, fill, default");
+        panelGeneral.add(simulatedYRotation, "4, 12, fill, default");
         simulatedYRotation.setColumns(10);
         
         lblScale = new JLabel(Translations.getString(
                 "ImageCameraConfigurationWizard.GeneralPanel.ViewingScaleLabel.text")); //$NON-NLS-1$
-        panelGeneral.add(lblScale, "2, 12, right, default");
+        panelGeneral.add(lblScale, "2, 14, right, default");
         
         simulatedScale = new JTextField();
-        panelGeneral.add(simulatedScale, "4, 12, fill, default");
+        panelGeneral.add(simulatedScale, "4, 14, fill, default");
         simulatedScale.setColumns(10);
         
         lblDistortion = new JLabel(Translations.getString(
                 "ImageCameraConfigurationWizard.GeneralPanel.DistortionLabel.text")); //$NON-NLS-1$
         lblDistortion.setToolTipText(Translations.getString(
                 "ImageCameraConfigurationWizard.GeneralPanel.DistortionLabel.toolTipText")); //$NON-NLS-1$
-        panelGeneral.add(lblDistortion, "2, 14, right, default");
+        panelGeneral.add(lblDistortion, "2, 16, right, default");
         
         simulatedDistortion = new JTextField();
-        panelGeneral.add(simulatedDistortion, "4, 14, fill, default");
+        panelGeneral.add(simulatedDistortion, "4, 16, fill, default");
         simulatedDistortion.setColumns(10);
 
 
@@ -178,13 +194,13 @@ public class ImageCameraConfigurationWizard extends AbstractConfigurationWizard 
                 "ImageCameraConfigurationWizard.GeneralPanel.MirroredViewLabel.text")); //$NON-NLS-1$
         lblCameraFlipped.setToolTipText(Translations.getString(
                 "ImageCameraConfigurationWizard.GeneralPanel.MirroredViewLabel.toolTipText")); //$NON-NLS-1$
-        panelGeneral.add(lblCameraFlipped, "2, 16, right, default");
+        panelGeneral.add(lblCameraFlipped, "2, 18, right, default");
 
         simulatedFlipped = new JCheckBox("");
-        panelGeneral.add(simulatedFlipped, "4, 16");
+        panelGeneral.add(simulatedFlipped, "4, 18");
 
         label = new JLabel(" ");
-        panelGeneral.add(label, "8, 16");
+        panelGeneral.add(label, "8, 18");
 
         lblSourceUrl = new JLabel(Translations.getString(
                 "ImageCameraConfigurationWizard.GeneralPanel.SourceUrlLabel.text")); //$NON-NLS-1$
@@ -312,6 +328,11 @@ public class ImageCameraConfigurationWizard extends AbstractConfigurationWizard 
         addWrappedBinding(imageUnitsPerPixel, "lengthX", imageUnitsPerPixelX, "text", uppConverter);
         addWrappedBinding(imageUnitsPerPixel, "lengthY", imageUnitsPerPixelY, "text", uppConverter);
 
+        MutableLocationProxy imageOffset = new MutableLocationProxy();
+        bind(UpdateStrategy.READ_WRITE, camera, "imageOffset", imageOffset, "location");
+        addWrappedBinding(imageOffset, "lengthX", imageOffsetX, "text", lengthConverter);
+        addWrappedBinding(imageOffset, "lengthY", imageOffsetY, "text", lengthConverter);
+
         addWrappedBinding(camera, "focalLength", focalLength, "text", lengthConverter);
         addWrappedBinding(camera, "sensorDiagonal", sensorDiagonal, "text", lengthConverter);
 
@@ -335,6 +356,8 @@ public class ImageCameraConfigurationWizard extends AbstractConfigurationWizard 
         ComponentDecorators.decorateWithAutoSelect(textFieldSourceUrl);
         ComponentDecorators.decorateWithAutoSelect(imageUnitsPerPixelX);
         ComponentDecorators.decorateWithAutoSelect(imageUnitsPerPixelY);
+        ComponentDecorators.decorateWithAutoSelect(imageOffsetX);
+        ComponentDecorators.decorateWithAutoSelect(imageOffsetY);
 
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(focalLength);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(sensorDiagonal);
@@ -391,6 +414,9 @@ public class ImageCameraConfigurationWizard extends AbstractConfigurationWizard 
     private JLabel lblUnitsPerPixel;
     private JTextField imageUnitsPerPixelX;
     private JTextField imageUnitsPerPixelY;
+    private JLabel lblOffset;
+    private JTextField imageOffsetX;
+    private JTextField imageOffsetY;
     private JLabel label_1;
     private JLabel lblScale;
     private JTextField simulatedScale;

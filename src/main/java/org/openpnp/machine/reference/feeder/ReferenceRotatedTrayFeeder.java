@@ -32,6 +32,8 @@ import org.openpnp.spi.PropertySheetHolder;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.core.Commit;
+import org.simpleframework.xml.core.Persist;
 
 /**
  * Implementation of Feeder that indexes based on an offset. This allows a tray
@@ -48,8 +50,14 @@ public class ReferenceRotatedTrayFeeder extends ReferenceFeeder {
 	private Location offsets = new Location(LengthUnit.Millimeters);
 	@Attribute
 	private int feedCount = 0;
-	@Attribute
-	private double trayRotation = 0;
+	
+	@Attribute(required=false)
+	@Deprecated
+	private Double trayRotation = null;
+	
+	@Attribute(required=false)
+	private double componentRotationInTray = 0;
+	
 	@Element
 	protected Location lastComponentLocation = new Location(LengthUnit.Millimeters);
 	@Element
@@ -57,28 +65,54 @@ public class ReferenceRotatedTrayFeeder extends ReferenceFeeder {
 
 	private Location pickLocation;
 
+	@Commit
+	public void commit() {
+	    if (trayRotation != null) {
+	        //In previous versions, the location held the pick rotation and trayRotation held
+	        //the actual rotation of the tray. In this version, the location holds the actual
+	        //rotation of the tray and componentRotationInTray holds the rotation of the component
+	        //relative to the tray. Note, in almost all cases, componentRotationInTray will be one
+	        //of 0, or +/-90, or +/-180. And with this version, pick rotation = 
+	        //location.getRotation() + componentRotationInTray
+	        
+	        //Convert from the old version to the new version
+	        componentRotationInTray = location.getRotation() - trayRotation;
+	        location = location.derive(null, null, null, trayRotation);
+	        
+	        //Remove the deprecated attribute
+	        trayRotation = null;
+	    }
+	}
+	
 	@Override
 	public Location getPickLocation() throws Exception {
-		if (pickLocation == null) {
-			pickLocation = location;
-		}
-		int partX, partY;
+		if (pickLocation == null || feedCount == 0) {
+		    //Normally the pick location is only valid after a feed operation. But in the case of no
+		    //prior feed operation (feed count is zero), we set the pick location to the first part
+		    //(which is also where it will be after the first feed operation).
+	        int partX, partY;
+	        int fc = feedCount;
+	        if (pickLocation == null && feedCount > 0) {
+	            //Since the pick location is null, the machine configuration must have just been
+	            //loaded. And since the feed count is greater than 0, this feeder must have already
+	            //performed a feed operation prior to the configuration being saved. This means we
+	            //must back-up one feed count to point to the pick location for that prior feed 
+	            //operation.
+	            fc = fc - 1;
+	        }
 
-		if (feedCount >= (trayCountCols * trayCountRows)) {
-			throw new Exception("Tray empty.");
-		}
+	        if (trayCountCols >= trayCountRows) {
+	            // X major axis.
+	            partX = fc / trayCountRows;
+	            partY = fc % trayCountRows;
+	        } else {
+	            // Y major axis.
+	            partX = fc % trayCountCols;
+	            partY = fc / trayCountCols;
+	        }
 
-		if (trayCountCols >= trayCountRows) {
-			// X major axis.
-			partX = feedCount / trayCountRows;
-			partY = feedCount % trayCountRows;
-		} else {
-			// Y major axis.
-			partX = feedCount % trayCountCols;
-			partY = feedCount / trayCountCols;
+	        calculatePickLocation(partX, partY);
 		}
-
-		calculatePickLocation(partX, partY);
 	
 		Logger.debug("{}.getPickLocation => {}", getName(), pickLocation);
 		
@@ -92,14 +126,14 @@ public class ReferenceRotatedTrayFeeder extends ReferenceFeeder {
 		// and then add them to the location to get the final pickLocation.
 		// pickLocation = location.add(offsets.multiply(partX, partY, 0.0, 0.0));
 
-		double sin = Math.sin(Math.toRadians(trayRotation));
-		double cos = Math.cos(Math.toRadians(trayRotation));
+		double sin = Math.sin(Math.toRadians(location.getRotation()));
+		double cos = Math.cos(Math.toRadians(location.getRotation()));
 
 		double delta_x = partX * offsets.getX() * cos + partY * offsets.getY() * sin;
 		double delta_y = partX * offsets.getX() * sin - partY * offsets.getY() * cos;
-		Location delta = new Location(LengthUnit.Millimeters, delta_x, delta_y, 0, 0);
+		Location delta = new Location(LengthUnit.Millimeters, delta_x, delta_y, 0, componentRotationInTray);
 
-		pickLocation = location.add(delta);
+		pickLocation = location.addWithRotation(delta);
 	}
 
 	public void feed(Nozzle nozzle) throws Exception {
@@ -108,7 +142,7 @@ public class ReferenceRotatedTrayFeeder extends ReferenceFeeder {
 		int partX, partY;
 
 		if (feedCount >= (trayCountCols * trayCountRows)) {
-			throw new Exception("Tray empty.");
+			throw new Exception(this.getName() + " (" + this.partId + ") is empty.");
 		}
 
 		if (trayCountCols >= trayCountRows) {
@@ -165,15 +199,39 @@ public class ReferenceRotatedTrayFeeder extends ReferenceFeeder {
         }
         // change FeedCount
         setFeedCount(getFeedCount() - 1);
+
+        //Since this is essentially an unpick and unfeed operation we also need to adjust the pick 
+        //location back one place so that it points to the location computed for the feed operation
+        //prior to the one we just undone.
+        int fc = feedCount;
+        if (feedCount > 0) {
+            fc = fc - 1;
+        }
+
+        int partX, partY;
+        if (trayCountCols >= trayCountRows) {
+            // X major axis.
+            partX = fc / trayCountRows;
+            partY = fc % trayCountRows;
+        } else {
+            // Y major axis.
+            partX = fc % trayCountCols;
+            partY = fc / trayCountCols;
+        }
+
+        calculatePickLocation(partX, partY);
     }
 
-	
 	public int getTrayCountCols() {
 		return trayCountCols;
 	}
 
 	public void setTrayCountCols(int trayCountCols) {
-		this.trayCountCols = trayCountCols;
+	    int oldValue = this.trayCountCols;
+        this.trayCountCols = trayCountCols;
+        firePropertyChange("trayCountCols", oldValue, trayCountCols);
+        firePropertyChange("remainingCount", trayCountRows*oldValue - feedCount, 
+                trayCountRows*trayCountCols - feedCount);
 	}
 
 	public int getTrayCountRows() {
@@ -181,7 +239,11 @@ public class ReferenceRotatedTrayFeeder extends ReferenceFeeder {
 	}
 
 	public void setTrayCountRows(int trayCountRows) {
-		this.trayCountRows = trayCountRows;
+        int oldValue = this.trayCountRows;
+        this.trayCountRows = trayCountRows;
+        firePropertyChange("trayCountRows", oldValue, trayCountRows);
+        firePropertyChange("remainingCount", oldValue*trayCountCols - feedCount, 
+                trayCountRows*trayCountCols - feedCount);
 	}
 
 	public Location getLastComponentLocation() {
@@ -208,14 +270,6 @@ public class ReferenceRotatedTrayFeeder extends ReferenceFeeder {
 		this.offsets = offsets;
 	}
 
-	public double getTrayRotation() {
-		return trayRotation;
-	}
-
-	public void setTrayRotation(double trayrotation) {
-		this.trayRotation = trayrotation;
-	}
-
 	public int getFeedCount() {
 		return feedCount;
 	}
@@ -224,7 +278,23 @@ public class ReferenceRotatedTrayFeeder extends ReferenceFeeder {
 		int oldValue = this.feedCount;
 		this.feedCount = feedCount;
 		firePropertyChange("feedCount", oldValue, feedCount);
+		firePropertyChange("remainingCount", trayCountRows*trayCountCols - oldValue, 
+		        trayCountRows*trayCountCols - feedCount);
 	}
+	
+	public int getRemainingCount() {
+	    return trayCountRows*trayCountCols - feedCount;
+	}
+	
+	public double getComponentRotationInTray() {
+        return componentRotationInTray;
+    }
+
+    public void setComponentRotationInTray(double componentRotationInTray) {
+        double oldValue = this.componentRotationInTray;
+        this.componentRotationInTray = componentRotationInTray;
+        firePropertyChange("componentRotationInTray", oldValue, componentRotationInTray);
+    }
 
 	@Override
 	public String toString() {
