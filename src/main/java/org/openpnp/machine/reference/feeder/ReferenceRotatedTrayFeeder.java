@@ -33,12 +33,12 @@ import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.core.Commit;
-import org.simpleframework.xml.core.Persist;
 
 /**
  * Implementation of Feeder that indexes based on an offset. This allows a tray
  * of parts to be picked from without moving any tape. Can handle trays of
- * arbitrary X and Y count.
+ * arbitrary X and Y count and the tray can be rotated at an arbitrary angle
+ * relative to the machine.
  */
 public class ReferenceRotatedTrayFeeder extends ReferenceFeeder {
 
@@ -72,12 +72,19 @@ public class ReferenceRotatedTrayFeeder extends ReferenceFeeder {
 	        //the actual rotation of the tray. In this version, the location holds the actual
 	        //rotation of the tray and componentRotationInTray holds the rotation of the component
 	        //relative to the tray. Note, in almost all cases, componentRotationInTray will be one
-	        //of 0, or +/-90, or +/-180. And with this version, pick rotation = 
+	        //of 0, or +/-90, or +/-180. So, with the new version, pick rotation = 
 	        //location.getRotation() + componentRotationInTray
 	        
-	        //Convert from the old version to the new version
+	        //Convert the values from the old version to the new version
 	        componentRotationInTray = location.getRotation() - trayRotation;
 	        location = location.derive(null, null, null, trayRotation);
+	        
+	        //The previous version of the feeder also had a bug which caused it to skip the first
+	        //component and thereafter it was picking one component ahead of where it should.
+	        //This bumps the feedCount up by one to account for that bug.
+	        if ((feedCount > 0) && (feedCount < trayCountCols*trayCountRows)) {
+	            feedCount++;
+	        }
 	        
 	        //Remove the deprecated attribute
 	        trayRotation = null;
@@ -101,6 +108,9 @@ public class ReferenceRotatedTrayFeeder extends ReferenceFeeder {
 	            fc = fc - 1;
 	        }
 
+	        //Not sure why we need to change whether we pick along rows or columns depending on
+	        //which is shorter. Anyway, the original version of the feeder does this so am leaving
+	        //this as is so as to not affect picking from a partially completed tray.
 	        if (trayCountCols >= trayCountRows) {
 	            // X major axis.
 	            partX = fc / trayCountRows;
@@ -145,6 +155,9 @@ public class ReferenceRotatedTrayFeeder extends ReferenceFeeder {
 			throw new Exception(this.getName() + " (" + this.partId + ") is empty.");
 		}
 
+        //Not sure why we need to change whether we pick along rows or columns depending on
+        //which is shorter. Anyway, the original version of the feeder does this so am leaving
+        //this as is so as to not affect picking from a partially completed tray.
 		if (trayCountCols >= trayCountRows) {
 			// X major axis.
 			partX = feedCount / trayCountRows;
@@ -208,6 +221,9 @@ public class ReferenceRotatedTrayFeeder extends ReferenceFeeder {
             fc = fc - 1;
         }
 
+        //Not sure why we need to change whether we pick along rows or columns depending on
+        //which is shorter. Anyway, the original version of the feeder does this so am leaving
+        //this as is so as to not affect picking from a partially completed tray.
         int partX, partY;
         if (trayCountCols >= trayCountRows) {
             // X major axis.

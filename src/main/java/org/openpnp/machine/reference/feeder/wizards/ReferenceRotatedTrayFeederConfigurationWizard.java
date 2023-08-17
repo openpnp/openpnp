@@ -36,6 +36,7 @@ import javax.swing.border.TitledBorder;
 
 import org.jdesktop.beansbinding.Converter;
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
+import org.openpnp.Translations;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.components.LocationButtonsPanel;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
@@ -48,8 +49,12 @@ import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.gui.support.PartsComboBoxModel;
 import org.openpnp.machine.reference.feeder.ReferenceRotatedTrayFeeder;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Length;
+import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
+import org.openpnp.util.Utils2D;
+
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
@@ -58,7 +63,8 @@ import com.jgoodies.forms.layout.RowSpec;
 @SuppressWarnings("serial")
 public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfigurationWizard {
     private static final double RIGHT_ANGLE_TOLERANCE = 2.5; //degrees
-    private static final double OFFSET_AND_ROTATION_TOLERANCE = 0.002;
+    private static final LengthUnit VALIDATION_UNITS = LengthUnit.Millimeters;
+    private static final double VALIDATION_TOLERANCE = 0.03;
     
 	private final ReferenceRotatedTrayFeeder feeder;
 	private final boolean includePickLocation;
@@ -96,6 +102,14 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 	private JLabel lblPickRetryCount;
 	private JTextField pickRetryCount;
 
+	private MutableLocationProxy firstRowFirstColumn = new MutableLocationProxy();
+	private MutableLocationProxy firstRowLastColumn = new MutableLocationProxy();
+    private MutableLocationProxy lastRowLastColumn = new MutableLocationProxy();
+    private MutableLocationProxy offsetsAndRotation = new MutableLocationProxy();
+	private int nRows;
+	private int nCols;
+	
+	
 	/**
 	 * @wbp.parser.constructor
 	 */
@@ -106,12 +120,11 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 	@SuppressWarnings({"rawtypes", "unchecked"})
     public ReferenceRotatedTrayFeederConfigurationWizard(ReferenceRotatedTrayFeeder feeder,
 			boolean includePickLocation) {
-		// super(feeder);
 		this.feeder = feeder;
 		this.includePickLocation = includePickLocation;
 
 		panelPart = new JPanel();
-		panelPart.setBorder(new TitledBorder(null, "General Settings",
+		panelPart.setBorder(new TitledBorder(null, Translations.getString("ReferenceRotatedTrayFeederConfigurationWizard.GeneralSettings"), //$NON-NLS-1$
 				TitledBorder.LEADING, TitledBorder.TOP, null));
 		contentPanel.add(panelPart);
 		panelPart.setLayout(new FormLayout(new ColumnSpec[] {
@@ -120,7 +133,7 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 		        FormSpecs.RELATED_GAP_COLSPEC,
 		        FormSpecs.DEFAULT_COLSPEC,
 		        FormSpecs.RELATED_GAP_COLSPEC,
-		        ColumnSpec.decode("default:grow"),},
+		        ColumnSpec.decode("default:grow"),}, //$NON-NLS-1$
 		    new RowSpec[] {
 		        FormSpecs.RELATED_GAP_ROWSPEC,
 		        FormSpecs.DEFAULT_ROWSPEC,
@@ -137,108 +150,104 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 			// in WindowBuilder but doesn't happen during normal run.
 		}
 
-		JLabel lblPart = new JLabel("Part");
-		panelPart.add(lblPart, "2, 2, right, default");
+		JLabel lblPart = new JLabel(Translations.getString("ReferenceRotatedTrayFeederConfigurationWizard.Part")); //$NON-NLS-1$
+		panelPart.add(lblPart, "2, 2, right, default"); //$NON-NLS-1$
 		comboBoxPart.setRenderer(new IdentifiableListCellRenderer<Part>());
-		panelPart.add(comboBoxPart, "4, 2, left, default");
+		panelPart.add(comboBoxPart, "4, 2, left, default"); //$NON-NLS-1$
 
-		JLabel lblRetryCount = new JLabel("Feed Retry Count");
-		panelPart.add(lblRetryCount, "2, 4, right, default");
+		JLabel lblRetryCount = new JLabel(Translations.getString("ReferenceRotatedTrayFeederConfigurationWizard.FeedRetryCount")); //$NON-NLS-1$
+		panelPart.add(lblRetryCount, "2, 4, right, default"); //$NON-NLS-1$
 
 		retryCountTf = new JTextField();
-		retryCountTf.setText("3");
-		panelPart.add(retryCountTf, "4, 4");
+		retryCountTf.setText("3"); //$NON-NLS-1$
+		panelPart.add(retryCountTf, "4, 4"); //$NON-NLS-1$
 		retryCountTf.setColumns(3);
 		
-		lblPickRetryCount = new JLabel("Pick Retry Count");
-		panelPart.add(lblPickRetryCount, "2, 6, right, default");
+		lblPickRetryCount = new JLabel(Translations.getString("ReferenceRotatedTrayFeederConfigurationWizard.PickRetryCount")); //$NON-NLS-1$
+		panelPart.add(lblPickRetryCount, "2, 6, right, default"); //$NON-NLS-1$
 		
 		pickRetryCount = new JTextField();
-		pickRetryCount.setText("3");
+		pickRetryCount.setText("3"); //$NON-NLS-1$
 		pickRetryCount.setColumns(3);
-		panelPart.add(pickRetryCount, "4, 6, fill, default");
+		panelPart.add(pickRetryCount, "4, 6, fill, default"); //$NON-NLS-1$
 
 		if (includePickLocation) {
 			panelLocation = new JPanel();
 			panelLocation.setBorder(new TitledBorder(null,
-					"Tray Component Locations", TitledBorder.LEADING, TitledBorder.TOP, null));
+					Translations.getString("ReferenceRotatedTrayFeederConfigurationWizard.TrayComponentLocations"), TitledBorder.LEADING, TitledBorder.TOP, null)); //$NON-NLS-1$
 			contentPanel.add(panelLocation);
 			panelLocation.setLayout(new FormLayout(
-					new ColumnSpec[] { FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"),
-							FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"),
-							FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"),
-							FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"),
-							FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("left:default:grow"), },
+					new ColumnSpec[] { FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"), //$NON-NLS-1$
+							FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"), //$NON-NLS-1$
+							FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"), //$NON-NLS-1$
+							FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"), //$NON-NLS-1$
+							FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("left:default:grow"), }, //$NON-NLS-1$
 					new RowSpec[] { FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
 							FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC,
 							FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
 							FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC }));
 
 			JLabel firstComponent = new JLabel(
-					"<html><b>Point A:</b><br /><span style='font-size:7px'>First Row - First Component</span></html>");
-			panelLocation.add(firstComponent, "2, 4");
+					Translations.getString("ReferenceRotatedTrayFeederConfigurationWizard.FirstRowFirstColumn")); //$NON-NLS-1$
+			panelLocation.add(firstComponent, "2, 4"); //$NON-NLS-1$
 
-			lblX_1 = new JLabel("X");
-			panelLocation.add(lblX_1, "4, 2");
+			lblX_1 = new JLabel(Translations.getString("ReferenceRotatedTrayFeederConfigurationWizard.X")); //$NON-NLS-1$
+			panelLocation.add(lblX_1, "4, 2"); //$NON-NLS-1$
 
-			lblY_1 = new JLabel("Y");
-			panelLocation.add(lblY_1, "6, 2");
+			lblY_1 = new JLabel(Translations.getString("ReferenceRotatedTrayFeederConfigurationWizard.Y")); //$NON-NLS-1$
+			panelLocation.add(lblY_1, "6, 2"); //$NON-NLS-1$
 
 			textFieldLocationX = new JTextField();
-			panelLocation.add(textFieldLocationX, "4, 4");
+			panelLocation.add(textFieldLocationX, "4, 4"); //$NON-NLS-1$
 			textFieldLocationX.setColumns(6);
 
 			textFieldLocationY = new JTextField();
-			panelLocation.add(textFieldLocationY, "6, 4");
+			panelLocation.add(textFieldLocationY, "6, 4"); //$NON-NLS-1$
 			textFieldLocationY.setColumns(6);
 
-//			locationButtonsPanel = new LocationButtonsPanel(textFieldLocationX, textFieldLocationY,
-//			        null, textFieldTrayRotation);
-//			panelLocation.add(locationButtonsPanel, "8, 4");
-
 			JLabel firstRowLastComponent = new JLabel(
-					"<html><b>Point B:</b><br /><span style='font-size:8px'>First Row - Last Component</span></html>");
-			panelLocation.add(firstRowLastComponent, "2, 6");
+					Translations.getString("ReferenceRotatedTrayFeederConfigurationWizard.FirstRowLastColumn")); //$NON-NLS-1$
+			panelLocation.add(firstRowLastComponent, "2, 6"); //$NON-NLS-1$
 
 			textFieldFirstRowLastLocationX = new JTextField();
-			panelLocation.add(textFieldFirstRowLastLocationX, "4, 6");
+			panelLocation.add(textFieldFirstRowLastLocationX, "4, 6"); //$NON-NLS-1$
 			textFieldFirstRowLastLocationX.setColumns(6);
 
 			textFieldFirstRowLastLocationY = new JTextField();
-			panelLocation.add(textFieldFirstRowLastLocationY, "6, 6");
+			panelLocation.add(textFieldFirstRowLastLocationY, "6, 6"); //$NON-NLS-1$
 			textFieldFirstRowLastLocationY.setColumns(6);
 
 			lastLocationButtonsPanel = new LocationButtonsPanel(textFieldFirstRowLastLocationX,
 					textFieldFirstRowLastLocationY, null, null);
-			panelLocation.add(lastLocationButtonsPanel, "8, 6");
+			panelLocation.add(lastLocationButtonsPanel, "8, 6"); //$NON-NLS-1$
 
 			JLabel lastComponent = new JLabel(
-					"<html><b>Point C:</b><br /><span style='font-size:8px'>Last Row - Last Component</span></html>");
-			panelLocation.add(lastComponent, "2, 8");
+					Translations.getString("ReferenceRotatedTrayFeederConfigurationWizard.LastRowLastColumn")); //$NON-NLS-1$
+			panelLocation.add(lastComponent, "2, 8"); //$NON-NLS-1$
 
 			textFieldLastLocationX = new JTextField();
-			panelLocation.add(textFieldLastLocationX, "4, 8");
+			panelLocation.add(textFieldLastLocationX, "4, 8"); //$NON-NLS-1$
 			textFieldLastLocationX.setColumns(6);
 
 			textFieldLastLocationY = new JTextField();
-			panelLocation.add(textFieldLastLocationY, "6, 8");
+			panelLocation.add(textFieldLastLocationY, "6, 8"); //$NON-NLS-1$
 			textFieldLastLocationY.setColumns(6);
 
 			lastLocationButtonsPanel = new LocationButtonsPanel(textFieldLastLocationX, 
 			        textFieldLastLocationY, null, null);
-			panelLocation.add(lastLocationButtonsPanel, "8, 8");
+			panelLocation.add(lastLocationButtonsPanel, "8, 8"); //$NON-NLS-1$
 
 			panelParameters = new JPanel();
 			panelParameters.setBorder(new TitledBorder(null,
-					"Tray Parameters", TitledBorder.LEADING, TitledBorder.TOP, null));
+					Translations.getString("ReferenceRotatedTrayFeederConfigurationWizard.TrayParameters"), TitledBorder.LEADING, TitledBorder.TOP, null)); //$NON-NLS-1$
 			contentPanel.add(panelParameters);
 
 			panelParameters.setLayout(new FormLayout(
-					new ColumnSpec[] { FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("left:default:grow"),
-							FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("left:default:grow"),
-							FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("left:default:grow"),
-							FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("left:default:grow"),
-							FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("left:default:grow"), },
+					new ColumnSpec[] { FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("left:default:grow"), //$NON-NLS-1$
+							FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("left:default:grow"), //$NON-NLS-1$
+							FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("left:default:grow"), //$NON-NLS-1$
+							FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("left:default:grow"), //$NON-NLS-1$
+							FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("left:default:grow"), }, //$NON-NLS-1$
 					new RowSpec[] { FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
 							FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC,
 							FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
@@ -247,136 +256,108 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 							FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC,
 							FormSpecs.DEFAULT_ROWSPEC }));
 
-			JLabel lblTrayRows = new JLabel("Number of Tray Rows");
-			panelParameters.add(lblTrayRows, "2, 2");
+			JLabel lblTrayRows = new JLabel(Translations.getString("ReferenceRotatedTrayFeederConfigurationWizard.NumberOfRows")); //$NON-NLS-1$
+			panelParameters.add(lblTrayRows, "2, 2"); //$NON-NLS-1$
 
 			textFieldTrayCountRows = new JTextField();
-			panelParameters.add(textFieldTrayCountRows, "4, 2");
+			panelParameters.add(textFieldTrayCountRows, "4, 2"); //$NON-NLS-1$
 			textFieldTrayCountRows.setColumns(10);
 
-			JLabel lblTrayCols = new JLabel("Number of Tray Columns");
-			panelParameters.add(lblTrayCols, "6, 2");
+			JLabel lblTrayCols = new JLabel(Translations.getString("ReferenceRotatedTrayFeederConfigurationWizard.NumberOfColumns")); //$NON-NLS-1$
+			panelParameters.add(lblTrayCols, "6, 2"); //$NON-NLS-1$
 
 			textFieldTrayCountCols = new JTextField();
-			panelParameters.add(textFieldTrayCountCols, "8, 2");
+			panelParameters.add(textFieldTrayCountCols, "8, 2"); //$NON-NLS-1$
 			textFieldTrayCountCols.setColumns(10);
 
-			JLabel lblFeedCount = new JLabel("Feed Count");
-			panelParameters.add(lblFeedCount, "2, 4");
+			JLabel lblFeedCount = new JLabel(Translations.getString("ReferenceRotatedTrayFeederConfigurationWizard.FeedCount")); //$NON-NLS-1$
+			panelParameters.add(lblFeedCount, "2, 4"); //$NON-NLS-1$
 
 			textFieldFeedCount = new JTextField();
-			panelParameters.add(textFieldFeedCount, "4, 4");
+			panelParameters.add(textFieldFeedCount, "4, 4"); //$NON-NLS-1$
 			textFieldFeedCount.setColumns(10);
 
-			lblComponentCount = new JLabel("Components left:");
-			panelParameters.add(lblComponentCount, "6, 4");
+			lblComponentCount = new JLabel(Translations.getString("ReferenceRotatedTrayFeederConfigurationWizard.ComponentsRemaining")); //$NON-NLS-1$
+			panelParameters.add(lblComponentCount, "6, 4"); //$NON-NLS-1$
 
-			JButton btnResetFeedCount = new JButton(new AbstractAction("Reset") {
+			JButton btnResetFeedCount = new JButton(new AbstractAction(Translations.getString("ReferenceRotatedTrayFeederConfigurationWizard.Reset")) { //$NON-NLS-1$
 				@Override
 				public void actionPerformed(ActionEvent e) {
                     feeder.setFeedCount(0);
 				}
 			});
 			btnResetFeedCount.setHorizontalAlignment(SwingConstants.LEFT);
-			panelParameters.add(btnResetFeedCount, "8, 4, left, default");
+			panelParameters.add(btnResetFeedCount, "8, 4, left, default"); //$NON-NLS-1$
 
-			JLabel lblComponentRotation = new JLabel("Component Rotation in Tray [°]");
-			panelParameters.add(lblComponentRotation, "2, 6");
+			JLabel lblComponentRotation = new JLabel(Translations.getString("ReferenceRotatedTrayFeederConfigurationWizard.ComponentRotation")); //$NON-NLS-1$
+			panelParameters.add(lblComponentRotation, "2, 6"); //$NON-NLS-1$
 
 			textFieldComponentRotation = new JTextField();
-			panelParameters.add(textFieldComponentRotation, "4, 6");
+			panelParameters.add(textFieldComponentRotation, "4, 6"); //$NON-NLS-1$
 			textFieldComponentRotation.setColumns(10);
-			textFieldComponentRotation.setToolTipText("Rotation of the components relative to the tray's A->B (row) axis");
+			textFieldComponentRotation.setToolTipText(Translations.getString("ReferenceRotatedTrayFeederConfigurationWizard.ComponentRotation.ToolTip")); //$NON-NLS-1$
 			
-			JLabel lblComponentZHeight = new JLabel("Z Height");
-			panelParameters.add(lblComponentZHeight, "6, 6");
+			JLabel lblComponentZHeight = new JLabel(Translations.getString("ReferenceRotatedTrayFeederConfigurationWizard.ZHeight")); //$NON-NLS-1$
+			panelParameters.add(lblComponentZHeight, "6, 6"); //$NON-NLS-1$
 
 			textFieldComponentZHeight = new JTextField();
-			panelParameters.add(textFieldComponentZHeight, "8, 6");
+			panelParameters.add(textFieldComponentZHeight, "8, 6"); //$NON-NLS-1$
 			textFieldComponentZHeight.setColumns(10);
 
 			JSeparator separator = new JSeparator();
-			panelParameters.add(separator, "1, 9, 8, 1");
+			panelParameters.add(separator, "1, 9, 8, 1"); //$NON-NLS-1$
 
 			JButton btnCalcOffsetsRotation = new JButton(
-			        new AbstractAction("Calculate Offsets & Tray Rotation") {
+			        new AbstractAction(Translations.getString("ReferenceRotatedTrayFeederConfigurationWizard.CalculateOffsetsAndTrayRotation")) { //$NON-NLS-1$
 				@Override
 				public void actionPerformed(ActionEvent e) {
 
-//					if ((Integer.parseInt(textFieldTrayCountCols.getText())
-//							* Integer.parseInt(textFieldTrayCountRows.getText()) <= 1)) {
-//						MessageBoxes.errorBox(getTopLevelAncestor(), "Error",
-//								"Need at least 2 components in tray to calculate offsets. Please "
-//								+ "increase Number of Tray Rows or Columns.");
-//						return;
-//					}
-
-			        Location offsetsAndRotation;
                     try {
-                        offsetsAndRotation = calculateOffsetsAndRotation();
+                        offsetsAndRotation.setLocation(calculateOffsetsAndRotation());
                     }
                     catch (Exception e1) {
-                        MessageBoxes.errorBox(getTopLevelAncestor(), "Error", e1.getMessage());
+                        MessageBoxes.errorBox(getTopLevelAncestor(), Translations.getString("ReferenceRotatedTrayFeederConfigurationWizard.Error"), e1.getMessage()); //$NON-NLS-1$
                         return;
                     }
-
-                    textFieldOffsetsX.requestFocusInWindow(); //so the component decorator runs
-//					if (Integer.parseInt(textFieldTrayCountCols.getText()) > 1) {
-                        textFieldOffsetsX.setText(String.valueOf(offsetsAndRotation.getX()));
-//					} else {
-//						textFieldOffsetsX.setText("0");
-//					}
-
-                    textFieldOffsetsY.requestFocusInWindow(); //so the component decorator runs
-//					if (Integer.parseInt(textFieldTrayCountRows.getText()) > 1) {
-                        textFieldOffsetsY.setText(String.valueOf(offsetsAndRotation.getY()));
-//					} else {
-//						textFieldOffsetsY.setText("0");
-//					}
-					
-                    textFieldTrayRotation.requestFocusInWindow(); //so the component decorator runs
-                    textFieldTrayRotation.setText(String.valueOf(offsetsAndRotation.getRotation()));
-
-                    //Return the focus back to the button
-                    ((JButton) (e.getSource())).requestFocusInWindow();
 				}
 			});
 			btnCalcOffsetsRotation.setHorizontalAlignment(SwingConstants.LEFT);
-			panelParameters.add(btnCalcOffsetsRotation, "2, 12");
+			panelParameters.add(btnCalcOffsetsRotation, "2, 12"); //$NON-NLS-1$
 
-			JLabel lblRowOffset = new JLabel("Column Offset");
-			panelParameters.add(lblRowOffset, "2, 14");
+			JLabel lblRowOffset = new JLabel(Translations.getString("ReferenceRotatedTrayFeederConfigurationWizard.ColumnOffset")); //$NON-NLS-1$
+			panelParameters.add(lblRowOffset, "2, 14"); //$NON-NLS-1$
 
 			textFieldOffsetsX = new JTextField();
-			panelParameters.add(textFieldOffsetsX, "4, 14");
+			panelParameters.add(textFieldOffsetsX, "4, 14"); //$NON-NLS-1$
 			textFieldOffsetsX.setColumns(10);
 
-			JLabel lblColOffset = new JLabel("Row Offset");
-			panelParameters.add(lblColOffset, "6, 14");
+			JLabel lblColOffset = new JLabel(Translations.getString("ReferenceRotatedTrayFeederConfigurationWizard.RowOffset")); //$NON-NLS-1$
+			panelParameters.add(lblColOffset, "6, 14"); //$NON-NLS-1$
 
 			textFieldOffsetsY = new JTextField();
-			panelParameters.add(textFieldOffsetsY, "8, 14, ");
+			panelParameters.add(textFieldOffsetsY, "8, 14, "); //$NON-NLS-1$
 			textFieldOffsetsY.setColumns(10);
 
-			JLabel lblTrayRotation = new JLabel("Tray Rotation [°]");
-			panelParameters.add(lblTrayRotation, "2, 16");
+			JLabel lblTrayRotation = new JLabel(Translations.getString("ReferenceRotatedTrayFeederConfigurationWizard.TrayRotation")); //$NON-NLS-1$
+			panelParameters.add(lblTrayRotation, "2, 16"); //$NON-NLS-1$
 
 			textFieldTrayRotation = new JTextField();
-			textFieldTrayRotation.setToolTipText("Angle of the tray's A->B (row) axis relative to "
-			        + "the machine's positive X-axis");
-			panelParameters.add(textFieldTrayRotation, "4, 16");
+			textFieldTrayRotation.setToolTipText(Translations.getString("ReferenceRotatedTrayFeederConfigurationWizard.TrayRotation.ToolTip")); //$NON-NLS-1$
+			panelParameters.add(textFieldTrayRotation, "4, 16"); //$NON-NLS-1$
 			textFieldTrayRotation.setColumns(10);
 
+			//This need to come after textFieldLocationX, textFieldLocationY and 
+			//textFieldTrayRotation are initialized
             locationButtonsPanel = new LocationButtonsPanel(textFieldLocationX, textFieldLocationY,
                     null, textFieldTrayRotation);
-            panelLocation.add(locationButtonsPanel, "8, 4");
+            panelLocation.add(locationButtonsPanel, "8, 4"); //$NON-NLS-1$
 
 			panelIllustration = new JPanel();
 			panelIllustration.setBorder(new TitledBorder(null,
-					"Tray Illustration", TitledBorder.LEADING, TitledBorder.TOP, null));
+					Translations.getString("ReferenceRotatedTrayFeederConfigurationWizard.TrayIllustration"), TitledBorder.LEADING, TitledBorder.TOP, null)); //$NON-NLS-1$
 			contentPanel.add(panelIllustration);
 
-			InputStream stream = getClass().getResourceAsStream("/illustrations/rotatedtrayfeeder.png");
+			InputStream stream = getClass().getResourceAsStream("/illustrations/rotatedtrayfeeder.png"); //$NON-NLS-1$
 			ImageIcon illustrationicon = null;
 			try {
 				illustrationicon = new ImageIcon(ImageIO.read(stream));
@@ -396,35 +377,57 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 		IntegerConverter intConverter = new IntegerConverter();
 		DoubleConverter doubleConverter = new DoubleConverter(Configuration.get().getLengthDisplayFormat());
 
-		addWrappedBinding(feeder, "part", comboBoxPart, "selectedItem");
-        addWrappedBinding(feeder, "feedRetryCount", retryCountTf, "text", intConverter);
-        addWrappedBinding(feeder, "pickRetryCount", pickRetryCount, "text", intConverter);
+		//---------------------------------------------------------------------------------------//
+		//These bindings are used to access the various text fields of the GUI without having to
+		//parse each text field when getting the value and format each value when setting the value.
+		//These bindings must come before any of the other bindings so they don't step on the toes
+		//of those other bindings.
+        bind(UpdateStrategy.READ_WRITE, firstRowFirstColumn, "lengthX", textFieldLocationX, "text", lengthConverter); //$NON-NLS-1$ //$NON-NLS-2$
+        bind(UpdateStrategy.READ_WRITE, firstRowFirstColumn, "lengthY", textFieldLocationY, "text", lengthConverter); //$NON-NLS-1$ //$NON-NLS-2$
+
+        bind(UpdateStrategy.READ_WRITE, firstRowLastColumn, "lengthX", textFieldFirstRowLastLocationX, "text", lengthConverter); //$NON-NLS-1$ //$NON-NLS-2$
+        bind(UpdateStrategy.READ_WRITE, firstRowLastColumn, "lengthY", textFieldFirstRowLastLocationY, "text", lengthConverter); //$NON-NLS-1$ //$NON-NLS-2$
+
+        bind(UpdateStrategy.READ_WRITE, lastRowLastColumn, "lengthX", textFieldLastLocationX, "text", lengthConverter); //$NON-NLS-1$ //$NON-NLS-2$
+        bind(UpdateStrategy.READ_WRITE, lastRowLastColumn, "lengthY", textFieldLastLocationY, "text", lengthConverter); //$NON-NLS-1$ //$NON-NLS-2$
+
+        bind(UpdateStrategy.READ_WRITE, this, "nRows", textFieldTrayCountRows, "text", intConverter); //$NON-NLS-1$ //$NON-NLS-2$
+        bind(UpdateStrategy.READ_WRITE, this, "nCols", textFieldTrayCountCols, "text", intConverter); //$NON-NLS-1$ //$NON-NLS-2$
+
+        bind(UpdateStrategy.READ_WRITE, offsetsAndRotation, "lengthX", textFieldOffsetsX, "text", lengthConverter); //$NON-NLS-1$ //$NON-NLS-2$
+        bind(UpdateStrategy.READ_WRITE, offsetsAndRotation, "lengthY", textFieldOffsetsY, "text", lengthConverter); //$NON-NLS-1$ //$NON-NLS-2$
+        bind(UpdateStrategy.READ_WRITE, offsetsAndRotation, "rotation", textFieldTrayRotation, "text", doubleConverter); //$NON-NLS-1$ //$NON-NLS-2$
+        //---------------------------------------------------------------------------------------//
+        
+		addWrappedBinding(feeder, "part", comboBoxPart, "selectedItem"); //$NON-NLS-1$ //$NON-NLS-2$
+        addWrappedBinding(feeder, "feedRetryCount", retryCountTf, "text", intConverter); //$NON-NLS-1$ //$NON-NLS-2$
+        addWrappedBinding(feeder, "pickRetryCount", pickRetryCount, "text", intConverter); //$NON-NLS-1$ //$NON-NLS-2$
 
 		if (includePickLocation) {
 			MutableLocationProxy location = new MutableLocationProxy();
-			bind(UpdateStrategy.READ_WRITE, feeder, "location", location, "location");
-			addWrappedBinding(location, "lengthX", textFieldLocationX, "text", lengthConverter);
-			addWrappedBinding(location, "lengthY", textFieldLocationY, "text", lengthConverter);
-			addWrappedBinding(location, "rotation", textFieldTrayRotation, "text", doubleConverter);
-			addWrappedBinding(location, "lengthZ", textFieldComponentZHeight, "text", lengthConverter);
-
-	        addWrappedBinding(feeder, "componentRotationInTray", textFieldComponentRotation, 
-	                "text", doubleConverter);
+			bind(UpdateStrategy.READ_WRITE, feeder, "location", location, "location"); //$NON-NLS-1$ //$NON-NLS-2$
+			addWrappedBinding(location, "lengthX", textFieldLocationX, "text", lengthConverter); //$NON-NLS-1$ //$NON-NLS-2$
+			addWrappedBinding(location, "lengthY", textFieldLocationY, "text", lengthConverter); //$NON-NLS-1$ //$NON-NLS-2$
+			addWrappedBinding(location, "rotation", textFieldTrayRotation, "text", doubleConverter); //$NON-NLS-1$ //$NON-NLS-2$
+			addWrappedBinding(location, "lengthZ", textFieldComponentZHeight, "text", lengthConverter); //$NON-NLS-1$ //$NON-NLS-2$
+			
+	        addWrappedBinding(feeder, "componentRotationInTray", textFieldComponentRotation,  //$NON-NLS-1$
+	                "text", doubleConverter); //$NON-NLS-1$
 
 			MutableLocationProxy firstRowLastComponentlocation = new MutableLocationProxy();
-			bind(UpdateStrategy.READ_WRITE, feeder, "firstRowLastComponentLocation", 
-			        firstRowLastComponentlocation, "location");
-			addWrappedBinding(firstRowLastComponentlocation, "lengthX", 
-			        textFieldFirstRowLastLocationX, "text", lengthConverter);
-			addWrappedBinding(firstRowLastComponentlocation, "lengthY", 
-			        textFieldFirstRowLastLocationY, "text", lengthConverter);
+			bind(UpdateStrategy.READ_WRITE, feeder, "firstRowLastComponentLocation",  //$NON-NLS-1$
+			        firstRowLastComponentlocation, "location"); //$NON-NLS-1$
+			addWrappedBinding(firstRowLastComponentlocation, "lengthX",  //$NON-NLS-1$
+			        textFieldFirstRowLastLocationX, "text", lengthConverter); //$NON-NLS-1$
+			addWrappedBinding(firstRowLastComponentlocation, "lengthY",  //$NON-NLS-1$
+			        textFieldFirstRowLastLocationY, "text", lengthConverter); //$NON-NLS-1$
 
 			MutableLocationProxy lastComponentlocation = new MutableLocationProxy();
-			bind(UpdateStrategy.READ_WRITE, feeder, "lastComponentLocation", 
-			        lastComponentlocation, "location");
-			addWrappedBinding(lastComponentlocation, "lengthX", textFieldLastLocationX, "text", 
+			bind(UpdateStrategy.READ_WRITE, feeder, "lastComponentLocation",  //$NON-NLS-1$
+			        lastComponentlocation, "location"); //$NON-NLS-1$
+			addWrappedBinding(lastComponentlocation, "lengthX", textFieldLastLocationX, "text",  //$NON-NLS-1$ //$NON-NLS-2$
 			        lengthConverter);
-			addWrappedBinding(lastComponentlocation, "lengthY", textFieldLastLocationY, "text", 
+			addWrappedBinding(lastComponentlocation, "lengthY", textFieldLastLocationY, "text",  //$NON-NLS-1$ //$NON-NLS-2$
 			        lengthConverter);
 
 			ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldLocationX);
@@ -438,21 +441,21 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 		}
 
 		MutableLocationProxy offsets = new MutableLocationProxy();
-		bind(UpdateStrategy.READ_WRITE, feeder, "offsets", offsets, "location");
-		addWrappedBinding(offsets, "lengthX", textFieldOffsetsX, "text", lengthConverter);
-		addWrappedBinding(offsets, "lengthY", textFieldOffsetsY, "text", lengthConverter);
+		bind(UpdateStrategy.READ_WRITE, feeder, "offsets", offsets, "location"); //$NON-NLS-1$ //$NON-NLS-2$
+		addWrappedBinding(offsets, "lengthX", textFieldOffsetsX, "text", lengthConverter); //$NON-NLS-1$ //$NON-NLS-2$
+		addWrappedBinding(offsets, "lengthY", textFieldOffsetsY, "text", lengthConverter); //$NON-NLS-1$ //$NON-NLS-2$
 
-		addWrappedBinding(feeder, "trayCountCols", textFieldTrayCountCols, "text", intConverter);
-		addWrappedBinding(feeder, "trayCountRows", textFieldTrayCountRows, "text", intConverter);
+		addWrappedBinding(feeder, "trayCountCols", textFieldTrayCountCols, "text", intConverter); //$NON-NLS-1$ //$NON-NLS-2$
+		addWrappedBinding(feeder, "trayCountRows", textFieldTrayCountRows, "text", intConverter); //$NON-NLS-1$ //$NON-NLS-2$
 
-        bind(UpdateStrategy.READ_WRITE, feeder, "feedCount", textFieldFeedCount, "text", intConverter);
+        bind(UpdateStrategy.READ_WRITE, feeder, "feedCount", textFieldFeedCount, "text", intConverter); //$NON-NLS-1$ //$NON-NLS-2$
 
-		bind(UpdateStrategy.READ, feeder, "remainingCount", lblComponentCount, "text", 
+		bind(UpdateStrategy.READ, feeder, "remainingCount", lblComponentCount, "text",  //$NON-NLS-1$ //$NON-NLS-2$
 		        new Converter<Integer, String>() {
 	        
 	        @Override
 	        public String convertForward(Integer count) {
-	            return "Components left: " + String.valueOf(count);
+	            return Translations.getString("ReferenceRotatedTrayFeederConfigurationWizard.ComponentsRemaining") + String.valueOf(count); //$NON-NLS-1$
 	        }
 
 	        @Override
@@ -471,133 +474,121 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 		ComponentDecorators.decorateWithAutoSelect(textFieldFeedCount);
 	}
 
-	/**
+	public int getnRows() {
+        return nRows;
+    }
+
+	public void setnRows(int nRows) {
+        this.nRows = nRows;
+    }
+
+    public int getnCols() {
+        return nCols;
+    }
+
+    public void setnCols(int nCols) {
+        this.nCols = nCols;
+    }
+
+    /**
 	 * Calculates the tray's x (column) and y (row) offsets as well as the tray rotation.
 	 * @return the offsets and rotation
 	 */
 	public Location calculateOffsetsAndRotation() throws Exception {
-        double ax = Double.parseDouble(textFieldLocationX.getText());
-        double ay = Double.parseDouble(textFieldLocationY.getText());
-        double bx = Double.parseDouble(textFieldFirstRowLastLocationX.getText());
-        double by = Double.parseDouble(textFieldFirstRowLastLocationY.getText());
-        double cx = Double.parseDouble(textFieldLastLocationX.getText());
-        double cy = Double.parseDouble(textFieldLastLocationY.getText());
-        
-        int nCols = Integer.parseInt(textFieldTrayCountCols.getText());
-        int nRows = Integer.parseInt(textFieldTrayCountRows.getText());
-        
-        if (nCols*nRows < 1) {
-            throw new Exception("Feeder must have at least one row and one column.");
+        if (nCols < 1 || nRows < 1) {
+            throw new Exception(Translations.getString("ReferenceRotatedTrayFeederConfigurationWizard.ErrorMessage.AtLeastOneRowAndOneColumn")); //$NON-NLS-1$
         }
         
         // Distance Point A -> Point B
-        double deltaX1 = bx - ax;
-        double deltaY1 = by - ay;
-
-        double delta_length1 = Math.hypot(deltaX1, deltaY1);
+        Length abLength = firstRowFirstColumn.getLocation().
+                getLinearLengthTo(firstRowLastColumn.getLocation());
         
-        if ((delta_length1 > 0) && (nCols <= 1)) {
-            throw new Exception("Points A and B are different which is inconsistent with Number of Tray Columns = " + String.valueOf(nCols));
+        if ((abLength.getValue() > 0) && (nCols == 1)) {
+            throw new Exception(Translations.getString("ReferenceRotatedTrayFeederConfigurationWizard.ErrorMessage.SingleColumnInconsistency")); //$NON-NLS-1$
         }
-        if ((delta_length1 == 0) && (nCols > 1)) {
-            throw new Exception("Points A and B are the same which is inconsistent with Number of Tray Columns = " + String.valueOf(nCols));
+        if ((abLength.getValue() == 0) && (nCols > 1)) {
+            throw new Exception(String.format(Translations.getString("ReferenceRotatedTrayFeederConfigurationWizard.ErrorMessage.MultipleColumnInconsistency"), nCols)); //$NON-NLS-1$
         }
 
         // Distance Point B -> Point C
-        double deltaX2 = cx - bx;
-        double deltaY2 = cy - by;
+        Length bcLength = firstRowLastColumn.getLocation().
+                getLinearLengthTo(lastRowLastColumn.getLocation());
 
-        double delta_length2 = Math.hypot(deltaX2, deltaY2);
-
-        if ((delta_length2 > 0) && (nRows <= 1)) {
-            throw new Exception("Points B and C are different which is inconsistent with Number of Tray Rows = " + String.valueOf(nRows));
+        if ((bcLength.getValue() > 0) && (nRows == 1)) {
+            throw new Exception(Translations.getString("ReferenceRotatedTrayFeederConfigurationWizard.ErrorMessage.SingleRowInconsistency")); //$NON-NLS-1$
         }
-        if ((delta_length2 == 0) && (nRows > 1)) {
-            throw new Exception("Points B and C are the same which is inconsistent with Number of Tray Rows = " + String.valueOf(nRows));
+        if ((bcLength.getValue() == 0) && (nRows > 1)) {
+            throw new Exception(String.format(Translations.getString("ReferenceRotatedTrayFeederConfigurationWizard.ErrorMessage.MultipleRowInconsistency"), nRows)); //$NON-NLS-1$
         }
 
-        // Distance Point C -> Point A
-        double deltaX3 = ax - cx;
-        double deltaY3 = ay - cy;
-
-        double delta_length3 = Math.hypot(deltaX3, deltaY3);
+        Length colStep = nCols > 1 ? abLength.divide(nCols-1) : new Length(0, LengthUnit.Millimeters);
+        Length rowStep = nRows > 1 ? bcLength.divide(nRows-1) : new Length(0, LengthUnit.Millimeters);
         
-        //Use the law of cosines to compute angle ABC and check to see if it is close to 90 degrees.
-        //A NaN is ok here, it just means we have a single row or column and therefore there is no
-        //90 degree angle to check.
-        Double checkAngleDeg = Math.toDegrees(Math.acos((delta_length3*delta_length3 - 
-                delta_length2*delta_length2 - delta_length1*delta_length1)/
-                (-2*delta_length1*delta_length2)));
-        if (checkAngleDeg != Double.NaN && (checkAngleDeg < 90-RIGHT_ANGLE_TOLERANCE || 
-                checkAngleDeg > 90+RIGHT_ANGLE_TOLERANCE)) {
-            throw new Exception("Tray angle ABC should be 90 degrees but is "
-                    + String.format("%.3f", checkAngleDeg)
-                    + " degrees, double check coordinates of points A, B and C.");
+        // Angle of the rows and columns relative to the machine
+        double rowAngleDeg = Utils2D.getAngleFromPoint(firstRowFirstColumn.getLocation(), 
+                firstRowLastColumn.getLocation());
+        double colAngleDeg = Utils2D.getAngleFromPoint(firstRowLastColumn.getLocation(), 
+                lastRowLastColumn.getLocation());
+        
+        if ((nRows > 1) && (nCols > 1)) {
+            //Compute angle ABC (the angle between the rows and columns)
+            double checkAngleDeg = Utils2D.normalizeAngle180(rowAngleDeg - colAngleDeg);
+            
+            //Verify angle ABC is near +/-90 degrees, if not, throw an exception
+            double checkDeg = Math.abs(checkAngleDeg);
+            if ((checkDeg < 90-RIGHT_ANGLE_TOLERANCE) || (checkDeg > 90+RIGHT_ANGLE_TOLERANCE)) {
+                throw new Exception(String.format(Translations.getString("ReferenceRotatedTrayFeederConfigurationWizard.ErrorMessage.TrayAngleNot90"), checkDeg)); //$NON-NLS-1$
+            }
+            
+            //If the angle is negative, the points were defined going the opposite way around the 
+            //feeder than shown in the illustration. In that case, we need to negate the row offset
+            //so that the feed moves in the correct direction when stepping to the next row.
+            if (checkAngleDeg < 0) {
+                rowStep = rowStep.multiply(-1);
+            }
         }
 
-        double colStep = nCols <= 1 ? 0 : delta_length1/(nCols-1);
-        double rowStep = nRows <= 1 ? 0 : delta_length2/(nRows-1);
-        
-        //Determine whether the points go clockwise or counter-clockwise around the
-        //tray by using the shoelace formula to compute the area of the triangle. The
-        //area will be positive if counter-clockwise. We use this to determine
-        //if points A, B and C were picked as shown in the illustration (clockwise) or
-        //were picked going the other way around (counter-clockwise).
-        double doubleArea = (ay + by) * (ax - bx) + (by + cy) * (bx - cx) + 
-                (cy + ay) * (cx - ax);
-        if (doubleArea > 0) {
-            //The definition of the tray has the row numbers increasing in the negative
-            //y direction (towards point C). Therefore, if the points were picked the
-            //opposite way of the definition, we need to negate the row offset so that 
-            //the row numbers increase in the positive y direction.
-            delta_length2 *= -1;
+        //Initialize the tray rotation to that shown in the GUI, this will be used if the feeder has
+        //only a single column and single row
+        double rotDeg = offsetsAndRotation.getRotation();
+        if (nCols > 1) {
+            //We have multiple columns so the tray rotation is the angle of the row(s)
+            rotDeg = rowAngleDeg;
         }
-        
-        //Compute the tray rotation using a four-quadrant arc tangent so that the tray
-        //can be oriented at any rotation relative to the machine X-Y axes.
-        double rotDeg = Double.parseDouble(textFieldTrayRotation.getText());
-        if (deltaX1 != 0 || deltaY1 != 0) {
-            //We have multiple columns so compute the tray rotation from the points on
-            //the first row
-            rotDeg = Math.toDegrees(Math.atan2(deltaY1, deltaX1));
-        }
-        else if (deltaX2 != 0 || deltaY2 != 0) {
-            //We have only a single column but multiple rows so compute the angle of the column and
-            //add 90 degrees to it to get the tray rotation
-            rotDeg = Math.toDegrees(Math.atan2(deltaY2, deltaX2)) + 90;
+        else if (nRows > 1) {
+            //We have only a single column but multiple rows so the tray rotation is the angle of
+            //the column plus 90 degrees
+            rotDeg = colAngleDeg + 90;
         }
         
-        return new Location(Configuration.get().getSystemUnits(), colStep, rowStep, 0, rotDeg);
+        LengthUnit units = Configuration.get().getSystemUnits();
+        return new Location(units, colStep.convertToUnits(units).getValue(), 
+                rowStep.convertToUnits(units).getValue(), 0, rotDeg);
 	}
 	
 	@Override
     public void validateInput() throws Exception {
-        double offsetX = Double.parseDouble(textFieldOffsetsX.getText());
-        double offsetY = Double.parseDouble(textFieldOffsetsY.getText());
-//        int nCols = Integer.parseInt(textFieldTrayCountCols.getText());
-//        int nRows = Integer.parseInt(textFieldTrayCountRows.getText());
-        double rot = Double.parseDouble(textFieldTrayRotation.getText());
+	    //Make sure the feed count isn't pointing beyond the end of the feeder
+	    if (feeder.getFeedCount() > nCols*nRows) {
+	        feeder.setFeedCount(nCols*nRows);
+	    }
+	    
+	    //Compute offsets and rotation from points A, B, C, number of rows and number of columns
+        Location offsetsAndRotation = calculateOffsetsAndRotation().convertToUnits(VALIDATION_UNITS);
         
-        Location offsetsAndRotation = calculateOffsetsAndRotation();
+        //The offsets and rotation shown on the GUI
+        double offsetX = this.offsetsAndRotation.getLengthX().convertToUnits(VALIDATION_UNITS).getValue();
+        double offsetY = this.offsetsAndRotation.getLengthY().convertToUnits(VALIDATION_UNITS).getValue();
+        double rot = this.offsetsAndRotation.getRotation();
         
-        if ((Math.abs(offsetsAndRotation.getX() - offsetX) > OFFSET_AND_ROTATION_TOLERANCE) ||
-                (Math.abs(offsetsAndRotation.getY() - offsetY) > OFFSET_AND_ROTATION_TOLERANCE) ||
-                (Math.abs(offsetsAndRotation.getRotation() - rot) > OFFSET_AND_ROTATION_TOLERANCE)) {
+        //Compare them and if any are too different, throw an exception - note, all values are
+        //still saved regardless of this exception being thrown or not
+        if ((Math.abs(offsetsAndRotation.getX() - offsetX) > VALIDATION_TOLERANCE) ||
+                (Math.abs(offsetsAndRotation.getY() - offsetY) > VALIDATION_TOLERANCE) ||
+                (Math.abs(offsetsAndRotation.getRotation() - rot) > VALIDATION_TOLERANCE)) {
             throw new Exception(
-                    "Offsets and/or Tray Rotation are inconsistent with points A, B, C, number of "
-                    + "rows, and/or number of columns. Double check those values and then click "
-                    + "the Calculate Offsets & Tray Rotation button to make them consistent.");
+                    Translations.getString("ReferenceRotatedTrayFeederConfigurationWizard.ErrorMessage.OffsetsAndRotationInconsistency")); //$NON-NLS-1$
         }
-//        if ((offsetX == 0) && (nCols > 1)) {
-//            throw new Exception(
-//                    "Column Offset must be non-zero if Number of Tray Columns is greater than 1, "
-//                    + "otherwise a feed failure will occur.");
-//        }
-//        if ((offsetY == 0) && (nRows > 1)) {
-//            throw new Exception(
-//                    "Row Offset must be non-zero if Number of Tray Rows is greater than 1, "
-//                    + "otherwise a feed failure will occur.");
-//        }
     }
 
 }
