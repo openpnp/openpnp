@@ -42,139 +42,126 @@ import org.simpleframework.xml.core.Commit;
  */
 public class ReferenceRotatedTrayFeeder extends ReferenceFeeder {
 
-	@Attribute
-	private int trayCountCols = 1;
-	@Attribute
-	private int trayCountRows = 1;
-	@Element
-	private Location offsets = new Location(LengthUnit.Millimeters);
-	@Attribute
-	private int feedCount = 0;
-	
-	@Attribute(required=false)
-	@Deprecated
-	private Double trayRotation = null;
-	
-	@Attribute(required=false)
-	private double componentRotationInTray = 0;
-	
-	@Element
-	protected Location lastComponentLocation = new Location(LengthUnit.Millimeters);
-	@Element
-	protected Location firstRowLastComponentLocation = new Location(LengthUnit.Millimeters);
+    @Attribute
+    private int trayCountCols = 1;
+    @Attribute
+    private int trayCountRows = 1;
+    @Element
+    private Location offsets = new Location(LengthUnit.Millimeters);
+    @Attribute
+    private int feedCount = 0;
 
-	private Location pickLocation;
+    @Attribute(required=false)
+    @Deprecated
+    private Double trayRotation = null;
 
-	@Commit
-	public void commit() {
-	    if (trayRotation != null) {
-	        //In previous versions, the location held the pick rotation and trayRotation held
-	        //the actual rotation of the tray. In this version, the location holds the actual
-	        //rotation of the tray and componentRotationInTray holds the rotation of the component
-	        //relative to the tray. Note, in almost all cases, componentRotationInTray will be one
-	        //of 0, or +/-90, or +/-180. So, with the new version, pick rotation = 
-	        //location.getRotation() + componentRotationInTray
-	        
-	        //Convert the values from the old version to the new version
-	        componentRotationInTray = location.getRotation() - trayRotation;
-	        location = location.derive(null, null, null, trayRotation);
-	        
-	        //The previous version of the feeder also had a bug which caused it to skip the first
-	        //component and thereafter it was picking one component ahead of where it should.
-	        //This bumps the feedCount up by one to account for that bug.
-	        if ((feedCount > 0) && (feedCount < trayCountCols*trayCountRows)) {
-	            feedCount++;
-	        }
-	        
-	        //Remove the deprecated attribute
-	        trayRotation = null;
-	    }
-	}
-	
-	@Override
-	public Location getPickLocation() throws Exception {
-		if (pickLocation == null || feedCount == 0) {
-		    //Normally the pick location is only valid after a feed operation. But in the case of no
-		    //prior feed operation (feed count is zero), we set the pick location to the first part
-		    //(which is also where it will be after the first feed operation).
-	        int partX, partY;
-	        int fc = feedCount;
-	        if (pickLocation == null && feedCount > 0) {
-	            //Since the pick location is null, the machine configuration must have just been
-	            //loaded. And since the feed count is greater than 0, this feeder must have already
-	            //performed a feed operation prior to the configuration being saved. This means we
-	            //must back-up one feed count to point to the pick location for that prior feed 
-	            //operation.
-	            fc = fc - 1;
-	        }
+    @Attribute(required=false)
+    private double componentRotationInTray = 0;
 
-	        //Not sure why we need to change whether we pick along rows or columns depending on
-	        //which is shorter. Anyway, the original version of the feeder does this so am leaving
-	        //this as is so as to not affect picking from a partially completed tray.
-	        if (trayCountCols >= trayCountRows) {
-	            // X major axis.
-	            partX = fc / trayCountRows;
-	            partY = fc % trayCountRows;
-	        } else {
-	            // Y major axis.
-	            partX = fc % trayCountCols;
-	            partY = fc / trayCountCols;
-	        }
+    @Attribute(required=false)
+    private boolean legacyPickingInProgress = false;
 
-	        calculatePickLocation(partX, partY);
-		}
-	
-		Logger.debug("{}.getPickLocation => {}", getName(), pickLocation);
-		
-		return pickLocation;
-	}
+    @Element
+    protected Location lastComponentLocation = new Location(LengthUnit.Millimeters);
+    @Element
+    protected Location firstRowLastComponentLocation = new Location(LengthUnit.Millimeters);
 
-	private void calculatePickLocation(int partX, int partY) throws Exception {
+    private Location pickLocation;
 
-		// Multiply the offsets by the X/Y part indexes to get the total offsets
-		// and then rotate it with the correct rotation matrix.
-		// and then add them to the location to get the final pickLocation.
-		// pickLocation = location.add(offsets.multiply(partX, partY, 0.0, 0.0));
+    @Commit
+    public void commit() {
+        if (trayRotation != null) {
+            Logger.trace("Updating legacy Rotated Tray Feeder to latest version.");
+            //In previous versions, the location held the pick rotation and trayRotation held
+            //the actual rotation of the tray. In this version, the location holds the actual
+            //rotation of the tray and componentRotationInTray holds the rotation of the component
+            //relative to the tray. Note, in almost all cases, componentRotationInTray will be one
+            //of 0, or +/-90, or +/-180. So, with the new version, pick rotation = 
+            //location.getRotation() + componentRotationInTray
 
-		double sin = Math.sin(Math.toRadians(location.getRotation()));
-		double cos = Math.cos(Math.toRadians(location.getRotation()));
+            //Convert the values from the old version to the new version
+            componentRotationInTray = location.getRotation() - trayRotation;
+            location = location.derive(null, null, null, trayRotation);
 
-		double delta_x = partX * offsets.getX() * cos + partY * offsets.getY() * sin;
-		double delta_y = partX * offsets.getX() * sin - partY * offsets.getY() * cos;
-		Location delta = new Location(LengthUnit.Millimeters, delta_x, delta_y, 0, componentRotationInTray);
+            //The previous version of the feeder also had a bug which caused it to skip the first
+            //component and thereafter it was picking one component ahead of where it should.
+            //This bumps the feedCount up by one to account for that bug.
+            if ((feedCount > 0) && (feedCount < trayCountCols*trayCountRows)) {
+                feedCount++;
+                legacyPickingInProgress = true;
+            }
 
-		pickLocation = location.addWithRotation(delta);
-	}
+            //Remove the deprecated attribute
+            trayRotation = null;
+        }
+    }
 
-	public void feed(Nozzle nozzle) throws Exception {
-		Logger.debug("{}.feed({})", getName(), nozzle);
+    @Override
+    public Location getPickLocation() throws Exception {
+        if (pickLocation == null || feedCount == 0) {
+            //Normally the pick location is only valid after a feed operation. But in the case of no
+            //prior feed operation (feed count is zero), we set the pick location to the first part
+            //(which is also where it will be after the first feed operation).
+            int partX, partY;
+            int fc = feedCount;
+            if (pickLocation == null && feedCount > 0) {
+                //Since the pick location is null, the machine configuration must have just been
+                //loaded. And since the feed count is greater than 0, this feeder must have already
+                //performed a feed operation prior to the configuration being saved. This means we
+                //must back-up one feed count to point to the pick location for that prior feed 
+                //operation.
+                fc = fc - 1;
+            }
 
-		int partX, partY;
+            calculatePickLocation(fc);
+        }
 
-		if (feedCount >= (trayCountCols * trayCountRows)) {
-			throw new Exception(this.getName() + " (" + this.partId + ") is empty.");
-		}
+        Logger.debug("{}.getPickLocation => {}", getName(), pickLocation);
 
-        //Not sure why we need to change whether we pick along rows or columns depending on
-        //which is shorter. Anyway, the original version of the feeder does this so am leaving
-        //this as is so as to not affect picking from a partially completed tray.
-		if (trayCountCols >= trayCountRows) {
-			// X major axis.
-			partX = feedCount / trayCountRows;
-			partY = feedCount % trayCountRows;
-		} else {
-			// Y major axis.
-			partX = feedCount % trayCountCols;
-			partY = feedCount / trayCountCols;
-		}
+        return pickLocation;
+    }
 
-		calculatePickLocation(partX, partY);
+    private void calculatePickLocation(int feedCount) throws Exception {
+        //The original version of this feeder fed along either the rows or columns depending on
+        //which was shorter. This version now feeds along a row until it is empty and then it moves
+        //to the next row. However, if an old version of the feeder was just loaded and it was
+        //partially completed (not completely full or completely empty), the picking order will
+        //revert to the legacy method until the feed count is reset to 0.
+        int colNum, rowNum;
+        if (legacyPickingInProgress && (trayCountCols >= trayCountRows)) {
+            //Pick parts along a column (stepping through all the rows) until it is empty and then 
+            //move to the next column
+            rowNum = feedCount % trayCountRows;
+            colNum = feedCount / trayCountRows;
+        } else {
+            //Pick parts along a row (stepping through all the columns) until it is empty and then
+            //move to the next row (the new default)
+            rowNum = feedCount / trayCountCols;
+            colNum = feedCount % trayCountCols;
+        }
 
-		Logger.debug(String.format("Feeding part # %d, x %d, y %d, xPos %f, yPos %f, rPos %f", feedCount, partX, partY,
-				pickLocation.getX(), pickLocation.getY(), pickLocation.getRotation()));
+        //The definition of the tray has row numbers increasing in the negative y direction so that
+        //is why we negate rowNum here:
+        Location delta = offsets.multiply(colNum, -rowNum, 0, 0).rotateXy(location.getRotation()).
+                derive(null, null, null, componentRotationInTray);
+        
+        pickLocation = location.addWithRotation(delta);
+    }
 
-		setFeedCount(getFeedCount() + 1);
-	}
+    public void feed(Nozzle nozzle) throws Exception {
+        Logger.debug("{}.feed({})", getName(), nozzle);
+
+        if (feedCount >= (trayCountCols * trayCountRows)) {
+            throw new Exception(this.getName() + " (" + this.partId + ") is empty.");
+        }
+
+        calculatePickLocation(feedCount);
+
+        Logger.debug(String.format("Feeding part # %d, xPos %f, yPos %f, rPos %f", feedCount,
+                pickLocation.getX(), pickLocation.getY(), pickLocation.getRotation()));
+
+        setFeedCount(getFeedCount() + 1);
+    }
 
     /**
      * Returns if the feeder can take back a part.
@@ -221,88 +208,77 @@ public class ReferenceRotatedTrayFeeder extends ReferenceFeeder {
             fc = fc - 1;
         }
 
-        //Not sure why we need to change whether we pick along rows or columns depending on
-        //which is shorter. Anyway, the original version of the feeder does this so am leaving
-        //this as is so as to not affect picking from a partially completed tray.
-        int partX, partY;
-        if (trayCountCols >= trayCountRows) {
-            // X major axis.
-            partX = fc / trayCountRows;
-            partY = fc % trayCountRows;
-        } else {
-            // Y major axis.
-            partX = fc % trayCountCols;
-            partY = fc / trayCountCols;
-        }
-
-        calculatePickLocation(partX, partY);
+        calculatePickLocation(fc);
     }
 
-	public int getTrayCountCols() {
-		return trayCountCols;
-	}
+    public int getTrayCountCols() {
+        return trayCountCols;
+    }
 
-	public void setTrayCountCols(int trayCountCols) {
-	    int oldValue = this.trayCountCols;
+    public void setTrayCountCols(int trayCountCols) {
+        int oldValue = this.trayCountCols;
         this.trayCountCols = trayCountCols;
         firePropertyChange("trayCountCols", oldValue, trayCountCols);
         firePropertyChange("remainingCount", trayCountRows*oldValue - feedCount, 
                 trayCountRows*trayCountCols - feedCount);
-	}
+    }
 
-	public int getTrayCountRows() {
-		return trayCountRows;
-	}
+    public int getTrayCountRows() {
+        return trayCountRows;
+    }
 
-	public void setTrayCountRows(int trayCountRows) {
+    public void setTrayCountRows(int trayCountRows) {
         int oldValue = this.trayCountRows;
         this.trayCountRows = trayCountRows;
         firePropertyChange("trayCountRows", oldValue, trayCountRows);
         firePropertyChange("remainingCount", oldValue*trayCountCols - feedCount, 
                 trayCountRows*trayCountCols - feedCount);
-	}
+    }
 
-	public Location getLastComponentLocation() {
-		return lastComponentLocation;
-	}
+    public Location getLastComponentLocation() {
+        return lastComponentLocation;
+    }
 
-	public void setLastComponentLocation(Location LastComponentLocation) {
-		this.lastComponentLocation = LastComponentLocation;
-	}
+    public void setLastComponentLocation(Location LastComponentLocation) {
+        this.lastComponentLocation = LastComponentLocation;
+    }
 
-	public Location getFirstRowLastComponentLocation() {
-		return this.firstRowLastComponentLocation;
-	}
+    public Location getFirstRowLastComponentLocation() {
+        return this.firstRowLastComponentLocation;
+    }
 
-	public void setFirstRowLastComponentLocation(Location FirstRowLastComponentLocation) {
-		this.firstRowLastComponentLocation = FirstRowLastComponentLocation;
-	}
+    public void setFirstRowLastComponentLocation(Location FirstRowLastComponentLocation) {
+        this.firstRowLastComponentLocation = FirstRowLastComponentLocation;
+    }
 
-	public Location getOffsets() {
-		return offsets;
-	}
+    public Location getOffsets() {
+        return offsets;
+    }
 
-	public void setOffsets(Location offsets) {
-		this.offsets = offsets;
-	}
+    public void setOffsets(Location offsets) {
+        this.offsets = offsets;
+    }
 
-	public int getFeedCount() {
-		return feedCount;
-	}
+    public int getFeedCount() {
+        return feedCount;
+    }
 
-	public void setFeedCount(int feedCount) {
-		int oldValue = this.feedCount;
-		this.feedCount = feedCount;
-		firePropertyChange("feedCount", oldValue, feedCount);
-		firePropertyChange("remainingCount", trayCountRows*trayCountCols - oldValue, 
-		        trayCountRows*trayCountCols - feedCount);
-	}
-	
-	public int getRemainingCount() {
-	    return trayCountRows*trayCountCols - feedCount;
-	}
-	
-	public double getComponentRotationInTray() {
+    public void setFeedCount(int feedCount) {
+        int oldValue = this.feedCount;
+        this.feedCount = feedCount;
+        if (feedCount == 0) {
+            legacyPickingInProgress = false;
+        }
+        firePropertyChange("feedCount", oldValue, feedCount);
+        firePropertyChange("remainingCount", trayCountRows*trayCountCols - oldValue, 
+                trayCountRows*trayCountCols - feedCount);
+    }
+
+    public int getRemainingCount() {
+        return trayCountRows*trayCountCols - feedCount;
+    }
+
+    public double getComponentRotationInTray() {
         return componentRotationInTray;
     }
 
@@ -312,28 +288,28 @@ public class ReferenceRotatedTrayFeeder extends ReferenceFeeder {
         firePropertyChange("componentRotationInTray", oldValue, componentRotationInTray);
     }
 
-	@Override
-	public String toString() {
-		return getName();
-	}
+    @Override
+    public String toString() {
+        return getName();
+    }
 
-	@Override
-	public Wizard getConfigurationWizard() {
-		return new ReferenceRotatedTrayFeederConfigurationWizard(this);
-	}
+    @Override
+    public Wizard getConfigurationWizard() {
+        return new ReferenceRotatedTrayFeederConfigurationWizard(this);
+    }
 
-	@Override
-	public String getPropertySheetHolderTitle() {
-		return getClass().getSimpleName() + " " + getName();
-	}
+    @Override
+    public String getPropertySheetHolderTitle() {
+        return getClass().getSimpleName() + " " + getName();
+    }
 
-	@Override
-	public PropertySheetHolder[] getChildPropertySheetHolders() {
-		return null;
-	}
+    @Override
+    public PropertySheetHolder[] getChildPropertySheetHolders() {
+        return null;
+    }
 
-	@Override
-	public Action[] getPropertySheetHolderActions() {
-		return null;
-	}
+    @Override
+    public Action[] getPropertySheetHolderActions() {
+        return null;
+    }
 }
