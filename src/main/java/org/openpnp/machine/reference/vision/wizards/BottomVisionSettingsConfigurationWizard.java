@@ -1,6 +1,7 @@
 package org.openpnp.machine.reference.vision.wizards;
 
 import java.awt.Component;
+import java.awt.image.BufferedImage;
 import java.util.List;
 import java.util.Map;
 
@@ -571,47 +572,59 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
     public void alignAndCenter(ReferenceBottomVision bottomVision, Nozzle nozzle, double angle, boolean centerAfterTest)
             throws Exception {
         // perform the alignment
+        Camera camera = VisionUtils.getBottomVisionCamera();
         Placement dummy = new Placement("Dummy");
         dummy.setLocation(new Location(LengthUnit.Millimeters, 0, 0, 0, angle));
+        Double rotationBefore = nozzle.getRotationModeOffset();
         PartAlignment.PartAlignmentOffset alignmentOffset = VisionUtils.findPartAlignmentOffsets(bottomVision, nozzle.getPart(),
                 null, dummy, nozzle);
         Location offsets = alignmentOffset.getLocation();
+        Double rotationAfter = nozzle.getRotationModeOffset();
 
         if (!centerAfterTest) {
             return;
         }
 
         // Nominal position of the part over camera center
-        Location cameraLocation = bottomVision.getCameraLocationAtPartHeight(nozzle.getPart(), VisionUtils.getBottomVisionCamera(),
+        Location cameraLocation = bottomVision.getCameraLocationAtPartHeight(nozzle.getPart(), camera,
                 nozzle, angle);
 
+        // Calculate the centered, rotated and aligned location.
+        Location centeredLocation; 
         if (alignmentOffset.getPreRotated()) {
-            Location centeredLocation = cameraLocation.subtractWithRotation(alignmentOffset.getLocation());
-            nozzle.moveTo(centeredLocation);
-            return;
+            // Pre-rotated is straight-forward.
+            centeredLocation = cameraLocation.subtractWithRotation(alignmentOffset.getLocation());
         }
+        else {
+            // Post-rotate is more complicated. 
+            // Rotate the point 0,0 using the bottom offsets as a center point by the angle
+            // that is the difference between the bottom vision angle and the calculated global
+            // placement angle.
+            centeredLocation = new Location(LengthUnit.Millimeters).rotateXyCenterPoint(offsets,
+                    cameraLocation.getRotation() - offsets.getRotation());
 
-        // Rotate the point 0,0 using the bottom offsets as a center point by the angle
-        // that is
-        // the difference between the bottom vision angle and the calculated global
-        // placement angle.
-        Location location = new Location(LengthUnit.Millimeters).rotateXyCenterPoint(offsets,
-                cameraLocation.getRotation() - offsets.getRotation());
+            // Set the angle to the difference mentioned above, aligning the part to the
+            // same angle as the placement.
+            centeredLocation = centeredLocation.derive(null, null, null, cameraLocation.getRotation() - offsets.getRotation());
 
-        // Set the angle to the difference mentioned above, aligning the part to the
-        // same angle as
-        // the placement.
-        location = location.derive(null, null, null, cameraLocation.getRotation() - offsets.getRotation());
+            // Add the placement final location to move our local coordinate into global
+            // space
+            centeredLocation = centeredLocation.add(cameraLocation);
 
-        // Add the placement final location to move our local coordinate into global
-        // space
-        location = location.add(cameraLocation);
-
-        // Subtract the bottom vision offsets to move the part to the final location,
-        // instead of the nozzle.
-        location = location.subtract(offsets);
-
-        nozzle.moveTo(location);
+            // Subtract the bottom vision offsets to move the part to the final location,
+            // instead of the nozzle.
+            centeredLocation = centeredLocation.subtract(offsets);
+        }
+        // Center, rotate and align the part.
+        nozzle.moveTo(centeredLocation);
+        // Take a fresh camera shot.
+        BufferedImage image = camera.lightSettleAndCapture();
+        // Wait a moment to let the last alignment pass result display sink in.
+        Thread.sleep(500);
+        // Display with the the final offsets, but also include the rotation mode offset adjustment.
+        double rotationOffset = (rotationAfter != null ? rotationAfter : 0) - (rotationBefore != null ? rotationBefore : 0);
+        Location offsetsDisplayed = offsets.deriveLengths(null, null, null, offsets.getRotation() + rotationOffset);
+        bottomVision.displayResult(image, nozzle.getPart(), offsetsDisplayed, camera, nozzle);
     }
 
     private void determineVisionOffset() throws Exception {

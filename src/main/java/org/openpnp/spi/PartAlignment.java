@@ -1,5 +1,7 @@
 package org.openpnp.spi;
 
+import java.awt.image.BufferedImage;
+
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Location;
@@ -66,5 +68,17 @@ public interface PartAlignment extends PartSettingsHolder, Named, Solutions.Subj
     public boolean canHandle(PartSettingsHolder partSettingsHolder, boolean allowDisabled);
 
     boolean isEnabled();
+
+    /**
+     * Display the result of an Alignment on the camera view. 
+     * 
+     * @param image
+     * @param part
+     * @param offsets
+     * @param camera
+     * @param nozzle
+     */
+    void displayResult(BufferedImage image, Part part, Location offsets, Camera camera,
+            Nozzle nozzle);
 
 }

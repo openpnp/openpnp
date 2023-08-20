@@ -1,5 +1,6 @@
 package org.openpnp.machine.reference.vision;
 
+import java.awt.image.BufferedImage;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,7 +39,6 @@ import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
 import org.openpnp.spi.PartAlignment;
 import org.openpnp.spi.PropertySheetHolder;
-import org.openpnp.spi.base.AbstractNozzle;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.UiUtils;
@@ -128,13 +128,12 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
         else {
             offsets = findOffsetsPostRotate(part, boardLocation, placement, nozzle, camera, bottomVisionSettings);
         }
-        if (nozzle.isAligningRotationMode() && nozzle instanceof AbstractNozzle) {
+        if (nozzle.isAligningRotationMode()) {
             // Add the rotation offset to the rotation mode rather than adjusting for it in placement. This has the advantage of
             // showing the rotation aligned with the part rotation in the DRO, cross-hairs etc.
-            AbstractNozzle abstractNozzle = (AbstractNozzle) nozzle;
-            double rotOff = abstractNozzle.getRotationModeOffset() != null ? abstractNozzle.getRotationModeOffset() : 0;
-            abstractNozzle.setRotationModeOffset(rotOff + offsets.getLocation().getRotation());
-            Location newOffsets = offsets.getLocation()/*.rotateXy(offsets.getLocation().getRotation())*/.derive(null, null, null, 0.);
+            double rotOff = nozzle.getRotationModeOffset() != null ? nozzle.getRotationModeOffset() : 0;
+            nozzle.setRotationModeOffset(rotOff + offsets.getLocation().getRotation());
+            Location newOffsets = offsets.getLocation().derive(null, null, null, 0.);
             offsets = new PartAlignmentOffset(newOffsets, offsets.getPreRotated()); 
         }
         return offsets;
@@ -277,7 +276,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
             // subtract visionCenterOffset
             offsets = offsets.subtract(bottomVisionSettings.getVisionOffset().rotateXy(wantedAngle));
 
-            displayResult(pipeline, part, offsets, camera, nozzle);
+            displayResult(OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), part, offsets, camera, nozzle);
             offsetsCheck(part, nozzle, offsets);
 
             return new PartAlignment.PartAlignmentOffset(offsets, true);
@@ -320,7 +319,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
             // subtract visionCenterOffset
             offsets = offsets.subtract(bottomVisionSettings.getVisionOffset().rotateXy(offsets.getRotation()));
 
-            displayResult(pipeline, part, offsets, camera, nozzle);
+            displayResult(OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), part, offsets, camera, nozzle);
             offsetsCheck(part, nozzle, offsets);
 
             return new PartAlignmentOffset(offsets, false);
@@ -412,7 +411,8 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
         return true;
     }
 
-    private static void displayResult(CvPipeline pipeline, Part part, Location offsets, Camera camera, Nozzle nozzle) {
+    @Override
+    public void displayResult(BufferedImage image, Part part, Location offsets, Camera camera, Nozzle nozzle) {
         String s = part.getId();
         if (offsets != null) {
             LengthConverter lengthConverter = new LengthConverter();
@@ -429,7 +429,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                 mainFrame
                 .getCameraViews()
                 .getCameraView(camera)
-                .showFilteredImage(OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), s,
+                .showFilteredImage(image, s,
                         2000);
                 // Also make sure the right nozzle is selected for correct cross-hair rotation.
                 MovableUtils.fireTargetedUserAction(nozzle);
@@ -589,7 +589,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
             }
             pipelineShot.processResult(result);
             // Display the shot result.   
-            displayResult(pipeline, part, null, camera, nozzle);
+            displayResult(OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), part, null, camera, nozzle);
         }
         return (RotatedRect) pipeline.getCurrentPipelineShot().processCompositeResult().getModel();
     }
