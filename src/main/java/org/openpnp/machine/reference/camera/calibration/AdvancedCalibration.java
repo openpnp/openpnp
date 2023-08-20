@@ -56,7 +56,8 @@ public class AdvancedCalibration extends LensCalibrationParams {
     // Moving to version 1.3 - version 1.2 accidentally disabled all distortion correction by 
     // default rather than only tangential distortion correction.
     // Moving to version 1.4 - modify the pipeline for camera full frame settling.
-    private static final Double LATEST_VERSION = 1.4;
+    // Moving to version 1.5 - adds attributes to save the image size
+    private static final Double LATEST_VERSION = 1.5;
     
     @Attribute(required = false)
     private boolean overridingOldTransformsAndDistortionCorrectionSettings = false;
@@ -173,6 +174,11 @@ public class AdvancedCalibration extends LensCalibrationParams {
     @Attribute(required = false)
     private Double version;
 
+    @Attribute(required = false)
+    private Integer rawCroppedImageWidth = null;
+    
+    @Attribute(required = false)
+    private Integer rawCroppedImageHeight = null;
     
     private Mat virtualCameraMatrix = Mat.eye(3, 3, CvType.CV_64FC1);
     private Mat rectificationMatrix = Mat.eye(3, 3, CvType.CV_64FC1);
@@ -295,6 +301,14 @@ public class AdvancedCalibration extends LensCalibrationParams {
                 pipeline = createDefaultPipeline();
             }
         }
+        
+        //If the raw cropped image size has never been saved before, extract the information from
+        //the camera matrix.
+        if ((version == null || version <= 1.4) && rawCroppedImageWidth == null) {
+            rawCroppedImageWidth = (int) (Math.round(2*cameraMatrix.get(0, 2)[0]) + 1);
+            rawCroppedImageHeight = (int) (Math.round(2*cameraMatrix.get(1, 2)[0]) + 1);
+        }
+        
     }
     
     @Persist
@@ -799,6 +813,34 @@ public class AdvancedCalibration extends LensCalibrationParams {
     public void setDisableTangentialDistortionCorrection(
             boolean disableTangentialDistortionCorrection) {
         this.disableTangentialDistortionCorrection = disableTangentialDistortionCorrection;
+    }
+
+    /**
+     * @return the camera's raw image width in pixels after cropping has been applied
+     */
+    public int getRawCroppedImageWidth() {
+        return rawCroppedImageWidth;
+    }
+
+    /**
+     * @param rawImageWidth - the raw image width in pixels after cropping has been applied
+     */
+    public void setRawCroppedImageWidth(int rawImageWidth) {
+        this.rawCroppedImageWidth = rawImageWidth;
+    }
+
+    /**
+     * @return the camera's raw image height in pixels after cropping has been applied
+     */
+    public int getRawCroppedImageHeight() {
+        return rawCroppedImageHeight;
+    }
+
+    /**
+     * @param rawImageHeight - the raw image height in pixels after cropping has been applied
+     */
+    public void setRawCroppedImageHeight(int rawImageHeight) {
+        this.rawCroppedImageHeight = rawImageHeight;
     }
 
     /**
@@ -1330,11 +1372,11 @@ public class AdvancedCalibration extends LensCalibrationParams {
     /**
      * Initializes the tables used to map the pixels from the distorted/rotated images to the 
      * undistorted images
-     * @param size - size of the physical camera images
      * @param undistortionMap1 - output X pixel mapping
      * @param undistortionMap2 - output Y pixel mapping
      */
-    public void initUndistortRectifyMap(Size size, Mat undistortionMap1, Mat undistortionMap2) {
+    public void initUndistortRectifyMap(Mat undistortionMap1, Mat undistortionMap2) {
+        Size size = new Size(rawCroppedImageWidth, rawCroppedImageHeight);
         Size virCamSize = new Size();
         if (virtualCameraMatrix != null) {
             virtualCameraMatrix.release();
@@ -1410,10 +1452,6 @@ public class AdvancedCalibration extends LensCalibrationParams {
      * @param camera
      */
     public void applyCalibrationToMachine(ReferenceHead head, ReferenceCamera camera) {
-        if (getPrimaryLocation() != null) {
-            camera.setDefaultZ(getPrimaryLocation().getLengthZ());
-        }
-        
         Location calibratedOffsets = new Location(LengthUnit.Millimeters);
         if (head != null) {
             calibratedOffsets = calibratedOffsets

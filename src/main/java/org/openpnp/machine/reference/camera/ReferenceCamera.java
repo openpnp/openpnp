@@ -661,8 +661,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
             if (undistortionMap2 == null) {
                 undistortionMap2 = new Mat();
             }
-            advancedCalibration.initUndistortRectifyMap(mat.size(), 
-                    undistortionMap1, undistortionMap2);
+            advancedCalibration.initUndistortRectifyMap(undistortionMap1, undistortionMap2);
         }
         Imgproc.remap(mat, dst, undistortionMap1, undistortionMap2, Imgproc.INTER_LINEAR);
         mat.release();

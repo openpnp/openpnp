@@ -182,6 +182,9 @@ public abstract class CalibrateCameraProcess {
 
         advCal = ((ReferenceCamera)camera).getAdvancedCalibration();
         
+        advCal.setRawCroppedImageWidth(pixelsX);
+        advCal.setRawCroppedImageHeight(pixelsY);
+        
         testPattern3dPointsList = new ArrayList<>();
         testPatternImagePointsList = new ArrayList<>();
         

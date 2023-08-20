@@ -1059,7 +1059,7 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
                 else {
                     try {
                         referenceCamera.getAdvancedCalibration().processRawCalibrationData(
-                                new Size(referenceCamera.getWidth(), referenceCamera.getHeight()));
+                                new Size(advCal.getRawCroppedImageWidth(), advCal.getRawCroppedImageHeight()));
                     
                         postCalibrationProcessing();
                     }
@@ -1239,18 +1239,17 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
                 
                 int width = referenceCamera.getCropWidth();
                 int height = referenceCamera.getCropHeight();
-                BufferedImage rawImage = referenceCamera.captureRaw();
                 if (width > 0) {
-                    width = Math.min(width, rawImage.getWidth());
+                    width = Math.min(width, advCal.getRawCroppedImageWidth());
                 }
                 else {
-                    width = rawImage.getWidth();
+                    width = advCal.getRawCroppedImageWidth();
                 }
                 if (height > 0) {
-                    height = Math.min(height, rawImage.getHeight());
+                    height = Math.min(height, advCal.getRawCroppedImageHeight());
                 }
                 else {
-                    height = rawImage.getHeight();
+                    height = advCal.getRawCroppedImageHeight();
                 }
                 
                 if (chckbxShowOutliers.isSelected()) {
