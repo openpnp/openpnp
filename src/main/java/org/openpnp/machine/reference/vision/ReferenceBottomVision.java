@@ -39,7 +39,6 @@ import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
 import org.openpnp.spi.PartAlignment;
 import org.openpnp.spi.PropertySheetHolder;
-import org.openpnp.spi.base.AbstractNozzle;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.UiUtils;
@@ -129,13 +128,12 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
         else {
             offsets = findOffsetsPostRotate(part, boardLocation, placement, nozzle, camera, bottomVisionSettings);
         }
-        if (nozzle.isAligningRotationMode() && nozzle instanceof AbstractNozzle) {
+        if (nozzle.isAligningRotationMode()) {
             // Add the rotation offset to the rotation mode rather than adjusting for it in placement. This has the advantage of
             // showing the rotation aligned with the part rotation in the DRO, cross-hairs etc.
-            AbstractNozzle abstractNozzle = (AbstractNozzle) nozzle;
-            double rotOff = abstractNozzle.getRotationModeOffset() != null ? abstractNozzle.getRotationModeOffset() : 0;
-            abstractNozzle.setRotationModeOffset(rotOff + offsets.getLocation().getRotation());
-            Location newOffsets = offsets.getLocation()/*.rotateXy(offsets.getLocation().getRotation())*/.derive(null, null, null, 0.);
+            double rotOff = nozzle.getRotationModeOffset() != null ? nozzle.getRotationModeOffset() : 0;
+            nozzle.setRotationModeOffset(rotOff + offsets.getLocation().getRotation());
+            Location newOffsets = offsets.getLocation().derive(null, null, null, 0.);
             offsets = new PartAlignmentOffset(newOffsets, offsets.getPreRotated()); 
         }
         return offsets;

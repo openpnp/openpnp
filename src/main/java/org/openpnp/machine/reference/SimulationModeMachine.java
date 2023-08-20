@@ -55,7 +55,6 @@ import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Locatable.LocationOption;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;
-import org.openpnp.spi.base.AbstractNozzle;
 import org.openpnp.util.Collect;
 import org.openpnp.util.GcodeServer;
 import org.openpnp.util.NanosecondTime;
@@ -386,10 +385,8 @@ public class SimulationModeMachine extends ReferenceMachine {
                                                         +" pick location not recognized.");
                                             }
                                         }
-                                        if (nozzle instanceof AbstractNozzle) {
-                                            Double rotationModeOffset = ((AbstractNozzle) nozzle).getRotationModeOffset();
-                                            rotationModeOffsetAtPick.put(nozzle, rotationModeOffset == null ? 0.0 : rotationModeOffset);
-                                        }
+                                        Double rotationModeOffset = nozzle.getRotationModeOffset();
+                                        rotationModeOffsetAtPick.put(nozzle, rotationModeOffset == null ? 0.0 : rotationModeOffset);
                                     }
                                     else {
                                         // Place
@@ -537,13 +534,13 @@ public class SimulationModeMachine extends ReferenceMachine {
                         LocationOption.SuppressStaticCompensation,
                         LocationOption.SuppressDynamicCompensation);
                 // If the part rotation is wanted, we need to adjust the 
-                if (partRotation && hm instanceof AbstractNozzle) {
+                if (partRotation && hm instanceof Nozzle) {
                     Double rotationOffset = rotationModeOffsetAtPick.get(hm);
                     if (rotationOffset != null) {
                         location = location.derive(null, null, null, location.getRotation() + rotationOffset);
                     }
                     else {
-                        rotationOffset = ((AbstractNozzle)hm).getRotationModeOffset();
+                        rotationOffset = ((Nozzle)hm).getRotationModeOffset();
                         if (rotationOffset != null) {
                             location = location.derive(null, null, null, location.getRotation() + rotationOffset);
                         }

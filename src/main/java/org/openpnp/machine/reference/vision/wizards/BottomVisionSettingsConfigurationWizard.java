@@ -615,15 +615,14 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
             // instead of the nozzle.
             centeredLocation = centeredLocation.subtract(offsets);
         }
-        // Center, rotate and align the part like that.
+        // Center, rotate and align the part.
         nozzle.moveTo(centeredLocation);
         // Take a fresh camera shot.
         BufferedImage image = camera.lightSettleAndCapture();
+        // Wait a moment to let the last alignment pass result display sink in.
+        Thread.sleep(500);
         // Display with the the final offsets, but also include the rotation mode offset adjustment.
-        double rotationOffset = 0;
-        if (rotationBefore != null && rotationAfter != null) {
-            rotationOffset = rotationAfter - rotationBefore;
-        }
+        double rotationOffset = (rotationAfter != null ? rotationAfter : 0) - (rotationBefore != null ? rotationBefore : 0);
         Location offsetsDisplayed = offsets.deriveLengths(null, null, null, offsets.getRotation() + rotationOffset);
         bottomVision.displayResult(image, nozzle.getPart(), offsetsDisplayed, camera, nozzle);
     }
