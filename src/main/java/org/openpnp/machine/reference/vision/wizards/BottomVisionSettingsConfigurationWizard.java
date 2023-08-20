@@ -575,9 +575,11 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
         Camera camera = VisionUtils.getBottomVisionCamera();
         Placement dummy = new Placement("Dummy");
         dummy.setLocation(new Location(LengthUnit.Millimeters, 0, 0, 0, angle));
+        Double rotationBefore = nozzle.getRotationModeOffset();
         PartAlignment.PartAlignmentOffset alignmentOffset = VisionUtils.findPartAlignmentOffsets(bottomVision, nozzle.getPart(),
                 null, dummy, nozzle);
         Location offsets = alignmentOffset.getLocation();
+        Double rotationAfter = nozzle.getRotationModeOffset();
 
         if (!centerAfterTest) {
             return;
@@ -617,8 +619,13 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
         nozzle.moveTo(centeredLocation);
         // Take a fresh camera shot.
         BufferedImage image = camera.lightSettleAndCapture();
-        // Display with the the final offsets.
-        bottomVision.displayResult(image, nozzle.getPart(), offsets, camera, nozzle);
+        // Display with the the final offsets, but also include the rotation mode offset adjustment.
+        double rotationOffset = 0;
+        if (rotationBefore != null && rotationAfter != null) {
+            rotationOffset = rotationAfter - rotationBefore;
+        }
+        Location offsetsDisplayed = offsets.deriveLengths(null, null, null, offsets.getRotation() + rotationOffset);
+        bottomVision.displayResult(image, nozzle.getPart(), offsetsDisplayed, camera, nozzle);
     }
 
     private void determineVisionOffset() throws Exception {
