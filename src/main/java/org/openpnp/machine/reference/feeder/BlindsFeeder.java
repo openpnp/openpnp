@@ -310,7 +310,6 @@ public class BlindsFeeder extends ReferenceFeeder {
     } 
 
     public Location getPickLocation(double pocketNumber) throws Exception {
-        assertCalibration();
         return getUncalibratedPickLocation(pocketNumber);
     }
 

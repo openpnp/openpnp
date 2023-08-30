@@ -371,7 +371,6 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
 
     @Override
     public Location getPickLocation() throws Exception {
-        assertCalibrated(false);
         // Numbers are 1-based (a feed is needed before the very first part can be picked),
         // therefore the modulo calculation is a bit gnarly.
         // The 1-based approach has the benefit, that at feed count 0 (reset) the part closest to the reel 
@@ -2373,6 +2372,9 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
             // Check the part in the feeder using OCR, this also calibrates the feeder.
             // Note, we cannot change the parts at this point, it is too late in the Job Process, so we always stop.
             performOcr(OcrWrongPartAction.None, true, null);
+        }
+        else {
+            assertCalibrated(false);
         }
     }
     
