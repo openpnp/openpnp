@@ -2357,7 +2357,8 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
 
     @Override
     public Location getJobPreparationLocation() {
-        if (isOcrDiscoverOnJobStart() && visionOffset == null) {
+        if (visionOffset == null 
+            && (isOcrDiscoverOnJobStart() || calibrationTrigger != CalibrationTrigger.None)) {
             return getPickLocation(0, null);
         }
         else {
@@ -2368,13 +2369,15 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     @Override
     public void prepareForJob(boolean visit) throws Exception {
         super.prepareForJob(visit);
-        if (visit && isOcrDiscoverOnJobStart() && visionOffset == null) {
-            // Check the part in the feeder using OCR, this also calibrates the feeder.
-            // Note, we cannot change the parts at this point, it is too late in the Job Process, so we always stop.
-            performOcr(OcrWrongPartAction.None, true, null);
-        }
-        else {
-            assertCalibrated(false);
+        if (visit && visionOffset == null) {
+            if (isOcrDiscoverOnJobStart()) {
+                // Check the part in the feeder using OCR, this also calibrates the feeder.
+                // Note, we cannot change the parts at this point, it is too late in the Job Process, so we always stop.
+                performOcr(OcrWrongPartAction.None, true, null);
+            }
+            else {
+                assertCalibrated(false);
+            }
         }
     }
     
@@ -2388,7 +2391,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
             feederLocationList.add(feeder.getPickLocation(0, null).convertToUnits(LengthUnit.Millimeters)); // Btw, convert to mm
         }
 
-        // Use a Travelling Salesman algorithm to optimize the path to actuate all the feeder covers.
+        // Use a Travelling Salesman algorithm to optimize the path to all the feeders OCR regions.
         TravellingSalesman<Location> tsm = new TravellingSalesman<>(
                 feederLocationList, 
                 new TravellingSalesman.Locator<Location>() { 
