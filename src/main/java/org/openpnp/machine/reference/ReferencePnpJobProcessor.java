@@ -319,7 +319,10 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                         if (placement.getPartId().equals(feeder.getPart().getId())) {
                             if (feeder.getJobPreparationLocation() != null) {
                                 // only feeders with location added to the visit list
-                                feederVisitList.add(feeder);
+                                // only add feeders once
+                                if (!feederVisitList.contains(feeder)) {
+                                    feederVisitList.add(feeder);
+                                }
                             }
                             // always also add them to the general (second pass) prep list
                             feederNoVisitList.add(feeder);
