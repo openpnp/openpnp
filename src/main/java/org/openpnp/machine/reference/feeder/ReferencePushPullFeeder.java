@@ -2370,7 +2370,9 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     public void prepareForJob(boolean visit) throws Exception {
         super.prepareForJob(visit);
         if (visit && visionOffset == null) {
-            if (isOcrDiscoverOnJobStart()) {
+            // according to Wiki OCR checking is disabled if calibration trigger is none. Check that here again
+            // as performOcr() will now always check OCR if ocrStop == true.
+            if (isOcrDiscoverOnJobStart() && calibrationTrigger != CalibrationTrigger.None) {
                 // Check the part in the feeder using OCR, this also calibrates the feeder.
                 // Note, we cannot change the parts at this point, it is too late in the Job Process, so we always stop.
                 performOcr(OcrWrongPartAction.None, true, null);
@@ -2461,7 +2463,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         
         FindFeatures feature = null;
 
-        final boolean ocrPass = (ocrAction != OcrWrongPartAction.None && getOcrRegion() != null);
+        final boolean ocrPass = ((ocrAction != OcrWrongPartAction.None || ocrStop) && getOcrRegion() != null);
         Location ocrOffsets = ocrPass ? getOcrRegion().getOffsets() : null;
         final boolean ocrZeroOffset = (ocrOffsets == null || !ocrOffsets.isInitialized());
 
