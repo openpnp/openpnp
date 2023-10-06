@@ -142,13 +142,13 @@ public class LabcenterProteusImporter implements BoardImporter {
             line = line.trim();
             String[] tokens = line.split(",");
             
-            String placementId = tokens[ind[0]].replaceAll("^\"|\"$", "");	// RefDes in Proteus pkp file
-            String partValue = tokens[ind[1]].replaceAll("^\"|\"$", "");    // Value in Proteus pkp file
-            String pkgName = tokens[ind[2]].replaceAll("^\"|\"$", "");      // Name in Proteus pkp file
-            double placementX = Double.parseDouble(tokens[ind[5]])*mul;   		// X (mm) in Proteus pkp file
-            double placementY = Double.parseDouble(tokens[ind[6]])*mul;   		// Y (mm) in Proteus pkp file
-            double placementRotation = Double.parseDouble(tokens[ind[4]]); 	// Rotate in Proteus pkp file
-            String placementLayer = tokens[ind[3]];    						// Layer in Proteus pkp file
+            String placementId = tokens[ind[0]].replaceAll("^\"|\"$", "");	                            // RefDes in Proteus pkp file
+            String partValue = tokens[ind[1]].replaceAll("^\"|\"$", "");                                // Value in Proteus pkp file
+            String pkgName = tokens[ind[2]].replaceAll("^\"|\"$", "");                                  // Name in Proteus pkp file
+            double placementX = Double.parseDouble(tokens[ind[5]].replaceAll("^\"|\"$", ""))*mul;   	// X (mm) in Proteus pkp file
+            double placementY = Double.parseDouble(tokens[ind[6]].replaceAll("^\"|\"$", ""))*mul;   	// Y (mm) in Proteus pkp file
+            double placementRotation = Double.parseDouble(tokens[ind[4]].replaceAll("^\"|\"$", ""));    // Rotate in Proteus pkp file
+            String placementLayer = tokens[ind[3]].replaceAll("^\"|\"$", "");    						// Layer in Proteus pkp file
 			
 			
             Placement placement = new Placement(placementId);
