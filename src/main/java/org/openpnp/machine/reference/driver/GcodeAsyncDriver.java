@@ -134,7 +134,7 @@ public class GcodeAsyncDriver extends GcodeDriver {
     protected LinkedBlockingQueue<CommandLine> commandQueue;
 
     private boolean waitedForCommands;
-    private boolean confirmationComplete;
+    private volatile boolean confirmationComplete;
 
     public boolean isConfirmationFlowControl() {
         return confirmationFlowControl;
@@ -325,6 +325,7 @@ public class GcodeAsyncDriver extends GcodeDriver {
         commandQueue.offer(commandLine, writerQueueTimeout, TimeUnit.MILLISECONDS);
         if (command.startsWith("$")) {
             waitForEmptyCommandQueue();
+            Logger.trace(getName()+" $-command, waiting "+dollarWaitTimeMilliseconds+"ms");
             Thread.sleep(dollarWaitTimeMilliseconds);
         }
     }
@@ -348,7 +349,7 @@ public class GcodeAsyncDriver extends GcodeDriver {
         while (System.currentTimeMillis() < t1) {
             if (commandQueue.size() == 0) {
                 long dt = System.currentTimeMillis() - t0;
-                if (dt > 20) {
+                if (dt > 1) {
                         Logger.trace("{} waited {}ms for empty command queue.", getName(), dt);
                 }
                 return; // --->
@@ -395,6 +396,7 @@ public class GcodeAsyncDriver extends GcodeDriver {
         confirmationComplete = false;
         CommandLine commandLine = new CommandLine(null, 1);
         commandQueue.offer(commandLine, writerQueueTimeout, TimeUnit.MILLISECONDS);
+        long t0 = System.currentTimeMillis();
         while (!confirmationComplete) {
             try {
                 synchronized(this) { 
@@ -404,6 +406,10 @@ public class GcodeAsyncDriver extends GcodeDriver {
             catch (InterruptedException e) {
                 Logger.warn(e, getName() +" was interrupted while waiting for completion.");
             }
+        }
+        long dt = System.currentTimeMillis() - t0;
+        if (dt > 1) {
+            Logger.trace("{} waited {}ms to drain command queue.", getName(), dt);
         }
     }
 

@@ -371,6 +371,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         connectThreads();
 
         // Wait a bit while the controller starts up
+        Logger.trace(getName()+" waiting for connection "+connectWaitTimeMilliseconds+"ms");
         Thread.sleep(connectWaitTimeMilliseconds);
 
         // Consume any startup messages

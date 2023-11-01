@@ -407,7 +407,8 @@ public class SimulationModeMachine extends ReferenceMachine {
         }
         if (realtime) {
             try {
-                Thread.sleep(50);
+                Logger.trace("{} simulate actuation, sleep 5ms", actuator.getName());
+                Thread.sleep(5);
             }
             catch (InterruptedException e) {
             }

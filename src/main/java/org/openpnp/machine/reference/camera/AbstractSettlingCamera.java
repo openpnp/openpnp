@@ -662,6 +662,7 @@ public abstract class AbstractSettlingCamera extends AbstractCamera {
             }
             if (settleMethod == SettleMethod.FixedTime) {
                 try {
+                    Logger.trace(getName()+" settling fixed time "+getSettleTimeMs()+"ms");
                     Thread.sleep(getSettleTimeMs());
                 }
                 catch (Exception e) {
