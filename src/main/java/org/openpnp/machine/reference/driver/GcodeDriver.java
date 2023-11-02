@@ -1165,11 +1165,16 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         if (timeout == -1) {
             timeout = infinityTimeoutMilliseconds;
         }
-        long t1 = System.currentTimeMillis() + timeout;
+        long t0 = System.currentTimeMillis(); 
+        long t1 = t0 + timeout;
         List<Line> responses = new ArrayList<>();
         do{ 
             responses.addAll(receiveResponses());
             if (containsMatch(responses, regex)) {
+                long dt = System.currentTimeMillis() - t0;
+                if (dt > 1) {
+                    Logger.trace("{} got response matching \"{}\" after {}ms", getName(), regex, dt);
+                }
                 return responses;
             }
             Line response = responseQueue.poll(Math.max(1, t1 - System.currentTimeMillis()), TimeUnit.MILLISECONDS);
