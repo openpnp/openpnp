@@ -7,7 +7,7 @@
       <variable name="mediaFileVersion" value="${compiler:sys.version}" />
     </variables>
     <codeSigning macEnabled="true" macPkcs12File=".github/OpenPnP-Developer-ID-Application.p12" />
-    <jreBundles jdkProviderId="AdoptOpenJDK" release="17/latest" />
+    <jreBundles jdkProviderId="AdoptOpenJDK" release="17/jdk-17.0.8.1+1" />
   </application>
   <files>
     <roots>
@@ -994,6 +994,10 @@ if (context.isUnattended()) {
     </linuxDeb>
   </mediaSets>
   <buildIds buildAll="false">
-    <mediaSet refId="337" />
+    <mediaSet refId="28" />
+    <mediaSet refId="121" />
+    <mediaSet refId="122" />
+    <mediaSet refId="123" />
+    <mediaSet refId="124" />
   </buildIds>
 </install4j>
