@@ -404,13 +404,13 @@ public class SimulationModeMachine extends ReferenceMachine {
                     }
                 }
             }
-        }
-        if (realtime) {
-            try {
-                Logger.trace("{} simulate actuation, sleep 5ms", actuator.getName());
-                Thread.sleep(5);
-            }
-            catch (InterruptedException e) {
+            if (realtime) {
+                try {
+                    Logger.trace("{} simulate actuation, sleep 5ms", actuator.getName());
+                    Thread.sleep(5);
+                }
+                catch (InterruptedException e) {
+                }
             }
         }
     }
