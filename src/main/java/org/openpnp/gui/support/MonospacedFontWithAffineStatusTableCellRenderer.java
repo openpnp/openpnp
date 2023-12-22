@@ -51,28 +51,32 @@ public class MonospacedFontWithAffineStatusTableCellRenderer extends DefaultTabl
             alternateGlobalColor = globalColor;
             alternateLocalColor = localColor;
         }
+        Color foreground = table.getForeground();
+        Color background = row%2==0 ? rowColor : alternateRowColor;
         if (isSelected) {
-            setForeground(table.getSelectionForeground());
-            super.setBackground(table.getSelectionBackground());
+            foreground = table.getSelectionForeground();
+            background = table.getSelectionBackground();
         }
-        else {
-            Color foreground = table.getForeground();
-            Color background = row%2==0 ? rowColor : alternateRowColor;
-            try {
-                PlacementsTransformStatus transformStatus = ((PlacementsHolderLocationsTableModel) table.getModel()).getPlacementsHolderLocation(table.convertRowIndexToModel(row)).getPlacementsTransformStatus();
-                if (transformStatus == PlacementsTransformStatus.GloballySet) {
-                    background = row%2==0 ? globalColor : alternateGlobalColor;
-                }
-                else if (transformStatus == PlacementsTransformStatus.LocallySet) {
-                    background = row%2==0 ? localColor : alternateLocalColor;
+        try {
+            PlacementsTransformStatus transformStatus = ((PlacementsHolderLocationsTableModel) table.getModel()).getPlacementsHolderLocation(table.convertRowIndexToModel(row)).getPlacementsTransformStatus();
+            if (transformStatus == PlacementsTransformStatus.GloballySet) {
+                background = row%2==0 ? globalColor : alternateGlobalColor;
+                if (isSelected) {
+                    background = background.darker();
                 }
             }
-            catch (Exception ex) {
-                //do nothing
+            else if (transformStatus == PlacementsTransformStatus.LocallySet) {
+                background = row%2==0 ? localColor : alternateLocalColor;
+                if (isSelected) {
+                    background = background.darker();
+                }
             }
-            setForeground(foreground);
-            setBackground(background);
         }
+        catch (Exception ex) {
+            //do nothing
+        }
+        setForeground(foreground);
+        setBackground(background);
         setFont(new Font( "Monospaced", Font.BOLD, super.getFont().getSize()));
         return this;
     }

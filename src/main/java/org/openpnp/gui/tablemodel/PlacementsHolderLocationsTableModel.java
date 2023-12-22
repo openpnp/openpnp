@@ -254,34 +254,57 @@ public class PlacementsHolderLocationsTableModel extends AbstractObjectTableMode
             else if (columnIndex == 5) {
                 LengthCellValue value = (LengthCellValue) aValue;
                 Length length = value.getLength();
+                Length displayedLength = value.getDisplayedLength();
                 Location oldValue = placementsHolderLocation.getGlobalLocation();
-                Location location = Length.setLocationField(configuration, oldValue, length, Length.Field.X);
-                placementsHolderLocation.setGlobalLocation(location);
-                fireTableCellDecendantsUpdated(rowIndex, TableModelEvent.ALL_COLUMNS);
+                Length oldLength = oldValue.getLengthX();
+                Length displayedOldLength = new LengthCellValue(oldLength).getDisplayedLength();
+                //Check to see if the operator actually changed anything in the cell. The first check
+                //catches changes made to the digits to the right of what would ordinarily be displayed
+                //and the second check catches changes to the displayed digits 
+                if (length.compareTo(displayedLength) != 0 || length.compareTo(displayedOldLength) != 0) {
+                    Location location = Length.setLocationField(configuration, oldValue, length, Length.Field.X);
+                    placementsHolderLocation.setGlobalLocation(location);
+                    fireTableCellDecendantsUpdated(rowIndex, TableModelEvent.ALL_COLUMNS);
+                }
             }
             else if (columnIndex == 6) {
                 LengthCellValue value = (LengthCellValue) aValue;
                 Length length = value.getLength();
+                Length displayedLength = value.getDisplayedLength();
                 Location oldValue = placementsHolderLocation.getGlobalLocation();
-                Location location = Length.setLocationField(configuration, oldValue, length, Length.Field.Y);
-                placementsHolderLocation.setGlobalLocation(location);
-                fireTableCellDecendantsUpdated(rowIndex, TableModelEvent.ALL_COLUMNS);
+                Length oldLength = oldValue.getLengthY();
+                Length displayedOldLength = new LengthCellValue(oldLength).getDisplayedLength();
+                if (length.compareTo(displayedLength) != 0 || length.compareTo(displayedOldLength) != 0) {
+                    Location location = Length.setLocationField(configuration, oldValue, length, Length.Field.Y);
+                    placementsHolderLocation.setGlobalLocation(location);
+                    fireTableCellDecendantsUpdated(rowIndex, TableModelEvent.ALL_COLUMNS);
+                }
             }
             else if (columnIndex == 7) {
                 LengthCellValue value = (LengthCellValue) aValue;
                 Length length = value.getLength();
+                Length displayedLength = value.getDisplayedLength();
                 Location oldValue = placementsHolderLocation.getGlobalLocation();
-                Location location = Length.setLocationField(configuration, oldValue, length, Length.Field.Z);
-                placementsHolderLocation.setGlobalLocation(location);
-                fireTableCellDecendantsUpdated(rowIndex, columnIndex);
+                Length oldLength = oldValue.getLengthZ();
+                Length displayedOldLength = new LengthCellValue(oldLength).getDisplayedLength();
+                if (length.compareTo(displayedLength) != 0 || length.compareTo(displayedOldLength) != 0) {
+                    Location location = Length.setLocationField(configuration, oldValue, length, Length.Field.Z);
+                    placementsHolderLocation.setGlobalLocation(location);
+                    fireTableCellDecendantsUpdated(rowIndex, TableModelEvent.ALL_COLUMNS);
+                }
             }
             else if (columnIndex == 8) {
                 RotationCellValue value = (RotationCellValue) aValue;
                 double rotation = value.getRotation();
+                double displayedRotation = value.getDisplayedRotation();
                 Location oldValue = placementsHolderLocation.getGlobalLocation();
-                Location location = oldValue.derive(null, null, null, rotation);
-                placementsHolderLocation.setLocation(location);
-                fireTableCellDecendantsUpdated(rowIndex, TableModelEvent.ALL_COLUMNS);
+                double oldRotation = oldValue.getRotation();
+                double displayedOldRotation = new RotationCellValue(oldRotation).getDisplayedRotation();
+                if (rotation != displayedRotation || rotation != displayedOldRotation) {
+                    Location location = oldValue.derive(null, null, null, rotation);
+                    placementsHolderLocation.setGlobalLocation(location);
+                    fireTableCellDecendantsUpdated(rowIndex, TableModelEvent.ALL_COLUMNS);
+                }
             }
             else if (columnIndex == 9) {
                 if ((placementsHolderLocation.getParent() == null) ||

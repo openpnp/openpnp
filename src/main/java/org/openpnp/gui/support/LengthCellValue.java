@@ -71,6 +71,14 @@ public class LengthCellValue implements Comparable<LengthCellValue> {
         this.length = length;
     }
 
+    /**
+     * Gets the length rounded to the precision displayed in the cell
+     * @return the length
+     */
+    public Length getDisplayedLength() {
+        return Length.parse(toString());
+    }
+    
     public boolean isDisplayNativeUnits() {
         return displayNativeUnits;
     }
