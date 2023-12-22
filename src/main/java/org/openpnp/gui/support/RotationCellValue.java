@@ -67,6 +67,14 @@ public class RotationCellValue implements Comparable<RotationCellValue> {
         this.rotation = rotation;
     }
 
+    /**
+     * Gets the rotation rounded to the precision displayed in the cell
+     * @return the rotation
+     */
+    public double getDisplayedRotation() {
+        return Double.parseDouble(toString());
+    }
+    
     public boolean isDisplayNativeUnits() {
         return displayNativeUnits;
     }
