@@ -2459,6 +2459,10 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         Location runningVisionOffset = getVisionOffset();
         ensureCameraZ(camera, true);
         
+        // FIXME: this function will move the head unexpectedly if called via prepareForJob() -> performOCR() with 
+        //        storeHoles == false, storePickLocation == false and storeVisionOffset == true. CalibrationTrigger
+        //        is not checked but should be respected e.g. for feeders, that wont OCR but no location calibration.
+        
         FindFeatures feature = null;
 
         final boolean ocrPass = ((ocrAction != OcrWrongPartAction.None || ocrStop) && getOcrRegion() != null);
