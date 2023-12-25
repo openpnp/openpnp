@@ -2,11 +2,14 @@ package org.openpnp.machine.photon.sheets.gui;
 
 import java.awt.Color;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
+import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
@@ -17,6 +20,7 @@ import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.jdesktop.beansbinding.BeanProperty;
 import org.jdesktop.beansbinding.Bindings;
 import org.openpnp.Translations;
+import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.LocationButtonsPanel;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.DoubleConverter;
@@ -28,7 +32,12 @@ import org.openpnp.gui.support.PartsComboBoxModel;
 import org.openpnp.machine.photon.PhotonFeeder;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Part;
+import org.openpnp.spi.Camera;
 import org.openpnp.util.UiUtils;
+import org.openpnp.util.VisionUtils;
+import org.openpnp.vision.pipeline.CvPipeline;
+import org.openpnp.vision.pipeline.ui.CvPipelineEditor;
+import org.openpnp.vision.pipeline.ui.CvPipelineEditorDialog;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
@@ -54,6 +63,9 @@ public class FeederConfigurationWizard extends AbstractConfigurationWizard {
 	private final JTextField rotOffsetTf;
 	private final LocationButtonsPanel offsetLocationPanel;
 	private final LocationButtonsPanel slotLocationPanel;
+
+        private JCheckBox chckbxUseVision;
+        private JLabel lblUseVision;
 
 	/**
 	 * Create the panel.
@@ -149,7 +161,45 @@ public class FeederConfigurationWizard extends AbstractConfigurationWizard {
 		pickRetryCountTf = new JTextField();
 		partPanel.add(pickRetryCountTf, "4, 8, fill, default"); //$NON-NLS-1$
 		pickRetryCountTf.setColumns(10);
-		
+
+                JPanel visionPanel = new JPanel();
+                visionPanel.setBorder(new TitledBorder(null, Translations.getString(
+                        "FeederConfigurationWizard.VisionPanel.Border.title"), //$NON-NLS-1$
+                        TitledBorder.LEADING, TitledBorder.TOP, null, null));
+                contentPanel.add(visionPanel);
+                visionPanel.setLayout(new FormLayout(
+                        new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                                FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
+                        new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                                FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
+
+                lblUseVision = new JLabel(Translations.getString(
+                        "FeederConfigurationWizard.VisionPanel.UseVisionLabel.text")); //$NON-NLS-1$
+                visionPanel.add(lblUseVision, "2, 2");
+
+                chckbxUseVision = new JCheckBox("");
+                visionPanel.add(chckbxUseVision, "4, 2");
+
+                JButton btnEditPipeline = new JButton(Translations.getString(
+                        "FeederConfigurationWizard.VisionPanel.EditPipelineButton.text")); //$NON-NLS-1$
+                btnEditPipeline.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent e) {
+                        UiUtils.messageBoxOnException(() -> {
+                            editPipeline();
+                        });
+                    }
+                });
+                visionPanel.add(btnEditPipeline, "2, 4");
+
+                JButton btnResetPipeline = new JButton(Translations.getString(
+                        "FeederConfigurationWizard.VisionPanel.ResetPipelineButton.text")); //$NON-NLS-1$
+                btnResetPipeline.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent e) {
+                        resetPipeline();
+                    }
+                });
+                visionPanel.add(btnResetPipeline, "4, 4");
+
 		JPanel locationPanel = new JPanel();
 		locationPanel.setBorder(new TitledBorder(null, Translations.getString("FeederConfigurationWizard.LocationPanel.Border.title"), TitledBorder.LEADING, TitledBorder.TOP, null, null)); //$NON-NLS-1$
 		contentPanel.add(locationPanel);
@@ -255,6 +305,7 @@ public class FeederConfigurationWizard extends AbstractConfigurationWizard {
 		addWrappedBinding(feeder, "partPitch", partPitchTf, "text", intConverter); //$NON-NLS-1$ //$NON-NLS-2$
 		addWrappedBinding(feeder, "feedRetryCount", feedRetryCountTf, "text", intConverter); //$NON-NLS-1$ //$NON-NLS-2$
 		addWrappedBinding(feeder, "pickRetryCount", pickRetryCountTf, "text", intConverter); //$NON-NLS-1$ //$NON-NLS-2$
+		addWrappedBinding(feeder, "visionEnabled", chckbxUseVision, "selected");
 
 		bind(UpdateStrategy.READ, slotProxy, "enabled", feedAction, "enabled"); //$NON-NLS-1$ //$NON-NLS-2$
 
@@ -301,4 +352,41 @@ public class FeederConfigurationWizard extends AbstractConfigurationWizard {
 			});
 		}
 	};
+
+        private void editPipeline() throws Exception {
+            Camera camera = Configuration.get().getMachine().getDefaultHead().getDefaultCamera();
+            CvPipeline pipeline = getCvPipeline(camera, false);
+            CvPipelineEditor editor = new CvPipelineEditor(pipeline);
+            JDialog dialog = new CvPipelineEditorDialog(MainFrame.get(), feeder.getName() + " Pipeline", editor);
+            dialog.setVisible(true);
+        }
+
+        private void resetPipeline() {
+            feeder.resetPipeline();
+        }
+
+        private CvPipeline getCvPipeline(Camera camera, boolean clone) {
+            Integer pxMaxDistance = (int) VisionUtils.toPixels(feeder.getHolePitch(), camera);
+            Integer pxMinDiameter = (int) VisionUtils.toPixels(feeder.getHoleDiameterMin(), camera);
+            Integer pxMaxDiameter = (int) VisionUtils.toPixels(feeder.getHoleDiameterMax(), camera);
+
+            try {
+                CvPipeline pipeline = feeder.getPipeline();;
+                if (clone) {
+                    pipeline = pipeline.clone();
+                }
+                pipeline.setProperty("camera", camera);
+                pipeline.setProperty("feeder", feeder);
+                pipeline.setProperty("DetectCircularSymmetry.maxDistance", pxMaxDistance / 2);
+                pipeline.setProperty("DetectCircularSymmetry.minDiameter", pxMinDiameter);
+                pipeline.setProperty("DetectCircularSymmetry.maxDiameter", pxMaxDiameter);
+                pipeline.setProperty("DetectCircularSymmetry.searchHeight", pxMaxDistance);
+                pipeline.setProperty("DetectCircularSymmetry.searchWidth", pxMinDiameter / 2);
+                return pipeline;
+            }
+            catch (CloneNotSupportedException e) {
+                throw new Error(e);
+            }
+        }
+
 }

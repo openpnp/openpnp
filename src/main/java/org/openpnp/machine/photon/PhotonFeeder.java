@@ -1,6 +1,8 @@
 package org.openpnp.machine.photon;
 
+import org.apache.commons.io.IOUtils;
 import org.openpnp.ConfigurationListener;
+import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.photon.exceptions.FeedFailureException;
 import org.openpnp.machine.photon.exceptions.FeederHasNoLocationOffsetException;
@@ -16,9 +18,17 @@ import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.machine.reference.driver.GcodeDriver;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Length;
+import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Solutions;
 import org.openpnp.spi.*;
+import org.openpnp.util.MovableUtils;
+import org.openpnp.util.OpenCvUtils;
+import org.openpnp.util.Utils2D;
+import org.openpnp.util.VisionUtils;
+import org.openpnp.vision.pipeline.CvPipeline;
+import org.openpnp.vision.pipeline.CvStage;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -41,7 +51,24 @@ public class PhotonFeeder extends ReferenceFeeder {
     @Attribute(required = false)
     protected int partPitch = 4;
 
+    @Element(required = false)
+    private Length tapeWidth = new Length(8, LengthUnit.Millimeters);
+
     protected boolean initialized = false;
+
+    @Attribute(required = false)
+    private boolean visionEnabled = false;
+
+    @Element(required = false)
+    private CvPipeline pipeline = createDefaultPipeline();
+
+    private Location visionOffset = new Location(LengthUnit.Millimeters);
+
+    private Length holeDiameter = new Length(1.5, LengthUnit.Millimeters);
+
+    private Length holePitch = new Length(4, LengthUnit.Millimeters);
+
+    private Length referenceHoleToPartLinear = new Length(2, LengthUnit.Millimeters);
 
     @Element(required = false)
     private Location offset;
@@ -78,11 +105,71 @@ public class PhotonFeeder extends ReferenceFeeder {
         photonBus = new PhotonBus(0, getDataActuator());
     }
 
+    public Length getHoleDiameter() {
+        return holeDiameter;
+    }
+
+    public void setHoleDiameter(Length holeDiameter) {
+        this.holeDiameter = holeDiameter;
+    }
+
+    public Length getHolePitch() {
+        return holePitch;
+    }
+
+    public void setHolePitch(Length holePitch) {
+        this.holePitch = holePitch;
+    }
+
+    public Length getTapeWidth() {
+        return tapeWidth;
+    }
+
+    public void setTapeWidth(Length tapeWidth) {
+        this.tapeWidth = tapeWidth;
+    }
+
+    public Length getHoleDiameterMin() {
+        return getHoleDiameter().multiply(0.9);
+    }
+
+    public Length getHoleDiameterMax() {
+        return getHoleDiameter().multiply(1.1);
+    }
+
+    public Length getHolePitchMin() {
+        return getHolePitch().multiply(0.9);
+    }
+
+    public Length getHoleDistanceMin() {
+        return getTapeWidth().multiply(0.25);
+    }
+
+    private Length getHoleToPartLateral() {
+        Length tapeWidth = this.tapeWidth.convertToUnits(LengthUnit.Millimeters);
+        return new Length(tapeWidth.getValue() / 2 - 0.5, LengthUnit.Millimeters);
+    }
+
+    public Length getHoleDistanceMax() {
+        // 1.75mm = 1.5mm holes are 1mm from the edge of the tape (as per EIA-481)
+        Length tapeEdgeToFeedHoleCenter = new Length(1.75, LengthUnit.Millimeters);
+        // The distance from the centre of the component to the edge of the tape. Gives a bit of leeway for not
+        // clicking exactly in the centre of the component, but is close enough to eliminate most false-positives.
+        return tapeEdgeToFeedHoleCenter.add(getHoleToPartLateral());
+    }
+
+    public Length getHoleLineDistanceMax() {
+        return new Length(0.5, LengthUnit.Millimeters);
+    }
+
     @Override
     public Location getPickLocation() throws Exception {
         verifyFeederLocationIsFullyConfigured();
-
-        return offset.offsetWithRotationFrom(getSlot().getLocation());
+        Location pickLocation = offset.offsetWithRotationFrom(getSlot().getLocation());
+        if (visionEnabled) {
+            pickLocation = pickLocation.add(visionOffset);
+        }
+        return pickLocation;
     }
 
     private void verifyFeederLocationIsFullyConfigured() throws NoSlotAddressException,
@@ -250,7 +337,16 @@ public class PhotonFeeder extends ReferenceFeeder {
 
     @Override
     public void feed(Nozzle nozzle) throws Exception {
-        for (int i = 0; i <= photonProperties.getFeederCommunicationMaxRetry(); i++) {
+        int max_retry = photonProperties.getFeederCommunicationMaxRetry();
+        int attempts = 0;
+
+        // Send MoveForwardCommand using RS485.
+        int timeToWaitMillis = 0;
+        while (true) {
+            if (attempts++ > max_retry) {
+                throw new FeedFailureException("Failed to feed for an unknown reason. Is the feeder inserted?");
+            }
+
             findSlotAddressIfNeeded();
             initializeIfNeeded();
 
@@ -273,30 +369,145 @@ public class PhotonFeeder extends ReferenceFeeder {
                 continue;  // We'll initialize it on a retry
             }
 
-            int timeToWaitMillis = moveFeedForwardResponse.expectedTimeToFeed;
+            timeToWaitMillis = moveFeedForwardResponse.expectedTimeToFeed;
+            break;
+        }
 
-            for (int j = 0; j < 3; j++) {
-                //noinspection BusyWait
-                Thread.sleep(timeToWaitMillis);
+        // Wait for feedback from the feeder that the position has been reached.
+        attempts = 0;
+        while (true) {
+            if (attempts++ >= 3) {
+                throw new FeedFailureException("Feeder timed out when we requested a feed status update.");
+            }
 
-                MoveFeedStatus moveFeedStatus = new MoveFeedStatus(slotAddress);
-                MoveFeedStatus.Response moveFeedStatusResponse = moveFeedStatus.send(photonBus);
+            //noinspection BusyWait
+            Thread.sleep(timeToWaitMillis);
 
-                if (moveFeedStatusResponse == null) {
-                    continue; // Timeout. retry after delay.
+            MoveFeedStatus moveFeedStatus = new MoveFeedStatus(slotAddress);
+            MoveFeedStatus.Response moveFeedStatusResponse = moveFeedStatus.send(photonBus);
+
+            if (moveFeedStatusResponse == null) {
+                continue; // Timeout. retry after delay.
+            }
+
+            if (moveFeedStatusResponse.error == ErrorTypes.NONE) {
+                break;
+            } else if (moveFeedStatusResponse.error == ErrorTypes.COULD_NOT_REACH) {
+                throw new FeedFailureException("Feeder could not reach its destination.");
+            }
+        }
+
+        // If Vision is disabled, then rely on the registered pick location, otherwise use vision to
+        // detect the tape hole location offset and use that as a mean to compensate the variance in
+        // positionning.
+        updateVisionOffsets(nozzle);
+    }
+
+    private void updateVisionOffsets(Nozzle nozzle) throws Exception {
+        if (!visionEnabled) {
+            return;
+        }
+        if (partPitch < 4) {
+            // Not handled yet.
+            return;
+        }
+
+        // Use our last pick location as a best guess.
+        Location pickLocation = getPickLocation();
+
+        // go to where we expect to find the next reference hole
+        Camera camera = nozzle.getHead().getDefaultCamera();
+        //ensureFeederZ(camera);
+
+        // Compute the orientation of the tape. This suppose that the slot-location is in front of
+        // the picking location.
+        Location tapeVector = Location.origin.subtract(offset);
+
+        // Discard any miss alignment, and consider that the feeders are perfectly aligned as a
+        // small miss-alignment would not cause much problems.
+        if (tapeVector.getLengthX().getValue() > tapeVector.getLengthY().getValue()) {
+            tapeVector = tapeVector.multiply(1, 0, 0, 1);
+        } else {
+            tapeVector = tapeVector.multiply(0, 1, 0, 1);
+        }
+
+        // Normalize the tapeVector.
+        tapeVector = Location.origin.unitVectorTo(tapeVector);
+
+        // Compute the hole location based on the tapeVector and pick location.
+        Location lateralVector = tapeVector.rotateXy(90);
+        Location expectedLocation =
+            pickLocation.add(lateralVector.multiply(getHoleToPartLateral().getValue()));
+        if (partPitch < 4) {
+            throw new Exception("Part pitch smaller than 4 is not yet handled.");
+        }
+        // For tapes with a part pitch >= 4 there is always a reference
+        // hole 2mm from a part so we just multiply by the part pitch
+        // skipping over holes that are not reference holes.
+        expectedLocation = expectedLocation.add(tapeVector.multiply(-2));
+
+        // Move the camera above the expected location for the hole.
+        MovableUtils.moveToLocationAtSafeZ(camera, expectedLocation);
+
+        // and look for the hole
+        Location actualLocation = findClosestHole(camera);
+        if (actualLocation == null) {
+            throw new Exception("Unable to locate reference hole. End of strip? Too close to the feeder window?");
+        }
+
+        // make sure it's not too far away. The feeder should only move by increments of 4
+        // millimeters, and the camera is not supposed to scan beyond.
+        Length distance = actualLocation.getLinearLengthTo(expectedLocation)
+                .convertToUnits(LengthUnit.Millimeters);
+        if (distance.getValue() > 2) {
+            throw new Exception("Located hole is too far.");
+        }
+
+        // Record the position difference between the expected hole location and the actual hole
+        // location. Any deviations would be used when locating the next hole, or when locating the
+        // next part. The difference is added to the vision offset which was used previously to
+        // compute the pick location.
+        visionOffset = visionOffset.add(actualLocation.subtract(expectedLocation));
+    }
+
+    private Location findClosestHole(Camera camera) throws Exception {
+        Integer pxMaxDistance = (int) VisionUtils.toPixels(getHolePitch(), camera);
+        Integer pxMinDiameter = (int) VisionUtils.toPixels(getHoleDiameterMin(), camera);
+        Integer pxMaxDiameter = (int) VisionUtils.toPixels(getHoleDiameterMax(), camera);
+
+        try (CvPipeline pipeline = getPipeline()) {
+            // Process the pipeline to clean up the image and detect the tape holes
+            pipeline.setProperty("camera", camera);
+            pipeline.setProperty("feeder", this);
+            pipeline.setProperty("DetectCircularSymmetry.maxDistance", pxMaxDistance / 2);
+            pipeline.setProperty("DetectCircularSymmetry.minDiameter", pxMinDiameter);
+            pipeline.setProperty("DetectCircularSymmetry.maxDiameter", pxMaxDiameter);
+            // Limit the search to a to the area where the new hole might have moved into, and limit
+            // it to the distance between 2 holes, in order to avoid more than one hole in frame.
+            pipeline.setProperty("DetectCircularSymmetry.searchHeight", pxMaxDistance);
+            pipeline.setProperty("DetectCircularSymmetry.searchWidth", pxMinDiameter / 2);
+            pipeline.process();
+
+            if (MainFrame.get() != null) {
+                try {
+                    MainFrame.get().getCameraViews().getCameraView(camera)
+                            .showFilteredImage(OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), 250);
                 }
-
-                if (moveFeedStatusResponse.error == ErrorTypes.NONE) {
-                    return;
-                } else if (moveFeedStatusResponse.error == ErrorTypes.COULD_NOT_REACH) {
-                    throw new FeedFailureException("Feeder could not reach its destination.");
+                catch (Exception e) {
+                    // if we aren't running in the UI this will fail, and that's okay
                 }
             }
 
-            throw new FeedFailureException("Feeder timed out when we requested a feed status update.");
-        }
+            // Grab the results
+            List<CvStage.Result.Circle> results = pipeline.getExpectedResult(VisionUtils.PIPELINE_RESULTS_NAME)
+                    .getExpectedListModel(CvStage.Result.Circle.class,
+                            new Exception("Feeder " + getName() + ": No tape holes found."));
 
-        throw new FeedFailureException("Failed to feed for an unknown reason. Is the feeder inserted?");
+            // Return the only hole in the search window.
+            CvStage.Result.Circle closestResult = results.get(0);
+            Location holeLocation = VisionUtils.getPixelLocation(camera, closestResult.x, closestResult.y);
+            return holeLocation;
+        }
     }
 
     @Override
@@ -447,6 +658,15 @@ public class PhotonFeeder extends ReferenceFeeder {
         return partPitch;
     }
 
+    public void setVisionEnabled(boolean enable) {
+        visionEnabled = enable;
+        visionOffset = new Location(LengthUnit.Millimeters);
+    }
+
+    public boolean getVisionEnabled() {
+        return visionEnabled;
+    }
+
     public static PhotonFeeder findByHardwareId(String hardwareId) {
         for (Feeder feeder : Configuration.get().getMachine().getFeeders()) {
             if (!(feeder instanceof PhotonFeeder)) {
@@ -544,6 +764,25 @@ public class PhotonFeeder extends ReferenceFeeder {
 
         for (PhotonFeeder feeder : feedersToAdd) {
             Configuration.get().getMachine().addFeeder(feeder);
+        }
+    }
+
+    public CvPipeline getPipeline() {
+        return pipeline;
+    }
+
+    public void resetPipeline() {
+        pipeline = createDefaultPipeline();
+    }
+
+    private static CvPipeline createDefaultPipeline() {
+        try {
+            String xml = IOUtils.toString(PhotonFeeder.class
+                    .getResource("PhotonFeeder-DefaultPipeline.xml"));
+            return new CvPipeline(xml);
+        }
+        catch (Exception e) {
+            throw new Error(e);
         }
     }
 }
