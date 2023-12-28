@@ -348,7 +348,8 @@ public class FeederConfigurationWizard extends AbstractConfigurationWizard {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			UiUtils.submitUiMachineTask(() -> {
-				feeder.feed(null); // TODO This probably shouldn't be null
+				Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
+				feeder.feed(nozzle);
 			});
 		}
 	};
