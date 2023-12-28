@@ -130,11 +130,11 @@ public class PhotonFeeder extends ReferenceFeeder {
     }
 
     public Length getHoleDiameterMin() {
-        return getHoleDiameter().multiply(0.9);
+        return getHoleDiameter().multiply(0.85);
     }
 
     public Length getHoleDiameterMax() {
-        return getHoleDiameter().multiply(1.1);
+        return getHoleDiameter().multiply(1.15);
     }
 
     public Length getHolePitchMin() {

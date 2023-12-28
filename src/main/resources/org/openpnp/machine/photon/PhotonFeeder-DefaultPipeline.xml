@@ -1,7 +1,7 @@
 <cv-pipeline>
    <stages>
       <cv-stage class="org.openpnp.vision.pipeline.stages.ImageCapture" name="original" enabled="true" settle-first="true"/>
-      <cv-stage class="org.openpnp.vision.pipeline.stages.DetectCircularSymmetry" property-name="DetectCircularSymmetry" name="results" enabled="true" min-diameter="120" max-diameter="130" max-distance="350" search-width="50" search-height="350" heat-map="true"/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.DetectCircularSymmetry" property-name="DetectCircularSymmetry" name="results" enabled="true" min-diameter="115" max-diameter="130" max-distance="350" search-width="50" search-height="350" heat-map="true"/>
       <cv-stage class="org.openpnp.vision.pipeline.stages.DrawCircles" name="display" enabled="true" circles-stage-name="results" thickness="1">
          <color r="255" g="0" b="0" a="255"/>
       </cv-stage>
