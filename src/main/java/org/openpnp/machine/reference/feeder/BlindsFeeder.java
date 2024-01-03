@@ -1507,8 +1507,8 @@ public class BlindsFeeder extends ReferenceFeeder {
     public Location getJobPreparationLocation() {
         if ((isVisionEnabled() && !isCalibrated())
             || getOcrAction() != OcrAction.None
-            || (getCoverActuation() == CoverActuation.OpenOnJobStart)
-                && ! isCoverOpen()) {
+            || (getCoverActuation() == CoverActuation.OpenOnJobStart
+                && ! isCoverOpen())) {
             return getUncalibratedPickLocation(0);
         }
         else {
