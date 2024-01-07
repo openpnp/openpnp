@@ -95,6 +95,8 @@ import org.openpnp.model.Panel;
 import org.openpnp.model.PanelLocation;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
+import org.openpnp.model.PlacementsHolder;
+
 import javax.swing.JSplitPane;
 import javax.swing.JTable;
 import javax.swing.border.EtchedBorder;
@@ -121,6 +123,7 @@ public class PanelDefinitionPanel extends JPanel implements PropertyChangeListen
     
     private ActionGroup childrenSingleSelectionActionGroup;
     private ActionGroup childrenMultiSelectionActionGroup;
+    private ActionGroup replaceChildrenSelectionActionGroup;
     
     private PanelLocation rootPanelLocation = new PanelLocation();
     private Panel panel;
@@ -166,6 +169,9 @@ public class PanelDefinitionPanel extends JPanel implements PropertyChangeListen
                 setEnabledAction, setCheckFidsAction);
         childrenMultiSelectionActionGroup.setEnabled(false);
 
+        replaceChildrenSelectionActionGroup = new ActionGroup(replaceChildrenAction);
+        replaceChildrenSelectionActionGroup.setEnabled(false);
+        
         @SuppressWarnings({"unchecked", "rawtypes"})
         JComboBox<PartsComboBoxModel> partsComboBox = new JComboBox(new PartsComboBoxModel());
         partsComboBox.setMaximumRowCount(20);
@@ -231,7 +237,7 @@ public class PanelDefinitionPanel extends JPanel implements PropertyChangeListen
             
             @Override
             public boolean isCellEditable(int rowIndex, int columnIndex) {
-                return columnIndex == 0 || columnIndex >= 4;
+                return columnIndex <= 1 || columnIndex >= 4;
             }
         };
         childrenTableModel.setRootPanelLocation(rootPanelLocation);
@@ -278,6 +284,22 @@ public class PanelDefinitionPanel extends JPanel implements PropertyChangeListen
                     // multi select
                     childrenSingleSelectionActionGroup.setEnabled(false);
                     childrenMultiSelectionActionGroup.setEnabled(true);
+                    boolean allSameDefinition = true;
+                    boolean starting = true;
+                    PlacementsHolder<?> definition = null;
+                    for (PlacementsHolderLocation<?> phl : selections) {
+                        if (starting) {
+                            definition = phl.getPlacementsHolder().getDefinition();
+                            starting = false;
+                        }
+                        else {
+                            if (phl.getPlacementsHolder().getDefinition() != definition) {
+                                allSameDefinition = false;
+                                break;
+                            }
+                        }
+                    }
+                    replaceChildrenSelectionActionGroup.setEnabled(allSameDefinition);
                     if (updateLinkedTables) {
                         Configuration.get().getBus()
                             .post(new PlacementsHolderLocationSelectedEvent(null, PanelDefinitionPanel.this));
@@ -289,6 +311,7 @@ public class PanelDefinitionPanel extends JPanel implements PropertyChangeListen
                     // single select
                     childrenMultiSelectionActionGroup.setEnabled(false);
                     childrenSingleSelectionActionGroup.setEnabled(selections != null);
+                    replaceChildrenSelectionActionGroup.setEnabled(selections != null);
                     if (updateLinkedTables) {
                         Configuration.get().getBus()
                             .post(new PlacementsHolderLocationSelectedEvent(selections.get(0), PanelDefinitionPanel.this));
@@ -300,6 +323,7 @@ public class PanelDefinitionPanel extends JPanel implements PropertyChangeListen
                     // no select
                     childrenSingleSelectionActionGroup.setEnabled(false);
                     childrenMultiSelectionActionGroup.setEnabled(false);
+                    replaceChildrenSelectionActionGroup.setEnabled(false);
                     if (updateLinkedTables) {
                         Configuration.get().getBus()
                             .post(new PlacementsHolderLocationSelectedEvent(null, PanelDefinitionPanel.this));
@@ -325,6 +349,9 @@ public class PanelDefinitionPanel extends JPanel implements PropertyChangeListen
 
         JPopupMenu childrenPopupMenu = new JPopupMenu();
 
+        JMenuItem changeChildrenMenu = new JMenuItem(replaceChildrenAction);
+        childrenPopupMenu.add(changeChildrenMenu);
+        
         JMenu setChildrenSideMenu = new JMenu(setSideAction);
         for (Side side : Side.values()) {
             setChildrenSideMenu.add(new SetChildrenSideAction(side));
@@ -906,6 +933,73 @@ public class PanelDefinitionPanel extends JPanel implements PropertyChangeListen
                 panelViewer.setExtendedState(Frame.NORMAL);
             }
             panelViewer.setVisible(true);
+        }
+    };
+
+    public final Action replaceChildrenAction = new AbstractAction() {
+        {
+            putValue(NAME, Translations.getString("PanelDefinition.Children.Replace")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("PanelDefinition.Children.Replace.Description")); //$NON-NLS-1$
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            List<PlacementsHolderLocation<?>> selectedChildren = getChildrenSelections();
+            ExistingBoardOrPanelDialog existingBoardOrPanelDialog;
+            File file;
+            if (selectedChildren.get(0) instanceof BoardLocation) {
+                existingBoardOrPanelDialog = new ExistingBoardOrPanelDialog(
+                        Configuration.get(), Board.class,
+                        Translations.getString("PanelDefinition.Children.Replace.ExistingBoard.DialogTitle")); //$NON-NLS-1$
+            }
+            else {
+                existingBoardOrPanelDialog = new ExistingBoardOrPanelDialog(
+                        Configuration.get(), Panel.class,
+                        Translations.getString("PanelDefinition.Children.Replace.ExistingPanel.DialogTitle")); //$NON-NLS-1$
+            }
+
+            existingBoardOrPanelDialog.setVisible(true);
+            file = existingBoardOrPanelDialog.getFile();
+            existingBoardOrPanelDialog.dispose();
+            if (file == null) {
+                return;
+            }
+                
+            try {
+                if (selectedChildren.get(0) instanceof BoardLocation) {
+                    for (PlacementsHolderLocation<?> oldChild : selectedChildren) {
+                        //Make a deep copy of the board's definition to add to the panel
+                        Board board = new Board(configuration.getBoard(file));
+                        
+                        BoardLocation boardLocation = new BoardLocation(board);
+                        boardLocation.setParent(oldChild.getParent());
+                        panel.replaceChild(oldChild, boardLocation);
+                    }
+                }
+                else {
+                    for (PlacementsHolderLocation<?> oldChild : selectedChildren) {
+                        //Make a deep copy of the panel's definition to add to the panel
+                        Panel panelCopy = new Panel(configuration.getPanel(file));
+                        
+                        PanelLocation panelLocation = new PanelLocation(panelCopy);
+                        panelLocation.setParent(oldChild.getParent());
+                        PanelLocation.setParentsOfAllDescendants(panelLocation);
+                        panel.replaceChild(oldChild, panelLocation);
+                    }
+                }
+                
+                childrenTableModel.fireTableDataChanged();
+                
+                Configuration.get().getBus()
+                    .post(new DefinitionStructureChangedEvent(rootPanelLocation.getPanel(), "children", //$NON-NLS-1$
+                            PanelDefinitionPanel.this));
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+                MessageBoxes.errorBox(frame, 
+                        Translations.getString("PanelDefinition.Children.Replace.LoadError"), //$NON-NLS-1$
+                        e.getMessage());
+            }
         }
     };
 
