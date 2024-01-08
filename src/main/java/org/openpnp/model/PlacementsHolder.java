@@ -310,7 +310,7 @@ public abstract class PlacementsHolder<T extends PlacementsHolder<T>>
         if (oldValue != null) {
             oldValue.removePropertyChangeListener(this);
         }
-        if (definedBy != null) {
+        if (definedBy != null && definedBy != this) {
             definedBy.addPropertyChangeListener(this);
         }
     }

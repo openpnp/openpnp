@@ -365,6 +365,10 @@ public class Panel extends PlacementsHolder<Panel> implements PropertyChangeList
                 for (Placement pseudoPlacement : oldPseudoPlacements) {
                     if (pseudoPlacement.getId().startsWith(child.getId() + PlacementsHolderLocation.ID_DELIMITTER)) {
                         removePseudoPlacement(pseudoPlacement);
+                        child.removePropertyChangeListener("side", pseudoPlacement);
+                        child.removePropertyChangeListener("placementsHolder", pseudoPlacement);
+                        child.removePropertyChangeListener("location", pseudoPlacement);
+                        child.removePropertyChangeListener("id", pseudoPlacement);
                     }
                 }
                 children.remove(index);
@@ -373,6 +377,71 @@ public class Panel extends PlacementsHolder<Panel> implements PropertyChangeList
                 child.dispose();
             }
         }
+    }
+    
+    /**
+     * Replaces a child of this panel with another. This method should only be called on panel 
+     * definitions.
+     * @param originalChild - the child to remove
+     * @param newChild - the child that will replace the original
+     * @throws UnsupportedOperationException if called on a non-panel definition
+     */
+    public void replaceChild(PlacementsHolderLocation<?> originalChild, PlacementsHolderLocation<?> newChild) {
+        if (this != this.definition) {
+            throw new UnsupportedOperationException("This method should only be called on a Panel definition.");
+        }
+        if (originalChild != null) {
+            String childId = originalChild.getId();
+            int index = children.indexOf(originalChild);
+            List<Integer> replacePseudoPlacementIndicies = new ArrayList<>();
+            if (index >= 0) {
+                for (Placement pseudoPlacement : pseudoPlacements) {
+                    if (pseudoPlacement.getId().startsWith(originalChild.getId() + PlacementsHolderLocation.ID_DELIMITTER)) {
+                        replacePseudoPlacementIndicies.add(pseudoPlacements.indexOf(pseudoPlacement));
+                    }
+                }
+                children.remove(index);
+                originalChild.removePropertyChangeListener(this);
+                fireIndexedPropertyChange("child", index, originalChild, null);
+                
+                if (newChild != null) {
+                    newChild.setId(childId);
+                    newChild.setCheckFiducials(originalChild.isCheckFiducials());
+                    newChild.setLocation(originalChild.getLocation());
+                    newChild.setLocallyEnabled(originalChild.isLocallyEnabled());
+                    newChild.setSide(originalChild.getSide());
+                    children.add(index, newChild);
+                    fireIndexedPropertyChange("child", index, null, newChild);
+                    newChild.addPropertyChangeListener(this);
+                }
+                
+                List<Placement> removePseudoPlacementList = new ArrayList<>();
+                for (int idx : replacePseudoPlacementIndicies) {
+                    Placement oldPseudoPlacement = pseudoPlacements.get(idx);
+                    try {
+                        PseudoPlacement pseudoPlacement = new PseudoPlacement(this, oldPseudoPlacement.getId());
+                        pseudoPlacements.set(idx, pseudoPlacement);
+                        oldPseudoPlacement.removePropertyChangeListener(this);
+                        oldPseudoPlacement.dispose();
+                        pseudoPlacement.addPropertyChangeListener(this);
+                        fireIndexedPropertyChange("pseudoPlacement", index, null, pseudoPlacement);
+                    }
+                    catch (Exception e) {
+                        removePseudoPlacementList.add(oldPseudoPlacement);
+                    }
+                }
+                for (Placement pseudoPlacement : removePseudoPlacementList) {
+                    removePseudoPlacement(pseudoPlacement);
+                    originalChild.removePropertyChangeListener("side", pseudoPlacement);
+                    originalChild.removePropertyChangeListener("placementsHolder", pseudoPlacement);
+                    originalChild.removePropertyChangeListener("location", pseudoPlacement);
+                    originalChild.removePropertyChangeListener("id", pseudoPlacement);
+                }
+                
+                originalChild.dispose();
+            }
+        }
+        
     }
     
     /**
@@ -461,7 +530,10 @@ public class Panel extends PlacementsHolder<Panel> implements PropertyChangeList
                 pseudoPlacements.add(pseudoPlacement);
             }
             else {
+                Placement oldPseudoPlacement = pseudoPlacements.get(index);
                 pseudoPlacements.set(index, pseudoPlacement);
+                oldPseudoPlacement.removePropertyChangeListener(this);
+                oldPseudoPlacement.dispose();
             }
             pseudoPlacement.addPropertyChangeListener(this);
             fireIndexedPropertyChange("pseudoPlacement", index, null, pseudoPlacement);
