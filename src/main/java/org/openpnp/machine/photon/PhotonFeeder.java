@@ -62,14 +62,30 @@ public class PhotonFeeder extends ReferenceFeeder {
     @Element(required = false)
     private CvPipeline pipeline = createDefaultPipeline();
 
+    // Offset of the picking location deduced using vision.
     private Location visionOffset = new Location(LengthUnit.Millimeters);
 
     private Length holeDiameter = new Length(1.5, LengthUnit.Millimeters);
 
+    // Spacing between 2 holes in the tape. By default holes are separated by
+    // 4mm.
     private Length holePitch = new Length(4, LengthUnit.Millimeters);
 
+    private Length partHoleOffset = new Length(2, LengthUnit.Millimeters);
+
+    // Offset from the part to the hole along the axis of the tape. This value
+    // would change in cases where the part pitch is not a multiple of the hole
+    // pitch. By default parts are offset by 2mm in front of the holes.
     private Length referenceHoleToPartLinear = new Length(2, LengthUnit.Millimeters);
 
+    // When the part pitch is different than the hole pitch, the holes would
+    // move relative to the picking position. Thus this value would be updated
+    // by adding the part pitch each time a new part is picked, and moved to be
+    // between 0 and the holePitch. By default identical to the
+    // referenceHoleToPartLinear value.
+    private Length holeToPartLinear = new Length(2, LengthUnit.Millimeters);
+
+    // Offset of the part to be picked relative to the slot location.
     @Element(required = false)
     private Location offset;
 
@@ -197,6 +213,8 @@ public class PhotonFeeder extends ReferenceFeeder {
         Object oldValue = this.offset;
         this.offset = offsets;
         firePropertyChange("offsets", oldValue, offsets);
+        // When the offset is updated, reset the hole-to-part offset.
+        this.holeToPartLinear = this.referenceHoleToPartLinear;
     }
 
     public Location getOffset() {
@@ -397,6 +415,16 @@ public class PhotonFeeder extends ReferenceFeeder {
             }
         }
 
+        // Moving the tape forward implies that if the part pitch is different
+        // than the holePitch, then the linear distance between the hole and the
+        // part would change. In most cases this is a multiple and this code
+        // would be a no-op, but for cases where it is not, such as 0402, this
+        // would alternate between 2 part pitches.
+        double pitch = this.partPitch;
+        holeToPartLinear = holeToPartLinear
+            .add(new Length(pitch, LengthUnit.Millimeters))
+            .modulo(holePitch);
+
         // If Vision is disabled, then rely on the registered pick location, otherwise use vision to
         // detect the tape hole location offset and use that as a mean to compensate the variance in
         // positionning.
@@ -419,16 +447,17 @@ public class PhotonFeeder extends ReferenceFeeder {
         Camera camera = nozzle.getHead().getDefaultCamera();
         //ensureFeederZ(camera);
 
-        // Compute the orientation of the tape. This suppose that the slot-location is in front of
-        // the picking location.
+        // Compute the orientation of the tape. This supposes that the
+        // slot-location is in front of the picking location.
         Location tapeVector = Location.origin.subtract(offset);
 
-        // Discard any miss alignment, and consider that the feeders are perfectly aligned as a
-        // small miss-alignment would not cause much problems.
+        // Discard any miss alignment, and consider that the feeders are
+        // perfectly aligned as a small miss-alignment would not cause much
+        // problems.
         if (tapeVector.getLengthX().getValue() > tapeVector.getLengthY().getValue()) {
-            tapeVector = tapeVector.multiply(1, 0, 0, 1);
+            tapeVector = tapeVector.multiply(1, 0, 0, 0);
         } else {
-            tapeVector = tapeVector.multiply(0, 1, 0, 1);
+            tapeVector = tapeVector.multiply(0, 1, 0, 0);
         }
 
         // Normalize the tapeVector.
@@ -436,15 +465,16 @@ public class PhotonFeeder extends ReferenceFeeder {
 
         // Compute the hole location based on the tapeVector and pick location.
         Location lateralVector = tapeVector.rotateXy(90);
-        Location expectedLocation =
-            pickLocation.add(lateralVector.multiply(getHoleToPartLateral().getValue()));
-        if (partPitch < 4) {
-            throw new Exception("Part pitch smaller than 4 is not yet handled.");
-        }
+        lateralVector = lateralVector.multiply(getHoleToPartLateral().getValue());
+
         // For tapes with a part pitch >= 4 there is always a reference
         // hole 2mm from a part so we just multiply by the part pitch
         // skipping over holes that are not reference holes.
-        expectedLocation = expectedLocation.add(tapeVector.multiply(-2));
+        Location backwardVector = tapeVector.multiply(-1 * holeToPartLinear.getValue());
+
+        // Location where the hole is expected to be found while pushing the
+        // tape forward.
+        Location expectedLocation = pickLocation.add(lateralVector).add(backwardVector);
 
         // Move the camera above the expected location for the hole.
         MovableUtils.moveToLocationAtSafeZ(camera, expectedLocation);
