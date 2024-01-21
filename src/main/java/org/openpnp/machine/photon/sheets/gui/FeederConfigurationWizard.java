@@ -33,6 +33,7 @@ import org.openpnp.machine.photon.PhotonFeeder;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Camera;
+import org.openpnp.spi.Nozzle;
 import org.openpnp.util.UiUtils;
 import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
