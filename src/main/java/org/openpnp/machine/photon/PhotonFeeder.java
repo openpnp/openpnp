@@ -435,10 +435,6 @@ public class PhotonFeeder extends ReferenceFeeder {
         if (!visionEnabled) {
             return;
         }
-        if (partPitch < 4) {
-            // Not handled yet.
-            return;
-        }
 
         // Use our last pick location as a best guess.
         Location pickLocation = getPickLocation();
