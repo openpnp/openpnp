@@ -54,6 +54,7 @@ public class FeederConfigurationWizard extends AbstractConfigurationWizard {
 	private final JTextField partPitchTf;
 	private final JTextField feedRetryCountTf;
 	private final JTextField pickRetryCountTf;
+	private final JTextField varianceHistoryTf;
 	private final JTextField xSlotTf;
 	private final JTextField ySlotTf;
 	private final JTextField zSlotTf;
@@ -169,10 +170,13 @@ public class FeederConfigurationWizard extends AbstractConfigurationWizard {
                         TitledBorder.LEADING, TitledBorder.TOP, null, null));
                 contentPanel.add(visionPanel);
                 visionPanel.setLayout(new FormLayout(
-                        new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                                FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
-                        new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                                FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
+                    new ColumnSpec[] {
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
+                    new RowSpec[] {
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
 
                 lblUseVision = new JLabel(Translations.getString(
                         "FeederConfigurationWizard.VisionPanel.UseVisionLabel.text")); //$NON-NLS-1$
@@ -200,6 +204,13 @@ public class FeederConfigurationWizard extends AbstractConfigurationWizard {
                     }
                 });
                 visionPanel.add(btnResetPipeline, "4, 4");
+
+                JLabel varianceHistoryLabel = new JLabel(Translations.getString("FeederConfigurationWizard.VisionPanel.varianceHistoryLabel.text")); //$NON-NLS-1$
+                visionPanel.add(varianceHistoryLabel, "2, 6, right, default"); //$NON-NLS-1$
+		
+                varianceHistoryTf = new JTextField();
+                visionPanel.add(varianceHistoryTf, "4, 6, fill, default"); //$NON-NLS-1$
+                varianceHistoryTf.setColumns(10);
 
 		JPanel locationPanel = new JPanel();
 		locationPanel.setBorder(new TitledBorder(null, Translations.getString("FeederConfigurationWizard.LocationPanel.Border.title"), TitledBorder.LEADING, TitledBorder.TOP, null, null)); //$NON-NLS-1$
@@ -307,6 +318,7 @@ public class FeederConfigurationWizard extends AbstractConfigurationWizard {
 		addWrappedBinding(feeder, "feedRetryCount", feedRetryCountTf, "text", intConverter); //$NON-NLS-1$ //$NON-NLS-2$
 		addWrappedBinding(feeder, "pickRetryCount", pickRetryCountTf, "text", intConverter); //$NON-NLS-1$ //$NON-NLS-2$
 		addWrappedBinding(feeder, "visionEnabled", chckbxUseVision, "selected");
+		addWrappedBinding(feeder, "varianceHistory", varianceHistoryTf, "text", intConverter); //$NON-NLS-1$ //$NON-NLS-2$
 
 		bind(UpdateStrategy.READ, slotProxy, "enabled", feedAction, "enabled"); //$NON-NLS-1$ //$NON-NLS-2$
 

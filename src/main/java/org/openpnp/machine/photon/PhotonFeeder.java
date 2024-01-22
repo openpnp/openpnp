@@ -59,6 +59,11 @@ public class PhotonFeeder extends ReferenceFeeder {
     @Attribute(required = false)
     private boolean visionEnabled = false;
 
+    @Attribute(required = false)
+    private int varianceHistory = 20;
+    private ArrayList<Location> visionOffsetLog = null;
+    private boolean updateVisionOffset = true;
+
     @Element(required = false)
     private CvPipeline pipeline = createDefaultPipeline();
 
@@ -425,14 +430,52 @@ public class PhotonFeeder extends ReferenceFeeder {
             .add(new Length(pitch, LengthUnit.Millimeters))
             .modulo(holePitch);
 
-        // If Vision is disabled, then rely on the registered pick location, otherwise use vision to
-        // detect the tape hole location offset and use that as a mean to compensate the variance in
-        // positionning.
+        // If Vision is disabled, then rely on the registered pick location,
+        // otherwise use vision to detect the tape hole location offset and use
+        // that as a mean to compensate the variance in positionning.
         updateVisionOffsets(nozzle);
+
+        // Record the last vision offset in the log used to compute the
+        // variance.
+        if (visionEnabled && updateVisionOffset) {
+            if (visionOffsetLog == null) {
+                visionOffsetLog = new ArrayList(varianceHistory);
+            }
+            if (visionOffsetLog.size() == varianceHistory) {
+                visionOffsetLog.remove(0);
+            }
+            visionOffsetLog.add(visionOffset);
+            if (visionOffsetLog.size() == varianceHistory) {
+                // Compute the average vision offset and check the variance, if
+                // the variance is too high, then do not record the average
+                // vision offset, which would keep the vision enabled.
+                Location average = Location.origin;
+                for (Location offset : visionOffsetLog) {
+                    average = average.add(offset);
+                }
+                average = average.multiply(1. / visionOffsetLog.size());
+
+                // We do not compute the standard deviation, as our goal is that
+                // all the pick locations are good. Thus we compute the maximum
+                // deviation compared to the average position.
+                double deviationMax = 0; // unit: length
+                for (Location offset : visionOffsetLog) {
+                    deviationMax = Math.max(average.getXyzDistanceTo(offset), deviationMax);
+                }
+
+                // If the deviation is small enough less than 0.1mm, then record
+                // the average as the default visionOffset and skip future
+                // updates of the vision offset for upcoming picks.
+                if (deviationMax < 0.1) {
+                    visionOffset = average;
+                    updateVisionOffset = false;
+                }
+            }
+        }
     }
 
     private void updateVisionOffsets(Nozzle nozzle) throws Exception {
-        if (!visionEnabled) {
+        if (!visionEnabled || !updateVisionOffset) {
             return;
         }
 
@@ -642,6 +685,10 @@ public class PhotonFeeder extends ReferenceFeeder {
 
         this.slotAddress = slotAddress;
 
+        // Changing the slot implies updating the vision offset as we do not
+        // know what happened to the tape while out of the machine.
+        resetVision();
+
         firePropertyChange("slotAddress", oldValue, slotAddress);
         firePropertyChange("slot", oldSlot, getSlot());
         firePropertyChange("name", oldName, getName());
@@ -684,13 +731,28 @@ public class PhotonFeeder extends ReferenceFeeder {
         return partPitch;
     }
 
+    public void resetVision() {
+        updateVisionOffset = true;
+        visionOffset = new Location(LengthUnit.Millimeters);
+        visionOffsetLog = null;
+    }
+
     public void setVisionEnabled(boolean enable) {
         visionEnabled = enable;
-        visionOffset = new Location(LengthUnit.Millimeters);
+        resetVision();
     }
 
     public boolean getVisionEnabled() {
         return visionEnabled;
+    }
+
+    public void setVarianceHistory(int varianceHistory) {
+        this.varianceHistory = varianceHistory;
+        resetVision();
+    }
+
+    public int getVarianceHistory() {
+        return varianceHistory;
     }
 
     public static PhotonFeeder findByHardwareId(String hardwareId) {
