@@ -55,6 +55,7 @@ public class FeederConfigurationWizard extends AbstractConfigurationWizard {
 	private final JTextField feedRetryCountTf;
 	private final JTextField pickRetryCountTf;
 	private final JTextField varianceHistoryTf;
+	private final JTextField skippedCalibrationTf;
 	private final JTextField xSlotTf;
 	private final JTextField ySlotTf;
 	private final JTextField zSlotTf;
@@ -176,6 +177,7 @@ public class FeederConfigurationWizard extends AbstractConfigurationWizard {
                     new RowSpec[] {
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
 
                 lblUseVision = new JLabel(Translations.getString(
@@ -211,6 +213,13 @@ public class FeederConfigurationWizard extends AbstractConfigurationWizard {
                 varianceHistoryTf = new JTextField();
                 visionPanel.add(varianceHistoryTf, "4, 6, fill, default"); //$NON-NLS-1$
                 varianceHistoryTf.setColumns(10);
+
+                JLabel skippedCalibrationLabel = new JLabel(Translations.getString("FeederConfigurationWizard.VisionPanel.skippedCalibrationLabel.text")); //$NON-NLS-1$
+                visionPanel.add(skippedCalibrationLabel, "2, 8, right, default"); //$NON-NLS-1$
+		
+                skippedCalibrationTf = new JTextField();
+                visionPanel.add(skippedCalibrationTf, "4, 8, fill, default"); //$NON-NLS-1$
+                skippedCalibrationTf.setColumns(10);
 
 		JPanel locationPanel = new JPanel();
 		locationPanel.setBorder(new TitledBorder(null, Translations.getString("FeederConfigurationWizard.LocationPanel.Border.title"), TitledBorder.LEADING, TitledBorder.TOP, null, null)); //$NON-NLS-1$
@@ -319,6 +328,7 @@ public class FeederConfigurationWizard extends AbstractConfigurationWizard {
 		addWrappedBinding(feeder, "pickRetryCount", pickRetryCountTf, "text", intConverter); //$NON-NLS-1$ //$NON-NLS-2$
 		addWrappedBinding(feeder, "visionEnabled", chckbxUseVision, "selected");
 		addWrappedBinding(feeder, "varianceHistory", varianceHistoryTf, "text", intConverter); //$NON-NLS-1$ //$NON-NLS-2$
+		addWrappedBinding(feeder, "skippedCalibration", skippedCalibrationTf, "text", intConverter); //$NON-NLS-1$ //$NON-NLS-2$
 
 		bind(UpdateStrategy.READ, slotProxy, "enabled", feedAction, "enabled"); //$NON-NLS-1$ //$NON-NLS-2$
 

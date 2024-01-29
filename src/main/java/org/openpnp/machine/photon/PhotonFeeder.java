@@ -64,6 +64,12 @@ public class PhotonFeeder extends ReferenceFeeder {
     private ArrayList<Location> visionOffsetLog = null;
     private boolean updateVisionOffset = true;
 
+    // Define the number of parts that would be skipped between multiple vision
+    // offset detection.
+    @Attribute(required = false)
+    private int skippedCalibration = 0;
+    private int feedsSinceLastCalibration = 0;
+
     @Element(required = false)
     private CvPipeline pipeline = createDefaultPipeline();
 
@@ -434,49 +440,22 @@ public class PhotonFeeder extends ReferenceFeeder {
         // otherwise use vision to detect the tape hole location offset and use
         // that as a mean to compensate the variance in positionning.
         updateVisionOffsets(nozzle);
-
-        // Record the last vision offset in the log used to compute the
-        // variance.
-        if (visionEnabled && updateVisionOffset) {
-            if (visionOffsetLog == null) {
-                visionOffsetLog = new ArrayList(varianceHistory);
-            }
-            if (visionOffsetLog.size() == varianceHistory) {
-                visionOffsetLog.remove(0);
-            }
-            visionOffsetLog.add(visionOffset);
-            if (visionOffsetLog.size() == varianceHistory) {
-                // Compute the average vision offset and check the variance, if
-                // the variance is too high, then do not record the average
-                // vision offset, which would keep the vision enabled.
-                Location average = Location.origin;
-                for (Location offset : visionOffsetLog) {
-                    average = average.add(offset);
-                }
-                average = average.multiply(1. / visionOffsetLog.size());
-
-                // We do not compute the standard deviation, as our goal is that
-                // all the pick locations are good. Thus we compute the maximum
-                // deviation compared to the average position.
-                double deviationMax = 0; // unit: length
-                for (Location offset : visionOffsetLog) {
-                    deviationMax = Math.max(average.getXyzDistanceTo(offset), deviationMax);
-                }
-
-                // If the deviation is small enough less than 0.1mm, then record
-                // the average as the default visionOffset and skip future
-                // updates of the vision offset for upcoming picks.
-                if (deviationMax < 0.1) {
-                    visionOffset = average;
-                    updateVisionOffset = false;
-                }
-            }
-        }
     }
 
     private void updateVisionOffsets(Nozzle nozzle) throws Exception {
         if (!visionEnabled || !updateVisionOffset) {
             return;
+        }
+
+        if (skippedCalibration > 0) {
+            // Run calibration when feedsSinceLastCalibration reaches the reset value, such that
+            // we always compute the visionOffset each time the configuration is reseted.
+            boolean calibrate = (feedsSinceLastCalibration == 0);
+            feedsSinceLastCalibration =
+                (feedsSinceLastCalibration  + 1) % skippedCalibration;
+            if (!calibrate) {
+                return;
+            }
         }
 
         // Use our last pick location as a best guess.
@@ -537,6 +516,42 @@ public class PhotonFeeder extends ReferenceFeeder {
         // next part. The difference is added to the vision offset which was used previously to
         // compute the pick location.
         visionOffset = visionOffset.add(actualLocation.subtract(expectedLocation));
+
+        // Record the last vision offset in the log used to compute the
+        // variance.
+        if (visionOffsetLog == null) {
+            visionOffsetLog = new ArrayList(varianceHistory);
+        }
+        if (visionOffsetLog.size() == varianceHistory) {
+            visionOffsetLog.remove(0);
+        }
+        visionOffsetLog.add(visionOffset);
+        if (visionOffsetLog.size() == varianceHistory) {
+            // Compute the average vision offset and check the variance, if
+            // the variance is too high, then do not record the average
+            // vision offset, which would keep the vision enabled.
+            Location average = Location.origin;
+            for (Location offset : visionOffsetLog) {
+                average = average.add(offset);
+            }
+            average = average.multiply(1. / visionOffsetLog.size());
+
+            // We do not compute the standard deviation, as our goal is that
+            // all the pick locations are good. Thus we compute the maximum
+            // deviation compared to the average position.
+            double deviationMax = 0; // unit: length
+            for (Location offset : visionOffsetLog) {
+                deviationMax = Math.max(average.getXyzDistanceTo(offset), deviationMax);
+            }
+
+            // If the deviation is small enough less than 0.1mm, then record
+            // the average as the default visionOffset and skip future
+            // updates of the vision offset for upcoming picks.
+            if (deviationMax < 0.1) {
+                visionOffset = average;
+                updateVisionOffset = false;
+            }
+        }
     }
 
     private Location findClosestHole(Camera camera) throws Exception {
@@ -735,6 +750,7 @@ public class PhotonFeeder extends ReferenceFeeder {
         updateVisionOffset = true;
         visionOffset = new Location(LengthUnit.Millimeters);
         visionOffsetLog = null;
+        feedsSinceLastCalibration = 0;
     }
 
     public void setVisionEnabled(boolean enable) {
@@ -753,6 +769,15 @@ public class PhotonFeeder extends ReferenceFeeder {
 
     public int getVarianceHistory() {
         return varianceHistory;
+    }
+
+    public void setSkippedCalibration(int skippedCalibration) {
+        this.skippedCalibration = skippedCalibration;
+        resetVision();
+    }
+
+    public int getSkippedCalibration() {
+        return skippedCalibration;
     }
 
     public static PhotonFeeder findByHardwareId(String hardwareId) {
