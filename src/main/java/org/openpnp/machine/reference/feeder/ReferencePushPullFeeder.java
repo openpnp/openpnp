@@ -371,7 +371,6 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
 
     @Override
     public Location getPickLocation() throws Exception {
-        assertCalibrated(false);
         // Numbers are 1-based (a feed is needed before the very first part can be picked),
         // therefore the modulo calculation is a bit gnarly.
         // The 1-based approach has the benefit, that at feed count 0 (reset) the part closest to the reel 
@@ -2358,7 +2357,8 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
 
     @Override
     public Location getJobPreparationLocation() {
-        if (isOcrDiscoverOnJobStart() && visionOffset == null) {
+        if (visionOffset == null 
+            && (isOcrDiscoverOnJobStart() || calibrationTrigger != CalibrationTrigger.None)) {
             return getPickLocation(0, null);
         }
         else {
@@ -2369,10 +2369,15 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     @Override
     public void prepareForJob(boolean visit) throws Exception {
         super.prepareForJob(visit);
-        if (visit && isOcrDiscoverOnJobStart() && visionOffset == null) {
-            // Check the part in the feeder using OCR, this also calibrates the feeder.
-            // Note, we cannot change the parts at this point, it is too late in the Job Process, so we always stop.
-            performOcr(OcrWrongPartAction.None, true, null);
+        if (visit && visionOffset == null) {
+            if (isOcrDiscoverOnJobStart()) {
+                // Check the part in the feeder using OCR, this also calibrates the feeder.
+                // Note, we cannot change the parts at this point, it is too late in the Job Process, so we always stop.
+                performOcr(OcrWrongPartAction.None, true, null);
+            }
+            else {
+                assertCalibrated(false);
+            }
         }
     }
     
@@ -2386,7 +2391,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
             feederLocationList.add(feeder.getPickLocation(0, null).convertToUnits(LengthUnit.Millimeters)); // Btw, convert to mm
         }
 
-        // Use a Travelling Salesman algorithm to optimize the path to actuate all the feeder covers.
+        // Use a Travelling Salesman algorithm to optimize the path to all the feeders OCR regions.
         TravellingSalesman<Location> tsm = new TravellingSalesman<>(
                 feederLocationList, 
                 new TravellingSalesman.Locator<Location>() { 
@@ -2456,60 +2461,62 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         
         FindFeatures feature = null;
 
-        final boolean ocrPass = (ocrAction != OcrWrongPartAction.None && getOcrRegion() != null);
+        final boolean ocrPass = ((ocrAction != OcrWrongPartAction.None || ocrStop) && getOcrRegion() != null);
         Location ocrOffsets = ocrPass ? getOcrRegion().getOffsets() : null;
         final boolean ocrZeroOffset = (ocrOffsets == null || !ocrOffsets.isInitialized());
 
-        // Calibrate the exact hole locations by obtaining a mid-point lock on them,
-        // assuming that any camera lens and Z parallax distortion is symmetric.
-        for (int i = 0; i < calibrateMaxPasses; i++) {
-            // move the camera to the mid-point 
-            Location midPoint = runningHole1Location.add(runningHole2Location).multiply(0.5, 0.5, 0, 0)
-                    .derive(camera.getLocation(), false, false, true, false)
-                    .derive(null, null, null, runningPickLocation.getRotation()+getRotationInFeeder());
-            Logger.debug("calibrating sprocket holes pass "+ i+ " midPoint is "+midPoint);
-            MovableUtils.moveToLocationAtSafeZ(camera, midPoint);
-            if(ocrPass && ocrZeroOffset) {
-                setupOcr(camera, pipeline, runningHole1Location, runningHole2Location, runningPickLocation);
-            } else {
-                disableOcr(camera, pipeline);
-            }
-            // take a new shot
-            pipeline.process();
-            feature = new FindFeatures(camera, pipeline, 2000, FindFeaturesMode.CalibrateHoles)
-                    .invoke();
-            runningHole1Location = feature.calibratedHole1Location;
-            runningHole2Location = feature.calibratedHole2Location;
-            runningPickLocation = feature.calibratedPickLocation;
-            // calculate the worst pick location delta this gives, cycle part 1 is the worst as it is farthest away
-            Location uncalibratedPick1Location = getPickLocation(1, runningVisionOffset);
-            Location calibratedPick1Location = getPickLocation(1, feature.calibratedVisionOffset);
-            Length error = calibratedPick1Location.getLinearLengthTo(uncalibratedPick1Location);
-            Logger.trace("new vision offset "+feature.calibratedVisionOffset
-                    +" vs. previous vision offset "+runningVisionOffset+" results in error "+error+" at the (farthest) pick location");
-            // store data if requested
-            if (storeHoles) {
-                setHole1Location(runningHole1Location);
-                setHole2Location(runningHole2Location);
-            }
-            if (storePickLocation) {
-                setLocation(runningPickLocation);
-            }
-            if (storeVisionOffset) {
-                // update the stats
-                if (visionOffset != null) {
-                    // Only when a previous vision offset has been stored, should we store the error
-                    // because the feeder might have been moved physically. The user's actions are 
-                    // not part of the calibration error. :-)
-                    addCalibrationError(error);
+        if ((ocrPass && ocrZeroOffset) ||  storeHoles || storePickLocation || storeVisionOffset) {
+            // Calibrate the exact hole locations by obtaining a mid-point lock on them,
+            // assuming that any camera lens and Z parallax distortion is symmetric.
+            for (int i = 0; i < calibrateMaxPasses; i++) {
+                // move the camera to the mid-point 
+                Location midPoint = runningHole1Location.add(runningHole2Location).multiply(0.5, 0.5, 0, 0)
+                        .derive(camera.getLocation(), false, false, true, false)
+                        .derive(null, null, null, runningPickLocation.getRotation()+getRotationInFeeder());
+                Logger.debug("calibrating sprocket holes pass "+ i+ " midPoint is "+midPoint);
+                MovableUtils.moveToLocationAtSafeZ(camera, midPoint);
+                if(ocrPass && ocrZeroOffset) {
+                    setupOcr(camera, pipeline, runningHole1Location, runningHole2Location, runningPickLocation);
+                } else {
+                    disableOcr(camera, pipeline);
                 }
-                setVisionOffset(feature.calibratedVisionOffset);
+                // take a new shot
+                pipeline.process();
+                feature = new FindFeatures(camera, pipeline, 2000, FindFeaturesMode.CalibrateHoles)
+                        .invoke();
+                runningHole1Location = feature.calibratedHole1Location;
+                runningHole2Location = feature.calibratedHole2Location;
+                runningPickLocation = feature.calibratedPickLocation;
+                // calculate the worst pick location delta this gives, cycle part 1 is the worst as it is farthest away
+                Location uncalibratedPick1Location = getPickLocation(1, runningVisionOffset);
+                Location calibratedPick1Location = getPickLocation(1, feature.calibratedVisionOffset);
+                Length error = calibratedPick1Location.getLinearLengthTo(uncalibratedPick1Location);
+                Logger.trace("new vision offset "+feature.calibratedVisionOffset
+                        +" vs. previous vision offset "+runningVisionOffset+" results in error "+error+" at the (farthest) pick location");
+                // store data if requested
+                if (storeHoles) {
+                    setHole1Location(runningHole1Location);
+                    setHole2Location(runningHole2Location);
+                }
+                if (storePickLocation) {
+                    setLocation(runningPickLocation);
+                }
+                if (storeVisionOffset) {
+                    // update the stats
+                    if (visionOffset != null) {
+                        // Only when a previous vision offset has been stored, should we store the error
+                        // because the feeder might have been moved physically. The user's actions are 
+                        // not part of the calibration error. :-)
+                        addCalibrationError(error);
+                    }
+                    setVisionOffset(feature.calibratedVisionOffset);
+                }
+                // is it good enough? Compare with running offset.
+                if (error.convertToUnits(LengthUnit.Millimeters).getValue() < calibrateToleranceMm) {
+                    break;
+                }
+                runningVisionOffset = feature.calibratedVisionOffset;
             }
-            // is it good enough? Compare with running offset.
-            if (error.convertToUnits(LengthUnit.Millimeters).getValue() < calibrateToleranceMm) {
-                break;
-            }
-            runningVisionOffset = feature.calibratedVisionOffset;
         }
         
         // setup OCR if wanted

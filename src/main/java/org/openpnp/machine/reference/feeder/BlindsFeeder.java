@@ -310,7 +310,6 @@ public class BlindsFeeder extends ReferenceFeeder {
     } 
 
     public Location getPickLocation(double pocketNumber) throws Exception {
-        assertCalibration();
         return getUncalibratedPickLocation(pocketNumber);
     }
 
@@ -1506,9 +1505,10 @@ public class BlindsFeeder extends ReferenceFeeder {
 
     @Override
     public Location getJobPreparationLocation() {
-        if ((getOcrAction() != OcrAction.None
-                || getCoverActuation() == CoverActuation.OpenOnJobStart)
-                && ! isCoverOpen()) {
+        if ((isVisionEnabled() && !isCalibrated())
+            || getOcrAction() != OcrAction.None
+            || (getCoverActuation() == CoverActuation.OpenOnJobStart
+                && ! isCoverOpen())) {
             return getUncalibratedPickLocation(0);
         }
         else {
@@ -1524,6 +1524,8 @@ public class BlindsFeeder extends ReferenceFeeder {
     public void prepareForJob(boolean visit) throws Exception {
         super.prepareForJob(visit);
         if (visit) {
+            assertCalibration();
+            
             ocrChangedPartId = null;
             if (getCoverActuation() == CoverActuation.OpenOnJobStart
                     && ! isCoverOpen()) {

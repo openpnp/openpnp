@@ -45,6 +45,7 @@ public class ReferencePnpJobProcessorConfigurationWizard extends AbstractConfigu
     private JComboBox comboBoxJobOrder;
     private JTextField maxVisionRetriesTextField;
     private JCheckBox steppingToNextMotion;
+    private JCheckBox optimizeMultipleNozzles;
 
     public ReferencePnpJobProcessorConfigurationWizard(ReferencePnpJobProcessor jobProcessor) {
         this.jobProcessor = jobProcessor;
@@ -60,6 +61,8 @@ public class ReferencePnpJobProcessorConfigurationWizard extends AbstractConfigu
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
                 new RowSpec[] {
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC,
                         FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC,
@@ -88,6 +91,13 @@ public class ReferencePnpJobProcessorConfigurationWizard extends AbstractConfigu
 
         steppingToNextMotion = new JCheckBox(); 
         panelGeneral.add(steppingToNextMotion, "4, 6");
+
+        JLabel lblOptimizeMultipleNozzles = new JLabel(Translations.getString("ReferencePnpJobProcessorConfigurationWizard.lblOptimizeMultipleNozzles.text")); //$NON-NLS-1$
+        lblOptimizeMultipleNozzles.setToolTipText(Translations.getString("ReferencePnpJobProcessorConfigurationWizard.lblOptimizeMultipleNozzles.toolTipText")); //$NON-NLS-1$
+        panelGeneral.add(lblOptimizeMultipleNozzles, "2, 8, right, default");
+
+        optimizeMultipleNozzles = new JCheckBox(); 
+        panelGeneral.add(optimizeMultipleNozzles, "4, 8");
     }
 
     @Override
@@ -97,6 +107,7 @@ public class ReferencePnpJobProcessorConfigurationWizard extends AbstractConfigu
         addWrappedBinding(jobProcessor, "jobOrder", comboBoxJobOrder, "selectedItem");
         addWrappedBinding(jobProcessor, "maxVisionRetries", maxVisionRetriesTextField, "text", intConverter);
         addWrappedBinding(jobProcessor, "steppingToNextMotion", steppingToNextMotion, "selected");
+        addWrappedBinding(jobProcessor, "optimizeMultipleNozzles", optimizeMultipleNozzles, "selected");
         
         ComponentDecorators.decorateWithAutoSelect(maxVisionRetriesTextField);
     }
