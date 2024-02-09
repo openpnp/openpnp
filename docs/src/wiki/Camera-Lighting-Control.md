@@ -1,0 +1,1 @@
+Moved to [[Setup and Calibration: Camera Lighting]].

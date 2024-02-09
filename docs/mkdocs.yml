@@ -1,0 +1,55 @@
+site_name: OpenPnP Wiki
+site_description: Wiki content for OpenPnP
+copyright: OpenPnP
+repo_url: https://github.com/openpnp/openpnp
+edit_uri: edit/master/docs/src
+docs_dir: src
+nav:
+    - Sidebar:
+      - Sidebar/index.md
+      - User Manual: Sidebar/User-Manual.md
+      - Video Tutorials: Sidebar/Video-Tutorials.md
+      - Development Resources:
+        - Developer's Guide: Sidebar/Development Resources/Developers-Guide.md
+        - Your First Pull Request: Sidebar/Development Resources/Your-First-Pull-Request.md
+        - API Documentation: http://openpnp.org/api
+        - Language Translations: https://github.com/openpnp/openpnp/blob/test/TRANSLATIONS.md
+      - FAQ: Sidebar/FAQ.md
+      - Getting Help: Sidebar/Getting-Help.md
+    - Wiki Content:
+      - ... | wiki/*.md
+    - Code: 'https://github.com/openpnp/openpnp'
+    - Downloads: 'https://openpnp.org/downloads/'
+extra:
+  homepage: https://openpnp.org
+  version:
+    provider: mike
+  social:
+    - icon: fontawesome/brands/youtube
+      link: https://www.youtube.com/c/OpenPnPSMT
+    - icon: fontawesome/brands/twitter
+      link: https://twitter.com/openpnp
+    - icon: fontawesome/brands/instagram
+      link: https://www.instagram.com/openpnp/
+    - icon: fontawesome/brands/github
+      link: https://github.com/openpnp/openpnp
+    - icon: material/rss
+      link: https://openpnp.org/feed/
+theme:
+  name: material
+  features:
+    - search.suggest
+    - search.highlight
+    - navigation.tabs
+    - navigation.tracking
+    - navigation.indexes
+    - navigation.footer
+    - content.action.edit
+  palette:
+    primary: white
+  logo: assets/logo.png
+plugins:
+  - search:
+      lang: en
+  - awesome-pages
+  - offline
