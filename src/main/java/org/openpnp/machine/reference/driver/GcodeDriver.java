@@ -326,6 +326,9 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
 
     private PrintWriter gcodeLogger;
 
+    private Double currentFeedRate = 0.0;     // last feedrate send to the driver - used to only send on change
+    private Double currentAcceleration = 0.0; // last acceleration send to the driver - use to only send on change
+    
     @Commit
     public void commit() {
         super.commit();
@@ -767,8 +770,21 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
 
         command = substituteVariable(command, "Id", hm.getId());
         command = substituteVariable(command, "Name", hm.getName());
-        command = substituteVariable(command, "FeedRate", feedRate);
-        command = substituteVariable(command, "Acceleration", acceleration);
+        // only send feedrate if it has changed by more then 0.1%
+        if (Math.abs((currentFeedRate - feedRate) / feedRate) > 1e-3) {
+            currentFeedRate = feedRate;
+            command = substituteVariable(command, "FeedRate", feedRate);
+        } else {
+            command = substituteVariable(command, "FeedRate", null); 
+        }
+        // only send acceleration if it has changed by more then 0.1%
+        if (Math.abs((currentAcceleration - acceleration) / acceleration) > 1e-3) {
+            currentAcceleration = acceleration;
+            command = substituteVariable(command, "Acceleration", acceleration);
+        } else {
+            command = substituteVariable(command, "Acceleration", null); 
+        }
+        // FIXME: can jerk be optimised by only sending it on change?
         command = substituteVariable(command, "Jerk", jerk);
 
         ReferenceMachine machine = (ReferenceMachine) hm.getHead().getMachine();
