@@ -326,8 +326,84 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
 
     private PrintWriter gcodeLogger;
 
-    private Double currentFeedRate = 0.0;     // last feedrate send to the driver - used to only send on change
-    private Double currentAcceleration = 0.0; // last acceleration send to the driver - use to only send on change
+    // create a class to group send-on-change behavior
+    // used to support sending feedRate, acceleration and jerk only when they have changed
+    static class SendOnChange {
+        @Attribute(required = false)
+        protected boolean sendOnChange = false; // configuration flag: if set the value is only send if it has changed
+
+        @Attribute(required = false)
+        protected Double relativeDeviation;     // configuration flag: relative deviation between new and last value that is considered as value has change
+        
+        final String string;    // string to be replaced in the (g-code) command
+        Double lastValue;       // last value processed
+        
+        public SendOnChange(String string, Double relativeDeviation) {
+            this.lastValue = null;
+            this.string = string;
+            this.relativeDeviation = relativeDeviation;
+        }
+        
+        public SendOnChange(String string) {
+            this(string, 1e-3);
+        }
+        
+        public SendOnChange() {     // this constructor is needed to correctly read/load maschin.xml on startup
+            this(null);
+        }
+        
+        public String substituteVariable(String command, Double value) {
+            // send/substitute string and value
+            if (!sendOnChange                                                       // .. if forced
+                 || value == null                                                   // .. or value not initialized
+                 || lastValue == null                                               // .. or last value not initialized
+                 || value == 0.0                                                    // .. of if the new value is 0 - avoid division by zero
+                 || Math.abs((lastValue - value) / value) > relativeDeviation) {    // .. or if the value has changed by more then 1e-3 relative
+                lastValue = value;
+                command = GcodeDriver.substituteVariable(command, string, value);   // call the substitute method of the outer class as used by the rest of the code
+            } else {
+                command = GcodeDriver.substituteVariable(command, string, value); 
+            }
+            
+            return command;
+        }
+        
+        public boolean isSendOnChange() {
+            return sendOnChange;
+        }
+
+        public void setSendOnChange(boolean state) {
+            sendOnChange = state;
+        }
+    }
+    
+    // define feedRate, acceleration and jerk as SendOnChange types to handle them in a unified way
+    @Element(required = false)
+    protected SendOnChange sendOnChangeFeedRate     = new SendOnChange("FeedRate");
+    @Element(required = false)
+    protected SendOnChange sendOnChangeAcceleration = new SendOnChange("Acceleration");
+    @Element(required = false)
+    protected SendOnChange sendOnChangeJerk         = new SendOnChange("Jerk");
+
+    // provide get and set methods to allow changing the configuration of sendOnChange using the UI
+    public boolean isSendOnChangeFeedRate() {
+        return sendOnChangeFeedRate.isSendOnChange();
+    }
+    public void setSendOnChangeFeedRate(boolean state) {
+        sendOnChangeFeedRate.setSendOnChange(state);
+    }
+    public boolean isSendOnChangeAcceleration() {
+        return sendOnChangeAcceleration.isSendOnChange();
+    }
+    public void setSendOnChangeAcceleration(boolean state) {
+        sendOnChangeAcceleration.setSendOnChange(state);
+    }
+    public boolean isSendOnChangeJerk() {
+        return sendOnChangeJerk.isSendOnChange();
+    }
+    public void setSendOnChangeJerk(boolean state) {
+        sendOnChangeJerk.setSendOnChange(state);
+    }
     
     @Commit
     public void commit() {
@@ -498,22 +574,22 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
 
             if (getMotionControlType().isUnpredictable()) {
                 // Do not initialize rates, as the motion control is unpredictable, i.e. not controlled by us.  
-                command = substituteVariable(command, "FeedRate", null);
-                command = substituteVariable(command, "Acceleration", null);
-                command = substituteVariable(command, "Jerk", null);
+                command = sendOnChangeFeedRate.substituteVariable(command, null);
+                command = sendOnChangeAcceleration.substituteVariable(command, null);
+                command = sendOnChangeJerk.substituteVariable(command, null);
             }
             else {
                 // For the purpose of homing, initialize the rates to the lowest of any axis. 
-                command = substituteVariable(command, "FeedRate", feedrate);
-                command = substituteVariable(command, "Acceleration", acceleration);
-                command = substituteVariable(command, "Jerk", jerk);
+                command = sendOnChangeFeedRate.substituteVariable(command, feedrate);
+                command = sendOnChangeAcceleration.substituteVariable(command, acceleration);
+                command = sendOnChangeJerk.substituteVariable(command, jerk);
             }
         }
         else {
             // Do not initialize rates in legacy mode.  
-            command = substituteVariable(command, "FeedRate", null);
-            command = substituteVariable(command, "Acceleration", null);
-            command = substituteVariable(command, "Jerk", null);
+            command = sendOnChangeFeedRate.substituteVariable(command, null);
+            command = sendOnChangeAcceleration.substituteVariable(command, null);
+            command = sendOnChangeJerk.substituteVariable(command, null);
         }
 
         long timeout = -1;
@@ -770,22 +846,9 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
 
         command = substituteVariable(command, "Id", hm.getId());
         command = substituteVariable(command, "Name", hm.getName());
-        // only send feedrate if it has changed by more then 0.1%
-        if (Math.abs((currentFeedRate - feedRate) / feedRate) > 1e-3) {
-            currentFeedRate = feedRate;
-            command = substituteVariable(command, "FeedRate", feedRate);
-        } else {
-            command = substituteVariable(command, "FeedRate", null); 
-        }
-        // only send acceleration if it has changed by more then 0.1%
-        if (Math.abs((currentAcceleration - acceleration) / acceleration) > 1e-3) {
-            currentAcceleration = acceleration;
-            command = substituteVariable(command, "Acceleration", acceleration);
-        } else {
-            command = substituteVariable(command, "Acceleration", null); 
-        }
-        // FIXME: can jerk be optimised by only sending it on change?
-        command = substituteVariable(command, "Jerk", jerk);
+        command = sendOnChangeFeedRate.substituteVariable(command, feedRate);
+        command = sendOnChangeAcceleration.substituteVariable(command, acceleration);
+        command = sendOnChangeJerk.substituteVariable(command, jerk);
 
         ReferenceMachine machine = (ReferenceMachine) hm.getHead().getMachine();
         // Get a map of the axes of ...
