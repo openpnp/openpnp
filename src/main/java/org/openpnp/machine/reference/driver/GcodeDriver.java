@@ -335,35 +335,37 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         @Attribute(required = false)
         protected Double relativeDeviation;     // configuration flag: relative deviation between new and last value that is considered as value has change
         
-        private String string;                  // string to be replaced in the (g-code) command
+        private String variable;                // variable to be replaced in the (g-code) command
         private Double lastValue;               // last value processed
         
-        public SendOnChange(String string) {
-            this.string = null;
+        public SendOnChange(String variable) {
+            this.variable = variable;
             this.relativeDeviation = 0.001;
             reset();
         }
         
         // this constructor is needed to correctly read/load maschin.xml on startup
-        // FIXME: if this is called, the new instances has no string rendering it useless.
+        // FIXME: if this is called, the new instance has no variable rendering it useless. An extra setVariable() call is required.
         public SendOnChange() {
-            this(null);
+            this.variable = null;
+            this.relativeDeviation = 0.001;
+            reset();
         }
         
         public String substituteVariable(String command, Double value) {
             // send/substitute string and value
-            if (!sendOnChange                                                       // .. if forced
-                 || value == null                                                   // .. or value not initialized
-                 || lastValue == null                                               // .. or last value not initialized
-                 || value == 0.0                                                    // .. of if the new value is 0 - avoid division by zero
-                 || Math.abs((lastValue - value) / value) > relativeDeviation) {    // .. or if the value has changed by more then 1e-3 relative
+            if (!sendOnChange                                                         // .. if forced
+                 || value == null                                                     // .. or value not initialized
+                 || lastValue == null                                                 // .. or last value not initialized
+                 || value == 0.0                                                      // .. of if the new value is 0 - avoid division by zero
+                 || Math.abs((lastValue - value) / value) > relativeDeviation) {      // .. or if the value has changed by more then 1e-3 relative
                 lastValue = value;
-                command = GcodeDriver.substituteVariable(command, string, value);   // call the substitute method of the outer class as used by the rest of the code
+                command = GcodeDriver.substituteVariable(command, variable, value);   // call the substitute method of the outer class as used by the rest of the code
             } else {
-                command = GcodeDriver.substituteVariable(command, string, null);    // remove the variable
+                command = GcodeDriver.substituteVariable(command, variable, null);    // remove the variable
             }
             // always substitute string + "F"
-            command = GcodeDriver.substituteVariable(command, string + "F", value); // call the substitute method of the outer class as used by the rest of the code
+            command = GcodeDriver.substituteVariable(command, variable + "F", value); // call the substitute method of the outer class as used by the rest of the code
             
             return command;
         }
@@ -373,8 +375,8 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
             lastValue = null;
         }
         
-        public void setString(String string) {
-            this.string = string;
+        public void setVariable(String variable) {
+            this.variable = variable;
         }
         
         public boolean isSendOnChange() {
@@ -394,41 +396,64 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     @Element(required = false)
     protected SendOnChange sendOnChangeJerk;
 
+    // provide getter methods to read sendOnChange<...> and initialize then on the fly
+    private SendOnChange getSendOnChangeFeedRate() {
+        if (sendOnChangeFeedRate == null) {
+            sendOnChangeFeedRate = new SendOnChange("FeedRate");
+        }
+        
+        return sendOnChangeFeedRate;
+    }
+    private SendOnChange getSendOnChangeAcceleration() {
+        if (sendOnChangeAcceleration == null) {
+            sendOnChangeAcceleration = new SendOnChange("Acceleration");
+        }
+        
+        return sendOnChangeAcceleration;
+    }
+    private SendOnChange getSendOnChangeJerk() {
+        if (sendOnChangeJerk == null) {
+            sendOnChangeJerk = new SendOnChange("Jerk");
+        }
+        
+        return sendOnChangeJerk;
+    }
+    
     // provide get and set methods to allow changing the configuration of sendOnChange using the UI
     public boolean isSendOnChangeFeedRate() {
-        return sendOnChangeFeedRate.isSendOnChange();
+        return getSendOnChangeFeedRate().isSendOnChange();
     }
     public void setSendOnChangeFeedRate(boolean state) {
-        sendOnChangeFeedRate.setSendOnChange(state);
+        getSendOnChangeFeedRate().setSendOnChange(state);
     }
     public boolean isSendOnChangeAcceleration() {
-        return sendOnChangeAcceleration.isSendOnChange();
+        return getSendOnChangeAcceleration().isSendOnChange();
     }
     public void setSendOnChangeAcceleration(boolean state) {
-        sendOnChangeAcceleration.setSendOnChange(state);
+        getSendOnChangeAcceleration().setSendOnChange(state);
     }
     public boolean isSendOnChangeJerk() {
-        return sendOnChangeJerk.isSendOnChange();
+        return getSendOnChangeJerk().isSendOnChange();
     }
     public void setSendOnChangeJerk(boolean state) {
-        sendOnChangeJerk.setSendOnChange(state);
+        getSendOnChangeJerk().setSendOnChange(state);
     }
     
     // helper functions to process all send-on-change variables at once
-    void sendOnChangeResetAll() {
-        sendOnChangeFeedRate.reset();
-        sendOnChangeAcceleration.reset();
-        sendOnChangeJerk.reset();
+    private void sendOnChangeResetAll() {
+        getSendOnChangeFeedRate().reset();
+        getSendOnChangeAcceleration().reset();
+        getSendOnChangeJerk().reset();
     }
-    void sendOnChangeSetAllStrings() {
-        sendOnChangeFeedRate.setString("FeedRate");
-        sendOnChangeAcceleration.setString("Acceleration");
-        sendOnChangeJerk.setString("Jerk");
+    private void sendOnChangeSetAllVariables() {
+        getSendOnChangeFeedRate().setVariable("FeedRate");
+        getSendOnChangeAcceleration().setVariable("Acceleration");
+        getSendOnChangeJerk().setVariable("Jerk");
     }
-    String sendOnChangeSubstituteAllVariables(String command, Double feedRate, Double acceleration, Double jerk) {
-        command = sendOnChangeFeedRate.substituteVariable(command, feedRate);
-        command = sendOnChangeAcceleration.substituteVariable(command, acceleration);
-        command = sendOnChangeJerk.substituteVariable(command, jerk);
+    private String sendOnChangeSubstituteAllVariables(String command, Double feedRate, Double acceleration, Double jerk) {
+        command = getSendOnChangeFeedRate().substituteVariable(command, feedRate);
+        command = getSendOnChangeAcceleration().substituteVariable(command, acceleration);
+        command = getSendOnChangeJerk().substituteVariable(command, jerk);
         return command;
     }
     
@@ -475,7 +500,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         connected = false;
 
         // initialize strings in send-on-change behavior to correctly replace them in G-Code commands
-        sendOnChangeSetAllStrings();
+        sendOnChangeSetAllVariables();
         
         connectThreads();
 
@@ -1551,8 +1576,17 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         // Store the latest momentary position.
         reportedLocationsQueue.add(position);
 
-        // for safety reasons reset the send-on-change logic here as well
-        sendOnChangeResetAll();
+        // detect if the new position has changed compared to where OpenPnP thinks the controller shall be
+        for (ControllerAxis axis : position.getAxes(this)) {
+            if (!axis.coordinatesMatch(
+                  position.getLengthCoordinate(axis), 
+                  axis.getDriverLengthCoordinate())) {
+
+                // for safety reasons reset the send-on-change logic here as well
+                sendOnChangeResetAll();
+                break;
+            }
+        }
         
         if (motionPending) {
             Logger.warn("Position report cannot be processed when motion might still be pending. Missing Machine Coordination on Actuators?", 
