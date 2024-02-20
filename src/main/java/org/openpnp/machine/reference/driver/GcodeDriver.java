@@ -335,17 +335,13 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         @Attribute(required = false)
         protected Double relativeDeviation;     // configuration flag: relative deviation between new and last value that is considered as value has change
         
-        final private String string;            // string to be replaced in the (g-code) command
+        private String string;                  // string to be replaced in the (g-code) command
         private Double lastValue;               // last value processed
         
-        public SendOnChange(String string, Double relativeDeviation) {
-            this.string = string;
-            this.relativeDeviation = relativeDeviation;
-            reset();
-        }
-        
         public SendOnChange(String string) {
-            this(string, 1e-3);
+            this.string = null;
+            this.relativeDeviation = 0.001;
+            reset();
         }
         
         // this constructor is needed to correctly read/load maschin.xml on startup
@@ -366,6 +362,8 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
             } else {
                 command = GcodeDriver.substituteVariable(command, string, null);    // remove the variable
             }
+            // always substitute string + "F"
+            command = GcodeDriver.substituteVariable(command, string + "F", value); // call the substitute method of the outer class as used by the rest of the code
             
             return command;
         }
@@ -373,6 +371,10 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         // reset the send on change behavior by invalidating lastValue
         public void reset() {
             lastValue = null;
+        }
+        
+        public void setString(String string) {
+            this.string = string;
         }
         
         public boolean isSendOnChange() {
@@ -386,11 +388,11 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     
     // define feedRate, acceleration and jerk as SendOnChange types to handle them in a unified way
     @Element(required = false)
-    protected SendOnChange sendOnChangeFeedRate     = new SendOnChange("FeedRate");
+    protected SendOnChange sendOnChangeFeedRate;
     @Element(required = false)
-    protected SendOnChange sendOnChangeAcceleration = new SendOnChange("Acceleration");
+    protected SendOnChange sendOnChangeAcceleration;
     @Element(required = false)
-    protected SendOnChange sendOnChangeJerk         = new SendOnChange("Jerk");
+    protected SendOnChange sendOnChangeJerk;
 
     // provide get and set methods to allow changing the configuration of sendOnChange using the UI
     public boolean isSendOnChangeFeedRate() {
@@ -454,11 +456,11 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         getCommunications().connect();
         connected = false;
 
-        // reset send-on-change behavior
-        sendOnChangeFeedRate.reset();
-        sendOnChangeAcceleration.reset();
-        sendOnChangeJerk.reset();
-
+        // initialize strings in send-on-change behavior to correctly replace them in G-Code commands
+        sendOnChangeFeedRate.setString("FeedRate");
+        sendOnChangeAcceleration.setString("Acceleration");
+        sendOnChangeJerk.setString("Jerk");
+        
         connectThreads();
 
         // Wait a bit while the controller starts up
@@ -482,6 +484,11 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         sendGcode(getCommand(null, CommandType.CONNECT_COMMAND));
 
         connected = true;
+
+        // reset send-on-change behavior
+        sendOnChangeFeedRate.reset();
+        sendOnChangeAcceleration.reset();
+        sendOnChangeJerk.reset();
     }
 
     /**
@@ -535,12 +542,6 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         // Home is sent with an infinite timeout since it's tough to tell how long it will
         // take.
         String command = getCommand(null, CommandType.HOME_COMMAND);
-
-        // reset send-on-change behavior
-        sendOnChangeFeedRate.reset();
-        sendOnChangeAcceleration.reset();
-        sendOnChangeJerk.reset();
-
         // legacy head support
         Head head = machine.getDefaultHead();
         command = substituteVariable(command, "Id", head.getId()); 
@@ -623,6 +624,11 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
 
         AxesLocation homeLocation = new AxesLocation(machine, this, (axis) -> (axis.getHomeCoordinate()));
         homeLocation.setToDriverCoordinates(this);
+
+        // reset send-on-change behavior
+        sendOnChangeFeedRate.reset();
+        sendOnChangeAcceleration.reset();
+        sendOnChangeJerk.reset();
     }
 
     public List<String> getAxisVariables(ReferenceMachine machine) {
@@ -1541,6 +1547,11 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         // Store the latest momentary position.
         reportedLocationsQueue.add(position);
 
+        // for safety reasons reset the send-on-change logic here as well
+        sendOnChangeFeedRate.reset();
+        sendOnChangeAcceleration.reset();
+        sendOnChangeJerk.reset();
+        
         if (motionPending) {
             Logger.warn("Position report cannot be processed when motion might still be pending. Missing Machine Coordination on Actuators?", 
                     position);
