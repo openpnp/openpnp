@@ -853,13 +853,16 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         double driverUnitsFactor = new Length(1, AxesLocation.getUnits())
                 .convertToUnits(getUnits()).getValue();
         if (feedRate != null) {
-            feedRate = Math.max(feedRate*driverUnitsFactor, vMin);
+            feedRate = Math.max(feedRate, vMin*60.0);   // feedrate is in <x>/min and vMin in <x>/sec
+            feedRate *= driverUnitsFactor;              // scale feedrate to driver units.
         }
         if (acceleration != null) {
-            acceleration = Math.max(acceleration*driverUnitsFactor, aMin);
+            acceleration = Math.max(acceleration, aMin);
+            acceleration *= driverUnitsFactor;
         }
         if (jerk != null) {
-            jerk = Math.max(jerk*driverUnitsFactor, jMin);
+            jerk = Math.max(jerk, jMin);
+            jerk *= driverUnitsFactor;
         }
 
         command = substituteVariable(command, "Id", hm.getId());
