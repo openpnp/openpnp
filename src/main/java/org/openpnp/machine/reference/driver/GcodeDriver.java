@@ -335,20 +335,22 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         @Attribute(required = false)
         protected Double relativeDeviation;     // configuration flag: relative deviation between new and last value that is considered as value has change
         
-        final String string;    // string to be replaced in the (g-code) command
-        Double lastValue;       // last value processed
+        final private String string;            // string to be replaced in the (g-code) command
+        private Double lastValue;               // last value processed
         
         public SendOnChange(String string, Double relativeDeviation) {
-            this.lastValue = null;
             this.string = string;
             this.relativeDeviation = relativeDeviation;
+            reset();
         }
         
         public SendOnChange(String string) {
             this(string, 1e-3);
         }
         
-        public SendOnChange() {     // this constructor is needed to correctly read/load maschin.xml on startup
+        // this constructor is needed to correctly read/load maschin.xml on startup
+        // FIXME: if this is called, the new instances has no string rendering it useless.
+        public SendOnChange() {
             this(null);
         }
         
@@ -362,10 +364,15 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
                 lastValue = value;
                 command = GcodeDriver.substituteVariable(command, string, value);   // call the substitute method of the outer class as used by the rest of the code
             } else {
-                command = GcodeDriver.substituteVariable(command, string, value); 
+                command = GcodeDriver.substituteVariable(command, string, null);    // remove the variable
             }
             
             return command;
+        }
+
+        // reset the send on change behavior by invalidating lastValue
+        public void reset() {
+            lastValue = null;
         }
         
         public boolean isSendOnChange() {
@@ -447,6 +454,11 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         getCommunications().connect();
         connected = false;
 
+        // reset send-on-change behavior
+        sendOnChangeFeedRate.reset();
+        sendOnChangeAcceleration.reset();
+        sendOnChangeJerk.reset();
+
         connectThreads();
 
         // Wait a bit while the controller starts up
@@ -523,6 +535,12 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         // Home is sent with an infinite timeout since it's tough to tell how long it will
         // take.
         String command = getCommand(null, CommandType.HOME_COMMAND);
+
+        // reset send-on-change behavior
+        sendOnChangeFeedRate.reset();
+        sendOnChangeAcceleration.reset();
+        sendOnChangeJerk.reset();
+
         // legacy head support
         Head head = machine.getDefaultHead();
         command = substituteVariable(command, "Id", head.getId()); 
