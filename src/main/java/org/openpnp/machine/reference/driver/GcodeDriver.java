@@ -414,6 +414,24 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         sendOnChangeJerk.setSendOnChange(state);
     }
     
+    // helper functions to process all send-on-change variables at once
+    void sendOnChangeResetAll() {
+        sendOnChangeFeedRate.reset();
+        sendOnChangeAcceleration.reset();
+        sendOnChangeJerk.reset();
+    }
+    void sendOnChangeSetAllStrings() {
+        sendOnChangeFeedRate.setString("FeedRate");
+        sendOnChangeAcceleration.setString("Acceleration");
+        sendOnChangeJerk.setString("Jerk");
+    }
+    String sendOnChangeSubstituteAllVariables(String command, Double feedRate, Double acceleration, Double jerk) {
+        command = sendOnChangeFeedRate.substituteVariable(command, feedRate);
+        command = sendOnChangeAcceleration.substituteVariable(command, acceleration);
+        command = sendOnChangeJerk.substituteVariable(command, jerk);
+        return command;
+    }
+    
     @Commit
     public void commit() {
         super.commit();
@@ -457,9 +475,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         connected = false;
 
         // initialize strings in send-on-change behavior to correctly replace them in G-Code commands
-        sendOnChangeFeedRate.setString("FeedRate");
-        sendOnChangeAcceleration.setString("Acceleration");
-        sendOnChangeJerk.setString("Jerk");
+        sendOnChangeSetAllStrings();
         
         connectThreads();
 
@@ -486,9 +502,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         connected = true;
 
         // reset send-on-change behavior
-        sendOnChangeFeedRate.reset();
-        sendOnChangeAcceleration.reset();
-        sendOnChangeJerk.reset();
+        sendOnChangeResetAll();
     }
 
     /**
@@ -593,22 +607,16 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
 
             if (getMotionControlType().isUnpredictable()) {
                 // Do not initialize rates, as the motion control is unpredictable, i.e. not controlled by us.  
-                command = sendOnChangeFeedRate.substituteVariable(command, null);
-                command = sendOnChangeAcceleration.substituteVariable(command, null);
-                command = sendOnChangeJerk.substituteVariable(command, null);
+                command = sendOnChangeSubstituteAllVariables(command, null, null, null);
             }
             else {
                 // For the purpose of homing, initialize the rates to the lowest of any axis. 
-                command = sendOnChangeFeedRate.substituteVariable(command, feedrate);
-                command = sendOnChangeAcceleration.substituteVariable(command, acceleration);
-                command = sendOnChangeJerk.substituteVariable(command, jerk);
+                command = sendOnChangeSubstituteAllVariables(command, feedrate, acceleration, jerk);
             }
         }
         else {
             // Do not initialize rates in legacy mode.  
-            command = sendOnChangeFeedRate.substituteVariable(command, null);
-            command = sendOnChangeAcceleration.substituteVariable(command, null);
-            command = sendOnChangeJerk.substituteVariable(command, null);
+            command = sendOnChangeSubstituteAllVariables(command, null, null, null);
         }
 
         long timeout = -1;
@@ -626,9 +634,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         homeLocation.setToDriverCoordinates(this);
 
         // reset send-on-change behavior
-        sendOnChangeFeedRate.reset();
-        sendOnChangeAcceleration.reset();
-        sendOnChangeJerk.reset();
+        sendOnChangeResetAll();
     }
 
     public List<String> getAxisVariables(ReferenceMachine machine) {
@@ -873,9 +879,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
 
         command = substituteVariable(command, "Id", hm.getId());
         command = substituteVariable(command, "Name", hm.getName());
-        command = sendOnChangeFeedRate.substituteVariable(command, feedRate);
-        command = sendOnChangeAcceleration.substituteVariable(command, acceleration);
-        command = sendOnChangeJerk.substituteVariable(command, jerk);
+        command = sendOnChangeSubstituteAllVariables(command, feedRate, acceleration, jerk);
 
         ReferenceMachine machine = (ReferenceMachine) hm.getHead().getMachine();
         // Get a map of the axes of ...
@@ -1548,9 +1552,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         reportedLocationsQueue.add(position);
 
         // for safety reasons reset the send-on-change logic here as well
-        sendOnChangeFeedRate.reset();
-        sendOnChangeAcceleration.reset();
-        sendOnChangeJerk.reset();
+        sendOnChangeResetAll();
         
         if (motionPending) {
             Logger.warn("Position report cannot be processed when motion might still be pending. Missing Machine Coordination on Actuators?", 
