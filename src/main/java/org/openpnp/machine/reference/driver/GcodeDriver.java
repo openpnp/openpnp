@@ -580,7 +580,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
                     }
                     if (axis.getMotionLimit(3) != 0.0) {
                         if (jerk == null || jerk > axis.getMotionLimit(3)) {
-                            feedrate = axis.getMotionLimit(3);
+                            jerk = axis.getMotionLimit(3);
                         }
                     }
                 }
