@@ -329,27 +329,38 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     // create a class to group send-on-change behavior
     // used to support sending feedRate, acceleration and jerk only when they have changed
     static class SendOnChange {
+        // objects stored in machine.xml
         @Attribute(required = false)
         protected boolean sendOnChange = false; // configuration flag: if set the value is only send if it has changed
 
         @Attribute(required = false)
         protected Double relativeDeviation;     // configuration flag: relative deviation between new and last value that is considered as value has change
-        
+
+        // This object is designed to be initialized on creation. However, the de-serializer used to
+        // read the machine.xml configuration file seems to not support the creation using a custom
+        // constructor required to initialize it leaving this object uninitialized. This in turn 
+        // requires that the object is initialized later in a different context making the code 
+        // harder to understand. Storing the value in the machine.xml configuration file circumvents
+        // the problem. However now content thats compile-time defined becomes part of the
+        // configuration file...
+        @Attribute(required = false)
         private String variable;                // variable to be replaced in the (g-code) command
+
+        // local objects
         private Double lastValue;               // last value processed
-        
+
+        // this constructor shall be used to create the object and specify the variable in G-Code commands
+        // it is bound to.
         public SendOnChange(String variable) {
             this.variable = variable;
             this.relativeDeviation = 0.001;
             reset();
         }
         
-        // this constructor is needed to correctly read/load maschin.xml on startup
-        // FIXME: if this is called, the new instance has no variable rendering it useless. An extra setVariable() call is required.
+        // this constructor is needed to correctly read/load maschine.xml on startup
+        // the value of variable is now part of the machine.xml configuration file
         public SendOnChange() {
-            this.variable = null;
-            this.relativeDeviation = 0.001;
-            reset();
+            this(null);
         }
         
         public String substituteVariable(String command, Double value) {
@@ -373,10 +384,6 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         // reset the send on change behavior by invalidating lastValue
         public void reset() {
             lastValue = null;
-        }
-        
-        public void setVariable(String variable) {
-            this.variable = variable;
         }
         
         public boolean isSendOnChange() {
@@ -445,11 +452,6 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         getSendOnChangeAcceleration().reset();
         getSendOnChangeJerk().reset();
     }
-    private void sendOnChangeSetAllVariables() {
-        getSendOnChangeFeedRate().setVariable("FeedRate");
-        getSendOnChangeAcceleration().setVariable("Acceleration");
-        getSendOnChangeJerk().setVariable("Jerk");
-    }
     private String sendOnChangeSubstituteAllVariables(String command, Double feedRate, Double acceleration, Double jerk) {
         command = getSendOnChangeFeedRate().substituteVariable(command, feedRate);
         command = getSendOnChangeAcceleration().substituteVariable(command, acceleration);
@@ -499,9 +501,6 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         getCommunications().connect();
         connected = false;
 
-        // initialize strings in send-on-change behavior to correctly replace them in G-Code commands
-        sendOnChangeSetAllVariables();
-        
         connectThreads();
 
         // Wait a bit while the controller starts up
