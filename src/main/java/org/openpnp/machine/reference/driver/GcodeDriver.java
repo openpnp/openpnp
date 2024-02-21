@@ -451,7 +451,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         getSendOnChangeFeedRate().reset();
         getSendOnChangeAcceleration().reset();
         getSendOnChangeJerk().reset();
-        Logger.trace("Send-on-change logic for FeedRate, Acceleration and Jerk resetted");
+        Logger.trace("Send-on-change logic for Feed Rate, Acceleration and Jerk reset");
     }
     private String sendOnChangeSubstituteAllVariables(String command, Double feedRate, Double acceleration, Double jerk) {
         command = getSendOnChangeFeedRate().substituteVariable(command, feedRate);
