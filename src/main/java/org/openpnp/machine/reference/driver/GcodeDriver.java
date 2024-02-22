@@ -326,6 +326,140 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
 
     private PrintWriter gcodeLogger;
 
+    // create a class to group send-on-change behavior
+    // used to support sending feedRate, acceleration and jerk only when they have changed
+    static class SendOnChange {
+        // objects stored in machine.xml
+        @Attribute(required = false)
+        protected boolean sendOnChange = false; // configuration flag: if set the value is only send if it has changed
+
+        @Attribute(required = false)
+        protected Double relativeDeviation;     // configuration flag: relative deviation between new and last value that is considered as value has change
+
+        // This object is designed to be initialized on creation. However, the de-serializer used to
+        // read the machine.xml configuration file seems to not support the creation using a custom
+        // constructor required to initialize it leaving this object uninitialized. This in turn 
+        // requires that the object is initialized later in a different context making the code 
+        // harder to understand. Storing the value in the machine.xml configuration file circumvents
+        // the problem. However now content thats compile-time defined becomes part of the
+        // configuration file...
+        @Attribute(required = false)
+        private String variable;                // variable to be replaced in the (g-code) command
+
+        // local objects
+        private Double lastValue;               // last value processed
+
+        // this constructor shall be used to create the object and specify the variable in G-Code commands
+        // it is bound to.
+        public SendOnChange(String variable) {
+            this.variable = variable;
+            this.relativeDeviation = 0.001;
+            reset();
+        }
+        
+        // this constructor is needed to correctly read/load maschine.xml on startup
+        // the value of variable is now part of the machine.xml configuration file
+        public SendOnChange() {
+            this(null);
+        }
+        
+        public String substituteVariable(String command, Double value) {
+            // send/substitute string and value
+            if (!sendOnChange                                                         // .. if forced
+                 || value == null                                                     // .. or value not initialized
+                 || lastValue == null                                                 // .. or last value not initialized
+                 || value == 0.0                                                      // .. of if the new value is 0 - avoid division by zero
+                 || Math.abs((lastValue - value) / value) > relativeDeviation) {      // .. or if the value has changed by more then 1e-3 relative
+                lastValue = value;
+                command = GcodeDriver.substituteVariable(command, variable, value);   // call the substitute method of the outer class as used by the rest of the code
+            } else {
+                command = GcodeDriver.substituteVariable(command, variable, null);    // remove the variable
+            }
+            // always substitute string + "F"
+            command = GcodeDriver.substituteVariable(command, variable + "F", value); // call the substitute method of the outer class as used by the rest of the code
+            
+            return command;
+        }
+
+        // reset the send on change behavior by invalidating lastValue
+        public void reset() {
+            lastValue = null;
+        }
+        
+        public boolean isSendOnChange() {
+            return sendOnChange;
+        }
+
+        public void setSendOnChange(boolean state) {
+            sendOnChange = state;
+        }
+    }
+    
+    // define feedRate, acceleration and jerk as SendOnChange types to handle them in a unified way
+    @Element(required = false)
+    protected SendOnChange sendOnChangeFeedRate;
+    @Element(required = false)
+    protected SendOnChange sendOnChangeAcceleration;
+    @Element(required = false)
+    protected SendOnChange sendOnChangeJerk;
+
+    // provide getter methods to read sendOnChange<...> and initialize then on the fly
+    private SendOnChange getSendOnChangeFeedRate() {
+        if (sendOnChangeFeedRate == null) {
+            sendOnChangeFeedRate = new SendOnChange("FeedRate");
+        }
+        
+        return sendOnChangeFeedRate;
+    }
+    private SendOnChange getSendOnChangeAcceleration() {
+        if (sendOnChangeAcceleration == null) {
+            sendOnChangeAcceleration = new SendOnChange("Acceleration");
+        }
+        
+        return sendOnChangeAcceleration;
+    }
+    private SendOnChange getSendOnChangeJerk() {
+        if (sendOnChangeJerk == null) {
+            sendOnChangeJerk = new SendOnChange("Jerk");
+        }
+        
+        return sendOnChangeJerk;
+    }
+    
+    // provide get and set methods to allow changing the configuration of sendOnChange using the UI
+    public boolean isSendOnChangeFeedRate() {
+        return getSendOnChangeFeedRate().isSendOnChange();
+    }
+    public void setSendOnChangeFeedRate(boolean state) {
+        getSendOnChangeFeedRate().setSendOnChange(state);
+    }
+    public boolean isSendOnChangeAcceleration() {
+        return getSendOnChangeAcceleration().isSendOnChange();
+    }
+    public void setSendOnChangeAcceleration(boolean state) {
+        getSendOnChangeAcceleration().setSendOnChange(state);
+    }
+    public boolean isSendOnChangeJerk() {
+        return getSendOnChangeJerk().isSendOnChange();
+    }
+    public void setSendOnChangeJerk(boolean state) {
+        getSendOnChangeJerk().setSendOnChange(state);
+    }
+    
+    // helper functions to process all send-on-change variables at once
+    private void sendOnChangeResetAll() {
+        getSendOnChangeFeedRate().reset();
+        getSendOnChangeAcceleration().reset();
+        getSendOnChangeJerk().reset();
+        Logger.trace("Send-on-change logic for Feed Rate, Acceleration and Jerk reset");
+    }
+    private String sendOnChangeSubstituteAllVariables(String command, Double feedRate, Double acceleration, Double jerk) {
+        command = getSendOnChangeFeedRate().substituteVariable(command, feedRate);
+        command = getSendOnChangeAcceleration().substituteVariable(command, acceleration);
+        command = getSendOnChangeJerk().substituteVariable(command, jerk);
+        return command;
+    }
+    
     @Commit
     public void commit() {
         super.commit();
@@ -391,6 +525,9 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         sendGcode(getCommand(null, CommandType.CONNECT_COMMAND));
 
         connected = true;
+
+        // reset send-on-change behavior
+        sendOnChangeResetAll();
     }
 
     /**
@@ -483,7 +620,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
                     }
                     if (axis.getMotionLimit(3) != 0.0) {
                         if (jerk == null || jerk > axis.getMotionLimit(3)) {
-                            feedrate = axis.getMotionLimit(3);
+                            jerk = axis.getMotionLimit(3);
                         }
                     }
                 }
@@ -495,22 +632,16 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
 
             if (getMotionControlType().isUnpredictable()) {
                 // Do not initialize rates, as the motion control is unpredictable, i.e. not controlled by us.  
-                command = substituteVariable(command, "FeedRate", null);
-                command = substituteVariable(command, "Acceleration", null);
-                command = substituteVariable(command, "Jerk", null);
+                command = sendOnChangeSubstituteAllVariables(command, null, null, null);
             }
             else {
                 // For the purpose of homing, initialize the rates to the lowest of any axis. 
-                command = substituteVariable(command, "FeedRate", feedrate);
-                command = substituteVariable(command, "Acceleration", acceleration);
-                command = substituteVariable(command, "Jerk", jerk);
+                command = sendOnChangeSubstituteAllVariables(command, feedrate, acceleration, jerk);
             }
         }
         else {
             // Do not initialize rates in legacy mode.  
-            command = substituteVariable(command, "FeedRate", null);
-            command = substituteVariable(command, "Acceleration", null);
-            command = substituteVariable(command, "Jerk", null);
+            command = sendOnChangeSubstituteAllVariables(command, null, null, null);
         }
 
         long timeout = -1;
@@ -526,6 +657,9 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
 
         AxesLocation homeLocation = new AxesLocation(machine, this, (axis) -> (axis.getHomeCoordinate()));
         homeLocation.setToDriverCoordinates(this);
+
+        // reset send-on-change behavior
+        sendOnChangeResetAll();
     }
 
     public List<String> getAxisVariables(ReferenceMachine machine) {
@@ -756,20 +890,21 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         double driverUnitsFactor = new Length(1, AxesLocation.getUnits())
                 .convertToUnits(getUnits()).getValue();
         if (feedRate != null) {
-            feedRate = Math.max(feedRate*driverUnitsFactor, vMin);
+            feedRate = Math.max(feedRate, vMin*60.0);   // feedrate is in <x>/min and vMin in <x>/sec
+            feedRate *= driverUnitsFactor;              // scale feedrate to driver units.
         }
         if (acceleration != null) {
-            acceleration = Math.max(acceleration*driverUnitsFactor, aMin);
+            acceleration = Math.max(acceleration, aMin);
+            acceleration *= driverUnitsFactor;
         }
         if (jerk != null) {
-            jerk = Math.max(jerk*driverUnitsFactor, jMin);
+            jerk = Math.max(jerk, jMin);
+            jerk *= driverUnitsFactor;
         }
 
         command = substituteVariable(command, "Id", hm.getId());
         command = substituteVariable(command, "Name", hm.getName());
-        command = substituteVariable(command, "FeedRate", feedRate);
-        command = substituteVariable(command, "Acceleration", acceleration);
-        command = substituteVariable(command, "Jerk", jerk);
+        command = sendOnChangeSubstituteAllVariables(command, feedRate, acceleration, jerk);
 
         ReferenceMachine machine = (ReferenceMachine) hm.getHead().getMachine();
         // Get a map of the axes of ...
@@ -1441,6 +1576,18 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         // Store the latest momentary position.
         reportedLocationsQueue.add(position);
 
+        // detect if the new position has changed compared to where OpenPnP thinks the controller shall be
+        for (ControllerAxis axis : position.getAxes(this)) {
+            if (!axis.coordinatesMatch(
+                  position.getLengthCoordinate(axis), 
+                  axis.getDriverLengthCoordinate())) {
+
+                // for safety reasons reset the send-on-change logic here as well
+                sendOnChangeResetAll();
+                break;
+            }
+        }
+        
         if (motionPending) {
             Logger.warn("Position report cannot be processed when motion might still be pending. Missing Machine Coordination on Actuators?", 
                     position);
