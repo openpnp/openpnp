@@ -142,7 +142,7 @@ public class NozzleTipSolutions implements Solutions.Subject  {
                                     "Nozzle tip "+nozzleTip.getName()+" has no compatible nozzle.", 
                                     "Go to the nozzle(s) and enable the Compatible switches where appropriate.", 
                                     Solutions.Severity.Error,
-                                    "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-Nozzle-Setup#nozzle-to-nozzle-tip-compatibility"));
+                                    "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration_Nozzle-Setup#nozzle-to-nozzle-tip-compatibility"));
                         }
                         else {
                             perNozzleTip(solutions, nozzleTip, camera, defaultNozzle);
@@ -278,7 +278,7 @@ public class NozzleTipSolutions implements Solutions.Subject  {
                         "Set the Max. Pick Tolerance to the actual pick errors you expect. "
                         + "Press the blue info button (below) for more information.",
                         Severity.Error,
-                        "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-Nozzle-Setup#nozzle-tip-configuration"));
+                        "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration_Nozzle-Setup#nozzle-tip-configuration"));
             }
             else if (nozzleTip.getMinPartDiameter().compareTo(nozzleTip.getMaxPickTolerance().multiply(2)) <= 0) {
                 solutions.add(new Solutions.PlainIssue(
@@ -288,7 +288,7 @@ public class NozzleTipSolutions implements Solutions.Subject  {
                         + lengthConverter.convertForward(nozzleTip.getMaxPickTolerance())+". "
                         + "Press the blue info button (below) for more information.",
                         Severity.Error,
-                        "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-Nozzle-Setup#nozzle-tip-configuration"));
+                        "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration_Nozzle-Setup#nozzle-tip-configuration"));
             }
             else if (nozzleTip.getMinPartDiameter().compareTo(nozzleTip.getMaxPartDiameter()) >= 0) {
                 solutions.add(new Solutions.PlainIssue(
@@ -297,7 +297,7 @@ public class NozzleTipSolutions implements Solutions.Subject  {
                         "Make sure the Max. Part Diameter is larger than the Min. Part Diameter. "
                         + "Press the blue info button (below) for more information.",
                         Severity.Error,
-                        "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-Nozzle-Setup#nozzle-tip-configuration"));
+                        "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration_Nozzle-Setup#nozzle-tip-configuration"));
             }
             if (oldBackgroundCalibrationMethod == BackgroundCalibrationMethod.None) {
                 solutions.add(new Solutions.Issue(

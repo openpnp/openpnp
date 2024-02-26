@@ -697,7 +697,7 @@ public class ReferenceMachine extends AbstractMachine {
                     "OpenPnP can often automatically select the right tool for you in Machine Controls.", 
                     "Enable Auto tool select.", 
                     Solutions.Severity.Suggestion,
-                    "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-Machine-Setup#configuration") {
+                    "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration_Machine-Setup#configuration") {
 
                 @Override
                 public void setState(Solutions.State state) throws Exception {
