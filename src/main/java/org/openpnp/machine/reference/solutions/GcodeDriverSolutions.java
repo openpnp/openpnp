@@ -76,7 +76,8 @@ public class GcodeDriverSolutions implements Solutions.Subject {
         RepRapFirmware,
         TinyG,
         Marlin,
-        Grbl;
+        Grbl,
+        GrblHAL;
 
         boolean isSmoothie() {
             return this == Smoothieware || this == SmoothiewareGrblSyntax || this == SmoothiewareChmt;
@@ -355,6 +356,9 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                 }
                 else if (gcodeDriver.getFirmwareProperty("FIRMWARE_NAME", "").contains("Grbl")) {
                     firmware = FirmwareType.Grbl;
+                }
+                else if (gcodeDriver.getFirmwareProperty("FIRMWARE_NAME", "").contains("grblHAL")) {
+                    firmware = FirmwareType.GrblHAL;
                 }
                 else if (gcodeDriver.getFirmwareProperty("FIRMWARE_NAME", "").contains("GcodeServer")) {
                     firmware = FirmwareType.Generic;
@@ -846,6 +850,9 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                 case COMMAND_ERROR_REGEX:
                     if (dialect == FirmwareType.TinyG) {
                         commandBuilt = "^tinyg .* err:.*";
+                    }
+                    else if (dialect == FirmwareType.GrblHAL) {
+                        commandBuilt = "^error:.*";
                     }
                     else {
                         //commandBuilt = "^!!*";
