@@ -244,7 +244,7 @@
 	</dependencies>
 	<build>
 		<plugins>
-			<!-- Used to specify that the Maven Eclipse task should download sources 
+			<!-- Used to specify that the Maven Eclipse task should download sources
 				and JavaDocs and attach them to the Eclipse project. -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -256,7 +256,7 @@
 				</configuration>
 			</plugin>
 
-			<!-- Creates a build number property that is then embedded into the manifest 
+			<!-- Creates a build number property that is then embedded into the manifest
 				by the maven-jar-plugin. -->
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
@@ -277,7 +277,7 @@
 				</configuration>
 			</plugin>
 
-			<!-- Specifies the source and class versions that should be used when 
+			<!-- Specifies the source and class versions that should be used when
 				compiling and sets the main class to the OpenPnP startup class. -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -293,10 +293,10 @@
 				</configuration>
 			</plugin>
 
-			<!-- * Enables creation of INDEX.LIST to improve classloader performance. 
-				* Specifies the main class to make jar runnable. * Adds Implementation-Version 
-				info to jar manifest. * Creates a classpath entry in jar so that dependencies 
-				can be loaded directly. * Specifies a classpath prefix so that dependencies 
+			<!-- * Enables creation of INDEX.LIST to improve classloader performance.
+				* Specifies the main class to make jar runnable. * Adds Implementation-Version
+				info to jar manifest. * Creates a classpath entry in jar so that dependencies
+				can be loaded directly. * Specifies a classpath prefix so that dependencies
 				can be bundled in. -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -350,7 +350,7 @@
 				</configuration>
 			</plugin>
 
-			<!-- Checks source code for common format violations and stops the build 
+			<!-- Checks source code for common format violations and stops the build
 				if any are found. -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -403,7 +403,7 @@
 					<includeTestSourceDirectory>true</includeTestSourceDirectory>
 					<!-- Exclude Eagle importer code, which is auto generated -->
 					<!-- Exclude Neoden dll function names we can't modify -->
-					<excludes>org/openpnp/model/eagle/xml/*,org/openpnp/machine/neoden4/Neoden4CamDll*</excludes>
+					<excludes>org/openpnp/model/eagle/xml/*,org/openpnp/machine/neoden4/Neoden4CameraDriver*</excludes>
 					<!-- Add any resource files to exclude here -->
 					<resourceExcludes></resourceExcludes>
 				</configuration>

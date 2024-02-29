@@ -2,9 +2,21 @@ package org.openpnp.machine.neoden4;
 
 import org.pmw.tinylog.Logger;
 
-public final class Neoden4CameraHandler implements Neoden4CamDll {
+import com.jgoodies.common.base.SystemUtils;
+import com.sun.jna.Native;
+
+public final class Neoden4CameraHandler implements Neoden4CameraDriver {
+
+	private static Neoden4CameraDriver driver;
 
 	public Neoden4CameraHandler() {
+		String sharedLib = "libneodencam";
+		if (SystemUtils.IS_OS_WINDOWS) {
+			sharedLib = "NeodenCamera.dll";
+		}
+
+		driver = (Neoden4CameraDriver) Native
+				.synchronizedLibrary(Native.load(sharedLib, Neoden4CameraDriver.class));
 	}
 
 	private static Neoden4CameraHandler instance;
@@ -47,52 +59,52 @@ public final class Neoden4CameraHandler implements Neoden4CamDll {
 
 	@Override
 	public boolean img_capture(int which_camera) {
-		return INSTANCE.img_capture(which_camera);
+		return driver.img_capture(which_camera);
 	}
 
 	@Override
 	public int img_init() {
-		return INSTANCE.img_init();
+		return driver.img_init();
 	}
 
 	@Override
 	public boolean img_led(int camera, short mode) {
-		return INSTANCE.img_led(camera, mode);
+		return driver.img_led(camera, mode);
 	}
 
 	@Override
 	public int img_read(int which_camera, byte[] pFrameBuffer, int BytesToRead, int timeoutMs) {
-		return INSTANCE.img_read(which_camera, pFrameBuffer, BytesToRead, timeoutMs);
+		return driver.img_read(which_camera, pFrameBuffer, BytesToRead, timeoutMs);
 	}
 
 	@Override
 	public int img_readAsy(int which_camera, byte[] pFrameBuffer, int BytesToRead, int timeoutMs) {
-		return INSTANCE.img_readAsy(which_camera, pFrameBuffer, BytesToRead, timeoutMs);
+		return driver.img_readAsy(which_camera, pFrameBuffer, BytesToRead, timeoutMs);
 	}
 
 	@Override
 	public int img_reset(int which_camera) {
-		return INSTANCE.img_reset(which_camera);
+		return driver.img_reset(which_camera);
 	}
 
 	@Override
 	public boolean img_set_exp(int which_camera, short exposure) {
-		return INSTANCE.img_set_exp(which_camera, exposure);
+		return driver.img_set_exp(which_camera, exposure);
 	}
 
 	@Override
 	public boolean img_set_gain(int which_camera, short gain) {
-		return INSTANCE.img_set_gain(which_camera, gain);
+		return driver.img_set_gain(which_camera, gain);
 	}
 
 	@Override
 	public boolean img_set_lt(int which_camera, short a2, short a3) {
-		return INSTANCE.img_set_lt(which_camera, a2, a3);
+		return driver.img_set_lt(which_camera, a2, a3);
 	}
 
 	@Override
 	public boolean img_set_wh(int which_camera, short w, short h) {
-		return INSTANCE.img_set_wh(which_camera, w, h);
+		return driver.img_set_wh(which_camera, w, h);
 	}
 
 }

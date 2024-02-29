@@ -1,12 +1,8 @@
 package org.openpnp.machine.neoden4;
 
 import com.sun.jna.Library;
-import com.sun.jna.Native;
 
-public interface Neoden4CamDll extends Library {
-	
-	public static Neoden4CamDll INSTANCE = 
-			(Neoden4CamDll) Native.synchronizedLibrary(Native.load("NeodenCamera.dll", Neoden4CamDll.class));
+public interface Neoden4CameraDriver extends Library {
 
 	public boolean img_capture(int which_camera);
 
@@ -14,7 +10,7 @@ public interface Neoden4CamDll extends Library {
 
 	public boolean img_led(int camera, short mode);
 
-	public int img_read(int which_camera,  byte[] pFrameBuffer, int BytesToRead, int timeoutMs);
+	public int img_read(int which_camera, byte[] pFrameBuffer, int BytesToRead, int timeoutMs);
 
 	public int img_readAsy(int which_camera, byte[] pFrameBuffer, int BytesToRead, int timeoutMs);
 
