@@ -448,7 +448,7 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
         addWrappedBinding(feeder, "trayCountCols", textFieldTrayCountCols, "text", intConverter); //$NON-NLS-1$ //$NON-NLS-2$
         addWrappedBinding(feeder, "trayCountRows", textFieldTrayCountRows, "text", intConverter); //$NON-NLS-1$ //$NON-NLS-2$
 
-        bind(UpdateStrategy.READ_WRITE, feeder, "feedCount", textFieldFeedCount, "text", intConverter); //$NON-NLS-1$ //$NON-NLS-2$
+        addWrappedBinding(feeder, "feedCount", textFieldFeedCount, "text", intConverter); //$NON-NLS-1$ //$NON-NLS-2$
 
         bind(UpdateStrategy.READ, feeder, "remainingCount", lblComponentCount, "text",  //$NON-NLS-1$ //$NON-NLS-2$
                 new Converter<Integer, String>() {
