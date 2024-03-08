@@ -49,46 +49,51 @@ public class ReferenceTrayFeeder extends ReferenceFeeder {
     @Element
     private Location offsets = new Location(LengthUnit.Millimeters);
     @Attribute
-    private int feedCount = 0;
-
-    private Location pickLocation;
+    private int feedCount = 0;  // UI is base 1, 0 is ok because a pick operation always preceded by a feed, which increments feedCount to 1
 
     @Override
     public Location getPickLocation() throws Exception {
-        if (pickLocation == null) {
-            pickLocation = location;
-        }
-        Logger.debug("{}.getPickLocation => {}", getName(), pickLocation);
-        return pickLocation;
-    }
-
-    public void feed(Nozzle nozzle) throws Exception {
-        Logger.debug("{}.feed({})", getName(), nozzle);
+        Location pickLocation;
         int partX, partY;
+        int feedCountBase0 = feedCount -1; // UI uses feedCount base 1, the following calculations are base 0
 
-        if (feedCount >= (trayCountX * trayCountY)) {
+        // if feedCound is currently 0, assume its one
+        // this can happen if the pickLocation is requested before any feed operation
+        // return first location in that case
+        if (feedCount == 0) {
+            feedCountBase0 = 0;
+        }
+        
+        if (feedCount > (trayCountX * trayCountY)) {
             throw new Exception("Tray empty.");
         }
 
         if (trayCountX >= trayCountY) {
             // X major axis.
-            partX = feedCount / trayCountY;
-            partY = feedCount % trayCountY;
+            partX = feedCountBase0 / trayCountY;
+            partY = feedCountBase0 % trayCountY;
         }
         else {
             // Y major axis.
-            partX = feedCount % trayCountX;
-            partY = feedCount / trayCountX;
+            partX = feedCountBase0 % trayCountX;
+            partY = feedCountBase0 / trayCountX;
         }
 
         // Multiply the offsets by the X/Y part indexes to get the total offsets
         // and then add the pickLocation to offset the final value.
         // and then add them to the location to get the final pickLocation.
         pickLocation = location.add(offsets.multiply(partX, partY, 0.0, 0.0));
-
-        Logger.debug(String.format("Feeding part # %d, x %d, y %d, xPos %f, yPos %f, rPos %f",
+        
+        Logger.debug(String.format("Location of part # %d, x %d, y %d, xPos %f, yPos %f, rPos %f",
                 feedCount, partX, partY, pickLocation.getX(), pickLocation.getY(),
                 pickLocation.getRotation()));
+
+        Logger.debug("{}.getPickLocation => {}", getName(), pickLocation);
+        return pickLocation;
+    }
+
+    public void feed(Nozzle nozzle) throws Exception {
+        Logger.debug("{}.feed({})", getName(), nozzle);
 
         setFeedCount(getFeedCount() + 1);
     }
@@ -120,12 +125,6 @@ public class ReferenceTrayFeeder extends ReferenceFeeder {
             throw new UnsupportedOperationException("Feeder: " + getName() + " - Currently no free slot. Can not take back the part.");
         }
         
-        // can be null, if part had been picked from an other feeder
-        if (pickLocation == null) {
-            // repeat last feed operation, so that the pickLocation is the last free spot 
-            setFeedCount(getFeedCount() - 1); // is immediately increased during feed
-            feed(nozzle);
-        }
         // ok, now put the part back on the location of the last pick
         nozzle.moveToPickLocation(this);
         nozzle.place();
