@@ -610,7 +610,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             nt.getNozzleWhereLoaded().unloadNozzleTip();
         }
 
-        unloadNozzleTip();
+        unloadNozzleTip(true);  // signal that a loadNozzleTip will immediately follow not interrupting if manual nozzle tip change is configured
 
         double speed = getHead().getMachine().getSpeed();
         if (!nt.isUnloadedNozzleTipStandin()) {
@@ -704,7 +704,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     }
 
     @Override
-    public void unloadNozzleTip() throws Exception {
+    public void unloadNozzleTip(boolean loadNozzleTipFollows) throws Exception {
         if (getPart() != null) {
             throw new Exception("Nozzle "+getName()+" still has a part loaded. Please discard first.");
         }
@@ -779,7 +779,8 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
 
         setNozzleTip(null);
 
-        if (!changerEnabled) {
+        // if a loadNozzleTip() is already known to follow, do not interrupt for unload
+        if (!changerEnabled && !loadNozzleTipFollows) {
             waitForCompletion(CompletionType.WaitForStillstand);
             throw new JobProcessorException(this, 
                     "Task interrupted: Please perform a manual nozzle tip "+nt.getName()+" unload from nozzle "+getName()+" now. "
@@ -797,6 +798,11 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         }
     }
 
+    @Override
+    public void unloadNozzleTip() throws Exception {
+        unloadNozzleTip(false);
+    }
+    
     protected void assertManualChangeLocation() throws Exception {
         if (isManualNozzleTipChangeLocationUndefined()) {
             throw new Exception("Nozzle "+getName()+" Manual Change Location is not configured!");

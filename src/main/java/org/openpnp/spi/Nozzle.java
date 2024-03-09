@@ -147,6 +147,21 @@ public interface Nozzle
     public void unloadNozzleTip() throws Exception;
     
     /**
+     * Changer interface:
+     * 
+     * Unload the current NozzleTip from the Nozzle, leaving it empty.
+     * 
+     * After this call getNozzleTip() should return null.
+     * 
+     * This is a special version of the unloadNozzleTip() method that does not interrupt on manual nozzle tip
+     * changes if a loadNozzleTip() is known to follow.
+     * 
+     * @param loadNozzleTipFollows If true, a loadNozzleTip() call will follow and no interrutp for unload will be generated.
+     * @throws Exception
+     */
+    public void unloadNozzleTip(boolean loadNozzleTipFollows) throws Exception;
+
+    /**
      * Get the part that is currently picked on the Nozzle, or null if none is picked.
      * Should typically be non-null after a pick operation and before a place operation and null
      * after a pick operation. Of note, it should be non-null after a failed pick operation
