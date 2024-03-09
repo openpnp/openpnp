@@ -533,23 +533,25 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         
         @Override
         public Step stepImpl(PlannedPlacement plannedPlacement) throws JobProcessorException {
+            final Nozzle nozzle = plannedPlacement.nozzle;
+            
             if (plannedPlacement == null) {
                 return new Pick(plannedPlacements);
             }
             
-            final NozzleTip nozzleTip = plannedPlacement.nozzle.getNozzleTip();
+            final NozzleTip nozzleTip = nozzle.getNozzleTip();
             
             if (nozzleTip == null) {
                 return this;
             }
             
-            if (plannedPlacement.nozzle.isCalibrated()) {
+            if (nozzle.isCalibrated()) {
                 return this;
             }
             
-            fireTextStatus("Calibrate nozzle tip %s", nozzleTip);
+            fireTextStatus("Calibrate nozzle tip %s on nozzle %s", nozzleTip, nozzle.getName());
             try {
-                plannedPlacement.nozzle.calibrate();
+                nozzle.calibrate();
             }
             catch (Exception e) {
                 throw new JobProcessorException(nozzleTip, e);
@@ -735,8 +737,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         
         private void pick(Nozzle nozzle, Feeder feeder, JobPlacement jobPlacement, Part part) throws JobProcessorException {
             try {
-                fireTextStatus("Pick %s from %s for %s.", part.getId(), feeder.getName(),
-                        jobPlacement.getPlacement().getId());
+                fireTextStatus("Pick %s from %s for %s using nozzle %s.", part.getId(), feeder.getName(),
+                        jobPlacement.getPlacement().getId(), nozzle.getName());
 
                 // Prepare the Nozzle for pick-to-place articulation.
                 Location placementLocation = Utils2D.calculateBoardPlacementLocation(jobPlacement.getBoardLocation(), jobPlacement.getPlacement().getLocation());
@@ -846,7 +848,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
             Exception lastException = null;
             for (int i = 0; i < ReferencePnpJobProcessor.this.getMaxVisionRetries(); i++) {
-                fireTextStatus("Aligning %s for %s.", part.getId(), placement.getId());
+                fireTextStatus("Aligning %s for %s using nozzle %s.", part.getId(), placement.getId(), nozzle.getName());
                 try {
                     plannedPlacement.alignmentOffsets = VisionUtils.findPartAlignmentOffsets(
                             partAlignment,
@@ -941,7 +943,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         }
         
         private void place(Nozzle nozzle, Part part, Placement placement, Location placementLocation) throws JobProcessorException {
-            fireTextStatus("Placing %s for %s.", part.getId(), placement.getId());
+            fireTextStatus("Placing %s for %s using nozzle %s.", part.getId(), placement.getId(), nozzle.getName());
             
             try {
                 // Move to the placement location
