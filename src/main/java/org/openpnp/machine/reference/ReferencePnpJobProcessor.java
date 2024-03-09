@@ -533,12 +533,11 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         
         @Override
         public Step stepImpl(PlannedPlacement plannedPlacement) throws JobProcessorException {
-            final Nozzle nozzle = plannedPlacement.nozzle;
-            
             if (plannedPlacement == null) {
                 return new Pick(plannedPlacements);
             }
             
+            final Nozzle nozzle = plannedPlacement.nozzle;
             final NozzleTip nozzleTip = nozzle.getNozzleTip();
             
             if (nozzleTip == null) {
