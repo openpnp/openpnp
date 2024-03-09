@@ -84,11 +84,7 @@ public class ReferenceTrayFeeder extends ReferenceFeeder {
         // and then add them to the location to get the final pickLocation.
         pickLocation = location.add(offsets.multiply(partX, partY, 0.0, 0.0));
         
-        Logger.debug(String.format("Location of part # %d, x %d, y %d, xPos %f, yPos %f, rPos %f",
-                feedCount, partX, partY, pickLocation.getX(), pickLocation.getY(),
-                pickLocation.getRotation()));
-
-        Logger.debug("{}.getPickLocation => {}", getName(), pickLocation);
+        Logger.debug("{}.getPickLocation => {}, part # {}, x {}, y {}", getName(), pickLocation, feedCount, partX, partY);
         return pickLocation;
     }
 
