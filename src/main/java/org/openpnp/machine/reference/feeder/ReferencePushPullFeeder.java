@@ -1500,6 +1500,10 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                             if (Math.abs(circle.diameter*mmScale.getX() - sprocketHoleDiameterMm) < sprocketHoleToleranceMm) {
                                 results.add(circle);
                             }
+                            else {
+                                Logger.debug("Dismissed Circle with non-compliant diameter "+(circle.diameter*mmScale.getX())+"mm, "
+                                        + "allowed tolerance is ±"+sprocketHoleToleranceMm+"mm");
+                            }
                         }
                         else if ((result) instanceof RotatedRect) {
                             RotatedRect rect = ((RotatedRect) result);
@@ -1507,6 +1511,11 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                             if (Math.abs(rect.size.width*mmScale.getX() - sprocketHoleDiameterMm) < sprocketHoleToleranceMm
                                     && Math.abs(rect.size.height*mmScale.getX() - sprocketHoleDiameterMm) < sprocketHoleToleranceMm) {
                                 results.add(new Result.Circle(rect.center.x, rect.center.y, diameter));
+                            }
+                            else {
+                                Logger.debug("Dismissed RotatedRect with non-compliant width or height "
+                                        +(rect.size.width*mmScale.getX())+"mm x "+rect.size.height*mmScale.getX()+"mm, "
+                                                + "allowed tolerance is ±"+sprocketHoleToleranceMm+"mm");
                             }
                         }
                         else if ((result) instanceof KeyPoint) {
@@ -1522,6 +1531,10 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                     }
                     List<Ransac.Line> ransacLines = Ransac.ransac(points, 100, sprocketHoleTolerancePx, 
                             sprocketHolePitchPx, sprocketHoleTolerancePx, false);
+                    if (ransacLines.isEmpty()) {
+                        Logger.debug("Ransac algorithm has not found any lines of sprocket holes with "+sprocketHolePitchMm+"mm pitch, "
+                                + "allowed pitch and line tolerance is ±"+sprocketHoleToleranceMm+"mm");
+                    }
                     // Get the best line within the calibration tolerance
                     Ransac.Line bestLine = null;
                     Location bestUnitVector = null;
@@ -1561,6 +1574,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                         }
                         else if (autoSetupMode == null) {
                             lines.add(line);
+                            Logger.debug("Dismissed line by distance, "+(distanceMm)+"mm, not within "+minDistanceMm+"mm .. "+maxDistanceMm+"mm");
                         }
                     }
 
