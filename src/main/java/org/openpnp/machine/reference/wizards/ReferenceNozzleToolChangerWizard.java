@@ -147,6 +147,7 @@ public class ReferenceNozzleToolChangerWizard extends AbstractConfigurationWizar
         
         changerStartLocationButtonsPanel = new LocationButtonsPanel(manualNozzleTipChangeX,
                 manualNozzleTipChangeY, manualNozzleTipChangeZ, (JTextField) null);
+        changerStartLocationButtonsPanel.setTool(nozzle);   // make the tool buttons react on the current nozzle only
         panelChanger.add(changerStartLocationButtonsPanel, "10, 8, fill, default");
     }
 

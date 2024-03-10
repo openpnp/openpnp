@@ -60,6 +60,7 @@ import org.openpnp.util.UiUtils;
 public class LocationButtonsPanel extends JPanel {
     private JTextField textFieldX, textFieldY, textFieldZ, textFieldC;
     private String actuatorName;
+    private HeadMountable tool;     // this variable holds a spcific tool, if the tool-buttons shall react on that tool only, default is the selected nozzle
 
     private JButton buttonCenterTool;
     private JButton buttonCaptureCamera;
@@ -209,7 +210,18 @@ public class LocationButtonsPanel extends JPanel {
         return actuatorName;
     }
 
+    // set/specify a tool the tool/nozzle buttons shall react on. Default is the selected nozzle
+    public void setTool(HeadMountable tool) {
+        this.tool = tool;
+    }
+    
     public HeadMountable getTool() throws Exception {
+        // return the specified tool, if any
+        if (tool != null) {
+            return tool;
+        }
+
+        // else return the selected nozzle
         return MainFrame.get().getMachineControls().getSelectedNozzle();
     }
 
