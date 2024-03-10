@@ -52,20 +52,21 @@ public class ReferenceTrayFeeder extends ReferenceFeeder {
     private int feedCount = 0;  // UI is base 1, 0 is ok because a pick operation always preceded by a feed, which increments feedCount to 1
 
     @Override
-    public Location getPickLocation() throws Exception {
+    public Location getPickLocation() {
         Location pickLocation;
         int partX, partY;
         int feedCountBase0 = feedCount -1; // UI uses feedCount base 1, the following calculations are base 0
 
-        // if feedCound is currently 0, assume its one
+        // if feedCound is currently zero, assume its one
         // this can happen if the pickLocation is requested before any feed operation
         // return first location in that case
         if (feedCount == 0) {
             feedCountBase0 = 0;
         }
-        
-        if (feedCount > (trayCountX * trayCountY)) {
-            throw new Exception("Tray empty.");
+        // limit feed count to tray size
+        else if (feedCount > (trayCountX * trayCountY)) {
+            feedCountBase0 = trayCountX * trayCountY -1;
+            Logger.warn("{}.getPickLocation: feedCount larger then tray, limiting to maximum.", getName());
         }
 
         if (trayCountX >= trayCountY) {
@@ -84,12 +85,16 @@ public class ReferenceTrayFeeder extends ReferenceFeeder {
         // and then add them to the location to get the final pickLocation.
         pickLocation = location.add(offsets.multiply(partX, partY, 0.0, 0.0));
         
-        Logger.debug("{}.getPickLocation => {}, part # {}, x {}, y {}", getName(), pickLocation, feedCount, partX, partY);
+        Logger.debug("{}.getPickLocation => {}, part # {}, x {}, y {}", getName(), pickLocation, feedCountBase0 + 1, partX, partY);
         return pickLocation;
     }
 
     public void feed(Nozzle nozzle) throws Exception {
         Logger.debug("{}.feed({})", getName(), nozzle);
+
+        if (feedCount >= (trayCountX * trayCountY)) {
+            throw new Exception("Tray empty.");
+        }
 
         setFeedCount(getFeedCount() + 1);
     }
@@ -165,6 +170,8 @@ public class ReferenceTrayFeeder extends ReferenceFeeder {
         int oldValue = this.feedCount;
         this.feedCount = feedCount;
         firePropertyChange("feedCount", oldValue, feedCount);
+        // evaluate getPickLocation() to write the new pick location into the logs
+        getPickLocation();
     }
 
     @Override
