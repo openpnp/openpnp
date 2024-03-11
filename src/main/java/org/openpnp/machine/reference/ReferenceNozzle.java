@@ -230,7 +230,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
      * @param headOffsetsNew
      * @param offsetsDiff
      */
-    public void adjustHeadOffsetsDependencies(Location headOffsetsOld, Location headOffsetsNew) {
+    private void adjustHeadOffsetsDependencies(Location headOffsetsOld, Location headOffsetsNew) {
         Location offsetsDiff = headOffsetsNew.subtract(headOffsetsOld).convertToUnits(LengthUnit.Millimeters);
         if (offsetsDiff.getLinearDistanceTo(Location.origin) > 0.01) {
             // Changing a X, Y head offset invalidates the nozzle tip calibration. Just changing Z leaves it intact. 
