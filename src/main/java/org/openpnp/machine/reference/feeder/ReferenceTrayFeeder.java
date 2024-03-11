@@ -53,7 +53,6 @@ public class ReferenceTrayFeeder extends ReferenceFeeder {
 
     @Override
     public Location getPickLocation() {
-        Location pickLocation;
         int partX, partY;
         int feedCountBase0 = feedCount -1; // UI uses feedCount base 1, the following calculations are base 0
 
@@ -83,10 +82,7 @@ public class ReferenceTrayFeeder extends ReferenceFeeder {
         // Multiply the offsets by the X/Y part indexes to get the total offsets
         // and then add the pickLocation to offset the final value.
         // and then add them to the location to get the final pickLocation.
-        pickLocation = location.add(offsets.multiply(partX, partY, 0.0, 0.0));
-        
-        Logger.debug("{}.getPickLocation => {}, part # {}, x {}, y {}", getName(), pickLocation, feedCountBase0 + 1, partX, partY);
-        return pickLocation;
+        return location.add(offsets.multiply(partX, partY, 0.0, 0.0));
     }
 
     public void feed(Nozzle nozzle) throws Exception {
@@ -170,8 +166,7 @@ public class ReferenceTrayFeeder extends ReferenceFeeder {
         int oldValue = this.feedCount;
         this.feedCount = feedCount;
         firePropertyChange("feedCount", oldValue, feedCount);
-        // evaluate getPickLocation() to write the new pick location into the logs
-        getPickLocation();
+        Logger.debug("{}.setFeedCount(): feedCount {}, pickLocation {}", getName(), feedCount, getPickLocation());
     }
 
     @Override
