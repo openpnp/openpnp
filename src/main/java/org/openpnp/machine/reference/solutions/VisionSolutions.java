@@ -960,7 +960,6 @@ public class VisionSolutions implements Solutions.Subject {
                                             else {
                                                 nozzle.setHeadOffsets(headOffsets);
                                                 Logger.info("Set nozzle "+nozzle.getName()+" head offsets to "+headOffsets+" (previously "+headOffsetsBefore+")");
-                                                nozzle.adjustHeadOffsetsDependencies(headOffsetsBefore, headOffsets);
                                             }
                                         }
                                         return true;
