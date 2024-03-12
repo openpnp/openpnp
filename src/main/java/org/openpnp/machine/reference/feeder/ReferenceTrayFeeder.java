@@ -89,7 +89,7 @@ public class ReferenceTrayFeeder extends ReferenceFeeder {
         Logger.debug("{}.feed({})", getName(), nozzle);
 
         if (feedCount >= (trayCountX * trayCountY)) {
-            throw new Exception("Tray empty.");
+            throw new Exception("Feeder: " + getName() + " (" + getPart().getId() + ") - tray empty.");
         }
 
         setFeedCount(getFeedCount() + 1);
@@ -116,7 +116,7 @@ public class ReferenceTrayFeeder extends ReferenceFeeder {
             throw new UnsupportedOperationException("No part loaded that could be taken back.");
         }
         if (!nozzle.getPart().equals(getPart())) {
-            throw new UnsupportedOperationException("Feeder: " + getName() + " - Can not take back " + nozzle.getPart().getName() + " this feeder only supports " + getPart().getName());
+            throw new UnsupportedOperationException("Feeder: " + getName() + " - Can not take back " + nozzle.getPart().getId() + " this feeder only supports " + getPart().getId());
         }
         if (!canTakeBackPart()) {
             throw new UnsupportedOperationException("Feeder: " + getName() + " - Currently no free slot. Can not take back the part.");
