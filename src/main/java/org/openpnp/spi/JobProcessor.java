@@ -4,6 +4,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 
 import org.openpnp.model.Job;
+import org.openpnp.util.UiUtils.Thrunnable;
 
 public interface JobProcessor extends PropertySheetHolder, WizardConfigurable {
     public interface TextStatusListener {
@@ -67,4 +68,34 @@ public interface JobProcessor extends PropertySheetHolder, WizardConfigurable {
             return interrupting;
         }
     }
+    
+    // this extended exception class allows to specify a task to be executed once the user has agreed
+    public class JobProcessorExceptionWithContinuation extends JobProcessorException {
+        private static final long serialVersionUID = 1L;
+
+        final Thrunnable thrunnable;
+        
+        public JobProcessorExceptionWithContinuation(JobProcessorException e, Thrunnable thrunnable) {
+            super(e.getSource(), e);
+            this.thrunnable = thrunnable;
+        }
+        
+        public JobProcessorExceptionWithContinuation(Object source, String message, boolean interrupting, Thrunnable thrunnable) {
+            super(source, message, interrupting);
+            this.thrunnable = thrunnable;
+        }
+
+        public Thrunnable getThrunnable() {
+            return thrunnable;
+        }
+    }
+    
+    public class ManualUnloadException extends JobProcessorException {
+        private static final long serialVersionUID = 1L;
+
+        public ManualUnloadException(Object source, String message, boolean interrupting) {
+            super(source, message, interrupting);
+        }
+    }
+
 }

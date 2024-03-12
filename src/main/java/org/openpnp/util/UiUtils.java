@@ -18,6 +18,7 @@ import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 import org.openpnp.spi.HeadMountable;
+import org.openpnp.spi.JobProcessor.JobProcessorExceptionWithContinuation;
 import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.pmw.tinylog.Logger;
 
@@ -72,6 +73,14 @@ public class UiUtils {
         }
         else {
             Logger.error(t);
+        }
+
+        // FIXME: add Cancel button and  only execute on OK
+        if (t instanceof JobProcessorExceptionWithContinuation) {
+            Thrunnable thrunnable = ((JobProcessorExceptionWithContinuation)t).getThrunnable();
+            if (thrunnable != null) {
+                submitUiMachineTask(thrunnable);
+            }
         }
     }
 

@@ -39,6 +39,8 @@ import org.openpnp.spi.CoordinateAxis;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.JobProcessor.JobProcessorException;
+import org.openpnp.spi.JobProcessor.JobProcessorExceptionWithContinuation;
+import org.openpnp.spi.JobProcessor.ManualUnloadException;
 import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
@@ -597,20 +599,36 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
 
         ReferenceNozzleTip nt = (ReferenceNozzleTip) nozzleTip;
 
-        Actuator tcPostOneActuator = getMachine().getActuatorByName(nt.getChangerActuatorPostStepOne());
-        Actuator tcPostTwoActuator = getMachine().getActuatorByName(nt.getChangerActuatorPostStepTwo());
-        Actuator tcPostThreeActuator = getMachine().getActuatorByName(nt.getChangerActuatorPostStepThree());
-
         if (!getCompatibleNozzleTips().contains(nt)) {
             throw new Exception("Can't load incompatible nozzle tip.");
         }
 
         if (nt.getNozzleWhereLoaded() != null) {
             // Nozzle tip is on different nozzle - unload it from there first.  
+            // FIXME: catch ManualUnloadException and only interrupt once
             nt.getNozzleWhereLoaded().unloadNozzleTip();
         }
 
-        unloadNozzleTip(true);  // signal that a loadNozzleTip will immediately follow not interrupting if manual nozzle tip change is configured
+        try {
+            unloadNozzleTip();
+        } catch (JobProcessorException e) {
+            if (e instanceof ManualUnloadException) {
+                // FIXME: catch ManualUnloadException and only interrupt once
+                throw new JobProcessorExceptionWithContinuation(e, () -> { loadNozzleTipPart2(nozzleTip); } );
+            }
+        }
+
+        loadNozzleTipPart2(nozzleTip);
+    }
+    
+    // this is the second part of the nozzle tip load procedure and a separate method 
+    // to be called either directly or as continuation of a manual nozzle tip change
+    private void loadNozzleTipPart2(NozzleTip nozzleTip) throws Exception {
+        ReferenceNozzleTip nt = (ReferenceNozzleTip) nozzleTip;
+
+        Actuator tcPostOneActuator = getMachine().getActuatorByName(nt.getChangerActuatorPostStepOne());
+        Actuator tcPostTwoActuator = getMachine().getActuatorByName(nt.getChangerActuatorPostStepTwo());
+        Actuator tcPostThreeActuator = getMachine().getActuatorByName(nt.getChangerActuatorPostStepThree());
 
         double speed = getHead().getMachine().getSpeed();
         if (!nt.isUnloadedNozzleTipStandin()) {
@@ -685,13 +703,19 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
                     this.nozzleTip.getCalibration().reset(this);
                 }
                 waitForCompletion(CompletionType.WaitForStillstand);
-                throw new JobProcessorException(this, 
+                throw new JobProcessorExceptionWithContinuation(this, 
                         "Task interrupted: Please perform a manual nozzle tip "+nt.getName()+" load on nozzle "+getName()+" now. "
                                 + "You can then resume/restart the interrupted task.", 
-                        true);
+                        true, () -> { loadNozzleTipFinish(nozzleTip); });
             }
         }
 
+        loadNozzleTipFinish(nozzleTip);
+    }
+
+    // this is the final part of the nozzle tip load procedure and a separate method 
+    // to be called either directly or as continuation of a manual nozzle tip change
+    private void loadNozzleTipFinish(NozzleTip nozzleTip) throws Exception {
         if (this.nozzleTip.getCalibration().isRecalibrateOnNozzleTipChangeNeeded(this)) {
             Logger.debug("{}.loadNozzleTip() nozzle tip {} calibration needed", getName(), this.nozzleTip.getName());
             this.nozzleTip.getCalibration().calibrate(this);
@@ -702,9 +726,9 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             this.nozzleTip.getCalibration().reset(this);
         }
     }
-
+    
     @Override
-    public void unloadNozzleTip(boolean loadNozzleTipFollows) throws Exception {
+    public void unloadNozzleTip() throws Exception {
         if (getPart() != null) {
             throw new Exception("Nozzle "+getName()+" still has a part loaded. Please discard first.");
         }
@@ -779,10 +803,9 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
 
         setNozzleTip(null);
 
-        // if a loadNozzleTip() is already known to follow, do not interrupt for unload
-        if (!changerEnabled && !loadNozzleTipFollows) {
+        if (!changerEnabled) {
             waitForCompletion(CompletionType.WaitForStillstand);
-            throw new JobProcessorException(this, 
+            throw new ManualUnloadException(this, 
                     "Task interrupted: Please perform a manual nozzle tip "+nt.getName()+" unload from nozzle "+getName()+" now. "
                             + "You can then resume/restart the interrupted task.",
                     true);
@@ -798,11 +821,6 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         }
     }
 
-    @Override
-    public void unloadNozzleTip() throws Exception {
-        unloadNozzleTip(false);
-    }
-    
     protected void assertManualChangeLocation() throws Exception {
         if (isManualNozzleTipChangeLocationUndefined()) {
             throw new Exception("Nozzle "+getName()+" Manual Change Location is not configured!");

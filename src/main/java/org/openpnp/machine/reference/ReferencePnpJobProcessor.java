@@ -515,7 +515,6 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                     nozzle.getName(), 
                     nozzleTip.getName());
             try {
-                nozzle.unloadNozzleTip(true);       // signal that a load will immediately follow, skipping the interruption if manual nozzle tip change is configured
                 nozzle.loadNozzleTip(nozzleTip);
             }
             catch (Exception e) {
