@@ -38,9 +38,7 @@ import org.openpnp.spi.Camera.Looking;
 import org.openpnp.spi.CoordinateAxis;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.HeadMountable;
-import org.openpnp.spi.JobProcessor.JobProcessorException;
-import org.openpnp.spi.JobProcessor.ManualLoadException;
-import org.openpnp.spi.JobProcessor.ManualUnloadException;
+import org.openpnp.spi.JobProcessor;
 import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
@@ -50,13 +48,28 @@ import org.openpnp.spi.base.AbstractNozzle;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.SimpleGraph;
 import org.openpnp.util.UiUtils;
-import org.openpnp.util.UiUtils.ExceptionWithContinuation;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.core.Persist;
 
 public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMountable {
+    public static class ManualUnloadException extends JobProcessor.JobProcessorException {
+        private static final long serialVersionUID = 1L;
+    
+        public ManualUnloadException(Object source, Throwable throwable) {
+            super(source, throwable, true);
+        }
+    }
+
+    public static class ManualLoadException extends JobProcessor.JobProcessorException {
+        private static final long serialVersionUID = 1L;
+    
+        public ManualLoadException(Object source, Throwable throwable) {
+            super(source, throwable, true);
+        }
+    }
+
     @Element
     private Location headOffsets = new Location(LengthUnit.Millimeters);
 
@@ -605,6 +618,9 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             throw new Exception("Can't load incompatible nozzle tip.");
         }
 
+        // detect if an unload is required:
+        // either if the current nozzle has a different tip loaded
+        // or if the tip to be loaded is on a different nozzle.
         ReferenceNozzle unloadNozzle = this;
         if (nt.getNozzleWhereLoaded() != null) {
             // Nozzle tip is on different nozzle - unload it from there first.  
@@ -613,14 +629,15 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         ntUnload = unloadNozzle.getNozzleTip();
 
         boolean unloadSwallowed = false;
-        try {
-            unloadNozzle.unloadNozzleTip();
-        } catch (JobProcessorException e) {
-            // if the exception is a ManualUnloadException, remember and swallow it.
-            if (e instanceof ManualUnloadException) {
+        
+        // if there is any nozzle tip requiring unload, do it now
+        if (ntUnload != null) {
+            try {
+                unloadNozzle.unloadNozzleTip();
+            } catch (ManualUnloadException e) {
+                // if the exception indicates a manual unload, remember and swallow it.
+                // we'll later throw a combined unload and load exception.
                 unloadSwallowed = true;
-            } else {
-                throw e;
             }
         }
 
@@ -708,8 +725,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
                 message += " a manual nozzle tip " + nt.getName()+" load on nozzle "+getName()+" now. ";
                 message += "When you press OK, the task will continue.";
                 throw new ManualLoadException(this, 
-                        new UiUtils.ExceptionWithContinuation(message,  () -> { loadNozzleTipFinish(nozzleTip); }),
-                        true);
+                        new UiUtils.ExceptionWithContinuation(message,  () -> { loadNozzleTipFinish(nozzleTip); }));
             }
         }
 
@@ -810,16 +826,15 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             waitForCompletion(CompletionType.WaitForStillstand);
             throw new ManualUnloadException(this, 
                     new UiUtils.ExceptionWithContinuation("Task interrupted: Please perform a manual nozzle tip "+nt.getName()+" unload from nozzle "+getName()+" now. "
-                            + "You can then resume/restart the interrupted task.", () -> { loadNozzleFinal(); }),
-                    true);
+                            + "You can then resume/restart the interrupted task.", () -> { unloadNozzleTipFinish(); }));
         }
 
-        loadNozzleFinal();
+        unloadNozzleTipFinish();
     }
     
     // this is the final part of the nozzle tip unload procedure and a separate method 
     // to be called either directly or as continuation of a manual nozzle tip change
-    private void loadNozzleFinal() throws Exception {
+    private void unloadNozzleTipFinish() throws Exception {
         ensureZCalibrated(true);
 
         // May need to calibrate the "unloaded" nozzle tip stand-in i.e. the naked nozzle tip holder. 

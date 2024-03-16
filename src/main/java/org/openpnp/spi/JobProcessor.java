@@ -67,20 +67,4 @@ public interface JobProcessor extends PropertySheetHolder, WizardConfigurable {
             return interrupting;
         }
     }
-
-    public class ManualUnloadException extends JobProcessorException {
-        private static final long serialVersionUID = 1L;
-
-        public ManualUnloadException(Object source, Throwable throwable, boolean interrupting) {
-            super(source, throwable, interrupting);
-        }
-    }
-
-    public class ManualLoadException extends JobProcessorException {
-        private static final long serialVersionUID = 1L;
-
-        public ManualLoadException(Object source, Throwable throwable, boolean interrupting) {
-            super(source, throwable, interrupting);
-        }
-    }
 }
