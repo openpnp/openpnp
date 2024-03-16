@@ -12,8 +12,61 @@ public interface PnpJobPlanner {
         public final NozzleTip nozzleTip;
         public Feeder feeder;
         public PartAlignment.PartAlignmentOffset alignmentOffsets;
-        public Location sortLocation;	// location used to sort placements as part of the job processing
+        private Location pickLocation;	// (preliminary) location the pick will take place - as feed/pick might not work, this location is preliminary and optimization using it my fail.
+        private Location alignLocation; // location the alignment will take place. - may be null if alignment for this part is disabled
+        private Location placeLocation; // location the part will be place to
 
+        public enum LocationType {
+            PICK, ALIGN, PLACE, NONE;   // location type, used to return one of [pick|align|place]Location
+        }
+        
+        // return the location of given type
+        public Location getLocation(LocationType type) {
+            Location l = null;
+            switch (type)
+            {
+                case PICK:
+                    l = pickLocation;
+                    break;
+                    
+                case ALIGN:
+                    l = alignLocation;
+                    break;
+                    
+                case PLACE:
+                    l = placeLocation;
+                    break;
+                    
+                case NONE:
+                    l = null;
+                    break;
+            }
+            
+            return l;
+        }
+
+        // set a specific location type
+        public void setLocation(Location l, LocationType type) {
+            switch (type)
+            {
+                case PICK:
+                    pickLocation = l;
+                    break;
+                    
+                case ALIGN:
+                    alignLocation = l;
+                    break;
+                    
+                case PLACE:
+                    placeLocation = l;
+                    break;
+                    
+                case NONE:
+                    l = null;
+                    break;
+            }
+        }
+        
         public PlannedPlacement(Nozzle nozzle, NozzleTip nozzleTip, JobPlacement jobPlacement) {
             this.nozzle = nozzle;
             this.nozzleTip = nozzleTip;
