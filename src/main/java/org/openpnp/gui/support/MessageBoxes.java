@@ -31,8 +31,9 @@ import org.pmw.tinylog.Logger;
 public class MessageBoxes {
 
 
-    public static void errorBox(Component parent, String title, Throwable cause) {
+    public static boolean errorBox(Component parent, String title, Throwable cause, boolean withContinuation) {
         String message = null;
+        boolean ret = false;
         if (cause != null) {
             message = cause.getMessage();
             if (message == null || message.trim().isEmpty()) {
@@ -52,7 +53,19 @@ public class MessageBoxes {
         message = message.replaceAll("<", "&lt;");
         message = message.replaceAll(">", "&gt;");
         message = "<html><body width=\"400\">" + message + "</body></html>";
-        JOptionPane.showMessageDialog(parent, message, title, JOptionPane.ERROR_MESSAGE);
+
+        // if this errorBox shall ask for Continuation, show a ConfirmDialog and return if the user selected YES
+        if (withContinuation) {
+            ret = JOptionPane.showConfirmDialog(parent, message, title, JOptionPane.OK_CANCEL_OPTION, JOptionPane.ERROR_MESSAGE) == JOptionPane.OK_OPTION;
+        } else {
+            JOptionPane.showMessageDialog(parent, message, title, JOptionPane.ERROR_MESSAGE);
+        }
+        
+        return ret;
+    }
+
+    public static void errorBox(Component parent, String title, Throwable cause) {
+        errorBox(parent, title, cause, false);
     }
 
     public static void errorBox(Component parent, String title, String message) {

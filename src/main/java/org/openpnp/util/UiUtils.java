@@ -18,7 +18,6 @@ import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 import org.openpnp.spi.HeadMountable;
-import org.openpnp.spi.JobProcessor.JobProcessorExceptionWithContinuation;
 import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.pmw.tinylog.Logger;
 
@@ -31,6 +30,29 @@ public class UiUtils {
      */
     public interface Thrunnable {
         public void thrun() throws Exception;
+    }
+
+    /**
+     * This extends the exception class by allowing to specify a task to be executed once the user has agreed.
+     */
+    public static class ExceptionWithContinuation extends Exception {
+        private static final long serialVersionUID = 1L;
+    
+        protected Thrunnable continuation = null;
+        
+        public ExceptionWithContinuation(Throwable cause, Thrunnable continuation) {
+            super(cause);
+            this.continuation = continuation;
+        }
+        
+        public ExceptionWithContinuation(String message, Thrunnable continuation) {
+            super(message, null);
+            this.continuation = continuation;
+        }
+        
+        public Thrunnable getContinuation() {
+            return continuation;
+        }
     }
 
     /**
@@ -68,19 +90,32 @@ public class UiUtils {
      * @param t
      */
     public static void showError(Throwable t) {
+        
+        // Go through all causes, creating a combined continuation
+        Thrunnable combinedContinuation = null;
+        for (Throwable cause = t; cause != null; cause = cause.getCause()) {
+            if (cause instanceof ExceptionWithContinuation) {
+                Thrunnable continuation = ((ExceptionWithContinuation)cause).getContinuation();
+                if (continuation != null) {
+                    if (combinedContinuation == null) {
+                        combinedContinuation = continuation; // just take the first one
+                    } else {
+                        Logger.warn("Combined continuation not supported yet.");
+                    }
+                }
+            }
+        }
+            
         if (MainFrame.get() != null) {
-            MessageBoxes.errorBox(MainFrame.get(), "Error", t);
+            boolean execContinuation = MessageBoxes.errorBox(MainFrame.get(), "Error", t, combinedContinuation != null);
+
+            // execution continuation, if user agrees
+            if (combinedContinuation != null && execContinuation) {
+                submitUiMachineTask(combinedContinuation);
+            }
         }
         else {
             Logger.error(t);
-        }
-
-        // FIXME: add Cancel button and  only execute on OK
-        if (t instanceof JobProcessorExceptionWithContinuation) {
-            Thrunnable thrunnable = ((JobProcessorExceptionWithContinuation)t).getThrunnable();
-            if (thrunnable != null) {
-                submitUiMachineTask(thrunnable);
-            }
         }
     }
 
