@@ -12,6 +12,8 @@ public interface PnpJobPlanner {
         public final NozzleTip nozzleTip;
         public Feeder feeder;
         public PartAlignment.PartAlignmentOffset alignmentOffsets;
+        
+        // the following locations are used for optimization purposes and may not be accurate or complete.
         private Location pickLocation;	// (preliminary) location the pick will take place - as feed/pick might not work, this location is preliminary and optimization using it my fail.
         private Location alignLocation; // location the alignment will take place. - may be null if alignment for this part is disabled
         private Location placeLocation; // location the part will be place to
