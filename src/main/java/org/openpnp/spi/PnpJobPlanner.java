@@ -19,7 +19,18 @@ public interface PnpJobPlanner {
         private Location placeLocation; // location the part will be place to
 
         public enum LocationType {
-            PICK, ALIGN, PLACE, NONE;   // location type, used to return one of [pick|align|place]Location
+            PICK("pick"), ALIGN("alignment"), PLACE("place");   // location type, used to return one of [pick|align|place]Location
+            
+            private final String name;
+            
+            LocationType(String name) {
+                this.name = name;
+            }
+            
+            @Override
+            public String toString() {
+                return name;
+            }
         }
         
         // return the location of given type
@@ -37,10 +48,6 @@ public interface PnpJobPlanner {
                     
                 case PLACE:
                     l = placeLocation;
-                    break;
-                    
-                case NONE:
-                    l = null;
                     break;
             }
             
@@ -61,10 +68,6 @@ public interface PnpJobPlanner {
                     
                 case PLACE:
                     placeLocation = l;
-                    break;
-                    
-                case NONE:
-                    l = null;
                     break;
             }
         }
