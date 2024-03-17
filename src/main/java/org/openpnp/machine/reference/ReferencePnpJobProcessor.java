@@ -640,7 +640,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         public Step step() throws JobProcessorException {
             
             // sort plannedPlacements for picking with alignment as next/end location using TSM
-            List<PlannedPlacement> optimizedPlannedPlacements = optimizePlacements(PlannedPlacement.LocationType.PICK, PlannedPlacement.LocationType.ALIGN, "pick");
+            List<PlannedPlacement> optimizedPlannedPlacements = optimizePlacements(PlannedPlacement.LocationType.PICK);
             
             return new Pick(optimizedPlannedPlacements);
         }
@@ -859,7 +859,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         public Step step() throws JobProcessorException {
 
             // sort plannedPlacements for alignment with place as next/end location using TSM
-            List<PlannedPlacement> optimizedPlannedPlacements = optimizePlacements(PlannedPlacement.LocationType.ALIGN, PlannedPlacement.LocationType.PLACE, "alignment");
+            List<PlannedPlacement> optimizedPlannedPlacements = optimizePlacements(PlannedPlacement.LocationType.ALIGN);
             
             // continue with alignment
             return new Align(optimizedPlannedPlacements);
@@ -954,10 +954,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         
         public Step step() throws JobProcessorException {
             
-            // the current job-planner does not provide look-ahead so we do not
-            // know where to go next and hence can not consider it here for the optimization
-            // sort plannedPlacements using TSM
-            List<PlannedPlacement> optimizedPlannedPlacements = optimizePlacements(PlannedPlacement.LocationType.PLACE, PlannedPlacement.LocationType.NONE, "place");
+            // sort plannedPlacements for place using TSM
+            List<PlannedPlacement> optimizedPlannedPlacements = optimizePlacements(PlannedPlacement.LocationType.PLACE);
             
             return new Place(optimizedPlannedPlacements);
         }
@@ -1322,6 +1320,26 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         protected OptimizationNozzlesStep(List<PlannedPlacement> plannedPlacements) {
             this.plannedPlacements = plannedPlacements;
         }
+
+        private Location calcCenterLocation(PlannedPlacement.LocationType type) {
+            Location centerLocation = new Location(LengthUnit.Millimeters);
+            int cnt = 0;
+            for (PlannedPlacement plannedPlacement : plannedPlacements) {
+                Location l = plannedPlacement.getLocation(type);
+                if (l != null) {
+                    centerLocation = centerLocation.add(l);
+                    cnt++;
+                }
+            }
+            
+            if (cnt > 0) {
+                centerLocation = centerLocation.multiply(1.0 / cnt);
+            } else {
+                centerLocation = null;
+            }
+            
+            return centerLocation;
+        }
         
         /**
          * Sort the list of planned placements for better performance
@@ -1332,7 +1350,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
          * @param plannedPlacements
          * @return
          */
-        protected List<PlannedPlacement> optimizePlacements(PlannedPlacement.LocationType sort, PlannedPlacement.LocationType end, String forMessage) {
+        protected List<PlannedPlacement> optimizePlacements(PlannedPlacement.LocationType sort) {
             List<PlannedPlacement> optimizedPlannedPlacements;
             long t = System.currentTimeMillis();
             Location start; // start location of traveling salesman, current location of the head
@@ -1358,19 +1376,23 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             Nozzle nozzle = plannedPlacements.get(0).nozzle;
             start = getHeadLocation(nozzle, nozzle.getLocation());
             
-            // b) calculate the average end location - if its not configured as NONE
-            Location endLocation = null;
-            if (end != PlannedPlacement.LocationType.NONE) {
-                endLocation = new Location(LengthUnit.Millimeters);
-                int cnt = 0;
-                for (PlannedPlacement plannedPlacement : plannedPlacements) {
-                    Location l = plannedPlacement.getLocation(end);
-                    if (l != null) {
-                        endLocation.add(l);
-                        cnt++;
-                    }
-                }
-                endLocation.multiply(1.0 / cnt);
+            // b) calculate end location as center between all locations of the next step
+            Location endLocation;
+            switch (sort) {
+                case PICK:
+                    endLocation = calcCenterLocation(PlannedPlacement.LocationType.ALIGN);
+                    break;
+
+                case ALIGN:
+                    endLocation = calcCenterLocation(PlannedPlacement.LocationType.PLACE);
+                    break;
+                    
+                case PLACE:
+                default:
+                    // the current job-planner does not provide look-ahead so we do not
+                    // know where to go next and hence can not consider it here for the optimization
+                    endLocation = null;
+                    break;
             }
             
             // c) sort PlanndPlacements according to sortLocation
@@ -1404,7 +1426,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             double optimization_advantage = Math.max(100 * (1 - distance_optimized / distance_ref), 0);
             final DecimalFormat df = new DecimalFormat("0.0");
             
-            Logger.debug("Optimization for {} completed in {}ms: {}, {}% gain", forMessage, (System.currentTimeMillis() - t), optimizedPlannedPlacements, df.format(optimization_advantage));
+            Logger.debug("Optimization for {} completed in {}ms: {}, {}% gain", sort.toString(), (System.currentTimeMillis() - t), optimizedPlannedPlacements, df.format(optimization_advantage));
             
             return optimizedPlannedPlacements;
         }
