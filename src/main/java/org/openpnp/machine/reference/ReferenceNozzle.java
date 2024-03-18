@@ -641,10 +641,6 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
                 manualChangeInstructions += "\na manual nozzle tip " + nt2.getName() + " unload from nozzle " + getName() + " and";
             }
 
-            Actuator tcPostOneActuator = getMachine().getActuatorByName(nt.getChangerActuatorPostStepOne());
-            Actuator tcPostTwoActuator = getMachine().getActuatorByName(nt.getChangerActuatorPostStepTwo());
-            Actuator tcPostThreeActuator = getMachine().getActuatorByName(nt.getChangerActuatorPostStepThree());
-
             double speed = getHead().getMachine().getSpeed();
             if (!nt.isUnloadedNozzleTipStandin()) {
                 if (changerEnabled) {
@@ -661,45 +657,43 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
 
                     ensureZCalibrated(true);
 
-                    Logger.debug("{}.loadNozzleTip({}): moveTo Start Location",
-                            new Object[] {getName(), nozzleTip.getName()});
+                    Actuator tcPostOneActuator = getMachine().getActuatorByName(nt.getChangerActuatorPostStepOne());
+                    Actuator tcPostTwoActuator = getMachine().getActuatorByName(nt.getChangerActuatorPostStepTwo());
+                    Actuator tcPostThreeActuator = getMachine().getActuatorByName(nt.getChangerActuatorPostStepThree());
+
+                    Logger.debug("{}.loadNozzleTip({}): moveTo Start Location", getName(), nozzleTip.getName());
                     MovableUtils.moveToLocationAtSafeZ(this, nt.getChangerStartLocationCalibrated(true), speed);
 
                     if (tcPostOneActuator != null) {
                         tcPostOneActuator.actuate(true);
                     }
 
-                    Logger.debug("{}.loadNozzleTip({}): moveTo Mid Location",
-                            new Object[] {getName(), nozzleTip.getName()});
+                    Logger.debug("{}.loadNozzleTip({}): moveTo Mid Location", getName(), nozzleTip.getName());
                     moveTo(nt.getChangerMidLocationCalibrated(false), nt.getChangerStartToMidSpeed() * speed);
 
                     if (tcPostTwoActuator !=null) {
                         tcPostTwoActuator.actuate(true);
                     }
 
-                    Logger.debug("{}.loadNozzleTip({}): moveTo Mid Location 2",
-                            new Object[] {getName(), nozzleTip.getName()});
+                    Logger.debug("{}.loadNozzleTip({}): moveTo Mid Location 2", getName(), nozzleTip.getName());
                     moveTo(nt.getChangerMidLocation2Calibrated(false), nt.getChangerMidToMid2Speed() * speed);
 
                     if (tcPostThreeActuator !=null) {
                         tcPostThreeActuator.actuate(true);
                     }
 
-                    Logger.debug("{}.loadNozzleTip({}): moveTo End Location",
-                            new Object[] {getName(), nozzleTip.getName()});
+                    Logger.debug("{}.loadNozzleTip({}): moveTo End Location", getName(), nozzleTip.getName());
                     moveTo(nt.getChangerEndLocationCalibrated(false), nt.getChangerMid2ToEndSpeed() * speed);
                     moveToSafeZ(getHead().getMachine().getSpeed());
 
-                    Logger.debug("{}.loadNozzleTip({}): Finished",
-                            new Object[] {getName(), nozzleTip.getName()});
+                    Logger.debug("{}.loadNozzleTip({}): Finished", getName(), nozzleTip.getName());
 
                     Configuration.get()
                     .getScripting()
                     .on("NozzleTip.Loaded", globals);
                 }
                 else {
-                    Logger.debug("{}.loadNozzleTip({}): moveTo manual Location",
-                            new Object[] {getName(), nozzleTip.getName()});
+                    Logger.debug("{}.loadNozzleTip({}): moveTo manual Location", getName(), nozzleTip.getName());
                     assertManualChangeLocation();
                     MovableUtils.moveToLocationAtSafeZ(this, getManualNozzleTipChangeLocation());
                 }
@@ -707,40 +701,29 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
 
             setNozzleTip(nt);
 
-            // force the nozzle tip now installed to be uncalibrated
-            this.nozzleTip.getCalibration().reset(this);
+            // depending on configuration, set the nozzle tip now installed to be uncalibrated
+            if (this.nozzleTip.getCalibration().isRecalibrateOnNozzleTipChangeNeeded(this) 
+                    || this.nozzleTip.getCalibration().isRecalibrateOnNozzleTipChangeInJobNeeded(this)) {
+                Logger.debug("{}.loadNozzleTip() nozzle tip {} calibration reset", getName(), this.nozzleTip.getName());
+                // can't automatically recalibrate with manual change - reset() for now
+                this.nozzleTip.getCalibration().reset(this);
+            }
 
-            // FIXME: shall this be here or further below or in both places?
-            ensureZCalibrated(true);
-
-            if (!nt.isUnloadedNozzleTipStandin()) {
-                if (!changerEnabled) {
-                    if (this.nozzleTip.getCalibration().isRecalibrateOnNozzleTipChangeNeeded(this) 
-                            || this.nozzleTip.getCalibration().isRecalibrateOnNozzleTipChangeInJobNeeded(this)) {
-                        Logger.debug("{}.loadNozzleTip() nozzle tip {} calibration reset", getName(), this.nozzleTip.getName());
-                        // can't automatically recalibrate with manual change - reset() for now
-                        this.nozzleTip.getCalibration().reset(this);
-                    }
-                    waitForCompletion(CompletionType.WaitForStillstand);
-                    manualChangeInstructions += "\na manual nozzle tip " + nt.getName()+" load on nozzle "+getName()+" now.";
-                    manualChangeInstructions += "\nWhen you press OK, the nozzle tip will be calibrated (if enabled).";
-                    throw new ManualLoadException(this, 
-                            new UiUtils.ExceptionWithContinuation(manualChangeInstructions,  () -> { loadNozzleTip(nozzleTip); }));
-                }
+            if (!nt.isUnloadedNozzleTipStandin() && !changerEnabled) {
+                waitForCompletion(CompletionType.WaitForStillstand);
+                manualChangeInstructions += "\na manual nozzle tip " + nt.getName()+" load on nozzle "+getName()+" now.";
+                manualChangeInstructions += "\nWhen you press OK, the nozzle tip will be calibrated (if enabled).";
+                throw new ManualLoadException(this, 
+                        new UiUtils.ExceptionWithContinuation(manualChangeInstructions,  () -> { loadNozzleTip(nozzleTip); }));
             }
         }
 
-        // FIXME: shall this be here or further up or in both places?
         ensureZCalibrated(true);
 
-        if (this.nozzleTip.getCalibration().isRecalibrateOnNozzleTipChangeNeeded(this)) {
+        if (this.nozzleTip.getCalibration().isRecalibrateOnNozzleTipChangeNeeded(this)
+                && !this.nozzleTip.getCalibration().isCalibrated(this)) {
             Logger.debug("{}.loadNozzleTip() nozzle tip {} calibration needed", getName(), this.nozzleTip.getName());
             this.nozzleTip.getCalibration().calibrate(this);
-        }
-        else if (this.nozzleTip.getCalibration().isRecalibrateOnNozzleTipChangeInJobNeeded(this)) {
-            Logger.debug("{}.loadNozzleTip() nozzle tip {} calibration reset", getName(), this.nozzleTip.getName());
-            // it will be recalibrated by the job - just reset() for now
-            this.nozzleTip.getCalibration().reset(this);
         }
     }
     
@@ -757,10 +740,6 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         if (nozzleTip != null) {
             ReferenceNozzleTip nt = (ReferenceNozzleTip) nozzleTip;
 
-            Actuator tcPostOneActuator = getMachine().getActuatorByName(nt.getChangerActuatorPostStepOne());
-            Actuator tcPostTwoActuator = getMachine().getActuatorByName(nt.getChangerActuatorPostStepTwo());
-            Actuator tcPostThreeActuator = getMachine().getActuatorByName(nt.getChangerActuatorPostStepThree());
-
             if (!nt.isUnloadedNozzleTipStandin()) {
                 Logger.debug("{}.unloadNozzleTip(): Start", getName());
 
@@ -776,6 +755,10 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
                     .on("NozzleTip.BeforeUnload", globals);
 
                     ensureZCalibrated(false);
+
+                    Actuator tcPostOneActuator = getMachine().getActuatorByName(nt.getChangerActuatorPostStepOne());
+                    Actuator tcPostTwoActuator = getMachine().getActuatorByName(nt.getChangerActuatorPostStepTwo());
+                    Actuator tcPostThreeActuator = getMachine().getActuatorByName(nt.getChangerActuatorPostStepThree());
 
                     Logger.debug("{}.unloadNozzleTip(): moveTo End Location", getName());
                     MovableUtils.moveToLocationAtSafeZ(this, nt.getChangerEndLocationCalibrated(true), speed);
@@ -818,22 +801,16 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
 
             setNozzleTip(null);
 
-            // FIXME: once combined continuation is implemented, continue unloading with itself to eventually calibrate the bare nozzle
             if (!changerEnabled) {
-                // generate a warning that calibrating the unloaded nozzle is not supported
-                ReferenceNozzleTip calibrationNozzleTip = this.getCalibrationNozzleTip();
-                if (calibrationNozzleTip != null && calibrationNozzleTip.getCalibration().isRecalibrateOnNozzleTipChangeNeeded(this)) {
-                    Logger.warn("{}.unloadNozzleTip() nozzle tip {} calibration configured but not supported in combination with manual nozzle tip changing");
-                }
                 waitForCompletion(CompletionType.WaitForStillstand);
                 throw new ManualUnloadException(this, "Task interrupted: Please perform a manual nozzle tip "+nt.getName()+" unload from nozzle "+getName()+" now. "
                                 + "You can then resume/restart the interrupted task.");
             }
         }
 
-        // For manual nozzle tip changing, the code will never get here because of the exception.
-        // The following code is intended to calibrate the bare nozzle. This shall be only needed
-        // for automatic nozzle tip changer and hence ok to be omitted for manual nozzle tip changing.
+        // For manual nozzle tip changing, we will never get here because of the exception.
+        // And it is also not possible anymore as nozzle tip unloading and loading is a single
+        // exception/interruption now and the nozzle will usually not remain in the unloaded state.
         
         // May need to calibrate the "unloaded" nozzle tip stand-in i.e. the naked nozzle tip holder. 
         ReferenceNozzleTip calibrationNozzleTip = this.getCalibrationNozzleTip();
