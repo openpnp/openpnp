@@ -629,7 +629,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
                 // combine this unload exception with following unload/load exceptions into one
                 // There is code behind the exception that may calibrate the bare nozzle, which is
                 // not executed due to the exception.
-                manualChangeInstructions += " a manual nozzle tip " + nt.getName() + " unload from nozzle " + n.getName() + " and";
+                manualChangeInstructions += "\na manual nozzle tip " + nt.getName() + " unload from nozzle " + n.getName() + " and";
             }
         }
 
@@ -640,7 +640,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             // combine this unload exception with following unload/load exceptions into one
             // There is code behind the exception that may calibrate the bare nozzle, which is
             // not executed due to the exception.
-            manualChangeInstructions += " a manual nozzle tip " + nt2.getName() + " unload from nozzle " + getName() + " and";
+            manualChangeInstructions += "\na manual nozzle tip " + nt2.getName() + " unload from nozzle " + getName() + " and";
         }
 
         Actuator tcPostOneActuator = getMachine().getActuatorByName(nt.getChangerActuatorPostStepOne());
@@ -720,8 +720,8 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
                     this.nozzleTip.getCalibration().reset(this);
                 }
                 waitForCompletion(CompletionType.WaitForStillstand);
-                manualChangeInstructions += " a manual nozzle tip " + nt.getName()+" load on nozzle "+getName()+" now.";
-                manualChangeInstructions += " When you press OK, the nozzle tip will be calibrated (if enabled).";
+                manualChangeInstructions += "\na manual nozzle tip " + nt.getName()+" load on nozzle "+getName()+" now.";
+                manualChangeInstructions += "\nWhen you press OK, the nozzle tip will be calibrated (if enabled).";
                 throw new ManualLoadException(this, 
                         new UiUtils.ExceptionWithContinuation(manualChangeInstructions,  () -> { loadNozzleTipFinish(nozzleTip); }));
             }

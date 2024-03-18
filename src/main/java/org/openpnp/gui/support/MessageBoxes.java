@@ -50,8 +50,9 @@ public class MessageBoxes {
         Logger.debug("{}: {}", title, cause);
         message = message.replaceAll("\n", "<br/>");
         message = message.replaceAll("\r", "");
-        message = message.replaceAll("<", "&lt;");
-        message = message.replaceAll(">", "&gt;");
+        // FIXME: why are this replacements here? They make html in message void and even the <br> above.
+        //message = message.replaceAll("<", "&lt;");
+        //message = message.replaceAll(">", "&gt;");
         message = "<html><body width=\"400\">" + message + "</body></html>";
 
         // if this errorBox shall ask for Continuation, show a ConfirmDialog and return if the user selected YES
