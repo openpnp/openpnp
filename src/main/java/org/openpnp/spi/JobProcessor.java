@@ -53,6 +53,12 @@ public interface JobProcessor extends PropertySheetHolder, WizardConfigurable {
             this.source = source;
         }
 
+        public JobProcessorException(Object source, String message, boolean interrupting) {
+            super(message);
+            this.source = source;
+            this.interrupting = interrupting;
+        }
+
         public JobProcessorException(Object source, Throwable throwable, boolean interrupting) {
             super(getThrowableMessage(throwable), throwable);
             this.source = source;

@@ -57,8 +57,8 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     public static class ManualUnloadException extends JobProcessor.JobProcessorException {
         private static final long serialVersionUID = 1L;
     
-        public ManualUnloadException(Object source, Throwable throwable) {
-            super(source, throwable, true);
+        public ManualUnloadException(Object source, String message) {
+            super(source, message, true);
         }
     }
 
@@ -612,33 +612,35 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         setRotationModeOffset(null);
 
         ReferenceNozzleTip nt = (ReferenceNozzleTip) nozzleTip;
-        ReferenceNozzleTip ntUnload;
 
         if (!getCompatibleNozzleTips().contains(nt)) {
             throw new Exception("Can't load incompatible nozzle tip.");
         }
 
-        // detect if an unload is required:
-        // either if the current nozzle has a different tip loaded
-        // or if the tip to be loaded is on a different nozzle.
-        ReferenceNozzle unloadNozzle = this;
-        if (nt.getNozzleWhereLoaded() != null) {
-            // Nozzle tip is on different nozzle - unload it from there first.  
-            unloadNozzle = nt.getNozzleWhereLoaded();
-        }
-        ntUnload = unloadNozzle.getNozzleTip();
+        // compose instructions for manual nozzle tip changing on the fly while catching unload exceptions
+        String manualChangeInstructions = "Task interrupted: Please perform";
 
-        boolean unloadSwallowed = false;
-        
-        // if there is any nozzle tip requiring unload, do it now
-        if (ntUnload != null) {
+        ReferenceNozzle n = nt.getNozzleWhereLoaded();  // remember the nozzle to generate change instructions, if needed
+        if (nt.getNozzleWhereLoaded() != null) {
+            // Nozzle tip is on different nozzle - unload it from there first.
             try {
-                unloadNozzle.unloadNozzleTip();
+                nt.getNozzleWhereLoaded().unloadNozzleTip();
             } catch (ManualUnloadException e) {
-                // if the exception indicates a manual unload, remember and swallow it.
-                // we'll later throw a combined unload and load exception.
-                unloadSwallowed = true;
+                // combine this unload exception with following unload/load exceptions into one
+                // There is code behind the exception that may calibrate the bare nozzle, which is
+                // not executed due to the exception.
+                manualChangeInstructions += " a manual nozzle tip " + nt.getName() + " unload from nozzle " + n.getName() + " and";
             }
+        }
+
+        ReferenceNozzleTip nt2 = getNozzleTip();  // remember the nozzle tip currently loaded to generate change instructions, if needed
+        try {
+            unloadNozzleTip();
+        } catch (ManualUnloadException e) {
+            // combine this unload exception with following unload/load exceptions into one
+            // There is code behind the exception that may calibrate the bare nozzle, which is
+            // not executed due to the exception.
+            manualChangeInstructions += " a manual nozzle tip " + nt2.getName() + " unload from nozzle " + getName() + " and";
         }
 
         Actuator tcPostOneActuator = getMachine().getActuatorByName(nt.getChangerActuatorPostStepOne());
@@ -718,14 +720,10 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
                     this.nozzleTip.getCalibration().reset(this);
                 }
                 waitForCompletion(CompletionType.WaitForStillstand);
-                String message = "Task interrupted: Please perform";
-                if (unloadSwallowed) {
-                    message += " a manual nozzle tip " + ntUnload.getName()+" unload from nozzle " + unloadNozzle.getName() + " and";
-                }
-                message += " a manual nozzle tip " + nt.getName()+" load on nozzle "+getName()+" now. ";
-                message += "When you press OK, the task will continue.";
+                manualChangeInstructions += " a manual nozzle tip " + nt.getName()+" load on nozzle "+getName()+" now.";
+                manualChangeInstructions += " When you press OK, the nozzle tip will be calibrated (if enabled).";
                 throw new ManualLoadException(this, 
-                        new UiUtils.ExceptionWithContinuation(message,  () -> { loadNozzleTipFinish(nozzleTip); }));
+                        new UiUtils.ExceptionWithContinuation(manualChangeInstructions,  () -> { loadNozzleTipFinish(nozzleTip); }));
             }
         }
 
@@ -735,6 +733,8 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     // this is the final part of the nozzle tip load procedure and a separate method 
     // to be called either directly or as continuation of a manual nozzle tip change
     private void loadNozzleTipFinish(NozzleTip nozzleTip) throws Exception {
+        ensureZCalibrated(true);
+
         if (this.nozzleTip.getCalibration().isRecalibrateOnNozzleTipChangeNeeded(this)) {
             Logger.debug("{}.loadNozzleTip() nozzle tip {} calibration needed", getName(), this.nozzleTip.getName());
             this.nozzleTip.getCalibration().calibrate(this);
@@ -823,20 +823,20 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         setNozzleTip(null);
 
         if (!changerEnabled) {
+            // generate a warning that calibrating the unloaded nozzle is not supported
+            ReferenceNozzleTip calibrationNozzleTip = this.getCalibrationNozzleTip();
+            if (calibrationNozzleTip != null && calibrationNozzleTip.getCalibration().isRecalibrateOnNozzleTipChangeNeeded(this)) {
+                Logger.warn("{}.unloadNozzleTip() nozzle tip {} calibration configured but not supported in combination with manual nozzle tip changing");
+            }
             waitForCompletion(CompletionType.WaitForStillstand);
-            throw new ManualUnloadException(this, 
-                    new UiUtils.ExceptionWithContinuation("Task interrupted: Please perform a manual nozzle tip "+nt.getName()+" unload from nozzle "+getName()+" now. "
-                            + "You can then resume/restart the interrupted task.", () -> { unloadNozzleTipFinish(); }));
+            throw new ManualUnloadException(this, "Task interrupted: Please perform a manual nozzle tip "+nt.getName()+" unload from nozzle "+getName()+" now. "
+                            + "You can then resume/restart the interrupted task.");
         }
 
-        unloadNozzleTipFinish();
-    }
-    
-    // this is the final part of the nozzle tip unload procedure and a separate method 
-    // to be called either directly or as continuation of a manual nozzle tip change
-    private void unloadNozzleTipFinish() throws Exception {
-        ensureZCalibrated(true);
-
+        // For manual nozzle tip changing, the code will never get here because of the exception.
+        // The following code is intended to calibrate the bare nozzle. This shall be only needed
+        // for automatic nozzle tip changer and hence ok to be omitted for manual nozzle tip changing.
+        
         // May need to calibrate the "unloaded" nozzle tip stand-in i.e. the naked nozzle tip holder. 
         ReferenceNozzleTip calibrationNozzleTip = this.getCalibrationNozzleTip();
         if (calibrationNozzleTip != null && calibrationNozzleTip.getCalibration().isRecalibrateOnNozzleTipChangeNeeded(this)) {
