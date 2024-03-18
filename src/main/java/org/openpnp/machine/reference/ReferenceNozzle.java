@@ -657,33 +657,44 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
 
                     ensureZCalibrated(true);
 
+                    Location startLocation = nt.getChangerStartLocationCalibrated(true);
+                    if (startLocation.isInitialized()) {
+                        Logger.debug("{}.loadNozzleTip({}): moveTo Start Location", getName(), nozzleTip.getName());
+                        MovableUtils.moveToLocationAtSafeZ(this, startLocation, speed);
+                    }
+
                     Actuator tcPostOneActuator = getMachine().getActuatorByName(nt.getChangerActuatorPostStepOne());
-                    Actuator tcPostTwoActuator = getMachine().getActuatorByName(nt.getChangerActuatorPostStepTwo());
-                    Actuator tcPostThreeActuator = getMachine().getActuatorByName(nt.getChangerActuatorPostStepThree());
-
-                    Logger.debug("{}.loadNozzleTip({}): moveTo Start Location", getName(), nozzleTip.getName());
-                    MovableUtils.moveToLocationAtSafeZ(this, nt.getChangerStartLocationCalibrated(true), speed);
-
                     if (tcPostOneActuator != null) {
                         tcPostOneActuator.actuate(true);
                     }
 
-                    Logger.debug("{}.loadNozzleTip({}): moveTo Mid Location", getName(), nozzleTip.getName());
-                    moveTo(nt.getChangerMidLocationCalibrated(false), nt.getChangerStartToMidSpeed() * speed);
+                    Location midLocation = nt.getChangerMidLocationCalibrated(false);
+                    if (midLocation.isInitialized()) {
+                        Logger.debug("{}.loadNozzleTip({}): moveTo Mid Location", getName(), nozzleTip.getName());
+                        moveTo(midLocation, nt.getChangerStartToMidSpeed() * speed);
+                    }
 
+                    Actuator tcPostTwoActuator = getMachine().getActuatorByName(nt.getChangerActuatorPostStepTwo());
                     if (tcPostTwoActuator !=null) {
                         tcPostTwoActuator.actuate(true);
                     }
 
-                    Logger.debug("{}.loadNozzleTip({}): moveTo Mid Location 2", getName(), nozzleTip.getName());
-                    moveTo(nt.getChangerMidLocation2Calibrated(false), nt.getChangerMidToMid2Speed() * speed);
+                    Location midLocation2 = nt.getChangerMidLocation2Calibrated(false);
+                    if (midLocation2.isInitialized()) {
+                        Logger.debug("{}.loadNozzleTip({}): moveTo Mid Location 2", getName(), nozzleTip.getName());
+                        moveTo(midLocation2, nt.getChangerMidToMid2Speed() * speed);
+                    }
 
+                    Actuator tcPostThreeActuator = getMachine().getActuatorByName(nt.getChangerActuatorPostStepThree());
                     if (tcPostThreeActuator !=null) {
                         tcPostThreeActuator.actuate(true);
                     }
 
-                    Logger.debug("{}.loadNozzleTip({}): moveTo End Location", getName(), nozzleTip.getName());
-                    moveTo(nt.getChangerEndLocationCalibrated(false), nt.getChangerMid2ToEndSpeed() * speed);
+                    Location endLocation = nt.getChangerEndLocationCalibrated(false);
+                    if (endLocation.isInitialized()) {
+                        Logger.debug("{}.loadNozzleTip({}): moveTo End Location", getName(), nozzleTip.getName());
+                        moveTo(endLocation, nt.getChangerMid2ToEndSpeed() * speed);
+                    }
                     moveToSafeZ(getHead().getMachine().getSpeed());
 
                     Logger.debug("{}.loadNozzleTip({}): Finished", getName(), nozzleTip.getName());
@@ -756,33 +767,45 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
 
                     ensureZCalibrated(false);
 
-                    Actuator tcPostOneActuator = getMachine().getActuatorByName(nt.getChangerActuatorPostStepOne());
-                    Actuator tcPostTwoActuator = getMachine().getActuatorByName(nt.getChangerActuatorPostStepTwo());
+
+                    Location endLocation = nt.getChangerEndLocationCalibrated(true);
+                    if (endLocation.isInitialized()) {
+                        Logger.debug("{}.unloadNozzleTip(): moveTo End Location", getName());
+                        MovableUtils.moveToLocationAtSafeZ(this, endLocation, speed);
+                    }
+
                     Actuator tcPostThreeActuator = getMachine().getActuatorByName(nt.getChangerActuatorPostStepThree());
-
-                    Logger.debug("{}.unloadNozzleTip(): moveTo End Location", getName());
-                    MovableUtils.moveToLocationAtSafeZ(this, nt.getChangerEndLocationCalibrated(true), speed);
-
                     if (tcPostThreeActuator !=null) {
                         tcPostThreeActuator.actuate(true);
                     }
 
-                    Logger.debug("{}.unloadNozzleTip(): moveTo Mid Location 2", getName());
-                    moveTo(nt.getChangerMidLocation2Calibrated(false), nt.getChangerMid2ToEndSpeed() * speed);
+                    Location midLocation2 = nt.getChangerMidLocation2Calibrated(false);
+                    if (midLocation2.isInitialized()) {
+                        Logger.debug("{}.unloadNozzleTip(): moveTo Mid Location 2", getName());
+                        moveTo(midLocation2, nt.getChangerMid2ToEndSpeed() * speed);
+                    }
 
+                    Actuator tcPostTwoActuator = getMachine().getActuatorByName(nt.getChangerActuatorPostStepTwo());
                     if (tcPostTwoActuator !=null) {
                         tcPostTwoActuator.actuate(true);
                     }
 
-                    Logger.debug("{}.unloadNozzleTip(): moveTo Mid Location", getName());
-                    moveTo(nt.getChangerMidLocationCalibrated(false), nt.getChangerMidToMid2Speed() * speed);
+                    Location midLocation = nt.getChangerMidLocationCalibrated(false);
+                    if (midLocation.isInitialized()) {
+                        Logger.debug("{}.unloadNozzleTip(): moveTo Mid Location", getName());
+                        moveTo(midLocation, nt.getChangerMidToMid2Speed() * speed);
+                    }
 
+                    Actuator tcPostOneActuator = getMachine().getActuatorByName(nt.getChangerActuatorPostStepOne());
                     if (tcPostOneActuator != null) {
                         tcPostOneActuator.actuate(true);
                     }
 
-                    Logger.debug("{}.unloadNozzleTip(): moveTo Start Location", getName());
-                    moveTo(nt.getChangerStartLocationCalibrated(false), nt.getChangerStartToMidSpeed() * speed);
+                    Location startLocation = nt.getChangerStartLocationCalibrated(false);
+                    if (startLocation.isInitialized()) {
+                        Logger.debug("{}.unloadNozzleTip(): moveTo Start Location", getName());
+                        moveTo(startLocation, nt.getChangerStartToMidSpeed() * speed);
+                    }
                     moveToSafeZ(getHead().getMachine().getSpeed());
 
                     Logger.debug("{}.unloadNozzleTip(): Finished", getName());
