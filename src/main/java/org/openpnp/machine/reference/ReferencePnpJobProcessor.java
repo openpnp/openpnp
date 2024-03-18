@@ -29,6 +29,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.swing.SwingUtilities;
+
+import org.openpnp.gui.JobPanel;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.vision.AbstractPartAlignment;
 import org.openpnp.machine.reference.wizards.ReferencePnpJobProcessorConfigurationWizard;
@@ -57,6 +60,7 @@ import org.openpnp.spi.base.AbstractJobProcessor;
 import org.openpnp.spi.base.AbstractPnpJobProcessor;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.TravellingSalesman;
+import org.openpnp.util.UiUtils;
 import org.openpnp.util.Utils2D;
 import org.openpnp.util.VisionUtils;
 import org.pmw.tinylog.Logger;
@@ -525,10 +529,50 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 nozzle.loadNozzleTip(nozzleTip);
             }
             catch (Exception e) {
-                throw new JobProcessorException(nozzleTip,  e);
+                if (e instanceof ReferenceNozzle.ManualLoadException) {
+                    throw new JobProcessorException(nozzleTip, 
+                            new UiUtils.ExceptionWithContinuation(
+                                    new UiUtils.ExceptionWithContinuation(
+                                            new UiUtils.ExceptionWithContinuation(
+                                                    new UiUtils.ExceptionWithContinuation(e,
+                                                            () -> { test3(); }),
+                                                    () -> { test2(); }), 
+                                            () -> { test1(); }), 
+                                    () -> { resumeJob(); }));
+                } else {
+                    throw new JobProcessorException(nozzleTip, e);
+                }
             }
             
             return this;
+        }
+        
+        public void resumeJob() {
+            Logger.debug("Restarting the job now.");
+            // change the job state from within the UI thread (we are currently in a machine thread)
+            // FIXME: this does not work...
+            //SwingUtilities.invokeLater(() -> JobPanel.jobResume());
+        }
+        
+        public void test1() {
+            Logger.debug("Test 1");
+        }
+
+        public void test2() throws Exception {
+            Logger.debug("Test 2");
+            throw new UiUtils.ExceptionWithContinuation(new UiUtils.ExceptionWithContinuation("test 2", () -> { test2b(); }), () -> { test2a(); });
+        }
+
+        public void test2a() {
+            Logger.debug("Test 2a");
+        }
+
+        public void test2b() {
+            Logger.debug("Test 2b");
+        }
+
+        public void test3() {
+            Logger.debug("Test 3");
         }
     }
     
