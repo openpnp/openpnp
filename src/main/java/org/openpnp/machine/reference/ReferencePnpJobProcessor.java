@@ -57,6 +57,7 @@ import org.openpnp.spi.base.AbstractJobProcessor;
 import org.openpnp.spi.base.AbstractPnpJobProcessor;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.TravellingSalesman;
+import org.openpnp.util.UiUtils;
 import org.openpnp.util.Utils2D;
 import org.openpnp.util.VisionUtils;
 import org.pmw.tinylog.Logger;
@@ -518,10 +519,42 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 nozzle.loadNozzleTip(nozzleTip);
             }
             catch (Exception e) {
-                throw new JobProcessorException(nozzleTip,  e);
+                if (e instanceof ReferenceNozzle.ManualLoadException) {
+                    throw new JobProcessorException(nozzleTip, new UiUtils.ExceptionWithContinuation(
+                            new UiUtils.ExceptionWithContinuation(
+                                    new UiUtils.ExceptionWithContinuation(
+                                            new UiUtils.ExceptionWithContinuation(e, () -> { test3(); }), () -> { test2(); }), () -> { test1(); }), () -> { RestartJob(); }));
+                } else {
+                    throw new JobProcessorException(nozzleTip, e);
+                }
             }
             
             return this;
+        }
+        
+        public void RestartJob() {
+            Logger.debug("Restart Job Request not yet implemented");
+        }
+        
+        public void test1() {
+            Logger.debug("Test 1");
+        }
+
+        public void test2() throws Exception {
+            Logger.debug("Test 2");
+            throw new UiUtils.ExceptionWithContinuation(new UiUtils.ExceptionWithContinuation("test 2", () -> { test2b(); }), () -> { test2a(); });
+        }
+
+        public void test2a() {
+            Logger.debug("Test 2a");
+        }
+
+        public void test2b() {
+            Logger.debug("Test 2b");
+        }
+
+        public void test3() {
+            Logger.debug("Test 3");
         }
     }
     
