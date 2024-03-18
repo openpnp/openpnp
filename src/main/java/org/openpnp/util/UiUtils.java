@@ -100,6 +100,7 @@ public class UiUtils {
                     if (combinedContinuation == null) {
                         combinedContinuation = continuation; // just take the first one
                     } else {
+                        // FIXME: implement continuation chaining
                         Logger.warn("Combined continuation not supported yet.");
                     }
                 }
