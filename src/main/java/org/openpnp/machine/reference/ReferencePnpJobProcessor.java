@@ -515,7 +515,6 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                     nozzle.getName(), 
                     nozzleTip.getName());
             try {
-                nozzle.unloadNozzleTip();
                 nozzle.loadNozzleTip(nozzleTip);
             }
             catch (Exception e) {

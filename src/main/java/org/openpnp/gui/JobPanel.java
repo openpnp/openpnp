@@ -995,14 +995,16 @@ public class JobPanel extends JPanel {
                 }
             }
             
-            MessageBoxes.errorBox(getTopLevelAncestor(), 
-                    Translations.getString("JobPanel.JobRun.Error.ErrorBox.Title"), t.getMessage()); //$NON-NLS-1$
+            // update the state before showing the error to allow exceptions with continuations to change it
             if (state == State.Running || state == State.Pausing) {
                 setState(State.Paused);
             }
             else if (state == State.Stopping) {
                 setState(State.Stopped);
             }
+            
+            // call showError() to support exceptions with continuation
+            UiUtils.showError(getTopLevelAncestor(), Translations.getString("JobPanel.JobRun.Error.ErrorBox.Title"), t); //$NON-NLS-1$
         });
     }
 
