@@ -108,7 +108,7 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
     private MutableLocationProxy offsetsAndRotation = new MutableLocationProxy();
     private int nRows;
     private int nCols;
-
+    private int wizardFeedCount;
 
     /**
      * @wbp.parser.constructor
@@ -394,6 +394,8 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
         bind(UpdateStrategy.READ_WRITE, this, "nRows", textFieldTrayCountRows, "text", intConverter); //$NON-NLS-1$ //$NON-NLS-2$
         bind(UpdateStrategy.READ_WRITE, this, "nCols", textFieldTrayCountCols, "text", intConverter); //$NON-NLS-1$ //$NON-NLS-2$
 
+        bind(UpdateStrategy.READ_WRITE, this, "wizardFeedCount", textFieldFeedCount, "text", intConverter); //$NON-NLS-1$ //$NON-NLS-2$
+
         bind(UpdateStrategy.READ_WRITE, offsetsAndRotation, "lengthX", textFieldOffsetsX, "text", lengthConverter); //$NON-NLS-1$ //$NON-NLS-2$
         bind(UpdateStrategy.READ_WRITE, offsetsAndRotation, "lengthY", textFieldOffsetsY, "text", lengthConverter); //$NON-NLS-1$ //$NON-NLS-2$
         bind(UpdateStrategy.READ_WRITE, offsetsAndRotation, "rotation", textFieldTrayRotation, "text", doubleConverter); //$NON-NLS-1$ //$NON-NLS-2$
@@ -448,7 +450,7 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
         addWrappedBinding(feeder, "trayCountCols", textFieldTrayCountCols, "text", intConverter); //$NON-NLS-1$ //$NON-NLS-2$
         addWrappedBinding(feeder, "trayCountRows", textFieldTrayCountRows, "text", intConverter); //$NON-NLS-1$ //$NON-NLS-2$
 
-        bind(UpdateStrategy.READ_WRITE, feeder, "feedCount", textFieldFeedCount, "text", intConverter); //$NON-NLS-1$ //$NON-NLS-2$
+        addWrappedBinding(feeder, "feedCount", textFieldFeedCount, "text", intConverter); //$NON-NLS-1$ //$NON-NLS-2$
 
         bind(UpdateStrategy.READ, feeder, "remainingCount", lblComponentCount, "text",  //$NON-NLS-1$ //$NON-NLS-2$
                 new Converter<Integer, String>() {
@@ -488,6 +490,16 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 
     public void setnCols(int nCols) {
         this.nCols = nCols;
+    }
+
+    public int getwizardFeedCount() {
+        return wizardFeedCount;
+    }
+
+    public void setwizardFeedCount(int wizardFeedCount) {
+        int oldValue = this.wizardFeedCount;
+        this.wizardFeedCount = wizardFeedCount;
+        firePropertyChange("wizardFeedCount", oldValue, wizardFeedCount);
     }
 
     /**
@@ -569,8 +581,11 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
     @Override
     public void validateInput() throws Exception {
         //Make sure the feed count isn't pointing beyond the end of the feeder
-        if (feeder.getFeedCount() > nCols*nRows) {
-            feeder.setFeedCount(nCols*nRows);
+        if (wizardFeedCount < 0) {
+            setwizardFeedCount(0);
+        }
+        if (wizardFeedCount > nCols*nRows) {
+            setwizardFeedCount(nCols*nRows);
         }
 
         //Compute offsets and rotation from points A, B, C, number of rows and number of columns

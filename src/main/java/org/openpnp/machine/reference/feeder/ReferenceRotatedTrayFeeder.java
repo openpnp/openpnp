@@ -49,7 +49,7 @@ public class ReferenceRotatedTrayFeeder extends ReferenceFeeder {
     @Element
     private Location offsets = new Location(LengthUnit.Millimeters);
     @Attribute
-    private int feedCount = 0;
+    private int feedCount = 0;  // UI is base 1, 0 is ok because a pick operation always preceded by a feed, which increments feedCount to 1
 
     @Attribute(required=false)
     @Deprecated
@@ -65,8 +65,6 @@ public class ReferenceRotatedTrayFeeder extends ReferenceFeeder {
     protected Location lastComponentLocation = new Location(LengthUnit.Millimeters);
     @Element
     protected Location firstRowLastComponentLocation = new Location(LengthUnit.Millimeters);
-
-    private Location pickLocation;
 
     @Commit
     public void commit() {
@@ -97,31 +95,21 @@ public class ReferenceRotatedTrayFeeder extends ReferenceFeeder {
     }
 
     @Override
-    public Location getPickLocation() throws Exception {
-        if (pickLocation == null || feedCount == 0) {
-            //Normally the pick location is only valid after a feed operation. But in the case of no
-            //prior feed operation (feed count is zero), we set the pick location to the first part
-            //(which is also where it will be after the first feed operation).
-            int partX, partY;
-            int fc = feedCount;
-            if (pickLocation == null && feedCount > 0) {
-                //Since the pick location is null, the machine configuration must have just been
-                //loaded. And since the feed count is greater than 0, this feeder must have already
-                //performed a feed operation prior to the configuration being saved. This means we
-                //must back-up one feed count to point to the pick location for that prior feed 
-                //operation.
-                fc = fc - 1;
-            }
+    public Location getPickLocation() {
+        int feedCountBase0 = feedCount -1; // UI uses feedCount base 1, the following calculations are base 0
 
-            calculatePickLocation(fc);
+        // if feedCound is currently zero, assume its one
+        // this can happen if the pickLocation is requested before any feed operation
+        // return first location in that case
+        if (feedCount == 0) {
+            feedCountBase0 = 0;
         }
-
-        Logger.debug("{}.getPickLocation => {}", getName(), pickLocation);
-
-        return pickLocation;
-    }
-
-    private void calculatePickLocation(int feedCount) throws Exception {
+        // limit feed count to tray size
+        else if (feedCount > (trayCountCols * trayCountRows)) {
+            feedCountBase0 = trayCountCols * trayCountRows -1;
+            Logger.warn("{}.getPickLocation: feedCount larger then tray, limiting to maximum.", getName());
+        }
+        
         //The original version of this feeder fed along either the rows or columns depending on
         //which was shorter. This version now feeds along a row until it is empty and then it moves
         //to the next row. However, if an old version of the feeder was just loaded and it was
@@ -131,13 +119,13 @@ public class ReferenceRotatedTrayFeeder extends ReferenceFeeder {
         if (legacyPickingInProgress && (trayCountCols >= trayCountRows)) {
             //Pick parts along a column (stepping through all the rows) until it is empty and then 
             //move to the next column
-            rowNum = feedCount % trayCountRows;
-            colNum = feedCount / trayCountRows;
+            rowNum = feedCountBase0 % trayCountRows;
+            colNum = feedCountBase0 / trayCountRows;
         } else {
             //Pick parts along a row (stepping through all the columns) until it is empty and then
             //move to the next row (the new default)
-            rowNum = feedCount / trayCountCols;
-            colNum = feedCount % trayCountCols;
+            rowNum = feedCountBase0 / trayCountCols;
+            colNum = feedCountBase0 % trayCountCols;
         }
 
         //The definition of the tray has row numbers increasing in the negative y direction so that
@@ -145,7 +133,7 @@ public class ReferenceRotatedTrayFeeder extends ReferenceFeeder {
         Location delta = offsets.multiply(colNum, -rowNum, 0, 0).rotateXy(location.getRotation()).
                 derive(null, null, null, componentRotationInTray);
         
-        pickLocation = location.addWithRotation(delta);
+        return location.addWithRotation(delta);
     }
 
     public void feed(Nozzle nozzle) throws Exception {
@@ -154,11 +142,6 @@ public class ReferenceRotatedTrayFeeder extends ReferenceFeeder {
         if (feedCount >= (trayCountCols * trayCountRows)) {
             throw new Exception(this.getName() + " (" + this.partId + ") is empty.");
         }
-
-        calculatePickLocation(feedCount);
-
-        Logger.debug(String.format("Feeding part # %d, xPos %f, yPos %f, rPos %f", feedCount,
-                pickLocation.getX(), pickLocation.getY(), pickLocation.getRotation()));
 
         setFeedCount(getFeedCount() + 1);
     }
@@ -184,7 +167,7 @@ public class ReferenceRotatedTrayFeeder extends ReferenceFeeder {
             throw new UnsupportedOperationException("No part loaded that could be taken back.");
         }
         if (!nozzle.getPart().equals(getPart())) {
-            throw new UnsupportedOperationException("Feeder: " + getName() + " - Can not take back " + nozzle.getPart().getName() + " this feeder only supports " + getPart().getName());
+            throw new UnsupportedOperationException("Feeder: " + getName() + " - Can not take back " + nozzle.getPart().getId() + " this feeder only supports " + getPart().getId());
         }
         if (!canTakeBackPart()) {
             throw new UnsupportedOperationException("Feeder: " + getName() + " - Currently no free slot. Can not take back the part.");
@@ -199,16 +182,6 @@ public class ReferenceRotatedTrayFeeder extends ReferenceFeeder {
         }
         // change FeedCount
         setFeedCount(getFeedCount() - 1);
-
-        //Since this is essentially an unpick and unfeed operation we also need to adjust the pick 
-        //location back one place so that it points to the location computed for the feed operation
-        //prior to the one we just undone.
-        int fc = feedCount;
-        if (feedCount > 0) {
-            fc = fc - 1;
-        }
-
-        calculatePickLocation(fc);
     }
 
     public int getTrayCountCols() {
@@ -272,6 +245,7 @@ public class ReferenceRotatedTrayFeeder extends ReferenceFeeder {
         firePropertyChange("feedCount", oldValue, feedCount);
         firePropertyChange("remainingCount", trayCountRows*trayCountCols - oldValue, 
                 trayCountRows*trayCountCols - feedCount);
+        Logger.debug("{}.setFeedCount(): feedCount {}, pickLocation {}", getName(), feedCount, getPickLocation());
     }
 
     public int getRemainingCount() {
