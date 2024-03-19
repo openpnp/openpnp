@@ -29,6 +29,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.swing.SwingUtilities;
+
+import org.openpnp.gui.JobPanel;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.vision.AbstractPartAlignment;
 import org.openpnp.machine.reference.wizards.ReferencePnpJobProcessorConfigurationWizard;
@@ -520,10 +523,15 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             }
             catch (Exception e) {
                 if (e instanceof ReferenceNozzle.ManualLoadException) {
-                    throw new JobProcessorException(nozzleTip, new UiUtils.ExceptionWithContinuation(
+                    throw new JobProcessorException(nozzleTip, 
                             new UiUtils.ExceptionWithContinuation(
                                     new UiUtils.ExceptionWithContinuation(
-                                            new UiUtils.ExceptionWithContinuation(e, () -> { test3(); }), () -> { test2(); }), () -> { test1(); }), () -> { RestartJob(); }));
+                                            new UiUtils.ExceptionWithContinuation(
+                                                    new UiUtils.ExceptionWithContinuation(e,
+                                                            () -> { test3(); }),
+                                                    () -> { test2(); }), 
+                                            () -> { test1(); }), 
+                                    () -> { RestartJob(); }));
                 } else {
                     throw new JobProcessorException(nozzleTip, e);
                 }
@@ -533,7 +541,10 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         }
         
         public void RestartJob() {
-            Logger.debug("Restart Job Request not yet implemented");
+            Logger.debug("Restarting the job now.");
+            // change the job state from within the UI thread (we are currently in a machine thread)
+            // FIXME: this does not work...
+            //SwingUtilities.invokeLater(() -> JobPanel.jobResume());
         }
         
         public void test1() {

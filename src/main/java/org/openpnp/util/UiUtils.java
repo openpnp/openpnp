@@ -118,7 +118,7 @@ public class UiUtils {
             
         if (parent != null) {
             boolean haveContinuations = !continuations.isEmpty();
-            boolean execContinuations = MessageBoxes.errorBox(MainFrame.get(), "Error", t, haveContinuations);
+            boolean execContinuations = MessageBoxes.errorBox(parent, title, t, haveContinuations);
 
             // execution continuation, if user agrees
             if (haveContinuations && execContinuations) {
