@@ -87,9 +87,11 @@ public class UiUtils {
 
     /**
      * Show an error using a message box, if the GUI is present, otherwise just log the error.
+     * @param parent
+     * @param title
      * @param t
      */
-    public static void showError(Throwable t) {
+    public static void showError(Component parent, String title, Throwable t) {
         
         // Go through all causes, creating a combined continuation
         Thrunnable combinedContinuation = null;
@@ -107,8 +109,8 @@ public class UiUtils {
             }
         }
             
-        if (MainFrame.get() != null) {
-            boolean execContinuation = MessageBoxes.errorBox(MainFrame.get(), "Error", t, combinedContinuation != null);
+        if (parent != null) {
+            boolean execContinuation = MessageBoxes.errorBox(parent, title, t, combinedContinuation != null);
 
             // execution continuation, if user agrees
             if (combinedContinuation != null && execContinuation) {
@@ -120,7 +122,14 @@ public class UiUtils {
         }
     }
 
-
+    /**
+     * Show an error using a message box. This version provides the simplified interface where the
+     * title is fixed to "Error" and the parent is the main frame.
+     */
+    public static void showError(Throwable t) {
+        showError(MainFrame.get(), "Error", t);
+    }
+    
     /**
      * Functional version of Machine.submit which guarantees that the the onSuccess and onFailure
      * handlers will be run on the Swing event thread.
