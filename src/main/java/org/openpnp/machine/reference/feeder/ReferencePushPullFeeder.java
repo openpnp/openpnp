@@ -43,7 +43,6 @@ import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
-import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.machine.reference.feeder.wizards.ReferencePushPullFeederConfigurationWizard;
 import org.openpnp.machine.reference.feeder.wizards.ReferencePushPullMotionConfigurationWizard;
 import org.openpnp.model.AxesLocation;
@@ -81,26 +80,8 @@ import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.core.Persist;
 
-public class ReferencePushPullFeeder extends ReferenceFeeder {
+public class ReferencePushPullFeeder extends ReferenceVisionFeeder {
 
-    // Rotation of the part within the feeder (i.e. within the tape)
-    // This is compatible with tonyluken's pending PR #943 or a similar solution.
-    // Conversely, feeder.location.rotation contains the orientation of the feeder itself
-    // and it defines the local feeder coordinate system. The rotationInFeeder here can be removed
-    // once it is inherited. 
-    @Attribute(required=false)
-    protected Double rotationInFeeder = new Double(0.0);
-
-    @Attribute(required = false)
-    protected boolean normalizePickLocation = true;
-
-    @Attribute(required = false)
-    protected boolean snapToAxis = true;
-
-    @Element(required = false)
-    protected Location hole1Location = new Location(LengthUnit.Millimeters);
-    @Element(required = false)
-    protected Location hole2Location = new Location(LengthUnit.Millimeters);
 
     @Attribute(required = false)
     protected boolean usedAsTemplate = false; 
@@ -120,10 +101,6 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     protected Location feedMid3Location = new Location(LengthUnit.Millimeters);
     @Element
     protected Location feedEndLocation = new Location(LengthUnit.Millimeters);
-    @Element(required = false)
-    private Length partPitch = new Length(4, LengthUnit.Millimeters);
-    @Element(required = false)
-    private Length feedPitch = new Length(4, LengthUnit.Millimeters);
     @Attribute(required = false)
     private long feedMultiplier= 1;
 
@@ -187,25 +164,6 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     protected Actuator actuator2;
 
     @Attribute(required = false)
-    private long feedCount = 0;
-
-    public enum PipelineType {
-        ColorKeyed("Default"),
-        CircularSymmetry("CircularSymmetry");
-
-        private String tag;
-
-        PipelineType(String tag) {
-            this.tag = tag; 
-        }
-    }
-
-    @Element(required = false)
-    private CvPipeline pipeline = createDefaultPipeline(PipelineType.ColorKeyed);
-    @Attribute(required = false)
-    protected PipelineType pipelineType = PipelineType.ColorKeyed;
-
-    @Attribute(required = false)
     protected String ocrFontName = "Liberation Mono";
     @Attribute(required = false)
     protected double ocrFontSizePt = 7.0;
@@ -227,68 +185,8 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     @Attribute(required = false)
     protected boolean ocrStopAfterWrongPart = false;
 
-    @Element(required = false)
-    private Length precisionWanted = new Length(0.1, LengthUnit.Millimeters);
-
-    @Attribute(required = false)
-    private int calibrationCount = 0;
-    @Element(required = false)
-    private Length sumOfErrors = new Length(0, LengthUnit.Millimeters);
-    @Element(required = false)
-    private Length sumOfErrorSquares = new Length(0, LengthUnit.Millimeters);
 
 
-    // These are not on the GUI but can be tweaked in the machine.xml /////////////////
-
-    // initial calibration tolerance, i.e. how much the feeder can be shifted physically 
-    @Attribute(required = false)
-    private double calibrationToleranceMm = 1.95;
-    // vision and comparison sprocket hole tolerance (in size, position)
-    @Attribute(required = false)
-    private double sprocketHoleToleranceMm = 0.6;
-    // for rows of feeders, the tolerance in X, Y
-    @Attribute(required = false)
-    private double rowLocationToleranceMm = 4.0; 
-    // for rows of feeders, the tolerance in Z
-    @Attribute(required = false)
-    private double rowZLocationToleranceMm = 1.0; 
-
-    @Attribute(required = false)
-    private int calibrateMaxPasses = 3; 
-    // how close the camera has to be to prevent one more pass
-    @Attribute(required = false)
-    private double calibrateToleranceMm = 0.3; 
-    @Attribute(required = false)
-    private int calibrateMinStatistic = 2; 
-
-    // Some EIA 481 standard constants.
-    static final double sprocketHoleDiameterMm = 1.5;
-    static final double sprocketHolePitchMm = 4;
-    static final double minSprocketHolesDistanceMm = 3.5;
-
-    /*
-     * visionOffset contains the difference between where the part was expected to be and where it
-     * is. Subtracting these offsets from the pickLocation produces the correct pick location.
-     */
-    protected Location visionOffset;
-
-    public enum CalibrationTrigger {
-        None,
-        OnFirstUse,
-        UntilConfident,
-        OnEachTapeFeed
-    }
-
-    @Attribute(required = false)
-    protected CalibrationTrigger calibrationTrigger = CalibrationTrigger.UntilConfident;
-
-    public static final Location nullLocation = new Location(LengthUnit.Millimeters);
-
-    private void checkHomedState(Machine machine) {
-        if (!machine.isHomed()) {
-            this.resetCalibration();
-        }
-    }
 
     public ReferencePushPullFeeder() {
         Configuration.get().addListener(new ConfigurationListener.Adapter() {
@@ -332,52 +230,6 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         peelOffActuatorName = (actuator2 == null ? null : actuator2.getName()); 
     }
 
-    public Camera getCamera() throws Exception {
-        return  Configuration.get()
-                .getMachine()
-                .getDefaultHead()
-                .getDefaultCamera();
-    }
-
-    public void assertCalibrated(boolean tapeFeed) throws Exception {
-        if (getHole1Location().convertToUnits(LengthUnit.Millimeters).getLinearDistanceTo(getHole2Location()) < 3) {
-            throw new Exception("Feeder "+getName()+" sprocket hole locations undefined/too close together.");
-        }
-        if ((visionOffset == null && calibrationTrigger != CalibrationTrigger.None)
-                || (tapeFeed && calibrationTrigger == CalibrationTrigger.UntilConfident && !isPrecisionSufficient())
-                || (tapeFeed && calibrationTrigger == CalibrationTrigger.OnEachTapeFeed)) {
-            // not yet calibrated (enough)
-            obtainCalibratedVisionOffset();
-            if (visionOffset == null) {
-                // no lock obtained
-                throw new Exception(String.format("Vision failed on feeder %s.", getName()));
-            }
-        }
-    }
-
-    public boolean isPrecisionSufficient() {
-        if (calibrationCount < calibrateMinStatistic) {
-            return false;
-        }
-        else if (getPrecisionConfidenceLimit().divide(getPrecisionWanted()) > 1.0) {
-            return false;
-        }
-        return true;
-    }
-
-    public boolean isVisionEnabled() {
-        return calibrationTrigger != CalibrationTrigger.None;
-    }
-
-    @Override
-    public Location getPickLocation() throws Exception {
-        // Numbers are 1-based (a feed is needed before the very first part can be picked),
-        // therefore the modulo calculation is a bit gnarly.
-        // The 1-based approach has the benefit, that at feed count 0 (reset) the part closest to the reel 
-        // is the pick location which is the last part in a multi-part feed cycle, which is the one we want for setup.  
-        long partInCycle = ((getFeedCount()+getPartsPerFeedCycle()-1) % getPartsPerFeedCycle())+1;
-        return getPickLocation(partInCycle, visionOffset);
-    }
 
     @Override
     public void feed(Nozzle nozzle) throws Exception {
@@ -502,26 +354,15 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
             assertCalibrated(true);
         } 
         else {
-            Logger.debug("Multi parts feed: skipping tape feed at feed count " + feedCount);
+            Logger.debug("Multi parts feed: skipping tape feed at feed count " + getFeedCount());
         }
 
         // increment feed count 
         setFeedCount(getFeedCount()+1);
     }
 
-    public void ensureCameraZ(Camera camera, boolean setZ) throws Exception {
-        if (camera.isUnitsPerPixelAtZCalibrated()
-                && !getLocation().getLengthZ().isInitialized()) {
-            throw new Exception("Feeder "+getName()+": Please set the Pick Location Z coordinate first, "
-                    + "it is required to determine the true scale of the camera view for accurate computer vision.");
-        }
-        if (setZ && getLocation().getLengthZ().isInitialized()) {
-            // If we already have the Feeder Z, move the camera there to get the right units per pixel.
-            camera.moveTo(camera.getLocation().deriveLengths(null, null, getLocation().getLengthZ(), null));
-        }
-    }
-
-    private void obtainCalibratedVisionOffset() throws Exception {
+    @Override
+    protected void obtainCalibratedVisionOffset() throws Exception {
         Camera camera = getCamera();
         try (CvPipeline pipeline = getCvPipeline(camera, true, false, false)) {
             OcrWrongPartAction ocrAction = OcrWrongPartAction.None;
@@ -535,71 +376,6 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         }
     }
 
-    @Override
-    public String toString() {
-        return String.format("%s id %s", getClass().getName(), id);
-    }
-
-    @Override
-    public void setLocation(Location location) {
-        super.setLocation(location);
-        resetCalibration();
-    }
-
-    public Double getRotationInFeeder() {
-        if (rotationInFeeder == null) {
-            rotationInFeeder = new Double(0.0);
-        }
-        return rotationInFeeder;
-    }
-
-    public void setRotationInFeeder(Double rotationInFeeder) {
-        Object oldValue = this.rotationInFeeder;
-        this.rotationInFeeder = rotationInFeeder;
-        firePropertyChange("rotationInFeeder", oldValue, rotationInFeeder);
-    }
-
-    public boolean isNormalizePickLocation() {
-        return normalizePickLocation;
-    }
-
-    public void setNormalizePickLocation(boolean normalizePickLocation) {
-        Object oldValue = this.normalizePickLocation;
-        this.normalizePickLocation = normalizePickLocation;
-        firePropertyChange("normalizePickLocation", oldValue, normalizePickLocation);
-    }
-
-    public boolean isSnapToAxis() {
-        return snapToAxis;
-    }
-
-    public void setSnapToAxis(boolean snapToAxis) {
-        Object oldValue = this.snapToAxis;
-        this.snapToAxis = snapToAxis;
-        firePropertyChange("snapToAxis", oldValue, snapToAxis);
-    }
-
-    public Location getHole1Location() {
-        return hole1Location;
-    }
-
-    public void setHole1Location(Location hole1Location) {
-        Object oldValue = this.hole1Location;
-        this.hole1Location = hole1Location;
-        firePropertyChange("hole1Location", oldValue, hole1Location);
-        resetCalibration();
-    }
-
-    public Location getHole2Location() {
-        return hole2Location;
-    }
-
-    public void setHole2Location(Location hole2Location) {
-        Object oldValue = this.hole2Location;
-        this.hole2Location = hole2Location;
-        firePropertyChange("hole2Location", oldValue, hole2Location);
-        resetCalibration();
-    }
 
     public boolean isUsedAsTemplate() {
         return usedAsTemplate;
@@ -681,26 +457,6 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         Object oldValue = this.feedEndLocation;
         this.feedEndLocation = feedEndLocation;
         firePropertyChange("feedEndLocation", oldValue, feedEndLocation);
-    }
-
-    public Length getPartPitch() {
-        return partPitch;
-    }
-
-    public void setPartPitch(Length partPitch) {
-        Object oldValue = this.partPitch;
-        this.partPitch = partPitch;
-        firePropertyChange("partPitch", oldValue, partPitch);
-    }
-
-    public Length getFeedPitch() {
-        return feedPitch;
-    }
-
-    public void setFeedPitch(Length feedPitch) {
-        Object oldValue = this.feedPitch;
-        this.feedPitch = feedPitch;
-        firePropertyChange("feedPitch", oldValue, feedPitch);
     }
 
     public double getFeedSpeedPush1() {
@@ -943,16 +699,6 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         firePropertyChange("actuator2", oldValue, actuator2);
     }
 
-    public long getFeedCount() {
-        return feedCount;
-    }
-
-    public void setFeedCount(long feedCount) {
-        long oldValue = this.feedCount;
-        this.feedCount = feedCount;
-        firePropertyChange("feedCount", oldValue, feedCount);
-    }
-
     public long getFeedMultiplier() {
         return feedMultiplier;
     }
@@ -961,16 +707,6 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         Object oldValue = this.feedMultiplier;
         this.feedMultiplier = feedMultiplier;
         firePropertyChange("feedMultiplier", oldValue, feedMultiplier);
-    }
-
-    public CalibrationTrigger getCalibrationTrigger() {
-        return calibrationTrigger;
-    }
-
-    public void setCalibrationTrigger(CalibrationTrigger calibrationTrigger) {
-        Object oldValue = this.calibrationTrigger;
-        this.calibrationTrigger = calibrationTrigger;
-        firePropertyChange("calibrationTrigger", oldValue, calibrationTrigger);
     }
 
     public String getOcrFontName() {
@@ -1033,197 +769,13 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         firePropertyChange("ocrStopAfterWrongPart", oldValue, ocrStopAfterWrongPart);
     }
 
-    public Length getPrecisionWanted() {
-        return precisionWanted;
-    }
-
-    public void setPrecisionWanted(Length precisionWanted) {
-        Object oldValue = this.precisionWanted;
-        this.precisionWanted = precisionWanted;
-        firePropertyChange("precisionWanted", oldValue, precisionWanted);
-    }
-
-    public int getCalibrationCount() {
-        return calibrationCount;
-    }
-
-    public void setCalibrationCount(int calibrationCount) {
-        int oldValue = this.calibrationCount;
-        Length oldPrecision = getPrecisionAverage();
-        Length oldConfidence = getPrecisionConfidenceLimit();
-        this.calibrationCount = calibrationCount;
-        firePropertyChange("calibrationCount", oldValue, calibrationCount);
-        if (oldValue !=  calibrationCount) {
-            // this also implicitly changes the stats
-            firePropertyChange("precisionAverage", oldPrecision, getPrecisionAverage());
-            firePropertyChange("precisionConfidenceLimit", oldConfidence, getPrecisionConfidenceLimit());
-        }
-    }
-
-    public Length getSumOfErrors() {
-        return sumOfErrors;
-    }
-
-    public void addCalibrationError(Length error) {
-        sumOfErrors = sumOfErrors.add(error);
-        // this is a bit dodgy as the true unit is actually the length unit squared, but we'll use the square root of that later, so it will be fine.
-        error = error.convertToUnits(sumOfErrorSquares.getUnits());
-        sumOfErrorSquares = sumOfErrorSquares.add(error.multiply(error.getValue()));
-        setCalibrationCount(getCalibrationCount()+1); // will also fire average and confidence prop change
-    }
-
-    public Length getPrecisionAverage() {
-        return calibrationCount > 0 ? 
-                sumOfErrors.multiply(1.0/calibrationCount) 
-                : new Length(0, LengthUnit.Millimeters);
-    }
-
-    public void setPrecisionAverage(Length precisionAverage) {
-        // swallow this
-    }
-
-    public Length getPrecisionConfidenceLimit() {
-        if (calibrationCount >= 2) {
-            // Note, we don't take the average of the error, because the error is already a distance that is distributed 
-            // around the true sprocket holes center location i.e. distributed around zero i.e. zero is the mean 
-            // (this is limited math knowledge speaking).   
-            Length variance = sumOfErrorSquares.multiply(1.0/(calibrationCount-1));
-            Length scatter = new Length(Math.sqrt(variance.getValue()/Math.sqrt(calibrationCount)), variance.getUnits()); 
-            return scatter.multiply(1.64); // 95% confidence interval, normal distribution.
-        }
-        else {
-            return new Length(0, LengthUnit.Millimeters);
-        }
-    }
-
-    public void setPrecisionConfidenceLimit(Length precisionConfidenceLimit) {
-        // swallow this
-    }
-
-    public Length getPartsToSprocketHoleDistance() {
-        return new Length(getLocation().getLinearDistanceToLineSegment(getHole1Location(), getHole2Location()), 
-                getLocation().getUnits());
-    }
-
+    // Override to include the part multiplier parameter
+    @Override
     public long getPartsPerFeedCycle() {
         long feedsPerPart = (long)Math.ceil(getPartPitch().divide(getFeedPitch()));
         return Math.round(getFeedMultiplier()*Math.ceil(feedsPerPart*getFeedPitch().divide(getPartPitch())));
     }
 
-    public void resetCalibrationStatistics() {
-        sumOfErrors = new Length(0, LengthUnit.Millimeters);
-        sumOfErrorSquares = new Length(0, LengthUnit.Millimeters);
-        setCalibrationCount(0);
-        resetCalibration();
-    }
-
-    public static Location forwardTransform(Location location, Location transform) {
-        return location.rotateXy(transform.getRotation()).addWithRotation(transform);
-    }
-
-    public static Location backwardTransform(Location location, Location transform) {
-        return location.subtractWithRotation(transform).rotateXy(-transform.getRotation());
-    }
-
-    protected Location getTransform(Location visionOffset) {
-        // Our local feeder coordinate system is relative to the EIA 481 standard tape orientation
-        // i.e. with the sprocket holes on top and the tape advancing to the right, which is our +X
-        // The pick location is on [0, 0] local, which corresponds to feeder.location global.
-        // The feeder.location.rotation contains the orientation of the tape on the machine.
-
-        // to make sure we get the right rotation, we update it from the sprocket holes
-        // instead of trusting the location.rotation. This might happen when the user fiddles 
-        // with the locations manually.
-
-        Location unitVector = getHole1Location().unitVectorTo(getHole2Location());
-        if (!(Double.isFinite(unitVector.getX()) && Double.isFinite(unitVector.getY()))) {
-            // Catch (yet) undefined hole locations.    
-            unitVector = new Location(getHole1Location().getUnits(), 0, 1, 0, 0);
-        }
-        double rotationTape = Math.atan2(unitVector.getY(), unitVector.getX())*180.0/Math.PI;
-        Location transform = getLocation().derive(null, null, null, rotationTape);
-        if (Math.abs(rotationTape - getLocation().getRotation()) > 0.1) {
-            // HACK: something is not up-to-date -> refresh
-            setLocation(transform);
-        }
-
-        if (visionOffset != null) {
-            transform = transform.subtractWithRotation(visionOffset);
-        }
-        return transform;
-    }
-
-    protected Location transformFeederToMachineLocation(Location feederLocation, Location visionOffset) {
-        return forwardTransform(feederLocation, getTransform(visionOffset));
-    }
-
-    protected Location transformMachineToFeederLocation(Location machineLocation, Location visionOffset) {
-        return backwardTransform(machineLocation, getTransform(visionOffset));
-    }
-
-    public Location getPickLocation(long partInCycle, Location visionOffset)  {
-        // If the feeder is advancing more than one part per feed cycle (e.g. with 2mm pitch tape or if a multiplier is
-        // given), we need to cycle through multiple pick locations. partInCycle is 1-based and goes to getPartsPerFeedCycle().
-        long offsetPitches = (getPartsPerFeedCycle() - partInCycle) % getPartsPerFeedCycle();
-        Location feederLocation = new Location(partPitch.getUnits(), partPitch.multiply((double)offsetPitches).getValue(), 
-                0, 0, getRotationInFeeder());
-        Location machineLocation = transformFeederToMachineLocation(feederLocation, visionOffset);
-        return machineLocation;
-    } 
-
-
-    public CvPipeline getPipeline() {
-        return pipeline;
-    }
-
-    public void setPipeline(CvPipeline pipeline) {
-        this.pipeline = pipeline;
-    }
-
-    public PipelineType getPipelineType() {
-        return pipelineType;
-    }
-
-    public void setPipelineType(PipelineType pipelineType) {
-        Object oldValue = this.pipelineType;
-        this.pipelineType = pipelineType;
-        firePropertyChange("pipelineType", oldValue, pipelineType);
-    }
-
-    public Location getVisionOffset() {
-        if (isVisionEnabled() && visionOffset != null) {
-            return visionOffset;
-        }
-        else {
-            return Location.origin;
-        }
-    }
-
-    public void setVisionOffset(Location visionOffset) {
-        this.visionOffset = visionOffset;
-    }
-
-    public void resetCalibration() {
-        setVisionOffset(null);
-    }
-
-    public void resetPipeline(PipelineType type) {
-        pipeline = createDefaultPipeline(type);
-        setPipelineType(type);
-    }
-
-    public Location getNominalVisionLocation() throws Exception {
-        if (!(hole1Location.isInitialized() && hole2Location.isInitialized())) {
-            // not yet initialized, just return the current camera location
-            return getCamera().getLocation();
-        }
-        else {
-            ensureCameraZ(getCamera(), false);
-            return getHole1Location().add(getHole2Location()).multiply(0.5)
-                    .deriveLengths(null, null, getLocation().getLengthZ(), 
-                            getLocation().getRotation()+getRotationInFeeder());
-        }
-    }
 
     public Location getOcrLocation() throws Exception {
         Location offsets = ocrRegion.getOffsets();
@@ -1252,45 +804,20 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         pipeline.setProperty("SimpleOcr.alphabet", ""); // empty alphabet switches OCR off
     }
 
+    //not an override due to different parameters
     public CvPipeline getCvPipeline(Camera camera, boolean clone, boolean performOcr, boolean autoSetup) {
-        try {
-            CvPipeline pipeline = getPipeline();
-            if (clone) {
-                pipeline = pipeline.clone();
-            }
-            pipeline.setProperty("camera", camera);
-            pipeline.setProperty("feeder", this);
-            pipeline.setProperty("sprocketHole.diameter", new Length(sprocketHoleDiameterMm, LengthUnit.Millimeters));
-            Length range;
-            if (autoSetup) { 
-                // Auto-Setup: search Range is half camera. 
-                Location upp = camera.getUnitsPerPixelAtZ();
-                range = camera.getWidth() > camera.getHeight() ? 
-                        upp.getLengthY().multiply(camera.getHeight()/2)
-                        : upp.getLengthX().multiply(camera.getWidth()/2);
-            }
-            else {
-                // Normal mode: search range is half the distance between the holes plus one pitch. 
-                range = getHole1Location().getLinearLengthTo(getHole2Location())
-                        .multiply(0.5)
-                        .add(new Length(sprocketHolePitchMm, LengthUnit.Millimeters));
-            }
-            pipeline.setProperty("sprocketHole.maxDistance", range);
-            if (performOcr && getOcrRegion() != null) {
-                setupOcr(camera, pipeline);
-            }
-            else {
-                disableOcr(camera, pipeline);
-            }
-
-            return pipeline;
-        }
-        catch (CloneNotSupportedException e) {
-            throw new Error(e);
-        }
+    	CvPipeline pipeline = super.getCvPipeline(camera, clone, autoSetup);
+    	if (performOcr && getOcrRegion() != null) {
+             setupOcr(camera, pipeline);
+         }
+         else {
+             disableOcr(camera, pipeline);
+         }
+    	return pipeline;
     }
 
-    private static CvPipeline createDefaultPipeline(PipelineType type) {
+    @Override
+    protected CvPipeline createDefaultPipeline(PipelineType type) {
         try {
             String xml = IOUtils.toString(BlindsFeeder.class
                     .getResource("ReferencePushPullFeeder-"+type.tag+"Pipeline.xml"));
@@ -1301,12 +828,14 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         }
     }
 
+//    @Override - not possible
     public enum FindFeaturesMode {
         FromPickLocationGetHoles,
         CalibrateHoles,
         OcrOnly
     }
 
+//  @Override - not possible
     public class FindFeatures {
         private Camera camera;
         private CvPipeline pipeline;
@@ -1764,19 +1293,8 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         }
     }
 
-    public void showFeatures() throws Exception {
-        Camera camera = getCamera();
-        ensureCameraZ(camera, true);
-        try (CvPipeline pipeline = getCvPipeline(camera, true, true, true)) {
-
-            // Process vision and show feature without applying anything
-            pipeline.process();
-            new FindFeatures(camera, pipeline, 2000, null).invoke();
-        }
-    }
-
+    @Override
     public void autoSetup() throws Exception {
-        Camera camera = getCamera();
         // First preliminary smart clone to get a pipeline from the most suitable template.
         if (!isUsedAsTemplate() && getTemplateFeeder(null) != null) {
             Logger.debug("Auto-Setup: trying with cloned pipeline, template: feeder "+getTemplateFeeder(null).getName());
@@ -1785,33 +1303,10 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         else {
             Logger.debug("Auto-Setup: trying with currently assigned pipeline");
         }
-        if (calibrationTrigger == CalibrationTrigger.None) {
-            // Just assume the user wants it now 
-            setCalibrationTrigger(CalibrationTrigger.UntilConfident);
-        }
-
-        ensureCameraZ(camera, true);
-        // Try with cloned pipeline.
-        Exception e = autoSetupPipeline(camera, null); 
-        if (e != null) {
-            Logger.debug(e, "Auto-Setup: exception");
-            // Failed, try with pipeline type defaults.
-            for (PipelineType type : PipelineType.values()) {
-                Logger.debug("Auto-Setup: trying with stock pipeline type "+type);
-                e = autoSetupPipeline(camera, type);
-                if (e == null) {
-                    // Success.
-                    Logger.debug(e, "Auto-Setup: success");
-                    return;
-                }
-                Logger.debug(e, "Auto-Setup: exception");
-            }
-            // Still no luck, throw.
-            Logger.debug(e, "Auto-Setup: final exception");
-            throw e;
-        }
+        super.autoSetup();
     }
 
+    @Override
     protected Exception autoSetupPipeline(Camera camera, PipelineType type) {
         if (type != null) {
             resetPipeline(type);
@@ -1865,15 +1360,6 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
 
     public List<ReferencePushPullFeeder> getAllPushPullFeeders() {
         return getPushPullFeedersFromPool(Configuration.get().getMachine().getFeeders());
-    }
-
-    public Length getTapeWidth() {
-        // infer the tape width 
-        Location hole1Location = transformMachineToFeederLocation(getHole1Location(), null)
-                .convertToUnits(LengthUnit.Millimeters);
-        final double partToSprocketHoleHalfTapeWidthDiffMm = 0.5; // deducted from EIA-481
-        double tapeWidth = Math.round(hole1Location.getY()+partToSprocketHoleHalfTapeWidthDiffMm)*2;
-        return new Length(tapeWidth, LengthUnit.Millimeters);
     }
 
     protected org.openpnp.model.Package getPartPackage() {
@@ -2152,26 +1638,6 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         }
         // now transform over all the locations
         setFeederLocation(getTransform(null), false, true, true, templateFeeder);
-    }
-
-    protected static Location relocatedLocation(Location location, Location oldTransform, Location newTransform) {
-        if (!location.isInitialized()) {
-            // a location with all zeroes is assumed as uninitialized 
-            return location;
-        }
-        else {
-            Location feederLocalLocation = backwardTransform(location, oldTransform);
-            location = forwardTransform(feederLocalLocation, newTransform);
-            return location;
-        }
-    }
-    protected static Location relocatedXyLocation(Location location, Location oldTransform, Location newTransform) {
-        // disregard Z and Rotation
-        return relocatedLocation(location.multiply(1.0, 1.0, 0.0, 0.0), oldTransform, newTransform);
-    }
-    protected static Location relocatedXyzLocation(Location location, Location oldTransform, Location newTransform) {
-        // disregard Rotation
-        return relocatedLocation(location.multiply(1.0, 1.0, 1.0, 0.0), oldTransform, newTransform);
     }
 
     protected void setFeederLocation(Location newTransform, 
@@ -2464,7 +1930,8 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         }
     }
 
-    protected void performVisionOperations(Camera camera, CvPipeline pipeline, 
+    //not an override due to different parameters
+    protected void performVisionOperations(Camera camera, CvPipeline pipeline,
             boolean storeHoles, boolean storePickLocation, boolean storeVisionOffset, OcrWrongPartAction ocrAction, boolean ocrStop,
             StringBuilder report) throws Exception {
         Location runningHole1Location = getHole1Location();
