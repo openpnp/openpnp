@@ -501,60 +501,6 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 plannedPlacement.jobPlacement.setStatus(Status.Processing);
             }
             
-            // calculate (preliminary) pick locations
-            for (PlannedPlacement plannedPlacement : plannedPlacements) {
-                Location location;
-                final Nozzle nozzle = plannedPlacement.nozzle;
-                final JobPlacement jobPlacement = plannedPlacement.jobPlacement;
-                final Placement placement = jobPlacement.getPlacement();
-                final Part part = placement.getPart();
-
-                // try to get the location where the alignment will take place
-                try {
-                    final Feeder feeder = findFeeder(machine, part);
-
-                    location = getHeadLocation(nozzle, feeder.getPickLocation());
-                } catch (Exception e) {
-                    // ignore exceptions
-                    location = null;
-                }
-                
-                plannedPlacement.pickLocation = location;
-            }
-            
-            // calculate align locations
-            for (PlannedPlacement plannedPlacement : plannedPlacements) {
-                Location location;
-                final Camera camera;
-                final Nozzle nozzle = plannedPlacement.nozzle;
-
-                // try to get the location where the alignment will take place
-                try {
-                    camera = VisionUtils.getBottomVisionCamera();
-                    
-                    location = getHeadLocation(nozzle, camera.getLocation());
-                } catch (Exception e) {
-                    // ignore exceptions
-                    location = null;
-                }
-                
-                plannedPlacement.alignLocation = location;
-            }
-            
-            // calculate place location
-            for (PlannedPlacement plannedPlacement : plannedPlacements) {
-                final Nozzle nozzle = plannedPlacement.nozzle;
-                final JobPlacement jobPlacement = plannedPlacement.jobPlacement;
-                final Placement placement = jobPlacement.getPlacement();
-                final BoardLocation boardLocation = plannedPlacement.jobPlacement.getBoardLocation();
-            
-                Location location = Utils2D.calculateBoardPlacementLocation(boardLocation,
-                        placement.getLocation());
-            
-                // convert location to where the head will move to to place the part
-                plannedPlacement.placeLocation = getHeadLocation(nozzle, location);
-            }
-            
             Logger.debug("Planned placements {}", plannedPlacements);
             
             return new ChangeNozzleTips(plannedPlacements);
@@ -1420,7 +1366,23 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     // FIXME: can "TravellingSalesman.Locator<PlannedPlacement>" be converted into a shorter name?
     private class pickLocator implements TravellingSalesman.Locator<PlannedPlacement> {
         public Location getLocation(PlannedPlacement p) {
-            return p.pickLocation;
+            Location location;
+            final Nozzle nozzle = p.nozzle;
+            final JobPlacement jobPlacement = p.jobPlacement;
+            final Placement placement = jobPlacement.getPlacement();
+            final Part part = placement.getPart();
+
+            // try to get the location where the alignment will take place
+            try {
+                final Feeder feeder = findFeeder(machine, part);
+
+                location = getHeadLocation(nozzle, feeder.getPickLocation());
+            } catch (Exception e) {
+                // ignore exceptions
+                location = null;
+            }
+            
+            return location;
         }
         
         @Override
@@ -1431,7 +1393,21 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     
     private class alignLocator implements TravellingSalesman.Locator<PlannedPlacement> {
         public Location getLocation(PlannedPlacement p) {
-            return p.alignLocation;
+            Location location;
+            final Camera camera;
+            final Nozzle nozzle = p.nozzle;
+
+            // try to get the location where the alignment will take place
+            try {
+                camera = VisionUtils.getBottomVisionCamera();
+                
+                location = getHeadLocation(nozzle, camera.getLocation());
+            } catch (Exception e) {
+                // ignore exceptions
+                location = null;
+            }
+            
+            return location;
         }
 
         @Override
@@ -1442,7 +1418,16 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     
     private class placeLocator implements TravellingSalesman.Locator<PlannedPlacement> {
         public Location getLocation(PlannedPlacement p) {
-            return p.placeLocation;
+            final Nozzle nozzle = p.nozzle;
+            final JobPlacement jobPlacement = p.jobPlacement;
+            final Placement placement = jobPlacement.getPlacement();
+            final BoardLocation boardLocation = jobPlacement.getBoardLocation();
+        
+            Location location = Utils2D.calculateBoardPlacementLocation(boardLocation,
+                    placement.getLocation());
+        
+            // convert location to where the head will move to to place the part
+            return getHeadLocation(nozzle, location);
         }
         
         @Override
