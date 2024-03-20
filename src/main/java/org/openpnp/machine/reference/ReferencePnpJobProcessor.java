@@ -586,7 +586,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         public Step step() throws JobProcessorException {
             
             // sort plannedPlacements for picking with alignment as next/end location using TSM
-            List<PlannedPlacement> optimizedPlannedPlacements = optimizePlacements(new pickLocator(), new alignLocator());
+            List<PlannedPlacement> optimizedPlannedPlacements = optimizePlacements(new PickLocator(), new AlignLocator());
             
             return new Pick(optimizedPlannedPlacements);
         }
@@ -805,7 +805,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         public Step step() throws JobProcessorException {
 
             // sort plannedPlacements for alignment with place as next/end location using TSM
-            List<PlannedPlacement> optimizedPlannedPlacements = optimizePlacements(new alignLocator(), new placeLocator());
+            List<PlannedPlacement> optimizedPlannedPlacements = optimizePlacements(new AlignLocator(), new PlaceLocator());
             
             // continue with alignment
             return new Align(optimizedPlannedPlacements);
@@ -901,7 +901,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         public Step step() throws JobProcessorException {
             
             // sort plannedPlacements for place using TSM
-            List<PlannedPlacement> optimizedPlannedPlacements = optimizePlacements(new placeLocator(), null);
+            List<PlannedPlacement> optimizedPlannedPlacements = optimizePlacements(new PlaceLocator(), null);
             
             return new Place(optimizedPlannedPlacements);
         }
@@ -1364,7 +1364,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     }
     
     // FIXME: can "TravellingSalesman.Locator<PlannedPlacement>" be converted into a shorter name?
-    private class pickLocator implements TravellingSalesman.Locator<PlannedPlacement> {
+    private class PickLocator implements TravellingSalesman.Locator<PlannedPlacement> {
         public Location getLocation(PlannedPlacement p) {
             Location location;
             final Nozzle nozzle = p.nozzle;
@@ -1391,7 +1391,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         }
     }
     
-    private class alignLocator implements TravellingSalesman.Locator<PlannedPlacement> {
+    private class AlignLocator implements TravellingSalesman.Locator<PlannedPlacement> {
         public Location getLocation(PlannedPlacement p) {
             Location location;
             final Camera camera;
@@ -1416,7 +1416,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         }
     }
     
-    private class placeLocator implements TravellingSalesman.Locator<PlannedPlacement> {
+    private class PlaceLocator implements TravellingSalesman.Locator<PlannedPlacement> {
         public Location getLocation(PlannedPlacement p) {
             final Nozzle nozzle = p.nozzle;
             final JobPlacement jobPlacement = p.jobPlacement;
