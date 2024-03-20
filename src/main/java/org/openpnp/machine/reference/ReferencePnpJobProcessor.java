@@ -531,7 +531,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                                                             () -> { test3(); }),
                                                     () -> { test2(); }), 
                                             () -> { test1(); }), 
-                                    () -> { RestartJob(); }));
+                                    () -> { resumeJob(); }));
                 } else {
                     throw new JobProcessorException(nozzleTip, e);
                 }
@@ -540,7 +540,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             return this;
         }
         
-        public void RestartJob() {
+        public void resumeJob() {
             Logger.debug("Restarting the job now.");
             // change the job state from within the UI thread (we are currently in a machine thread)
             // FIXME: this does not work...
