@@ -519,7 +519,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                     location = null;
                 }
                 
-                plannedPlacement.setLocation(location, PlannedPlacement.LocationType.PICK);
+                plannedPlacement.pickLocation = location;
             }
             
             // calculate align locations
@@ -538,7 +538,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                     location = null;
                 }
                 
-                plannedPlacement.setLocation(location, PlannedPlacement.LocationType.ALIGN);
+                plannedPlacement.alignLocation = location;
             }
             
             // calculate place location
@@ -552,7 +552,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                         placement.getLocation());
             
                 // convert location to where the head will move to to place the part
-                plannedPlacement.setLocation(getHeadLocation(nozzle, location), PlannedPlacement.LocationType.PLACE);
+                plannedPlacement.placeLocation = getHeadLocation(nozzle, location);
             }
             
             Logger.debug("Planned placements {}", plannedPlacements);
@@ -640,7 +640,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         public Step step() throws JobProcessorException {
             
             // sort plannedPlacements for picking with alignment as next/end location using TSM
-            List<PlannedPlacement> optimizedPlannedPlacements = optimizePlacements(PlannedPlacement.LocationType.PICK);
+            List<PlannedPlacement> optimizedPlannedPlacements = optimizePlacements(new pickLocator(), new alignLocator());
             
             return new Pick(optimizedPlannedPlacements);
         }
@@ -859,7 +859,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         public Step step() throws JobProcessorException {
 
             // sort plannedPlacements for alignment with place as next/end location using TSM
-            List<PlannedPlacement> optimizedPlannedPlacements = optimizePlacements(PlannedPlacement.LocationType.ALIGN);
+            List<PlannedPlacement> optimizedPlannedPlacements = optimizePlacements(new alignLocator(), new placeLocator());
             
             // continue with alignment
             return new Align(optimizedPlannedPlacements);
@@ -955,7 +955,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         public Step step() throws JobProcessorException {
             
             // sort plannedPlacements for place using TSM
-            List<PlannedPlacement> optimizedPlannedPlacements = optimizePlacements(PlannedPlacement.LocationType.PLACE);
+            List<PlannedPlacement> optimizedPlannedPlacements = optimizePlacements(new placeLocator(), null);
             
             return new Place(optimizedPlannedPlacements);
         }
@@ -1321,21 +1321,24 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             this.plannedPlacements = plannedPlacements;
         }
 
-        private Location calcCenterLocation(PlannedPlacement.LocationType type) {
-            Location centerLocation = new Location(LengthUnit.Millimeters);
-            int cnt = 0;
-            for (PlannedPlacement plannedPlacement : plannedPlacements) {
-                Location l = plannedPlacement.getLocation(type);
-                if (l != null) {
-                    centerLocation = centerLocation.add(l);
-                    cnt++;
+        private Location calcCenterLocation(TravellingSalesman.Locator<PlannedPlacement> locator) {
+            Location centerLocation = null;
+            if (locator != null) {
+                centerLocation = new Location(LengthUnit.Millimeters);
+                int cnt = 0;
+                for (PlannedPlacement p : plannedPlacements) {
+                    Location l = locator.getLocation(p);
+                    if (l != null) {
+                        centerLocation = centerLocation.add(l);
+                        cnt++;
+                    }
                 }
-            }
-            
-            if (cnt > 0) {
-                centerLocation = centerLocation.multiply(1.0 / cnt);
-            } else {
-                centerLocation = null;
+                
+                if (cnt > 0) {
+                    centerLocation = centerLocation.multiply(1.0 / cnt);
+                } else {
+                    centerLocation = null;
+                }
             }
             
             return centerLocation;
@@ -1347,10 +1350,13 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
          * to when executing this step and then using a traveling salesman to 
          * optimize the list.
          * 
-         * @param plannedPlacements
+         * @param sortLocator An interface that shall return the location of a PlannedPlacement used to optimize for
+         * @param endLocator An interface that shall return the location of a PlannedPlacement to be considered
+         * the end location. The center between all this end location of all PlannedPlacements will be used
+         * as endLocation for the optimization.
          * @return
          */
-        protected List<PlannedPlacement> optimizePlacements(PlannedPlacement.LocationType sort) {
+        protected List<PlannedPlacement> optimizePlacements(TravellingSalesman.Locator<PlannedPlacement> sortLocator, TravellingSalesman.Locator<PlannedPlacement> endLocator) {
             List<PlannedPlacement> optimizedPlannedPlacements;
             long t = System.currentTimeMillis();
             Location start; // start location of traveling salesman, current location of the head
@@ -1366,7 +1372,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             }
             
             // if any sort locations are now empty, skip the optimization
-            if (plannedPlacements.stream().filter(p -> {return p.getLocation(sort) == null;}).count() != 0) {
+            if (plannedPlacements.stream().filter(p -> {return sortLocator.getLocation(p) == null;}).count() != 0) {
                 return plannedPlacements;
             }
             
@@ -1377,23 +1383,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             start = getHeadLocation(nozzle, nozzle.getLocation());
             
             // b) calculate end location as center between all locations of the next step
-            Location endLocation;
-            switch (sort) {
-                case PICK:
-                    endLocation = calcCenterLocation(PlannedPlacement.LocationType.ALIGN);
-                    break;
-
-                case ALIGN:
-                    endLocation = calcCenterLocation(PlannedPlacement.LocationType.PLACE);
-                    break;
-                    
-                case PLACE:
-                default:
-                    // the current job-planner does not provide look-ahead so we do not
-                    // know where to go next and hence can not consider it here for the optimization
-                    endLocation = null;
-                    break;
-            }
+            Location endLocation = calcCenterLocation(endLocator);
             
             // c) sort PlanndPlacements according to sortLocation
             // Use a traveling salesman algorithm to optimize the path to visit the placements
@@ -1403,12 +1393,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             //        a longer path on one axis compared to the other.
             TravellingSalesman<PlannedPlacement> tsm = new TravellingSalesman<>(
                     plannedPlacements, 
-                    new TravellingSalesman.Locator<PlannedPlacement>() { 
-                        @Override
-                        public Location getLocation(PlannedPlacement locatable) {
-                            return locatable.getLocation(sort);
-                        }
-                    }, 
+                    sortLocator,
                     start,
                     endLocation);
             
@@ -1426,9 +1411,43 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             double optimization_advantage = Math.max(100 * (1 - distance_optimized / distance_ref), 0);
             final DecimalFormat df = new DecimalFormat("0.0");
             
-            Logger.debug("Optimization for {} completed in {}ms: {}, {}% gain", sort.toString(), (System.currentTimeMillis() - t), optimizedPlannedPlacements, df.format(optimization_advantage));
+            Logger.debug("Optimization for {} completed in {}ms: {}, {}% gain", sortLocator.toString(), (System.currentTimeMillis() - t), optimizedPlannedPlacements, df.format(optimization_advantage));
             
             return optimizedPlannedPlacements;
+        }
+    }
+    
+    // FIXME: can "TravellingSalesman.Locator<PlannedPlacement>" be converted into a shorter name?
+    private class pickLocator implements TravellingSalesman.Locator<PlannedPlacement> {
+        public Location getLocation(PlannedPlacement p) {
+            return p.pickLocation;
+        }
+        
+        @Override
+        public String toString() {
+            return "pick";
+        }
+    }
+    
+    private class alignLocator implements TravellingSalesman.Locator<PlannedPlacement> {
+        public Location getLocation(PlannedPlacement p) {
+            return p.alignLocation;
+        }
+
+        @Override
+        public String toString() {
+            return "alignment";
+        }
+    }
+    
+    private class placeLocator implements TravellingSalesman.Locator<PlannedPlacement> {
+        public Location getLocation(PlannedPlacement p) {
+            return p.placeLocation;
+        }
+        
+        @Override
+        public String toString() {
+            return "place";
         }
     }
     
