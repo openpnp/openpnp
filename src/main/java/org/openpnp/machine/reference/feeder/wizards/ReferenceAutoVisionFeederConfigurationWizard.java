@@ -49,6 +49,7 @@ import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.LongConverter;
 import org.openpnp.gui.support.MutableLocationProxy;
+import org.openpnp.gui.support.NamedConverter;
 import org.openpnp.machine.reference.feeder.ReferenceVisionFeeder.PipelineType;
 import org.openpnp.machine.reference.feeder.ReferenceAutoVisionFeeder;
 import org.openpnp.model.Configuration;
@@ -461,6 +462,7 @@ extends AbstractReferenceFeederConfigurationWizard {
         LongConverter longConverter = new LongConverter();
         DoubleConverter doubleConverter =
                 new DoubleConverter(Configuration.get().getLengthDisplayFormat());
+        actuatorConverter = (new NamedConverter<>(Configuration.get().getMachine().getActuators()));
 
         MutableLocationProxy firstPickLocation = new MutableLocationProxy();
         bind(UpdateStrategy.READ_WRITE, feeder, "location", firstPickLocation, "location");
@@ -506,10 +508,10 @@ extends AbstractReferenceFeederConfigurationWizard {
 
         addWrappedBinding(feeder, "pipelineType", pipelineType, "selectedItem");
 
-        addWrappedBinding(feeder, "feedActuatorName", comboBoxFeedActuator, "selectedItem");
+        addWrappedBinding(feeder, "feedActuator", comboBoxFeedActuator, "selectedItem", actuatorConverter);
         addWrappedBinding(feeder, "feedActuatorValue", feedActuatorValue, "text", doubleConverter);
 
-        addWrappedBinding(feeder, "postPickActuatorName", comboBoxPostPickActuator, "selectedItem");
+        addWrappedBinding(feeder, "postPickActuator", comboBoxPostPickActuator, "selectedItem", actuatorConverter);
         addWrappedBinding(feeder, "postPickActuatorValue", postPickActuatorValue, "text", doubleConverter);
 
         addWrappedBinding(feeder, "moveBeforeFeed", ckBoxMoveBeforeFeed, "selected");
@@ -681,8 +683,7 @@ extends AbstractReferenceFeederConfigurationWizard {
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
                 if (feeder.getFeedActuatorName() == null || feeder.getFeedActuatorName().equals("")) {
-                    Logger.warn("No actuatorName specified for feeder {}.", feeder.getName());
-                    return;
+                	throw new Exception("No feedActuatorName specified for feeder " + feeder.getName() + ".");
                 }
                 Actuator actuator = Configuration.get().getMachine().getActuatorByName(feeder.getFeedActuatorName());
 
@@ -700,15 +701,12 @@ extends AbstractReferenceFeederConfigurationWizard {
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
                 if (feeder.getPostPickActuatorName() == null || feeder.getPostPickActuatorName().equals("")) {
-                    Logger.warn("No postPickActuatorName specified for feeder {}.", feeder.getName());
-                    return;
+                	throw new Exception("No postPickActuatorName specified for feeder " + feeder.getName() + ".");
                 }
-                Actuator actuator = Configuration.get().getMachine()
-                        .getActuatorByName(feeder.getPostPickActuatorName());
+                Actuator actuator = Configuration.get().getMachine().getActuatorByName(feeder.getPostPickActuatorName());
 
                 if (actuator == null) {
-                    throw new Exception(
-                            "Feed failed. Unable to find an actuator named " + feeder.getPostPickActuatorName());
+                    throw new Exception("Feed failed. Unable to find an actuator named " + feeder.getPostPickActuatorName());
                 }
                 // Use the generic Object method to interpret the value as the actuator.valueType.
                 actuator.actuate((Object)feeder.getPostPickActuatorValue());
@@ -791,4 +789,5 @@ extends AbstractReferenceFeederConfigurationWizard {
     private JCheckBox ckBoxMoveBeforeFeed;
     private JLabel lblPostPick;
     private JLabel lblMoveBeforeFeed;
+    private NamedConverter<Actuator> actuatorConverter;
 }

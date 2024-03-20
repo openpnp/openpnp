@@ -16,18 +16,19 @@ import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.util.MovableUtils;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
+import org.simpleframework.xml.core.Persist;
 
 public class ReferenceAutoVisionFeeder extends ReferenceVisionFeeder {
 
 	@Attribute(required=false)
-    protected String feedActuatorName;
+    private String feedActuatorName;
 	protected Actuator feedActuator;
     
     @Attribute(required=false)
     protected double feedActuatorValue;
 
     @Attribute(required=false)
-    protected String postPickActuatorName;
+    private String postPickActuatorName;
 	protected Actuator postPickActuator;
 
     @Attribute(required=false)
@@ -40,8 +41,18 @@ public class ReferenceAutoVisionFeeder extends ReferenceVisionFeeder {
         return feedActuatorName;
     }
 
-    public void setFeedActuatorName(String feedActuatorName) {
-        this.feedActuatorName = feedActuatorName;
+    public Actuator getFeedActuator() {
+        return this.feedActuator;
+    }
+
+    public void setFeedActuator(Actuator feedActuator) {
+        Object oldValue = this.feedActuator;
+        this.feedActuator = feedActuator;
+        firePropertyChange("feedActuator", oldValue, feedActuator);
+        
+//        Object oldValue2 = this.feedActuatorName;
+        feedActuatorName = (feedActuator == null ? null : feedActuator.getName()); 
+//        firePropertyChange("feedActuatorName", oldValue2, feedActuatorName);
     }
 
     public double getFeedActuatorValue() {
@@ -56,8 +67,18 @@ public class ReferenceAutoVisionFeeder extends ReferenceVisionFeeder {
         return postPickActuatorName;
     }
 
-    public void setPostPickActuatorName(String postPickActuatorName) {
-        this.postPickActuatorName = postPickActuatorName;
+    public Actuator getPostPickActuator() {
+        return this.postPickActuator;
+    }
+
+    public void setPostPickActuator(Actuator postPickActuator) {
+        Object oldValue = this.postPickActuator;
+        this.postPickActuator = postPickActuator;
+        firePropertyChange("postPickActuator", oldValue, postPickActuator);
+        
+//        Object oldValue2 = this.postPickActuatorName;
+        postPickActuatorName = (postPickActuator == null ? null : postPickActuator.getName()); 
+//        firePropertyChange("postPickActuatorName", oldValue2, postPickActuatorName);
     }
 
     public double getPostPickActuatorValue() {
@@ -113,6 +134,13 @@ public class ReferenceAutoVisionFeeder extends ReferenceVisionFeeder {
         });
     	
 	}
+
+    @Persist
+    private void persist() {
+        // Make sure the newest names are persisted (legacy way).
+        feedActuatorName = (feedActuator == null ? null : feedActuator.getName()); 
+        postPickActuatorName = (postPickActuator == null ? null : postPickActuator.getName()); 
+    }
 
 	// inherited from ReferenceFeeder
 	@Override
