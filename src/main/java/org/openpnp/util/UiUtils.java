@@ -52,7 +52,7 @@ public class UiUtils {
         protected Thrunnable continuation = null;
         
         public ExceptionWithContinuation(Throwable cause, Thrunnable continuation) {
-            super(cause);
+            super(cause.getMessage(), cause);
             this.continuation = continuation;
         }
         
