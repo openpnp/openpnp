@@ -32,6 +32,7 @@ import java.util.stream.Collectors;
 import javax.swing.SwingUtilities;
 
 import org.openpnp.gui.JobPanel;
+import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.vision.AbstractPartAlignment;
 import org.openpnp.machine.reference.wizards.ReferencePnpJobProcessorConfigurationWizard;
@@ -530,15 +531,21 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             }
             catch (Exception e) {
                 if (e instanceof ReferenceNozzle.ManualLoadException) {
-                    throw new JobProcessorException(nozzleTip, 
-                            new UiUtils.ExceptionWithContinuation(
-                                    new UiUtils.ExceptionWithContinuation(
-                                            new UiUtils.ExceptionWithContinuation(
-                                                    new UiUtils.ExceptionWithContinuation(e,
-                                                            () -> { test3(); }),
-                                                    () -> { test2(); }), 
-                                            () -> { test1(); }), 
-                                    () -> { resumeJob(); }));
+                    if (false) {
+                        // debug version which generates a lot of continuations from which 1 is programmed to throw an exception
+                        throw new JobProcessorException(nozzleTip, 
+                                new UiUtils.ExceptionWithContinuation(
+                                        new UiUtils.ExceptionWithContinuation(
+                                                new UiUtils.ExceptionWithContinuation(
+                                                        new UiUtils.ExceptionWithContinuation(e,
+                                                                () -> { test3(); }),
+                                                        () -> { test2(); }), 
+                                                () -> { test1(); }), 
+                                        () -> { resumeJob(); }));
+                    } else {
+                        throw new JobProcessorException(nozzleTip, 
+                                new UiUtils.ExceptionWithContinuation(e, () -> { resumeJob(); }));
+                    }
                 } else {
                     throw new JobProcessorException(nozzleTip, e);
                 }
@@ -550,8 +557,10 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         public void resumeJob() {
             Logger.debug("Restarting the job now.");
             // change the job state from within the UI thread (we are currently in a machine thread)
-            // FIXME: this does not work...
-            //SwingUtilities.invokeLater(() -> JobPanel.jobResume());
+            SwingUtilities.invokeLater(() -> { 
+                JobPanel j = MainFrame.get().getJobTab();
+                j.jobResume(); }
+            );
         }
         
         public void test1() {
