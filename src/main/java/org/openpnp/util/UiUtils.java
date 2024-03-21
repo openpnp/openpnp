@@ -125,6 +125,7 @@ public class UiUtils {
                 // if the queue has not been initialized yet, do it now
                 // FIXME: is this a good location to initialize the global queue
                 if (continuationsQueue == null) {
+                    Logger.debug("Global Contiunations Queue initialized.");
                     continuationsQueue = new ArrayDeque<Thrunnable>();
                 }
                 
@@ -138,11 +139,20 @@ public class UiUtils {
                 }
                 
                 // execute all continuations in the queue now in LiFo style
-                // FIXME: the ordering is not strict here: is an exception is thrown by one of the entries of the queue, the result is not inserted into the others, likely because the submission of machine tasks is queued as well.
+                // The ordering has to be strict here to keep the order in which exceptions are throws.
+                // If the entire queue content is immediately executed, all items are send to the machine
+                // task queuing for execution there. If one of them throws an exception the queue is
+                // drained without executing the remaining items. To overcome this, we could send all
+                // items one after the other or just assume a serious error can not be recovered by
+                // continuing queuing continuations.
+                // Lets go for the later for now.
+                // for reference: the other solution could be implemented by sending the
+                // next item from the onSuccess callback of submitUiMachineTask(). However, a mutex would
+                // be required to avoid starting a concurrent execution cycle if any item throws an
+                // exception.
                 while (!continuationsQueue.isEmpty()) {
                     submitUiMachineTask(continuationsQueue.removeFirst());
                 }
-                
             }
         }
         else {
