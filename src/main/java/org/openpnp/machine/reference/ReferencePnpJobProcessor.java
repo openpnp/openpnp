@@ -43,6 +43,7 @@ import org.openpnp.model.Job;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.model.Motion.MotionOption;
 import org.openpnp.model.PanelLocation;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
@@ -674,10 +675,26 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             // sort plannedPlacements for picking with alignment as next/end location using TSM
             List<PlannedPlacement> optimizedPlannedPlacements = optimizePlacements(pickLocator, alignLocator);
             
-            return new Pick(optimizedPlannedPlacements);
+            return new PrerotateAllNozzlesForPick(optimizedPlannedPlacements);
         }
     }
         
+    /**
+     * Prerotate all nozzles while moving to the first pick location.
+     */
+    protected class PrerotateAllNozzlesForPick extends PrerotateAllNozzlesStep {
+        public PrerotateAllNozzlesForPick(List<PlannedPlacement> plannedPlacements) {
+            super(plannedPlacements);
+        }
+
+        public Step step() throws JobProcessorException {
+            
+            prerotateAllNozzles(new PickLocator());
+            
+            return new Pick(plannedPlacements);
+        }
+    }
+
     /**
      * Pick step - pick parts using all nozzles
      */
@@ -902,7 +919,23 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             List<PlannedPlacement> optimizedPlannedPlacements = optimizePlacements(alignLocator, placeLocator);
             
             // continue with alignment
-            return new Align(optimizedPlannedPlacements);
+            return new PrerotateAllNozzlesForAlign(optimizedPlannedPlacements);
+        }
+    }
+
+    /**
+     * Prerotate all nozzles while moving to the first alignement location.
+     */
+    protected class PrerotateAllNozzlesForAlign extends PrerotateAllNozzlesStep {
+        public PrerotateAllNozzlesForAlign(List<PlannedPlacement> plannedPlacements) {
+            super(plannedPlacements);
+        }
+
+        public Step step() throws JobProcessorException {
+            
+            prerotateAllNozzles(new AlignLocator());
+            
+            return new Align(plannedPlacements);
         }
     }
 
@@ -998,7 +1031,23 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             // FIXME: if the planner would provide a look-ahead feature, we could use it for further optimization here
             List<PlannedPlacement> optimizedPlannedPlacements = optimizePlacements(placeLocator, null);
             
-            return new Place(optimizedPlannedPlacements);
+            return new PrerotateAllNozzlesForPlace(optimizedPlannedPlacements);
+        }
+    }
+
+    /**
+     * Prerotate all nozzles while moving to the first placement location.
+     */
+    protected class PrerotateAllNozzlesForPlace extends PrerotateAllNozzlesStep {
+        public PrerotateAllNozzlesForPlace(List<PlannedPlacement> plannedPlacements) {
+            super(plannedPlacements);
+        }
+
+        public Step step() throws JobProcessorException {
+            
+            prerotateAllNozzles(new PlaceLocator());
+            
+            return new Place(plannedPlacements);
         }
     }
 
@@ -1464,6 +1513,37 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         }
     }
     
+    /**
+     * This class groups a step to prerotate all nozzles
+     */
+    protected abstract class PrerotateAllNozzlesStep implements Step {
+        final List<PlannedPlacement> plannedPlacements;
+        protected PrerotateAllNozzlesStep(List<PlannedPlacement> plannedPlacements) {
+            this.plannedPlacements = plannedPlacements;
+        }
+        
+        // prerorate all nozzles using a subordinate movement using the given locator
+        protected void prerotateAllNozzles(TravellingSalesman.Locator<PlannedPlacement> locator) {
+            for (PlannedPlacement p : plannedPlacements) {
+                Location l = locator.getLocation(p);
+                if (l != null) {
+                    double speed = p.nozzle.getHead().getMachine().getSpeed();
+                    try {
+                        // this movement sequence is of type subordinate and the location itself
+                        // will be defined by the next movement segments not of subordinate type.
+                        // the rotation of nozzles unrelated to that segment will survive and
+                        // result in rotating this nozzles to the requested angle.
+                        head.moveTo(p.nozzle, l, speed , MotionOption.Subordinate);
+                    } catch (Exception e) {
+                        // ignore any errors
+                    }
+                }
+            }
+            
+            Logger.debug("All nozzle pre-rotation for {} requested", locator.toString());
+        }
+    }
+        
     /**
      * create a class to group all pick, align an placement locator functions and to get rid of
      * the lengthy "TravellingSalesman.Locator<PlannedPlacement>"
