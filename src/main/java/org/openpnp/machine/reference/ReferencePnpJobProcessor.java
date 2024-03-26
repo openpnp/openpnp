@@ -531,21 +531,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             }
             catch (Exception e) {
                 if (e instanceof ReferenceNozzle.ManualLoadException) {
-                    if (false) {
-                        // debug version which generates a lot of continuations from which 1 is programmed to throw an exception
-                        throw new JobProcessorException(nozzleTip, 
-                                new UiUtils.ExceptionWithContinuation(
-                                        new UiUtils.ExceptionWithContinuation(
-                                                new UiUtils.ExceptionWithContinuation(
-                                                        new UiUtils.ExceptionWithContinuation(e,
-                                                                () -> { test3(); }),
-                                                        () -> { test2(); }), 
-                                                () -> { test1(); }), 
-                                        () -> { resumeJob(); }));
-                    } else {
-                        throw new JobProcessorException(nozzleTip, 
-                                new UiUtils.ExceptionWithContinuation(e, () -> { resumeJob(); }));
-                    }
+                    throw new JobProcessorException(nozzleTip, 
+                            new UiUtils.ExceptionWithContinuation(e, () -> { resumeJob(); }));
                 } else {
                     throw new JobProcessorException(nozzleTip, e);
                 }
@@ -561,27 +548,6 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 JobPanel j = MainFrame.get().getJobTab();
                 j.jobResume(); }
             );
-        }
-        
-        public void test1() {
-            Logger.debug("Test 1");
-        }
-
-        public void test2() throws Exception {
-            Logger.debug("Test 2");
-            throw new UiUtils.ExceptionWithContinuation(new UiUtils.ExceptionWithContinuation("test 2", () -> { test2b(); }), () -> { test2a(); });
-        }
-
-        public void test2a() {
-            Logger.debug("Test 2a");
-        }
-
-        public void test2b() {
-            Logger.debug("Test 2b");
-        }
-
-        public void test3() {
-            Logger.debug("Test 3");
         }
     }
     
