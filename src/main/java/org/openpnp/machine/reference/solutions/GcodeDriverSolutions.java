@@ -96,7 +96,7 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                 return FlowControl.XonXoff;
             }
             // Default to typical driver setting.
-            return (this == TinyG || this == Grbl || this == SmoothiewareChmt) ? FlowControl.Off : FlowControl.RtsCts;
+            return (this == TinyG || this == Grbl || this == GrblHAL || this == SmoothiewareChmt) ? FlowControl.Off : FlowControl.RtsCts;
         }
     }
 
