@@ -198,10 +198,10 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                 solutions.add(new Solutions.Issue(
                         gcodeDriver, 
                         "Firmware was not detected ("+
-                                (machine.isEnabled() ? 
-                                        (gcodeDriver.isSpeakingGcode() ? "failure, check log" : "controller may not speak Gcode") 
-                                        : "machine is disabled")+"). Only if the firmware is know, can Issues & Solutions generate suggested G-code for your machine configuration.", 
-                                "Retry the detection by connecting to the controller or assume a generic controller.", 
+                                (machine.isEnabled() ?
+                                        (gcodeDriver.isSpeakingGcode() ? "failure, check log" : "controller may not speak Gcode")
+                                        : "machine is disabled")+"). Only if the firmware is known, Issues & Solutions can generate suggested G-code for your machine configuration.",
+                                "Retry the detection by connecting to the controller or assume a generic controller.",
                                 Severity.Fundamental,
                         "https://www.reprap.org/wiki/G-code#M115:_Get_Firmware_Version_and_Capabilities") {
 
