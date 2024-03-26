@@ -36,6 +36,7 @@ import org.openpnp.model.Solutions.Severity;
 import org.openpnp.model.Solutions.State;
 import org.openpnp.model.Solutions.Subject;
 import org.openpnp.spi.Actuator;
+import org.openpnp.spi.Driver;
 import org.openpnp.spi.Machine;
 import org.openpnp.util.TextUtils;
 import org.pmw.tinylog.Logger;
@@ -85,10 +86,27 @@ public class ActuatorSolutions implements Solutions.Subject {
                 }
                 case Boolean: {
                     HashMap<CommandType, String []> suggestions = new HashMap<>();
-                    suggestions.put(CommandType.ACTUATE_BOOLEAN_COMMAND, new String[] { 
-                            "{True:M\u00BF ; actuate "+qualifier+" ON}\n"
-                                    + "{False:M\u00BF ; actuate "+qualifier+" OFF}"
-                    });
+                    // get firmware name if driver is GcodeDriver
+                    Driver driver = actuator.getDriver();
+                    String firmware_name = (driver instanceof GcodeDriver) ?
+                        ((GcodeDriver) driver).getFirmwareProperty("FIRMWARE_NAME", "")
+                        : "";
+                    // make firmware specific suggestion
+                    switch(firmware_name) {
+                        case "grblHAL":
+                            suggestions.put(CommandType.ACTUATE_BOOLEAN_COMMAND, new String[] {
+                                "M6{True:4}{False:5} P{Index} ; actuate "+qualifier+" ON/OFF"
+                            });
+                            break;
+
+                        // default for unhandled firmwares
+                        default:
+                            suggestions.put(CommandType.ACTUATE_BOOLEAN_COMMAND, new String[] {
+                                "{True:M\u00BF ; actuate "+qualifier+" ON}\n"
+                                        + "{False:M\u00BF ; actuate "+qualifier+" OFF}"
+                            });
+                    }
+
                     new ActuatorSolutions(actuator).findActuatorIssues(solutions, holder, qualifier, 
                             new CommandType[] { CommandType.ACTUATE_BOOLEAN_COMMAND }, suggestions, 
                             uri);
