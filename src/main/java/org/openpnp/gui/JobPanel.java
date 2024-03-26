@@ -461,17 +461,26 @@ public class JobPanel extends JPanel {
 
                 machine.getPnpJobProcessor().addTextStatusListener(textStatusListener);
 
-                if (machine.isAutoLoadMostRecentJob()) {
-                    // try to load the most recent job
-                    if (recentJobs.size() > 0) {
-                        File file = recentJobs.get(0);
-                        loadJobExec(file);
-                    }
-                }
-
                 // Create an empty Job if one is not loaded
                 if (getJob() == null) {
                     setJob(new Job());
+                }
+
+                if (machine.isAutoLoadMostRecentJob()) {
+                    // try to load the most recent job
+                    if (recentJobs.size() > 0) {
+                        // execute the auto-load from within the UI thread
+                        SwingUtilities.invokeLater(() -> {
+                            File file = recentJobs.get(0);
+                            try {
+                                loadJobExec(file);
+                            } catch (Exception e) {
+                                // in case of error, log it and set an empty job
+                                Logger.warn("Loading recent job {} failed: {}", file.getName(), e.getMessage());
+                                setJob(new Job());
+                            }
+                        });
+                    }
                 }
             }
         });
