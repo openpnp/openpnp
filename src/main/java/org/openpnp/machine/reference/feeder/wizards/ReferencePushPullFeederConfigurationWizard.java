@@ -59,7 +59,7 @@ import org.openpnp.gui.support.LongConverter;
 import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.machine.reference.feeder.ReferencePushPullFeeder;
 import org.openpnp.machine.reference.feeder.ReferencePushPullFeeder.OcrWrongPartAction;
-import org.openpnp.machine.reference.feeder.ReferencePushPullFeeder.PipelineType;
+import org.openpnp.machine.reference.feeder.ReferenceVisionFeeder.PipelineType;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.RegionOfInterest;
 import org.openpnp.spi.Camera;
