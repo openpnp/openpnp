@@ -454,6 +454,7 @@ public class JobPanel extends JPanel {
         loadRecentJobs();
 
         Configuration.get().addListener(new ConfigurationListener.Adapter() {
+            // FYI: this listener is executed asynchronously
             public void configurationComplete(Configuration configuration) throws Exception {
                 Machine machine = configuration.getMachine();
 
