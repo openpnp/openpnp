@@ -12,8 +12,7 @@ public interface PnpJobPlanner {
         public final NozzleTip nozzleTip;
         public Feeder feeder;
         public PartAlignment.PartAlignmentOffset alignmentOffsets;
-        public Location sortLocation;	// location used to sort placements as part of the job processing
-
+        
         public PlannedPlacement(Nozzle nozzle, NozzleTip nozzleTip, JobPlacement jobPlacement) {
             this.nozzle = nozzle;
             this.nozzleTip = nozzleTip;
