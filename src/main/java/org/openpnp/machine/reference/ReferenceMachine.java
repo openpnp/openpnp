@@ -155,6 +155,9 @@ public class ReferenceMachine extends AbstractMachine {
     private boolean poolScriptingEngines = false;
 
     @Element(required = false)
+    private boolean autoLoadMostRecentJob = false;
+
+    @Element(required = false)
     private Solutions solutions = new Solutions();
 
     @Deprecated // now in the Solutions object.
@@ -343,7 +346,14 @@ public class ReferenceMachine extends AbstractMachine {
         this.poolScriptingEngines = poolScriptingEngines;
     }
 
+    public boolean isAutoLoadMostRecentJob() {
+        return autoLoadMostRecentJob;
+    }
 
+    public void setAutoLoadMostRecentJob(boolean autoLoadMostRecentJob) {
+        this.autoLoadMostRecentJob = autoLoadMostRecentJob;
+    }
+    
     @Override
     public Wizard getConfigurationWizard() {
         return new ReferenceMachineConfigurationWizard(this);

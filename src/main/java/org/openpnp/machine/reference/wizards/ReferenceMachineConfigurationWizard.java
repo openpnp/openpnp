@@ -28,6 +28,8 @@ import com.jgoodies.forms.layout.RowSpec;
 
 public class ReferenceMachineConfigurationWizard extends AbstractConfigurationWizard {
 
+    private static final long serialVersionUID = 1L;
+    
     private final ReferenceMachine machine;
     private JCheckBox checkBoxHomeAfterEnabled;
     private String motionPlannerClassName;
@@ -46,6 +48,7 @@ public class ReferenceMachineConfigurationWizard extends AbstractConfigurationWi
     private JTextField unsafeZRoamingDistance;
     private JCheckBox parkAfterHomed;
     private JCheckBox poolScriptingEngines;
+    private JCheckBox autoLoadMostRecentJob;
 
     public ReferenceMachineConfigurationWizard(ReferenceMachine machine) {
         this.machine = machine;
@@ -63,6 +66,8 @@ public class ReferenceMachineConfigurationWizard extends AbstractConfigurationWi
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("default:grow"),},
             new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
@@ -133,7 +138,13 @@ public class ReferenceMachineConfigurationWizard extends AbstractConfigurationWi
         poolScriptingEngines = new JCheckBox("");
         panelGeneral.add(poolScriptingEngines, "4, 14");
 
-                JPanel panelLocations = new JPanel();
+        JLabel lblAutoLoadMostRecentJob = new JLabel("Auto-load most recent job?");
+        panelGeneral.add(lblAutoLoadMostRecentJob, "2, 16, right, default");
+
+        autoLoadMostRecentJob = new JCheckBox("");
+        panelGeneral.add(autoLoadMostRecentJob, "4, 16");
+
+        JPanel panelLocations = new JPanel();
         panelLocations.setBorder(new TitledBorder(null, Translations.getString(
                 "ReferenceMachineConfigurationWizard.PanelLocations.Border.title"), //$NON-NLS-1$
                 TitledBorder.LEADING, TitledBorder.TOP, null, null));
@@ -241,6 +252,7 @@ public class ReferenceMachineConfigurationWizard extends AbstractConfigurationWi
         addWrappedBinding(this, "motionPlannerClassName", motionPlannerClass, "selectedItem");
 
         addWrappedBinding(machine, "poolScriptingEngines", poolScriptingEngines, "selected");
+        addWrappedBinding(machine, "autoLoadMostRecentJob", autoLoadMostRecentJob, "selected");
 
         MutableLocationProxy discardLocation = new MutableLocationProxy();
         bind(UpdateStrategy.READ_WRITE, machine, "discardLocation", discardLocation, "location");

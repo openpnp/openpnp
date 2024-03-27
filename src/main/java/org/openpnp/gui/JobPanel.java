@@ -454,12 +454,21 @@ public class JobPanel extends JPanel {
         loadRecentJobs();
 
         Configuration.get().addListener(new ConfigurationListener.Adapter() {
+            // FYI: this listener is executed asynchronously
             public void configurationComplete(Configuration configuration) throws Exception {
                 Machine machine = configuration.getMachine();
 
                 machine.addListener(machineListener);
 
                 machine.getPnpJobProcessor().addTextStatusListener(textStatusListener);
+
+                if (machine.isAutoLoadMostRecentJob()) {
+                    // try to load the most recent job
+                    if (recentJobs.size() > 0) {
+                        File file = recentJobs.get(0);
+                        loadJobExec(file);
+                    }
+                }
 
                 // Create an empty Job if one is not loaded
                 if (getJob() == null) {
@@ -837,10 +846,7 @@ public class JobPanel extends JPanel {
                     return;
                 }
                 File file = new File(new File(fileDialog.getDirectory()), fileDialog.getFile());
-                Job job = configuration.loadJob(file);
-                setJob(job);
-                addRecentJob(file);
-                mainFrame.getFeedersTab().updateView();
+                loadJobExec(file);
             }
             catch (Exception e) {
                 e.printStackTrace();
@@ -1641,10 +1647,7 @@ public class JobPanel extends JPanel {
                 return;
             }
             try {
-                Job job = configuration.loadJob(file);
-                setJob(job);
-                addRecentJob(file);
-                mainFrame.getFeedersTab().updateView();
+                loadJobExec(file);
             }
             catch (Exception e) {
                 e.printStackTrace();
@@ -1652,6 +1655,19 @@ public class JobPanel extends JPanel {
                         Translations.getString("JobPanel.Action.Job.RecentJobs.ErrorBox.Title"), e.getMessage()); //$NON-NLS-1$
             }
         }
+    }
+
+    /**
+     * Perform all action required to load a job from a given file
+     * 
+     * @param file job to load
+     * @throws Exception
+     */
+    private void loadJobExec(File file) throws Exception {
+        Job job = configuration.loadJob(file);
+        setJob(job);
+        addRecentJob(file);
+        mainFrame.getFeedersTab().updateView();
     }
 
     private final MachineListener machineListener = new MachineListener.Adapter() {
