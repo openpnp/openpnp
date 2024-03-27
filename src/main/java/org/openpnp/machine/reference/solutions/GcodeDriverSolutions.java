@@ -395,7 +395,29 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                         });
                     }
                 }
+
+                if(firmware == FirmwareType.GrblHAL || firmware == FirmwareType.Grbl) {
+                    // enable backlash escaped characters to send ctrl-c etc.
+                    if(!gcodeDriver.isBackslashEscapedCharactersEnabled()) {
+
+                        solutions.add(new Solutions.Issue(
+                                gcodeDriver,
+                                "Backlash escaped characters needed for Grbl dialects.",
+                                "Enable backlash escaped characters to support \\u0000 notation in commands."
+                                + "This is needed to send ctrl-c or ctrl-x to the controller firmware.",
+                                Severity.Warning,
+                                "https://github.com/gnea/grbl/blob/master/doc/markdown/commands.md#ascii-realtime-command-descriptions") {
+
+                                @Override
+                                public void setState(Solutions.State state) throws Exception {
+                                        gcodeDriver.setBackslashEscapedCharactersEnabled((state == Solutions.State.Solved));
+                                        super.setState(state);
+                                }
+                        });
+                    }
+                }
             }
+
             if (gcodeDriver.isConnectionKeepAlive()) {
                 solutions.add(new Solutions.Issue(
                         gcodeDriver, 
