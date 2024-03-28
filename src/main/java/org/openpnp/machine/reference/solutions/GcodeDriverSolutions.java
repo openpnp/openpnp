@@ -877,7 +877,7 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                         commandBuilt = "^tinyg .* err:.*";
                     }
                     else if (dialect == FirmwareType.GrblHAL) {
-                        commandBuilt = "^error:.*";
+                        commandBuilt = "^(error|ALARM):.*";
                     }
                     else {
                         //commandBuilt = "^!!*";
