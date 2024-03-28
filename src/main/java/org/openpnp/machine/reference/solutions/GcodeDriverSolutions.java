@@ -865,6 +865,9 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                     if (dialect == FirmwareType.TinyG) {
                         commandBuilt = "^tinyg .* ok.*";
                     }
+                    else if (dialect == FirmwareType.GrblHAL) {
+                        commandBuilt = "^(ok|GrblHAL).*";
+                    }
                     else {
                         commandBuilt = "^ok.*";
                     }
