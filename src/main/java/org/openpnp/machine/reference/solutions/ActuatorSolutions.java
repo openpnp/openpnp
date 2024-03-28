@@ -95,7 +95,9 @@ public class ActuatorSolutions implements Solutions.Subject {
                     switch(firmware_name) {
                         case "grblHAL":
                             suggestions.put(CommandType.ACTUATE_BOOLEAN_COMMAND, new String[] {
-                                "M6{True:4}{False:5} P{Index} ; actuate "+qualifier+" ON/OFF"
+                                "M6{True:4}{False:5} P{Index} ; actuate aux pin for "+qualifier+" ON/OFF",
+                                "M{True:8}{False:9} ; actuate flood pin for "+qualifier+" ON/OFF",
+                                "M{True:7}{False:9} ; actuate mist pin for "+qualifier+" ON/OFF"
                             });
                             break;
 
