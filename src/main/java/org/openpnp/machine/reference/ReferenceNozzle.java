@@ -776,7 +776,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
 
                     Actuator tcPostThreeActuator = getMachine().getActuatorByName(nt.getChangerActuatorPostStepThree());
                     if (tcPostThreeActuator !=null) {
-                        tcPostThreeActuator.actuate(true);
+                        tcPostThreeActuator.actuate(false);
                     }
 
                     Location midLocation2 = nt.getChangerMidLocation2Calibrated(false);
@@ -787,7 +787,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
 
                     Actuator tcPostTwoActuator = getMachine().getActuatorByName(nt.getChangerActuatorPostStepTwo());
                     if (tcPostTwoActuator !=null) {
-                        tcPostTwoActuator.actuate(true);
+                        tcPostTwoActuator.actuate(false);
                     }
 
                     Location midLocation = nt.getChangerMidLocationCalibrated(false);
@@ -798,7 +798,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
 
                     Actuator tcPostOneActuator = getMachine().getActuatorByName(nt.getChangerActuatorPostStepOne());
                     if (tcPostOneActuator != null) {
-                        tcPostOneActuator.actuate(true);
+                        tcPostOneActuator.actuate(false);
                     }
 
                     Location startLocation = nt.getChangerStartLocationCalibrated(false);
