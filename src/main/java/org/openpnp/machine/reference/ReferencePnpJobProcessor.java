@@ -48,11 +48,11 @@ import org.openpnp.model.PanelLocation;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
 import org.openpnp.model.PlacementsHolderLocation;
-import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.FiducialLocator;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
+import org.openpnp.spi.Locatable.LocationOption;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
@@ -596,7 +596,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
             // If the Nozzle already has the correct NozzleTip loaded we're good.
             if (nozzle.getNozzleTip() == nozzleTip) {
-                Logger.debug("No nozzle tip change needed for nozzle {}", nozzle);
+                Logger.debug("No nozzle tip change needed for nozzle {}", nozzle.getName());
                 return this;
             }
             
@@ -1151,6 +1151,12 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                     throw new JobProcessorException(nozzle, e);
                 }
             }
+            catch (JobProcessorException e) {
+                throw e;
+            }
+            catch (Exception e) {
+                throw new JobProcessorException(nozzle, e);
+            }
         }
         
         private void scriptBeforeAssembly(PlannedPlacement plannedPlacement, Location placementLocation) throws JobProcessorException {
@@ -1569,13 +1575,15 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         protected Location convertToHeadLocation(HeadMountable hm, Location ref)
         {
             Location location;
-            
+        
             try {
-                location = hm.toHeadLocation(ref);
+                // FIXME: this does not preserve the rotation
+                location = hm.toHeadLocation(ref, LocationOption.KeepRotation);
+                location = location.derive(ref, false, false, false, true);
             } catch (Exception e) {
                 location = null;
             }
-            
+        
             return location;
         }
     }
@@ -1592,13 +1600,13 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             try {
                 final Feeder feeder = findFeeder(machine, part);
 
-                location = convertToHeadLocation(nozzle, feeder.getPickLocation());
+                location = feeder.getPickLocation();
             } catch (Exception e) {
                 // ignore exceptions
                 location = null;
             }
             
-            return location;
+            return convertToHeadLocation(nozzle, location);
         }
         
         public String toString() {
@@ -1609,20 +1617,33 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     private class AlignLocator extends Locator {
         public Location getLocation(PlannedPlacement p) {
             Location location;
-            final Camera camera;
-            final Nozzle nozzle = p.nozzle;
 
-            // try to get the location where the alignment will take place
-            try {
-                camera = VisionUtils.getBottomVisionCamera();
-                
-                location = convertToHeadLocation(nozzle, camera.getLocation());
-            } catch (Exception e) {
-                // ignore exceptions
-                location = null;
-            }
+            final Nozzle nozzle = p.nozzle;
+            final JobPlacement jobPlacement = p.jobPlacement;
+            final Placement placement = jobPlacement.getPlacement();
+            final BoardLocation boardLocation = jobPlacement.getBoardLocation();
+            final Part part = placement.getPart();
+
+            final PartAlignment partAlignment = AbstractPartAlignment.getPartAlignment(part);
             
-            return location;
+            if (partAlignment == null) {
+                location = null;
+            } else {
+                // try to get the location where the alignment will take place
+                try {
+                    location = VisionUtils.getPartAlignmentLocation(
+                            partAlignment,
+                            part,
+                            boardLocation,
+                            placement, nozzle);
+                }
+                catch (Exception e) {
+                    // ignore exceptions
+                    location = null;
+                }
+            }
+
+            return convertToHeadLocation(nozzle, location);
         }
 
         public String toString() {
