@@ -96,6 +96,10 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
     protected Head head;
 
+    protected Locator pickLocator;
+    protected Locator alignLocator;
+    protected Locator placeLocator;
+    
     protected List<JobPlacement> jobPlacements = new ArrayList<>();
 
     private Step currentStep = null;
@@ -173,6 +177,9 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             catch (Exception e) {
                 throw new JobProcessorException(machine, e);
             }
+            pickLocator  = new PickLocator();
+            alignLocator = new AlignLocator();
+            placeLocator = new PlaceLocator();
             
             checkSetupErrors();
             
@@ -570,7 +577,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         public Step step() throws JobProcessorException {
             
             // sort plannedPlacements for picking with alignment as next/end location using TSM
-            List<PlannedPlacement> optimizedPlannedPlacements = optimizePlacements(new PickLocator(), new AlignLocator());
+            List<PlannedPlacement> optimizedPlannedPlacements = optimizePlacements(pickLocator, alignLocator);
             
             return new Pick(optimizedPlannedPlacements);
         }
@@ -789,7 +796,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         public Step step() throws JobProcessorException {
 
             // sort plannedPlacements for alignment with place as next/end location using TSM
-            List<PlannedPlacement> optimizedPlannedPlacements = optimizePlacements(new AlignLocator(), new PlaceLocator());
+            List<PlannedPlacement> optimizedPlannedPlacements = optimizePlacements(alignLocator, placeLocator);
             
             // continue with alignment
             return new Align(optimizedPlannedPlacements);
@@ -885,7 +892,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         public Step step() throws JobProcessorException {
             
             // sort plannedPlacements for place using TSM
-            List<PlannedPlacement> optimizedPlannedPlacements = optimizePlacements(new PlaceLocator(), null);
+            // FIXME: if the planner would provide a look-ahead feature, we could use it for further optimization here
+            List<PlannedPlacement> optimizedPlannedPlacements = optimizePlacements(placeLocator, null);
             
             return new Place(optimizedPlannedPlacements);
         }
