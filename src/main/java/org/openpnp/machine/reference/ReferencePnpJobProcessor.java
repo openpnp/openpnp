@@ -147,7 +147,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     /**
      * Get the location of ref with respect to the head mountable hm
      */
-    protected Location getHeadLocation(HeadMountable hm, Location ref)
+    protected Location convertToHeadLocation(HeadMountable hm, Location ref)
     {
         Location location;
         
@@ -578,7 +578,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     /**
      * Optimize nozzles for best pick performance
      */
-    protected class OptimizeNozzlesForPick extends OptimizationNozzlesStep {
+    protected class OptimizeNozzlesForPick extends AbstractOptimizationNozzlesStep {
         public OptimizeNozzlesForPick(List<PlannedPlacement> plannedPlacements) {
             super(plannedPlacements);
         }
@@ -797,7 +797,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     /**
      * Optimize nozzles for best alignment performance
      */
-    protected class OptimizeNozzlesForAlign extends OptimizationNozzlesStep {
+    protected class OptimizeNozzlesForAlign extends AbstractOptimizationNozzlesStep {
         public OptimizeNozzlesForAlign(List<PlannedPlacement> plannedPlacements) {
             super(plannedPlacements);
         }
@@ -893,7 +893,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     /**
      * Optimize nozzles for best place performance
      */
-    protected class OptimizeNozzlesForPlace extends OptimizationNozzlesStep {
+    protected class OptimizeNozzlesForPlace extends AbstractOptimizationNozzlesStep {
         public OptimizeNozzlesForPlace(List<PlannedPlacement> plannedPlacements) {
             super(plannedPlacements);
         }
@@ -1261,9 +1261,9 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     /**
      * This class groups a step for step for multi-nozzle optimization
      */
-    protected abstract class OptimizationNozzlesStep implements Step {
+    protected abstract class AbstractOptimizationNozzlesStep implements Step {
         private final List<PlannedPlacement> plannedPlacements;
-        protected OptimizationNozzlesStep(List<PlannedPlacement> plannedPlacements) {
+        protected AbstractOptimizationNozzlesStep(List<PlannedPlacement> plannedPlacements) {
             this.plannedPlacements = plannedPlacements;
         }
 
@@ -1326,7 +1326,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             // all nozzles are expected to be mounted on the same head so using
             // any nozzle as reference shall provide the same head location.
             Nozzle nozzle = plannedPlacements.get(0).nozzle;
-            start = getHeadLocation(nozzle, nozzle.getLocation());
+            start = convertToHeadLocation(nozzle, nozzle.getLocation());
             
             // b) calculate end location as center between all locations of the next step
             Location endLocation = calcCenterLocation(endLocator);
@@ -1376,7 +1376,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             try {
                 final Feeder feeder = findFeeder(machine, part);
 
-                location = getHeadLocation(nozzle, feeder.getPickLocation());
+                location = convertToHeadLocation(nozzle, feeder.getPickLocation());
             } catch (Exception e) {
                 // ignore exceptions
                 location = null;
@@ -1401,7 +1401,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             try {
                 camera = VisionUtils.getBottomVisionCamera();
                 
-                location = getHeadLocation(nozzle, camera.getLocation());
+                location = convertToHeadLocation(nozzle, camera.getLocation());
             } catch (Exception e) {
                 // ignore exceptions
                 location = null;
@@ -1427,7 +1427,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                     placement.getLocation());
         
             // convert location to where the head will move to to place the part
-            return getHeadLocation(nozzle, location);
+            return convertToHeadLocation(nozzle, location);
         }
         
         @Override
