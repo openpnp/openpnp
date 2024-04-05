@@ -145,22 +145,6 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     }
 
     /**
-     * Get the location of ref with respect to the head mountable hm
-     */
-    protected Location convertToHeadLocation(HeadMountable hm, Location ref)
-    {
-        Location location;
-        
-        try {
-            location = hm.toHeadLocation(ref);
-        } catch (Exception e) {
-            location = null;
-        }
-        
-        return location;
-    }
-
-    /**
      * Create some internal shortcuts to various buried objects.
      * 
      * Check for obvious setup errors in the job: Feeders are available and enabled, Placements all
@@ -1302,14 +1286,13 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
          * as endLocation for the optimization.
          * @return
          */
-        protected List<PlannedPlacement> optimizePlacements(TravellingSalesman.Locator<PlannedPlacement> sortLocator, TravellingSalesman.Locator<PlannedPlacement> endLocator) {
+        protected List<PlannedPlacement> optimizePlacements(Locator sortLocator, Locator endLocator) {
             List<PlannedPlacement> optimizedPlannedPlacements;
             long t = System.currentTimeMillis();
             Location start; // start location of traveling salesman, current location of the head
         
             // no optimization can take place if there are not enough placements
             if (plannedPlacements.size() <= 1) {
-                return plannedPlacements;
             }
 
             // if multi-nozzle optimization has been disabled, stop here
@@ -1326,7 +1309,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             // all nozzles are expected to be mounted on the same head so using
             // any nozzle as reference shall provide the same head location.
             Nozzle nozzle = plannedPlacements.get(0).nozzle;
-            start = convertToHeadLocation(nozzle, nozzle.getLocation());
+            start = sortLocator.convertToHeadLocation(nozzle, nozzle.getLocation());
             
             // b) calculate end location as center between all locations of the next step
             Location endLocation = calcCenterLocation(endLocator);
@@ -1363,8 +1346,43 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         }
     }
     
-    // FIXME: can "TravellingSalesman.Locator<PlannedPlacement>" be converted into a shorter name?
-    private class PickLocator implements TravellingSalesman.Locator<PlannedPlacement> {
+    /**
+     * create a class to group all pick, align an placement locator functions and to get rid of
+     * the lengthy "TravellingSalesman.Locator<PlannedPlacement>"
+     */
+    protected abstract class Locator implements TravellingSalesman.Locator<PlannedPlacement> {
+        /**
+         * This method is called to query the approximate location of the head for a given placement.
+         * The location is in the reference system of the head in order to compare it with others
+         * or to apply math like calculating the center between them.
+         */
+        abstract public Location getLocation(PlannedPlacement p);
+        
+        /**
+         * toString is used in log messages to generate meaningful messages where it locator as been used.
+         */
+        abstract public String toString();
+        
+        /**
+         * Return the location of the head when the headmountable hm is at location ref.
+         * This method is used to convert locations, calculated for eg. a nozzle to a head
+         * location to return it via getLocation() above.
+         */
+        protected Location convertToHeadLocation(HeadMountable hm, Location ref)
+        {
+            Location location;
+            
+            try {
+                location = hm.toHeadLocation(ref);
+            } catch (Exception e) {
+                location = null;
+            }
+            
+            return location;
+        }
+    }
+    
+    private class PickLocator extends Locator {
         public Location getLocation(PlannedPlacement p) {
             Location location;
             final Nozzle nozzle = p.nozzle;
@@ -1385,13 +1403,12 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             return location;
         }
         
-        @Override
         public String toString() {
             return "pick";
         }
     }
     
-    private class AlignLocator implements TravellingSalesman.Locator<PlannedPlacement> {
+    private class AlignLocator extends Locator {
         public Location getLocation(PlannedPlacement p) {
             Location location;
             final Camera camera;
@@ -1410,13 +1427,12 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             return location;
         }
 
-        @Override
         public String toString() {
             return "alignment";
         }
     }
     
-    private class PlaceLocator implements TravellingSalesman.Locator<PlannedPlacement> {
+    private class PlaceLocator extends Locator {
         public Location getLocation(PlannedPlacement p) {
             final Nozzle nozzle = p.nozzle;
             final JobPlacement jobPlacement = p.jobPlacement;
@@ -1430,7 +1446,6 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             return convertToHeadLocation(nozzle, location);
         }
         
-        @Override
         public String toString() {
             return "place";
         }
