@@ -1299,17 +1299,19 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             long t = System.currentTimeMillis();
             Location start; // start location of traveling salesman, current location of the head
         
-            // no optimization can take place if there are not enough placements
-            if (plannedPlacements.size() <= 1) {
-            }
-
             // if multi-nozzle optimization has been disabled, stop here
             if (!optimizeMultipleNozzles) {
                 return plannedPlacements;
             }
             
+            // no optimization can take place if there are not enough placements
+            if (plannedPlacements.size() <= 1) {
+                return plannedPlacements;
+            }
+
             // if any sort locations are now empty, skip the optimization
             if (plannedPlacements.stream().filter(p -> {return sortLocator.getLocation(p) == null;}).count() != 0) {
+                Logger.debug("Optimization skipped because not all placements provide locations");
                 return plannedPlacements;
             }
             
