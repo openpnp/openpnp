@@ -1419,7 +1419,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     protected abstract class AbstractOptimizationNozzlesStep implements Step {
         private final List<PlannedPlacement> plannedPlacements;
         protected AbstractOptimizationNozzlesStep(List<PlannedPlacement> plannedPlacements) {
-            this.plannedPlacements = plannedPlacements;
+            // sort placements into their default order to provide logging referencing the unoptimized state
+            this.plannedPlacements = planner.sort(plannedPlacements);
         }
 
         private Location calcCenterLocation(TravellingSalesman.Locator<PlannedPlacement> locator) {
@@ -1835,6 +1836,11 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
              */
             return plannedPlacements;
         }
+
+        @Override
+        public List<PlannedPlacement> sort(List<PlannedPlacement> plannedPlacements) {
+            return plannedPlacements;
+        }
     }    
     
     /**
@@ -1928,9 +1934,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
              * performed in the order of nozzle name. This is not really necessary but some users
              * prefer it that way and it does no harm
              */
-            plannedPlacements.sort(Comparator.comparing(plannedPlacement -> {
-                return plannedPlacement.nozzle.getName();
-            }));
+            plannedPlacements = sort(plannedPlacements);
 
             return plannedPlacements;
         }
@@ -1993,6 +1997,19 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 }
             }
             return null;
+        }
+        
+        @Override
+        public List<PlannedPlacement> sort(List<PlannedPlacement> plannedPlacements) {
+            /**
+             * Sort any planned placements by the nozzle name so that they are
+             * performed in the order of nozzle name. This is not really necessary but some users
+             * prefer it that way and it does no harm
+             */
+            plannedPlacements.sort(Comparator.comparing(plannedPlacement -> {
+                return plannedPlacement.nozzle.getName();
+            }));
+            return plannedPlacements;
         }
     }
 }
