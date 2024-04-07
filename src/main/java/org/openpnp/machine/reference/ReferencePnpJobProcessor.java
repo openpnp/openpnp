@@ -92,6 +92,9 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     @Attribute(required = false)
     boolean optimizeMultipleNozzles = true;
 
+    @Attribute(required = false)
+    boolean calibrateNozzleTipsInJobProcessor = true;
+
     @Element(required = false)
     public PnpJobPlanner planner = new SimplePnpJobPlanner();
 
@@ -527,7 +530,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                     nozzle.getName(), 
                     nozzleTip.getName());
             try {
-                nozzle.loadNozzleTip(nozzleTip);
+                nozzle.loadNozzleTip(nozzleTip, calibrateNozzleTipsInJobProcessor);
             }
             catch (Exception e) {
                 if (e instanceof ReferenceNozzle.ManualLoadException) {
@@ -1267,6 +1270,14 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
     public void setOptimizeMultipleNozzles(boolean optimizeMultipleNozzles) {
         this.optimizeMultipleNozzles = optimizeMultipleNozzles;
+    }
+
+    public boolean isCalibrateNozzleTipsInJobProcessor() {
+        return calibrateNozzleTipsInJobProcessor;
+    }
+
+    public void setCalibrateNozzleTipsInJobProcessor(boolean calibrateNozzleTipsInJobProcessor) {
+        this.calibrateNozzleTipsInJobProcessor = calibrateNozzleTipsInJobProcessor;
     }
 
     /**
