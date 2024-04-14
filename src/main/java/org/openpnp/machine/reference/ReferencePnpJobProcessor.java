@@ -93,7 +93,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     boolean optimizeMultipleNozzles = true;
 
     @Attribute(required = false)
-    boolean calibrateNozzleTipsInJobProcessor = true;
+    boolean allowImmediateNozzleTipCalibration = false;
 
     @Element(required = false)
     public PnpJobPlanner planner = new SimplePnpJobPlanner();
@@ -530,7 +530,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                     nozzle.getName(), 
                     nozzleTip.getName());
             try {
-                nozzle.loadNozzleTip(nozzleTip, !calibrateNozzleTipsInJobProcessor);
+                nozzle.loadNozzleTip(nozzleTip, allowImmediateNozzleTipCalibration);
             }
             catch (Exception e) {
                 if (e instanceof ReferenceNozzle.ManualLoadException) {
