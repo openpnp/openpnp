@@ -134,7 +134,9 @@ public interface Nozzle
      * @param withCalibration
      * @throws Exception
      */
-    public void loadNozzleTip(NozzleTip nozzleTip) throws Exception;
+    default void loadNozzleTip(NozzleTip nozzleTip) throws Exception {
+        loadNozzleTip(nozzleTip, true);
+    }
     public void loadNozzleTip(NozzleTip nozzleTip, boolean withCalibration) throws Exception;
 
     /**
