@@ -1272,14 +1272,6 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         this.optimizeMultipleNozzles = optimizeMultipleNozzles;
     }
 
-    public boolean isCalibrateNozzleTipsInJobProcessor() {
-        return calibrateNozzleTipsInJobProcessor;
-    }
-
-    public void setCalibrateNozzleTipsInJobProcessor(boolean calibrateNozzleTipsInJobProcessor) {
-        this.calibrateNozzleTipsInJobProcessor = calibrateNozzleTipsInJobProcessor;
-    }
-
     /**
      * This class groups a step for step for multi-nozzle optimization
      */
