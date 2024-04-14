@@ -131,11 +131,11 @@ public interface Nozzle
      * If the specified NozzleTip is already loaded this method should do nothing.
      * 
      * @param nozzleTip
-     * @param skipCalibration
+     * @param withCalibration
      * @throws Exception
      */
     public void loadNozzleTip(NozzleTip nozzleTip) throws Exception;
-    public void loadNozzleTip(NozzleTip nozzleTip, boolean skipCalibration) throws Exception;
+    public void loadNozzleTip(NozzleTip nozzleTip, boolean withCalibration) throws Exception;
 
     /**
      * Changer interface:

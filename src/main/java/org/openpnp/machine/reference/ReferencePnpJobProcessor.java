@@ -530,7 +530,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                     nozzle.getName(), 
                     nozzleTip.getName());
             try {
-                nozzle.loadNozzleTip(nozzleTip, calibrateNozzleTipsInJobProcessor);
+                nozzle.loadNozzleTip(nozzleTip, !calibrateNozzleTipsInJobProcessor);
             }
             catch (Exception e) {
                 if (e instanceof ReferenceNozzle.ManualLoadException) {
