@@ -5,8 +5,6 @@ import java.awt.Desktop;
 import java.awt.Toolkit;
 import java.awt.datatransfer.StringSelection;
 import java.net.URI;
-import java.util.ArrayDeque;
-import java.util.Deque;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import java.util.function.Consumer;
@@ -26,7 +24,6 @@ import org.pmw.tinylog.Logger;
 import com.google.common.util.concurrent.FutureCallback;
 
 public class UiUtils {
-    
     /**
      * Functional interface for a Runnable that can throw an Exception but returns no value. Splits
      * the difference between Runnable and Callable.
@@ -34,7 +31,7 @@ public class UiUtils {
     public interface Thrunnable {
         public void thrun() throws Exception;
     }
-    
+
     /**
      * This extends the exception class by allowing to specify a task to be executed once the user has agreed.
      */
@@ -95,7 +92,7 @@ public class UiUtils {
      * @param t
      */
     public static void showError(Component parent, String title, Throwable t) {
-
+        
         // Go through all causes, creating a combined continuation
         Thrunnable combinedContinuation = null;
         for (Throwable cause = t; cause != null; cause = cause.getCause()) {

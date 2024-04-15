@@ -1026,7 +1026,7 @@ public class JobPanel extends JPanel {
         });
     }
     
-    // resume a job that currently in pause state - used to continue after a manual nozzle tip change
+    // resume a job that's currently in state Paused - used to continue after a manual nozzle tip change from within the JobProcessor
     public void jobResume() {
         if (state == State.Paused) {
             setState(State.Running);

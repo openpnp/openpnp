@@ -599,11 +599,6 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     }
 
     @Override
-    public void loadNozzleTip(NozzleTip nozzleTip) throws Exception {
-        loadNozzleTip(nozzleTip, false);
-    }
-
-    @Override
     public void loadNozzleTip(NozzleTip nozzleTip, boolean withCalibration) throws Exception {
         // if the requested nozzle-tip is already loaded, skip the load step, but continue as calibration might be required.
         if (this.nozzleTip != nozzleTip) {
