@@ -41,7 +41,7 @@ public class UiUtils {
         protected Thrunnable continuation = null;
         
         public ExceptionWithContinuation(Throwable cause, Thrunnable continuation) {
-            super(cause);
+            super(cause.getMessage(), cause);
             this.continuation = continuation;
         }
         
@@ -102,18 +102,30 @@ public class UiUtils {
                     if (combinedContinuation == null) {
                         combinedContinuation = continuation; // just take the first one
                     } else {
-                        // FIXME: implement continuation chaining
-                        Logger.warn("Combined continuation not supported yet.");
+                        final Thrunnable outerCombinedContinuation = combinedContinuation;
+                        combinedContinuation = (() -> { 
+                            // combine the two
+                            try {
+                                continuation.thrun(); // inner first
+                            }
+                            catch (ExceptionWithContinuation e) {
+                                throw new ExceptionWithContinuation(e, () -> {
+                                    outerCombinedContinuation.thrun(); // requeue outer, in case of exception
+                                });
+                            }
+                            outerCombinedContinuation.thrun(); // outer
+                        });
                     }
                 }
             }
         }
-            
+
         if (parent != null) {
-            boolean execContinuation = MessageBoxes.errorBox(parent, title, t, combinedContinuation != null);
+            boolean haveContinuations = combinedContinuation != null;
+            boolean execContinuations = MessageBoxes.errorBox(parent, title, t, haveContinuations);
 
             // execution continuation, if user agrees
-            if (combinedContinuation != null && execContinuation) {
+            if (haveContinuations && execContinuations) {
                 submitUiMachineTask(combinedContinuation);
             }
         }

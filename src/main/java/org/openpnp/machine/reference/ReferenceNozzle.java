@@ -599,7 +599,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     }
 
     @Override
-    public void loadNozzleTip(NozzleTip nozzleTip) throws Exception {
+    public void loadNozzleTip(NozzleTip nozzleTip, boolean withCalibration) throws Exception {
         // if the requested nozzle-tip is already loaded, skip the load step, but continue as calibration might be required.
         if (this.nozzleTip != nozzleTip) {
             if (getPart() != null) {
@@ -725,13 +725,14 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
                 manualChangeInstructions += "\na manual nozzle tip " + nt.getName()+" load on nozzle "+getName()+" now.";
                 manualChangeInstructions += "\nWhen you press OK, the nozzle tip will be calibrated (if enabled).";
                 throw new ManualLoadException(this, 
-                        new UiUtils.ExceptionWithContinuation(manualChangeInstructions,  () -> { loadNozzleTip(nozzleTip); }));
+                        new UiUtils.ExceptionWithContinuation(manualChangeInstructions,  () -> { loadNozzleTip(nozzleTip, withCalibration); }));
             }
         }
 
         ensureZCalibrated(true);
-
-        if (this.nozzleTip.getCalibration().isRecalibrateOnNozzleTipChangeNeeded(this)
+        
+        if (withCalibration
+                && this.nozzleTip.getCalibration().isRecalibrateOnNozzleTipChangeNeeded(this)
                 && !this.nozzleTip.getCalibration().isCalibrated(this)) {
             Logger.debug("{}.loadNozzleTip() nozzle tip {} calibration needed", getName(), this.nozzleTip.getName());
             this.nozzleTip.getCalibration().calibrate(this);

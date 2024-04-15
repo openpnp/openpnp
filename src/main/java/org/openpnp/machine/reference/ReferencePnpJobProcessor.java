@@ -29,6 +29,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.swing.SwingUtilities;
+
+import org.openpnp.gui.JobPanel;
+import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.vision.AbstractPartAlignment;
 import org.openpnp.machine.reference.wizards.ReferencePnpJobProcessorConfigurationWizard;
@@ -57,6 +61,7 @@ import org.openpnp.spi.base.AbstractJobProcessor;
 import org.openpnp.spi.base.AbstractPnpJobProcessor;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.TravellingSalesman;
+import org.openpnp.util.UiUtils;
 import org.openpnp.util.Utils2D;
 import org.openpnp.util.VisionUtils;
 import org.pmw.tinylog.Logger;
@@ -86,6 +91,9 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
     @Attribute(required = false)
     boolean optimizeMultipleNozzles = true;
+
+    @Attribute(required = false)
+    boolean allowImmediateNozzleTipCalibration = false;
 
     @Element(required = false)
     public PnpJobPlanner planner = new SimplePnpJobPlanner();
@@ -522,13 +530,27 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                     nozzle.getName(), 
                     nozzleTip.getName());
             try {
-                nozzle.loadNozzleTip(nozzleTip);
+                nozzle.loadNozzleTip(nozzleTip, allowImmediateNozzleTipCalibration);
             }
             catch (Exception e) {
-                throw new JobProcessorException(nozzleTip,  e);
+                if (e instanceof ReferenceNozzle.ManualLoadException) {
+                    throw new JobProcessorException(nozzleTip, 
+                            new UiUtils.ExceptionWithContinuation(e, () -> { resumeJob(); }));
+                } else {
+                    throw new JobProcessorException(nozzleTip, e);
+                }
             }
             
             return this;
+        }
+        
+        public void resumeJob() {
+            Logger.debug("Restarting the job now.");
+            // change the job state from within the UI thread (we are currently in a machine thread)
+            SwingUtilities.invokeLater(() -> { 
+                JobPanel j = MainFrame.get().getJobTab();
+                j.jobResume(); }
+            );
         }
     }
     
