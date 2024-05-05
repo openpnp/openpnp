@@ -817,6 +817,12 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                                     "$sv=0\n" // Non-verbose
                                     +commandBuilt;
                         }
+                        // prepend alarm reset for grblHAL controllers
+                        else if (dialect == FirmwareType.GrblHAL) {
+                            commandBuilt = "\\u0003\n$X\n"
+                                + "(^ send ctrl-c to abort any previous state & reset any previous alarm)\n"
+                                + commandBuilt;
+                        }
                     }
                     else {
                         if (gcodeDriver.getUnits() == LengthUnit.Millimeters) {
@@ -861,6 +867,12 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                         }
                     }
                     break;
+                case ENABLE_COMMAND:
+                    if (dialect == FirmwareType.GrblHAL) {
+                        commandBuilt = "\\u0003\n$X\n"
+                            + "(^ send ctrl-c to abort any previous state & reset any previous alarm)";
+                    }
+                    break;
                 case COMMAND_CONFIRM_REGEX:
                     if (dialect == FirmwareType.TinyG) {
                         commandBuilt = "^tinyg .* ok.*";
@@ -886,6 +898,12 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                 case HOME_COMMAND:
                     if (dialect == FirmwareType.SmoothiewareGrblSyntax || dialect == FirmwareType.Grbl) {
                         commandBuilt = "$H ; Home all axes";
+                    }
+                    else if (dialect == FirmwareType.GrblHAL) {
+                        commandBuilt = "\\u0003\n$X\n"
+                            + "(^ send ctrl-c to abort any previous state & reset any previous alarm)\n"
+                            + "{Acceleration:M204 S%.2f ; Initialize acceleration}\n"
+                            + "$H ; Home all axes";
                     }
                     else if (dialect == FirmwareType.TinyG) {
                         commandBuilt = "G28.2 ";
