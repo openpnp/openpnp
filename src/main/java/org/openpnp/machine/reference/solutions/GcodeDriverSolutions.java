@@ -817,8 +817,59 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                                     "$sv=0\n" // Non-verbose
                                     +commandBuilt;
                         }
-                        // prepend alarm reset for grblHAL controllers
+                        // grblHAL specifics
                         else if (dialect == FirmwareType.GrblHAL) {
+                            // prepend default config + param descriptions for user convenience
+                            commandBuilt = "$0=5.0              ; Step pulse time microseconds\n"
+                                + "$1=25               ; Step idle delay milliseconds\n"
+                                + "$2=0                ; Step pulse invert\n"
+                                + "$3=0                ; Step direction invert\n"
+                                + "$4=15               ; Invert stepper enable pin(s)\n"
+                                + "$5=15               ; Invert limit pins\n"
+                                + "$10=511             ; Status report options\n"
+                                + "$11=0.010           ; Junction deviation\n"
+                                + "$12=0.002           ; Arc tolerance\n"
+                                + "$13=0               ; Report in inches\n"
+                                + "$14=6               ; Invert control pins (N/A,Feed hold,Cycle start,N/A,N/A,N/A,EStop)\n"
+                                + "$15=0               ; Invert coolant pins\n"
+                                + "$17=70              ; Pullup disable control pins (N/A,Feed hold,Cycle start,N/A,N/A,N/A,EStop)\n"
+                                + "$18=15              ; Pullup disable limit pins\n"
+                                + "$28=0.100           ; G73 Retract distance\n"
+                                + "$29=0.0             ; Pulse delay\n"
+                                + "$32=0               ; Mode of operation\n"
+                                + "$37=0               ; Steppers deenergize\n"
+                                + "$39=1               ; Enable legacy RT commands\n"
+                                + "$62=0               ; Sleep enable\n"
+                                + "$63=3               ; Feed hold actions - Disable laser during hold,Restore spindle and coolant state on resume   Actions taken during feed hold and on resume from feed hold.\n"
+                                + "$64=0               ; Force init alarm\n"
+                                + "$100=82.36058       ; X-axis travel resolution (step/mm)\n"
+                                + "$101=82.36058       ; Y-axis travel resolution (step/mm)\n"
+                                + "$102=250.00000      ; Z-axis travel resolution (step/mm)\n"
+                                + "$110=90000.000      ; X-axis maximum rate (mm/min)\n"
+                                + "$111=90000.000      ; Y-axis maximum rate (mm/min)\n"
+                                + "$112=90000.000      ; Z-axis maximum rate (mm/min)\n"
+                                + "$120=1000.000       ; X-axis acceleration (mm/sec^2)\n"
+                                + "$121=1000.000       ; Y-axis acceleration (mm/sec^2)\n"
+                                + "$122=1500.000       ; Z-axis acceleration (mm/sec^2)\n"
+                                + "$130=1308.000       ; X-axis maximum travel (mm)\n"
+                                + "$131=548.000        ; Y-axis maximum travel (mm)\n"
+                                + "$132=200.000        ; Z-axis maximum travel (mm)\n"
+                                + "$341=0              ; Tool change mode\n"
+                                + "$342=30.0           ; Tool change probing distance (mm)\n"
+                                + "$343=25.0           ; Tool change locate feed rate (mm/min)\n"
+                                + "$344=200.0          ; Tool change search seek rate (mm/min)\n"
+                                + "$345=200.0          ; Tool change probe pull-off rate (mm/min)\n"
+                                + "$346=1              ; Restore position after M6\n"
+                                + "$370=0              ; Invert I/O Port inputs\n"
+                                + "$372=0              ; Invert I/O Port outputs\n"
+                                + "$384=0              ; Disable G92 persistence\n"
+                                + "$398=100            ; Planner buffer blocks\n"
+                                + "$481=0              ; Autoreport interval (ms)\n"
+                                + "$484=1              ; Unlock required after E-Stop\n"
+                                + "$486=0              ; Lock coordinate systems\n"
+                                + "; $$                ; uncomment to output settings in gcode log\n"
+                                + commandBuilt;
+                            // prepend alarm reset
                             commandBuilt = "\\u0003\n$X\n"
                                 + "(^ send ctrl-c to abort any previous state & reset any previous alarm)\n"
                                 + commandBuilt;
@@ -902,8 +953,19 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                     else if (dialect == FirmwareType.GrblHAL) {
                         commandBuilt = "\\u0003\n$X\n"
                             + "(^ send ctrl-c to abort any previous state & reset any previous alarm)\n"
+                            + "$22=51                   ; Homing cycle\n"
+                            + "$23=0                    ; Homing direction invert\n"
+                            + "$24=50.0                 ; Homing locate feed rate (mm/min)\n"
+                            + "$25=2500.0               ; Homing search seek rate (mm/min)\n"
+                            + "$26=0                    ; Homing switch debounce delay (ms)\n"
+                            + "$27=1.000                ; Homing switch pull-off distance (mm)\n"
+                            + "$43=1                    ; Homing passes\n"
+                            + "$44=3                    ; Axes homing, first pass\n"
+                            + "$45=0                    ; Axes homing, second pass\n"
+                            + "$46=0                    ; Axes homing, third pass\n"
+                            + "$47=0                    ; Axes homing, fourth pass\n"
                             + "{Acceleration:M204 S%.2f ; Initialize acceleration}\n"
-                            + "$H ; Home all axes";
+                            + "$H                       ; Home all axes";
                     }
                     else if (dialect == FirmwareType.TinyG) {
                         commandBuilt = "G28.2 ";
