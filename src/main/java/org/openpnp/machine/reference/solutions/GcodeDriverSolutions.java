@@ -1028,6 +1028,11 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                                 commandBuilt += "\n";
                             }
                         }
+                        if (dialect == FirmwareType.GrblHAL) {
+                            // make controller use jog mode (respect soft limits etc.) when moving
+                            // https://github.com/gnea/grbl/wiki/Grbl-v1.1-Jogging
+                            commandBuilt += "\n$J=";
+                        }
                         commandBuilt += "G1 ";
                         for (String variable : gcodeDriver.getAxisVariables(machine)) {
                             // Determine the significant number of digits.
