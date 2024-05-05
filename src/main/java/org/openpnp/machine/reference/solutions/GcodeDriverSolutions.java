@@ -993,6 +993,11 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                         commandBuilt = null;
                     }
                     break;
+                case HOME_COMPLETE_REGEX:
+                    if (dialect == FirmwareType.GrblHAL) {
+                        commandBuilt = "^<Home.*";
+                    }
+                    break;
                 case MOVE_TO_COMMAND:
                     if (hasAxes) {
                         // Determine minimum rates to compute needed decimal digits.
