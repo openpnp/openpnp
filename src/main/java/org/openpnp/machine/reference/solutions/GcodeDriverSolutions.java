@@ -1068,6 +1068,13 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                         commandBuilt = "";
                     }
                     break;
+                case ACTUATE_BOOLEAN_COMMAND:
+                    if (dialect == FirmwareType.GrblHAL) {
+                        commandBuilt = ";M6{True:4}{False:5} P{Index} ; turn AUX output <Index> on/off\n"
+                            + ";M{True:7}{False:9} ; toggle mist pin\n"
+                            + ";M{True:8}{False:9} ; toggle flood pin on/off";
+                    }
+                    break;
             }
             suggestGcodeCommand(gcodeDriver, null, solutions, commandType, commandBuilt, commandModified,
                     disallowHeadMountables);
