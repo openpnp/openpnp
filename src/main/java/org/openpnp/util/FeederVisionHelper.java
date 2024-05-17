@@ -243,10 +243,16 @@ public class FeederVisionHelper {
         }
         double rotationTape = Math.atan2(unitVector.getY(), unitVector.getX())*180.0/Math.PI;
         Location transform = params.partLocation.derive(null, null, null, rotationTape);
-        if (Math.abs(rotationTape - this.settings.partLocation.getRotation()) > 0.1) {
-            // HACK: something is not up-to-date -> refresh
-            this.settings.partLocation = transform;
-        }
+
+//        // this section is inherited from the original ReferencePushPullFeeder but it was disabled
+//        // the check about rotation being more than 0.1 does not provide significant value
+//        // this was disabled in order to facilitate having all transform functions as static
+//        if (Math.abs(rotationTape - this.settings.partLocation.getRotation()) > 0.1) {
+//            // HACK: something is not up-to-date -> refresh
+              // // original: setLocation(transform); // which also resets the calibration
+//            this.settings.partLocation = transform;
+//            this.calibratedVisionOffset = null;
+//        }
 
         if (visionOffset != null) {
             transform = transform.subtractWithRotation(visionOffset);
