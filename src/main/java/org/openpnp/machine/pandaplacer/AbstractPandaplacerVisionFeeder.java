@@ -74,9 +74,9 @@ public abstract class AbstractPandaplacerVisionFeeder extends ReferenceFeeder {
     private long feedCount = 0;
 
     @Element(required = false)
-    private CvPipeline pipeline = createDefaultPipeline(PipelineType.ColorKeyed);
+    private CvPipeline pipeline = FeederVisionHelper.createDefaultPipeline(PipelineType.CircularSymmetry);
     @Attribute(required = false)
-    protected PipelineType pipelineType = PipelineType.ColorKeyed;
+    protected PipelineType pipelineType = PipelineType.CircularSymmetry;
 
     @Element(required = false)
     private Length precisionWanted = new Length(0.1, LengthUnit.Millimeters);
@@ -128,43 +128,6 @@ public abstract class AbstractPandaplacerVisionFeeder extends ReferenceFeeder {
 
     public static final Location nullLocation = new Location(LengthUnit.Millimeters);
 
-    static final private String xmlDefaultPipeline = "<cv-pipeline>\n"
-        + "   <stages>\n"
-        + "      <cv-stage class=\"org.openpnp.vision.pipeline.stages.ImageRead\" name=\"00\" enabled=\"false\" file=\"test.png\"/>\n"
-        + "      <cv-stage class=\"org.openpnp.vision.pipeline.stages.ImageCapture\" name=\"0\" enabled=\"true\" settle-first=\"true\" count=\"1\"/>\n"
-        + "      <cv-stage class=\"org.openpnp.vision.pipeline.stages.BlurGaussian\" name=\"1\" enabled=\"true\" kernel-size=\"5\"/>\n"
-        + "      <cv-stage class=\"org.openpnp.vision.pipeline.stages.AffineWarp\" name=\"11\" enabled=\"true\" length-unit=\"Millimeters\" x-0=\"0.0\" y-0=\"0.0\" x-1=\"0.0\" y-1=\"0.0\" x-2=\"0.0\" y-2=\"0.0\" scale=\"1.0\" rectify=\"true\" region-of-interest-property=\"regionOfInterest\"/>\n"
-        + "      <cv-stage class=\"org.openpnp.vision.pipeline.stages.ConvertColor\" name=\"12\" enabled=\"true\" conversion=\"Bgr2Gray\"/>\n"
-        + "      <cv-stage class=\"org.openpnp.vision.pipeline.stages.HistogramEqualizeAdaptive\" name=\"13\" enabled=\"false\" channels-to-equalize=\"First\" clip-limit=\"2.0\" number-of-tile-rows=\"1\" number-of-tile-cols=\"1\"/>\n"
-        + "      <cv-stage class=\"org.openpnp.vision.pipeline.stages.ImageRecall\" name=\"20\" enabled=\"true\" image-stage-name=\"1\"/>\n"
-        + "      <cv-stage class=\"org.openpnp.vision.pipeline.stages.MaskCircle\" name=\"21\" enabled=\"true\" diameter=\"600\"/>\n"
-        + "      <cv-stage class=\"org.openpnp.vision.pipeline.stages.ConvertColor\" name=\"22\" enabled=\"true\" conversion=\"Bgr2HsvFull\"/>\n"
-        + "      <cv-stage class=\"org.openpnp.vision.pipeline.stages.Normalize\" name=\"23\" enabled=\"false\"/>\n"
-        + "      <cv-stage class=\"org.openpnp.vision.pipeline.stages.MaskHsv\" name=\"24\" enabled=\"true\" auto=\"false\" fraction-to-mask=\"0.0\" hue-min=\"240\" hue-max=\"130\" saturation-min=\"110\" saturation-max=\"255\" value-min=\"10\" value-max=\"255\" invert=\"false\" binary-mask=\"true\"/>\n"
-        + "      <cv-stage class=\"org.openpnp.vision.pipeline.stages.BlurMedian\" name=\"25\" enabled=\"true\" kernel-size=\"13\"/>\n"
-        + "      <cv-stage class=\"org.openpnp.vision.pipeline.stages.FindContours\" name=\"27\" enabled=\"true\" retrieval-mode=\"List\" approximation-method=\"Simple\"/>\n"
-        + "      <cv-stage class=\"org.openpnp.vision.pipeline.stages.FilterContours\" name=\"28\" enabled=\"true\" contours-stage-name=\"27\" min-area=\"1000.0\" max-area=\"100000.0\"/>\n"
-        + "      <cv-stage class=\"org.openpnp.vision.pipeline.stages.FitEllipseContours\" name=\"results\" enabled=\"true\" contours-stage-name=\"28\"/>\n"
-        + "      <cv-stage class=\"org.openpnp.vision.pipeline.stages.ImageRecall\" name=\"30\" enabled=\"true\" image-stage-name=\"0\"/>\n"
-        + "      <cv-stage class=\"org.openpnp.vision.pipeline.stages.DrawEllipses\" name=\"31\" enabled=\"false\" ellipses-stage-name=\"results\" thickness=\"2\"/>\n"
-        + "   </stages>\n"
-        + "</cv-pipeline>";
-    static final private String xmlCircularSymmetryPipeline = "<cv-pipeline>\n"
-        + "   <stages>\n"
-        + "      <cv-stage class=\"org.openpnp.vision.pipeline.stages.ImageCapture\" name=\"0\" enabled=\"true\" default-light=\"true\" settle-first=\"true\" count=\"1\"/>\n"
-        + "      <cv-stage class=\"org.openpnp.vision.pipeline.stages.ImageWriteDebug\" name=\"deb0\" enabled=\"false\" prefix=\"push_pull_\" suffix=\".png\"/>\n"
-        + "      <cv-stage class=\"org.openpnp.vision.pipeline.stages.BlurGaussian\" name=\"1\" enabled=\"true\" kernel-size=\"5\"/>\n"
-        + "      <cv-stage class=\"org.openpnp.vision.pipeline.stages.AffineWarp\" name=\"2\" enabled=\"true\" length-unit=\"Millimeters\" x-0=\"0.0\" y-0=\"0.0\" x-1=\"0.0\" y-1=\"0.0\" x-2=\"0.0\" y-2=\"0.0\" scale=\"1.0\" rectify=\"true\" region-of-interest-property=\"regionOfInterest\"/>\n"
-        + "      <cv-stage class=\"org.openpnp.vision.pipeline.stages.ConvertColor\" name=\"3\" enabled=\"true\" conversion=\"Bgr2Gray\"/>\n"
-        + "      <cv-stage class=\"org.openpnp.vision.pipeline.stages.ImageRecall\" name=\"5\" enabled=\"true\" image-stage-name=\"0\"/>\n"
-        + "      <cv-stage class=\"org.openpnp.vision.pipeline.stages.DetectCircularSymmetry\" name=\"results\" enabled=\"true\" min-diameter=\"10\" max-diameter=\"100\" max-distance=\"100\" max-target-count=\"10\" min-symmetry=\"1.2\" corr-symmetry=\"0.2\" property-name=\"sprocketHole\" outer-margin=\"0.3\" inner-margin=\"0.1\" sub-sampling=\"8\" super-sampling=\"1\" symmetry-score=\"RingMedianVarianceVsRingVarianceSum\" diagnostics=\"false\"/>\n"
-        + "      <cv-stage class=\"org.openpnp.vision.pipeline.stages.ImageRecall\" name=\"7\" enabled=\"false\" image-stage-name=\"0\"/>\n"
-        + "      <cv-stage class=\"org.openpnp.vision.pipeline.stages.DrawCircles\" name=\"8\" enabled=\"false\" circles-stage-name=\"results\" thickness=\"1\">\n"
-        + "         <color r=\"255\" g=\"0\" b=\"0\" a=\"255\"/>\n"
-        + "      </cv-stage>\n"
-        + "      <cv-stage class=\"org.openpnp.vision.pipeline.stages.ImageWriteDebug\" name=\"deb1\" enabled=\"false\" prefix=\"push_pull_result_\" suffix=\".png\"/>\n"
-        + "   </stages>\n"
-        + "</cv-pipeline>";
 
 
     public void checkHomedState(Machine machine) {
@@ -555,7 +518,7 @@ public abstract class AbstractPandaplacerVisionFeeder extends ReferenceFeeder {
     }
 
     public void resetPipeline(PipelineType type) {
-        pipeline = createDefaultPipeline(type);
+        pipeline = FeederVisionHelper.createDefaultPipeline(type);
         setPipelineType(type);
     }
 
@@ -601,18 +564,6 @@ public abstract class AbstractPandaplacerVisionFeeder extends ReferenceFeeder {
             return pipeline;
         }
         catch (CloneNotSupportedException e) {
-            throw new Error(e);
-        }
-    }
-
-
-    // Note: ReferencePushPullFeeder has different pipelines that include OCR.
-    protected CvPipeline createDefaultPipeline(PipelineType type) {
-        try {
-            String xml = (type == PipelineType.CircularSymmetry) ? xmlCircularSymmetryPipeline : xmlDefaultPipeline;
-            return new CvPipeline(xml);
-        }
-        catch (Exception e) {
             throw new Error(e);
         }
     }

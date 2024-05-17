@@ -26,10 +26,12 @@ package org.openpnp.util;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import org.apache.commons.io.IOUtils;
 import org.opencv.core.KeyPoint;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
@@ -71,6 +73,18 @@ public class FeederVisionHelper {
         CircularSymmetry
     }
 
+    // default CV pipelines are defined as XML resources
+    // if the feeder class doesn't set the pipeline, the default ones are used depending on the pipelineType
+    public static CvPipeline createDefaultPipeline(PipelineType type) {
+    	try {
+            String xml = IOUtils.toString(FeederVisionHelper.class.getResource("FeederVisionHelper-"+type.toString()+"-Pipeline.xml"), Charset.defaultCharset());
+            return new CvPipeline(xml);
+        }
+        catch (Exception e) {
+            throw new Error(e);
+        }
+    }
+
         // class to store all the inbound parameters
         public static class FeederVisionHelperParams {
             // vision objects
@@ -91,6 +105,11 @@ public class FeederVisionHelper {
             public double calibrationToleranceMm = 1.95;
             // vision and comparison sprocket hole tolerance (in size, position)
             public double sprocketHoleToleranceMm = 0.6;
+
+	          public void resetPipeline(PipelineType type) {
+	              this.pipelineType = type;
+	              this.pipeline = createDefaultPipeline(type);
+	          }
 
             public FeederVisionHelperParams() {
                 //default values
