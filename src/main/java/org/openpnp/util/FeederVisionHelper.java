@@ -656,7 +656,7 @@ public class FeederVisionHelper {
                                     /sprocketHolePitchMm)*sprocketHolePitchMm;
                             calibratedHole1Location = midPoint.subtract(bestUnitVector.multiply(distanceHolesMm*0.5, distanceHolesMm*0.5, 0, 0));
                             calibratedHole2Location = midPoint.add(bestUnitVector.multiply(distanceHolesMm*0.5, distanceHolesMm*0.5, 0, 0));
-                            Logger.trace("[TapeUtils] calibrated hole locations are: " + calibratedHole1Location + ", " +calibratedHole2Location);
+                            Logger.trace("[FeederVisionHelper] calibrated hole locations are: " + calibratedHole1Location + ", " +calibratedHole2Location);
                             if (autoSetupMode  == FindFeaturesMode.CalibrateHoles) {
                                 // get the current pick location relative to hole 1
                                 Location pickLocation = partLocation.convertToUnits(LengthUnit.Millimeters);

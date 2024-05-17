@@ -55,7 +55,6 @@ public abstract class AbstractPandaplacerVisionFeeder extends ReferenceFeeder {
 
     @Attribute(required = false)
     protected boolean normalizePickLocation = true;
-
     @Attribute(required = false)
     protected boolean snapToAxis = false;
 
@@ -69,7 +68,6 @@ public abstract class AbstractPandaplacerVisionFeeder extends ReferenceFeeder {
     @Element(required = false)
     private Length feedPitch = new Length(4, LengthUnit.Millimeters);
 
-
     @Attribute(required = false)
     private long feedCount = 0;
 
@@ -80,7 +78,6 @@ public abstract class AbstractPandaplacerVisionFeeder extends ReferenceFeeder {
 
     @Element(required = false)
     private Length precisionWanted = new Length(0.1, LengthUnit.Millimeters);
-
     @Attribute(required = false)
     private int calibrationCount = 0;
     @Element(required = false)
@@ -127,7 +124,6 @@ public abstract class AbstractPandaplacerVisionFeeder extends ReferenceFeeder {
     protected CalibrationTrigger calibrationTrigger = CalibrationTrigger.UntilConfident;
 
     public static final Location nullLocation = new Location(LengthUnit.Millimeters);
-
 
 
     public void checkHomedState(Machine machine) {
@@ -227,7 +223,6 @@ public abstract class AbstractPandaplacerVisionFeeder extends ReferenceFeeder {
         }
     }
 
-
     protected void obtainCalibratedVisionOffset() throws Exception {
         Camera camera = getCamera();
         try (CvPipeline pipeline = getCvPipeline(camera, true, false)) {
@@ -321,7 +316,6 @@ public abstract class AbstractPandaplacerVisionFeeder extends ReferenceFeeder {
         firePropertyChange("feedPitch", oldValue, feedPitch);
     }
 
-
     public long getFeedCount() {
         return feedCount;
     }
@@ -341,7 +335,6 @@ public abstract class AbstractPandaplacerVisionFeeder extends ReferenceFeeder {
         this.calibrationTrigger = calibrationTrigger;
         firePropertyChange("calibrationTrigger", oldValue, calibrationTrigger);
     }
-
 
     public Length getPrecisionWanted() {
         return precisionWanted;
@@ -491,7 +484,6 @@ public abstract class AbstractPandaplacerVisionFeeder extends ReferenceFeeder {
         }
     }
 
-
     public CvPipeline getCvPipeline(Camera camera, boolean clone, boolean autoSetup) {
         try {
             CvPipeline pipeline = getPipeline();
@@ -579,7 +571,7 @@ public abstract class AbstractPandaplacerVisionFeeder extends ReferenceFeeder {
             // As we've changed all this -> reset any stats
             resetCalibrationStatistics();
             try {
-                // Now run a sprocket hole calibration, make sure to change the part (not swap it)
+                // Now run a sprocket hole calibration
                 performVisionOperations(camera, pipeline, true, true, false);
             }
             finally {
