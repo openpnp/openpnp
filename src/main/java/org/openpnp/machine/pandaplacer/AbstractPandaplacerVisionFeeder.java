@@ -33,10 +33,11 @@ import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
-import org.openpnp.util.FeederVisionHelper;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.FeederVisionHelper;
+import org.openpnp.util.FeederVisionHelper.FeederVisionHelperParams;
 import org.openpnp.util.FeederVisionHelper.FindFeaturesMode;
+import org.openpnp.util.FeederVisionHelper.PipelineType;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
@@ -71,17 +72,6 @@ public abstract class AbstractPandaplacerVisionFeeder extends ReferenceFeeder {
 
     @Attribute(required = false)
     private long feedCount = 0;
-
-    public enum PipelineType {
-        ColorKeyed("Default"),
-        CircularSymmetry("CircularSymmetry");
-
-        public String tag;
-
-        PipelineType(String tag) {
-            this.tag = tag;
-        }
-    }
 
     @Element(required = false)
     private CvPipeline pipeline = createDefaultPipeline(PipelineType.ColorKeyed);
@@ -204,6 +194,10 @@ public abstract class AbstractPandaplacerVisionFeeder extends ReferenceFeeder {
                 });
             }
         });
+    }
+
+    private FeederVisionHelperParams getVisionHelperParams(Camera camera, CvPipeline pipeline) {
+        return new FeederVisionHelperParams(camera, this.pipelineType, pipeline, 2000, normalizePickLocation, snapToAxis, partPitch, feedPitch, location, hole1Location, hole2Location, calibrationToleranceMm, sprocketHoleToleranceMm);
     }
 
     public Camera getCamera() throws Exception {
@@ -630,8 +624,8 @@ public abstract class AbstractPandaplacerVisionFeeder extends ReferenceFeeder {
 
             // Process vision and show feature without applying anything
             pipeline.process();
-            FeederVisionHelper tape = new FeederVisionHelper(camera, pipeline, 2000, null);
-            tape.findFeatures(normalizePickLocation, snapToAxis, partPitch, feedPitch, location, hole1Location, hole2Location, calibrationToleranceMm, sprocketHoleToleranceMm);
+            FeederVisionHelper tape = new FeederVisionHelper(getVisionHelperParams(camera, pipeline));
+            tape.findFeatures(null);
         }
     }
 
@@ -671,8 +665,8 @@ public abstract class AbstractPandaplacerVisionFeeder extends ReferenceFeeder {
         try (CvPipeline pipeline = getCvPipeline(camera, true, true)) {
             // Process vision and get some features
             pipeline.process();
-            FeederVisionHelper feature = new FeederVisionHelper(camera, pipeline, 2000, FindFeaturesMode.FromPickLocationGetHoles)
-                    .findFeatures(normalizePickLocation, snapToAxis, partPitch, feedPitch, location, hole1Location, hole2Location, calibrationToleranceMm, sprocketHoleToleranceMm);
+            FeederVisionHelper feature = new FeederVisionHelper(getVisionHelperParams(camera, pipeline))
+                    .findFeatures(FindFeaturesMode.FromPickLocationGetHoles);
             // Store the initial vision based results
             setLocation(feature.getCalibratedPickLocation());
             setHole1Location(feature.getCalibratedHole1Location());
@@ -752,8 +746,8 @@ public abstract class AbstractPandaplacerVisionFeeder extends ReferenceFeeder {
                 MovableUtils.moveToLocationAtSafeZ(camera, midPoint);
                 // take a new shot
                 pipeline.process();
-                feature = new FeederVisionHelper(camera, pipeline, 2000, FindFeaturesMode.CalibrateHoles)
-                        .findFeatures(storePickLocation, storeVisionOffset, partPitch, feedPitch, location, hole1Location, hole2Location);
+                feature = new FeederVisionHelper(getVisionHelperParams(camera, pipeline))
+                        .findFeatures(FindFeaturesMode.CalibrateHoles);
                 runningHole1Location = feature.getCalibratedHole1Location();
                 runningHole2Location = feature.getCalibratedHole2Location();
                 runningPickLocation = feature.getCalibratedPickLocation();

@@ -66,32 +66,77 @@ public class FeederVisionHelper {
       OcrOnly
     }
 
-    // initial calibration tolerance, i.e. how much the feeder can be shifted physically
-    private double calibrationToleranceMm = 1.95;
-    // vision and comparison sprocket hole tolerance (in size, position)
-    private double sprocketHoleToleranceMm = 0.6;
+    public enum PipelineType {
+        ColorKeyed,
+        CircularSymmetry
+    }
+
+        // class to store all the inbound parameters
+        public static class FeederVisionHelperParams {
+            // vision objects
+            public Camera camera;
+            public PipelineType pipelineType = PipelineType.CircularSymmetry;
+            public CvPipeline pipeline;
+            // features display ms
+            public long showResultMilliseconds = 2000;
+            // tape parameters
+            public boolean normalizePickLocation = true;
+            public boolean snapToAxis = false;
+            public Length partPitch = new Length(4, LengthUnit.Millimeters);
+            public Length feedPitch = new Length(4, LengthUnit.Millimeters);
+            public Location partLocation = new Location(LengthUnit.Millimeters);
+            public Location hole1Location = new Location(LengthUnit.Millimeters);
+            public Location hole2Location = new Location(LengthUnit.Millimeters);
+            // initial calibration tolerance, i.e. how much the feeder can be shifted physically
+            public double calibrationToleranceMm = 1.95;
+            // vision and comparison sprocket hole tolerance (in size, position)
+            public double sprocketHoleToleranceMm = 0.6;
+
+            public FeederVisionHelperParams() {
+                //default values
+            }
+
+/*
+ * This is the constructor for the Params class to be passed around from outside the Helper
+ * Arguments:
+ * - camera: the actual camera to be used for vision calibration
+ * - pipeline: CV XML pipeline expected
+ * - showResultMilliseconds: how long the drawings on the picture will be displayed (ms)
+ * - normalizePickLocation: Normalize the pick location relative to the tape holes according to the EIA-481 standard
+ * - snapToAxis: Snap rows of tape holes to the Axis parallel
+ * - partPitch: Pitch of the parts in the tape (2mm, 4mm, 8mm, 12mm, etc.)
+ * - feedPitch: How much the tape will be advanced by one actuation (usually multiples of 4mm)
+ *    - if partPitch > feedPitch then multiple actuations will be executed
+ * - partLocation: approximate location of the part pocket as set using jogging the head
+ * - hole1Location, hole2Location: provide if known (maybe from previous calibration), critical only to the "OcrOnly" mode
+ * - calibrationToleranceMm, sprocketHoleToleranceMm: calibration tolerance parameters, either used from internal constants or provided by the caller class *
+ */
+        public FeederVisionHelperParams(Camera camera, PipelineType pipelineType, CvPipeline pipeline, long showResultMilliseconds, boolean normalizePickLocation, boolean snapToAxis, Length partPitch, Length feedPitch, Location partLocation, Location hole1Location, Location hole2Location
+                ,double calibrationToleranceMm, double sprocketHoleToleranceMm) {
+            this.camera = camera;
+            this.pipelineType = pipelineType;
+            this.pipeline = pipeline;
+            this.showResultMilliseconds = showResultMilliseconds;
+            this.normalizePickLocation = normalizePickLocation;
+            this.snapToAxis = snapToAxis;
+            this.partPitch = partPitch;
+            this.feedPitch = feedPitch;
+            this.partLocation = partLocation;
+            this.hole1Location = hole1Location;
+            this.hole2Location = hole2Location;
+            this.calibrationToleranceMm = calibrationToleranceMm;
+            this.sprocketHoleToleranceMm = sprocketHoleToleranceMm;
+        }
+
+    }
+
+    private FeederVisionHelperParams settings = new FeederVisionHelperParams();
 
     // Some EIA 481 standard constants.
     static final double sprocketHoleDiameterMm = 1.5;
     static final double sprocketHolePitchMm = 4;
     static final double minSprocketHolesDistanceMm = 3.5;
 
-    // tape parameters
-    private boolean normalizePickLocation = true;
-    private boolean snapToAxis = false;
-
-    private Location partLocation = new Location(LengthUnit.Millimeters);
-    private Location hole1Location = new Location(LengthUnit.Millimeters);
-    private Location hole2Location = new Location(LengthUnit.Millimeters);
-
-    private Length partPitch = new Length(4, LengthUnit.Millimeters);
-    private Length feedPitch = new Length(4, LengthUnit.Millimeters);
-
-
-    private Camera camera;
-    private CvPipeline pipeline;
-    private long showResultMilliseconds;
-    private FindFeaturesMode autoSetupMode;
 
     private Location calibratedVisionOffset;
     private Location calibratedHole1Location;
@@ -109,31 +154,13 @@ public class FeederVisionHelper {
     private List<Result.Circle> holes;
     private List<Line> lines;
 
-    public FeederVisionHelper(Camera camera, CvPipeline pipeline, final long showResultMilliseconds, FindFeaturesMode autoSetupMode) {
-        this.camera = camera;
-        this.pipeline = pipeline;
-        this.showResultMilliseconds = showResultMilliseconds;
-        this.autoSetupMode = autoSetupMode;
+    public FeederVisionHelper(FeederVisionHelperParams settings) {
+        this.settings = settings;
     }
-
-    private void setTapeSpecs(boolean normalizePickLocation, boolean snapToAxis, Length partPitch, Length feedPitch, Location partLocation, Location hole1Location, Location hole2Location) {
-      this.normalizePickLocation = normalizePickLocation;
-      this.snapToAxis = snapToAxis;
-      this.partPitch = partPitch;
-      this.feedPitch = feedPitch;
-      this.hole1Location = hole1Location;
-      this.hole2Location = hole2Location;
-      this.partLocation = partLocation;
-    }
-
-    private void setCalibrationTolerance(double calibrationToleranceMm, double sprocketHoleToleranceMm) {
-      this.calibrationToleranceMm = calibrationToleranceMm;
-      this.sprocketHoleToleranceMm = sprocketHoleToleranceMm;
-}
 
     public long getPartsPerFeedCycle() {
-        long feedsPerPart = (long)Math.ceil(partPitch.divide(feedPitch));
-        return Math.round(1*Math.ceil(feedsPerPart*feedPitch.divide(partPitch)));
+        long feedsPerPart = (long)Math.ceil(this.settings.partPitch.divide(this.settings.feedPitch));
+        return Math.round(1*Math.ceil(feedsPerPart*this.settings.feedPitch.divide(this.settings.partPitch)));
     }
 
     public Length getTapeWidth() {
@@ -143,7 +170,7 @@ public class FeederVisionHelper {
       // 3) therefore
       // 3) a) hole middle to part middle + 0.5mm = half of tape width
       // 3) b) (hole middle to part middle + 0.5mm) * 2 = tapeWidth
-        Location hole1Location = transformMachineToFeederLocation(this.hole1Location, null)
+        Location hole1Location = transformMachineToFeederLocation(this.settings.hole1Location, null, this.settings)
                 .convertToUnits(LengthUnit.Millimeters);
         final double partToSprocketHoleHalfTapeWidthDiffMm = 0.5; // deducted from EIA-481
         double tapeWidth = Math.round(hole1Location.getY()+partToSprocketHoleHalfTapeWidthDiffMm)*2;
@@ -179,7 +206,8 @@ public class FeederVisionHelper {
         return location.subtractWithRotation(transform).rotateXy(-transform.getRotation());
     }
 
-    protected Location getTransform(Location visionOffset) {
+    //Note: only partLocation, hole1Location and hole2Location are relevant from the FeederVisionHelperParams
+    public Location getTransform(Location visionOffset, FeederVisionHelperParams params) {
         // Our local feeder coordinate system is relative to the EIA 481 standard tape orientation
         // i.e. with the sprocket holes on top and the tape advancing to the right, which is our +X
         // The pick location is on [0, 0] local, which corresponds to feeder.location global.
@@ -189,16 +217,16 @@ public class FeederVisionHelper {
         // instead of trusting the location.rotation. This might happen when the user fiddles
         // with the locations manually.
 
-        Location unitVector = hole1Location.unitVectorTo(hole2Location);
+        Location unitVector = params.hole1Location.unitVectorTo(params.hole2Location);
         if (!(Double.isFinite(unitVector.getX()) && Double.isFinite(unitVector.getY()))) {
             // Catch (yet) undefined hole locations.
-            unitVector = new Location(hole1Location.getUnits(), 0, 1, 0, 0);
+            unitVector = new Location(params.hole1Location.getUnits(), 0, 1, 0, 0);
         }
         double rotationTape = Math.atan2(unitVector.getY(), unitVector.getX())*180.0/Math.PI;
-        Location transform = this.partLocation.derive(null, null, null, rotationTape);
-        if (Math.abs(rotationTape - this.partLocation.getRotation()) > 0.1) {
+        Location transform = params.partLocation.derive(null, null, null, rotationTape);
+        if (Math.abs(rotationTape - this.settings.partLocation.getRotation()) > 0.1) {
             // HACK: something is not up-to-date -> refresh
-            this.partLocation = transform;
+            this.settings.partLocation = transform;
         }
 
         if (visionOffset != null) {
@@ -207,12 +235,14 @@ public class FeederVisionHelper {
         return transform;
     }
 
-    protected Location transformFeederToMachineLocation(Location feederLocation, Location visionOffset) {
-        return forwardTransform(feederLocation, getTransform(visionOffset));
+    //Note: only partLocation, hole1Location and hole2Location are relevant from the FeederVisionHelperParams
+    public Location transformFeederToMachineLocation(Location feederLocation, Location visionOffset, FeederVisionHelperParams params) {
+        return forwardTransform(feederLocation, getTransform(visionOffset, params));
     }
 
-    protected Location transformMachineToFeederLocation(Location machineLocation, Location visionOffset) {
-        return backwardTransform(machineLocation, getTransform(visionOffset));
+    //Note: only partLocation, hole1Location and hole2Location are relevant from the FeederVisionHelperParams
+    public Location transformMachineToFeederLocation(Location machineLocation, Location visionOffset, FeederVisionHelperParams params) {
+        return backwardTransform(machineLocation, getTransform(visionOffset, params));
     }
 
 
@@ -220,9 +250,9 @@ public class FeederVisionHelper {
         // If the feeder is advancing more than one part per feed cycle (e.g. with 2mm pitch tape or if a multiplier is
         // given), we need to cycle through multiple pick locations. partInCycle is 1-based and goes to getPartsPerFeedCycle().
         long offsetPitches = (getPartsPerFeedCycle() - partInCycle) % getPartsPerFeedCycle();
-        Location feederLocation = new Location(partPitch.getUnits(), partPitch.multiply((double)offsetPitches).getValue(),
+        Location feederLocation = new Location(this.settings.partPitch.getUnits(), this.settings.partPitch.multiply((double)offsetPitches).getValue(),
                 0, 0, 0);
-        Location machineLocation = transformFeederToMachineLocation(feederLocation, visionOffset);
+        Location machineLocation = transformFeederToMachineLocation(feederLocation, visionOffset, this.settings);
         return machineLocation;
     }
 
@@ -272,7 +302,7 @@ public class FeederVisionHelper {
     private void drawPartNumbers(Mat mat, Color color) {
         // make sure the numbers are not too dense
         int [] baseLine = null;
-        double feederPocketPitchMm =  partPitch.convertToUnits(LengthUnit.Millimeters).getValue();
+        double feederPocketPitchMm = this.settings.partPitch.convertToUnits(LengthUnit.Millimeters).getValue();
         if (feederPocketPitchMm < 1.) {
             // feeder not set up yet
             return;
@@ -282,7 +312,7 @@ public class FeederVisionHelper {
         double fontScale = 1.0;
         Size size = Imgproc.getTextSize(String.valueOf(getPartsPerFeedCycle()),
                 Imgproc.FONT_HERSHEY_PLAIN, fontScale, 2, baseLine);
-        Location textSizeMm = camera.getUnitsPerPixelAtZ().multiply(size.width, size.height, 0., 0.)
+        Location textSizeMm = this.settings.camera.getUnitsPerPixelAtZ().multiply(size.width, size.height, 0., 0.)
                 .convertToUnits(LengthUnit.Millimeters);
         if (textSizeMm.getY() < 0.0) {
             textSizeMm = textSizeMm.multiply(1.0, -1.0, 0.0, 0.0);
@@ -315,12 +345,12 @@ public class FeederVisionHelper {
             Location partLocation = getPartLocation(i, calibratedVisionOffset)
                     .convertToUnits(LengthUnit.Millimeters);
             // TODO: go besides part
-            Location textLocation = transformMachineToFeederLocation(partLocation, calibratedVisionOffset);
+            Location textLocation = transformMachineToFeederLocation(partLocation, calibratedVisionOffset, this.settings);
             textLocation = textLocation.add(new Location(LengthUnit.Millimeters, 0., -textSizeMm.getY()*0.25, 0., 0.));
-            textLocation = transformFeederToMachineLocation(textLocation, calibratedVisionOffset)
+            textLocation = transformFeederToMachineLocation(textLocation, calibratedVisionOffset, this.settings)
                     .convertToUnits(LengthUnit.Millimeters);
-            org.openpnp.model.Point p = VisionUtils.getLocationPixels(camera, textLocation);
-            if (p.x > 0 && p.x < camera.getWidth() && p.y > 0 && p.y < camera.getHeight()) {
+            org.openpnp.model.Point p = VisionUtils.getLocationPixels(this.settings.camera, textLocation);
+            if (p.x > 0 && p.x < this.settings.camera.getWidth() && p.y > 0 && p.y < this.settings.camera.getHeight()) {
                 // roughly in the visible range - draw it
                 // determine the alignment based on where the text is located in relation to the pocket
                 double dx = textLocation.getX() - partLocation.getX();
@@ -362,32 +392,27 @@ public class FeederVisionHelper {
         }
     }
 
-    public FeederVisionHelper findFeatures(boolean normalizePickLocation, boolean snapToAxis, Length partPitch, Length feedPitch, Location partLocation, Location hole1Location, Location hole2Location)
-        throws Exception {
-      return findFeatures(normalizePickLocation, snapToAxis, partPitch, feedPitch, partLocation, hole1Location, hole2Location
-            ,this.calibrationToleranceMm, this.sprocketHoleToleranceMm);
-    }
-
 /*
  * This method will use Computer Vision to detect and calculate EIA-481 standard tape features - holes & part pockets
  * - detects the tape holes first as they are defined in the standard, 4mm apart
  * - calculates the tape width based on the distance between the initial nozzle location and where the holes were found
  * - determines the exact location for the part pocket center point based on EIA-481 specs and the input parameter partPitch
- * Notes:
- * - normalizePickLocation: Normalize the pick location relative to the tape holes according to the EIA-481 standard
- * - snapToAxis: Snap rows of tape holes to the Axis parallel
- * - partPitch: Pitch of the parts in the tape (2mm, 4mm, 8mm, 12mm, etc.)
- * - feedPitch: How much the tape will be advanced by one actuation (usually multiples of 4mm)
- *    - if partPitch > feedPitch then multiple actuations will be executed
- * - partLocation: approximate location of the part pocket as set using jogging the head
- * - hole1Location, hole2Location: provide if known (maybe from previous calibration), critical only to the "OcrOnly" mode
- * - calibrationToleranceMm, sprocketHoleToleranceMm: calibration tolerance parameters, either used from internal constants or provided by the caller class
  */
-    public FeederVisionHelper findFeatures(boolean normalizePickLocation, boolean snapToAxis, Length partPitch, Length feedPitch, Location partLocation, Location hole1Location, Location hole2Location
-        ,double calibrationToleranceMm, double sprocketHoleToleranceMm)
+    public FeederVisionHelper findFeatures(FindFeaturesMode autoSetupMode)
         throws Exception {
-      setTapeSpecs(normalizePickLocation, snapToAxis, partPitch, feedPitch, partLocation, hole1Location, hole2Location);
-      setCalibrationTolerance(calibrationToleranceMm, sprocketHoleToleranceMm);
+
+        // using some local variables to keep the below function code as close to original as possible
+        Camera camera = this.settings.camera;
+        CvPipeline pipeline = this.settings.pipeline;
+        Location partLocation = this.settings.partLocation;
+        Location hole1Location = this.settings.hole1Location;
+        Location hole2Location = this.settings.hole2Location;
+        double sprocketHoleToleranceMm = this.settings.sprocketHoleToleranceMm;
+        double calibrationToleranceMm = this.settings.calibrationToleranceMm;
+        boolean normalizePickLocation = this.settings.normalizePickLocation;
+        boolean snapToAxis = this.settings.snapToAxis;
+        long showResultMilliseconds = this.settings.showResultMilliseconds;
+
         List resultsList = null;
 
         try {
@@ -402,7 +427,7 @@ public class FeederVisionHelper {
                 // No vision calibration wanted - just copy the pre-set locations
                 calibratedHole1Location = hole1Location;
                 calibratedHole2Location = hole2Location;
-                calibratedPickLocation  = this.partLocation;
+                calibratedPickLocation  = partLocation;
             }
             else {
                 final double partPitchMinMm = 2;
@@ -555,7 +580,7 @@ public class FeederVisionHelper {
                         double angleTape = Math.atan2(bestUnitVector.getY(), bestUnitVector.getX())*180.0/Math.PI;
                         // preliminary pick location
                         calibratedPickLocation = camera.getLocation()
-                                .derive(this.partLocation, false, false, true, false) // previous Z
+                                .derive(partLocation, false, false, true, false) // previous Z
                                 .derive(null,  null, null, angleTape); // preliminary feeeder orientation
                     }
                     else {
@@ -583,7 +608,7 @@ public class FeederVisionHelper {
                                 // turn the unit vector around
                                 bestUnitVector = bestUnitVector.multiply(-1.0, -1.0, 0, 0);
                             }
-                            if (this.snapToAxis) {
+                            if (snapToAxis) {
                                 if (Math.abs(bestUnitVector.getX()) > Math.abs(bestUnitVector.getY())*5) {
                                     // close enough, snap to X
                                     bestUnitVector = new Location(LengthUnit.Millimeters, Math.signum(bestUnitVector.getX()), 0, 0, 0);
@@ -605,14 +630,14 @@ public class FeederVisionHelper {
                             Logger.trace("[TapeUtils] calibrated hole locations are: " + calibratedHole1Location + ", " +calibratedHole2Location);
                             if (autoSetupMode  == FindFeaturesMode.CalibrateHoles) {
                                 // get the current pick location relative to hole 1
-                                Location pickLocation = this.partLocation.convertToUnits(LengthUnit.Millimeters);
+                                Location pickLocation = partLocation.convertToUnits(LengthUnit.Millimeters);
                                 Location relativePickLocation = pickLocation
                                         .subtract(hole1Location);
                                 // rotate from old angle
                                 relativePickLocation =  relativePickLocation.rotateXy(-pickLocation.getRotation())
                                         .derive(null, null, null, 0.0);
                                 // normalize to a nominal local pick location according to EIA 481
-                                if (this.normalizePickLocation) {
+                                if (normalizePickLocation) {
                                     relativePickLocation = new Location(LengthUnit.Millimeters,
                                             Math.round(relativePickLocation.getX()/partPitchMinMm)*partPitchMinMm,
                                             -sprocketHoleToPartMinMm+Math.round((relativePickLocation.getY()+sprocketHoleToPartMinMm)/sprocketHoleToPartGridMm)*sprocketHoleToPartGridMm,
@@ -628,7 +653,7 @@ public class FeederVisionHelper {
                     if (calibratedHole1Location != null && calibratedPickLocation != null) {
                         // we have our calibrated locations
                         // Get the calibrated vision offset (with Z always 0)
-                        calibratedVisionOffset = this.partLocation
+                        calibratedVisionOffset = partLocation
                                 .subtractWithRotation(calibratedPickLocation)
                                 .derive(null, null, 0.0, null);
                         Logger.debug("calibrated vision offset is: " + calibratedVisionOffset
