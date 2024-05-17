@@ -677,7 +677,6 @@ public abstract class AbstractPandaplacerVisionFeeder extends ReferenceFeeder {
             setLocation(feature.getCalibratedPickLocation());
             setHole1Location(feature.getCalibratedHole1Location());
             setHole2Location(feature.getCalibratedHole2Location());
-            setRotationInFeeder(feature.getCalibratedRotationInFeeder());
             // As we've changed all this -> reset any stats
             resetCalibrationStatistics();
             try {
@@ -736,7 +735,6 @@ public abstract class AbstractPandaplacerVisionFeeder extends ReferenceFeeder {
         Location runningHole1Location = getHole1Location();
         Location runningHole2Location = getHole2Location();
         Location runningPickLocation = getLocation();
-        Double   runningRotationInFeeder = getRotationInFeeder();
         Location runningVisionOffset = getVisionOffset();
         ensureCameraZ(camera, true);
 
@@ -759,7 +757,6 @@ public abstract class AbstractPandaplacerVisionFeeder extends ReferenceFeeder {
                 runningHole1Location = feature.getCalibratedHole1Location();
                 runningHole2Location = feature.getCalibratedHole2Location();
                 runningPickLocation = feature.getCalibratedPickLocation();
-                runningRotationInFeeder = feature.getCalibratedRotationInFeeder();
                 // calculate the worst pick location delta this gives, cycle part 1 is the worst as it is farthest away
                 Location uncalibratedPick1Location = getPickLocation(1, runningVisionOffset);
                 Location calibratedPick1Location = getPickLocation(1, feature.getCalibratedVisionOffset());
@@ -773,7 +770,6 @@ public abstract class AbstractPandaplacerVisionFeeder extends ReferenceFeeder {
                 }
                 if (storePickLocation) {
                     setLocation(runningPickLocation);
-                    setRotationInFeeder(runningRotationInFeeder);
                 }
                 if (storeVisionOffset) {
                     // update the stats

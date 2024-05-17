@@ -99,8 +99,11 @@ public class FeederVisionHelper {
     private Location calibratedPickLocation;
     // OCR detection
     private SimpleOcr.OcrModel detectedOcrModel;
+
+    // RotationInFeeder is not required by the Helper class as it is only needed to determine the final Pick Location
+    // This Helper class does not provide a public method for Pick Location and only determines it internally for drawing purposes exclusively, where rotation is considered 0
     // Rotation of the part within the feeder (i.e. within the tape)
-    private Double rotationInFeeder = Double.valueOf(0.0);
+//  // private Double rotationInFeeder = Double.valueOf(0.0);
 
     // recognized stuff
     private List<Result.Circle> holes;
@@ -163,10 +166,6 @@ public class FeederVisionHelper {
       return this.calibratedPickLocation;
     }
 
-    public Double getCalibratedRotationInFeeder() {
-      return this.rotationInFeeder;
-    }
-
     public SimpleOcr.OcrModel getDetectedOcrModel() {
       return this.detectedOcrModel;
     }
@@ -222,7 +221,7 @@ public class FeederVisionHelper {
         // given), we need to cycle through multiple pick locations. partInCycle is 1-based and goes to getPartsPerFeedCycle().
         long offsetPitches = (getPartsPerFeedCycle() - partInCycle) % getPartsPerFeedCycle();
         Location feederLocation = new Location(partPitch.getUnits(), partPitch.multiply((double)offsetPitches).getValue(),
-                0, 0, getCalibratedRotationInFeeder());
+                0, 0, 0);
         Location machineLocation = transformFeederToMachineLocation(feederLocation, visionOffset);
         return machineLocation;
     }
