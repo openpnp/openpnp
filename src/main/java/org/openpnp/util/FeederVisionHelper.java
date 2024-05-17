@@ -63,7 +63,7 @@ public class FeederVisionHelper {
     public enum FindFeaturesMode {
       FromPickLocationGetHoles,
       CalibrateHoles,
-      CheckOnly
+      OcrOnly
     }
 
     // initial calibration tolerance, i.e. how much the feeder can be shifted physically
@@ -381,7 +381,7 @@ public class FeederVisionHelper {
  * - feedPitch: How much the tape will be advanced by one actuation (usually multiples of 4mm)
  *    - if partPitch > feedPitch then multiple actuations will be executed
  * - partLocation: approximate location of the part pocket as set using jogging the head
- * - hole1Location, hole2Location: provide if known (maybe from previous calibration), critical only to the "CheckOnly" mode
+ * - hole1Location, hole2Location: provide if known (maybe from previous calibration), critical only to the "OcrOnly" mode
  * - calibrationToleranceMm, sprocketHoleToleranceMm: calibration tolerance parameters, either used from internal constants or provided by the caller class
  */
     public FeederVisionHelper findFeatures(boolean normalizePickLocation, boolean snapToAxis, Length partPitch, Length feedPitch, Location partLocation, Location hole1Location, Location hole2Location
@@ -399,7 +399,7 @@ public class FeederVisionHelper {
             holes = new ArrayList<>();
             lines = new ArrayList<>();
 
-            if (autoSetupMode == FindFeaturesMode.CheckOnly) {
+            if (autoSetupMode == FindFeaturesMode.OcrOnly) {
                 // No vision calibration wanted - just copy the pre-set locations
                 calibratedHole1Location = hole1Location;
                 calibratedHole2Location = hole2Location;
