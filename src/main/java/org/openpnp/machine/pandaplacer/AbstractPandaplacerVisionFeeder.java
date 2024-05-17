@@ -427,57 +427,13 @@ public abstract class AbstractPandaplacerVisionFeeder extends ReferenceFeeder {
         resetCalibration();
     }
 
-    public static Location forwardTransform(Location location, Location transform) {
-        return location.rotateXy(transform.getRotation()).addWithRotation(transform);
-    }
-
-    public static Location backwardTransform(Location location, Location transform) {
-        return location.subtractWithRotation(transform).rotateXy(-transform.getRotation());
-    }
-
-    protected Location getTransform(Location visionOffset) {
-        // Our local feeder coordinate system is relative to the EIA 481 standard tape orientation
-        // i.e. with the sprocket holes on top and the tape advancing to the right, which is our +X
-        // The pick location is on [0, 0] local, which corresponds to feeder.location global.
-        // The feeder.location.rotation contains the orientation of the tape on the machine.
-
-        // to make sure we get the right rotation, we update it from the sprocket holes
-        // instead of trusting the location.rotation. This might happen when the user fiddles
-        // with the locations manually.
-
-        Location unitVector = getHole1Location().unitVectorTo(getHole2Location());
-        if (!(Double.isFinite(unitVector.getX()) && Double.isFinite(unitVector.getY()))) {
-            // Catch (yet) undefined hole locations.
-            unitVector = new Location(getHole1Location().getUnits(), 0, 1, 0, 0);
-        }
-        double rotationTape = Math.atan2(unitVector.getY(), unitVector.getX())*180.0/Math.PI;
-        Location transform = getLocation().derive(null, null, null, rotationTape);
-        if (Math.abs(rotationTape - getLocation().getRotation()) > 0.1) {
-            // HACK: something is not up-to-date -> refresh
-            setLocation(transform);
-        }
-
-        if (visionOffset != null) {
-            transform = transform.subtractWithRotation(visionOffset);
-        }
-        return transform;
-    }
-
-    protected Location transformFeederToMachineLocation(Location feederLocation, Location visionOffset) {
-        return forwardTransform(feederLocation, getTransform(visionOffset));
-    }
-
-    protected Location transformMachineToFeederLocation(Location machineLocation, Location visionOffset) {
-        return backwardTransform(machineLocation, getTransform(visionOffset));
-    }
-
     public Location getPickLocation(long partInCycle, Location visionOffset)  {
         // If the feeder is advancing more than one part per feed cycle (e.g. with 2mm pitch tape or if a multiplier is
         // given), we need to cycle through multiple pick locations. partInCycle is 1-based and goes to getPartsPerFeedCycle().
         long offsetPitches = (getPartsPerFeedCycle() - partInCycle) % getPartsPerFeedCycle();
         Location feederLocation = new Location(partPitch.getUnits(), partPitch.multiply((double)offsetPitches).getValue(),
                 0, 0, getRotationInFeeder());
-        Location machineLocation = transformFeederToMachineLocation(feederLocation, visionOffset);
+        Location machineLocation = FeederVisionHelper.transformFeederToMachineLocation(feederLocation, visionOffset, this.getVisionHelperParams(null, null));
         return machineLocation;
     }
 

@@ -226,7 +226,7 @@ public class FeederVisionHelper {
     }
 
     //Note: only partLocation, hole1Location and hole2Location are relevant from the FeederVisionHelperParams
-    public Location getTransform(Location visionOffset, FeederVisionHelperParams params) {
+    public static Location getTransform(Location visionOffset, FeederVisionHelperParams params) {
         // Our local feeder coordinate system is relative to the EIA 481 standard tape orientation
         // i.e. with the sprocket holes on top and the tape advancing to the right, which is our +X
         // The pick location is on [0, 0] local, which corresponds to feeder.location global.
@@ -261,12 +261,12 @@ public class FeederVisionHelper {
     }
 
     //Note: only partLocation, hole1Location and hole2Location are relevant from the FeederVisionHelperParams
-    public Location transformFeederToMachineLocation(Location feederLocation, Location visionOffset, FeederVisionHelperParams params) {
+    public static Location transformFeederToMachineLocation(Location feederLocation, Location visionOffset, FeederVisionHelperParams params) {
         return forwardTransform(feederLocation, getTransform(visionOffset, params));
     }
 
     //Note: only partLocation, hole1Location and hole2Location are relevant from the FeederVisionHelperParams
-    public Location transformMachineToFeederLocation(Location machineLocation, Location visionOffset, FeederVisionHelperParams params) {
+    public static Location transformMachineToFeederLocation(Location machineLocation, Location visionOffset, FeederVisionHelperParams params) {
         return backwardTransform(machineLocation, getTransform(visionOffset, params));
     }
 
