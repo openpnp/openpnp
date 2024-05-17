@@ -623,7 +623,6 @@ public abstract class AbstractPandaplacerVisionFeeder extends ReferenceFeeder {
         try (CvPipeline pipeline = getCvPipeline(camera, true, true)) {
 
             // Process vision and show feature without applying anything
-            pipeline.process();
             FeederVisionHelper tape = new FeederVisionHelper(getVisionHelperParams(camera, pipeline));
             tape.findFeatures(null);
         }
@@ -664,7 +663,6 @@ public abstract class AbstractPandaplacerVisionFeeder extends ReferenceFeeder {
         }
         try (CvPipeline pipeline = getCvPipeline(camera, true, true)) {
             // Process vision and get some features
-            pipeline.process();
             FeederVisionHelper feature = new FeederVisionHelper(getVisionHelperParams(camera, pipeline))
                     .findFeatures(FindFeaturesMode.FromPickLocationGetHoles);
             // Store the initial vision based results
@@ -744,8 +742,6 @@ public abstract class AbstractPandaplacerVisionFeeder extends ReferenceFeeder {
                         .derive(null, null, null, runningPickLocation.getRotation()+getRotationInFeeder());
                 Logger.debug("calibrating sprocket holes pass "+ i+ " midPoint is "+midPoint);
                 MovableUtils.moveToLocationAtSafeZ(camera, midPoint);
-                // take a new shot
-                pipeline.process();
                 feature = new FeederVisionHelper(getVisionHelperParams(camera, pipeline))
                         .findFeatures(FindFeaturesMode.CalibrateHoles);
                 runningHole1Location = feature.getCalibratedHole1Location();

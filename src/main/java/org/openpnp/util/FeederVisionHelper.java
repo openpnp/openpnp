@@ -416,6 +416,8 @@ public class FeederVisionHelper {
         List resultsList = null;
 
         try {
+        	//take a new shot
+        	pipeline.process();
             // in accordance with EIA-481 etc. we use all millimeters.
             Location mmScale = camera.getUnitsPerPixelAtZ()
                     .convertToUnits(LengthUnit.Millimeters);
