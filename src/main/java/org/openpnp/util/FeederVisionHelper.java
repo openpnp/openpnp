@@ -654,7 +654,10 @@ public class FeederVisionHelper {
 
             Result ocrStageResult = pipeline.getResult("OCR");
             if (ocrStageResult != null) {
-                detectedOcrModel = (SimpleOcr.OcrModel) ocrStageResult.model;
+                // when the stage is not enabled, a weird situation is created since the thrown error is about "Result.Circle, RotatedRect, KeyPoint"
+                if (ocrStageResult.stage.isEnabled()) {
+                      detectedOcrModel = (SimpleOcr.OcrModel) ocrStageResult.model;
+                }
             }
 
             if (showResultMilliseconds > 0) {
