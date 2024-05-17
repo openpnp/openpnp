@@ -89,7 +89,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     // and it defines the local feeder coordinate system. The rotationInFeeder here can be removed
     // once it is inherited. 
     @Attribute(required=false)
-    protected Double rotationInFeeder = new Double(0.0);
+    protected Double rotationInFeeder = Double.valueOf(0.0);
 
     @Attribute(required = false)
     protected boolean normalizePickLocation = true;
@@ -548,7 +548,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
 
     public Double getRotationInFeeder() {
         if (rotationInFeeder == null) {
-            rotationInFeeder = new Double(0.0);
+            rotationInFeeder = Double.valueOf(0.0);
         }
         return rotationInFeeder;
     }
@@ -1987,7 +1987,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                 }
 
                 // between equally good feeders, take the closer one
-                return new Double(feeder1.getLocation().convertToUnits(LengthUnit.Millimeters).getLinearDistanceTo(getLocation()))
+                return Double.valueOf(feeder1.getLocation().convertToUnits(LengthUnit.Millimeters).getLinearDistanceTo(getLocation()))
                         .compareTo(feeder2.getLocation().convertToUnits(LengthUnit.Millimeters).getLinearDistanceTo(getLocation()));
             }
         });

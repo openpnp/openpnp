@@ -100,7 +100,7 @@ public class FeederVisionHelper {
     // OCR detection
     private SimpleOcr.OcrModel detectedOcrModel;
     // Rotation of the part within the feeder (i.e. within the tape)
-    private Double rotationInFeeder = 0.0;
+    private Double rotationInFeeder = Double.valueOf(0.0);
 
     // recognized stuff
     private List<Result.Circle> holes;

@@ -50,7 +50,7 @@ public abstract class AbstractPandaplacerVisionFeeder extends ReferenceFeeder {
     // and it defines the local feeder coordinate system. The rotationInFeeder here can be removed
     // once it is inherited.
     @Attribute(required=false)
-    protected Double rotationInFeeder = 0.0;
+    protected Double rotationInFeeder = Double.valueOf(0.0);
 
     @Attribute(required = false)
     protected boolean normalizePickLocation = true;
@@ -291,7 +291,7 @@ public abstract class AbstractPandaplacerVisionFeeder extends ReferenceFeeder {
 
     public Double getRotationInFeeder() {
         if (rotationInFeeder == null) {
-            rotationInFeeder = 0.0;
+            rotationInFeeder = Double.valueOf(0.0);
         }
         return rotationInFeeder;
     }
