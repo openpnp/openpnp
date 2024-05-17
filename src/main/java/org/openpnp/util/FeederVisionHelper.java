@@ -177,9 +177,11 @@ public class FeederVisionHelper {
         this.settings = settings;
     }
 
-    public long getPartsPerFeedCycle() {
+    //this is only used for Preview functionality. No need to be public or consider multiplier
+    private long getPartsPerFeedCycle() {
+        long feedMultiplier = 1;
         long feedsPerPart = (long)Math.ceil(this.settings.partPitch.divide(this.settings.feedPitch));
-        return Math.round(1*Math.ceil(feedsPerPart*this.settings.feedPitch.divide(this.settings.partPitch)));
+        return Math.round(feedMultiplier*Math.ceil(feedsPerPart*this.settings.feedPitch.divide(this.settings.partPitch)));
     }
 
     public Length getTapeWidth() {
