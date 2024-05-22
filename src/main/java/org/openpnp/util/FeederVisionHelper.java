@@ -76,7 +76,7 @@ public class FeederVisionHelper {
     // default CV pipelines are defined as XML resources
     // if the feeder class doesn't set the pipeline, the default ones are used depending on the pipelineType
     public static CvPipeline createDefaultPipeline(PipelineType type) {
-    	try {
+      try {
             String xml = IOUtils.toString(FeederVisionHelper.class.getResource("FeederVisionHelper-"+type.toString()+"-Pipeline.xml"), Charset.defaultCharset());
             return new CvPipeline(xml);
         }
@@ -107,10 +107,10 @@ public class FeederVisionHelper {
             // vision and comparison sprocket hole tolerance (in size, position)
             public double sprocketHoleToleranceMm = 0.6;
 
-	          public void resetPipeline(PipelineType type) {
-	              this.pipelineType = type;
-	              this.pipeline = createDefaultPipeline(type);
-	          }
+            public void resetPipeline(PipelineType type) {
+                this.pipelineType = type;
+                this.pipeline = createDefaultPipeline(type);
+            }
 
             public FeederVisionHelperParams() {
                 //default values
@@ -138,13 +138,13 @@ public class FeederVisionHelper {
             this.pipelineType = pipelineType;
             this.pipeline = pipeline;
             this.showResultMilliseconds = showResultMilliseconds;
-            
+
             this.normalizePickLocation = normalizePickLocation;
             this.snapToAxis = snapToAxis;
-            
+
             this.partPitch = partPitch;
             this.feedPitch = feedPitch;
-        	this.feedMultiplier = feedMultiplier;
+          this.feedMultiplier = feedMultiplier;
 
             this.partLocation = partLocation;
             this.hole1Location = hole1Location;
@@ -282,9 +282,9 @@ public class FeederVisionHelper {
     public static Location getPartLocation(long partInCycle, Location visionOffset, FeederVisionHelperParams settings, Double rotationInFeeder)  {
         // If the feeder is advancing more than one part per feed cycle (e.g. with 2mm pitch tape or if a multiplier is
         // given), we need to cycle through multiple pick locations. partInCycle is 1-based and goes to getPartsPerFeedCycle().
-    	if (rotationInFeeder == null) {
-    		rotationInFeeder = Double.valueOf(0.0);
-    	}
+        if (rotationInFeeder == null) {
+          rotationInFeeder = Double.valueOf(0.0);
+        }
         long offsetPitches = (getPartsPerFeedCycle(settings) - partInCycle) % getPartsPerFeedCycle(settings);
         Location feederLocation = new Location(settings.partPitch.getUnits(), settings.partPitch.multiply((double)offsetPitches).getValue(),
                 0, 0, rotationInFeeder);
@@ -452,8 +452,8 @@ public class FeederVisionHelper {
         List resultsList = null;
 
         try {
-        	//take a new shot
-        	pipeline.process();
+            //take a new shot
+            pipeline.process();
             // in accordance with EIA-481 etc. we use all millimeters.
             Location mmScale = camera.getUnitsPerPixelAtZ()
                     .convertToUnits(LengthUnit.Millimeters);

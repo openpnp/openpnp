@@ -316,10 +316,10 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
 
     private FeederVisionHelperParams getVisionHelperParams(Camera camera, CvPipeline pipeline) {
         return new FeederVisionHelperParams(camera, pipelineType, pipeline, 2000
-        		, this.normalizePickLocation, this.snapToAxis
-        		, this.partPitch, this.feedPitch, this.feedMultiplier
-        		, this.location, this.hole1Location, this.hole2Location
-        		, this.calibrationToleranceMm, this.sprocketHoleToleranceMm);
+            , this.normalizePickLocation, this.snapToAxis
+            , this.partPitch, this.feedPitch, this.feedMultiplier
+            , this.location, this.hole1Location, this.hole2Location
+            , this.calibrationToleranceMm, this.sprocketHoleToleranceMm);
     }
 
     public void assertCalibrated(boolean tapeFeed) throws Exception {

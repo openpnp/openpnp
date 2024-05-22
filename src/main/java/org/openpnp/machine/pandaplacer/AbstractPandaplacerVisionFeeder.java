@@ -157,10 +157,10 @@ public abstract class AbstractPandaplacerVisionFeeder extends ReferenceFeeder {
 
     private FeederVisionHelperParams getVisionHelperParams(Camera camera, CvPipeline pipeline) {
         return new FeederVisionHelperParams(camera, this.pipelineType, pipeline, 2000
-        		, normalizePickLocation, snapToAxis
-        		, partPitch, feedPitch, 1 //multiplier is fixed to 1, not used in Pandaplacer feeders
-        		, location, hole1Location, hole2Location
-        		, calibrationToleranceMm, sprocketHoleToleranceMm);
+            , normalizePickLocation, snapToAxis
+            , partPitch, feedPitch, 1 //multiplier is fixed to 1, not used in Pandaplacer feeders
+            , location, hole1Location, hole2Location
+            , calibrationToleranceMm, sprocketHoleToleranceMm);
     }
 
     public Camera getCamera() throws Exception {
@@ -424,7 +424,7 @@ public abstract class AbstractPandaplacerVisionFeeder extends ReferenceFeeder {
     }
 
     public Location getPickLocation(long partInCycle, Location visionOffset)  {
-    	return FeederVisionHelper.getPartLocation(partInCycle, visionOffset, getVisionHelperParams(null, null), getRotationInFeeder());
+      return FeederVisionHelper.getPartLocation(partInCycle, visionOffset, getVisionHelperParams(null, null), getRotationInFeeder());
     }
 
     public CvPipeline getPipeline() {
