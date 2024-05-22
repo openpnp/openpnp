@@ -33,10 +33,11 @@ import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
-import org.openpnp.util.FeederVisionHelper;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.FeederVisionHelper;
+import org.openpnp.util.FeederVisionHelper.FeederVisionHelperParams;
 import org.openpnp.util.FeederVisionHelper.FindFeaturesMode;
+import org.openpnp.util.FeederVisionHelper.PipelineType;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
@@ -50,11 +51,10 @@ public abstract class AbstractPandaplacerVisionFeeder extends ReferenceFeeder {
     // and it defines the local feeder coordinate system. The rotationInFeeder here can be removed
     // once it is inherited.
     @Attribute(required=false)
-    protected Double rotationInFeeder = 0.0;
+    protected Double rotationInFeeder = Double.valueOf(0.0);
 
     @Attribute(required = false)
     protected boolean normalizePickLocation = true;
-
     @Attribute(required = false)
     protected boolean snapToAxis = false;
 
@@ -68,29 +68,16 @@ public abstract class AbstractPandaplacerVisionFeeder extends ReferenceFeeder {
     @Element(required = false)
     private Length feedPitch = new Length(4, LengthUnit.Millimeters);
 
-
     @Attribute(required = false)
     private long feedCount = 0;
 
-    public enum PipelineType {
-        ColorKeyed("Default"),
-        CircularSymmetry("CircularSymmetry");
-
-        public String tag;
-
-        PipelineType(String tag) {
-            this.tag = tag;
-        }
-    }
-
     @Element(required = false)
-    private CvPipeline pipeline = createDefaultPipeline(PipelineType.ColorKeyed);
+    private CvPipeline pipeline = FeederVisionHelper.createDefaultPipeline(PipelineType.CircularSymmetry);
     @Attribute(required = false)
-    protected PipelineType pipelineType = PipelineType.ColorKeyed;
+    protected PipelineType pipelineType = PipelineType.CircularSymmetry;
 
     @Element(required = false)
     private Length precisionWanted = new Length(0.1, LengthUnit.Millimeters);
-
     @Attribute(required = false)
     private int calibrationCount = 0;
     @Element(required = false)
@@ -138,44 +125,6 @@ public abstract class AbstractPandaplacerVisionFeeder extends ReferenceFeeder {
 
     public static final Location nullLocation = new Location(LengthUnit.Millimeters);
 
-    static final private String xmlDefaultPipeline = "<cv-pipeline>\n"
-        + "   <stages>\n"
-        + "      <cv-stage class=\"org.openpnp.vision.pipeline.stages.ImageRead\" name=\"00\" enabled=\"false\" file=\"test.png\"/>\n"
-        + "      <cv-stage class=\"org.openpnp.vision.pipeline.stages.ImageCapture\" name=\"0\" enabled=\"true\" settle-first=\"true\" count=\"1\"/>\n"
-        + "      <cv-stage class=\"org.openpnp.vision.pipeline.stages.BlurGaussian\" name=\"1\" enabled=\"true\" kernel-size=\"5\"/>\n"
-        + "      <cv-stage class=\"org.openpnp.vision.pipeline.stages.AffineWarp\" name=\"11\" enabled=\"true\" length-unit=\"Millimeters\" x-0=\"0.0\" y-0=\"0.0\" x-1=\"0.0\" y-1=\"0.0\" x-2=\"0.0\" y-2=\"0.0\" scale=\"1.0\" rectify=\"true\" region-of-interest-property=\"regionOfInterest\"/>\n"
-        + "      <cv-stage class=\"org.openpnp.vision.pipeline.stages.ConvertColor\" name=\"12\" enabled=\"true\" conversion=\"Bgr2Gray\"/>\n"
-        + "      <cv-stage class=\"org.openpnp.vision.pipeline.stages.HistogramEqualizeAdaptive\" name=\"13\" enabled=\"false\" channels-to-equalize=\"First\" clip-limit=\"2.0\" number-of-tile-rows=\"1\" number-of-tile-cols=\"1\"/>\n"
-        + "      <cv-stage class=\"org.openpnp.vision.pipeline.stages.ImageRecall\" name=\"20\" enabled=\"true\" image-stage-name=\"1\"/>\n"
-        + "      <cv-stage class=\"org.openpnp.vision.pipeline.stages.MaskCircle\" name=\"21\" enabled=\"true\" diameter=\"600\"/>\n"
-        + "      <cv-stage class=\"org.openpnp.vision.pipeline.stages.ConvertColor\" name=\"22\" enabled=\"true\" conversion=\"Bgr2HsvFull\"/>\n"
-        + "      <cv-stage class=\"org.openpnp.vision.pipeline.stages.Normalize\" name=\"23\" enabled=\"false\"/>\n"
-        + "      <cv-stage class=\"org.openpnp.vision.pipeline.stages.MaskHsv\" name=\"24\" enabled=\"true\" auto=\"false\" fraction-to-mask=\"0.0\" hue-min=\"240\" hue-max=\"130\" saturation-min=\"110\" saturation-max=\"255\" value-min=\"10\" value-max=\"255\" invert=\"false\" binary-mask=\"true\"/>\n"
-        + "      <cv-stage class=\"org.openpnp.vision.pipeline.stages.BlurMedian\" name=\"25\" enabled=\"true\" kernel-size=\"13\"/>\n"
-        + "      <cv-stage class=\"org.openpnp.vision.pipeline.stages.FindContours\" name=\"27\" enabled=\"true\" retrieval-mode=\"List\" approximation-method=\"Simple\"/>\n"
-        + "      <cv-stage class=\"org.openpnp.vision.pipeline.stages.FilterContours\" name=\"28\" enabled=\"true\" contours-stage-name=\"27\" min-area=\"1000.0\" max-area=\"100000.0\"/>\n"
-        + "      <cv-stage class=\"org.openpnp.vision.pipeline.stages.FitEllipseContours\" name=\"results\" enabled=\"true\" contours-stage-name=\"28\"/>\n"
-        + "      <cv-stage class=\"org.openpnp.vision.pipeline.stages.ImageRecall\" name=\"30\" enabled=\"true\" image-stage-name=\"0\"/>\n"
-        + "      <cv-stage class=\"org.openpnp.vision.pipeline.stages.DrawEllipses\" name=\"31\" enabled=\"false\" ellipses-stage-name=\"results\" thickness=\"2\"/>\n"
-        + "   </stages>\n"
-        + "</cv-pipeline>";
-    static final private String xmlCircularSymmetryPipeline = "<cv-pipeline>\n"
-        + "   <stages>\n"
-        + "      <cv-stage class=\"org.openpnp.vision.pipeline.stages.ImageCapture\" name=\"0\" enabled=\"true\" default-light=\"true\" settle-first=\"true\" count=\"1\"/>\n"
-        + "      <cv-stage class=\"org.openpnp.vision.pipeline.stages.ImageWriteDebug\" name=\"deb0\" enabled=\"false\" prefix=\"push_pull_\" suffix=\".png\"/>\n"
-        + "      <cv-stage class=\"org.openpnp.vision.pipeline.stages.BlurGaussian\" name=\"1\" enabled=\"true\" kernel-size=\"5\"/>\n"
-        + "      <cv-stage class=\"org.openpnp.vision.pipeline.stages.AffineWarp\" name=\"2\" enabled=\"true\" length-unit=\"Millimeters\" x-0=\"0.0\" y-0=\"0.0\" x-1=\"0.0\" y-1=\"0.0\" x-2=\"0.0\" y-2=\"0.0\" scale=\"1.0\" rectify=\"true\" region-of-interest-property=\"regionOfInterest\"/>\n"
-        + "      <cv-stage class=\"org.openpnp.vision.pipeline.stages.ConvertColor\" name=\"3\" enabled=\"true\" conversion=\"Bgr2Gray\"/>\n"
-        + "      <cv-stage class=\"org.openpnp.vision.pipeline.stages.ImageRecall\" name=\"5\" enabled=\"true\" image-stage-name=\"0\"/>\n"
-        + "      <cv-stage class=\"org.openpnp.vision.pipeline.stages.DetectCircularSymmetry\" name=\"results\" enabled=\"true\" min-diameter=\"10\" max-diameter=\"100\" max-distance=\"100\" max-target-count=\"10\" min-symmetry=\"1.2\" corr-symmetry=\"0.2\" property-name=\"sprocketHole\" outer-margin=\"0.3\" inner-margin=\"0.1\" sub-sampling=\"8\" super-sampling=\"1\" symmetry-score=\"RingMedianVarianceVsRingVarianceSum\" diagnostics=\"false\"/>\n"
-        + "      <cv-stage class=\"org.openpnp.vision.pipeline.stages.ImageRecall\" name=\"7\" enabled=\"false\" image-stage-name=\"0\"/>\n"
-        + "      <cv-stage class=\"org.openpnp.vision.pipeline.stages.DrawCircles\" name=\"8\" enabled=\"false\" circles-stage-name=\"results\" thickness=\"1\">\n"
-        + "         <color r=\"255\" g=\"0\" b=\"0\" a=\"255\"/>\n"
-        + "      </cv-stage>\n"
-        + "      <cv-stage class=\"org.openpnp.vision.pipeline.stages.ImageWriteDebug\" name=\"deb1\" enabled=\"false\" prefix=\"push_pull_result_\" suffix=\".png\"/>\n"
-        + "   </stages>\n"
-        + "</cv-pipeline>";
-
 
     public void checkHomedState(Machine machine) {
         if (!machine.isHomed()) {
@@ -204,6 +153,14 @@ public abstract class AbstractPandaplacerVisionFeeder extends ReferenceFeeder {
                 });
             }
         });
+    }
+
+    private FeederVisionHelperParams getVisionHelperParams(Camera camera, CvPipeline pipeline) {
+        return new FeederVisionHelperParams(camera, this.pipelineType, pipeline, 2000
+            , normalizePickLocation, snapToAxis
+            , partPitch, feedPitch, 1 //multiplier is fixed to 1, not used in Pandaplacer feeders
+            , location, hole1Location, hole2Location
+            , calibrationToleranceMm, sprocketHoleToleranceMm);
     }
 
     public Camera getCamera() throws Exception {
@@ -270,7 +227,6 @@ public abstract class AbstractPandaplacerVisionFeeder extends ReferenceFeeder {
         }
     }
 
-
     protected void obtainCalibratedVisionOffset() throws Exception {
         Camera camera = getCamera();
         try (CvPipeline pipeline = getCvPipeline(camera, true, false)) {
@@ -291,7 +247,7 @@ public abstract class AbstractPandaplacerVisionFeeder extends ReferenceFeeder {
 
     public Double getRotationInFeeder() {
         if (rotationInFeeder == null) {
-            rotationInFeeder = 0.0;
+            rotationInFeeder = Double.valueOf(0.0);
         }
         return rotationInFeeder;
     }
@@ -364,7 +320,6 @@ public abstract class AbstractPandaplacerVisionFeeder extends ReferenceFeeder {
         firePropertyChange("feedPitch", oldValue, feedPitch);
     }
 
-
     public long getFeedCount() {
         return feedCount;
     }
@@ -384,7 +339,6 @@ public abstract class AbstractPandaplacerVisionFeeder extends ReferenceFeeder {
         this.calibrationTrigger = calibrationTrigger;
         firePropertyChange("calibrationTrigger", oldValue, calibrationTrigger);
     }
-
 
     public Length getPrecisionWanted() {
         return precisionWanted;
@@ -459,8 +413,7 @@ public abstract class AbstractPandaplacerVisionFeeder extends ReferenceFeeder {
     }
 
     public long getPartsPerFeedCycle() {
-        long feedsPerPart = (long)Math.ceil(getPartPitch().divide(getFeedPitch()));
-        return Math.round(1*Math.ceil(feedsPerPart*getFeedPitch().divide(getPartPitch())));
+        return FeederVisionHelper.getPartsPerFeedCycle(getVisionHelperParams(null, null));
     }
 
     public void resetCalibrationStatistics() {
@@ -470,60 +423,9 @@ public abstract class AbstractPandaplacerVisionFeeder extends ReferenceFeeder {
         resetCalibration();
     }
 
-    public static Location forwardTransform(Location location, Location transform) {
-        return location.rotateXy(transform.getRotation()).addWithRotation(transform);
-    }
-
-    public static Location backwardTransform(Location location, Location transform) {
-        return location.subtractWithRotation(transform).rotateXy(-transform.getRotation());
-    }
-
-    protected Location getTransform(Location visionOffset) {
-        // Our local feeder coordinate system is relative to the EIA 481 standard tape orientation
-        // i.e. with the sprocket holes on top and the tape advancing to the right, which is our +X
-        // The pick location is on [0, 0] local, which corresponds to feeder.location global.
-        // The feeder.location.rotation contains the orientation of the tape on the machine.
-
-        // to make sure we get the right rotation, we update it from the sprocket holes
-        // instead of trusting the location.rotation. This might happen when the user fiddles
-        // with the locations manually.
-
-        Location unitVector = getHole1Location().unitVectorTo(getHole2Location());
-        if (!(Double.isFinite(unitVector.getX()) && Double.isFinite(unitVector.getY()))) {
-            // Catch (yet) undefined hole locations.
-            unitVector = new Location(getHole1Location().getUnits(), 0, 1, 0, 0);
-        }
-        double rotationTape = Math.atan2(unitVector.getY(), unitVector.getX())*180.0/Math.PI;
-        Location transform = getLocation().derive(null, null, null, rotationTape);
-        if (Math.abs(rotationTape - getLocation().getRotation()) > 0.1) {
-            // HACK: something is not up-to-date -> refresh
-            setLocation(transform);
-        }
-
-        if (visionOffset != null) {
-            transform = transform.subtractWithRotation(visionOffset);
-        }
-        return transform;
-    }
-
-    protected Location transformFeederToMachineLocation(Location feederLocation, Location visionOffset) {
-        return forwardTransform(feederLocation, getTransform(visionOffset));
-    }
-
-    protected Location transformMachineToFeederLocation(Location machineLocation, Location visionOffset) {
-        return backwardTransform(machineLocation, getTransform(visionOffset));
-    }
-
     public Location getPickLocation(long partInCycle, Location visionOffset)  {
-        // If the feeder is advancing more than one part per feed cycle (e.g. with 2mm pitch tape or if a multiplier is
-        // given), we need to cycle through multiple pick locations. partInCycle is 1-based and goes to getPartsPerFeedCycle().
-        long offsetPitches = (getPartsPerFeedCycle() - partInCycle) % getPartsPerFeedCycle();
-        Location feederLocation = new Location(partPitch.getUnits(), partPitch.multiply((double)offsetPitches).getValue(),
-                0, 0, getRotationInFeeder());
-        Location machineLocation = transformFeederToMachineLocation(feederLocation, visionOffset);
-        return machineLocation;
+      return FeederVisionHelper.getPartLocation(partInCycle, visionOffset, getVisionHelperParams(null, null), getRotationInFeeder());
     }
-
 
     public CvPipeline getPipeline() {
         return pipeline;
@@ -561,7 +463,7 @@ public abstract class AbstractPandaplacerVisionFeeder extends ReferenceFeeder {
     }
 
     public void resetPipeline(PipelineType type) {
-        pipeline = createDefaultPipeline(type);
+        pipeline = FeederVisionHelper.createDefaultPipeline(type);
         setPipelineType(type);
     }
 
@@ -577,7 +479,6 @@ public abstract class AbstractPandaplacerVisionFeeder extends ReferenceFeeder {
                             getLocation().getRotation()+getRotationInFeeder());
         }
     }
-
 
     public CvPipeline getCvPipeline(Camera camera, boolean clone, boolean autoSetup) {
         try {
@@ -611,27 +512,14 @@ public abstract class AbstractPandaplacerVisionFeeder extends ReferenceFeeder {
         }
     }
 
-
-    // Note: ReferencePushPullFeeder has different pipelines that include OCR.
-    protected CvPipeline createDefaultPipeline(PipelineType type) {
-        try {
-            String xml = (type == PipelineType.CircularSymmetry) ? xmlCircularSymmetryPipeline : xmlDefaultPipeline;
-            return new CvPipeline(xml);
-        }
-        catch (Exception e) {
-            throw new Error(e);
-        }
-    }
-
     public void showFeatures() throws Exception {
         Camera camera = getCamera();
         ensureCameraZ(camera, true);
         try (CvPipeline pipeline = getCvPipeline(camera, true, true)) {
 
             // Process vision and show feature without applying anything
-            pipeline.process();
-            FeederVisionHelper tape = new FeederVisionHelper(camera, pipeline, 2000, null);
-            tape.findFeatures(normalizePickLocation, snapToAxis, partPitch, feedPitch, location, hole1Location, hole2Location, calibrationToleranceMm, sprocketHoleToleranceMm);
+            FeederVisionHelper tape = new FeederVisionHelper(getVisionHelperParams(camera, pipeline));
+            tape.findFeatures(null);
         }
     }
 
@@ -670,18 +558,16 @@ public abstract class AbstractPandaplacerVisionFeeder extends ReferenceFeeder {
         }
         try (CvPipeline pipeline = getCvPipeline(camera, true, true)) {
             // Process vision and get some features
-            pipeline.process();
-            FeederVisionHelper feature = new FeederVisionHelper(camera, pipeline, 2000, FindFeaturesMode.FromPickLocationGetHoles)
-                    .findFeatures(normalizePickLocation, snapToAxis, partPitch, feedPitch, location, hole1Location, hole2Location, calibrationToleranceMm, sprocketHoleToleranceMm);
+            FeederVisionHelper feature = new FeederVisionHelper(getVisionHelperParams(camera, pipeline))
+                    .findFeatures(FindFeaturesMode.FromPickLocationGetHoles);
             // Store the initial vision based results
             setLocation(feature.getCalibratedPickLocation());
             setHole1Location(feature.getCalibratedHole1Location());
             setHole2Location(feature.getCalibratedHole2Location());
-            setRotationInFeeder(feature.getCalibratedRotationInFeeder());
             // As we've changed all this -> reset any stats
             resetCalibrationStatistics();
             try {
-                // Now run a sprocket hole calibration, make sure to change the part (not swap it)
+                // Now run a sprocket hole calibration
                 performVisionOperations(camera, pipeline, true, true, false);
             }
             finally {
@@ -736,7 +622,6 @@ public abstract class AbstractPandaplacerVisionFeeder extends ReferenceFeeder {
         Location runningHole1Location = getHole1Location();
         Location runningHole2Location = getHole2Location();
         Location runningPickLocation = getLocation();
-        Double   runningRotationInFeeder = getRotationInFeeder();
         Location runningVisionOffset = getVisionOffset();
         ensureCameraZ(camera, true);
 
@@ -752,14 +637,11 @@ public abstract class AbstractPandaplacerVisionFeeder extends ReferenceFeeder {
                         .derive(null, null, null, runningPickLocation.getRotation()+getRotationInFeeder());
                 Logger.debug("calibrating sprocket holes pass "+ i+ " midPoint is "+midPoint);
                 MovableUtils.moveToLocationAtSafeZ(camera, midPoint);
-                // take a new shot
-                pipeline.process();
-                feature = new FeederVisionHelper(camera, pipeline, 2000, FindFeaturesMode.CalibrateHoles)
-                        .findFeatures(storePickLocation, storeVisionOffset, partPitch, feedPitch, location, hole1Location, hole2Location);
+                feature = new FeederVisionHelper(getVisionHelperParams(camera, pipeline))
+                        .findFeatures(FindFeaturesMode.CalibrateHoles);
                 runningHole1Location = feature.getCalibratedHole1Location();
                 runningHole2Location = feature.getCalibratedHole2Location();
                 runningPickLocation = feature.getCalibratedPickLocation();
-                runningRotationInFeeder = feature.getCalibratedRotationInFeeder();
                 // calculate the worst pick location delta this gives, cycle part 1 is the worst as it is farthest away
                 Location uncalibratedPick1Location = getPickLocation(1, runningVisionOffset);
                 Location calibratedPick1Location = getPickLocation(1, feature.getCalibratedVisionOffset());
@@ -773,7 +655,6 @@ public abstract class AbstractPandaplacerVisionFeeder extends ReferenceFeeder {
                 }
                 if (storePickLocation) {
                     setLocation(runningPickLocation);
-                    setRotationInFeeder(runningRotationInFeeder);
                 }
                 if (storeVisionOffset) {
                     // update the stats
