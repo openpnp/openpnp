@@ -98,6 +98,7 @@ public class FeederVisionHelper {
             public boolean snapToAxis = false;
             public Length partPitch = new Length(4, LengthUnit.Millimeters);
             public Length feedPitch = new Length(4, LengthUnit.Millimeters);
+            public long feedMultiplier = 1;
             public Location partLocation = new Location(LengthUnit.Millimeters);
             public Location hole1Location = new Location(LengthUnit.Millimeters);
             public Location hole2Location = new Location(LengthUnit.Millimeters);
@@ -126,23 +127,29 @@ public class FeederVisionHelper {
  * - partPitch: Pitch of the parts in the tape (2mm, 4mm, 8mm, 12mm, etc.)
  * - feedPitch: How much the tape will be advanced by one actuation (usually multiples of 4mm)
  *    - if partPitch > feedPitch then multiple actuations will be executed
+ * - feedMultiplier: speed optimization for feeders that are not "self propelled" - actuate the feeder multiple times to feed more parts per feed cycle.
  * - partLocation: approximate location of the part pocket as set using jogging the head
  * - hole1Location, hole2Location: provide if known (maybe from previous calibration), critical only to the "OcrOnly" mode
  * - calibrationToleranceMm, sprocketHoleToleranceMm: calibration tolerance parameters, either used from internal constants or provided by the caller class *
  */
-        public FeederVisionHelperParams(Camera camera, PipelineType pipelineType, CvPipeline pipeline, long showResultMilliseconds, boolean normalizePickLocation, boolean snapToAxis, Length partPitch, Length feedPitch, Location partLocation, Location hole1Location, Location hole2Location
+        public FeederVisionHelperParams(Camera camera, PipelineType pipelineType, CvPipeline pipeline, long showResultMilliseconds, boolean normalizePickLocation, boolean snapToAxis, Length partPitch, Length feedPitch, long feedMultiplier, Location partLocation, Location hole1Location, Location hole2Location
                 ,double calibrationToleranceMm, double sprocketHoleToleranceMm) {
             this.camera = camera;
             this.pipelineType = pipelineType;
             this.pipeline = pipeline;
             this.showResultMilliseconds = showResultMilliseconds;
+            
             this.normalizePickLocation = normalizePickLocation;
             this.snapToAxis = snapToAxis;
+            
             this.partPitch = partPitch;
             this.feedPitch = feedPitch;
+        	this.feedMultiplier = feedMultiplier;
+
             this.partLocation = partLocation;
             this.hole1Location = hole1Location;
             this.hole2Location = hole2Location;
+
             this.calibrationToleranceMm = calibrationToleranceMm;
             this.sprocketHoleToleranceMm = sprocketHoleToleranceMm;
         }
@@ -177,11 +184,10 @@ public class FeederVisionHelper {
         this.settings = settings;
     }
 
-    //this is only used for Preview functionality. No need to be public or consider multiplier
-    private long getPartsPerFeedCycle() {
-        long feedMultiplier = 1;
-        long feedsPerPart = (long)Math.ceil(this.settings.partPitch.divide(this.settings.feedPitch));
-        return Math.round(feedMultiplier*Math.ceil(feedsPerPart*this.settings.feedPitch.divide(this.settings.partPitch)));
+    public static long getPartsPerFeedCycle(FeederVisionHelperParams settings) {
+        long feedMultiplier = settings.feedMultiplier; // speed optimization for feeders that are not "self propelled"
+        long feedsPerPart = (long)Math.ceil(settings.partPitch.divide(settings.feedPitch));
+        return Math.round(feedMultiplier*Math.ceil(feedsPerPart*settings.feedPitch.divide(settings.partPitch)));
     }
 
     public Length getTapeWidth() {
@@ -273,13 +279,16 @@ public class FeederVisionHelper {
     }
 
 
-    private Location getPartLocation(long partInCycle, Location visionOffset)  {
+    public static Location getPartLocation(long partInCycle, Location visionOffset, FeederVisionHelperParams settings, Double rotationInFeeder)  {
         // If the feeder is advancing more than one part per feed cycle (e.g. with 2mm pitch tape or if a multiplier is
         // given), we need to cycle through multiple pick locations. partInCycle is 1-based and goes to getPartsPerFeedCycle().
-        long offsetPitches = (getPartsPerFeedCycle() - partInCycle) % getPartsPerFeedCycle();
-        Location feederLocation = new Location(this.settings.partPitch.getUnits(), this.settings.partPitch.multiply((double)offsetPitches).getValue(),
-                0, 0, 0);
-        Location machineLocation = transformFeederToMachineLocation(feederLocation, visionOffset, this.settings);
+    	if (rotationInFeeder == null) {
+    		rotationInFeeder = Double.valueOf(0.0);
+    	}
+        long offsetPitches = (getPartsPerFeedCycle(settings) - partInCycle) % getPartsPerFeedCycle(settings);
+        Location feederLocation = new Location(settings.partPitch.getUnits(), settings.partPitch.multiply((double)offsetPitches).getValue(),
+                0, 0, rotationInFeeder);
+        Location machineLocation = transformFeederToMachineLocation(feederLocation, visionOffset, settings);
         return machineLocation;
     }
 
@@ -337,7 +346,7 @@ public class FeederVisionHelper {
 
         // calculate the diagonal text size
         double fontScale = 1.0;
-        Size size = Imgproc.getTextSize(String.valueOf(getPartsPerFeedCycle()),
+        Size size = Imgproc.getTextSize(String.valueOf(getPartsPerFeedCycle(this.settings)),
                 Imgproc.FONT_HERSHEY_PLAIN, fontScale, 2, baseLine);
         Location textSizeMm = this.settings.camera.getUnitsPerPixelAtZ().multiply(size.width, size.height, 0., 0.)
                 .convertToUnits(LengthUnit.Millimeters);
@@ -365,11 +374,11 @@ public class FeederVisionHelper {
             return;
         }
         // go through all the parts, step-wise
-        for (int i = step; i <= getPartsPerFeedCycle(); i += step) {
+        for (int i = step; i <= getPartsPerFeedCycle(this.settings); i += step) {
             String text = String.valueOf(i);
             Size textSize = Imgproc.getTextSize(text, Imgproc.FONT_HERSHEY_PLAIN, fontScale, 2, baseLine);
 
-            Location partLocation = getPartLocation(i, calibratedVisionOffset)
+            Location partLocation = getPartLocation(i, calibratedVisionOffset, this.settings, Double.valueOf(0))
                     .convertToUnits(LengthUnit.Millimeters);
             // TODO: go besides part
             Location textLocation = transformMachineToFeederLocation(partLocation, calibratedVisionOffset, this.settings);
@@ -718,7 +727,7 @@ public class FeederVisionHelper {
                 Mat resultMat = pipeline.getWorkingImage().clone();
                 drawHoles(resultMat, getHoles(), Color.green);
                 drawLines(resultMat, getLines(), new Color(0, 0, 255));
-                drawPartNumbers(resultMat, Color.orange);
+                drawPartNumbers(resultMat, Color.green);
                 drawOcrText(resultMat, Color.orange);
                 if (getHoles().isEmpty()) {
                     Imgproc.line(resultMat, new Point(0, 0), new Point(resultMat.cols()-1, resultMat.rows()-1),

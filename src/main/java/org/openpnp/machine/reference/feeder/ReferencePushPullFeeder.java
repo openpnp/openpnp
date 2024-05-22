@@ -317,7 +317,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     private FeederVisionHelperParams getVisionHelperParams(Camera camera, CvPipeline pipeline) {
         return new FeederVisionHelperParams(camera, pipelineType, pipeline, 2000
         		, this.normalizePickLocation, this.snapToAxis
-        		, this.partPitch, this.feedPitch
+        		, this.partPitch, this.feedPitch, this.feedMultiplier
         		, this.location, this.hole1Location, this.hole2Location
         		, this.calibrationToleranceMm, this.sprocketHoleToleranceMm);
     }
@@ -1089,8 +1089,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     }
 
     public long getPartsPerFeedCycle() {
-        long feedsPerPart = (long)Math.ceil(getPartPitch().divide(getFeedPitch()));
-        return Math.round(getFeedMultiplier()*Math.ceil(feedsPerPart*getFeedPitch().divide(getPartPitch())));
+        return FeederVisionHelper.getPartsPerFeedCycle(getVisionHelperParams(null, null));
     }
 
     public void resetCalibrationStatistics() {
@@ -1101,13 +1100,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     }
 
     public Location getPickLocation(long partInCycle, Location visionOffset)  {
-        // If the feeder is advancing more than one part per feed cycle (e.g. with 2mm pitch tape or if a multiplier is
-        // given), we need to cycle through multiple pick locations. partInCycle is 1-based and goes to getPartsPerFeedCycle().
-        long offsetPitches = (getPartsPerFeedCycle() - partInCycle) % getPartsPerFeedCycle();
-        Location feederLocation = new Location(partPitch.getUnits(), partPitch.multiply((double)offsetPitches).getValue(), 
-                0, 0, getRotationInFeeder());
-        Location machineLocation = FeederVisionHelper.transformFeederToMachineLocation(feederLocation, visionOffset, this.getVisionHelperParams(null, null));
-        return machineLocation;
+        return FeederVisionHelper.getPartLocation(partInCycle, visionOffset, getVisionHelperParams(null, null), getRotationInFeeder());
     } 
 
 
