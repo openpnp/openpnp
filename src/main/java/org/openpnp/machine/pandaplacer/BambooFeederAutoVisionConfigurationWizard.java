@@ -76,6 +76,8 @@ extends AbstractReferenceFeederConfigurationWizard {
         super(feeder, false);
         this.feeder = feeder;
 
+        String[] pitchValues = new String[] {"2 mm", "4 mm", "8 mm", "12 mm", "16 mm", "20 mm", "24 mm", "28 mm", "32 mm"};
+
         JPanel panelFields = new JPanel();
         panelFields.setLayout(new BoxLayout(panelFields, BoxLayout.Y_AXIS));
 
@@ -108,19 +110,17 @@ extends AbstractReferenceFeederConfigurationWizard {
         panelTape.add(lblPartPitch, "2, 2, right, default");
         lblPartPitch.setToolTipText("Pitch of the parts in the tape (2mm, 4mm, 8mm, 12mm, etc.)");
 
-        textFieldPartPitch = new JTextField();
+        textFieldPartPitch = new JComboBox<>(pitchValues);
         panelTape.add(textFieldPartPitch, "4, 2");
         textFieldPartPitch.setToolTipText("Pitch of the parts in the tape (2mm, 4mm, 8mm, 12mm, etc.)");
-        textFieldPartPitch.setColumns(5);
 
         lblFeedPitch = new JLabel("Feed Pitch");
         panelTape.add(lblFeedPitch, "6, 2, right, default");
         lblFeedPitch.setToolTipText("How much the tape will be advanced by one lever actuation (usually multiples of 4mm)");
 
-        textFieldFeedPitch = new JTextField();
+        textFieldFeedPitch = new JComboBox<>(pitchValues);
         panelTape.add(textFieldFeedPitch, "8, 2");
         textFieldFeedPitch.setToolTipText("How much the tape will be advanced by one lever actuation (usually multiples of 4mm)");
-        textFieldFeedPitch.setColumns(10);
 
         btnDiscardParts = new JButton(discardPartsAction);
         btnDiscardParts.setToolTipText("<html>Discard parts left over in the (multi-part) feed cycle.<br/>\r\nStarts with a fresh feed cycle including vision calibration (if enabled). \r\n</html>");
@@ -193,13 +193,13 @@ extends AbstractReferenceFeederConfigurationWizard {
         panelLocations.add(btnAutoSetup, "4, 2, 5, 1");
 
         lblX_1 = new JLabel("X");
-        panelLocations.add(lblX_1, "4, 4");
+        panelLocations.add(lblX_1, "4, 4, center, default");
 
         lblY_1 = new JLabel("Y");
-        panelLocations.add(lblY_1, "6, 4");
+        panelLocations.add(lblY_1, "6, 4, center, default");
 
         lblZ_1 = new JLabel("Z");
-        panelLocations.add(lblZ_1, "8, 4");
+        panelLocations.add(lblZ_1, "8, 4, center, default");
 
         lblPickLocation = new JLabel("Pick Location");
         lblPickLocation.setToolTipText("<html>Pick Location of the part. If multiple are produced by a feed operation<br/>\r\nthis must be the last one picked i.e. the one closest to the the tape reel.</html>");
@@ -220,52 +220,54 @@ extends AbstractReferenceFeederConfigurationWizard {
         locationButtonsPanelFirstPick = new LocationButtonsPanel(textFieldPickLocationX, textFieldPickLocationY, textFieldPickLocationZ, null);
         panelLocations.add(locationButtonsPanelFirstPick, "10, 6");
 
-        lblNormalizePickLocation = new JLabel("Normalize?");
-        panelLocations.add(lblNormalizePickLocation, "2, 8, right, default");
-        lblNormalizePickLocation.setToolTipText("Normalize the pick location relative to the sprocket holes according to the EIA-481 standard.");
-
-        checkBoxNormalizePickLocation = new JCheckBox("");
-        panelLocations.add(checkBoxNormalizePickLocation, "4, 8");
-        checkBoxNormalizePickLocation.setSelected(true);
-        checkBoxNormalizePickLocation.setToolTipText("Normalize the pick location relative to the sprocket holes according to the EIA-481 standard.");
-
         lblHole1Location = new JLabel("Hole 1 Location");
         lblHole1Location.setToolTipText("<html>Choose Hole 1 closer to the tape reel.<br/>\r\nIf possible choose two holes that bracket the part(s) to be picked.\r\n</html>");
-        panelLocations.add(lblHole1Location, "2, 10, right, default");
+        panelLocations.add(lblHole1Location, "2, 8, right, default");
 
         textFieldHole1LocationX = new JTextField();
-        panelLocations.add(textFieldHole1LocationX, "4, 10");
+        panelLocations.add(textFieldHole1LocationX, "4, 8");
         textFieldHole1LocationX.setColumns(10);
 
         textFieldHole1LocationY = new JTextField();
-        panelLocations.add(textFieldHole1LocationY, "6, 10");
+        panelLocations.add(textFieldHole1LocationY, "6, 8");
         textFieldHole1LocationY.setColumns(10);
 
         locationButtonsPanelHole1 = new LocationButtonsPanel(textFieldHole1LocationX, textFieldHole1LocationY, (JTextField) null, (JTextField) null);
-        panelLocations.add(locationButtonsPanelHole1, "10, 10");
+        panelLocations.add(locationButtonsPanelHole1, "10, 8");
 
         lblHole2Location = new JLabel("Hole 2 Location");
         lblHole2Location.setToolTipText("<html>Choose Hole 2 further away from the tape reel.<br/>\r\nIf possible choose two holes that bracket the part(s) to be picked.\r\n</html>");
-        panelLocations.add(lblHole2Location, "2, 12, right, default");
+        panelLocations.add(lblHole2Location, "2, 10, right, default");
 
         textFieldHole2LocationX = new JTextField();
-        panelLocations.add(textFieldHole2LocationX, "4, 12");
+        panelLocations.add(textFieldHole2LocationX, "4, 10");
         textFieldHole2LocationX.setColumns(10);
 
         textFieldHole2LocationY = new JTextField();
-        panelLocations.add(textFieldHole2LocationY, "6, 12");
+        panelLocations.add(textFieldHole2LocationY, "6, 10");
         textFieldHole2LocationY.setColumns(10);
 
         locationButtonsPanelHole2 = new LocationButtonsPanel(textFieldHole2LocationX, textFieldHole2LocationY, (JTextField) null, (JTextField) null);
-        panelLocations.add(locationButtonsPanelHole2, "10, 12");
+        panelLocations.add(locationButtonsPanelHole2, "10, 10");
+
+        lblNormalizePickLocation = new JLabel("Normalize?");
+        panelLocations.add(lblNormalizePickLocation, "2, 12, right, default");
+        lblNormalizePickLocation.setToolTipText("Normalize the pick location relative to the sprocket holes according to the EIA-481 standard.");
+
+        checkBoxNormalizePickLocation = new JCheckBox("");
+        panelLocations.add(checkBoxNormalizePickLocation, "4, 12");
+        checkBoxNormalizePickLocation.setSelected(true);
+        checkBoxNormalizePickLocation.setToolTipText("Normalize the pick location relative to the sprocket holes according to the EIA-481 standard.");
 
         lblSnapToAxis = new JLabel("Snap to Axis?");
         lblSnapToAxis.setToolTipText("Snap rows of sprocket holes to the Axis parallel.");
-        panelLocations.add(lblSnapToAxis, "2, 14, right, default");
+        panelLocations.add(lblSnapToAxis, "6, 12, right, default");
 
         checkBoxSnapToAxis = new JCheckBox("");
         checkBoxSnapToAxis.setToolTipText("Snap rows of sprocket holes to the Axis parallel.");
-        panelLocations.add(checkBoxSnapToAxis, "4, 14");
+        panelLocations.add(checkBoxSnapToAxis, "8, 12");
+
+
 // Panel End: Locations
 
 
@@ -303,68 +305,69 @@ extends AbstractReferenceFeederConfigurationWizard {
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
 
-        lblCalibrationTrigger = new JLabel("Calibration Trigger");
-        panelVisionEnabled.add(lblCalibrationTrigger, "2, 2, right, default");
+        lblVisionType = new JLabel("Vision Type");
+        lblVisionType.setToolTipText("<html>\r\n<p>Choose the vision type, then press <strong>Reset Pipeline</strong> to assign the<br/>\r\ndefault pipeline of that type. Sprocket holes are detected as follows:</p>\r\n<ul>\r\n<li><strong>ColorKeyed</strong>: the background under the holes must be of a vivid color<br/>\r\n(green by default).</li>\r\n<li><strong>CircularSymmetry</strong>: the shape of the holes must be circular, their<br/>\r\ninside/outside must be plain.</li>\r\n</ul>\r\n<p>Both types of pipeline will further assess detected holes by size, alignment, pitch<br/>\r\nand expected distance.</p>\r\n</html>");
+        panelVisionEnabled.add(lblVisionType, "2, 2, right, default");
 
-        comboBoxCalibrationTrigger = new JComboBox(CalibrationTrigger.values());
-        panelVisionEnabled.add(comboBoxCalibrationTrigger, "4, 2");
-
-        lblPrecisionAverage = new JLabel("Precision Average");
-        lblPrecisionAverage.setToolTipText("Obtained precision average i.e. offset of the pick location, as detected by the calibration");
-        panelVisionEnabled.add(lblPrecisionAverage, "8, 2, right, default");
-
-        textFieldPrecisionAverage = new JTextField();
-        textFieldPrecisionAverage.setToolTipText("Obtained precision average i.e. offset of the pick location, as detected by the calibration");
-        textFieldPrecisionAverage.setEditable(false);
-        panelVisionEnabled.add(textFieldPrecisionAverage, "10, 2");
-        textFieldPrecisionAverage.setColumns(10);
-
-        lblCalibrationCount = new JLabel("Calibration Count");
-        panelVisionEnabled.add(lblCalibrationCount, "12, 2, right, default");
-
-        textFieldCalibrationCount = new JTextField();
-        textFieldCalibrationCount.setEditable(false);
-        panelVisionEnabled.add(textFieldCalibrationCount, "14, 2");
-        textFieldCalibrationCount.setColumns(10);
-
-        lblPrecisionWanted = new JLabel("Precision wanted");
-        lblPrecisionWanted.setToolTipText("Precision wanted i.e. the tolerable pick location offset");
-        panelVisionEnabled.add(lblPrecisionWanted, "2, 4, right, default");
-
-        textFieldPrecisionWanted = new JTextField();
-        textFieldPrecisionWanted.setToolTipText("Precision wanted i.e. the tolerable pick location offset");
-        panelVisionEnabled.add(textFieldPrecisionWanted, "4, 4");
-        textFieldPrecisionWanted.setColumns(10);
-
-        lblPrecisionConfidenceLimit = new JLabel("Precision Confidence Limit");
-        lblPrecisionConfidenceLimit.setToolTipText("Precision obtained with 95% confidence (assuming normal distribution)");
-        panelVisionEnabled.add(lblPrecisionConfidenceLimit, "8, 4, right, default");
-
-        textFieldPrecisionConfidenceLimit = new JTextField();
-        textFieldPrecisionConfidenceLimit.setEditable(false);
-        panelVisionEnabled.add(textFieldPrecisionConfidenceLimit, "10, 4");
-        textFieldPrecisionConfidenceLimit.setColumns(10);
-
-        btnResetStatistics = new JButton(resetStatisticsAction);
-        panelVisionEnabled.add(btnResetStatistics, "12, 4, 3, 1");
+        pipelineType = new JComboBox(PipelineType.values());
+        panelVisionEnabled.add(pipelineType, "4, 2, fill, default");
 
         btnEditPipeline = new JButton(editPipelineAction);
         btnEditPipeline.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
             }
         });
-        panelVisionEnabled.add(btnEditPipeline, "2, 6");
-
-        lblVisionType = new JLabel("Vision Type");
-        lblVisionType.setToolTipText("<html>\r\n<p>Choose the vision type, then press <strong>Reset Pipeline</strong> to assign the<br/>\r\ndefault pipeline of that type. Sprocket holes are detected as follows:</p>\r\n<ul>\r\n<li><strong>ColorKeyed</strong>: the background under the holes must be of a vivid color<br/>\r\n(green by default).</li>\r\n<li><strong>CircularSymmetry</strong>: the shape of the holes must be circular, their<br/>\r\ninside/outside must be plain.</li>\r\n</ul>\r\n<p>Both types of pipeline will further assess detected holes by size, alignment, pitch<br/>\r\nand expected distance.</p>\r\n</html>");
-        panelVisionEnabled.add(lblVisionType, "8, 6, right, default");
-
-        pipelineType = new JComboBox(PipelineType.values());
-
-        panelVisionEnabled.add(pipelineType, "10, 6, fill, default");
-
+        panelVisionEnabled.add(btnEditPipeline, "8, 2, 3, 1");
+        
         btnResetPipeline = new JButton(resetPipelineAction);
-        panelVisionEnabled.add(btnResetPipeline, "12, 6, 3, 1");
+        panelVisionEnabled.add(btnResetPipeline, "12, 2, 3, 1");
+
+
+        lblCalibrationTrigger = new JLabel("Calibration Trigger");
+        panelVisionEnabled.add(lblCalibrationTrigger, "2, 4, right, default");
+
+        comboBoxCalibrationTrigger = new JComboBox(CalibrationTrigger.values());
+        panelVisionEnabled.add(comboBoxCalibrationTrigger, "4, 4");
+
+        lblPrecisionAverage = new JLabel("Precision Average");
+        lblPrecisionAverage.setToolTipText("Obtained precision average i.e. offset of the pick location, as detected by the calibration");
+        panelVisionEnabled.add(lblPrecisionAverage, "8, 4, right, default");
+
+        textFieldPrecisionAverage = new JTextField();
+        textFieldPrecisionAverage.setToolTipText("Obtained precision average i.e. offset of the pick location, as detected by the calibration");
+        textFieldPrecisionAverage.setEditable(false);
+        panelVisionEnabled.add(textFieldPrecisionAverage, "10, 4");
+        textFieldPrecisionAverage.setColumns(10);
+
+        lblCalibrationCount = new JLabel("Calibration Count");
+        panelVisionEnabled.add(lblCalibrationCount, "12, 4, right, default");
+
+        textFieldCalibrationCount = new JTextField();
+        textFieldCalibrationCount.setEditable(false);
+        panelVisionEnabled.add(textFieldCalibrationCount, "14, 4");
+        textFieldCalibrationCount.setColumns(10);
+
+        lblPrecisionWanted = new JLabel("Precision wanted");
+        lblPrecisionWanted.setToolTipText("Precision wanted i.e. the tolerable pick location offset");
+        panelVisionEnabled.add(lblPrecisionWanted, "2, 6, right, default");
+
+        textFieldPrecisionWanted = new JTextField();
+        textFieldPrecisionWanted.setToolTipText("Precision wanted i.e. the tolerable pick location offset");
+        panelVisionEnabled.add(textFieldPrecisionWanted, "4, 6");
+        textFieldPrecisionWanted.setColumns(10);
+
+        lblPrecisionConfidenceLimit = new JLabel("Precision Confidence Limit");
+        lblPrecisionConfidenceLimit.setToolTipText("Precision obtained with 95% confidence (assuming normal distribution)");
+        panelVisionEnabled.add(lblPrecisionConfidenceLimit, "8, 6, right, default");
+
+        textFieldPrecisionConfidenceLimit = new JTextField();
+        textFieldPrecisionConfidenceLimit.setEditable(false);
+        panelVisionEnabled.add(textFieldPrecisionConfidenceLimit, "10, 6");
+        textFieldPrecisionConfidenceLimit.setColumns(10);
+
+        btnResetStatistics = new JButton(resetStatisticsAction);
+        panelVisionEnabled.add(btnResetStatistics, "12, 6, 3, 1");
+
 
 // Panel End: Vision
 
@@ -396,10 +399,10 @@ extends AbstractReferenceFeederConfigurationWizard {
                         FormSpecs.DEFAULT_ROWSPEC,}));
 
         lblActuator = new JLabel("Actuator");
-        panelActuator.add(lblActuator, "4, 2, left, default");
+        panelActuator.add(lblActuator, "4, 2, center, default");
 
         lblActuatorValue = new JLabel("Actuator Value");
-        panelActuator.add(lblActuatorValue, "6, 2, left, default");
+        panelActuator.add(lblActuatorValue, "6, 2, center, default");
 
         lblFeed = new JLabel("Feed");
         panelActuator.add(lblFeed, "2, 4, right, default");
@@ -459,6 +462,7 @@ extends AbstractReferenceFeederConfigurationWizard {
     public void createBindings() {
         super.createBindings();
         LengthConverter lengthConverter = new LengthConverter();
+        LengthConverter lengthConverterPitch = new LengthConverter("%.0f mm");
         IntegerConverter intConverter = new IntegerConverter();
         LongConverter longConverter = new LongConverter();
         DoubleConverter doubleConverter =
@@ -495,8 +499,8 @@ extends AbstractReferenceFeederConfigurationWizard {
 
         addWrappedBinding(feeder, "snapToAxis", checkBoxSnapToAxis, "selected");
 
-        addWrappedBinding(feeder, "partPitch", textFieldPartPitch, "text", lengthConverter);
-        addWrappedBinding(feeder, "feedPitch", textFieldFeedPitch, "text", lengthConverter);
+        addWrappedBinding(feeder, "partPitch", textFieldPartPitch, "selectedItem", lengthConverterPitch);
+        addWrappedBinding(feeder, "feedPitch", textFieldFeedPitch, "selectedItem", lengthConverterPitch);
         addWrappedBinding(feeder, "feedCount", textFieldFeedCount, "text", longConverter);
 
 
@@ -526,8 +530,7 @@ extends AbstractReferenceFeederConfigurationWizard {
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldHole1LocationY);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldHole2LocationX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldHole2LocationY);
-        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldPartPitch);
-        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedPitch);
+
         ComponentDecorators.decorateWithAutoSelect(feedActuatorValue);
         ComponentDecorators.decorateWithAutoSelect(postPickActuatorValue);
     }
@@ -727,8 +730,8 @@ extends AbstractReferenceFeederConfigurationWizard {
     }
 
     private JLabel lblPartPitch;
-    private JTextField textFieldPartPitch;
-    private JTextField textFieldFeedPitch;
+    private JComboBox<String> textFieldPartPitch;
+    private JComboBox<String> textFieldFeedPitch;
     private JLabel lblFeedPitch;
     private JPanel panelLocations;
     private JPanel panelTape;

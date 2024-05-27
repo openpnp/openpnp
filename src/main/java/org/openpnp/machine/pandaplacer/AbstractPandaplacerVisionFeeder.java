@@ -515,6 +515,7 @@ public abstract class AbstractPandaplacerVisionFeeder extends ReferenceFeeder {
     public void showFeatures() throws Exception {
         Camera camera = getCamera();
         ensureCameraZ(camera, true);
+        camera.moveTo(this.getLocation()); //make sure the camera is pointing to the currently selected pick location
         try (CvPipeline pipeline = getCvPipeline(camera, true, true)) {
 
             // Process vision and show feature without applying anything
