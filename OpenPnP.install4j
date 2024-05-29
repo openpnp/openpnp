@@ -69,11 +69,8 @@
           <directory name="native/${compiler:native_path}" />
         </nativeLibraryDirectories>
       </java>
-      <infoPlist>
-&lt;key&gt;NSCameraUsageDescription&lt;/key&gt;
-&lt;string&gt;openpnp-capture needs permission to access the camera to capture images.&lt;/string&gt;
-
-</infoPlist>
+      <infoPlist>&lt;key&gt;NSCameraUsageDescription&lt;/key&gt;
+&lt;string&gt;openpnp-capture needs permission to access the camera to capture images.&lt;/string&gt;</infoPlist>
       <iconImageFiles>
         <file path="./src/main/resources/icons/OpenPnP-logo.iconset/icon_32x32.png" />
         <file path="./src/main/resources/icons/OpenPnP-logo.iconset/icon_128x128.png" />
