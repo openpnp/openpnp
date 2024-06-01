@@ -166,7 +166,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     private String actuatorName;
     protected Actuator actuator;
     /**
-     * "peelOff" is a legacy name, it is now recommened to use the rotation axis for peeling
+     * "peelOff" is a legacy name, it is now recommended to use the rotation axis for peeling
      */
     @Attribute(required = false)
     private  String peelOffActuatorName;
