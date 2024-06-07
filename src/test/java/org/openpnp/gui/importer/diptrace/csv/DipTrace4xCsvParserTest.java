@@ -13,9 +13,10 @@ import java.io.StringReader;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertLinesMatch;
 
-class DipTrace3xCsvParserTest {
+class DipTrace4xCsvParserTest {
 
     @BeforeEach
     void setUp() throws Exception {
@@ -38,15 +39,15 @@ class DipTrace3xCsvParserTest {
     @Test
     void importCSV() throws Exception {
         // given
-        DipTrace3xCsvParser parser = new DipTrace3xCsvParser();
+        DipTrace4xCsvParser parser = new DipTrace4xCsvParser();
         boolean createMissingParts = true;
         boolean updateHeights = true;
 
         // and
         String content =
-            "RefDes,Name,X (mm),Y (mm),Side,Rotate,Value\n" +
-            "C1,C0603,8.6,7.2,Top,0,1nF\n" +
-            "C2,C0402,10.81,22.99,Bottom,180,0.1uF/16V\n";
+            "\"RefDes\",\"Name\",\"Center X (mm)\",\"Center Y (mm)\",\"Side\",\"Rotation\",\"Value\"\n" +
+            "\"C1\",\"C0603\",\"8.6\",\"7.2\",\"Top\",\"0\",\"1nF\"\n" +
+            "\"C2\",\"C0402\",\"10.81\",\"22.99\",\"Bottom\",\"180\",\"0.1uF/16V\"\n";
 
         BufferedReader reader = new BufferedReader(new StringReader(content));
 

@@ -23,7 +23,7 @@ import java.awt.Frame;
 
 import org.openpnp.Translations;
 import org.openpnp.gui.importer.BoardImporter;
-import org.openpnp.gui.importer.diptrace.csv.DipTrace3xCsvParser;
+import org.openpnp.gui.importer.diptrace.csv.DipTrace4xCsvParser;
 import org.openpnp.gui.importer.diptrace.gui.DiptraceBoardImporterDialog;
 import org.openpnp.gui.importer.genericcsv.CsvImporter;
 import org.openpnp.gui.importer.genericcsv.csv.GenericCSVParser;
@@ -46,7 +46,7 @@ public class DipTraceBoardImporter extends CsvImporter implements BoardImporter 
 
     @Override
     public GenericCSVParser getParser() {
-        return new DipTrace3xCsvParser();
+        return new DipTrace4xCsvParser();
     }
 
     @Override
