@@ -36,7 +36,7 @@ class DipTraceCSVParserTest {
     }
 
     @Test
-    void ImportLegacyCSV() throws Exception {
+    void importLegacyCSV() throws Exception {
         // given
         DipTraceCSVParser parser = new DipTraceCSVParser();
         boolean createMissingParts = true;
