@@ -24,9 +24,9 @@ import java.awt.Frame;
 import org.openpnp.Translations;
 import org.openpnp.gui.importer.BoardImporter;
 import org.openpnp.gui.importer.diptrace.csv.DipTrace4xCsvParser;
-import org.openpnp.gui.importer.diptrace.gui.DiptraceBoardImporterDialog;
 import org.openpnp.gui.importer.genericcsv.CsvImporter;
 import org.openpnp.gui.importer.genericcsv.csv.GenericCSVParser;
+import org.openpnp.gui.importer.genericcsv.gui.GenericCSVImporterDialog;
 import org.openpnp.model.Board;
 
 @SuppressWarnings("serial")
@@ -52,7 +52,7 @@ public class DipTraceBoardImporter extends CsvImporter implements BoardImporter 
     @Override
     public Board importBoard(Frame parent) throws Exception {
         GenericCSVParser parser = getParser();
-        DiptraceBoardImporterDialog dialog = new DiptraceBoardImporterDialog(parent, getImporterDescription(), parser);
+        GenericCSVImporterDialog dialog = new GenericCSVImporterDialog(parent, getImporterDescription(), parser);
         dialog.setVisible(true);
         return dialog.getBoard();
     }
