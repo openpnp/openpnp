@@ -17,7 +17,7 @@
  * For more information about OpenPnP visit http://openpnp.org
  */
 
-package org.openpnp.gui.importer;
+package org.openpnp.gui.importer.diptrace;
 
 import java.awt.FileDialog;
 import java.awt.FlowLayout;
@@ -48,6 +48,7 @@ import javax.swing.KeyStroke;
 import javax.swing.border.TitledBorder;
 
 import org.openpnp.Translations;
+import org.openpnp.gui.importer.BoardImporter;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.model.Board;
 import org.openpnp.model.Abstract2DLocatable.Side;
