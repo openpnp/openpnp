@@ -5,7 +5,7 @@ import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
 import org.openpnp.Translations;
-import org.openpnp.gui.importer.diptrace.csv.DipTraceCSVParser;
+import org.openpnp.gui.importer.genericcsv.csv.GenericCSVParser;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.model.Board;
 import org.openpnp.model.Placement;
@@ -21,7 +21,7 @@ import java.util.List;
 
 public class DiptraceBoardImporterDialog extends JDialog {
 
-    private final DipTraceCSVParser parser;
+    private final GenericCSVParser parser;
     private File fileName;
 
     public Board getBoard() {
@@ -39,7 +39,7 @@ public class DiptraceBoardImporterDialog extends JDialog {
     private final Action cancelAction = new SwingAction_3();
     private JCheckBox chckbxCreateMissingParts;
 
-    public DiptraceBoardImporterDialog(Frame parent, String title, DipTraceCSVParser parser) {
+    public DiptraceBoardImporterDialog(Frame parent, String title, GenericCSVParser parser) {
         super(parent, title, true);
         this.parser = parser;
         getContentPane().setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
@@ -139,7 +139,8 @@ public class DiptraceBoardImporterDialog extends JDialog {
             List<Placement> placements = new ArrayList<>();
             try {
                 if (fileName.exists()) {
-                    placements.addAll(parser.parseFile(fileName, chckbxCreateMissingParts.isSelected()));
+                    // TODO add support for updating heights.
+                    placements.addAll(parser.parseFile(fileName, chckbxCreateMissingParts.isSelected(), false));
 
                 }
             } catch (Exception e1) {

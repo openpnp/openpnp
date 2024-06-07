@@ -23,12 +23,14 @@ import java.awt.Frame;
 
 import org.openpnp.Translations;
 import org.openpnp.gui.importer.BoardImporter;
-import org.openpnp.gui.importer.diptrace.csv.DipTraceCSVParser;
+import org.openpnp.gui.importer.diptrace.csv.DipTrace3xCsvParser;
 import org.openpnp.gui.importer.diptrace.gui.DiptraceBoardImporterDialog;
+import org.openpnp.gui.importer.genericcsv.CsvImporter;
+import org.openpnp.gui.importer.genericcsv.csv.GenericCSVParser;
 import org.openpnp.model.Board;
 
 @SuppressWarnings("serial")
-public class DipTraceBoardImporter implements BoardImporter {
+public class DipTraceBoardImporter extends CsvImporter implements BoardImporter {
     private final static String NAME = "Diptrace .csv"; //$NON-NLS-1$
     private final static String DESCRIPTION = Translations.getString("DipTraceImporter.Importer.Description"); //$NON-NLS-1$
 
@@ -43,8 +45,13 @@ public class DipTraceBoardImporter implements BoardImporter {
     }
 
     @Override
+    public GenericCSVParser getParser() {
+        return new DipTrace3xCsvParser();
+    }
+
+    @Override
     public Board importBoard(Frame parent) throws Exception {
-        DipTraceCSVParser parser = new DipTraceCSVParser();
+        GenericCSVParser parser = getParser();
         DiptraceBoardImporterDialog dialog = new DiptraceBoardImporterDialog(parent, getImporterDescription(), parser);
         dialog.setVisible(true);
         return dialog.getBoard();

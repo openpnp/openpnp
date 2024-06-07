@@ -51,6 +51,7 @@ public class ReferenceCsvImporter extends CsvImporter implements BoardImporter {
 	public GenericCSVParser getParser() {
 		return new ReferenceCsvParser();
 	}
+
 	private class ReferenceCsvParser extends GenericCSVParser {
 		// methods to read of strings for each purpose to be found in the heading line
 		// data read from file is converted to upper case before compare -> only list upper case pattern here

@@ -248,13 +248,19 @@ public abstract class GenericCSVParser {
         return "ISO-8859-1"; //$NON-NLS-1$
     }
 
-    public List<Placement> parseFile(File file, boolean createMissingParts,
+    public List<Placement> parseFile(File file, boolean createMissingParts, boolean updateHeights)
+            throws Exception {
+        String characterset = detectCharacterSet(file);
+
+        BufferedReader reader =
+                new BufferedReader(new InputStreamReader(new FileInputStream(file), characterset));
+        return parse(reader, createMissingParts, updateHeights);
+    }
+
+    public List<Placement> parse(BufferedReader reader, boolean createMissingParts,
                                      boolean updateHeights) throws Exception {
         initialise();
 
-        String characterset = detectCharacterSet(file);
-        BufferedReader reader =
-                new BufferedReader(new InputStreamReader(new FileInputStream(file), characterset));
         ArrayList<Placement> placements = new ArrayList<>();
         String line;
         Configuration cfg = Configuration.get();
