@@ -25,7 +25,7 @@ import java.awt.Frame;
 
 import org.openpnp.gui.importer.BoardImporter;
 import org.openpnp.gui.importer.genericcsv.csv.GenericCSVParser;
-import org.openpnp.gui.importer.genericcsv.gui.Dlg;
+import org.openpnp.gui.importer.genericcsv.gui.GenericCSVImporterDialog;
 import org.openpnp.model.Board;
 
 @SuppressWarnings("serial")
@@ -40,9 +40,9 @@ public abstract class CsvImporter {
         GenericCSVParser parser = getParser();
 
     	// open the file import dialog
-        Dlg dlg = new Dlg(parent, this.getImporterDescription(), parser);
-        dlg.setVisible(true);
-        return dlg.getBoard();
+        GenericCSVImporterDialog genericCSVImporterDialog = new GenericCSVImporterDialog(parent, this.getImporterDescription(), parser);
+        genericCSVImporterDialog.setVisible(true);
+        return genericCSVImporterDialog.getBoard();
     }
 
     public abstract GenericCSVParser getParser();

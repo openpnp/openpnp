@@ -20,7 +20,7 @@ import java.io.FilenameFilter;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Dlg extends JDialog {
+public class GenericCSVImporterDialog extends JDialog {
     private final GenericCSVParser parser;
 
     private JTextField textFieldFile;
@@ -31,7 +31,7 @@ public class Dlg extends JDialog {
     private JCheckBox chckbxUpdatePartHeight;
     private Board board;
 
-    public Dlg(Frame parent, String title, GenericCSVParser parser) {
+    public GenericCSVImporterDialog(Frame parent, String title, GenericCSVParser parser) {
         super(parent, title, true);
 
         this.parser = parser;
@@ -114,7 +114,7 @@ public class Dlg extends JDialog {
         }
 
         public void actionPerformed(ActionEvent e) {
-            FileDialog fileDialog = new FileDialog(Dlg.this);
+            FileDialog fileDialog = new FileDialog(GenericCSVImporterDialog.this);
             fileDialog.setFilenameFilter(new FilenameFilter() {
                 @Override
                 public boolean accept(File dir, String name) {
@@ -150,7 +150,7 @@ public class Dlg extends JDialog {
                             chckbxUpdatePartHeight.isSelected()));
                 }
             } catch (Exception e1) {
-                MessageBoxes.errorBox(Dlg.this, Translations.getString("CsvImporter.ImportErrorMessage"), e1); //$NON-NLS-1$
+                MessageBoxes.errorBox(GenericCSVImporterDialog.this, Translations.getString("CsvImporter.ImportErrorMessage"), e1); //$NON-NLS-1$
                 return;
             }
             for (Placement placement : placements) {
