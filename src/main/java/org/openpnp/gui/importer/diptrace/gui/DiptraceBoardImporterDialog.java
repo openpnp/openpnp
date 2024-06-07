@@ -136,7 +136,7 @@ public class DiptraceBoardImporterDialog extends JDialog {
             List<Placement> placements = new ArrayList<>();
             try {
                 if (fileName.exists()) {
-                    placements.addAll(parser.parse(fileName, chckbxCreateMissingParts.isSelected()));
+                    placements.addAll(parser.parseFile(fileName, chckbxCreateMissingParts.isSelected()));
 
                 }
             } catch (Exception e1) {

@@ -3,18 +3,20 @@ package org.openpnp.gui.importer.diptrace.csv;
 import org.openpnp.model.*;
 import org.openpnp.model.Package;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class DipTraceCSVParser {
-    public List<Placement> parse(File file, boolean createMissingParts)
+    public List<Placement> parseFile(File file, boolean createMissingParts)
             throws Exception {
         BufferedReader reader =
                 new BufferedReader(new InputStreamReader(new FileInputStream(file)));
+        return parse(reader, createMissingParts);
+    }
+
+    public List<Placement> parse(BufferedReader reader, boolean createMissingParts)
+            throws Exception {
         ArrayList<Placement> placements = new ArrayList<>();
         String line;
         int lineCount = 0;
