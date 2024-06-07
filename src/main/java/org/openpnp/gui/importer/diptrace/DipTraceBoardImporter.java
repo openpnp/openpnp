@@ -32,8 +32,6 @@ public class DipTraceBoardImporter implements BoardImporter {
     private final static String NAME = "Diptrace .csv"; //$NON-NLS-1$
     private final static String DESCRIPTION = Translations.getString("DipTraceImporter.Importer.Description"); //$NON-NLS-1$
 
-    private Board board;
-
     @Override
     public String getImporterName() {
         return NAME;
@@ -50,10 +48,6 @@ public class DipTraceBoardImporter implements BoardImporter {
         DiptraceBoardImporterDialog dialog = new DiptraceBoardImporterDialog(parent, getImporterDescription(), parser);
         dialog.setVisible(true);
         return dialog.getBoard();
-    }
-
-    public void setBoard(Board board) {
-        this.board = board;
     }
 }
 
