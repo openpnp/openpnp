@@ -47,9 +47,9 @@ public class DipTraceBoardImporter implements BoardImporter {
     @Override
     public Board importBoard(Frame parent) throws Exception {
         DipTraceCSVParser parser = new DipTraceCSVParser();
-        DiptraceBoardImporterDialog dialog = new DiptraceBoardImporterDialog(parent, this, parser);
+        DiptraceBoardImporterDialog dialog = new DiptraceBoardImporterDialog(parent, getImporterDescription(), parser);
         dialog.setVisible(true);
-        return board;
+        return dialog.getBoard();
     }
 
     public void setBoard(Board board) {
