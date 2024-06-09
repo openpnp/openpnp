@@ -65,7 +65,7 @@ public class VisionCompositingTest {
 
         Configurator
         .currentConfig()
-        .level(Level.INFO) // change this for other log levels.
+        .level(Level.DEBUG) // change this for other log levels.
         .activate();
 
     }
