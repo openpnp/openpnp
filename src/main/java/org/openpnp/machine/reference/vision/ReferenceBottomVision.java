@@ -478,12 +478,6 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                     .multiply(1.2)); // Allow for some tolerance, we will check the result later.
             // mask the corner
             pipeline.setProperty("MaskCircle.diameter", new Length(shot.getMaxMaskRadius()*2, composite.getUnits()));
-            // mask the whole part
-            pipeline.setProperty("partmask.diameter", new Length(composite.getMaxCornerRadius(), composite.getUnits())
-                    .add(nozzleTip.getMaxPickTolerance()).multiply(2));
-            pipeline.setProperty("partmask.center", camera.getLocation()
-                    .subtract(new Location(composite.getUnits(), shot.getX(), shot.getY(), 0., 0.)
-                            .rotateXy(wantedLocation.getRotation())));
             if (nozzleTip instanceof ReferenceNozzleTip) {
                 ReferenceNozzleTipCalibration calibration = ((ReferenceNozzleTip) nozzleTip).getCalibration();
                 if (calibration != null 
@@ -520,6 +514,12 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                     .add(samplingSize.multiply(2)));
 
             if (composite.getCompositingSolution().isAdvanced()) {
+                // mask the whole part
+                pipeline.setProperty("partmask.diameter", new Length(composite.getMaxPadRadius(), composite.getUnits())
+                        .add(nozzleTip.getMaxPickTolerance()).multiply(2));
+                pipeline.setProperty("partmask.center", camera.getLocation()
+                        .subtract(new Location(composite.getUnits(), shot.getX(), shot.getY(), 0., 0.)
+                                .rotateXy(wantedLocation.getRotation())));
                 pipeline.setProperty("MinAreaRect.leftEdge", shot.hasLeftEdge());
                 pipeline.setProperty("MinAreaRect.rightEdge", shot.hasRightEdge());
                 pipeline.setProperty("MinAreaRect.topEdge", shot.hasTopEdge());
