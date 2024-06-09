@@ -749,6 +749,10 @@ public class VisionCompositing extends AbstractModelObject{
             return locationAndRotation;
         }
 
+        public double getMaxPadRadius() {
+            return maxPadRadius;
+        }
+
         public List<Footprint.Pad> getRectifiedPads() {
             if (rectifiedPads == null) {
                 return null;
@@ -795,7 +799,8 @@ public class VisionCompositing extends AbstractModelObject{
         private final double invHypot = 1/Math.hypot(1, 1); 
         private final double[] xOctogonalHullSign = new double[] { -invHypot,  0, +invHypot, -1, +1, -invHypot,  0, +invHypot };
         private final double[] yOctogonalHullSign = new double[] { -invHypot, -1, -invHypot,  0,  0, +invHypot, +1, +invHypot };
-        
+
+        private double maxPadRadius = 0;
         private double octogonalHull[] = new double[8]; 
         private LengthConverter lengthConverter = new LengthConverter();
 
@@ -1023,6 +1028,10 @@ public class VisionCompositing extends AbstractModelObject{
          * @param pad
          */
         protected void addPadToOctogalHull(Footprint.Pad pad) {
+            for (Point pt : pad.corners()) {
+                double r = Math.hypot(pt.x, pt.y);
+                maxPadRadius = Math.max(maxPadRadius, r);
+            }
             for (int i = 0; i < 8; i++) {
                 double h = pad.getX()*xOctogonalHullSign[i] + pad.getWidth()*Math.abs(xOctogonalHullSign[i])*0.5
                          + pad.getY()*yOctogonalHullSign[i] + pad.getHeight()*Math.abs(yOctogonalHullSign[i])*0.5;

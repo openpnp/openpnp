@@ -155,7 +155,7 @@ public class VisionCompositingPreview extends JComponent implements MouseMotionL
                     // check if mouse over
                     if (xMouse != null && yMouse != null) {
                         double xMouse = (this.xMouse - width/2.0)/scale;
-                        double yMouse = (this.yMouse - height/2.0)/-scale;
+                        double yMouse = (this.yMouse - height/2.0)/scale;
                         double distance = Math.hypot(xMouse - shot.getX(), yMouse - shot.getY());
                         if (distance < shot.getMaxMaskRadius()
                                 && bestDistance > distance) {
