@@ -51,7 +51,7 @@ public class DipTrace4xCsvParser extends GenericCSVParser {
 
     public String[] getHeightPattern() {
         return new String[]{
-                "HEIGHT",        //$NON-NLS-1$
+                "PACKAGE HEIGHT",        //$NON-NLS-1$
         };
     }
 

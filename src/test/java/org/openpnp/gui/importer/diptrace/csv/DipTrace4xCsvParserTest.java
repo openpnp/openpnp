@@ -45,9 +45,9 @@ class DipTrace4xCsvParserTest {
 
         // and
         String content =
-            "\"RefDes\",\"Name\",\"Center X (mm)\",\"Center Y (mm)\",\"Side\",\"Rotation\",\"Value\"\n" +
-            "\"C1\",\"C0603\",\"8.6\",\"7.2\",\"Top\",\"0\",\"1nF\"\n" +
-            "\"C2\",\"C0402\",\"10.81\",\"22.99\",\"Bottom\",\"180\",\"0.1uF/16V\"\n";
+            "\"RefDes\",\"Name\",\"Center X (mm)\",\"Center Y (mm)\",\"Side\",\"Rotation\",\"Value\",\"Package Height\"\n" +
+            "\"C1\",\"C0603\",\"8.6\",\"7.2\",\"Top\",\"0\",\"1nF\",\"0.8\"\n" +
+            "\"C2\",\"C0402\",\"10.81\",\"22.99\",\"Bottom\",\"180\",\"0.1uF/16V\",\"0\"\n";
 
         BufferedReader reader = new BufferedReader(new StringReader(content));
 
@@ -57,7 +57,7 @@ class DipTrace4xCsvParserTest {
         //         Also, tying presentation code (Placement::toString, Location::toString) to test code, is far from ideal.
         //         And using regular expressions doesn't lend towards readable code.
         List<String> expectedPlacementPatterns = List.of(
-            "^Placement C1 @(.*)+, location=\\(8\\.600000, 7\\.200000, 0\\.000000, 0\\.000000 mm\\), side=Top, part=id C0603-1nF, name null, heightUnits Millimeters, height 0\\.000000, packageId \\(null\\), type=Placement$",
+            "^Placement C1 @(.*)+, location=\\(8\\.600000, 7\\.200000, 0\\.000000, 0\\.000000 mm\\), side=Top, part=id C0603-1nF, name null, heightUnits Millimeters, height 0\\.800000, packageId \\(null\\), type=Placement$",
             "^Placement C2 @(.*)+, location=\\(10\\.810000, 22\\.990000, 0\\.000000, 180\\.000000 mm\\), side=Bottom, part=id C0402-0.1uF/16V, name null, heightUnits Millimeters, height 0\\.000000, packageId \\(null\\), type=Placement$"
         );
 
