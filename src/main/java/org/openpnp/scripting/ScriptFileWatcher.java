@@ -42,6 +42,7 @@ public class ScriptFileWatcher {
         String[] exampleScripts =
                 new String[] {
                         "Groovy/HelloWorld.groovy",
+                        "Groovy/MoveMachine.groovy",
                         "JavaScript/Call_Java.js",
                         "JavaScript/Hello_World.js",
                         "JavaScript/Move_Machine.js",
