@@ -19,7 +19,9 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.pool2.impl.DefaultPooledObjectInfo;
 import org.apache.commons.pool2.impl.GenericKeyedObjectPool;
+import groovy.lang.GroovyClassLoader;
 import org.codehaus.groovy.jsr223.GroovyScriptEngineFactory;
+import org.codehaus.groovy.jsr223.GroovyScriptEngineImpl;
 import org.openjdk.nashorn.api.scripting.NashornScriptEngineFactory;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.model.Configuration;
@@ -87,8 +89,10 @@ public class Scripting {
         extensionToEngineNameMap.put("js", jsFactory.getNames()
                 .get(0));
 
+        String libPath = this.scriptsDirectory + File.separator + "lib";
 
-        ScriptEngineFactory groovyFactory = new GroovyScriptEngineFactory();
+        ScriptEngineFactory groovyFactory = new GroovyEngineFactory(libPath);
+
         manager.registerEngineName(groovyFactory.getNames().get(0), groovyFactory);
         extensionToEngineNameMap.put("groovy", groovyFactory.getNames().get(0));
 
@@ -251,5 +255,19 @@ public class Scripting {
                   .values()
                   .forEach(allEngines::addAll);
         return allEngines.size();
+    }
+
+    private static class GroovyEngineFactory extends GroovyScriptEngineFactory {
+        final String libPath;
+        public GroovyEngineFactory(String libPath) {
+            this.libPath = libPath;
+        }
+
+        @Override
+        public ScriptEngine getScriptEngine() {
+            GroovyClassLoader gcl = new GroovyClassLoader();
+            gcl.addClasspath(libPath);
+            return new GroovyScriptEngineImpl(gcl);
+        }
     }
 }

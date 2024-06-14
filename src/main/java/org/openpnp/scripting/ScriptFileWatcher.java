@@ -30,21 +30,42 @@ public class ScriptFileWatcher {
         this.scripting = scripting;
 
         copyExampleScripts();
+        copyExampleLibs();
     }
 
-    private void copyExampleScripts() {
+    private void copyFiles(String destination, String resourcePath, String[] fileNames) {
         // TODO: It would be better if we just copied all the files from the Examples
         // directory in the jar, but this is relatively difficult to do.
         // There is some information on how to do it in:
         // http://stackoverflow.com/questions/1386809/copy-directory-from-a-jar-file
-        File examplesDir = new File(scripting.getScriptsDirectory(), "Examples");
-        examplesDir.mkdirs();
+
+        File dir = new File(scripting.getScriptsDirectory(), destination);
+        dir.mkdirs();
+
+        for (String filename : fileNames) {
+            try {
+                File file = new File(dir, filename);
+                if (file.exists()) {
+                    continue;
+                }
+                FileUtils.copyURLToFile(ClassLoader.getSystemResource(resourcePath + "/" + filename),
+                        file);
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+    }
+
+    private void copyExampleScripts() {
         String[] exampleScripts =
                 new String[] {
                         "Groovy/CallJava.groovy",
                         "Groovy/HelloWorld.groovy",
                         "Groovy/MoveMachine.groovy",
                         "Groovy/PrintPropertiesAndMethods.groovy",
+                        "Groovy/UseLib.groovy",
                         "JavaScript/Call_Java.js",
                         "JavaScript/Hello_World.js",
                         "JavaScript/Move_Machine.js",
@@ -62,19 +83,16 @@ public class ScriptFileWatcher {
                         "Python/use_module.py",
                         "Python/utility.py"
                 };
-        for (String name : exampleScripts) {
-            try {
-                File file = new File(examplesDir, name);
-                if (file.exists()) {
-                    continue;
-                }
-                FileUtils.copyURLToFile(ClassLoader.getSystemResource("scripts/Examples/" + name),
-                        file);
-            }
-            catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
+        copyFiles("Examples", "scripts/Examples", exampleScripts );
+    }
+
+    private void copyExampleLibs() {
+        String[] exampleLibs =
+                new String[] {
+                        ".ignore",
+                        "examples/Groovy/ExampleLib.groovy",
+                };
+        copyFiles("lib", "scripts/lib", exampleLibs );
     }
 
     public void setMenu(JMenu menu) {
