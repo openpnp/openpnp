@@ -41,7 +41,7 @@ public class ScriptingTest {
         Scripting scripting = new Scripting(scriptsDirectory);
 
         // File extensions that there are test files for
-        List<String> availableTestFileExtensions = Arrays.asList("java", "bsh", "js", "py");
+        List<String> availableTestFileExtensions = Arrays.asList("java", "bsh", "js", "py", "groovy");
         // Only retain the set of extensions for which there is also a matching
         // scripting engine, avoids environment-dependent test failures
         List<String> supportedTestFileExtensions = new ArrayList<>(availableTestFileExtensions);

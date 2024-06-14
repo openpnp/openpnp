@@ -19,6 +19,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.pool2.impl.DefaultPooledObjectInfo;
 import org.apache.commons.pool2.impl.GenericKeyedObjectPool;
+import org.codehaus.groovy.jsr223.GroovyScriptEngineFactory;
 import org.openjdk.nashorn.api.scripting.NashornScriptEngineFactory;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.model.Configuration;
@@ -85,6 +86,11 @@ public class Scripting {
                 jsFactory);
         extensionToEngineNameMap.put("js", jsFactory.getNames()
                 .get(0));
+
+
+        ScriptEngineFactory groovyFactory = new GroovyScriptEngineFactory();
+        manager.registerEngineName(groovyFactory.getNames().get(0), groovyFactory);
+        extensionToEngineNameMap.put("groovy", groovyFactory.getNames().get(0));
 
         // Create the scripts directory if it doesn't exist.
         if (!scriptsDirectory.exists()) {
