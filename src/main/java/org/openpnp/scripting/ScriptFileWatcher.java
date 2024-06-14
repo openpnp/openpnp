@@ -41,6 +41,7 @@ public class ScriptFileWatcher {
         examplesDir.mkdirs();
         String[] exampleScripts =
                 new String[] {
+                        "Groovy/HelloWorld.groovy",
                         "JavaScript/Call_Java.js",
                         "JavaScript/Hello_World.js",
                         "JavaScript/Move_Machine.js",
