@@ -44,6 +44,7 @@ public class ScriptFileWatcher {
                         "Groovy/CallJava.groovy",
                         "Groovy/HelloWorld.groovy",
                         "Groovy/MoveMachine.groovy",
+                        "Groovy/PrintPropertiesAndMethods.groovy",
                         "JavaScript/Call_Java.js",
                         "JavaScript/Hello_World.js",
                         "JavaScript/Move_Machine.js",
