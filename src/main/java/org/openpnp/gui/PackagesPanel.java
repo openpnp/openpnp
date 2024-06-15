@@ -30,7 +30,6 @@ import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
@@ -223,7 +222,7 @@ public class PackagesPanel extends JPanel implements WizardContainer {
         toolBar.add(deletePackageAction);
         toolBar.addSeparator();
         toolBar.add(copyPackageToClipboardAction);
-        toolBar.add(pastePackageToClipboardAction);
+        toolBar.add(pastePackageFromClipboardAction);
 
         addComponentListener(new ComponentAdapter() {
             @Override
@@ -372,7 +371,7 @@ public class PackagesPanel extends JPanel implements WizardContainer {
         }
     };
 
-    public final Action pastePackageToClipboardAction = new AbstractAction() {
+    public final Action pastePackageFromClipboardAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.paste);
             putValue(NAME, Translations.getString("PackagesPanel.Action.PastePackage")); //$NON-NLS-1$
@@ -396,7 +395,6 @@ public class PackagesPanel extends JPanel implements WizardContainer {
                 Serializer ser = Configuration.createSerializer();
                 Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
                 String s = (String) clipboard.getData(DataFlavor.stringFlavor);
-                StringReader r = new StringReader(s);
                 Package pkg = ser.read(Package.class, s);
                 pkg.setId(id);
                 Configuration.get().addPackage(pkg);

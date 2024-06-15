@@ -156,8 +156,8 @@ public class VisionSettingsPanel extends JPanel implements WizardContainer {
         toolBar.add(newSettingsAction);
         toolBar.add(deleteSettingsAction);
         toolBar.addSeparator();
-        toolBar.add(copyPackageToClipboardAction);
-        toolBar.add(pastePackageToClipboardAction);
+        toolBar.add(copyToClipboardAction);
+        toolBar.add(pasteFromClipboardAction);
 
         toolBar.addSeparator();
     }
@@ -258,7 +258,7 @@ public class VisionSettingsPanel extends JPanel implements WizardContainer {
         }
     };
 
-    public final Action copyPackageToClipboardAction = new AbstractAction() {
+    public final Action copyToClipboardAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.copy);
             putValue(NAME, Translations.getString("VisionSettingsPanel.Action.CopySettingsToClipboard")); //$NON-NLS-1$
@@ -288,7 +288,7 @@ public class VisionSettingsPanel extends JPanel implements WizardContainer {
         }
     };
 
-    public final Action pastePackageToClipboardAction = new AbstractAction() {
+    public final Action pasteFromClipboardAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.paste);
             putValue(NAME, Translations.getString("VisionSettingsPanel.Action.CreateSettingsFromClipboard")); //$NON-NLS-1$

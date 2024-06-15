@@ -414,7 +414,6 @@ public class PartsPanel extends JPanel implements WizardContainer {
                 Serializer ser = Configuration.createSerializer();
                 Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
                 String s = (String) clipboard.getData(DataFlavor.stringFlavor);
-                StringReader r = new StringReader(s);
                 Part part = ser.read(Part.class, s);
                 part.setId(id);
                 Configuration.get().addPart(part);
