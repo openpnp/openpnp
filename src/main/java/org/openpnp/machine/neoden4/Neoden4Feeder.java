@@ -106,15 +106,15 @@ public class Neoden4Feeder extends ReferenceFeeder {
         actuator.actuate(partPitchInTape.getValue());
 
     	// Calculate vision offset
-
-
+    	
+    	
         if (vision.isEnabled()) {
         	try {
         		visionOffset = getVisionOffsets(head, location);
                 Logger.debug("final visionOffsets " + visionOffset);
-                Logger.debug("Modified pickLocation {}", getPickLocation());
+                Logger.debug("Modified pickLocation {}", getPickLocation());	
         	} catch (Exception e) {
-
+        		
 			}
         }
 
@@ -156,11 +156,11 @@ public class Neoden4Feeder extends ReferenceFeeder {
         VisionProvider visionProvider = camera.getVisionProvider();
 
         // Convert AOI origin to top-left corner (Neoden4Camera changes resolution)
-        Rectangle vision_aoi = getVision().getAreaOfInterest();
+        Rectangle vision_aoi = getVision().getAreaOfInterest();        
 		Rectangle aoi = new Rectangle(
-				vision_aoi.getX() + (camera.getWidth() / 2),
-				vision_aoi.getY() + (camera.getHeight() / 2),
-				vision_aoi.getWidth(),
+				vision_aoi.getX() + (camera.getWidth() / 2), 
+				vision_aoi.getY() + (camera.getHeight() / 2), 
+				vision_aoi.getWidth(), 
 				vision_aoi.getHeight());
 
 
@@ -168,47 +168,47 @@ public class Neoden4Feeder extends ReferenceFeeder {
 		// - user set camera tp 1024x1024
 		// - user select AOI almost full screen and save
 		// - when camera is 512x512 and feeder is checking
-		//   vision offsets, vision_aoi can be < 0 or > 512
+		//   vision offsets, vision_aoi can be < 0 or > 512 
 		//   and cause openCV error
 		// If there is, clamp AOI to 512x512
         if (aoi.getX() < 0) {
-        	aoi.setX(0);
+        	aoi.setX(0); 
         }
         if (aoi.getX() > 512) {
-        	aoi.setX(512);
+        	aoi.setX(512); 
         }
         if (aoi.getY() < 0) {
-        	aoi.setY(0);
+        	aoi.setY(0); 
         }
         if (aoi.getY() > 512) {
-        	aoi.setY(512);
+        	aoi.setY(512); 
         }
         if (aoi.getWidth() < 0) {
-        	aoi.setWidth(0);
+        	aoi.setWidth(0); 
         }
         if (aoi.getWidth() > 512) {
-        	aoi.setWidth(512);
+        	aoi.setWidth(512); 
         }
         if (aoi.getHeight() < 0) {
-        	aoi.setHeight(0);
+        	aoi.setHeight(0); 
         }
         if (aoi.getHeight() > 512) {
-        	aoi.setHeight(512);
+        	aoi.setHeight(512); 
         }
-
+		
 		// Perform the template match
 		Logger.debug("Perform template match.");
 		Logger.debug(String.format("AOI X:%d, Y:%d, W:%d, H:%d",
 				aoi.getX(), aoi.getY(), aoi.getWidth(), aoi.getHeight()));
-
+		
 		try {
 			Point[] matchingPoints = visionProvider.locateTemplateMatches(
-					aoi.getX(), aoi.getY(), aoi.getWidth(), aoi.getHeight(),
+					aoi.getX(), aoi.getY(), aoi.getWidth(), aoi.getHeight(), 
 					0, 0, vision.getTemplateImage());
-
+		
 			// Get the best match from the array
 	        Point match = matchingPoints[0];
-
+	
 	        // match now contains the position, in pixels, from the top left corner
 	        // of the image to the top left corner of the match. We are interested in
 	        // knowing how far from the center of the image the center of the match is.
@@ -218,36 +218,36 @@ public class Neoden4Feeder extends ReferenceFeeder {
 	        double templateHeight = vision.getTemplateImage().getHeight();
 	        double matchX = match.x;
 	        double matchY = match.y;
-
+	
 	        Logger.debug("matchX {}, matchY {}", matchX, matchY);
-
+	
 	        // Adjust the match x and y to be at the center of the match instead of
 	        // the top left corner.
 	        matchX += (templateWidth / 2);
 	        matchY += (templateHeight / 2);
-
+	
 	        Logger.debug("centered matchX {}, matchY {}", matchX, matchY);
-
+	
 	        // Calculate the difference between the center of the image to the
 	        // center of the match.
 	        double offsetX = (imageWidth / 2) - matchX;
 	        double offsetY = (imageHeight / 2) - matchY;
-
+	
 	        Logger.debug("offsetX {}, offsetY {}", offsetX, offsetY);
-
+	
 	        // Invert the Y offset because images count top to bottom and the Y
 	        // axis of the machine counts bottom to top.
 	        offsetY *= -1;
-
+	
 	        Logger.debug("negated offsetX {}, offsetY {}", offsetX, offsetY);
-
+	
 	        // And convert pixels to units
 	        Location unitsPerPixel = camera.getUnitsPerPixel();
 	        offsetX *= unitsPerPixel.getX();
 	        offsetY *= unitsPerPixel.getY();
-
+	
 	        Logger.debug("final, in camera units offsetX {}, offsetY {}", offsetX, offsetY);
-
+	
 	        return new Location(unitsPerPixel.getUnits(), offsetX, offsetY, 0, 0);
 		}
         catch (Exception e) {
@@ -410,5 +410,14 @@ public class Neoden4Feeder extends ReferenceFeeder {
         public void setTemplateImageBottomRight(Location templateImageBottomRight) {
             this.templateImageBottomRight = templateImageBottomRight;
         }
+    }
+
+    @Override
+    public void applyLocationOffset(Location offset) throws Exception {
+        super.applyLocationOffset(offset);
+
+        // invalidate the vision offset and pick location
+        visionOffset = null;
+        pickLocation = null;
     }
 }

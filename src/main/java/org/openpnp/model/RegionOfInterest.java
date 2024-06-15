@@ -60,4 +60,10 @@ public class RegionOfInterest {
                 rectify,
                 this.offsets==null ? null : offsets.rotateXy(angle));
     }
+
+    public void applyOffset(Location offset) {
+        this.upperLeftCorner = this.upperLeftCorner.addWithRotation(offset);
+        this.upperRightCorner = this.upperRightCorner.addWithRotation(offset);
+        this.lowerLeftCorner = this.lowerLeftCorner.addWithRotation(offset);
+    }
 }

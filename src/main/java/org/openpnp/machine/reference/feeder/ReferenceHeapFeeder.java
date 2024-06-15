@@ -579,19 +579,25 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
         return way1;
     }
     public void setWay1(Location way) {
+        Object oldValue = this.way1;
         this.way1 = way;
+        firePropertyChange("way1", oldValue, way1);
     }
     public Location getWay2() {
         return way2;
     }
     public void setWay2(Location way) {
+        Object oldValue = this.way2;
         this.way2 = way;
+        firePropertyChange("way2", oldValue, way2);
     }
     public Location getWay3() {
         return way3;
     }
     public void setWay3(Location way) {
+        Object oldValue = this.way3;
         this.way3 = way;
+        firePropertyChange("way3", oldValue, way3);
     }
     public int getThrowAwayDropBoxContentAfterFailedFeeds() {
         return throwAwayDropBoxContentAfterFailedFeeds;
@@ -640,7 +646,9 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
         if (dropBox == null) {
             throw new Exception("Location is required.");
         }
+        Object oldValue = this.dropBox;
         this.dropBox.setCenterBottomLocation(dropBox);
+        firePropertyChange("dropBoxLocation", oldValue, dropBox);
     }
     
     public Location getDropBoxDropLocation() {
@@ -651,7 +659,9 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
         if (dropBox == null) {
             throw new Exception("Location is required.");
         }
+        Object oldValue = this.dropBox;
         this.dropBox.setDropLocation(dropBox);
+        firePropertyChange("dropBoxDropLocation", oldValue, dropBox);
     }
 
     
@@ -1065,6 +1075,19 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
                 throw new Exception("HeapFeeder: Dropping part failed, check nozzle tip");
             }
         }
+    }
 
+    @Override
+    public void applyLocationOffset(Location offset) throws Exception {
+        super.applyLocationOffset(offset);
+        setWay1(getWay1().addWithRotation(offset));
+        setWay2(getWay2().addWithRotation(offset));
+        setWay3(getWay3().addWithRotation(offset));
+
+        setDropBoxLocation(getDropBoxLocation().addWithRotation(offset));
+        setDropBoxDropLocation(getDropBoxDropLocation().addWithRotation(offset));
+
+        // invalidate pick location.
+        pickLocation = null;
     }
 }

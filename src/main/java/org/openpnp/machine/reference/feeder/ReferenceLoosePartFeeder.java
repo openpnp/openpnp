@@ -187,4 +187,12 @@ public class ReferenceLoosePartFeeder extends ReferenceFeeder {
             throw new Error(e);
         }
     }
+
+    @Override
+    public void applyLocationOffset(Location offset) throws Exception {
+        super.applyLocationOffset(offset);
+
+        // invalidate the pick location
+        pickLocation = null;
+    }
 }

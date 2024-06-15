@@ -546,4 +546,12 @@ public class PhotonFeeder extends ReferenceFeeder {
             Configuration.get().getMachine().addFeeder(feeder);
         }
     }
+
+    @Override
+    public void applyLocationOffset(Location offset) throws Exception {
+        super.applyLocationOffset(offset);
+
+        PhotonFeederSlots.Slot slot = getSlot();
+        slot.setLocation(slot.getLocation().addWithRotation(offset));
+    }
 }

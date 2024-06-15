@@ -374,8 +374,8 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
         // change FeedCount
         setFeedCount(getFeedCount() - 1);
     }
-        
-    
+
+
     public CvPipeline getPipeline() {
         return pipeline;
     }
@@ -544,6 +544,13 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
         catch (Exception e) {
             throw new Error(e);
         }
+    }
+
+    @Override
+    public void applyLocationOffset(Location offset) throws Exception {
+        super.applyLocationOffset(offset);
+        setLastHoleLocation(getLastHoleLocation().addWithRotation(offset));
+        setReferenceHoleLocation(getReferenceHoleLocation().addWithRotation(offset));
     }
 }
 

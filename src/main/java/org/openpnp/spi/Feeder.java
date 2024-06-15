@@ -133,4 +133,11 @@ public interface Feeder extends Identifiable, Named, WizardConfigurable, Propert
      * @return
      */
     public int getPickRetryCount();
+
+    /**
+     * Applies location offset to the feeder configuration.
+     *
+     * This is useful when you move a feeder, or bank of feeders.
+     */
+    void applyLocationOffset(Location offset) throws Exception;
 }

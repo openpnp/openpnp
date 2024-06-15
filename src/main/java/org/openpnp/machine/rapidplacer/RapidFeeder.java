@@ -132,4 +132,11 @@ public class RapidFeeder extends ReferenceFeeder {
         this.pitch = pitch;
         firePropertyChange("pitch", null, pitch);
     }
+
+    @Override
+    public void applyLocationOffset(Location offset) throws Exception {
+        super.applyLocationOffset(offset);
+        setScanStartLocation(getScanStartLocation().addWithRotation(offset));
+        setScanEndLocation(getScanEndLocation().addWithRotation(offset));
+    }
 }

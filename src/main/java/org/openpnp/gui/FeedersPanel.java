@@ -29,6 +29,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.prefs.Preferences;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import java.util.stream.Collectors;
 
@@ -70,14 +72,8 @@ import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.gui.tablemodel.FeedersTableModel;
 import org.openpnp.machine.reference.vision.AbstractPartAlignment;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision;
-import org.openpnp.model.BoardLocation;
-import org.openpnp.model.Configuration;
+import org.openpnp.model.*;
 import org.openpnp.model.Configuration.TablesLinked;
-import org.openpnp.model.Job;
-import org.openpnp.model.Length;
-import org.openpnp.model.Location;
-import org.openpnp.model.Part;
-import org.openpnp.model.Placement;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.JobProcessor.JobProcessorException;
@@ -137,6 +133,9 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         JButton btnDeleteFeeder = new JButton(deleteFeederAction);
         btnDeleteFeeder.setHideActionText(true);
         toolBar.add(btnDeleteFeeder);
+
+        toolBar.addSeparator();
+        toolBar.add(applyOffsetAction);
 
         toolBar.addSeparator();
         toolBar.add(pickFeederAction);
@@ -241,10 +240,10 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 
         singleSelectActionGroup = new ActionGroup(deleteFeederAction, feedFeederAction,
                 pickFeederAction, moveCameraToPickLocation, moveToolToPickLocation,
-                setEnabledAction);
+                setEnabledAction, applyOffsetAction);
         singleSelectActionGroup.setEnabled(false);
         
-        multiSelectActionGroup = new ActionGroup(deleteFeederAction, setEnabledAction);
+        multiSelectActionGroup = new ActionGroup(deleteFeederAction, setEnabledAction, applyOffsetAction);
         multiSelectActionGroup.setEnabled(false);
         
         table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
@@ -565,6 +564,52 @@ public class FeedersPanel extends JPanel implements WizardContainer {
                 for (Feeder feeder : selections) {
                     configuration.getMachine().removeFeeder(feeder);
                     tableModel.refresh();
+                }
+            }
+        }
+    };
+
+    public Action applyOffsetAction = new AbstractAction() {
+        {
+            putValue(SMALL_ICON, Icons.editFeeder);
+            putValue(NAME, Translations.getString("FeedersPanel.Action.ApplyOffset")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("FeedersPanel.Action.ApplyOffset.Description")); //$NON-NLS-1$
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            // groups                                    12       3             45       6             78       9
+            Pattern xyPattern = Pattern.compile("X=((-)?\\d+(\\.\\d+)?),Y=((-)?\\d+(\\.\\d+)?),Z=((-)?\\d+(\\.\\d+)?)");
+            String xyInput = "X=0.0,Y=0.0,Z=0.0";
+            Location offset = null;
+
+            while ((xyInput = JOptionPane.showInputDialog(mainFrame,
+                    Translations.getString("FeedersPanel.Action.ApplyOffset.EnterOffset"), xyInput)) != null) {
+                Matcher m = xyPattern.matcher(xyInput);
+                if (m.matches()) {
+                    try {
+                        offset = new Location(
+                                LengthUnit.Millimeters,
+                                Double.parseDouble(m.group(1)),
+                                Double.parseDouble(m.group(4)),
+                                Double.parseDouble(m.group(7)),
+                                0.0);
+                        break;
+                    } catch (NumberFormatException ignored) {}
+                }
+                MessageBoxes.errorBox(mainFrame, "Error", "Invalid input");
+            }
+
+            if (offset == null) {
+                return;
+            }
+
+            List<Feeder> selections = getSelections();
+            for (Feeder feeder : selections) {
+                try {
+                    feeder.applyLocationOffset(offset);
+                } catch (Exception e) {
+                    MessageBoxes.errorBox(getTopLevelAncestor(), "Apply offset", e);
                 }
             }
         }

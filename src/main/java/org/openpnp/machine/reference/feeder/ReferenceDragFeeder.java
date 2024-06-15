@@ -21,8 +21,6 @@ package org.openpnp.machine.reference.feeder;
 
 import java.awt.Point;
 import java.awt.image.BufferedImage;
-import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeSupport;
 import java.io.File;
 import java.io.IOException;
 
@@ -241,6 +239,14 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
 
             Logger.debug("Modified pickLocation {}", location.subtract(visionOffset));
         }
+    }
+
+    @Override
+    public void applyLocationOffset(Location offset) throws Exception {
+        super.applyLocationOffset(offset);
+        resetVisionOffsets();
+        setFeedStartLocation(getFeedStartLocation().addWithRotation(offset));
+        setFeedEndLocation(getFeedEndLocation().addWithRotation(offset));
     }
 
     // TODO: Throw an Exception if vision fails.

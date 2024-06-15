@@ -2654,5 +2654,32 @@ public class BlindsFeeder extends ReferenceFeeder {
         }
     }
 
+    @Override
+    public void applyLocationOffset(Location offset) throws Exception {
+        super.applyLocationOffset(offset);
+
+        // Note: keeping 'live' code, rather than commenting out, so these usages do not rot and can be found.
+        if (false) {
+            // this feeder has some custom behavior, so we can't do this
+            setFiducial1Location(getFiducial1Location().addWithRotation(offset));
+            setFiducial2Location(getFiducial2Location().addWithRotation(offset));
+            setFiducial3Location(getFiducial3Location().addWithRotation(offset));
+        } else {
+            // instead we have to do it like this
+            Location oldFiducial1Location = this.fiducial1Location;
+            fiducial1Location = fiducial1Location.addWithRotation(offset);
+            firePropertyChange("fiducial1Location", oldFiducial1Location, fiducial1Location);
+
+            Location oldFiducial2Location = this.fiducial2Location;
+            fiducial2Location = fiducial2Location.addWithRotation(offset);
+            firePropertyChange("fiducial2Location", oldFiducial2Location, fiducial2Location);
+
+            Location oldFiducial3Location = this.fiducial3Location;
+            fiducial3Location = fiducial3Location.addWithRotation(offset);
+            firePropertyChange("fiducial3Location", oldFiducial3Location, fiducial3Location);
+
+            this.invalidateFeederTransformation();
+        }
+    }
 }
 

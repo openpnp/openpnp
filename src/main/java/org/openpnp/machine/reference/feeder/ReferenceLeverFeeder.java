@@ -468,4 +468,12 @@ public class ReferenceLeverFeeder extends ReferenceFeeder {
             this.templateImageBottomRight = templateImageBottomRight;
         }
     }
+
+    @Override
+    public void applyLocationOffset(Location offset) throws Exception {
+        super.applyLocationOffset(offset);
+        setFeedStartLocation(getFeedStartLocation().addWithRotation(offset));
+        setFeedEndLocation(getFeedEndLocation().addWithRotation(offset));
+    }
+
 }

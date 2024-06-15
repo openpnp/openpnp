@@ -2050,4 +2050,17 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     public Action[] getPropertySheetHolderActions() {
         return null;
     }
+
+    @Override
+    public void applyLocationOffset(Location offset) throws Exception {
+        super.applyLocationOffset(offset);
+        setHole1Location(getHole1Location().addWithRotation(offset));
+        setHole2Location(getHole2Location().addWithRotation(offset));
+        setFeedStartLocation(getFeedStartLocation().addWithRotation(offset));
+        setFeedMid1Location(getFeedMid1Location().addWithRotation(offset));
+        setFeedMid2Location(getFeedMid2Location().addWithRotation(offset));
+        setFeedMid3Location(getFeedMid3Location().addWithRotation(offset));
+        setFeedEndLocation(getFeedEndLocation().addWithRotation(offset));
+        ocrRegion.applyOffset(offset);
+    }
 }

@@ -290,4 +290,12 @@ public class ReferenceRotatedTrayFeeder extends ReferenceFeeder {
     public Action[] getPropertySheetHolderActions() {
         return null;
     }
+
+    @Override
+    public void applyLocationOffset(Location offset) throws Exception {
+        super.applyLocationOffset(offset);
+        setFirstRowLastComponentLocation(getFirstRowLastComponentLocation().addWithRotation(offset));
+        setLastComponentLocation(getLastComponentLocation().addWithRotation(offset));
+    }
+
 }

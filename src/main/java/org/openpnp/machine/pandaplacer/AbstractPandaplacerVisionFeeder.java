@@ -676,4 +676,13 @@ public abstract class AbstractPandaplacerVisionFeeder extends ReferenceFeeder {
         }
     }
 
+    @Override
+    public void applyLocationOffset(Location offset) throws Exception {
+        super.applyLocationOffset(offset);
+        setHole1Location(getHole1Location().addWithRotation(offset));
+        setHole2Location(getHole2Location().addWithRotation(offset));
+
+        // Invalidate the vision offset
+        visionOffset = null;
+    }
 }

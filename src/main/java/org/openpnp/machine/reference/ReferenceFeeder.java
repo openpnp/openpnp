@@ -32,4 +32,9 @@ public abstract class ReferenceFeeder extends AbstractFeeder {
     public void prepareForJob(boolean visit) throws Exception {
         // the default RefrenceFeeder needs no prep.
     }
+
+    @Override
+    public void applyLocationOffset(Location offset) throws Exception {
+        setLocation(getLocation().addWithRotation(offset));
+    }
 }
