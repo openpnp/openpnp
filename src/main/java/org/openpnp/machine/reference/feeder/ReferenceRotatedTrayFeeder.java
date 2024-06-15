@@ -204,7 +204,7 @@ public class ReferenceRotatedTrayFeeder extends ReferenceFeeder {
         int oldValue = this.trayCountRows;
         this.trayCountRows = trayCountRows;
         firePropertyChange("trayCountRows", oldValue, trayCountRows);
-        firePropertyChange("remainingCount", oldValue*trayCountCols - feedCount, 
+        firePropertyChange("remainingCount", oldValue*trayCountCols - feedCount,
                 trayCountRows*trayCountCols - feedCount);
     }
 
@@ -213,7 +213,9 @@ public class ReferenceRotatedTrayFeeder extends ReferenceFeeder {
     }
 
     public void setLastComponentLocation(Location LastComponentLocation) {
+        Location oldValue = this.lastComponentLocation;
         this.lastComponentLocation = LastComponentLocation;
+        firePropertyChange("lastComponentLocation", oldValue, lastComponentLocation);
     }
 
     public Location getFirstRowLastComponentLocation() {
@@ -221,7 +223,9 @@ public class ReferenceRotatedTrayFeeder extends ReferenceFeeder {
     }
 
     public void setFirstRowLastComponentLocation(Location FirstRowLastComponentLocation) {
+        Location oldValue = this.firstRowLastComponentLocation;
         this.firstRowLastComponentLocation = FirstRowLastComponentLocation;
+        firePropertyChange("firstRowLastComponentLocation", oldValue, firstRowLastComponentLocation);
     }
 
     public Location getOffsets() {
