@@ -356,7 +356,9 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
     }
 
     public void setFeedStartLocation(Location feedStartLocation) {
+        Location oldValue = this.feedStartLocation;
         this.feedStartLocation = feedStartLocation;
+        firePropertyChange("feedStartLocation", oldValue, feedStartLocation);
     }
 
     public Location getFeedEndLocation() {
@@ -364,7 +366,9 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
     }
 
     public void setFeedEndLocation(Location feedEndLocation) {
+        Location oldValue = this.feedEndLocation;
         this.feedEndLocation = feedEndLocation;
+        firePropertyChange("feedEndLocation", oldValue, feedEndLocation);
     }
 
     public Length getPartPitch() {
