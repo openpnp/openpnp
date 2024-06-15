@@ -62,10 +62,6 @@ import org.simpleframework.xml.core.Persist;
  * 
  */
 public class ReferenceLeverFeeder extends ReferenceFeeder {
-
-
-    private final PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(this);
-
     @Element
     protected Location feedStartLocation = new Location(LengthUnit.Millimeters);
     @Element
@@ -305,7 +301,9 @@ public class ReferenceLeverFeeder extends ReferenceFeeder {
     }
 
     public void setFeedStartLocation(Location feedStartLocation) {
+        Location oldValue = this.feedStartLocation;
         this.feedStartLocation = feedStartLocation;
+        firePropertyChange("feedStartLocation", oldValue, feedStartLocation);
     }
 
     public Location getFeedEndLocation() {
@@ -313,7 +311,9 @@ public class ReferenceLeverFeeder extends ReferenceFeeder {
     }
 
     public void setFeedEndLocation(Location feedEndLocation) {
+        Location oldValue = this.feedEndLocation;
         this.feedEndLocation = feedEndLocation;
+        firePropertyChange("feedEndLocation", oldValue, feedEndLocation);
     }
 
     public Length getPartPitch() {
@@ -339,7 +339,7 @@ public class ReferenceLeverFeeder extends ReferenceFeeder {
     public void setActuatorName(String actuatorName) {
         String oldValue = this.actuatorName;
         this.actuatorName = actuatorName;
-        propertyChangeSupport.firePropertyChange("actuatorName", oldValue, actuatorName);
+        firePropertyChange("actuatorName", oldValue, actuatorName);
     }
 
     public String getPeelOffActuatorName() {
@@ -349,7 +349,7 @@ public class ReferenceLeverFeeder extends ReferenceFeeder {
     public void setPeelOffActuatorName(String actuatorName) {
         String oldValue = this.peelOffActuatorName;
         this.peelOffActuatorName = actuatorName;
-        propertyChangeSupport.firePropertyChange("actuatorName", oldValue, actuatorName);
+        firePropertyChange("actuatorName", oldValue, actuatorName);
     }
 
     public Vision getVision() {
@@ -358,22 +358,6 @@ public class ReferenceLeverFeeder extends ReferenceFeeder {
 
     public void setVision(Vision vision) {
         this.vision = vision;
-    }
-
-    public void addPropertyChangeListener(PropertyChangeListener listener) {
-        propertyChangeSupport.addPropertyChangeListener(listener);
-    }
-
-    public void addPropertyChangeListener(String propertyName, PropertyChangeListener listener) {
-        propertyChangeSupport.addPropertyChangeListener(propertyName, listener);
-    }
-
-    public void removePropertyChangeListener(PropertyChangeListener listener) {
-        propertyChangeSupport.removePropertyChangeListener(listener);
-    }
-
-    public void removePropertyChangeListener(String propertyName, PropertyChangeListener listener) {
-        propertyChangeSupport.removePropertyChangeListener(propertyName, listener);
     }
 
     @Override
