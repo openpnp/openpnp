@@ -19,12 +19,17 @@
 
 package org.openpnp.gui;
 
+import java.awt.Toolkit;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Rectangle;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -72,6 +77,7 @@ import org.openpnp.machine.reference.vision.AbstractPartAlignment;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Configuration.FeedersConfigurationHolder;
 import org.openpnp.model.Configuration.TablesLinked;
 import org.openpnp.model.Job;
 import org.openpnp.model.Length;
@@ -90,6 +96,7 @@ import org.openpnp.util.UiUtils;
 import org.pmw.tinylog.Logger;
 
 import com.google.common.eventbus.Subscribe;
+import org.simpleframework.xml.Serializer;
 
 @SuppressWarnings("serial")
 public class FeedersPanel extends JPanel implements WizardContainer {
@@ -137,6 +144,10 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         JButton btnDeleteFeeder = new JButton(deleteFeederAction);
         btnDeleteFeeder.setHideActionText(true);
         toolBar.add(btnDeleteFeeder);
+
+        toolBar.addSeparator();
+        toolBar.add(copyToClipboardAction);
+        toolBar.add(pasteFromClipboardAction);
 
         toolBar.addSeparator();
         toolBar.add(pickFeederAction);
@@ -241,10 +252,10 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 
         singleSelectActionGroup = new ActionGroup(deleteFeederAction, feedFeederAction,
                 pickFeederAction, moveCameraToPickLocation, moveToolToPickLocation,
-                setEnabledAction);
+                setEnabledAction, copyToClipboardAction);
         singleSelectActionGroup.setEnabled(false);
         
-        multiSelectActionGroup = new ActionGroup(deleteFeederAction, setEnabledAction);
+        multiSelectActionGroup = new ActionGroup(deleteFeederAction, setEnabledAction, copyToClipboardAction);
         multiSelectActionGroup.setEnabled(false);
         
         table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
@@ -566,6 +577,67 @@ public class FeedersPanel extends JPanel implements WizardContainer {
                     configuration.getMachine().removeFeeder(feeder);
                     tableModel.refresh();
                 }
+            }
+        }
+    };
+
+    public final Action copyToClipboardAction = new AbstractAction() {
+        {
+            putValue(SMALL_ICON, Icons.copy);
+            putValue(NAME, Translations.getString("FeedersPanel.Action.CopyFeeder")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("FeedersPanel.Action.CopyFeeder.Description")); //$NON-NLS-1$
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            List<Feeder> feeders = getSelections();
+            if (feeders.isEmpty()) {
+                return;
+            }
+            try {
+                FeedersConfigurationHolder holder = new FeedersConfigurationHolder();
+                holder.feeders.addAll(feeders);
+
+                Serializer s = Configuration.createSerializer();
+                StringWriter w = new StringWriter();
+                s.write(holder, w);
+                StringSelection stringSelection = new StringSelection(w.toString());
+                Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+                clipboard.setContents(stringSelection, null);
+            }
+            catch (Exception e) {
+                MessageBoxes.errorBox(getTopLevelAncestor(), "Copy Failed", e);
+            }
+        }
+    };
+
+    public final Action pasteFromClipboardAction = new AbstractAction() {
+        {
+            putValue(SMALL_ICON, Icons.paste);
+            putValue(NAME, Translations.getString("FeedersPanel.Action.PasteFeeder")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("FeedersPanel.Action.PasteFeeder.Description")); //$NON-NLS-1$
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            try {
+                Serializer ser = Configuration.createSerializer();
+                Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+                String s = (String) clipboard.getData(DataFlavor.stringFlavor);
+                FeedersConfigurationHolder holder = ser.read(FeedersConfigurationHolder.class, s);
+
+                table.clearSelection();
+
+                for (Feeder feeder : holder.feeders) {
+                    String name = feeder.getName() + " (Copy)";
+                    feeder.setName(name);
+                    Configuration.get().getMachine().addFeeder(feeder);
+                }
+                tableModel.fireTableDataChanged();
+                Helpers.selectObjectTableRow(table, holder.feeders);
+            }
+            catch (Exception e) {
+                MessageBoxes.errorBox(getTopLevelAncestor(), "Paste Failed", e);
             }
         }
     };

@@ -52,6 +52,7 @@ import org.openpnp.gui.components.ThemeSettingsPanel;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.model.Abstract2DLocatable.Side;
 import org.openpnp.scripting.Scripting;
+import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Machine;
 import org.openpnp.util.NanosecondTime;
 import org.pmw.tinylog.Logger;
@@ -1539,4 +1540,14 @@ public class Configuration extends AbstractModelObject {
         public ArrayList<AbstractVisionSettings> visionSettings = new ArrayList<>();
     }
 
+    /**
+     * Used to provide a fixed root for the Feeders when serializing.
+     * For example, when copy/pasting in the GUI.
+     * Note: This isn't used when (de)serializing the machine config to machine.xml.
+     */
+    @Root(name = "openpnp-feeders")
+    public static class FeedersConfigurationHolder {
+        @ElementList(inline = true, entry = "feeders", required = false)
+        public ArrayList<Feeder> feeders = new ArrayList<>();
+    }
 }
