@@ -68,10 +68,6 @@ import org.simpleframework.xml.core.Persist;
  * the right position.
  */
 public class ReferenceDragFeeder extends ReferenceFeeder {
-
-
-    private final PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(this);
-
     @Element
     protected Location feedStartLocation = new Location(LengthUnit.Millimeters);
     @Element
@@ -394,7 +390,7 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
     public void setActuatorName(String actuatorName) {
         String oldValue = this.actuatorName;
         this.actuatorName = actuatorName;
-        propertyChangeSupport.firePropertyChange("actuatorName", oldValue, actuatorName);
+        firePropertyChange("actuatorName", oldValue, actuatorName);
     }
 
     public String getPeelOffActuatorName() {
@@ -404,7 +400,7 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
     public void setPeelOffActuatorName(String actuatorName) {
         String oldValue = this.peelOffActuatorName;
         this.peelOffActuatorName = actuatorName;
-        propertyChangeSupport.firePropertyChange("actuatorName", oldValue, actuatorName);
+        firePropertyChange("actuatorName", oldValue, actuatorName);
     }
 
     public Length getBackoffDistance() {
@@ -421,22 +417,6 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
 
     public void setVision(Vision vision) {
         this.vision = vision;
-    }
-
-    public void addPropertyChangeListener(PropertyChangeListener listener) {
-        propertyChangeSupport.addPropertyChangeListener(listener);
-    }
-
-    public void addPropertyChangeListener(String propertyName, PropertyChangeListener listener) {
-        propertyChangeSupport.addPropertyChangeListener(propertyName, listener);
-    }
-
-    public void removePropertyChangeListener(PropertyChangeListener listener) {
-        propertyChangeSupport.removePropertyChangeListener(listener);
-    }
-
-    public void removePropertyChangeListener(String propertyName, PropertyChangeListener listener) {
-        propertyChangeSupport.removePropertyChangeListener(propertyName, listener);
     }
 
     @Override
