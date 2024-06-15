@@ -158,8 +158,6 @@ public class VisionSettingsPanel extends JPanel implements WizardContainer {
         toolBar.addSeparator();
         toolBar.add(copyToClipboardAction);
         toolBar.add(pasteFromClipboardAction);
-
-        toolBar.addSeparator();
     }
 
     protected enum VisionTypeFilter {
@@ -302,7 +300,6 @@ public class VisionSettingsPanel extends JPanel implements WizardContainer {
                 Serializer ser = Configuration.createSerializer();
                 Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
                 String s = (String) clipboard.getData(DataFlavor.stringFlavor);
-                StringReader r = new StringReader(s);
                 VisionSettingsConfigurationHolder holder = ser.read(VisionSettingsConfigurationHolder.class, s);
                 table.clearSelection();
                 for (AbstractVisionSettings visionSettings : holder.visionSettings) {
