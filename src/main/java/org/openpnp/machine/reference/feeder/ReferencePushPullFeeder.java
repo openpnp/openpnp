@@ -2071,7 +2071,10 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         }
 
         setFeedEndLocation(getFeedEndLocation().addWithRotation(offset));
-        ocrRegion.applyOffset(offset);
 
+        // OCR region is optional
+        if (getOcrRegion() != null) {
+            ocrRegion.applyOffset(offset);
+        }
     }
 }
