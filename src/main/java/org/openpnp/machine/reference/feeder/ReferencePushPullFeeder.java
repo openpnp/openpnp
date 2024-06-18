@@ -2054,13 +2054,24 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     @Override
     public void applyLocationOffset(Location offset) throws Exception {
         super.applyLocationOffset(offset);
+
         setHole1Location(getHole1Location().addWithRotation(offset));
         setHole2Location(getHole2Location().addWithRotation(offset));
         setFeedStartLocation(getFeedStartLocation().addWithRotation(offset));
-        setFeedMid1Location(getFeedMid1Location().addWithRotation(offset));
-        setFeedMid2Location(getFeedMid2Location().addWithRotation(offset));
-        setFeedMid3Location(getFeedMid3Location().addWithRotation(offset));
+
+        // these three locations are optional, but the API for the getters returns `Location` and not `Optional<Location>` so we have to check each like this:
+        if (getFeedMid1Location().isInitialized()) {
+            setFeedMid1Location(getFeedMid1Location().addWithRotation(offset));
+        }
+        if (getFeedMid2Location().isInitialized()) {
+            setFeedMid2Location(getFeedMid2Location().addWithRotation(offset));
+        }
+        if (getFeedMid3Location().isInitialized()) {
+            setFeedMid3Location(getFeedMid3Location().addWithRotation(offset));
+        }
+
         setFeedEndLocation(getFeedEndLocation().addWithRotation(offset));
         ocrRegion.applyOffset(offset);
+
     }
 }
