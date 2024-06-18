@@ -578,6 +578,13 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
+
+            List<Feeder> selections = getSelections();
+            if (!canOffsetFeeders(selections)) {
+                MessageBoxes.errorBox(mainFrame, "Error", "One or more selected feeders do not support being offset.");
+                return;
+            }
+
             // groups                                    12       3             45       6             78       9
             Pattern xyPattern = Pattern.compile("X=((-)?\\d+(\\.\\d+)?),Y=((-)?\\d+(\\.\\d+)?),Z=((-)?\\d+(\\.\\d+)?)");
             String xyInput = "X=0.0,Y=0.0,Z=0.0";
@@ -604,7 +611,6 @@ public class FeedersPanel extends JPanel implements WizardContainer {
                 return;
             }
 
-            List<Feeder> selections = getSelections();
             for (Feeder feeder : selections) {
                 try {
                     feeder.applyLocationOffset(offset);
@@ -612,6 +618,15 @@ public class FeedersPanel extends JPanel implements WizardContainer {
                     MessageBoxes.errorBox(getTopLevelAncestor(), "Apply offset", e);
                 }
             }
+        }
+
+        private boolean canOffsetFeeders(List<Feeder> selections) {
+            for (Feeder feeder : selections) {
+                if (!feeder.canApplyLocationOffset()) {
+                    return false;
+                }
+            }
+            return true;
         }
     };
 

@@ -37,4 +37,9 @@ public abstract class ReferenceFeeder extends AbstractFeeder {
     public void applyLocationOffset(Location offset) throws Exception {
         setLocation(getLocation().addWithRotation(offset));
     }
+
+    @Override
+    public boolean canApplyLocationOffset() {
+        return true;
+    }
 }

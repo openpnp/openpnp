@@ -138,6 +138,20 @@ public interface Feeder extends Identifiable, Named, WizardConfigurable, Propert
      * Applies location offset to the feeder configuration.
      *
      * This is useful when you move a feeder, or bank of feeders.
+     *
+     * Should throw an UnsupportedOperationException if location offsets cannot be applied.
+     * It may still fail, depending on the location parameter supplied (e.g. out of bounds or otherwise invalid, details
+     * of which are down to each feeder implementation).
      */
     void applyLocationOffset(Location offset) throws Exception;
+
+    /**
+     * Provides information so that consumers know if they can apply a location offset.
+     *
+     * Some feeders cannot apply location offsets due to various constraints.
+     * This can thus be used by scripts or the GUI to determine whether a call to `applyLocationOffset` /could/ succeed.
+     *
+     * @return true if the feeder supports applying location offsets, false otherwise.
+     */
+    public boolean canApplyLocationOffset();
 }

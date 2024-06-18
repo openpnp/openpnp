@@ -2656,9 +2656,16 @@ public class BlindsFeeder extends ReferenceFeeder {
 
     @Override
     public void applyLocationOffset(Location offset) throws Exception {
+        // this works for /one/ feeder, but in the case where two or more feeders have overlapping bounding boxes defined by the fiducials
+        // other code in this class may update the wrong feeders, see 'updateConnectedFeedersFromThis', etc.
+        // as noted in the linked issue (#1634) updating the feeders to have a properly defined bus/group/array and moving the fiducuals to the group object would solve this problem.
+        if (!canApplyLocationOffset()) {
+            throw new UnsupportedOperationException("BlindsFeeder does not support location offset changes, for details see https://github.com/openpnp/openpnp/pull/1643#issuecomment-2175592098");
+        }
+
         super.applyLocationOffset(offset);
 
-        // Note: keeping 'live' code, rather than commenting out, so these usages do not rot and can be found.
+        // Note: keeping 'live' code, rather than commenting out, so these usages do not rot and can be found and so the code can be refactored as appropriate.
         if (false) {
             // this feeder has some custom behavior, so we can't do this
             setFiducial1Location(getFiducial1Location().addWithRotation(offset));
@@ -2680,6 +2687,11 @@ public class BlindsFeeder extends ReferenceFeeder {
 
             this.invalidateFeederTransformation();
         }
+    }
+
+    @Override
+    public boolean canApplyLocationOffset() {
+        return false;
     }
 }
 
