@@ -596,7 +596,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
                 if (m.matches()) {
                     try {
                         offset = new Location(
-                                LengthUnit.Millimeters,
+                                Configuration.get().getSystemUnits(),
                                 Double.parseDouble(m.group(1)),
                                 Double.parseDouble(m.group(4)),
                                 Double.parseDouble(m.group(7)),
