@@ -532,31 +532,16 @@ public abstract class AbstractPandaplacerVisionFeeder extends ReferenceFeeder {
         }
 
         ensureCameraZ(camera, true);
-        // Try with cloned pipeline.
-        Exception e = autoSetupPipeline(camera, null);
+        // Try with the current pipeline.
+        Exception e = autoSetupPipeline(camera, this.pipelineType);
         if (e != null) {
-            Logger.debug(e, "Auto-Setup: exception");
-            // Failed, try with pipeline type defaults.
-            for (PipelineType type : PipelineType.values()) {
-                Logger.debug("Auto-Setup: trying with stock pipeline type "+type);
-                e = autoSetupPipeline(camera, type);
-                if (e == null) {
-                    // Success.
-                    Logger.debug(e, "Auto-Setup: success");
-                    return;
-                }
-                Logger.debug(e, "Auto-Setup: exception");
-            }
-            // Still no luck, throw.
+            // No luck, throw.
             Logger.debug(e, "Auto-Setup: final exception");
             throw e;
         }
     }
 
     protected Exception autoSetupPipeline(Camera camera, PipelineType type) {
-        if (type != null) {
-            resetPipeline(type);
-        }
         try (CvPipeline pipeline = getCvPipeline(camera, true, true)) {
             // Process vision and get some features
             FeederVisionHelper feature = new FeederVisionHelper(getVisionHelperParams(camera, pipeline))
