@@ -546,6 +546,7 @@ public class FeederVisionHelper {
                             - sprocketHoleToleranceMm;
                     double maxDistanceMm = (autoSetupMode == FindFeaturesMode.CalibrateHoles ?
                             calibrationToleranceMm : bestDistanceMm);
+                    Logger.debug("Found sprocket holes line with distance "+(distanceMm)+"mm [min: "+minDistanceMm+"mm, max: "+maxDistanceMm+"mm]");
 
                     if (distanceMm >= minDistanceMm && distanceMm < maxDistanceMm) {
                         bestLine = line;
