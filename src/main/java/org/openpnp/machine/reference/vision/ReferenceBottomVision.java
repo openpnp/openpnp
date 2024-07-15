@@ -160,7 +160,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
             wantedAngle = Utils2D.angleNorm(wantedAngle, 180.);
         }
         
-        Location wantedLocation = getCameraLocationAtPartHeight(part, camera, nozzle, 0.);
+        Location wantedLocation = getCameraLocationAtPartHeight(part, camera, nozzle, wantedAngle);
 
         return wantedLocation;
     }

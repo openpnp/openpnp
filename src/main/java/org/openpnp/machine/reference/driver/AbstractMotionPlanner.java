@@ -122,10 +122,10 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
                     // this axis is moving, merge it into the queue letting the already queued axis take precedence
                     AxesLocation axesToQueue = new AxesLocation(axis, newLocation.getLengthCoordinate(axis));
                     queue = axesToQueue.put(queue);
-                    
-                    Logger.trace("Subordinate Motion: axis " + axesToQueue + " queued to " + queue);
                 }
             }
+            
+            Logger.trace("Subordinate Motion: axesLocation " + newLocation + " queued to " + queue);
         }
         
         /**
@@ -158,8 +158,6 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
                 Logger.warn("Subordinate Motion queue not empty, drained.");
                 queue = null;
             }
-            
-            Logger.trace("Subordinate Motion: queue drained");
         }
         
         /**

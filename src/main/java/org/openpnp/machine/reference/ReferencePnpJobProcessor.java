@@ -1582,9 +1582,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             }
             else {
                 try {
-                    // FIXME: this does not preserve the rotation
                     location = hm.toHeadLocation(ref, LocationOption.KeepRotation);
-                    location = location.derive(ref, false, false, false, true);
                 } catch (Exception e) {
                     location = null;
                 }
