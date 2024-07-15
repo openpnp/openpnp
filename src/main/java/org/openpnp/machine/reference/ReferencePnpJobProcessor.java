@@ -650,7 +650,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 return this;
             }
             
-            fireTextStatus("Calibrate nozzle tip %s on nozzle %s", nozzleTip, nozzle.getName());
+            fireTextStatus("Calibrate nozzle tip %s on nozzle %s", nozzleTip.getName(), nozzle.getName());
             try {
                 nozzle.calibrate();
             }
@@ -689,7 +689,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
         public Step step() throws JobProcessorException {
             
-            prerotateAllNozzles(new PickLocator());
+            prerotateAllNozzles(pickLocator);
             
             return new Pick(plannedPlacements);
         }
@@ -1540,7 +1540,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                         // will be defined by the next movement segments not of subordinate type.
                         // the rotation of nozzles unrelated to that segment will survive and
                         // result in rotating this nozzles to the requested angle.
-                        head.moveTo(p.nozzle, l, speed , MotionOption.Subordinate);
+                        head.moveTo(p.nozzle, l, speed, MotionOption.Subordinate);
                     } catch (Exception e) {
                         // ignore any errors
                     }
@@ -1577,14 +1577,19 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         {
             Location location;
         
-            try {
-                // FIXME: this does not preserve the rotation
-                location = hm.toHeadLocation(ref, LocationOption.KeepRotation);
-                location = location.derive(ref, false, false, false, true);
-            } catch (Exception e) {
+            if (ref == null) {
                 location = null;
             }
-        
+            else {
+                try {
+                    // FIXME: this does not preserve the rotation
+                    location = hm.toHeadLocation(ref, LocationOption.KeepRotation);
+                    location = location.derive(ref, false, false, false, true);
+                } catch (Exception e) {
+                    location = null;
+                }
+            }
+            
             return location;
         }
     }
