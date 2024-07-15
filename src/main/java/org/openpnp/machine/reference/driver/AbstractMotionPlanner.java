@@ -22,6 +22,7 @@
 package org.openpnp.machine.reference.driver;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -91,6 +92,108 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
 
     private boolean homed = false; 
 
+    private SubordinateMotion subordinateMotion = new SubordinateMotion();
+    
+    /**
+     * This class provides support for subordinate motion handling. It queues motion 
+     * tagged as subordinate and merges it with other, non-subordinate, motion.
+     */
+    private class SubordinateMotion {
+        private AxesLocation queue = null;  // this is the queue where subordinate motion is queued
+        
+        protected void SubordinateMotion() {
+            queue = null;
+        }
+        
+        /**
+         * queue subordinate motions
+         */
+        protected void queue(AxesLocation currentLocation, AxesLocation newLocation) {
+            if (queue == null) {
+                queue = new AxesLocation();
+            }
+            
+            // loop over all axes in newLocation and detect which coordinate is moving
+            for (CoordinateAxis axis : newLocation.getAxes(CoordinateAxis.class)) {
+                if (!axis.coordinatesMatch(
+                        newLocation.getLengthCoordinate(axis), 
+                        currentLocation.getLengthCoordinate(axis))) {
+                    
+                    // this axis is moving, merge it into the queue letting the already queued axis take precedence
+                    AxesLocation axesToQueue = new AxesLocation(axis, newLocation.getLengthCoordinate(axis));
+                    queue = axesToQueue.put(queue);
+                    
+                    Logger.trace("Subordinate Motion: axis " + axesToQueue + " queued to " + queue);
+                }
+            }
+        }
+        
+        /**
+         * merge subordinate motion with given locations and empty the queue
+         */
+        protected AxesLocation merge(AxesLocation axesLocation) {
+            // if no motion has been queued, bypass the merge process
+            if (queue == null) {
+                return axesLocation;
+            }
+
+            // merge queued motion into the given AxesLocation letting the given one take precedence
+            // FIXME: actually we only wont to merge axis from the queue at affect the same head as the one of the given AxesLocation
+            AxesLocation mergedLocation = axesLocation.put(queue);
+            mergedLocation = mergedLocation.put(axesLocation);
+
+            Logger.trace("Subordinate Motion: axesLocation " + axesLocation + " merged with queue " + queue + " to " + mergedLocation);
+            // FIXME: we actually shall only remove axis that have been merged
+            queue = null;
+            
+            // return the merge result
+            return mergedLocation;
+        }
+        
+        /**
+         * drain the queue reporting a warning
+         */
+        protected void drain() {
+            if (queue != null) {
+                Logger.warn("Subordinate Motion queue not empty, drained.");
+                queue = null;
+            }
+            
+            Logger.trace("Subordinate Motion: queue drained");
+        }
+        
+        /**
+         * merge dominant with recessive AxesLocation using reference AxesLocation
+         * 
+         * @param referenceLocation
+         * @param dominantLocation
+         * @param recessivLocation
+         * @return
+         */
+        private AxesLocation mergeAxesLocations(AxesLocation referenceLocation, AxesLocation dominantLocation, AxesLocation recessiveLocation) {
+            AxesLocation result = recessiveLocation;
+            if (result == null) {
+                result = new AxesLocation();
+            }
+
+            if (referenceLocation != null && dominantLocation != null) {
+                // loop over all axis in the dominant location and overwrite axis that are moving
+                for (CoordinateAxis axis : dominantLocation.getAxes(CoordinateAxis.class)) {
+                    if (!axis.coordinatesMatch(
+                            dominantLocation.getLengthCoordinate(axis), 
+                            referenceLocation.getLengthCoordinate(axis))) {
+                        
+                        // this axis is moving, merge it
+                        AxesLocation axesToMerge = new AxesLocation(axis, dominantLocation.getLengthCoordinate(axis));
+                        result = result.put(axesToMerge);
+                    }
+                }
+            }
+            
+            return result;
+        }
+    }
+    
     @Override
     public synchronized void home() throws Exception {
         // Reset lastDirectionalBacklashOffset (we don't actually know it after homing, but it will be known after the first move).
@@ -152,11 +255,22 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
         else if (speed < getMinimumSpeed()) {
             speed = getMinimumSpeed();
         }
+
         // Handle soft limits and rotation axes limiting and wrap-around.
         axesLocation = limitAxesLocation(hm, axesLocation, false);
-
+        
         // Get current planned location of all the axes.
         AxesLocation currentLocation = new AxesLocation(getMachine()); 
+        
+        // If this is a subordinate motion, queue it now
+        if (Arrays.asList(options).contains(MotionOption.Subordinate)) {
+            subordinateMotion.queue(currentLocation, axesLocation);
+            return;
+        }
+        
+        // Merge motion with queued subordinate motion
+        axesLocation = subordinateMotion.merge(axesLocation);                
+        
         // The new planned locations must include all the machine axes, so put the given axesLocation into the whole set.
         AxesLocation newLocation = 
                 currentLocation
@@ -272,6 +386,7 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
      */
     protected synchronized AxesLocation createBacklashCompensatedMotion(HeadMountable hm, double speed,
             AxesLocation currentLocation, AxesLocation newLocation, MotionOption... options) {
+
         // Adjust the current location to include any backlash compensation offset that was applied in the last move.
         AxesLocation backlashCompensatedCurrentLocation = currentLocation.add(lastDirectionalBacklashOffset);
         AxesLocation backlashCompensatedNewLocation = newLocation;
@@ -758,6 +873,9 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
         // Now is high time to plan and execute the queued motion commands. 
         executeMotionPlan(completionType);
 
+        // detect if there are any pending subordinate motion and remove it
+        subordinateMotion.drain();
+        
         if (completionType.isEnforcingStillstand()) {
             // Wait for the drivers.
             waitForDriverCompletion(hm, completionType);
