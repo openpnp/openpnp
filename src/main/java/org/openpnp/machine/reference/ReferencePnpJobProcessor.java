@@ -106,7 +106,16 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
      */
     @Attribute(required = false)
     int fiducialLevel = 1;
-    
+
+    /**
+     * This flag - if enabled - pre-rotates all nozzles on way to the first feed or pick location,
+     * the bottom camera and the first place location. Assuming that this move takes longer then 
+     * moving the next nozzle to its pick, align or place location, an overall speed enhancement
+     * combined with a lower risk of slipping parts on nozzles tips is expected.
+     */
+    @Attribute(required = false)
+    boolean preRotateAllNozzles = true;
+
     @Element(required = false)
     public PnpJobPlanner planner = new SimplePnpJobPlanner();
 
@@ -1414,6 +1423,14 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         this.optimizeMultipleNozzles = optimizeMultipleNozzles;
     }
 
+    public boolean isPreRotateAllNozzles() {
+        return preRotateAllNozzles;
+    }
+
+    public void setPreRotateAllNozzles(boolean preRotateAllNozzles) {
+        this.preRotateAllNozzles = preRotateAllNozzles;
+    }
+
     /**
      * This class groups a step for step for multi-nozzle optimization
      */
@@ -1532,6 +1549,11 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         
         // prerorate all nozzles using a subordinate movement using the given locator
         protected void prerotateAllNozzles(TravellingSalesman.Locator<PlannedPlacement> locator) {
+            // if pre-rotation is disabled, do nothing
+            if (!preRotateAllNozzles) {
+                return;
+            }
+
             for (PlannedPlacement p : plannedPlacements) {
                 Location l = locator.getLocation(p);
                 if (l != null) {
@@ -1547,7 +1569,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                     }
                 }
             }
-            
+        
             Logger.debug("All nozzle pre-rotation for {} requested", locator.toString());
         }
     }

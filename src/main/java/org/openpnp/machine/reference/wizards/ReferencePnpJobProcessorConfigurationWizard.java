@@ -48,7 +48,8 @@ public class ReferencePnpJobProcessorConfigurationWizard extends AbstractConfigu
     private JTextField maxVisionRetriesTextField;
     private JCheckBox steppingToNextMotion;
     private JCheckBox optimizeMultipleNozzles;
-    
+    private JCheckBox preRotateAllNozzles;
+
     public ReferencePnpJobProcessorConfigurationWizard(ReferencePnpJobProcessor jobProcessor) {
         this.jobProcessor = jobProcessor;
         contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
@@ -63,6 +64,8 @@ public class ReferencePnpJobProcessorConfigurationWizard extends AbstractConfigu
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
                 new RowSpec[] {
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC,
                         FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC,
@@ -106,7 +109,14 @@ public class ReferencePnpJobProcessorConfigurationWizard extends AbstractConfigu
         panelGeneral.add(lblOptimizeMultipleNozzles, "2, 10, right, default");
 
         optimizeMultipleNozzles = new JCheckBox(); 
-        panelGeneral.add(optimizeMultipleNozzles, "4, 10");
+        panelGeneral.add(optimizeMultipleNozzles, "4, 12");
+
+        JLabel lblPreRotateAllNozzles = new JLabel(Translations.getString("ReferencePnpJobProcessorConfigurationWizard.lblPreRotateAllNozzles.text")); //$NON-NLS-1$
+        lblPreRotateAllNozzles.setToolTipText(Translations.getString("ReferencePnpJobProcessorConfigurationWizard.lblPreRotateAllNozzles.toolTipText")); //$NON-NLS-1$
+        panelGeneral.add(lblPreRotateAllNozzles, "2, 12, right, default");
+
+        preRotateAllNozzles = new JCheckBox(); 
+        panelGeneral.add(preRotateAllNozzles, "4, 12");
     }
 
     @Override
@@ -118,6 +128,7 @@ public class ReferencePnpJobProcessorConfigurationWizard extends AbstractConfigu
         addWrappedBinding(jobProcessor, "maxVisionRetries", maxVisionRetriesTextField, "text", intConverter);
         addWrappedBinding(jobProcessor, "steppingToNextMotion", steppingToNextMotion, "selected");
         addWrappedBinding(jobProcessor, "optimizeMultipleNozzles", optimizeMultipleNozzles, "selected");
+        addWrappedBinding(jobProcessor, "preRotateAllNozzles", preRotateAllNozzles, "selected");
         
         ComponentDecorators.decorateWithAutoSelect(maxVisionRetriesTextField);
     }
