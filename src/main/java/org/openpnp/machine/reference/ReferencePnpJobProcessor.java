@@ -1210,59 +1210,6 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             }
         }
         
-        private Location getPlacementLocation(PlannedPlacement plannedPlacement) {
-            final JobPlacement jobPlacement = plannedPlacement.jobPlacement;
-            final Placement placement = jobPlacement.getPlacement();
-            final BoardLocation boardLocation = plannedPlacement.jobPlacement.getBoardLocation();
-
-            // Check if there is a fiducial override for the board location and if so, use it.
-            Location placementLocation =
-                    Utils2D.calculateBoardPlacementLocation(boardLocation, placement.getLocation());
-
-            // If there are alignment offsets update the placement location with them
-            if (plannedPlacement.alignmentOffsets != null) {
-                /*
-                 * preRotated means during alignment we have already rotated the component - this is
-                 * useful for say an external rotating stage that the component is placed on,
-                 * rotated to correct placement angle, and then picked up again.
-                 */
-                if (plannedPlacement.alignmentOffsets.getPreRotated()) {
-                    placementLocation = placementLocation.subtractWithRotation(
-                            plannedPlacement.alignmentOffsets.getLocation());
-                }
-                else {
-                    Location alignmentOffsets = plannedPlacement.alignmentOffsets.getLocation();
-                    // Rotate the point 0,0 using the alignment offsets as a center point by the angle
-                    // that is
-                    // the difference between the alignment angle and the calculated global
-                    // placement angle.
-                    Location location =
-                            new Location(LengthUnit.Millimeters).rotateXyCenterPoint(alignmentOffsets,
-                                    placementLocation.getRotation() - alignmentOffsets.getRotation());
-
-                    // Set the angle to the difference mentioned above, aligning the part to the
-                    // same angle as
-                    // the placement.
-                    location = location.derive(null, null, null,
-                            placementLocation.getRotation() - alignmentOffsets.getRotation());
-
-                    // Add the placement final location to move our local coordinate into global
-                    // space
-                    location = location.add(placementLocation);
-
-                    // Subtract the alignment offsets to move the part to the final location,
-                    // instead of
-                    // the nozzle.
-                    location = location.subtract(alignmentOffsets);
-
-                    placementLocation = location;
-                }
-            }
-
-            // Note, do not add the part's height to the placement location, this will be done later to allow
-            // for on-the-fly part height probing.  
-            return placementLocation;
-        }
     }
     
     protected class FinishCycle implements Step {
@@ -1365,6 +1312,60 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         }
     }
     
+    private Location getPlacementLocation(PlannedPlacement plannedPlacement) {
+        final JobPlacement jobPlacement = plannedPlacement.jobPlacement;
+        final Placement placement = jobPlacement.getPlacement();
+        final BoardLocation boardLocation = plannedPlacement.jobPlacement.getBoardLocation();
+
+        // Check if there is a fiducial override for the board location and if so, use it.
+        Location placementLocation =
+                Utils2D.calculateBoardPlacementLocation(boardLocation, placement.getLocation());
+
+        // If there are alignment offsets update the placement location with them
+        if (plannedPlacement.alignmentOffsets != null) {
+            /*
+             * preRotated means during alignment we have already rotated the component - this is
+             * useful for say an external rotating stage that the component is placed on,
+             * rotated to correct placement angle, and then picked up again.
+             */
+            if (plannedPlacement.alignmentOffsets.getPreRotated()) {
+                placementLocation = placementLocation.subtractWithRotation(
+                        plannedPlacement.alignmentOffsets.getLocation());
+            }
+            else {
+                Location alignmentOffsets = plannedPlacement.alignmentOffsets.getLocation();
+                // Rotate the point 0,0 using the alignment offsets as a center point by the angle
+                // that is
+                // the difference between the alignment angle and the calculated global
+                // placement angle.
+                Location location =
+                        new Location(LengthUnit.Millimeters).rotateXyCenterPoint(alignmentOffsets,
+                                placementLocation.getRotation() - alignmentOffsets.getRotation());
+
+                // Set the angle to the difference mentioned above, aligning the part to the
+                // same angle as
+                // the placement.
+                location = location.derive(null, null, null,
+                        placementLocation.getRotation() - alignmentOffsets.getRotation());
+
+                // Add the placement final location to move our local coordinate into global
+                // space
+                location = location.add(placementLocation);
+
+                // Subtract the alignment offsets to move the part to the final location,
+                // instead of
+                // the nozzle.
+                location = location.subtract(alignmentOffsets);
+
+                placementLocation = location;
+            }
+        }
+
+        // Note, do not add the part's height to the placement location, this will be done later to allow
+        // for on-the-fly part height probing.  
+        return placementLocation;
+    }
+
     protected List<JobPlacement> getPendingJobPlacements() {
         return this.jobPlacements.stream().filter((jobPlacement) -> {
             return jobPlacement.getStatus() == Status.Pending;
@@ -1658,12 +1659,9 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     private class PlaceLocator extends Locator {
         public Location getLocation(PlannedPlacement p) {
             final Nozzle nozzle = p.nozzle;
-            final JobPlacement jobPlacement = p.jobPlacement;
-            final Placement placement = jobPlacement.getPlacement();
-            final BoardLocation boardLocation = jobPlacement.getBoardLocation();
         
-            Location location = Utils2D.calculateBoardPlacementLocation(boardLocation,
-                    placement.getLocation());
+            // get the place location using the same method as the place step of the job planner
+            Location location = getPlacementLocation(p);
         
             // convert location to where the head will move to to place the part
             return convertToHeadLocation(nozzle, location);
