@@ -979,6 +979,14 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             
             checkPartOn(nozzle);
 
+            // Retract the nozzle so that for the next step all nozzles are at safe-z
+            try {
+                nozzle.moveToSafeZ();
+            }
+            catch (Exception e) {
+                throw new JobProcessorException(nozzle, e);
+            }
+
             return this;
         }
         

@@ -101,10 +101,6 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
     private class SubordinateMotion {
         private AxesLocation queue = null;  // this is the queue where subordinate motion is queued
         
-        protected void SubordinateMotion() {
-            queue = null;
-        }
-        
         /**
          * queue subordinate motions
          */
