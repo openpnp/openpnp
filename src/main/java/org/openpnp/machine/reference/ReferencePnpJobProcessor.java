@@ -979,14 +979,6 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             
             checkPartOn(nozzle);
 
-            // Retract the nozzle so that for the next step all nozzles are at safe-z
-            try {
-                nozzle.moveToSafeZ();
-            }
-            catch (Exception e) {
-                throw new JobProcessorException(nozzle, e);
-            }
-
             return this;
         }
         
@@ -1007,6 +999,9 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                             boardLocation,
                             placement, nozzle);
                     Logger.debug("Align {} with {}, offsets {}", part, nozzle, plannedPlacement.alignmentOffsets);
+                    
+                    // Retract the nozzle so that for the next step all nozzles are at safe-z
+                    nozzle.moveToSafeZ();
                     return;
                 }
                 catch (Exception e) {
