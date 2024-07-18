@@ -533,7 +533,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
             pipeline.new PipelineShot() {
                 @Override
                 public void apply() throws Exception {
-                    if (nozzle.getLocation().getLinearLengthTo(camera.getLocation())
+                    if (nozzle.getLocation().getLinearLengthTo(camera.getLocation(nozzle))
                             .compareTo(camera.getRoamingRadius()
                                     .add(nozzleTip.getMaxPickTolerance())) > 0) {
                         // Nozzle is not yet in camera roaming radius. Move at safe Z.
