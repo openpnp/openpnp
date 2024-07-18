@@ -268,12 +268,8 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
                 }
                 else {
                     // Must be below Safe Z. Move it.
-                    effectiveSafeZ = getSafeZZone()[1];
-                    if (effectiveSafeZ != null) {
-                        effectiveSafeZ = effectiveSafeZ.convertToUnits(l.getUnits());
-                        l = l.deriveLengths(null, null, effectiveSafeZ, null);
-                        moveTo(l, speed);
-                    }
+                    l = l.deriveLengths(null, null, effectiveSafeZ, null);
+                    moveTo(l, speed);
                 }
             }
         }
