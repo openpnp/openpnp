@@ -246,26 +246,34 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
     @Override
     public void moveToSafeZ(double speed) throws Exception {
         Location l = getLocation();
-        Length safeZ = this.getEffectiveSafeZ();
-        if (safeZ != null) {
+        Length effectiveSafeZ = this.getEffectiveSafeZ();
+        if (effectiveSafeZ != null) {
             Logger.debug("{}.moveToSafeZ({})", getName(), speed);
-            if (!isInSafeZZone(safeZ)) {
-                throw new Exception("Effective Safe Z coordinate "+safeZ+" is outside Safe Z Zone.");
+            if (!isInSafeZZone(effectiveSafeZ)) {
+                throw new Exception("Effective Safe Z coordinate "+effectiveSafeZ+" is outside Safe Z Zone.");
             }
-            safeZ = safeZ.convertToUnits(l.getUnits());
-            if (safeZ.getValue() > l.getZ()) {
-                // Only move if the new effective Safe Z is higher than current Z. 
-                l = l.derive(null, null, safeZ.getValue(), null);
-                moveTo(l, speed);
-            }
-            else if (!isInSafeZZone(l.getLengthZ())) {
-                // Still outside safe Z Zone (above it), for shared Z with negating transform, where the Safe Z Zone 
-                // is limited on two sides. 
-                safeZ = getSafeZZone()[1];
-                if (safeZ != null) {
-                    safeZ = safeZ.convertToUnits(l.getUnits());
-                    l = l.derive(null, null, safeZ.getValue(), null);
-                    moveTo(l, speed);
+            // With dynamic safe Z we have an underside Z (e.g. underside of the part), which must be in the safe Z Zone too.
+            // We derive the underside Z by adding the difference between safeZ and effectiveSafeZ (which is typically the part height).
+            Length safeZ = this.getSafeZ();
+            Length undersideZ = l.getLengthZ().add(safeZ).subtract(effectiveSafeZ);
+            if (!isInSafeZZone(undersideZ)) {
+                // The underside Z is not inside the safe Z Zone (taking the axis resolution into account).
+                // Check if below or above.
+                if (undersideZ.compareTo(safeZ) > 0) {
+                    // The underside Z it is larger than SafeZ, so it must be above the safeZ zone.
+                    // This can happen for shared Z with negating transform, where the Safe Z Zone is limited on two sides.
+                    // We ignore this condition, as our mission is only to move this HeadMountable above safe Z, i.e. we don't care about
+                    // the other HeadMountable sharing the Z axis with us. The head will generally move all its HeadMountables to Safe Z,
+                    // so this is still considered safe. If we were to do it in its stead, we might generate two staggered Z moves.
+                }
+                else {
+                    // Must be below Safe Z. Move it.
+                    effectiveSafeZ = getSafeZZone()[1];
+                    if (effectiveSafeZ != null) {
+                        effectiveSafeZ = effectiveSafeZ.convertToUnits(l.getUnits());
+                        l = l.deriveLengths(null, null, effectiveSafeZ, null);
+                        moveTo(l, speed);
+                    }
                 }
             }
         }

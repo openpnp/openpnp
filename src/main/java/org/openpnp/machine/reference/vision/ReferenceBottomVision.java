@@ -41,7 +41,6 @@ import org.openpnp.spi.PartAlignment;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.OpenCvUtils;
-import org.openpnp.util.UiUtils;
 import org.openpnp.util.Utils2D;
 import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
@@ -533,18 +532,17 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                     .addWithRotation(adjustedNozzleLocation.subtractWithRotation(wantedLocation)); 
             pipeline.new PipelineShot() {
                 @Override
-                public void apply() {
-                    UiUtils.messageBoxOnException(() -> {
-                        if (nozzle.getLocation().getLinearLengthTo(camera.getLocation())
-                                .compareTo(camera.getRoamingRadius()) > 0) {
-                            // Nozzle is not yet in camera roaming radius. Move at safe Z.
-                            MovableUtils.moveToLocationAtSafeZ(nozzle, shotLocation);
-                        }
-                        else {
-                            nozzle.moveTo(shotLocation);
-                        }
-                        super.apply();
-                    });
+                public void apply() throws Exception {
+                    if (nozzle.getLocation().getLinearLengthTo(camera.getLocation(nozzle))
+                            .compareTo(camera.getRoamingRadius()
+                                    .add(nozzleTip.getMaxPickTolerance())) > 0) {
+                        // Nozzle is not yet in camera roaming radius. Move at safe Z.
+                        MovableUtils.moveToLocationAtSafeZ(nozzle, shotLocation);
+                    }
+                    else {
+                        nozzle.moveTo(shotLocation);
+                    }
+                    super.apply();
                 }
 
                 @Override 
