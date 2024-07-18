@@ -556,17 +556,16 @@ public class JogControlsPanel extends JPanel {
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
                 HeadMountable hm = machineControlsPanel.getSelectedTool();
-                // Note, we don't just moveToSafeZ(), because this will just sit still, if we're already in the Safe Z Zone.
-                // instead we explicitly move to the Safe Z coordinate i.e. the lower bound of the Safe Z Zone, applicable
-                // for this hm.
-                Location location = hm.getLocation();
-                Length safeZLength = hm.getSafeZ();
-                double safeZ = (safeZLength != null ? safeZLength.convertToUnits(location.getUnits()).getValue() : Double.NaN);
-                location = location.derive(null, null, safeZ, null);
                 if (Configuration.get().getMachine().isSafeZPark()) {
                     // All other head-mountables must also be moved to safe Z.
                     hm.getHead().moveToSafeZ();
                 }
+                // Note, we don't just moveToSafeZ(), because this will just sit still, if we're already in the Safe Z Zone.
+                // instead we explicitly move to the effective Safe Z coordinate i.e. the lower bound of the Safe Z Zone, applicable
+                // for this hm (and in case of Dynamic Safe Z with the part height accounted for).
+                Location location = hm.getLocation();
+                Length safeZLength = hm.getEffectiveSafeZ();
+                location = location.deriveLengths(null, null, safeZLength, null);
                 hm.moveTo(location);
                 MovableUtils.fireTargetedUserAction(hm);
             });
