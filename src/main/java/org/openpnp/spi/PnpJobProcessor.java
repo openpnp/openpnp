@@ -69,6 +69,11 @@ public interface PnpJobProcessor extends JobProcessor {
                             : "");
         }
         
+        public String getBoardId() {
+            return boardLocation.getId();
+        }
+        
+        
         @Override
         public String toString() {
             return placement.getId();

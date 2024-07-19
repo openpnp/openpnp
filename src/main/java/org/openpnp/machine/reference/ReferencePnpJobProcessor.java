@@ -32,6 +32,7 @@ import java.util.Map;
 
 import javax.swing.SwingUtilities;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.JobPanel;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Wizard;
@@ -79,8 +80,17 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     }
     
     public enum JobOrderHint {
-        PartHeight,
-        Part
+        Part, PartHeight,               // keep this values for backward compatibility
+        PartBoard, PartHeightPartBoard, // sort as default, but use the board id as final sorting order
+        BoardPart,                      // sort by board id first, then part id
+        Unsorted;                       // keep the placements unsorted - for hand-optimized jobs
+
+        // provide a dedicated toSting() method (with translation) to convert the enum values into
+        // user friendly strings for the UI
+        @Override
+        public String toString() {
+            return Translations.getString("MachineSetup.JobProcessors.ReferencePnpJobProcessor.JobOrder." + this.name());
+        }
     }
 
     @Attribute(required = false)
@@ -552,19 +562,61 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
             List<JobPlacement> jobPlacements;
 
-            if (jobOrder.equals(JobOrderHint.Part)) {
+            switch (jobOrder) {
+            // this options are the default: for panels of identical board, the final sorting order is undefined as
+            // there are multiple and indistinguishable (eg. "C1") part ids
+            case Part:
                 // Get the list of unfinished placements and sort them by part.
-                    jobPlacements = getPendingJobPlacements().stream()
-                            .sorted(Comparator.comparing(JobPlacement::getPartId))
-                            .collect(Collectors.toList());
-            } 
-            else {
+                jobPlacements = getPendingJobPlacements().stream()
+                        .sorted(Comparator
+                                .comparing(JobPlacement::getPartId))
+                        .collect(Collectors.toList());
+                break;
+
+            case PartHeight:
                 // Get the list of unfinished placements and sort them by part height.
-                    jobPlacements = getPendingJobPlacements().stream()
-                            .sorted(Comparator
+                jobPlacements = getPendingJobPlacements().stream()
+                        .sorted(Comparator
                                 .comparing(JobPlacement::getPartHeight)
                                 .thenComparing(JobPlacement::getPartId))
-                            .collect(Collectors.toList());
+                        .collect(Collectors.toList());
+                break;
+
+            // this options are move specific and result in full sorted lists even for panels of identical boards
+            case PartBoard:
+                jobPlacements = getPendingJobPlacements().stream()
+                        .sorted(Comparator
+                                .comparing(JobPlacement::getPartId)
+                                .thenComparing(JobPlacement::getBoardId))
+                        .collect(Collectors.toList());
+                break;
+                
+            case PartHeightPartBoard:
+                jobPlacements = getPendingJobPlacements().stream()
+                        .sorted(Comparator
+                                .comparing(JobPlacement::getPartHeight)
+                                .thenComparing(JobPlacement::getPartId)
+                                .thenComparing(JobPlacement::getBoardId))
+                        .collect(Collectors.toList());
+                break;
+                
+            case BoardPart:
+                jobPlacements = getPendingJobPlacements().stream()
+                        .sorted(Comparator
+                                .comparing(JobPlacement::getBoardId)
+                                .thenComparing(JobPlacement::getPartId))
+                        .collect(Collectors.toList());
+                break;
+                
+            // FIXME: generating a error if not all enum values are handled would be more error resistant
+            default:
+                Logger.warn("JobProcessor:Plan(): unhandled jobOrder " + jobOrder);
+
+                // !! fall through to get the same result as unsorted and always well defined jobPlacements
+
+            case Unsorted:
+                // use job placements unsorted - for "hand-crafted" jobs
+                jobPlacements = getPendingJobPlacements();
             }
 
             if (jobPlacements.isEmpty()) {
