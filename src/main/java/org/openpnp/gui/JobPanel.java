@@ -1081,6 +1081,7 @@ public class JobPanel extends JPanel {
                 }
                 else if (state == State.Paused) {
                     setState(State.Running);
+                    jobProcessor.resume();
                     jobRun();
                 }
                 // If we're running and the user hits pause we pause.

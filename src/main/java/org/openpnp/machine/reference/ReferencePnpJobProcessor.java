@@ -140,7 +140,12 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     protected Locator alignLocator;
     protected Locator placeLocator;
     
-    protected List<JobPlacement> jobPlacements = new ArrayList<>();
+    protected List<JobPlacement> jobPlacements = new ArrayList<>();         // list of all placements to process in the job
+    
+    // List of job placements optimized/sorted by user request. The optimization/sorting takes place in the plan() step and
+    // will be stored in this list until there is reason to believe that something could have changed and would require
+    // reevaluating this list. At present this is done in case the job is resumed.
+    protected List<JobPlacement> planedJobPlacements = new ArrayList<>();
 
     private Step currentStep = null;
     
@@ -189,6 +194,15 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     }
 
     /**
+     * This method shall be called to signal that the job was paused and will now be resumed
+     * informing the logic, that some prerequirements may have changed.
+     */
+    public synchronized void resume() {
+        // in case of a job resume, clear the list of prepared/sorted/optimized job placements to rebuild it.
+        planedJobPlacements.clear();
+    }
+    
+    /**
      * Create some internal shortcuts to various buried objects.
      * 
      * Check for obvious setup errors in the job: Feeders are available and enabled, Placements all
@@ -208,6 +222,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             totalPartsPlaced = 0;
             
             jobPlacements.clear();
+            planedJobPlacements.clear();
 
             // Create some shortcuts for things that won't change during the run
             machine = Configuration.get().getMachine();
@@ -561,75 +576,23 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         public Step step() throws JobProcessorException {
             fireTextStatus("Planning placements.");
 
-            List<JobPlacement> jobPlacements;
-
-            switch (jobOrder) {
-            // this options are the default: for panels of identical board, the final sorting order is undefined as
-            // there are multiple and indistinguishable (eg. "C1") part ids
-            case Part:
-                // Get the list of unfinished placements and sort them by part.
-                jobPlacements = getPendingJobPlacements().stream()
-                        .sorted(Comparator
-                                .comparing(JobPlacement::getPartId))
-                        .collect(Collectors.toList());
-                break;
-
-            case PartHeight:
-                // Get the list of unfinished placements and sort them by part height.
-                jobPlacements = getPendingJobPlacements().stream()
-                        .sorted(Comparator
-                                .comparing(JobPlacement::getPartHeight)
-                                .thenComparing(JobPlacement::getPartId))
-                        .collect(Collectors.toList());
-                break;
-
-            // this options are move specific and result in full sorted lists even for panels of identical boards
-            case PartBoard:
-                jobPlacements = getPendingJobPlacements().stream()
-                        .sorted(Comparator
-                                .comparing(JobPlacement::getPartId)
-                                .thenComparing(JobPlacement::getBoardId))
-                        .collect(Collectors.toList());
-                break;
-                
-            case PartHeightPartBoard:
-                jobPlacements = getPendingJobPlacements().stream()
-                        .sorted(Comparator
-                                .comparing(JobPlacement::getPartHeight)
-                                .thenComparing(JobPlacement::getPartId)
-                                .thenComparing(JobPlacement::getBoardId))
-                        .collect(Collectors.toList());
-                break;
-                
-            case BoardPart:
-                jobPlacements = getPendingJobPlacements().stream()
-                        .sorted(Comparator
-                                .comparing(JobPlacement::getBoardId)
-                                .thenComparing(JobPlacement::getPartId))
-                        .collect(Collectors.toList());
-                break;
-                
-            case PickLocation:
-                jobPlacements = sortByPickLocation(getPendingJobPlacements());
-                break;
-                
-            // FIXME: generating a error if not all enum values are handled would be more error resistant
-            default:
-                Logger.warn("JobProcessor:Plan(): unhandled jobOrder " + jobOrder);
-
-                // !! fall through to get the same result as unsorted and always well defined jobPlacements
-
-            case Unsorted:
-                // use job placements unsorted - for "hand-crafted" jobs
-                jobPlacements = getPendingJobPlacements();
+            // if a sorted/optimized list of jobPlacements is available, use it now
+            if (planedJobPlacements.isEmpty()) {
+                planedJobPlacements = planJobPlacements(getPendingJobPlacements());
+            }
+            else {
+                // job placements have already been planed, remove the once that have already been placed
+                planedJobPlacements.stream().filter((jobPlacement) -> {
+                    return jobPlacement.getStatus() != Status.Complete;
+                }).collect(Collectors.toList());
             }
 
-            if (jobPlacements.isEmpty()) {
+            if (planedJobPlacements.isEmpty()) {
                 return new Finish();
             }
 
             long t = System.currentTimeMillis();
-            List<PlannedPlacement> plannedPlacements = planner.plan(head, jobPlacements);
+            List<PlannedPlacement> plannedPlacements = planner.plan(head, planedJobPlacements);
             Logger.debug("Planner complete in {}ms: {}", (System.currentTimeMillis() - t), plannedPlacements);
 
             if (plannedPlacements.isEmpty()) {
@@ -645,6 +608,79 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             return new ChangeNozzleTips(plannedPlacements);
         }
 
+        /**
+         * sort, optimize and plan all job placements
+         * the result is stored for reuse if nothing has changed.
+         * 
+         * @return
+         */
+        private List<JobPlacement> planJobPlacements(List<JobPlacement> jobPlacements) {
+            List<JobPlacement> planedJobPlacements;
+    
+            switch (jobOrder) {
+            // this options are the default: for panels of identical board, the final sorting order is undefined as
+            // there are multiple and indistinguishable (eg. "C1") part ids
+            case Part:
+                // Get the list of unfinished placements and sort them by part.
+                planedJobPlacements = jobPlacements.stream()
+                        .sorted(Comparator
+                                .comparing(JobPlacement::getPartId))
+                        .collect(Collectors.toList());
+                break;
+    
+            case PartHeight:
+                // Get the list of unfinished placements and sort them by part height.
+                planedJobPlacements = jobPlacements.stream()
+                        .sorted(Comparator
+                                .comparing(JobPlacement::getPartHeight)
+                                .thenComparing(JobPlacement::getPartId))
+                        .collect(Collectors.toList());
+                break;
+    
+            // this options are move specific and result in full sorted lists even for panels of identical boards
+            case PartBoard:
+                planedJobPlacements = jobPlacements.stream()
+                        .sorted(Comparator
+                                .comparing(JobPlacement::getPartId)
+                                .thenComparing(JobPlacement::getBoardId))
+                        .collect(Collectors.toList());
+                break;
+                
+            case PartHeightPartBoard:
+                planedJobPlacements = jobPlacements.stream()
+                        .sorted(Comparator
+                                .comparing(JobPlacement::getPartHeight)
+                                .thenComparing(JobPlacement::getPartId)
+                                .thenComparing(JobPlacement::getBoardId))
+                        .collect(Collectors.toList());
+                break;
+                
+            case BoardPart:
+                planedJobPlacements = jobPlacements.stream()
+                        .sorted(Comparator
+                                .comparing(JobPlacement::getBoardId)
+                                .thenComparing(JobPlacement::getPartId))
+                        .collect(Collectors.toList());
+                break;
+                
+            case PickLocation:
+                planedJobPlacements = sortByPickLocation(jobPlacements);
+                break;
+                
+            // FIXME: generating a error if not all enum values are handled would be more error resistant
+            default:
+                Logger.warn("JobProcessor:Plan(): unhandled jobOrder " + jobOrder);
+    
+                // !! fall through to get the same result as unsorted and always well defined jobPlacements
+    
+            case Unsorted:
+                // use job placements unsorted - for "hand-crafted" jobs
+                planedJobPlacements = jobPlacements;
+            }
+            
+            return planedJobPlacements;
+        }
+        
         /**
          * Sort jobPlacements using any available feeders pick locations taking the shortest route
          * between all feeders.

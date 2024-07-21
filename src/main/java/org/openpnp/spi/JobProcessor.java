@@ -18,6 +18,12 @@ public interface JobProcessor extends PropertySheetHolder, WizardConfigurable {
 
     public void abort() throws JobProcessorException;    
 
+    /**
+     * This method is intended to signal the jobProcessor that the job is going to be resume and
+     * allows to invalid some precalculated data for reevaluation.
+     */
+    public void resume();
+    
     public void addTextStatusListener(TextStatusListener listener);
 
     public void removeTextStatusListener(TextStatusListener listener);
