@@ -582,8 +582,9 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             }
             else {
                 // job placements have already been planed, remove the once that have already been placed
+                // this is in sync with getPendingJobPlacements() where placements are also filtered by Status.Pending
                 planedJobPlacements.stream().filter((jobPlacement) -> {
-                    return jobPlacement.getStatus() != Status.Complete;
+                    return jobPlacement.getStatus() == Status.Pending;
                 }).collect(Collectors.toList());
             }
 
@@ -618,8 +619,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             List<JobPlacement> planedJobPlacements;
     
             switch (jobOrder) {
-            // this options are the default: for panels of identical board, the final sorting order is undefined as
-            // there are multiple and indistinguishable (eg. "C1") part ids
+            // this options are the default: all parts are groups but indistinguishable across the entire job
             case Part:
                 // Get the list of unfinished placements and sort them by part.
                 planedJobPlacements = jobPlacements.stream()
@@ -637,7 +637,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                         .collect(Collectors.toList());
                 break;
     
-            // this options are move specific and result in full sorted lists even for panels of identical boards
+            // this options are more specific and result in sorted lists even for panels of identical boards
+            // placements will be still indistinguishable across individual boards.
             case PartBoard:
                 planedJobPlacements = jobPlacements.stream()
                         .sorted(Comparator
@@ -664,7 +665,13 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 break;
                 
             case PickLocation:
-                planedJobPlacements = sortByPickLocation(jobPlacements);
+                updateFeederIndex(jobPlacements);
+
+                // sort placements by feeder index
+                planedJobPlacements = jobPlacements.stream()
+                        .sorted(Comparator
+                                .comparing(JobPlacement::getFeederIndex))
+                        .collect(Collectors.toList());
                 break;
                 
             // FIXME: generating a error if not all enum values are handled would be more error resistant
@@ -682,26 +689,53 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         }
         
         /**
-         * Sort jobPlacements using any available feeders pick locations taking the shortest route
-         * between all feeders.
+         * Update feederIndex in jobPlacements using any available feeders pick locations
+         * taking the shortest route between all feeders. Later this index can be used to
+         * sort/optimize the jobplacements. 
          * 
          * @param jobPlacements
-         * @return optimized list of jobPlacements
          */
-        private List<JobPlacement> sortByPickLocation(List<JobPlacement> jobPlacements) {
+        private void updateFeederIndex(List<JobPlacement> jobPlacements) {
+            List<Feeder> feeders = new ArrayList<>();
             
-            // route pick locations through travelling salesman
-            TravellingSalesman<JobPlacement> tsm = new TravellingSalesman<>(
-                    jobPlacements, 
-                    new TravellingSalesman.Locator<JobPlacement>() { 
+            // start by sorting the list for partIDs: as each partID has its own feeder,
+            // we can then easily collect a list of all required feeders
+            List<JobPlacement> local = jobPlacements.stream()
+                    .sorted(Comparator
+                            .comparing(JobPlacement::getPartId))
+                    .collect(Collectors.toList());
+
+            // loop over all placements and collect required feeders
+            feeders.clear();
+            JobPlacement lastPlacement = null;
+            for (JobPlacement p : local) {
+                if (lastPlacement != null && p.getPlacement().equals(lastPlacement.getPlacement())) {
+                    // current placement equals last placement and hence shares the same feeder -> ignore
+                    continue;
+                }
+                
+                // new/unknown partid: get feeder and add it to the list
+                try {
+                    final Feeder feeder = findFeeder(machine, p.getPlacement().getPart());
+                    feeders.add(feeder);
+                }
+                catch (Exception e) {
+                }
+                
+                // remember this placement as last
+                lastPlacement = p;
+            }
+            
+            // route pick locations of all feeders through travelling salesman
+            TravellingSalesman<Feeder> tsm = new TravellingSalesman<>(
+                    feeders, 
+                    new TravellingSalesman.Locator<Feeder>() { 
                         @Override
-                        public Location getLocation(JobPlacement locatable) {
+                        public Location getLocation(Feeder locatable) {
                             Location location = null;
 
                             try {
-                                final Feeder feeder = findFeeder(machine, locatable.getPlacement().getPart());
-
-                                location = feeder.getPickLocation();
+                                location = locatable.getPickLocation();
                             }
                             catch (Exception e) {
                                 location = null;
@@ -716,8 +750,20 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             // Solve it using the default heuristics.
             tsm.solve();
             
-            // return optimized placements
-            return tsm.getTravel();
+            // get the optimized list of feeders
+            feeders = tsm.getTravel();
+            
+            // feed feeder locations back into jobPlacements as feederIndex
+            for (JobPlacement p : local) {
+                // find feeder for this placement
+                for (int i = 0; i < feeders.size(); ++i) {
+                    if (feeders.get(i).getPart().equals(p.getPlacement().getPart())) {
+                        p.setFeederIndex(i);
+                        break;
+                    }
+                        
+                }
+            }
         }
     }
     
