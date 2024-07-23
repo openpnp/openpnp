@@ -83,7 +83,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         Part, PartHeight,               // keep this values for backward compatibility
         PartBoard, PartHeightPartBoard, // sort as default, but use the board id as final sorting order
         BoardPart,                      // sort by board id first, then part id
-        PickLocation,                   // take the shorted route between all pick locations
+        PickLocation,                   // take the shortest route between all pick locations
+        PickPlaceLocation,              // optimize all place locations feeder wise for shortest route
         Unsorted;                       // keep the placements unsorted - for hand-optimized jobs
 
         // provide a dedicated toSting() method (with translation) to convert the enum values into
@@ -145,7 +146,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     // List of job placements optimized/sorted by user request. The optimization/sorting takes place in the plan() step and
     // will be stored in this list until there is reason to believe that something could have changed and would require
     // reevaluating this list. At present this is done in case the job is resumed.
-    protected List<JobPlacement> planedJobPlacements = new ArrayList<>();
+    protected List<JobPlacement> plannedJobPlacements = new ArrayList<>();
 
     private Step currentStep = null;
     
@@ -199,7 +200,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
      */
     public synchronized void resume() {
         // in case of a job resume, clear the list of prepared/sorted/optimized job placements to rebuild it.
-        planedJobPlacements.clear();
+        plannedJobPlacements.clear();
     }
     
     /**
@@ -222,7 +223,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             totalPartsPlaced = 0;
             
             jobPlacements.clear();
-            planedJobPlacements.clear();
+            plannedJobPlacements.clear();
 
             // Create some shortcuts for things that won't change during the run
             machine = Configuration.get().getMachine();
@@ -576,24 +577,32 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         public Step step() throws JobProcessorException {
             fireTextStatus("Planning placements.");
 
+            // get all pending job placements
+            List<JobPlacement> pendingJobPlacements = getPendingJobPlacements();
+
+            // if there are no pending placements, finish the job
+            if (pendingJobPlacements.isEmpty()) {
+                return new Finish();
+            }
+
             // if a sorted/optimized list of jobPlacements is available, use it now
-            if (planedJobPlacements.isEmpty()) {
-                planedJobPlacements = planJobPlacements(getPendingJobPlacements());
+            if (plannedJobPlacements.isEmpty()) {
+                plannedJobPlacements = planJobPlacements(pendingJobPlacements);
             }
             else {
                 // job placements have already been planed, remove the once that have already been placed
                 // this is in sync with getPendingJobPlacements() where placements are also filtered by Status.Pending
-                planedJobPlacements.stream().filter((jobPlacement) -> {
+                plannedJobPlacements.stream().filter((jobPlacement) -> {
                     return jobPlacement.getStatus() == Status.Pending;
                 }).collect(Collectors.toList());
             }
 
-            if (planedJobPlacements.isEmpty()) {
+            if (plannedJobPlacements.isEmpty()) {
                 return new Finish();
             }
 
             long t = System.currentTimeMillis();
-            List<PlannedPlacement> plannedPlacements = planner.plan(head, planedJobPlacements);
+            List<PlannedPlacement> plannedPlacements = planner.plan(head, plannedJobPlacements);
             Logger.debug("Planner complete in {}ms: {}", (System.currentTimeMillis() - t), plannedPlacements);
 
             if (plannedPlacements.isEmpty()) {
@@ -616,13 +625,14 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
          * @return
          */
         private List<JobPlacement> planJobPlacements(List<JobPlacement> jobPlacements) {
-            List<JobPlacement> planedJobPlacements;
+            long t = System.currentTimeMillis();
+            List<JobPlacement> plannedJobPlacements;
     
             switch (jobOrder) {
             // this options are the default: all parts are groups but indistinguishable across the entire job
             case Part:
                 // Get the list of unfinished placements and sort them by part.
-                planedJobPlacements = jobPlacements.stream()
+                plannedJobPlacements = jobPlacements.stream()
                         .sorted(Comparator
                                 .comparing(JobPlacement::getPartId))
                         .collect(Collectors.toList());
@@ -630,7 +640,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     
             case PartHeight:
                 // Get the list of unfinished placements and sort them by part height.
-                planedJobPlacements = jobPlacements.stream()
+                plannedJobPlacements = jobPlacements.stream()
                         .sorted(Comparator
                                 .comparing(JobPlacement::getPartHeight)
                                 .thenComparing(JobPlacement::getPartId))
@@ -640,7 +650,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             // this options are more specific and result in sorted lists even for panels of identical boards
             // placements will be still indistinguishable across individual boards.
             case PartBoard:
-                planedJobPlacements = jobPlacements.stream()
+                plannedJobPlacements = jobPlacements.stream()
                         .sorted(Comparator
                                 .comparing(JobPlacement::getPartId)
                                 .thenComparing(JobPlacement::getBoardId))
@@ -648,7 +658,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 break;
                 
             case PartHeightPartBoard:
-                planedJobPlacements = jobPlacements.stream()
+                plannedJobPlacements = jobPlacements.stream()
                         .sorted(Comparator
                                 .comparing(JobPlacement::getPartHeight)
                                 .thenComparing(JobPlacement::getPartId)
@@ -657,7 +667,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 break;
                 
             case BoardPart:
-                planedJobPlacements = jobPlacements.stream()
+                plannedJobPlacements = jobPlacements.stream()
                         .sorted(Comparator
                                 .comparing(JobPlacement::getBoardId)
                                 .thenComparing(JobPlacement::getPartId))
@@ -668,10 +678,22 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 updateFeederIndex(jobPlacements);
 
                 // sort placements by feeder index
-                planedJobPlacements = jobPlacements.stream()
+                plannedJobPlacements = jobPlacements.stream()
                         .sorted(Comparator
                                 .comparing(JobPlacement::getFeederIndex))
                         .collect(Collectors.toList());
+                break;
+                
+            case PickPlaceLocation:
+                updateFeederIndex(jobPlacements);
+
+                // sort placements by feeder index
+                plannedJobPlacements = jobPlacements.stream()
+                        .sorted(Comparator
+                                .comparing(JobPlacement::getFeederIndex))
+                        .collect(Collectors.toList());
+
+                plannedJobPlacements = optimizePlaceLocations(plannedJobPlacements);
                 break;
                 
             // FIXME: generating a error if not all enum values are handled would be more error resistant
@@ -682,10 +704,12 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     
             case Unsorted:
                 // use job placements unsorted - for "hand-crafted" jobs
-                planedJobPlacements = jobPlacements;
+                plannedJobPlacements = jobPlacements;
             }
             
-            return planedJobPlacements;
+            Logger.debug("Placements sorting using {} completed in {}ms", jobOrder.name(), (System.currentTimeMillis() - t));
+            
+            return plannedJobPlacements;
         }
         
         /**
@@ -707,14 +731,14 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
             // loop over all placements and collect required feeders
             feeders.clear();
-            JobPlacement lastPlacement = null;
+            Placement lastPlacement = null;
             for (JobPlacement p : local) {
-                if (lastPlacement != null && p.getPlacement().equals(lastPlacement.getPlacement())) {
+                if (lastPlacement != null && p.getPlacement().equals(lastPlacement)) {
                     // current placement equals last placement and hence shares the same feeder -> ignore
                     continue;
                 }
                 
-                // new/unknown partid: get feeder and add it to the list
+                // new/unknown placement: get feeder and add it to the list
                 try {
                     final Feeder feeder = findFeeder(machine, p.getPlacement().getPart());
                     feeders.add(feeder);
@@ -723,7 +747,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 }
                 
                 // remember this placement as last
-                lastPlacement = p;
+                lastPlacement = p.getPlacement();
             }
             
             // route pick locations of all feeders through travelling salesman
@@ -756,14 +780,57 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             // feed feeder locations back into jobPlacements as feederIndex
             for (JobPlacement p : local) {
                 // find feeder for this placement
+                final Part part = p.getPlacement().getPart();
                 for (int i = 0; i < feeders.size(); ++i) {
-                    if (feeders.get(i).getPart().equals(p.getPlacement().getPart())) {
+                    if (feeders.get(i).getPart().equals(part)) {
                         p.setFeederIndex(i);
                         break;
                     }
                         
                 }
             }
+        }
+        
+        /**
+         * Optimize a list of JobPlacements feeder wise (using feederIndex) for efficient
+         * order of place locations.
+         * 
+         * @param input list of jobPlacements (with feederIndex) to optimize
+         * @return optimized list of jobPlacements
+         */
+        private List<JobPlacement> optimizePlaceLocations(List<JobPlacement> input) {
+            List<JobPlacement> output = new ArrayList<>();
+            
+            while (!input.isEmpty()) {
+                // get all placements with the same (first) feeder index
+                final int feederIndex = input.get(0).getFeederIndex();
+                List<JobPlacement> tmp = input.stream()
+                        .filter(jobPlacement -> {return jobPlacement.getFeederIndex() == feederIndex; })
+                        .collect(Collectors.toList());
+
+                // remove all placements now in tmp from input
+                input.removeAll(tmp);
+                
+                // optimize the path between place location of all placements in tmp
+                TravellingSalesman<JobPlacement> tsm = new TravellingSalesman<>(
+                        tmp, 
+                        new TravellingSalesman.Locator<JobPlacement>() { 
+                            @Override
+                            public Location getLocation(JobPlacement locatable) {
+                                return locatable.getPlacement().getLocation();
+                            }
+                        }, 
+                        null,
+                        null);
+                
+                // Solve it using the default heuristics.
+                tsm.solve();
+                
+                // add the optimized list of jobPlacements to the output list
+                output.addAll(tsm.getTravel());
+            }
+            
+            return output;
         }
     }
     
