@@ -769,7 +769,7 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
                     misdetects++;
                     if (misdetects > this.allowMisdetections) {
                         throw new Exception(
-                                "Nozzle tip calibration: too many vision misdetects. Check the allowable distance threshold and/or computer vision. "
+                                "Nozzle tip " + nozzle.getNozzleTip().getName() + " on " + nozzle.getName() + " calibration: too many vision misdetects. Check the allowable distance threshold and/or computer vision. "
                                         + "Failure information can be found in the log.");
                     }
                 }
@@ -777,7 +777,7 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
 
             if (nozzleTipMeasuredLocations.size() < Math.max(3, angleSubdivisions + 1 - this.allowMisdetections)) {
                 throw new Exception(
-                        "Nozzle tip calibration: too many vision misdetects. Check the allowable distance threshold and/or computer vision. "
+                        "Nozzle tip " + nozzle.getNozzleTip().getName() + " on " + nozzle.getName() + " calibration: too many vision misdetects. Check the allowable distance threshold and/or computer vision. "
                                 + "Failure information can be found in the log.");
             }
 
