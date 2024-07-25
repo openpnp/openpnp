@@ -25,6 +25,6 @@ public interface PnpJobPlanner {
         }
     }
 
-    
+    public void startWithLoadedNozzleTips(boolean startWithLoadedNozzleTips);
     public List<PlannedPlacement> plan(Head head, List<JobPlacement> placements);
 }

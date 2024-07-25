@@ -46,7 +46,8 @@ public class ReferencePnpJobProcessorConfigurationWizard extends AbstractConfigu
     private JTextField maxVisionRetriesTextField;
     private JCheckBox steppingToNextMotion;
     private JCheckBox optimizeMultipleNozzles;
-
+    private JCheckBox startWithLoadedNozzleTips;
+    
     public ReferencePnpJobProcessorConfigurationWizard(ReferencePnpJobProcessor jobProcessor) {
         this.jobProcessor = jobProcessor;
         contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
@@ -98,6 +99,12 @@ public class ReferencePnpJobProcessorConfigurationWizard extends AbstractConfigu
 
         optimizeMultipleNozzles = new JCheckBox(); 
         panelGeneral.add(optimizeMultipleNozzles, "4, 8");
+
+        JLabel lblStartWithLoadedNozzleTips = new JLabel(Translations.getString("ReferencePnpJobProcessorConfigurationWizard.lblStartWithLoadedNozzleTips.text")); //$NON-NLS-1$
+        panelGeneral.add(lblStartWithLoadedNozzleTips, "2, 10, right, default");
+
+        startWithLoadedNozzleTips = new JCheckBox(); 
+        panelGeneral.add(startWithLoadedNozzleTips, "4, 10");
     }
 
     @Override
@@ -108,6 +115,7 @@ public class ReferencePnpJobProcessorConfigurationWizard extends AbstractConfigu
         addWrappedBinding(jobProcessor, "maxVisionRetries", maxVisionRetriesTextField, "text", intConverter);
         addWrappedBinding(jobProcessor, "steppingToNextMotion", steppingToNextMotion, "selected");
         addWrappedBinding(jobProcessor, "optimizeMultipleNozzles", optimizeMultipleNozzles, "selected");
+        addWrappedBinding(jobProcessor, "startWithLoadedNozzleTips", startWithLoadedNozzleTips, "selected");
         
         ComponentDecorators.decorateWithAutoSelect(maxVisionRetriesTextField);
     }
