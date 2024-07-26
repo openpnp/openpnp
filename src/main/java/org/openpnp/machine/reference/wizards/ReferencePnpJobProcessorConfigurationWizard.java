@@ -51,7 +51,6 @@ public class ReferencePnpJobProcessorConfigurationWizard extends AbstractConfigu
     
     public ReferencePnpJobProcessorConfigurationWizard(ReferencePnpJobProcessor jobProcessor) {
         this.jobProcessor = jobProcessor;
-        this.planner = jobProcessor.planner;
         contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
 
         JPanel panelGeneral = new JPanel();
