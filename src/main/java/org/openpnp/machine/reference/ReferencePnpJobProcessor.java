@@ -95,9 +95,6 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     @Attribute(required = false)
     boolean allowImmediateNozzleTipCalibration = false;
 
-    @Attribute(required = false)
-    boolean startWithLoadedNozzleTips = true;
-    
     @Element(required = false)
     public PnpJobPlanner planner = new SimplePnpJobPlanner();
 
@@ -200,7 +197,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             
             scriptJobStarting();
             
-            planner.startWithLoadedNozzleTips(startWithLoadedNozzleTips);
+            planner.restart();
 
             return new PanelFiducialCheck();
         }
@@ -1277,14 +1274,6 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         this.optimizeMultipleNozzles = optimizeMultipleNozzles;
     }
 
-    public boolean isStartWithLoadedNozzleTips() {
-        return startWithLoadedNozzleTips;
-    }
-
-    public void setStartWithLoadedNozzleTips(boolean startWithLoadedNozzleTips) {
-        this.startWithLoadedNozzleTips = startWithLoadedNozzleTips;
-    }
-
     /**
      * This class groups a step for step for multi-nozzle optimization
      */
@@ -1567,7 +1556,13 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
      */
     @Root
     public static class TrivialPnpJobPlanner implements PnpJobPlanner {
-        public void startWithLoadedNozzleTips(boolean startWitLoadedNozzleTips) {
+        // this methods are no used here and have to be present because they are required at interface level
+        public Strategy getStrategy() {
+            return Strategy.Performance;
+        }
+        public void setStrategy(Strategy strategy) {
+        }
+        public void restart() {
         }
         
         @Override
@@ -1669,16 +1664,24 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
      */
     @Root
     public static class SimplePnpJobPlanner implements PnpJobPlanner {
-        private boolean favorLoadedNozzleTips = true;
+        @Attribute(required = false)
+        protected Strategy strategy = Strategy.Performance;
         
-        /**
-         * Initialize the planner with a flag that signals that currently loaded nozzle tips
-         * shall be favored on start.
-         * 
-         * @param allowNozzleTipChangeOnFirstRun
-         */
-        public void startWithLoadedNozzleTips (boolean startWithLoadedNozzleTips) {
-            this.favorLoadedNozzleTips = startWithLoadedNozzleTips;
+        private boolean restart;
+        
+        @Override
+        public Strategy getStrategy() {
+            return strategy;
+        }
+        
+        @Override
+        public void setStrategy(Strategy strategy) {
+            this.strategy = strategy;
+        }
+
+        @Override
+        public void restart() {
+            this.restart = true;
         }
         
         @Override
@@ -1700,7 +1703,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
              */
             List<NozzleTip> nozzleTips = new ArrayList<>(head.getMachine().getNozzleTips());
             
-            if (favorLoadedNozzleTips) {
+            if (    strategy == Strategy.Performance
+                || (strategy == Strategy.Relaxed && !restart)) {
                 /**
                  * First we plan any placements that can be done without a nozzle change. For each
                  * nozzle we see if there is a placement that we can handle without doing a nozzletip
@@ -1717,9 +1721,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                     }
                 }
             }
-            else {
-                favorLoadedNozzleTips = true;
-            }
+            restart = false;
             
             /**
              * Now we'll try to plan any nozzles that didn't get planned on the first pass by

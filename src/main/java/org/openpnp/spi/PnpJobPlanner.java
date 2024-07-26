@@ -3,7 +3,6 @@ package org.openpnp.spi;
 import java.util.List;
 
 import org.openpnp.spi.PnpJobProcessor.JobPlacement;
-import org.openpnp.model.Location;
 
 public interface PnpJobPlanner {
     public static class PlannedPlacement {
@@ -24,7 +23,24 @@ public interface PnpJobPlanner {
             return String.format("%s (%s) -> %s", nozzle.getName(), nozzleTip.getName(), jobPlacement);
         }
     }
+    
+    /**
+     * JobPlanner strategy: depending on the strategy, the list of placements is searched to
+     * find a placement, that can be handled using the current nozzle tip or the list is strictly
+     * followed, potentially executing more nozzle tip changes then needed.
+     */
+    public enum Strategy {
+        Performance,    // avoid any nozzle tip change by searching the placements list.
+        Relaxed,        // place the first part with the required nozzle tip and then avoid nozzle tip changes.
+        Strict          // strictly follow the placements list executing all nozzle tip changes as needed.
+    }
 
-    public void startWithLoadedNozzleTips(boolean startWithLoadedNozzleTips);
+    /**
+     * Call restart() to signal that a new job run will start next. That allows to
+     * support a first-run strategies (Strategy.Relaxed).
+     */
+    public void restart();
+    public Strategy getStrategy();
+    public void setStrategy(Strategy strategy);
     public List<PlannedPlacement> plan(Head head, List<JobPlacement> placements);
 }
