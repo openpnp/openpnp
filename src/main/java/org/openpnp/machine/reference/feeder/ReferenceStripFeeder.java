@@ -26,16 +26,21 @@ import java.util.List;
 import javax.swing.Action;
 
 import org.apache.commons.io.IOUtils;
+import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.machine.reference.feeder.wizards.ReferenceStripFeederConfigurationWizard;
+import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Point;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Nozzle;
+import org.openpnp.spi.Head;
+import org.openpnp.spi.Machine;
+import org.openpnp.spi.MachineListener;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.OpenCvUtils;
@@ -151,6 +156,35 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
 
     public Length getHoleLineDistanceMax() {
         return new Length(0.5, LengthUnit.Millimeters);
+    }
+
+    public ReferenceStripFeeder() {
+        // Listen to the machine become unhomed to invalidate feeder calibration.
+        // Note that home()  first switches the machine isHomed() state off, then on again,
+        // so we also catch re-homing.
+        Configuration.get().addListener(new ConfigurationListener.Adapter() {
+            @Override
+            public void configurationComplete(Configuration configuration) throws Exception {
+                Configuration.get().getMachine().addListener(new MachineListener.Adapter() {
+
+                    @Override
+                    public void machineHeadActivity(Machine machine, Head head) {
+                        checkHomedState(machine);
+                    }
+
+                    @Override
+                    public void machineEnabled(Machine machine) {
+                        checkHomedState(machine);
+                    }
+                });
+            }
+        });
+    }
+
+    private void checkHomedState(Machine machine) {
+        if (!machine.isHomed()) {
+            resetVision();
+        }
     }
 
     @Override
