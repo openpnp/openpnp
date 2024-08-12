@@ -275,6 +275,8 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
                 applyAction.actionPerformed(e);
             }
         });
+        btnResetFeedCount.setToolTipText(Translations.getString(
+                "ReferenceStripFeederConfigurationWizard.ResetFeedCountButton.toolTipText")); //$NON-NLS-1$
         panelTapeSettings.add(btnResetFeedCount, "12, 6");
 
         lblMaxFeedCount = new JLabel(Translations.getString(
@@ -308,7 +310,8 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         contentPanel.add(panelVision);
         panelVision.setLayout(new FormLayout(
                 new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC},
                 new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
 
@@ -338,6 +341,17 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
             }
         });
         panelVision.add(btnResetPipeline, "4, 4");
+
+        JButton btnClearVisionCache = new JButton(Translations.getString(
+                "ReferenceStripFeederConfigurationWizard.PanelVision.ClearVisionCacheButton.text")); //$NON-NLS-1$
+        btnClearVisionCache.setToolTipText(Translations.getString(
+                "ReferenceStripFeederConfigurationWizard.PanelVision.ClearVisionCacheButton.toolTipText")); //$NON-NLS-1$
+        btnClearVisionCache.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                clearVisionCache();
+            }
+        });
+        panelVision.add(btnClearVisionCache, "6, 4");
 
         panelLocations = new JPanel();
         contentPanel.add(panelLocations);
@@ -1052,5 +1066,9 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         catch (CloneNotSupportedException e) {
             throw new Error(e);
         }
+    }
+
+    private void clearVisionCache() {
+        feeder.resetVision();
     }
 }
