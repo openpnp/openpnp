@@ -23,6 +23,8 @@ package org.openpnp.machine.reference.solutions;
 
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -981,7 +983,12 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                             int axisIndex = 0;
                             int lastAxisIndex = 26;
                             String pattern = "";
-                            for (String axisLetter: gcodeDriver.getReportedAxesLetters()) {
+                            List<String> letters = gcodeDriver.getReportedAxesLetters();
+                            if (letters.isEmpty()) {
+                                // we don't have reported letters, take a theoretical set
+                                letters = new ArrayList<>(Arrays.asList(AxisSolutions.VALID_AXIS_LETTERS));
+                            }
+                            for (String axisLetter : letters) {
                                 for (String variable : gcodeDriver.getAxisVariables(machine)) {
                                     if (variable.equals(axisLetter)) {
                                         if (lastAxisIndex < axisIndex-1) {
