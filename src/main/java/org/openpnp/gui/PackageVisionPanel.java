@@ -293,6 +293,10 @@ public class PackageVisionPanel extends JPanel {
             String name;
             while ((name = JOptionPane.showInputDialog(getTopLevelAncestor(),
                     "Please enter a name for the new pad.")) != null) {
+                name = name.trim();
+                if (name.isEmpty()) {
+                    break;
+                }
                 Pad pad = new Pad();
                 pad.setName(name);
                 footprint.addPad(pad);

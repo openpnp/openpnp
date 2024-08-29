@@ -484,7 +484,11 @@ public class BoardPlacementsPanel extends JPanel {
             if (id == null) {
                 return;
             }
-            
+            id = id.trim();
+            if (id.isEmpty()) {
+                return;
+            }
+
             // Check if the new placement ID is unique
             for(Placement compareplacement : board.getPlacements()) {
                 if (compareplacement.getId().equals(id)) {
