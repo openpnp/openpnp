@@ -241,7 +241,7 @@ public class MinAreaRect extends CvStage {
             return null;
         }
         RotatedRect r;
-        if (leftEdge && rightEdge && bottomEdge && topEdge) {
+        if (leftEdge && rightEdge && bottomEdge && topEdge && searchAngle==45) {
             // All edges, use OpenCv method.
             MatOfPoint2f pointsMat = new MatOfPoint2f(points.toArray(new Point[points.size()]));
             r = Imgproc.minAreaRect(pointsMat);
