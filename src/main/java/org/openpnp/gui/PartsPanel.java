@@ -289,6 +289,10 @@ public class PartsPanel extends JPanel implements WizardContainer {
             String id;
             while ((id = JOptionPane.showInputDialog(frame,
                     "Please enter an ID for the new part.")) != null) {
+                id = id.trim();
+                if (id.isEmpty()) {
+                    break;
+                }
                 if (configuration.getPart(id) != null) {
                     MessageBoxes.errorBox(frame, "Error", "Part ID " + id + " already exists.");
                     continue;
@@ -402,6 +406,10 @@ public class PartsPanel extends JPanel implements WizardContainer {
             String id;
             while ((id = JOptionPane.showInputDialog(frame,
                     "Please enter an ID for the pasted part.")) != null) {
+                id = id.trim();
+                if (id.isEmpty()) {
+                    break;
+                }
                 if (configuration.getPart(id) == null) {
                     break;
                 }
