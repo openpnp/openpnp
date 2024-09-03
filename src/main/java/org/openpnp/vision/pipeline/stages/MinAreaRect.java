@@ -241,7 +241,7 @@ public class MinAreaRect extends CvStage {
             return null;
         }
         RotatedRect r;
-        if (leftEdge && rightEdge && bottomEdge && topEdge && Math.abs(searchAngle-45)<angularResolution) {
+        if (leftEdge && rightEdge && bottomEdge && topEdge && searchAngle>=45-angularResolution) {
             // All edges, use OpenCv method.
             // This is slightly faster; 30µs per call, compared to 210µs for the java method in the other branch
             MatOfPoint2f pointsMat = new MatOfPoint2f(points.toArray(new Point[points.size()]));
