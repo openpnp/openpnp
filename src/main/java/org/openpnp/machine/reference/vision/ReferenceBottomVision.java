@@ -555,7 +555,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                 }
 
                 @Override 
-                public Result processCompositeResult() {
+                public Result processCompositeResult() throws Exception {
                     composite.interpret();
                     return new Result(null, composite.getDetectedRotatedRect());
                 }

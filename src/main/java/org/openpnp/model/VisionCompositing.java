@@ -1430,7 +1430,7 @@ public class VisionCompositing extends AbstractModelObject{
             }
         }
 
-        public void interpret() {
+        public void interpret() throws Exception {
             if (!compositingSolution.isAdvanced()) {
                 return;
             }
@@ -1538,9 +1538,21 @@ public class VisionCompositing extends AbstractModelObject{
                 }
             }
             // Evaluate the stats.
+            if(centerWeights==0) { // divide by zero ahead!
+                throw new Exception("Unable to calculate center from composite vision");
+            }
+            if(angleWeights==0) {
+                throw new Exception("Unable to calculate angle from composite vision");
+            }
             detectedCenter = centerSum.divide(centerWeights);
             detectedAngle = angleSum/angleWeights;
             detectedAngle += Math.round((expectedAngle - detectedAngle)/90)*90;
+            if(xScaleWeights==0) {
+                xScaleSum = xScaleWeights = 1.0; // We can not adjust x scale
+            }
+            if(yScaleWeights==0) {
+                yScaleSum = yScaleWeights = 1.0;
+            }
             detectedScale = new Point(
                     xScaleSum/xScaleWeights, 
                     yScaleSum/yScaleWeights); 
