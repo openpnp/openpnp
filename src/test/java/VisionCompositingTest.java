@@ -29,6 +29,7 @@ import org.openpnp.machine.reference.ReferenceNozzleTip;
 import org.openpnp.machine.reference.camera.SimulatedUpCamera;
 import org.openpnp.machine.reference.driver.NullDriver;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision;
+import org.openpnp.machine.reference.vision.ReferenceBottomVision.PartSizeCheckMethod;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
@@ -95,6 +96,9 @@ public class VisionCompositingTest {
         machine.execute(() -> {
             for (Part part: Configuration.get().getParts()) {
                 if (!part.getId().startsWith("FID")) {
+                    // Enable size test, to check that composite vision is measuring size correctly
+                    bottomVision.getInheritedVisionSettings(part).setCheckPartSizeMethod(ReferenceBottomVision.PartSizeCheckMethod.PadExtents);
+
                     Location error;
                     Location maxError;
                     if (part.getId().startsWith("SMALL")) {
