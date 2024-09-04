@@ -1554,10 +1554,10 @@ public class VisionCompositing extends AbstractModelObject{
             }
             // Evaluate the stats.
             if(centerWeights==0) { // divide by zero ahead!
-                throw new Exception("Unable to calculate center from composite vision");
+                throw new Exception("Unable to calculate center from composite vision for package "+pkg.getId());
             }
             if(angleWeights==0) {
-                throw new Exception("Unable to calculate angle from composite vision");
+                throw new Exception("Unable to calculate angle from composite vision for package "+pkg.getId());
             }
             detectedCenter = centerSum.divide(centerWeights);
             detectedAngle = angleSum/angleWeights;
