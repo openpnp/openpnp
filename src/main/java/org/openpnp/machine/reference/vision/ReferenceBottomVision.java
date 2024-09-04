@@ -354,8 +354,12 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
         double pxWidth = VisionUtils.toPixels(partSize.getLengthX(), camera);
         double pxLength = VisionUtils.toPixels(partSize.getLengthY(), camera);
 
-        // Make sure width is the longest dimension
         Size measuredSize = partRect.size;
+        if (! (measuredSize.width>0 && measuredSize.height>0) ) {
+            // This branch handles the case for zero size, negative size, and NaN size
+            throw new Exception(String.format("Invalid measured size for size check.\nwidth=%s\nlength=%s",measuredSize.width,measuredSize.height));
+        }
+        // Make sure width is the longest dimension
         if (measuredSize.height > measuredSize.width) {
             double mLength = measuredSize.height;
             double mWidth = measuredSize.width;
