@@ -1469,9 +1469,9 @@ public class VisionCompositing extends AbstractModelObject{
                             double distance = diff.distance();
                             double dx = Math.abs(corner.diagonalBuddy.getX() - corner.getX());
                             double dy = Math.abs(corner.diagonalBuddy.getY() - corner.getY());
-                            xScaleSum += distance;
+                            xScaleSum += distance / Math.sqrt(2);
                             xScaleWeights += dx;
-                            yScaleSum += distance;
+                            yScaleSum += distance / Math.sqrt(2);
                             yScaleWeights += dy;
                         }
                     }
