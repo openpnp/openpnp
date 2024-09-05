@@ -205,9 +205,10 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
 
             // The running, iterative offset.
             Location offsets = new Location(nozzleLocation.getUnits());
+            RotatedRect rect;
             // Try getting a good fix on the part in multiple passes.
             for(int pass = 0;;) {
-                RotatedRect rect = processPipelineAndGetResult(pipeline, camera, part, nozzle,
+                rect = processPipelineAndGetResult(pipeline, camera, part, nozzle,
                         wantedLocation, nozzleLocation, bottomVisionSettings);
 
                 Logger.debug("Bottom vision part {} result rect {}", part.getId(), rect);
@@ -247,7 +248,6 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                 Location corner = VisionUtils.getPixelCenterOffsets(camera, corners[0].x, corners[0].y)
                         .convertToUnits(maxLinearOffset.getUnits());
                 Location cornerWithAngularOffset = corner.rotateXy(angleOffset);
-                partSizeCheck(part, bottomVisionSettings, rect, camera);
 
                 if (center.getLinearDistanceTo(offsets) > getMaxLinearOffset().getValue()) {
                     Logger.debug("Offsets too large {} : center offset {} > {}", 
@@ -269,6 +269,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                 // Not a good enough fix - try again with corrected position.
             }
             Logger.debug("Offsets accepted {}", offsets);
+
             // Calculate cumulative offsets over all the passes.  
             offsets = wantedLocation.subtractWithRotation(nozzleLocation);
 
@@ -277,6 +278,8 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
 
             displayResult(OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), part, offsets, camera, nozzle);
             offsetsCheck(part, nozzle, offsets);
+
+            partSizeCheck(part, bottomVisionSettings, rect, camera);
 
             return new PartAlignment.PartAlignmentOffset(offsets, true);
         }
