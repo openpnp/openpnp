@@ -205,9 +205,10 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
 
             // The running, iterative offset.
             Location offsets = new Location(nozzleLocation.getUnits());
+            RotatedRect rect;
             // Try getting a good fix on the part in multiple passes.
             for(int pass = 0;;) {
-                RotatedRect rect = processPipelineAndGetResult(pipeline, camera, part, nozzle,
+                rect = processPipelineAndGetResult(pipeline, camera, part, nozzle,
                         wantedLocation, nozzleLocation, bottomVisionSettings);
 
                 Logger.debug("Bottom vision part {} result rect {}", part.getId(), rect);
@@ -247,7 +248,6 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                 Location corner = VisionUtils.getPixelCenterOffsets(camera, corners[0].x, corners[0].y)
                         .convertToUnits(maxLinearOffset.getUnits());
                 Location cornerWithAngularOffset = corner.rotateXy(angleOffset);
-                partSizeCheck(part, bottomVisionSettings, rect, camera);
 
                 if (center.getLinearDistanceTo(offsets) > getMaxLinearOffset().getValue()) {
                     Logger.debug("Offsets too large {} : center offset {} > {}", 
@@ -269,6 +269,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                 // Not a good enough fix - try again with corrected position.
             }
             Logger.debug("Offsets accepted {}", offsets);
+
             // Calculate cumulative offsets over all the passes.  
             offsets = wantedLocation.subtractWithRotation(nozzleLocation);
 
@@ -277,6 +278,8 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
 
             displayResult(OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), part, offsets, camera, nozzle);
             offsetsCheck(part, nozzle, offsets);
+
+            partSizeCheck(part, bottomVisionSettings, rect, camera);
 
             return new PartAlignment.PartAlignmentOffset(offsets, true);
         }
@@ -346,21 +349,13 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
             return true;
         }
 
-        // Make sure width is the longest dimension
-        if (partSize.getY() > partSize.getX()) {
-            partSize = new Location(partSize.getUnits(), partSize.getY(), partSize.getX(), 0, 0);
-        }
-
         double pxWidth = VisionUtils.toPixels(partSize.getLengthX(), camera);
         double pxLength = VisionUtils.toPixels(partSize.getLengthY(), camera);
 
-        // Make sure width is the longest dimension
         Size measuredSize = partRect.size;
-        if (measuredSize.height > measuredSize.width) {
-            double mLength = measuredSize.height;
-            double mWidth = measuredSize.width;
-            measuredSize.height = mWidth;
-            measuredSize.width = mLength;
+        if (! (measuredSize.width>0 && measuredSize.height>0) ) {
+            // This branch handles the case for zero size, negative size, and NaN size
+            throw new Exception(String.format("Invalid measured size for size check.\nwidth=%s\nlength=%s",measuredSize.width,measuredSize.height));
         }
 
         double widthTolerance = pxWidth * 0.01 * (double) bottomVisionSettings.getCheckSizeTolerancePercent();
@@ -551,7 +546,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                 }
 
                 @Override 
-                public Result processCompositeResult() {
+                public Result processCompositeResult() throws Exception {
                     composite.interpret();
                     return new Result(null, composite.getDetectedRotatedRect());
                 }
