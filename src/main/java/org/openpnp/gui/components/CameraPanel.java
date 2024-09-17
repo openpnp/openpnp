@@ -69,7 +69,6 @@ public class CameraPanel extends JPanel {
             @Override
             public void configurationComplete(Configuration configuration) throws Exception {
             	SwingUtilities.invokeLater(() -> {
-                    cameraViews.clear();
                     for (Camera camera : configuration.getMachine().getAllCameras()) {
                         addCamera(camera);
                     }
