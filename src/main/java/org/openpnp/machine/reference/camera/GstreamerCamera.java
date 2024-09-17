@@ -52,8 +52,8 @@ public class GstreamerCamera extends ReferenceCamera {
         Gst.init();
     }
 
-    @Attribute(name = "pipeline", required = true)
-    private String pipeString;
+    @Attribute(name = "gstPipeline", required = true)
+    private String gstPipeString;
 
     private BufferedImage currentImage;
     private AppSink videosink;
@@ -66,11 +66,12 @@ public class GstreamerCamera extends ReferenceCamera {
 
     @Override
     public synchronized BufferedImage internalCapture() {
-        if (! ensureOpen()) {
+        if (!ensureOpen()) {
             return null;
         }
 
-        // AbstractBroadcastingCamera uses atomic getAndSet on images along with hasNewFrame
+        // AbstractBroadcastingCamera uses atomic getAndSet on images along with
+        // hasNewFrame
         // Should be safe just to return the latest one here.
         newFrame.set(false);
         return currentImage;
@@ -86,20 +87,20 @@ public class GstreamerCamera extends ReferenceCamera {
         close();
         clearCalibrationCache();
 
-        if (pipeString == null) {
+        if (gstPipeString == null) {
             return;
         }
 
         Bin bin = null;
         try {
             // Create ghost src pad as we link the whole bin to the appsink
-            bin = Gst.parseBinFromDescription(pipeString, true);
+            bin = Gst.parseBinFromDescription(gstPipeString, true);
         } catch (Exception e) {
-            Logger.warn("Exception parsing pipeline {}", pipeString);
+            Logger.warn("Exception parsing pipeline {}", gstPipeString);
             return;
         }
         if (bin == null) {
-            Logger.warn("Failed parsing pipeline {}", pipeString);
+            Logger.warn("Failed parsing pipeline {}", gstPipeString);
             return;
         }
 
@@ -151,19 +152,19 @@ public class GstreamerCamera extends ReferenceCamera {
         currentImage = null;
     }
 
-    public String getPipeline() {
-        return pipeString;
+    public String getGstPipeline() {
+        return gstPipeString;
     }
 
-    public synchronized void setPipeline(String newPipeString) {
-        if (this.pipeString != null && pipe != null && !this.pipeString.equals(newPipeString)) {
+    public synchronized void setGstPipeline(String newPipeString) {
+        if (this.gstPipeString != null && pipe != null && !this.gstPipeString.equals(newPipeString)) {
             try {
                 close();
             } catch (Exception e) {
             }
         }
-        pipeString = newPipeString;
-        Logger.debug("Set pipeline: {}", pipeString);
+        gstPipeString = newPipeString;
+        Logger.debug("Set pipeline: {}", gstPipeString);
     }
 
     @Override

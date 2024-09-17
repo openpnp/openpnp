@@ -41,7 +41,7 @@ public class GstreamerCameraConfigurationWizard extends AbstractConfigurationWiz
     private final GstreamerCamera camera;
 
     private JPanel panelPipe;
-    private JTextField pipelineTextField;
+    private JTextField gstPipeTextField;
 
     public GstreamerCameraConfigurationWizard(GstreamerCamera camera) {
         this.camera = camera;
@@ -57,14 +57,14 @@ public class GstreamerCameraConfigurationWizard extends AbstractConfigurationWiz
 
         JLabel lblPipeline = new JLabel("Pipeline launch string");
         panelPipe.add(lblPipeline, "2, 2, right, default");
-        pipelineTextField = new JTextField(40);
-        panelPipe.add(pipelineTextField, "4, 2, fill, default");
-        // pipelineTextField.setColumns(5);
+        gstPipeTextField = new JTextField(40);
+        panelPipe.add(gstPipeTextField, "4, 2, fill, default");
+        gstPipeTextField.setColumns(5);
     }
 
     @Override
     public void createBindings() {
-        addWrappedBinding(camera, "pipeline", pipelineTextField, "text");
+        addWrappedBinding(camera, "gstPipeline", gstPipeTextField, "text");
     }
 
 }
