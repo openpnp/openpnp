@@ -352,6 +352,7 @@ public class MainFrame extends JFrame {
         if (!macOsXMenus) {
             mnFile.addSeparator();
             mnFile.add(new JMenuItem(quitAction));
+            mnFile.add(new JMenuItem(restartAction));
         }
 
         // Edit
@@ -1049,8 +1050,27 @@ public class MainFrame extends JFrame {
         return true;
     }
 
+    public boolean restart() {
+        Logger.info("Restarting..."); //$NON-NLS-1$
+        if( exit(false) ) {
+            Logger.info("Shutdown complete, restarting."); //$NON-NLS-1$
+            System.exit(127);
+            return true;
+        }
+        return false;
+    }
+
     public boolean quit() {
         Logger.info("Shutting down..."); //$NON-NLS-1$
+        if( exit(true) ) {
+            Logger.info("Shutdown complete, exiting."); //$NON-NLS-1$
+            System.exit(0);
+            return true;
+        }
+        return false;
+    }
+
+    private boolean exit(boolean saveConfig) {
         try {
             Preferences.userRoot().flush();
         }
@@ -1060,7 +1080,9 @@ public class MainFrame extends JFrame {
 
         // Save the configuration
         try {
-            configuration.save();
+            if( saveConfig ) {
+                configuration.save();
+            }
         }
         catch (Exception e) {
             String message = "There was a problem saving the configuration. The reason was:\n\n" //$NON-NLS-1$
@@ -1091,8 +1113,6 @@ public class MainFrame extends JFrame {
         catch (Exception e) {
             e.printStackTrace();
         }
-        Logger.info("Shutdown complete, exiting."); //$NON-NLS-1$
-        System.exit(0);
         return true;
     }
 
@@ -1238,6 +1258,17 @@ public class MainFrame extends JFrame {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             quit();
+        }
+    };
+
+    private Action restartAction = new AbstractAction(Translations.getString("Menu.File.Restart")) { //$NON-NLS-1$
+        {
+            //putValue(MNEMONIC_KEY, KeyEvent.VK_X);
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            restart();
         }
     };
 
