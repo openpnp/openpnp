@@ -1020,12 +1020,7 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
             int kernelSize = ((int)getMinimumDetailSize()
                     .divide(camera.getUnitsPerPixel().getLengthX()))|1;
             Imgproc.GaussianBlur(image, image, new Size(kernelSize, kernelSize), 0);
-            if (getBackgroundCalibrationMethod() == BackgroundCalibrationMethod.BrightnessAndKeyColor) {
-                Imgproc.cvtColor(image, image, FluentCv.ColorCode.Bgr2HsvFull.getCode());
-            }
-            else {
-                Imgproc.cvtColor(image, image, FluentCv.ColorCode.Bgr2Gray.getCode());
-            }
+            Imgproc.cvtColor(image, image, FluentCv.ColorCode.Bgr2HsvFull.getCode());
             backgroundImageRows = image.rows();
             backgroundImageCols = image.cols();
             backgroundImageChannels = image.channels();
@@ -1281,7 +1276,7 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
                     setBackgroundDiagnostics(report.toString());
                 }
                 else if (getBackgroundCalibrationMethod() == BackgroundCalibrationMethod.Brightness) {
-                    // Simple grayscale.
+                    // Only look at the V channel.
                     int bestMinValue = 255; 
                     int bestMaxValue = 0;
                     int signalColor = new Color(255, 0, 255).getRGB();
@@ -1295,7 +1290,11 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
                                 int dy = y - rows/2;
                                 int rSq = dx*dx + dy*dy;
                                 if (rSq < maskSq) {
-                                    int value = Byte.toUnsignedInt(data[idx]);
+                                    int hue = Byte.toUnsignedInt(data[idx+0]);
+                                    int saturation = Byte.toUnsignedInt(data[idx+1]);
+                                    int value = Byte.toUnsignedInt(data[idx+2]);
+                                    Color color = Color.getHSBColor(hue/255.0f, saturation/255.0f, value/255.0f);
+                                    int rgb = color.getRGB();
                                     if (value > bestMaxValue) {
                                         bestMaxValue = value;
                                     }
@@ -1304,7 +1303,6 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
                                         // (from image transforms or advanced camera calibration). 
                                         bestMinValue = value;
                                     }
-                                    int rgb = new Color(value, value, value).getRGB();
                                     if (value > backgroundWorstValue) {
                                         // outside mask
                                         imagePixels[y*cols + x] = rgb;

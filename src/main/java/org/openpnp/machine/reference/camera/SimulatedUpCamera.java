@@ -71,7 +71,10 @@ public class SimulatedUpCamera extends ReferenceCamera {
         Black(0x000000, 0x00FF00),
         Dark(0x222222, 0x00DD00),
         Green(0x22AA22, 0x00DD00),
-        Magenta(0xAA22AA, 0x444444);
+        Magenta(0xAA22AA, 0x444444),
+        BlackAndDark(0x000000, 0x444444),
+        DarkAndGrey(0x222222, 0x666666),
+        DarkAndBlueTint(0x222222, 0x4444AA);
 
         final private int rgb;
         final private int rgbNozzleTip;
