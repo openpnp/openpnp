@@ -104,24 +104,20 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
         /**
          * queue subordinate motions
          */
-        protected void queue(AxesLocation currentLocation, AxesLocation newLocation) {
+        protected void queue(AxesLocation axesLocation) {
             if (queue == null) {
                 queue = new AxesLocation();
             }
             
-            // loop over all axes in newLocation and detect which coordinate is moving
-            for (CoordinateAxis axis : newLocation.getAxes(CoordinateAxis.class)) {
-                if (!axis.coordinatesMatch(
-                        newLocation.getLengthCoordinate(axis), 
-                        currentLocation.getLengthCoordinate(axis))) {
-                    
-                    // this axis is moving, merge it into the queue letting the already queued axis take precedence
-                    AxesLocation axesToQueue = new AxesLocation(axis, newLocation.getLengthCoordinate(axis));
-                    queue = axesToQueue.put(queue);
-                }
-            }
+            // merge all axis into the queue by letting the queued axis take precedence
+            int currentQueueSize = queue.getAxes().size();
+            queue = axesLocation.put(queue);
             
-            Logger.trace("Subordinate Motion: axesLocation " + newLocation + " queued to " + queue);
+            // only generate a log message if a new axis as been queued
+            int newQueueSize = queue.getAxes().size();
+            if (newQueueSize > currentQueueSize) {
+                Logger.trace("Subordinate Motion: axesLocation " + axesLocation + " queued to " + queue);
+            }
         }
         
         /**
@@ -147,45 +143,14 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
         }
         
         /**
-         * drain the queue reporting a warning
+         * drain the queue reporting a warning if it's not empty.
          */
         protected void drain() {
             if (queue != null) {
                 Logger.warn("Subordinate Motion queue not empty, drained.");
                 queue = null;
             }
-        }
-        
-        /**
-         * merge dominant with recessive AxesLocation using reference AxesLocation
-         * 
-         * @param referenceLocation
-         * @param dominantLocation
-         * @param recessivLocation
-         * @return
-         */
-        private AxesLocation mergeAxesLocations(AxesLocation referenceLocation, AxesLocation dominantLocation, AxesLocation recessiveLocation) {
-            AxesLocation result = recessiveLocation;
-            if (result == null) {
-                result = new AxesLocation();
-            }
-
-            if (referenceLocation != null && dominantLocation != null) {
-                // loop over all axis in the dominant location and overwrite axis that are moving
-                for (CoordinateAxis axis : dominantLocation.getAxes(CoordinateAxis.class)) {
-                    if (!axis.coordinatesMatch(
-                            dominantLocation.getLengthCoordinate(axis), 
-                            referenceLocation.getLengthCoordinate(axis))) {
-                        
-                        // this axis is moving, merge it
-                        AxesLocation axesToMerge = new AxesLocation(axis, dominantLocation.getLengthCoordinate(axis));
-                        result = result.put(axesToMerge);
-                    }
-                }
-            }
-            
-            return result;
-        }
+        }        
     }
     
     @Override
@@ -253,17 +218,17 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
         // Handle soft limits and rotation axes limiting and wrap-around.
         axesLocation = limitAxesLocation(hm, axesLocation, false);
         
-        // Get current planned location of all the axes.
-        AxesLocation currentLocation = new AxesLocation(getMachine()); 
-        
         // If this is a subordinate motion, queue it now
         if (Arrays.asList(options).contains(MotionOption.Subordinate)) {
-            subordinateMotion.queue(currentLocation, axesLocation);
+            subordinateMotion.queue(axesLocation);
             return;
         }
         
         // Merge motion with queued subordinate motion
         axesLocation = subordinateMotion.merge(axesLocation);                
+        
+        // Get current planned location of all the axes.
+        AxesLocation currentLocation = new AxesLocation(getMachine()); 
         
         // The new planned locations must include all the machine axes, so put the given axesLocation into the whole set.
         AxesLocation newLocation = 
