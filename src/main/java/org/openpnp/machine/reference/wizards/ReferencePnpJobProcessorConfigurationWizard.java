@@ -80,7 +80,8 @@ public class ReferencePnpJobProcessorConfigurationWizard extends AbstractConfigu
         comboBoxJobOrder = new JComboBox<JobOrderHint>(JobOrderHint.values());
         panelGeneral.add(comboBoxJobOrder, "4, 2");
 
-        JLabel lblPlannerStrategy = new JLabel(Translations.getString("MachineSetup.JobProcessors.ReferencePnpJobProcessor.Label.PlannerStrategy")); //$NON-NLS-1$
+        JLabel lblPlannerStrategy = new JLabel(Translations.getString("MachineSetup.JobProcessors.ReferencePnpJobProcessor.lblPlannerStrategy.text")); //$NON-NLS-1$
+        lblPlannerStrategy.setToolTipText(Translations.getString("MachineSetup.JobProcessors.ReferencePnpJobProcessor.lblPlannerStrategy.toolTipText")); //$NON-NLS-1$
         panelGeneral.add(lblPlannerStrategy, "2, 4, right, default");
 
         comboBoxPlannerStrategy = new JComboBox<Strategy>(Strategy.values());

@@ -30,9 +30,9 @@ public interface PnpJobPlanner {
      * followed, potentially executing more nozzle tip changes then needed.
      */
     public enum Strategy {
-        Performance,    // avoid any nozzle tip change by searching the placements list.
-        Relaxed,        // place the first part with the required nozzle tip and then avoid nozzle tip changes.
-        Strict          // strictly follow the placements list executing all nozzle tip changes as needed.
+        Minimize,       // avoid any nozzle tip change by searching the placements list.
+        StartAsPlanned, // place the first part with the required nozzle tip and then avoid nozzle tip changes.
+        FullyAsPlanned  // strictly follow the placements list executing all nozzle tip changes as needed.
     }
 
     /**

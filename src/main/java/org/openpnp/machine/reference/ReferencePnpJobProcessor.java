@@ -1558,7 +1558,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     public static class TrivialPnpJobPlanner implements PnpJobPlanner {
         // this methods are no used here and have to be present because they are required at interface level
         public Strategy getStrategy() {
-            return Strategy.Performance;
+            return Strategy.Minimize;
         }
         public void setStrategy(Strategy strategy) {
         }
@@ -1665,7 +1665,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     @Root
     public static class SimplePnpJobPlanner implements PnpJobPlanner {
         @Attribute(required = false)
-        protected Strategy strategy = Strategy.Performance;
+        protected Strategy strategy = Strategy.Minimize;
         
         private boolean restart;
         
@@ -1703,8 +1703,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
              */
             List<NozzleTip> nozzleTips = new ArrayList<>(head.getMachine().getNozzleTips());
             
-            if (    strategy == Strategy.Performance
-                || (strategy == Strategy.Relaxed && !restart)) {
+            if (    strategy == Strategy.Minimize
+                || (strategy == Strategy.StartAsPlanned && !restart)) {
                 /**
                  * First we plan any placements that can be done without a nozzle change. For each
                  * nozzle we see if there is a placement that we can handle without doing a nozzletip
