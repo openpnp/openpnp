@@ -33,6 +33,7 @@ import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.machine.reference.ReferencePnpJobProcessor;
 import org.openpnp.machine.reference.ReferencePnpJobProcessor.JobOrderHint;
+import org.openpnp.spi.PnpJobPlanner.Strategy;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
@@ -42,11 +43,12 @@ import com.jgoodies.forms.layout.RowSpec;
 @SuppressWarnings("serial")
 public class ReferencePnpJobProcessorConfigurationWizard extends AbstractConfigurationWizard {
     private final ReferencePnpJobProcessor jobProcessor;
-    private JComboBox comboBoxJobOrder;
+    private JComboBox<JobOrderHint> comboBoxJobOrder;
+    private JComboBox<Strategy> comboBoxPlannerStrategy;
     private JTextField maxVisionRetriesTextField;
     private JCheckBox steppingToNextMotion;
     private JCheckBox optimizeMultipleNozzles;
-
+    
     public ReferencePnpJobProcessorConfigurationWizard(ReferencePnpJobProcessor jobProcessor) {
         this.jobProcessor = jobProcessor;
         contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
@@ -75,29 +77,36 @@ public class ReferencePnpJobProcessorConfigurationWizard extends AbstractConfigu
         JLabel lblJobOrder = new JLabel(Translations.getString("MachineSetup.JobProcessors.ReferencePnpJobProcessor.Label.JobOrder")); //$NON-NLS-1$
         panelGeneral.add(lblJobOrder, "2, 2, right, default");
 
-        comboBoxJobOrder = new JComboBox(JobOrderHint.values());
+        comboBoxJobOrder = new JComboBox<JobOrderHint>(JobOrderHint.values());
         panelGeneral.add(comboBoxJobOrder, "4, 2");
 
+        JLabel lblPlannerStrategy = new JLabel(Translations.getString("MachineSetup.JobProcessors.ReferencePnpJobProcessor.lblPlannerStrategy.text")); //$NON-NLS-1$
+        lblPlannerStrategy.setToolTipText(Translations.getString("MachineSetup.JobProcessors.ReferencePnpJobProcessor.lblPlannerStrategy.toolTipText")); //$NON-NLS-1$
+        panelGeneral.add(lblPlannerStrategy, "2, 4, right, default");
+
+        comboBoxPlannerStrategy = new JComboBox<Strategy>(Strategy.values());
+        panelGeneral.add(comboBoxPlannerStrategy, "4, 4");
+
         JLabel lblMaxVisionRetries = new JLabel(Translations.getString("MachineSetup.JobProcessors.ReferencePnpJobProcessor.Label.MaxVisionRetries")); //$NON-NLS-1$
-        panelGeneral.add(lblMaxVisionRetries, "2, 4, right, default");
+        panelGeneral.add(lblMaxVisionRetries, "2, 6, right, default");
 
         maxVisionRetriesTextField = new JTextField();
-        panelGeneral.add(maxVisionRetriesTextField, "4, 4");
+        panelGeneral.add(maxVisionRetriesTextField, "4, 6");
         maxVisionRetriesTextField.setColumns(10);
 
         JLabel lblStepsMotion = new JLabel(Translations.getString("ReferencePnpJobProcessorConfigurationWizard.lblStepsMotion.text")); //$NON-NLS-1$
         lblStepsMotion.setToolTipText(Translations.getString("ReferencePnpJobProcessorConfigurationWizard.lblStepsMotion.toolTipText")); //$NON-NLS-1$
-        panelGeneral.add(lblStepsMotion, "2, 6, right, default");
+        panelGeneral.add(lblStepsMotion, "2, 8, right, default");
 
         steppingToNextMotion = new JCheckBox(); 
-        panelGeneral.add(steppingToNextMotion, "4, 6");
+        panelGeneral.add(steppingToNextMotion, "4, 8");
 
         JLabel lblOptimizeMultipleNozzles = new JLabel(Translations.getString("ReferencePnpJobProcessorConfigurationWizard.lblOptimizeMultipleNozzles.text")); //$NON-NLS-1$
         lblOptimizeMultipleNozzles.setToolTipText(Translations.getString("ReferencePnpJobProcessorConfigurationWizard.lblOptimizeMultipleNozzles.toolTipText")); //$NON-NLS-1$
-        panelGeneral.add(lblOptimizeMultipleNozzles, "2, 8, right, default");
+        panelGeneral.add(lblOptimizeMultipleNozzles, "2, 10, right, default");
 
         optimizeMultipleNozzles = new JCheckBox(); 
-        panelGeneral.add(optimizeMultipleNozzles, "4, 8");
+        panelGeneral.add(optimizeMultipleNozzles, "4, 10");
     }
 
     @Override
@@ -105,6 +114,7 @@ public class ReferencePnpJobProcessorConfigurationWizard extends AbstractConfigu
         IntegerConverter intConverter = new IntegerConverter();
 
         addWrappedBinding(jobProcessor, "jobOrder", comboBoxJobOrder, "selectedItem");
+        addWrappedBinding(jobProcessor.planner, "strategy", comboBoxPlannerStrategy, "selectedItem");
         addWrappedBinding(jobProcessor, "maxVisionRetries", maxVisionRetriesTextField, "text", intConverter);
         addWrappedBinding(jobProcessor, "steppingToNextMotion", steppingToNextMotion, "selected");
         addWrappedBinding(jobProcessor, "optimizeMultipleNozzles", optimizeMultipleNozzles, "selected");

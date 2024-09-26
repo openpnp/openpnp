@@ -196,6 +196,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             prepFeeders();
             
             scriptJobStarting();
+            
+            planner.restart();
 
             return new PanelFiducialCheck();
         }
@@ -1554,6 +1556,15 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
      */
     @Root
     public static class TrivialPnpJobPlanner implements PnpJobPlanner {
+        // this methods are no used here and have to be present because they are required at interface level
+        public Strategy getStrategy() {
+            return Strategy.Minimize;
+        }
+        public void setStrategy(Strategy strategy) {
+        }
+        public void restart() {
+        }
+        
         @Override
         public List<PlannedPlacement> plan(Head head, List<JobPlacement> jobPlacements) {
             /**
@@ -1653,6 +1664,26 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
      */
     @Root
     public static class SimplePnpJobPlanner implements PnpJobPlanner {
+        @Attribute(required = false)
+        protected Strategy strategy = Strategy.Minimize;
+        
+        private boolean restart;
+        
+        @Override
+        public Strategy getStrategy() {
+            return strategy;
+        }
+        
+        @Override
+        public void setStrategy(Strategy strategy) {
+            this.strategy = strategy;
+        }
+
+        @Override
+        public void restart() {
+            this.restart = true;
+        }
+        
         @Override
         public List<PlannedPlacement> plan(Head head, List<JobPlacement> jobPlacements) {
             /**
@@ -1672,21 +1703,25 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
              */
             List<NozzleTip> nozzleTips = new ArrayList<>(head.getMachine().getNozzleTips());
             
-            /**
-             * First we plan any placements that can be done without a nozzle change. For each
-             * nozzle we see if there is a placement that we can handle without doing a nozzletip
-             * change. If there is, we remove the nozzle, nozzle tip and job placement from their
-             * respective lists so that we don't plan the same one again.
-             */
-            for (Nozzle nozzle : new ArrayList<>(nozzles)) {
-                PlannedPlacement plannedPlacement = planWithoutNozzleTipChange(nozzle, jobPlacements);
-                if (plannedPlacement != null) {
-                    plannedPlacements.add(plannedPlacement);
-                    jobPlacements.remove(plannedPlacement.jobPlacement);
-                    nozzles.remove(plannedPlacement.nozzle);
-                    nozzleTips.remove(plannedPlacement.nozzleTip);
+            if (    strategy == Strategy.Minimize
+                || (strategy == Strategy.StartAsPlanned && !restart)) {
+                /**
+                 * First we plan any placements that can be done without a nozzle change. For each
+                 * nozzle we see if there is a placement that we can handle without doing a nozzletip
+                 * change. If there is, we remove the nozzle, nozzle tip and job placement from their
+                 * respective lists so that we don't plan the same one again.
+                 */
+                for (Nozzle nozzle : new ArrayList<>(nozzles)) {
+                    PlannedPlacement plannedPlacement = planWithoutNozzleTipChange(nozzle, jobPlacements);
+                    if (plannedPlacement != null) {
+                        plannedPlacements.add(plannedPlacement);
+                        jobPlacements.remove(plannedPlacement.jobPlacement);
+                        nozzles.remove(plannedPlacement.nozzle);
+                        nozzleTips.remove(plannedPlacement.nozzleTip);
+                    }
                 }
             }
+            restart = false;
             
             /**
              * Now we'll try to plan any nozzles that didn't get planned on the first pass by
