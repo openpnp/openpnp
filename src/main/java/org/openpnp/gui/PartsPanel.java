@@ -501,6 +501,21 @@ public class PartsPanel extends JPanel implements WizardContainer {
 
     }
 
+    public void selectPartInTableAndUpdateLinks(Part part) {
+        selectPartInTable(part);
+
+        if(Configuration.get().getTablesLinked() == TablesLinked.Linked)
+        {
+            MainFrame mainFrame = MainFrame.get();
+            mainFrame.getPartsTab().selectPartInTable(part);
+            if (part != null) {
+                mainFrame.getPackagesTab().selectPackageInTable(part.getPackage());
+            }
+            mainFrame.getFeedersTab().selectFeederForPart(part);
+            mainFrame.getVisionSettingsTab().selectVisionSettingsInTable(part);
+        }
+    }
+
     public void selectPartInTable(Part part) {
         if (getSelectedPart() != part) {
             Helpers.selectObjectTableRow(table, part);

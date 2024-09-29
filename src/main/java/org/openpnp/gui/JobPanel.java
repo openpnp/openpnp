@@ -980,7 +980,10 @@ public class JobPanel extends JPanel {
 
     private void selectJobProcessorExceptionSource(Object source,boolean primary) {
         // decode the source of the exception and try to select as much as possible
-        if (source instanceof BoardLocation) {
+        if (source==null)
+        {
+        }
+        else if (source instanceof BoardLocation) {
             BoardLocation b = (BoardLocation)source;
             Logger.debug("Exception source is board location: {}", b);
             // select the board
@@ -1011,7 +1014,7 @@ public class JobPanel extends JPanel {
             Part p = (Part)source;
             Logger.debug("Exception source is part: {}", p);
             // select part in parts tab
-            MainFrame.get().getPartsTab().selectPartInTable(p);
+            MainFrame.get().getPartsTab().selectPartInTableAndUpdateLinks(p);
             if(primary) {
                 // focus the parts tab
                 MainFrame.get().getTabs().setSelectedComponent(MainFrame.get().getPartsTab());
@@ -1030,7 +1033,7 @@ public class JobPanel extends JPanel {
             Logger.debug("Exception source is nozzle: {}", n);
             // select the nozzle and part in the table
             MainFrame.get().getMachineControls().setSelectedTool(n);
-            MainFrame.get().getPartsTab().selectPartInTable(n.getPart());
+            MainFrame.get().getPartsTab().selectPartInTableAndUpdateLinks(n.getPart());
         } else {
             Logger.debug("Exception contains an unsupported source: {}", source.getClass());
         }

@@ -296,9 +296,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
                         if (mainFrame.getTabs().getSelectedComponent() == mainFrame.getFeedersTab()
                               &&  Configuration.get().getTablesLinked() == TablesLinked.Linked
                               && feeder.getPart() != null) {
-                            mainFrame.getPartsTab().selectPartInTable(feeder.getPart());
-                            mainFrame.getPackagesTab().selectPackageInTable(feeder.getPart().getPackage());
-                            mainFrame.getVisionSettingsTab().selectVisionSettingsInTable(feeder.getPart());
+                            mainFrame.getPartsTab().selectPartInTableAndUpdateLinks(feeder.getPart());
                         }
                     }
 
@@ -678,8 +676,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         MovableUtils.fireTargetedUserAction(nozzle);
         if (MainFrame.get().getTabs().getSelectedComponent() == MainFrame.get().getFeedersTab() 
                 && Configuration.get().getTablesLinked() == TablesLinked.Linked) {
-            MainFrame.get().getPartsTab().selectPartInTable(feeder.getPart());
-            MainFrame.get().getPackagesTab().selectPackageInTable(feeder.getPart().getPackage());
+            MainFrame.get().getPartsTab().selectPartInTableAndUpdateLinks(feeder.getPart());
         }
     }
 
