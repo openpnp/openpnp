@@ -732,14 +732,14 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 // may move the nozzle to (near) the pick location i.e. down in Z in feed().
                 nozzle.moveToSafeZ();
                 if (!nozzle.isPartOff()) {
-                    throw new JobProcessorException(nozzle, "Part vacuum-detected on nozzle before pick.");
+                    throw new JobProcessorException(nozzle, part, "Part vacuum-detected on nozzle before pick.");
                 }
             }
             catch (JobProcessorException e) {
                 throw e;
             }
             catch (Exception e) {
-                throw new JobProcessorException(nozzle, e);
+                throw new JobProcessorException(nozzle, part, e);
             }
         }
         
@@ -756,7 +756,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                     lastException = e;
                 }
             }
-            throw new JobProcessorException(feeder, lastException);
+            throw new JobProcessorException(feeder, nozzle, lastException);
         }
         
         private void pick(Nozzle nozzle, Feeder feeder, JobPlacement jobPlacement, Part part) throws JobProcessorException {
@@ -787,7 +787,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 feeder.postPick(nozzle);
             }
             catch (Exception e) {
-                throw new JobProcessorException(feeder, e);
+                throw new JobProcessorException(feeder, nozzle, e);
             }
         }
         
@@ -884,7 +884,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                     lastException = e;
                 }
             }
-            throw new JobProcessorException(part, lastException);
+            throw new JobProcessorException(part, nozzle, lastException);
         }
         
         private void checkPartOn(Nozzle nozzle) throws JobProcessorException {
