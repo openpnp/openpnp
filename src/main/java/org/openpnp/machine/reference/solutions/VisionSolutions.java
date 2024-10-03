@@ -945,22 +945,22 @@ public class VisionSolutions implements Solutions.Subject {
                                         }
                                         if (primary) {
                                             // Determine the nozzle head offset.
-                                            // Note 1: Remember, we reset the head offset to zero above, so the nozzle now shows the true offset.
-                                            // Note 2: The Z fiducial location Z was set to the default nozzle location Z (see above), so the Z offset will  
-                                            // be 0 for the default nozzle, but equalize Z for any other nozzle. 
+                                            // Note 1: Remember, we reset the head offsets to zero above, so the nozzle now shows the true offset.
+                                            // Note 2: The Z fiducial location Z was set to the default nozzle location Z (see above), so the Z offset will
+                                            // be 0 for the default nozzle, but equalize Z for any other nozzle.
                                             Location headOffsets = head.getCalibrationPrimaryFiducialLocation().subtract(nozzleLocation);
                                             if (headOffsetsBefore.getLinearLengthTo(headOffsets)
                                                     .compareTo(head.getCalibrationPrimaryFiducialDiameter().multiply(0.5)) < 0) {
-                                                // Offsets that are too close (inside the fiducial) are not updated. They might already have been calibrated and we want 
-                                                // to keep them so i.e. these rough nozzle-aimed offsets are likely worse. 
-                                                Logger.info("Not setting nozzle "+nozzle.getName()+" head offsets to rough "+headOffsets+" as these are close to "
-                                                        + "existing offsets "+headOffsetsBefore+" and existing offsets might already have been calibrated.");
-                                                nozzle.setHeadOffsets(headOffsetsBefore);
+                                                // Offsets that are too close (inside the fiducial) are not updated. They might already have been
+                                                // auto-calibrated precisely, and we want to keep them over these "guestimated" offsets we get from looking at a
+                                                // nozzle tip from the side here.
+                                                Logger.info("Not setting nozzle "+nozzle.getName()+" head X, Y offsets to rough "+headOffsets+" as these are close to "
+                                                        + "existing offsets "+headOffsetsBefore+" and existing offsets might already have been auto-calibrated. Only setting Z.");
+                                                // Just use the Z.
+                                                headOffsets = headOffsetsBefore.deriveLengths(null, null, headOffsets.getLengthZ(), null);
                                             }
-                                            else {
-                                                nozzle.setHeadOffsets(headOffsets);
-                                                Logger.info("Set nozzle "+nozzle.getName()+" head offsets to "+headOffsets+" (previously "+headOffsetsBefore+")");
-                                            }
+                                            nozzle.setHeadOffsets(headOffsets);
+                                            Logger.info("Set nozzle "+nozzle.getName()+" head offsets to "+headOffsets+" (previously "+headOffsetsBefore+")");
                                         }
                                         return true;
                                     },
