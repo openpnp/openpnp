@@ -6,7 +6,7 @@
       <variable name="native_path" />
       <variable name="mediaFileVersion" value="${compiler:sys.version}" />
     </variables>
-    <codeSigning macEnabled="true" macPkcs12File=".github/OpenPnP-Developer-ID-Application.p12" />
+		<codeSigning macEnabled="true" macPkcs12File=".github/OpenPnP-Developer-ID-Application.p12" macNotarize="true" appleId="jason@vonnieda.org" />
     <jreBundles jdkProviderId="AdoptOpenJDK" release="17/jdk-17.0.8.1+1" />
   </application>
   <files>
