@@ -55,9 +55,9 @@ jobs:
           mkdir -p installers/$BRANCH_NAME/$VERSION
           cp installers/OpenPnP* installers/$BRANCH_NAME/$VERSION
 
-      - name: Archive Test Results
-        if: always()
-        run: cat /Users/runner/work/openpnp/openpnp/installers/OpenPnP-macos-test.dmg.notarization.log
+      # - name: Archive Test Results
+      #   if: always()
+      #   run: cat /Users/runner/work/openpnp/openpnp/installers/OpenPnP-macos-test.dmg.notarization.log
           
       - name: Upload Installers to S3
         uses: shallwefootball/upload-s3-action@v1.1.3
