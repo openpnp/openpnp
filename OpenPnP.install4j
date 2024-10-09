@@ -6,7 +6,19 @@
       <variable name="native_path" />
       <variable name="mediaFileVersion" value="${compiler:sys.version}" />
     </variables>
-		<codeSigning macEnabled="true" macPkcs12File=".github/OpenPnP-Developer-ID-Application.p12" macNotarize="true" appleId="jason@vonnieda.org" />
+    <codeSigning macEnabled="true" macPkcs12File=".github/OpenPnP-Developer-ID-Application.p12" macNotarize="true" appleId="jason@vonnieda.org">
+      <macSearchedJars>
+        <entry>jna-*</entry>
+        <entry>swt-*</entry>
+        <entry>javafx-*</entry>
+        <entry>bridg-*</entry>
+        <entry>jSerialComm-*</entry>
+        <entry>jython-*</entry>
+        <entry>opencv-*</entry>
+        <entry>openpnp-*</entry>
+        <entry>webcam-*</entry>
+      </macSearchedJars>
+    </codeSigning>
     <jreBundles jdkProviderId="AdoptOpenJDK" release="17/jdk-17.0.8.1+1" />
   </application>
   <files>
@@ -991,10 +1003,6 @@ if (context.isUnattended()) {
     </linuxDeb>
   </mediaSets>
   <buildIds buildAll="false">
-    <mediaSet refId="28" />
-    <mediaSet refId="121" />
-    <mediaSet refId="122" />
-    <mediaSet refId="123" />
-    <mediaSet refId="124" />
+    <mediaSet refId="337" />
   </buildIds>
 </install4j>
