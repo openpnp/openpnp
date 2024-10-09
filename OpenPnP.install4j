@@ -11,7 +11,7 @@
         <entry>jna-*</entry>
         <entry>swt-*</entry>
         <entry>javafx-*</entry>
-        <entry>bridg-*</entry>
+        <entry>bridj-*</entry>
         <entry>jSerialComm-*</entry>
         <entry>jython-*</entry>
         <entry>opencv-*</entry>
