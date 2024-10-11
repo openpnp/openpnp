@@ -800,7 +800,23 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
          * @param input
          * @return
          */
-        private List<JobPlacement> planJobPlacementsByNozzleTips(List <JobPlacement> input) {
+        private List<JobPlacement> planJobPlacementsByNozzleTips(List<JobPlacement> input) {
+            /**
+             * Group nozzleTip and JobPlacements into one class to collect jobPlacements
+             * per nozzleTip for further sorting, filtering and processing.
+             */
+            class JobPlacementNozzleTip extends ArrayList<JobPlacement> {
+                private final NozzleTip nozzleTip;
+                
+                JobPlacementNozzleTip(NozzleTip nozzleTip) {
+                    this.nozzleTip = nozzleTip;
+                }
+
+                NozzleTip getNozzleTip() {
+                    return nozzleTip;
+                }
+            }
+            
             List<JobPlacement> output;
             
             // get all nozzle tips
@@ -820,58 +836,79 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                     })
                     .collect(Collectors.toList());
             
-            List<List<JobPlacement>> perNozzleTipJobPlacements = new ArrayList<List<JobPlacement>>(nozzleTips.size());
+            // this list contains one entry per NozzleTip. Each entry contains in addition a list
+            // of all jobPlacments that are compatible with that nozzleTip.
+            List<JobPlacementNozzleTip> perNozzleTipJobPlacements = new ArrayList<>();
 
-            // filter lists with placements compatible with each nozzleTip
+            // build lists with placements compatible with each nozzleTip
             for (int i = 0; i < nozzleTips.size(); ++i) {
                 NozzleTip nozzleTip = nozzleTips.get(i);
-
+                JobPlacementNozzleTip jobPlacementNozzleTip = new JobPlacementNozzleTip(nozzleTip);
+                
                 // add all job placements that are compatible with that nozzle tip
-                perNozzleTipJobPlacements.add(i, input.stream().filter(jobPlacement -> {
+                jobPlacementNozzleTip.addAll(input.stream().filter(jobPlacement -> {
                     Placement placement = jobPlacement.getPlacement();
                     Part part = placement.getPart();
                     org.openpnp.model.Package pkg = part.getPackage();
                     return pkg.getCompatibleNozzleTips().contains(nozzleTip);
-                } ).map(j -> { return new JobPlacement(j, nozzleTip); }).collect(Collectors.toList()));
+                } ).collect(Collectors.toList()));
+
+                if (!jobPlacementNozzleTip.isEmpty()) {
+                    // add the list of placements and nozzleTip
+                    perNozzleTipJobPlacements.add(jobPlacementNozzleTip);
+                }
             }
             
-            // sort lists per nozzleTips by their size
-            perNozzleTipJobPlacements.sort(Comparator.comparing(List<JobPlacement>::size).reversed());
+            // sort lists per nozzleTips by their size such that the nozzle tip that can handle
+            // the most jobPlacments is first. As second sorting criteria the nozzleTip's name is used.
+            // For mulit-nozzle machines with different nozzleTips for each nozzle that are compatible
+            // with the same jobPlacments this always results in groups of identical amounts of
+            // jobPlacments. Taking the name into account makes the sorting unique again.
+            perNozzleTipJobPlacements.sort(Comparator.comparing(JobPlacementNozzleTip::size).reversed()
+                    .thenComparing(j -> j.getNozzleTip().getName()));
             
-            // remove duplicates
-            List<JobPlacement> allNozzleTips = new ArrayList<>();
-            for (List<JobPlacement>perNozzleTipJobPlacement : perNozzleTipJobPlacements) {
-                for (JobPlacement jobPlacement : perNozzleTipJobPlacement) {
-                    if (!allNozzleTips.stream().anyMatch(j -> 
-                        { return j.getPlacement().equals(jobPlacement.getPlacement()) 
-                                 && j.getBoardLocation().equals(jobPlacement.getBoardLocation()); } )) {
-                        allNozzleTips.add(jobPlacement);
+            // build a list of just all nozzleTips after sorting. This list is to be used by the
+            // JobPlanner to select the next nozzleTip to use.
+            List<NozzleTip> plannedNozzleTips = perNozzleTipJobPlacements.stream().map(j -> j.getNozzleTip()).collect(Collectors.toList());
+            // FIXME: make this list public and use it in the Planner
+            
+            // Remove duplicate placements keeping only the first occurrence
+            // Skip this step if there is only one nozzle tip left.
+            if (perNozzleTipJobPlacements.size() > 1) {
+                // loop over all nozzleTips but the last
+                for (int i = 0; i < perNozzleTipJobPlacements.size() -1; ++i) {
+                    final JobPlacementNozzleTip dominantPlacements = perNozzleTipJobPlacements.get(i);
+                    
+                    // loop over all other nozzleTip
+                    for (int j = i + 1; j < perNozzleTipJobPlacements.size(); ++j) {
+                        // remove all placements that are in the dominant group
+                        JobPlacementNozzleTip recessivePlacements = perNozzleTipJobPlacements.get(j);
+                        recessivePlacements.removeAll(dominantPlacements);
+                        perNozzleTipJobPlacements.set(j, recessivePlacements);
                     }
                 }
+                
+                // remove empty nozzle groups
+                perNozzleTipJobPlacements = perNozzleTipJobPlacements.stream().filter(i -> !i.isEmpty()).collect(Collectors.toList());
             }
             
             // optimize each nozzle tip group using PickPlaceLocation
             output = new ArrayList<JobPlacement>();
+            // This variable is the return value of planJobPlacmentsByPickPlaceLocation
+            // The second argument is the end location of the optimization. It is here
+            // used as start location for the next group.
+            // FIXME: would it be a good idea to use the current head location as start location for the optimization?
             ReturnListAndLocation data = new ReturnListAndLocation(null, null);
             String traceMessage = "Selected nozzle tips:";
-            while (!allNozzleTips.isEmpty()) {
-                NozzleTip n = allNozzleTips.get(0).getNozzleTip();
-                List<JobPlacement> tmp = allNozzleTips
-                        .stream()
-                        .filter(e -> { return e.getNozzleTip().equals(n); })
-                        .collect(Collectors.toList());
-                
-                // remove placements now in tmp
-                allNozzleTips.removeAll(tmp);
-
-                // plan optimized feeder and pick locations0
-                data = planJobPlacementsByPickPlaceLocation(tmp, data.getLocation());
+            for (JobPlacementNozzleTip jobPlacementNozzleTip : perNozzleTipJobPlacements) {
+                // plan optimized feeder and pick locations
+                data = planJobPlacementsByPickPlaceLocation(jobPlacementNozzleTip, data.getLocation());
                 
                 // and add the result to the output list
                 output.addAll(data.getJobPlacements());
 
                 // build a debug message to report about the selected nozzle tips and the amount of components each takes
-                traceMessage += " " + n.getName() + " (" + data.getJobPlacements().size() + ")";
+                traceMessage += " " + jobPlacementNozzleTip.getNozzleTip().getName() + " (" + data.getJobPlacements().size() + ")";
             }
             
             Logger.trace(traceMessage);
@@ -2132,27 +2169,16 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
          */
         protected PlannedPlacement planWithoutNozzleTipChange(Nozzle nozzle, 
                 List<JobPlacement> jobPlacements) {
-            NozzleTip nozzleTip = nozzle.getNozzleTip();
-            if (nozzleTip == null) {
+            if (nozzle.getNozzleTip() == null) {
                 return null;
             }
-            // TODO: collect all placements into a list and sort it for best performance
             for (JobPlacement jobPlacement : jobPlacements) {
-                // test if the placement was planned to be handled by a specific nozzle tip
-                NozzleTip plannedNozzleTip = jobPlacement.getNozzleTip();
-                if (plannedNozzleTip != null) {
-                    if (nozzleTip.equals(plannedNozzleTip)) {
-                        return new PlannedPlacement(nozzle, plannedNozzleTip, jobPlacement);
-                    }
-                }
-                else {
-                    // else check if its compatible with the loaded nozzle tip
-                    Placement placement = jobPlacement.getPlacement();
-                    Part part = placement.getPart();
-                    org.openpnp.model.Package pkg = part.getPackage();
-                    if (pkg.getCompatibleNozzleTips().contains(nozzleTip)) {
-                        return new PlannedPlacement(nozzle, nozzleTip, jobPlacement);
-                    }
+                Placement placement = jobPlacement.getPlacement();
+                Part part = placement.getPart();
+                org.openpnp.model.Package pkg = part.getPackage();
+                NozzleTip nozzleTip = nozzle.getNozzleTip();
+                if (pkg.getCompatibleNozzleTips().contains(nozzleTip)) {
+                    return new PlannedPlacement(nozzle, nozzleTip, jobPlacement);
                 }
             }
             return null;
@@ -2171,36 +2197,23 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         protected PlannedPlacement planWithNozzleTipChange(Nozzle nozzle, 
                 List<JobPlacement> jobPlacements,
                 List<NozzleTip> nozzleTips) {
-            // TODO: collect all placements into a list and sort it for best performance
             for (JobPlacement jobPlacement : jobPlacements) {
-                // try to use the nozzleTip, that was planned to be used with this placement
-                NozzleTip plannedNozzleTip = jobPlacement.getNozzleTip();
-                if (plannedNozzleTip != null) {
-                    if (nozzle.getCompatibleNozzleTips().contains(plannedNozzleTip)) {
-                        // use this placement with the planned nozzle tip
-                        return new PlannedPlacement(nozzle, plannedNozzleTip, jobPlacement);
-                    }
-                }
-                else {
-                    // no nozzle tip has been planned for this placement, search for any compatible one
-                    Placement placement = jobPlacement.getPlacement();
-                    Part part = placement.getPart();
-                    org.openpnp.model.Package pkg = part.getPackage();
-                    
-                    // Get the intersection of nozzle tips that are not yet used, are compatible with
-                    // the package, and are compatible with the nozzle.
-                    List<NozzleTip> goodNozzleTips = nozzleTips
-                            .stream()
-                            .filter(nozzleTip -> {
-                                return pkg.getCompatibleNozzleTips().contains(nozzleTip);
-                            })
-                            .filter(nozzleTip -> {
-                                return nozzle.getCompatibleNozzleTips().contains(nozzleTip);
-                            })
-                            .collect(Collectors.toList());
-                    if (!goodNozzleTips.isEmpty()) {
-                        return new PlannedPlacement(nozzle, goodNozzleTips.get(0), jobPlacement);
-                    }
+                Placement placement = jobPlacement.getPlacement();
+                Part part = placement.getPart();
+                org.openpnp.model.Package pkg = part.getPackage();
+                // Get the intersection of nozzle tips that are not yet used, are compatible with
+                // the package, and are compatible with the nozzle.
+                List<NozzleTip> goodNozzleTips = nozzleTips
+                        .stream()
+                        .filter(nozzleTip -> {
+                            return pkg.getCompatibleNozzleTips().contains(nozzleTip);
+                        })
+                        .filter(nozzleTip -> {
+                            return nozzle.getCompatibleNozzleTips().contains(nozzleTip);
+                        })
+                        .collect(Collectors.toList());
+                if (!goodNozzleTips.isEmpty()) {
+                    return new PlannedPlacement(nozzle, goodNozzleTips.get(0), jobPlacement);
                 }
             }
             return null;

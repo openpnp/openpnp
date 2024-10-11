@@ -16,21 +16,13 @@ public interface PnpJobProcessor extends JobProcessor {
 
         private final BoardLocation boardLocation;
         private final Placement placement;
-        private final NozzleTip nozzleTip;    // nozzleTip to use for this placement or null if unspecified
         private Status status = Status.Pending;
         private Exception error;
         private int feederIndex;
 
-        public JobPlacement(JobPlacement jobPlacement, NozzleTip nozzleTip) {
-            this.boardLocation = jobPlacement.boardLocation;
-            this.placement = jobPlacement.placement;
-            this.nozzleTip = nozzleTip;
-        }
-
         public JobPlacement(BoardLocation boardLocation, Placement placement) {
             this.boardLocation = boardLocation;
             this.placement = placement;
-            this.nozzleTip = null;
         }
 
         public BoardLocation getBoardLocation() {
@@ -90,9 +82,6 @@ public interface PnpJobProcessor extends JobProcessor {
             this.feederIndex = index;
         }
 
-        public NozzleTip getNozzleTip() {
-            return nozzleTip;
-        }        
         @Override
         public String toString() {
             return placement.getId();
