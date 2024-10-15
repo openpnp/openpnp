@@ -311,8 +311,22 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
         axesLocation = limitAxesLocation(hm, axesLocation, false);
         
         // If this is a subordinate motion, queue it now
-        if (Arrays.asList(options).contains(MotionOption.Subordinate)) {
-            subordinateMotion.queue(axesLocation);
+        AxesLocation subordinateMotionAxes = new AxesLocation();
+        if (Arrays.asList(options).contains(MotionOption.SubordinateX)) {
+            subordinateMotionAxes = subordinateMotionAxes.put(axesLocation.byType(Type.X));
+        }
+        if (Arrays.asList(options).contains(MotionOption.SubordinateY)) {
+            subordinateMotionAxes = subordinateMotionAxes.put(axesLocation.byType(Type.Y));
+        }
+        if (Arrays.asList(options).contains(MotionOption.SubordinateZ)) {
+            subordinateMotionAxes = subordinateMotionAxes.put(axesLocation.byType(Type.Z));
+        }
+        if (Arrays.asList(options).contains(MotionOption.SubordinateRotation)) {
+            subordinateMotionAxes = subordinateMotionAxes.put(axesLocation.byType(Type.Rotation));
+        }
+        // if any subordinate as been queued, return now, dropping any remaining axis
+        if (subordinateMotionAxes != null && !subordinateMotionAxes.isEmpty()) {
+            subordinateMotion.queue(subordinateMotionAxes);
             return;
         }
         

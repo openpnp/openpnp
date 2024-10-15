@@ -1566,7 +1566,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                         // will be defined by the next movement segments not of subordinate type.
                         // the rotation of nozzles unrelated to that segment will survive and
                         // result in rotating this nozzles to the requested angle.
-                        head.moveTo(p.nozzle, l, speed, MotionOption.Subordinate);
+                        head.moveTo(p.nozzle, l, speed, MotionOption.SubordinateRotation);
                     } catch (Exception e) {
                         // ignore any errors
                     }
