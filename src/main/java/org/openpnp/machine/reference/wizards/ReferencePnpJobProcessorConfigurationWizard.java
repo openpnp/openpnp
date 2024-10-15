@@ -109,7 +109,7 @@ public class ReferencePnpJobProcessorConfigurationWizard extends AbstractConfigu
         panelGeneral.add(lblOptimizeMultipleNozzles, "2, 10, right, default");
 
         optimizeMultipleNozzles = new JCheckBox(); 
-        panelGeneral.add(optimizeMultipleNozzles, "4, 12");
+        panelGeneral.add(optimizeMultipleNozzles, "4, 10");
 
         JLabel lblPreRotateAllNozzles = new JLabel(Translations.getString("ReferencePnpJobProcessorConfigurationWizard.lblPreRotateAllNozzles.text")); //$NON-NLS-1$
         lblPreRotateAllNozzles.setToolTipText(Translations.getString("ReferencePnpJobProcessorConfigurationWizard.lblPreRotateAllNozzles.toolTipText")); //$NON-NLS-1$

@@ -35,7 +35,6 @@ public interface PnpJobPlanner {
         FullyAsPlanned  // strictly follow the placements list executing all nozzle tip changes as needed.
     }
 
-
     /**
      * Call restart() to signal that a new job run will start next. That allows to
      * support a first-run strategies (Strategy.StartAsPlanned).
@@ -43,8 +42,6 @@ public interface PnpJobPlanner {
     public void restart();
     public Strategy getStrategy();
     public void setStrategy(Strategy strategy);
-    
     public List<PlannedPlacement> plan(Head head, List<JobPlacement> jobPlacements);
-    
     public List<PlannedPlacement> sort(List<PlannedPlacement> plannedPlacements);
 }

@@ -23,7 +23,6 @@ package org.openpnp.machine.reference.driver;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -300,6 +299,8 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
 
     @Override
     public void moveTo(HeadMountable hm, AxesLocation axesLocation, double speed, MotionOption... options) throws Exception {
+        int optionFlags = Motion.optionFlags(options);
+
         if (speed <= 0) {
             throw new Exception("Speed must be greater than 0.");
         }
@@ -312,16 +313,16 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
         
         // If this is a subordinate motion, queue it now
         AxesLocation subordinateMotionAxes = new AxesLocation();
-        if (Arrays.asList(options).contains(MotionOption.SubordinateX)) {
+        if (Motion.MotionOption.SubordinateX.isSetIn(optionFlags)) {
             subordinateMotionAxes = subordinateMotionAxes.put(axesLocation.byType(Type.X));
         }
-        if (Arrays.asList(options).contains(MotionOption.SubordinateY)) {
+        if (Motion.MotionOption.SubordinateY.isSetIn(optionFlags)) {
             subordinateMotionAxes = subordinateMotionAxes.put(axesLocation.byType(Type.Y));
         }
-        if (Arrays.asList(options).contains(MotionOption.SubordinateZ)) {
+        if (Motion.MotionOption.SubordinateZ.isSetIn(optionFlags)) {
             subordinateMotionAxes = subordinateMotionAxes.put(axesLocation.byType(Type.Z));
         }
-        if (Arrays.asList(options).contains(MotionOption.SubordinateRotation)) {
+        if (Motion.MotionOption.SubordinateRotation.isSetIn(optionFlags)) {
             subordinateMotionAxes = subordinateMotionAxes.put(axesLocation.byType(Type.Rotation));
         }
         // if any subordinate as been queued, return now, dropping any remaining axis
@@ -343,7 +344,6 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
 
         if (!homed) {
             // Machine is unhomed, check if move is legal.
-            int optionFlags = Motion.optionFlags(options);
             AxesLocation segment = currentLocation.motionSegmentTo(newLocation);
             for (Driver driver : segment.getAxesDrivers(getMachine())) {
                 if (Motion.MotionOption.JogMotion.isSetIn(optionFlags)) {
