@@ -23,6 +23,8 @@ package org.openpnp.machine.reference.driver;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -131,26 +133,34 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
 
             // make sure, only safe motions are extended by queued subordination
             // collect all axes that are ok to move
-            AxesLocation okToMoveAxes = collectOkToMoveAxes();
+            LinkedHashSet<ControllerAxis> okToMoveAxes;
+            try {
+                okToMoveAxes = getOkToMoveAxes(axesLocation);
+            }
+            catch (Exception e) {
+                // in case of exception, do not merge any subordinate
+                return axesLocation;
+            }
 
             // loop over all queued axes
             AxesLocation queuedLocationToMerge = new AxesLocation();
             for (ControllerAxis a : queue.getControllerAxes()) {
                 // select the ones that are ok to move
                 if (okToMoveAxes.contains(a)) {
-                    AxesLocation tmp = new AxesLocation(a, queue.getCoordinate(a));
-                    // validate that the target location is also in SafeZ (the current location has been check while correcting the ok-to-move-axes)
-                    if (okToMoveToTargetLocation(tmp)) {
-                        // collect axis a to merge it later
-                        queuedLocationToMerge = queuedLocationToMerge.put(tmp);
-                        // and remove it from the queue
-                        queue = queue.remove(a);
-                    }
+                    // collect axis a to merge it later
+                    queuedLocationToMerge = queuedLocationToMerge.put(new AxesLocation(a, queue.getCoordinate(a)));
+                    // and remove it from the queue
+                    queue = queue.remove(a);
                 }
             }
             // TODO: it would be possible to add an "inverted rule": if all moving axes are Z axes only, no SafeZ validation needs to be done.
             //       see https://github.com/openpnp/openpnp/pull/1654#issuecomment-2373535986
 
+            // short exit: if there is nothing to merge, leave here
+            if (queuedLocationToMerge.isEmpty()) {
+                return axesLocation;
+            }
+            
             // merge filtered queued motion into the given AxesLocation letting the given one take precedence
             AxesLocation mergedLocation = queuedLocationToMerge.put(axesLocation);
 
@@ -160,74 +170,43 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
             return mergedLocation;
         }
         
-        
-        /**
-         * validate that the given axis is ok to move to its target location (target location is in SafeZ)
-         * @param axis to validate
-         * @return false if there is any head mountable on any head that considers the target
-         *         of axis NOT ok to move to (not in Safe-Z).
-         */
-        private boolean okToMoveToTargetLocation(AxesLocation axis) {
-
-            // filter input axis for Z only
-            axis = axis.byType(Type.Z);
-            
-            // if input is empty, consider movement ok
-            if (axis.isEmpty()) {
-                return true;
-            }
-            
-            // loop over all heads
-            for (Head h : machine.getHeads()) {
-                // loop over all its head mountables
-                for (HeadMountable hm : h.getHeadMountables()) {
-                    // test if this headmountable uses the requested axis
-                    for (ControllerAxis singleAxis : axis.getControllerAxes()) {
-                        // FIXME: this seems to select the wrong axis: on a CAM-style head, it validates the physical Z against the derived Z the nozzle is assigned to
-                        if (hm.getMappedAxes(machine).getControllerAxes().contains(singleAxis)) {
-                            // finally test if the target location is still in safe Z
-                            try {
-                                if (!hm.isInSafeZZone(axis.getLengthCoordinate(singleAxis))) {
-                                    // the target location is NOT in SafeZ for this headmountable
-                                    // -> it is NOT ok to move this axis
-                                    return false;
-                                }
-                            }
-                            catch (Exception e) {
-                                // in case of an exception, consider this axis as NOT ok to move
-                                return false;
-                            }
-                        }
-                    }
-                }
-            }
-
-            // no head mountable was found on any head that considers the target
-            // of axis to be NOT ok to move to.
-            return true;
-        }
-        
         /**
          * collect all axes that are ok to move (all head mountable of all heads are in SafeZ)
          * @return
          */
-        private AxesLocation collectOkToMoveAxes() {
-            AxesLocation okToMoveAxes = new AxesLocation();
+        private LinkedHashSet<ControllerAxis> getOkToMoveAxes(AxesLocation targetLocation) throws Exception {
+            // list of axes that are ok/safe to move
+            LinkedHashSet<ControllerAxis> okToMoveAxes = new LinkedHashSet<>();
             
             // loop over all heads
             for (Head h : machine.getHeads()) {
+                // collect per head axes
+                LinkedHashSet<ControllerAxis> okToMoveHeadAxes = new LinkedHashSet<>();
                 // loop over all its head mountables
                 for (HeadMountable hm : h.getHeadMountables()) {
-                    try {
-                        if (hm.isInSafeZZone(hm.getLocation().getLengthZ())) {
-                            // hm is in safe Z -> all its axes are ok to move
-                            okToMoveAxes = okToMoveAxes.put(hm.getMappedAxes(machine));
-                        }
-                    }
-                    catch (Exception e) {
-                        // ignore all exceptions - this is safe as the axis is considered NOT ok to move
+                    // take the raw axes location of the current hm location
+                    AxesLocation rawCurrentLocation = hm.toRaw(hm.getLocation());
+                    // get only controller axes (Note, we don't care if virtual axes are not safe)
+                    LinkedHashSet<ControllerAxis> headAxes = rawCurrentLocation.getControllerAxes();
+                    // optimistically add them to the ok to move head axes
+                    okToMoveHeadAxes.addAll(headAxes);
+                    // get us the current raw controller head location
+                    AxesLocation rawCurrentHeadLocation = new AxesLocation(headAxes, 
+                        (axis) -> (rawCurrentLocation.getLengthCoordinate(axis)));
+                    // get us the target raw controller head location
+                    AxesLocation rawTargetHeadLocation = new AxesLocation(headAxes, 
+                        (axis) -> (targetLocation.getLengthCoordinate(axis)));
+                    // check if the Z axes are safe, both in current and target location
+                    if (!(rawCurrentHeadLocation.byType(Type.Z).isInSafeZone()
+                           && rawTargetHeadLocation.byType(Type.Z).isInSafeZone())) {
+                        // uh oh, not in Safe Z, i.e. it is not safe to move any of the axes of this head
+                        // reset to zero (empty)
+                        okToMoveHeadAxes.clear();
+                        break;
                     }
                 }
+                // add the head axes to the ok to move axes (this will be empty if they were not safe)
+                okToMoveAxes.addAll(okToMoveHeadAxes);
             }
             
             return okToMoveAxes;
