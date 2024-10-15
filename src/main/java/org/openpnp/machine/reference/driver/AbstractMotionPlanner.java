@@ -23,6 +23,7 @@ package org.openpnp.machine.reference.driver;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -125,32 +126,123 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
          */
         protected AxesLocation merge(AxesLocation axesLocation) {
             // if no motion has been queued, bypass the merge process
-            if (queue == null) {
+            if (queue == null || queue.isEmpty()) {
                 return axesLocation;
             }
 
-            // merge queued motion into the given AxesLocation letting the given one take precedence
-            // FIXME: actually we only wont to merge axis from the queue at affect the same head as the one of the given AxesLocation
-            AxesLocation mergedLocation = axesLocation.put(queue);
-            mergedLocation = mergedLocation.put(axesLocation);
+            // make sure, only safe motions are extended by queued subordination
+            // collect all axes that are ok to move
+            AxesLocation okToMoveAxes = collectOkToMoveAxes();
 
-            Logger.trace("Subordinate Motion: axesLocation " + axesLocation + " merged with queue " + queue + " to " + mergedLocation);
-            // FIXME: we actually shall only remove axis that have been merged
-            queue = null;
+            // loop over all queued axes
+            AxesLocation queuedLocationToMerge = new AxesLocation();
+            for (ControllerAxis a : queue.getControllerAxes()) {
+                // select the ones that are ok to move
+                if (okToMoveAxes.contains(a)) {
+                    AxesLocation tmp = new AxesLocation(a, queue.getCoordinate(a));
+                    // validate that the target location is also in SafeZ (the current location has been check while correcting the ok-to-move-axes)
+                    if (okToMoveToTargetLocation(tmp)) {
+                        // collect axis a to merge it later
+                        queuedLocationToMerge = queuedLocationToMerge.put(tmp);
+                        // and remove it from the queue
+                        queue = queue.remove(a);
+                    }
+                }
+            }
+            // TODO: it would be possible to add an "inverted rule": if all moving axes are Z axes only, no SafeZ validation needs to be done.
+            //       see https://github.com/openpnp/openpnp/pull/1654#issuecomment-2373535986
+
+            // merge filtered queued motion into the given AxesLocation letting the given one take precedence
+            AxesLocation mergedLocation = queuedLocationToMerge.put(axesLocation);
+
+            Logger.trace("Subordinate Motion: axesLocation " + axesLocation + " merged with " + queuedLocationToMerge + " to " + mergedLocation);
             
             // return the merge result
             return mergedLocation;
+        }
+        
+        
+        /**
+         * validate that the given axis is ok to move to its target location (target location is in SafeZ)
+         * @param axis to validate
+         * @return false if there is any head mountable on any head that considers the target
+         *         of axis NOT ok to move to (not in Safe-Z).
+         */
+        private boolean okToMoveToTargetLocation(AxesLocation axis) {
+
+            // filter input axis for Z only
+            axis = axis.byType(Type.Z);
+            
+            // if input is empty, consider movement ok
+            if (axis.isEmpty()) {
+                return true;
+            }
+            
+            // loop over all heads
+            for (Head h : machine.getHeads()) {
+                // loop over all its head mountables
+                for (HeadMountable hm : h.getHeadMountables()) {
+                    // test if this headmountable uses the requested axis
+                    for (ControllerAxis singleAxis : axis.getControllerAxes()) {
+                        // FIXME: this seems to select the wrong axis: on a CAM-style head, it validates the physical Z against the derived Z the nozzle is assigned to
+                        if (hm.getMappedAxes(machine).getControllerAxes().contains(singleAxis)) {
+                            // finally test if the target location is still in safe Z
+                            try {
+                                if (!hm.isInSafeZZone(axis.getLengthCoordinate(singleAxis))) {
+                                    // the target location is NOT in SafeZ for this headmountable
+                                    // -> it is NOT ok to move this axis
+                                    return false;
+                                }
+                            }
+                            catch (Exception e) {
+                                // in case of an exception, consider this axis as NOT ok to move
+                                return false;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // no head mountable was found on any head that considers the target
+            // of axis to be NOT ok to move to.
+            return true;
+        }
+        
+        /**
+         * collect all axes that are ok to move (all head mountable of all heads are in SafeZ)
+         * @return
+         */
+        private AxesLocation collectOkToMoveAxes() {
+            AxesLocation okToMoveAxes = new AxesLocation();
+            
+            // loop over all heads
+            for (Head h : machine.getHeads()) {
+                // loop over all its head mountables
+                for (HeadMountable hm : h.getHeadMountables()) {
+                    try {
+                        if (hm.isInSafeZZone(hm.getLocation().getLengthZ())) {
+                            // hm is in safe Z -> all its axes are ok to move
+                            okToMoveAxes = okToMoveAxes.put(hm.getMappedAxes(machine));
+                        }
+                    }
+                    catch (Exception e) {
+                        // ignore all exceptions - this is safe as the axis is considered NOT ok to move
+                    }
+                }
+            }
+            
+            return okToMoveAxes;
         }
         
         /**
          * drain the queue reporting a warning if it's not empty.
          */
         protected void drain() {
-            if (queue != null) {
-                Logger.warn("Subordinate Motion queue not empty, drained.");
+            if (queue != null && !queue.isEmpty()) {
+                Logger.warn("Subordinate Motion queue not empty: " + queue + ", drained.");
                 queue = null;
             }
-        }        
+        }
     }
     
     @Override
