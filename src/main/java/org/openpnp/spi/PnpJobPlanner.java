@@ -9,7 +9,6 @@ public interface PnpJobPlanner {
         public final JobPlacement jobPlacement;
         public final Nozzle nozzle;
         public final NozzleTip nozzleTip;
-        public Feeder feeder;
         public PartAlignment.PartAlignmentOffset alignmentOffsets;
         
         public PlannedPlacement(Nozzle nozzle, NozzleTip nozzleTip, JobPlacement jobPlacement) {
