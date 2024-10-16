@@ -698,6 +698,33 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
         public Step step() throws JobProcessorException {
             
+            // In order for the pick-prerotation to return the correct rotation, the 
+            // nozzle rotation mode has to be applied. If not, the pickLocation may
+            // return the wrong angle.
+            for (PlannedPlacement p : plannedPlacements) {
+                JobPlacement jobPlacement = p.jobPlacement;
+                Nozzle nozzle = p.nozzle;
+                Feeder feeder = p.feeder;
+                Location pickLocation;
+                
+                try {
+                    pickLocation = feeder.getPickLocation();
+                }
+                catch (Exception e) {
+                    throw new JobProcessorException(feeder, e);
+                }
+                
+                Location placementLocation = Utils2D.calculateBoardPlacementLocation(jobPlacement.getBoardLocation(), jobPlacement.getPlacement().getLocation());
+                
+                try {
+                    nozzle.prepareForPickAndPlaceArticulation(pickLocation, placementLocation);
+                }
+                catch (Exception e) {
+                    throw new JobProcessorException(nozzle, e);
+                }
+            }
+            
+            // now request pre-rotation of all nozzles
             prerotateAllNozzles(pickLocator);
             
             return new Pick(plannedPlacements);
@@ -1575,8 +1602,14 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     }
         
     /**
-     * create a class to group all pick, align an placement locator functions and to get rid of
+     * Create a class to group all pick, align an placement locator functions and to get rid of
      * the lengthy "TravellingSalesman.Locator<PlannedPlacement>"
+     * 
+     * This class uses the nozzles toHeadLocation() method to transform a location
+     * into the reference space of the head and apply angular offsets of the nozzle,
+     * which depend on the configured nozzle rotation mode. The location (x, y, z) 
+     * is always correct, but the angle only if the nozzle rotation mode was applied
+     * before.
      */
     protected abstract class Locator implements TravellingSalesman.Locator<PlannedPlacement> {
         /**
@@ -1605,8 +1638,6 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             }
             else {
                 try {
-                    // TODO: transform to something like raw coordinates to take any nozzle rotation mode into account
-                    // it seems, that nozzle rotation is applied by toRaw(), however toRaw() does not return a Loction anymore...
                     location = hm.toHeadLocation(ref, LocationOption.Quiet);
                 } catch (Exception e) {
                     location = null;
@@ -1630,11 +1661,6 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 final Feeder feeder = findFeeder(machine, part);
 
                 location = feeder.getPickLocation();
-
-                // prepare the nozzle for pick/place articulation: apply the configured nozzle rotation mode setting in order to return the correct nozzle rotation angle
-                // convertToHeadLocation() will use the offset thats configured here when transforming the location
-                final Location placementLocation = Utils2D.calculateBoardPlacementLocation(jobPlacement.getBoardLocation(), jobPlacement.getPlacement().getLocation());
-                nozzle.prepareForPickAndPlaceArticulation(location, placementLocation);
             } catch (Exception e) {
                 // ignore exceptions
                 location = null;
