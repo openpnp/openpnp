@@ -1605,7 +1605,9 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             }
             else {
                 try {
-                    location = hm.toHeadLocation(ref, LocationOption.KeepRotation);
+                    // TODO: transform to something like raw coordinates to take any nozzle rotation mode into account
+                    // it seems, that nozzle rotation is applied by toRaw(), however toRaw() does not return a Loction anymore...
+                    location = hm.toHeadLocation(ref, LocationOption.Quiet);
                 } catch (Exception e) {
                     location = null;
                 }
@@ -1626,8 +1628,14 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             // try to get the location where the alignment will take place
             try {
                 final Feeder feeder = findFeeder(machine, part);
-
-                location = feeder.getPickLocation();
+                final Location pickLocation = feeder.getPickLocation();
+                
+                location = pickLocation;
+                
+                // prepare the nozzle for pick/place articulation: apply the configured nozzle rotation mode setting in order to return the correct nozzle rotation angle
+                // convertToHEadLocation() will use the offset thats configured here when transforming the location
+                final Location placementLocation = Utils2D.calculateBoardPlacementLocation(jobPlacement.getBoardLocation(), jobPlacement.getPlacement().getLocation());
+                nozzle.prepareForPickAndPlaceArticulation(pickLocation, placementLocation);
             } catch (Exception e) {
                 // ignore exceptions
                 location = null;

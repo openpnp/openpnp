@@ -195,7 +195,7 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
                         (axis) -> (rawCurrentLocation.getLengthCoordinate(axis)));
                     // get us the target raw controller head location
                     AxesLocation rawTargetHeadLocation = new AxesLocation(headAxes, 
-                        (axis) -> (targetLocation.getLengthCoordinate(axis)));
+                            (axis) -> (targetLocation.contains(axis) ? targetLocation.getLengthCoordinate(axis) : null));
                     // check if the Z axes are safe, both in current and target location
                     if (!(rawCurrentHeadLocation.byType(Type.Z).isInSafeZone()
                            && rawTargetHeadLocation.byType(Type.Z).isInSafeZone())) {
@@ -800,7 +800,7 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
      */
     public AxesLocation limitRotationAxis(HeadMountable hm, final AxesLocation axesLocation, ReferenceControllerAxis axis) throws Exception {
         AxesLocation limitedAxesLocation = axesLocation;
-        if (hm == null) {
+        if (!axis.isMovingHeadMountable(hm)) {
             hm = axis.getDefaultHeadMountable();
             if (hm == null) {
                 throw new Exception("Rotation axis "+axis.getName()+" cannot be limited when no head-mountable is mapped.");
@@ -861,6 +861,10 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
                         limitedAxesLocation.getCoordinate(axis)+" (transformed "+hm.getName()+" to "+location.getRotation()+"°)");
             }
         }
+        
+        // merge the new limited Axes Location with the input set, replacing only the axis to limit
+        limitedAxesLocation = axesLocation.put(new AxesLocation(axis, limitedAxesLocation.getCoordinate(axis)));
+        
         return limitedAxesLocation;
     }
 
