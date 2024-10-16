@@ -1628,14 +1628,13 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             // try to get the location where the alignment will take place
             try {
                 final Feeder feeder = findFeeder(machine, part);
-                final Location pickLocation = feeder.getPickLocation();
-                
-                location = pickLocation;
-                
+
+                location = feeder.getPickLocation();
+
                 // prepare the nozzle for pick/place articulation: apply the configured nozzle rotation mode setting in order to return the correct nozzle rotation angle
-                // convertToHEadLocation() will use the offset thats configured here when transforming the location
+                // convertToHeadLocation() will use the offset thats configured here when transforming the location
                 final Location placementLocation = Utils2D.calculateBoardPlacementLocation(jobPlacement.getBoardLocation(), jobPlacement.getPlacement().getLocation());
-                nozzle.prepareForPickAndPlaceArticulation(pickLocation, placementLocation);
+                nozzle.prepareForPickAndPlaceArticulation(location, placementLocation);
             } catch (Exception e) {
                 // ignore exceptions
                 location = null;
