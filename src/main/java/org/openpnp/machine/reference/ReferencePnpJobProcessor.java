@@ -482,17 +482,19 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         public Step step() throws JobProcessorException {
             fireTextStatus("Planning placements.");
 
-            List<JobPlacement> jobPlacements;
+            ReturnJobPlacementsAndNozzleTips jobPlacementsAndNozzleTips;
 
             // sort/plan all pending job placements
-            jobPlacements = planJobPlacements(getPendingJobPlacements());
+            jobPlacementsAndNozzleTips = planJobPlacements(getPendingJobPlacements());
+            
+            List<JobPlacement> plannedJobPlacements = jobPlacementsAndNozzleTips.getJobPlacements();
 
-            if (jobPlacements.isEmpty()) {
+            if (plannedJobPlacements == null || plannedJobPlacements.isEmpty()) {
                 return new Finish();
             }
 
             long t = System.currentTimeMillis();
-            List<PlannedPlacement> plannedPlacements = planner.plan(head, jobPlacements);
+            List<PlannedPlacement> plannedPlacements = planner.plan(head, plannedJobPlacements, jobPlacementsAndNozzleTips.getNozzleTips());
             Logger.debug("Planner complete in {}ms: {}", (System.currentTimeMillis() - t), plannedPlacements);
 
             if (plannedPlacements.isEmpty()) {
@@ -514,82 +516,109 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
          * 
          * @return
          */
-        private List<JobPlacement> planJobPlacements(List<JobPlacement> jobPlacements) {
-            long t = System.currentTimeMillis();
-            List<JobPlacement> plannedJobPlacements;
-    
-            switch (jobOrder) {
-            // this options are the default: all parts are groups but indistinguishable across the entire job
-            case Part:
-                // Get the list of unfinished placements and sort them by part.
-                plannedJobPlacements = jobPlacements.stream()
-                        .sorted(Comparator
-                                .comparing(JobPlacement::getPartId))
-                        .collect(Collectors.toList());
-                break;
-    
-            case PartHeight:
-                // Get the list of unfinished placements and sort them by part height.
-                plannedJobPlacements = jobPlacements.stream()
-                        .sorted(Comparator
-                                .comparing(JobPlacement::getPartHeight)
-                                .thenComparing(JobPlacement::getPartId))
-                        .collect(Collectors.toList());
-                break;
-    
-            // this options are more specific and result in sorted lists even for panels of identical boards
-            // placements will be still indistinguishable across individual boards.
-            case PartBoard:
-                plannedJobPlacements = jobPlacements.stream()
-                        .sorted(Comparator
-                                .comparing(JobPlacement::getPartId)
-                                .thenComparing(JobPlacement::getBoardId))
-                        .collect(Collectors.toList());
-                break;
-                
-            case PartHeightPartBoard:
-                plannedJobPlacements = jobPlacements.stream()
-                        .sorted(Comparator
-                                .comparing(JobPlacement::getPartHeight)
-                                .thenComparing(JobPlacement::getPartId)
-                                .thenComparing(JobPlacement::getBoardId))
-                        .collect(Collectors.toList());
-                break;
-                
-            case BoardPart:
-                plannedJobPlacements = jobPlacements.stream()
-                        .sorted(Comparator
-                                .comparing(JobPlacement::getBoardId)
-                                .thenComparing(JobPlacement::getPartId))
-                        .collect(Collectors.toList());
-                break;
-                
-            case PickLocation:
-                plannedJobPlacements = planJobPlacementsByPickLocation(jobPlacements);
-                break;
-                
-            case PickPlaceLocation:
-                plannedJobPlacements = planJobPlacementsByPickPlaceLocation(jobPlacements);
-                break;
-                
-            case NozzleTips:
-                plannedJobPlacements = planJobPlacementsByNozzleTips(jobPlacements);
-                break;
-                
-            // FIXME: generating a error if not all enum values are handled would be more error resistant
-            default:
-                Logger.warn("JobProcessor:Plan(): unhandled jobOrder " + jobOrder);
-    
-                // !! fall through to get the same result as unsorted and always well defined jobPlacements
-    
-            case Unsorted:
-                // use job placements unsorted - for "hand-crafted" jobs
-                plannedJobPlacements = jobPlacements;
+        private class ReturnJobPlacementsAndNozzleTips {
+            final List<JobPlacement> jobPlacements;
+            final List<NozzleTip> nozzleTips;
+            
+            public ReturnJobPlacementsAndNozzleTips(List<JobPlacement> jobPlacements, List<NozzleTip> nozzleTips) {
+                this.jobPlacements = jobPlacements;
+                this.nozzleTips = nozzleTips;
             }
             
-            Logger.debug("Placements sorting using {} completed in {}ms", jobOrder.name(), (System.currentTimeMillis() - t));
+            public List<JobPlacement> getJobPlacements() {
+                return jobPlacements;
+            }
             
-            return plannedJobPlacements;
+            public List<NozzleTip> getNozzleTips() {
+                return nozzleTips;
+            }
+        }
+        private ReturnJobPlacementsAndNozzleTips planJobPlacements(List<JobPlacement> jobPlacements) {
+            long t = System.currentTimeMillis();
+            List<JobPlacement> plannedJobPlacements = null;
+            ReturnJobPlacementsAndNozzleTips plannedJobPlacementsAndNozzleTips = null;
+    
+            // provide a shortcut to not execute all the sorting
+            if (!jobPlacements.isEmpty()) {
+                switch (jobOrder) {
+                // this options are the default: all parts are groups but indistinguishable across the entire job
+                case Part:
+                    // Get the list of unfinished placements and sort them by part.
+                    plannedJobPlacements = jobPlacements.stream()
+                            .sorted(Comparator
+                                    .comparing(JobPlacement::getPartId))
+                            .collect(Collectors.toList());
+                    break;
+        
+                case PartHeight:
+                    // Get the list of unfinished placements and sort them by part height.
+                    plannedJobPlacements = jobPlacements.stream()
+                            .sorted(Comparator
+                                    .comparing(JobPlacement::getPartHeight)
+                                    .thenComparing(JobPlacement::getPartId))
+                            .collect(Collectors.toList());
+                    break;
+        
+                // this options are more specific and result in sorted lists even for panels of identical boards
+                // placements will be still indistinguishable across individual boards.
+                case PartBoard:
+                    plannedJobPlacements = jobPlacements.stream()
+                            .sorted(Comparator
+                                    .comparing(JobPlacement::getPartId)
+                                    .thenComparing(JobPlacement::getBoardId))
+                            .collect(Collectors.toList());
+                    break;
+                    
+                case PartHeightPartBoard:
+                    plannedJobPlacements = jobPlacements.stream()
+                            .sorted(Comparator
+                                    .comparing(JobPlacement::getPartHeight)
+                                    .thenComparing(JobPlacement::getPartId)
+                                    .thenComparing(JobPlacement::getBoardId))
+                            .collect(Collectors.toList());
+                    break;
+                    
+                case BoardPart:
+                    plannedJobPlacements = jobPlacements.stream()
+                            .sorted(Comparator
+                                    .comparing(JobPlacement::getBoardId)
+                                    .thenComparing(JobPlacement::getPartId))
+                            .collect(Collectors.toList());
+                    break;
+                    
+                case PickLocation:
+                    plannedJobPlacements = planJobPlacementsByPickLocation(jobPlacements);
+                    break;
+                    
+                case PickPlaceLocation:
+                    plannedJobPlacements = planJobPlacementsByPickPlaceLocation(jobPlacements);
+                    break;
+                    
+                case NozzleTips:
+                    plannedJobPlacementsAndNozzleTips = planJobPlacementsByNozzleTips(jobPlacements);
+                    break;
+                    
+                // FIXME: generating a error if not all enum values are handled would be more error resistant
+                default:
+                    Logger.warn("JobProcessor:Plan(): unhandled jobOrder " + jobOrder);
+        
+                    // !! fall through to get the same result as unsorted and always well defined jobPlacements
+        
+                case Unsorted:
+                    // use job placements unsorted - for "hand-crafted" jobs
+                    plannedJobPlacements = jobPlacements;
+                }
+                
+                Logger.debug("Placements sorting using {} completed in {}ms", jobOrder.name(), (System.currentTimeMillis() - t));
+            }
+                
+            // some strategies return lists of nozzle tips to be used in planned order as well. If not available
+            // return NULL. The JobPlanner will then later setup a list of all available nozzle tips
+            if (plannedJobPlacementsAndNozzleTips == null) {
+                plannedJobPlacementsAndNozzleTips = new ReturnJobPlacementsAndNozzleTips(plannedJobPlacements, null);
+            }
+            
+            return plannedJobPlacementsAndNozzleTips;
         }
 
         /**
@@ -800,12 +829,13 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
          * @param input
          * @return
          */
-        private List<JobPlacement> planJobPlacementsByNozzleTips(List<JobPlacement> input) {
+        private ReturnJobPlacementsAndNozzleTips planJobPlacementsByNozzleTips(List<JobPlacement> input) {
             /**
              * Group nozzleTip and JobPlacements into one class to collect jobPlacements
              * per nozzleTip for further sorting, filtering and processing.
              */
             class JobPlacementNozzleTip extends ArrayList<JobPlacement> {
+                private static final long serialVersionUID = 1L;
                 private final NozzleTip nozzleTip;
                 
                 JobPlacementNozzleTip(NozzleTip nozzleTip) {
@@ -869,8 +899,13 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             
             // build a list of just all nozzleTips after sorting. This list is to be used by the
             // JobPlanner to select the next nozzleTip to use.
+            // This list contains _all_ nozzle tips, that are compatible with all jobPlacements. It is
+            // not limited to a set of tips, that is required to place all part. For single nozzle
+            // machines it would be possible to derive such a list, but for multi nozzle machines it is
+            // unknown at this stage, which nozzle tip might serve well in parallel with with others on
+            // the other nozzles. Keeping all possible tips sorted by amount of placements they can
+            // handle will likely provide a good starting point in selecting the next best one.
             List<NozzleTip> plannedNozzleTips = perNozzleTipJobPlacements.stream().map(j -> j.getNozzleTip()).collect(Collectors.toList());
-            // FIXME: make this list public and use it in the Planner
             
             // Remove duplicate placements keeping only the first occurrence
             // Skip this step if there is only one nozzle tip left.
@@ -913,7 +948,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             
             Logger.trace(traceMessage);
             
-            return output;
+            return new ReturnJobPlacementsAndNozzleTips(output, plannedNozzleTips);
         }
     }
     
@@ -1975,7 +2010,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         }
         
         @Override
-        public List<PlannedPlacement> plan(Head head, List<JobPlacement> jobPlacements) {
+        public List<PlannedPlacement> plan(Head head, List<JobPlacement> jobPlacements, List<NozzleTip> nozzleTips) {
             /**
              * Create a List<PlannedPlacement> that we will fill up and then return.
              */
@@ -2094,7 +2129,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         }
         
         @Override
-        public List<PlannedPlacement> plan(Head head, List<JobPlacement> jobPlacements) {
+        public List<PlannedPlacement> plan(Head head, List<JobPlacement> jobPlacements, List<NozzleTip> nozzleTips) {
             /**
              * Create an empty List<PlannedPlacement> which will hold the results.
              */
@@ -2109,8 +2144,11 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             
             /**
              * Same as above, except for NozzleTips.
+             * Only fill the list with all available nozzle tips, if the input is empty
              */
-            List<NozzleTip> nozzleTips = new ArrayList<>(head.getMachine().getNozzleTips());
+            if (nozzleTips == null || nozzleTips.isEmpty()) {
+                nozzleTips = new ArrayList<>(head.getMachine().getNozzleTips());
+            }
             
             if (    strategy == Strategy.Minimize
                 || (strategy == Strategy.StartAsPlanned && !restart)) {

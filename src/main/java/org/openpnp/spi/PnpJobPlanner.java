@@ -41,6 +41,6 @@ public interface PnpJobPlanner {
     public void restart();
     public Strategy getStrategy();
     public void setStrategy(Strategy strategy);
-    public List<PlannedPlacement> plan(Head head, List<JobPlacement> jobPlacements);
+    public List<PlannedPlacement> plan(Head head, List<JobPlacement> placements, List<NozzleTip> nozzleTips);
     public List<PlannedPlacement> sort(List<PlannedPlacement> plannedPlacements);
 }
