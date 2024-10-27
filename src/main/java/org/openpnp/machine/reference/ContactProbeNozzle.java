@@ -928,7 +928,7 @@ public class ContactProbeNozzle extends ReferenceNozzle {
                         }
                         if (suggestedCommand != null) {
                             GcodeDriverSolutions.suggestGcodeCommand(gcodeDriver, contactProbeActuator, solutions, 
-                                    GcodeDriver.CommandType.ACTUATE_BOOLEAN_COMMAND, suggestedCommand, false, false);
+                                    GcodeDriver.CommandType.ACTUATE_BOOLEAN_COMMAND, suggestedCommand, false, false, null);
                         }
                         else {
                             String currentCommand = gcodeDriver.getCommand(contactProbeActuator, GcodeDriver.CommandType.ACTUATE_BOOLEAN_COMMAND);
