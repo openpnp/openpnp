@@ -1100,7 +1100,7 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                 public String getExtendedDescription() {
                     String r = "<html>\n";
                     if (rationale!=null && !rationale.isEmpty()) {
-                        r += "<p><b>"+rationale+"</b></p>\n";
+                        r += "<p><strong>"+rationale+"</strong></p>\n";
                     }
                     if (suggestedCommand.isEmpty()) {
                         r += "<p>Delete it.</p>\n";
