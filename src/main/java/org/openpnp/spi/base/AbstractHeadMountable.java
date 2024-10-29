@@ -4,7 +4,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.openpnp.ConfigurationListener;
-import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
 import org.openpnp.machine.reference.axis.ReferenceVirtualAxis;
@@ -18,12 +17,13 @@ import org.openpnp.model.Motion.MotionOption;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.ControllerAxis;
 import org.openpnp.spi.CoordinateAxis;
+import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 
-public abstract class AbstractHeadMountable extends AbstractModelObject implements ReferenceHeadMountable {
+public abstract class AbstractHeadMountable extends AbstractModelObject implements HeadMountable {
     private AbstractAxis axisX;
     private AbstractAxis axisY;
     private AbstractAxis axisZ;

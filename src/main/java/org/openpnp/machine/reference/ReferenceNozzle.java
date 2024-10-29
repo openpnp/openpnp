@@ -53,7 +53,7 @@ import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.core.Persist;
 
-public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMountable {
+public class ReferenceNozzle extends AbstractNozzle implements HeadMountable {
     public static class ManualUnloadException extends JobProcessor.JobProcessorException {
         private static final long serialVersionUID = 1L;
     
@@ -266,9 +266,9 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
                 // likely copied over, like customary for the ReferencePushPullFeeder actuator. Adjust them likewise. 
                 for (HeadMountable hm : head.getHeadMountables()) {
                     if (this != hm 
-                            && (hm instanceof ReferenceHeadMountable)
+                            && (hm instanceof HeadMountable)
                             && !(hm instanceof ReferenceNozzle)) {
-                        ReferenceHeadMountable otherHeadMountable = (ReferenceHeadMountable) hm;
+                    	HeadMountable otherHeadMountable = (HeadMountable) hm;
                         Location otherHeadOffsets = otherHeadMountable.getHeadOffsets();
                         if (otherHeadOffsets.isInitialized() 
                                 && headOffsetsOld.convertToUnits(LengthUnit.Millimeters).getLinearDistanceTo(otherHeadOffsets) <= 0.01) {
@@ -287,7 +287,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
                         for (Camera camera : getMachine().getCameras()) {
                             if (camera instanceof ReferenceCamera 
                                     && camera.getLooking() == Looking.Up) {
-                                ReferenceHeadMountable upLookingCamera = (ReferenceHeadMountable) camera;
+                            	HeadMountable upLookingCamera = (HeadMountable) camera;
                                 Location cameraOffsets = upLookingCamera.getHeadOffsets();
                                 if (cameraOffsets.isInitialized()) {
                                     cameraOffsets = cameraOffsets.add(offsetsDiff);
