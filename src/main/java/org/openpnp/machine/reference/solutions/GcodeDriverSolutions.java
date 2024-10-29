@@ -772,6 +772,7 @@ public class GcodeDriverSolutions implements Solutions.Subject {
         for (CommandType commandType : gcodeDriver.isSpeakingGcode() ?
                 CommandType.values() 
                 : new CommandType[] { CommandType.CONNECT_COMMAND }) {
+            String rationale = "";
             String command = gcodeDriver.getCommand(null, commandType);
             String commandBuilt = null;
             boolean disallowHeadMountables = false;
@@ -797,24 +798,28 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                     else {
                         if (gcodeDriver.getUnits() == LengthUnit.Millimeters) {
                             if (command.contains("G20 ")) {
+                                rationale += "Replace G20 (inches) with G21 (millimeters). ";
                                 commandBuilt = command
                                         .replace("G20 ", "G21 ")
                                         .replace("inches", "millimeters");
                             }
                             else if (! command.contains("G21 "))
-                            { commandBuilt = "G21 ; Set millimeters mode \n" 
-                                    + command;
+                            {
+                                rationale += "Explicitly set millimeters mode. ";
+                                commandBuilt = "G21 ; Set millimeters mode \n" + command;
                             }
                         }
                         else if (gcodeDriver.getUnits() == LengthUnit.Inches) {
                             if (command.contains("G21 ")) {
+                                rationale += "Replace G21 (millimeters) with G20 (inches). ";
                                 commandBuilt = command
                                         .replace("G21 ", "G20 ")
                                         .replace("millimeters", "inches");
                             }
                             else if (! command.contains("G20 "))
-                            { commandBuilt = "G20 ; Set inches mode \n"
-                                    + command;
+                            {
+                                rationale += "Explicitly set inches mode. ";
+                                commandBuilt = "G20 ; Set inches mode \n" + command;
                             }
                         }
                         else {
@@ -1027,7 +1032,7 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                     break;
             }
             suggestGcodeCommand(gcodeDriver, null, solutions, commandType, commandBuilt, commandModified,
-                    disallowHeadMountables);
+                    disallowHeadMountables, rationale);
         }
     }
 
@@ -1066,14 +1071,22 @@ public class GcodeDriverSolutions implements Solutions.Subject {
      */
     public static void suggestGcodeCommand(GcodeDriver gcodeDriver, HeadMountable headMountable, Solutions solutions,
             CommandType commandType, String suggestedCommand, boolean commandModified,
-            boolean disallowHeadMountables) {
+            boolean disallowHeadMountables, String rationale) {
         String currentCommand = gcodeDriver.getCommand(headMountable, commandType);
         if (suggestedCommand != null && !suggestedCommand.equals(currentCommand)) {
+            String solution = "";
+            if (suggestedCommand.isEmpty()) {
+                solution = "Delete it.";
+            } else if (commandModified) {
+                solution = "Modify it.";
+            } else {
+                solution = "Change it.";
+            }
             solutions.add(new Solutions.Issue(
                     (headMountable != null ? headMountable : gcodeDriver),
                     commandType.name()+(suggestedCommand.isEmpty() ? " obsolete." : (commandModified ? " modification suggested." : " suggested."))
                     + (gcodeDriver.isSpeakingGcode() ? "" : " Accept if this is a true Gcode controller."),
-                    (suggestedCommand.isEmpty() ? "Delete it." : suggestedCommand),
+                    solution,
                     suggestedCommand.isEmpty() ? Severity.Warning
                             : (gcodeDriver.isSpeakingGcode() ? Severity.Suggestion : Severity.Fundamental),
                     "https://github.com/openpnp/openpnp/wiki/Advanced-Motion-Control#migration-from-a-previous-version") {
@@ -1082,6 +1095,24 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                 public void setState(Solutions.State state) throws Exception {
                     gcodeDriver.setCommand(headMountable, commandType, (state == Solutions.State.Solved) ? suggestedCommand : currentCommand);
                     super.setState(state);
+                }
+                @Override
+                public String getExtendedDescription() {
+                    String r = "<html>\n";
+                    if (rationale!=null && !rationale.isEmpty()) {
+                        r += "<p><strong>"+rationale+"</strong></p>\n";
+                    }
+                    if (suggestedCommand.isEmpty()) {
+                        r += "<p>Delete it.</p>\n";
+                    } else {
+                        r += "<p>Suggested cgode is:</p><pre>"+suggestedCommand+"</pre>\n";
+                    }
+                    String prev = gcodeDriver.getCommand(headMountable, commandType);
+                    if(!prev.isEmpty()) {
+                        r += "<p>Current gcode is:</p><pre>"+prev+"</pre>\n";
+                    }
+                    r += "</html>";
+                    return r;
                 }
             });
         }
