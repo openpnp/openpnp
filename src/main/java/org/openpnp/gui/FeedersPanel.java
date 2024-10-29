@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.prefs.Preferences;
 import java.util.regex.PatternSyntaxException;
 import java.util.stream.Collectors;
+import java.util.Map;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -628,9 +629,16 @@ public class FeedersPanel extends JPanel implements WizardContainer {
             nozzle.calibrate();
         }
 
+        Map<String, Object> globals = new HashMap<>();
+        globals.put("nozzle", nozzle);
+        globals.put("feeder", feeder);
+        globals.put("part", feeder.getPart());
+
         // Perform the feed.
         nozzle.moveToSafeZ();
+        Configuration.get().getScripting().on("Feeder.BeforeFeed", globals);
         feeder.feed(nozzle);
+        Configuration.get().getScripting().on("Feeder.AfterFeed", globals);
         return nozzle;
     }
 

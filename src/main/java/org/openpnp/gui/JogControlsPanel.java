@@ -639,11 +639,19 @@ public class JogControlsPanel extends JPanel {
                 if (part == null) {
                     throw new Exception("No Part on the current nozzle!");
                 }
-
+                
                 // go through the feeders
                 for (Feeder feeder : Configuration.get().getMachine().getFeeders()) {
                     if (part.equals(feeder.getPart()) && feeder.isEnabled() && feeder.canTakeBackPart()) {
+                        Map<String, Object> globals = new HashMap<>();
+                        globals.put("nozzle", nozzle);
+                        globals.put("feeder", feeder);
+                        globals.put("part", part);
+
+                        Configuration.get().getScripting().on("Feeder.BeforeTakeBack", globals);
                         feeder.takeBackPart(nozzle);
+                        Configuration.get().getScripting().on("Feeder.AfterTakeBack", globals);
+                        
                         break;
                     }
                 }
