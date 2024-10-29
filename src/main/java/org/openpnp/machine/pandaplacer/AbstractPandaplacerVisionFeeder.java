@@ -491,11 +491,13 @@ public abstract class AbstractPandaplacerVisionFeeder extends ReferenceFeeder {
             pipeline.setProperty("sprocketHole.diameter", new Length(sprocketHoleDiameterMm, LengthUnit.Millimeters));
             Length range;
             if (autoSetup) {
-                // Auto-Setup: search Range is half camera.
+                // Auto-Setup: search range is set to be full camera resolution (bigger dimension is used)
+                // to be able to detect sprocket holes at the edge of the image. Search range defines circle's
+                // radius with origin in center. Full resolution is used as radius to cover image corners.
                 Location upp = camera.getUnitsPerPixelAtZ();
                 range = camera.getWidth() > camera.getHeight() ?
-                        upp.getLengthY().multiply(camera.getHeight()/2)
-                        : upp.getLengthX().multiply(camera.getWidth()/2);
+                        upp.getLengthX().multiply(camera.getHeight())
+                        : upp.getLengthY().multiply(camera.getWidth());
             }
             else {
                 // Normal mode: search range is half the distance between the holes plus one pitch.
