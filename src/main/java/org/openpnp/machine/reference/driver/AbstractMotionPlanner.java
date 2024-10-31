@@ -456,7 +456,7 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
                 plannedMotion.setPlannedTime1(t);
                 motionPlan.put(t, plannedMotion);
                 // Execute across drivers.
-                HeadMountable  hm = (HeadMountable) plannedMotion.getHeadMountable();
+                HeadMountable  hm = plannedMotion.getHeadMountable();
                 if (hm != null) {
                     movedHeads.add(hm.getHead());
                     if (executeMoveTo(machine, hm, plannedMotion, first)) {
@@ -843,7 +843,7 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
             AxesLocation mappedAxes = hm.getMappedAxes(machine);
             if (!mappedAxes.isEmpty()) {
                 for (Driver driver : mappedAxes.getAxesDrivers(machine)) {
-                    driver.waitForCompletion((HeadMountable) hm, completionType);
+                    driver.waitForCompletion(hm, completionType);
                 }
             }
         }

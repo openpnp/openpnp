@@ -266,17 +266,15 @@ public class ReferenceNozzle extends AbstractNozzle implements HeadMountable {
                 // likely copied over, like customary for the ReferencePushPullFeeder actuator. Adjust them likewise. 
                 for (HeadMountable hm : head.getHeadMountables()) {
                     if (this != hm 
-                            && (hm instanceof HeadMountable)
                             && !(hm instanceof ReferenceNozzle)) {
-                    	HeadMountable otherHeadMountable = (HeadMountable) hm;
-                        Location otherHeadOffsets = otherHeadMountable.getHeadOffsets();
+                        Location otherHeadOffsets = hm.getHeadOffsets();
                         if (otherHeadOffsets.isInitialized() 
                                 && headOffsetsOld.convertToUnits(LengthUnit.Millimeters).getLinearDistanceTo(otherHeadOffsets) <= 0.01) {
                             // Take X, Y (but not Z).
                             Location hmOffsets = otherHeadOffsets.derive(headOffsetsNew, true, true, false, false);
-                            Logger.info("Set "+otherHeadMountable.getClass().getSimpleName()+" " + otherHeadMountable.getName() + " head offsets to " + hmOffsets
+                            Logger.info("Set "+hm.getClass().getSimpleName()+" " + hm.getName() + " head offsets to " + hmOffsets
                                     + " (previously " + otherHeadOffsets + ")");
-                            otherHeadMountable.setHeadOffsets(hmOffsets);
+                            hm.setHeadOffsets(hmOffsets);
                         }
                     }
                 }
