@@ -60,4 +60,16 @@ public interface HeadMountable extends MovableMountable, Identifiable, Named, So
      * @throws Exception
      */
     void waitForCompletion(CompletionType completionType) throws Exception;
+    
+    /**
+     * Get the head offsets for the object
+     */
+    Location getHeadOffsets();
+
+    /**
+     * Set the head offsets for the object
+     * @param headOffsets The offsets in XYZ
+     */
+    void setHeadOffsets(Location headOffsets);
+    
 }
