@@ -248,12 +248,7 @@ public class BoardPlacementsPanel extends JPanel {
                                     selectedComponent == mainFrame.getBoardsTab())
                             && configuration.getTablesLinked() == TablesLinked.Linked) {
                         Part selectedPart = getSelection().getPart();
-                        mainFrame.getPartsTab().selectPartInTable(selectedPart);
-                        if (selectedPart != null) {
-                            mainFrame.getPackagesTab().selectPackageInTable(selectedPart.getPackage());
-                        }
-                        mainFrame.getFeedersTab().selectFeederForPart(selectedPart);
-                        mainFrame.getVisionSettingsTab().selectVisionSettingsInTable(selectedPart);
+                        mainFrame.getPartsTab().selectPartInTableAndUpdateLinks(selectedPart);
                     }
                 }
             }
