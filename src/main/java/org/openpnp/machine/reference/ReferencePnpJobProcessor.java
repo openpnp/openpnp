@@ -28,6 +28,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.Map;
 
 import javax.swing.SwingUtilities;
 
@@ -708,11 +709,19 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         
         private void feed(Feeder feeder, Nozzle nozzle) throws JobProcessorException {
             Exception lastException = null;
+
+            Map<String, Object> globals = new HashMap<>();
+            globals.put("nozzle", nozzle);
+            globals.put("feeder", feeder);
+            globals.put("part", feeder.getPart());
+
             for (int i = 0; i < 1 + feeder.getFeedRetryCount(); i++) {
                 try {
                     fireTextStatus("Feed %s on %s.", feeder.getName(), feeder.getPart().getId());
                     
+                    Configuration.get().getScripting().on("Feeder.BeforeFeed", globals);
                     feeder.feed(nozzle);
+                    Configuration.get().getScripting().on("Feeder.AfterFeed", globals);
                     return;
                 }
                 catch (Exception e) {

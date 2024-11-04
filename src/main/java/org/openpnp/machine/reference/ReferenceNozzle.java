@@ -403,6 +403,7 @@ public class ReferenceNozzle extends AbstractNozzle implements HeadMountable {
 
         Map<String, Object> globals = new HashMap<>();
         globals.put("nozzle", this);
+        globals.put("part", getPart());
         Configuration.get().getScripting().on("Nozzle.BeforePlace", globals);
 
         // if the method needs it, store one measurement up front
