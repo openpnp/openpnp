@@ -29,6 +29,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -871,6 +872,42 @@ public class Configuration extends AbstractModelObject {
     }
 
     /**
+     * Make filepath absolute via adding path of referencing object (parent object)
+     * @param path - to be expanded
+     * @param refPath - when relative to this path
+     */
+    private File expandPath(File file, File refFile) {
+        if (!file.isAbsolute() && refFile.getParent() != null) {
+            Path path = file.toPath();
+            path = refFile.toPath().getParent().resolve(path);
+            file = path.toFile();
+        }
+        return file;
+    }
+
+    /**
+     * Make filepath relative to referencing object
+     * @param path - to be shrinked
+     * @param refPath - relatively to this path if is a subpath
+     */
+    private File relativizePath(File file, File refFile) {
+        if (file.getParent() != null && refFile.getParent() != null) {
+            Path path = file.toPath();
+            path.normalize();
+            Path refPath = refFile.toPath().getParent();
+            refPath.normalize();
+            if (path.startsWith(refPath)) {
+                path = refPath.relativize(path);
+            } else if (path.startsWith(configurationDirectory.toPath())) {
+                path = refPath.relativize(path);
+            }
+            file = path.toFile();
+        }
+        return file;
+    }
+
+    /**
+
      * Loads the Boards listed in the specified file into the configuration.  Any Boards listed that
      * can't be loaded are skipped and an error message is logged.
      * @param file - the file containing the list of boards
@@ -881,7 +918,7 @@ public class Configuration extends AbstractModelObject {
         BoardsConfigurationHolder holder = serializer.read(BoardsConfigurationHolder.class, file);
         for (File boardFile : holder.boards) {
             try {
-                addBoard(boardFile);
+                addBoard(expandPath(boardFile, file));
             }
             catch(FileNotFoundException e) {
                 Logger.error("Could not load board " + boardFile.getCanonicalPath() + ", file is missing.");
@@ -900,7 +937,11 @@ public class Configuration extends AbstractModelObject {
      */
     private void saveBoards(File file) throws Exception {
         BoardsConfigurationHolder holder = new BoardsConfigurationHolder();
-        holder.boards = new ArrayList<>(boards.keySet());
+        ArrayList<File> boardFiles = new ArrayList<>(boards.keySet());
+        for (int i = 0; i < boardFiles.size(); i++) {
+            boardFiles.set(i, relativizePath(boardFiles.get(i), file));
+        }
+        holder.boards = boardFiles;
         serializeObject(holder, file);
         
         for (Board board : getBoards()) {
@@ -919,7 +960,7 @@ public class Configuration extends AbstractModelObject {
         PanelsConfigurationHolder holder = serializer.read(PanelsConfigurationHolder.class, file);
         for (File panelFile : holder.panels) {
             try {
-                addPanel(panelFile);
+                addPanel(expandPath(panelFile, file));
             }
             catch(FileNotFoundException e) {
                 Logger.error("Could not load panel " + panelFile.getCanonicalPath() + ", file is missing.");
@@ -938,7 +979,11 @@ public class Configuration extends AbstractModelObject {
      */
     private void savePanels(File file) throws Exception {
         PanelsConfigurationHolder holder = new PanelsConfigurationHolder();
-        holder.panels = new ArrayList<>(panels.keySet());
+        ArrayList<File> panelFiles = new ArrayList<>(panels.keySet());
+        for (int i = 0; i < panelFiles.size(); i++) {
+            panelFiles.set(i, relativizePath(panelFiles.get(i), file));
+        }
+        holder.panels = panelFiles;
         serializeObject(holder, file);
         
         for (Panel panel : getPanels()) {
@@ -999,8 +1044,6 @@ public class Configuration extends AbstractModelObject {
         Job job = serializer.read(Job.class, file);
         job.setFile(file);
         convertLegacyJob(job);
-        
-        job.rootPanelLocation.setPlacementsHolder(job.rootPanel);
         
         resolvePanel(job, job.getRootPanelLocation());
         restoreJobEnabledAndErrorHandlingSettings(job, job.getRootPanelLocation());
@@ -1384,8 +1427,16 @@ public class Configuration extends AbstractModelObject {
     public void saveJob(Job job, File file) throws Exception {
         saveJobEnabledAndErrorHandlingSettings(job, job.getRootPanelLocation());
         Serializer serializer = createSerializer();
-        serializer.write(job, new ByteArrayOutputStream());
-        serializer.write(job, file);
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        serializer.write(job, out);
+        ByteArrayInputStream in = new ByteArrayInputStream(out.toByteArray());
+        Job job2 = serializer.read(Job.class, in);
+        Panel rootpanel2 = job2.getRootPanelLocation().getPanel();
+        for (int i = 0; i < rootpanel2.getChildren().size(); i++) {
+            PlacementsHolderLocation<?> child = rootpanel2.getChild(i);
+            child.setFileName(relativizePath(new File(child.getFileName()), file).getPath());
+        }
+        serializer.write(job2, file);
         job.setFile(file);
         job.setDirty(false);
     }
@@ -1401,8 +1452,15 @@ public class Configuration extends AbstractModelObject {
      */
     public void savePanel(Panel panel) throws Exception {
         Serializer serializer = createSerializer();
-        serializer.write(panel, new ByteArrayOutputStream());
-        serializer.write(panel, panel.getFile());
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        serializer.write(panel, out);
+        ByteArrayInputStream in = new ByteArrayInputStream(out.toByteArray());
+        Panel panel2 = serializer.read(Panel.class, in);
+        for (int i = 0; i < panel2.getChildren().size(); i++) {
+            PlacementsHolderLocation<?> child = panel2.getChild(i);
+            child.setFileName(relativizePath(new File(child.getFileName()), panel.getFile()).getPath());
+        }
+        serializer.write(panel2, panel.getFile());
         panel.setDirty(false);
     }
 
@@ -1421,7 +1479,10 @@ public class Configuration extends AbstractModelObject {
         for (PlacementsHolderLocation<?> child : panel.getChildren()) {
             File childFile = new File(child.getFileName());
             if (!childFile.exists()) {
-                childFile = new File(file.getParentFile(), childFile.getName());
+                childFile = new File(file.getParentFile(), childFile.getPath());
+                if (!childFile.exists()) {
+                    childFile = new File(file.getParentFile(), childFile.getName());
+                }
             }
             if (childFile.exists()) {
                 if (child instanceof BoardLocation) {
