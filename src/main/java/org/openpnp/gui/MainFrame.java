@@ -137,6 +137,7 @@ public class MainFrame extends JFrame {
     private static final int PREF_MACHINECONTROLS_WINDOW_WIDTH_DEF = 490;
     private static final String PREF_MACHINECONTROLS_WINDOW_HEIGHT = "MachineControlsFrame.windowHeight"; //$NON-NLS-1$
     private static final int PREF_MACHINECONTROLS_WINDOW_HEIGHT_DEF = 340;
+    private static final int MINIMUM_WINDOW_SIZE = 50;
 
     private final Configuration configuration;
 
@@ -160,6 +161,7 @@ public class MainFrame extends JFrame {
     private Map<KeyStroke, Action> hotkeyActionMap;
     private AbstractConfigurationWizard wizardWithActiveProcess = null;
     private UndoManager undoManager = new UndoManager();
+    private boolean windowStyleMultiple;
 
     public static MainFrame get() {
         return mainFrame;
@@ -297,13 +299,15 @@ public class MainFrame extends JFrame {
             }
         });
 
-        if (prefs.getInt(PREF_WINDOW_WIDTH, 50) < 50) {
+        if (prefs.getInt(PREF_WINDOW_WIDTH, MINIMUM_WINDOW_SIZE) < MINIMUM_WINDOW_SIZE) {
             prefs.putInt(PREF_WINDOW_WIDTH, PREF_WINDOW_WIDTH_DEF);
         }
 
-        if (prefs.getInt(PREF_WINDOW_HEIGHT, 50) < 50) {
+        if (prefs.getInt(PREF_WINDOW_HEIGHT, MINIMUM_WINDOW_SIZE) < MINIMUM_WINDOW_SIZE) {
             prefs.putInt(PREF_WINDOW_HEIGHT, PREF_WINDOW_HEIGHT_DEF);
         }
+
+        windowStyleMultiple = prefs.getBoolean(PREF_WINDOW_STYLE_MULTIPLE, PREF_WINDOW_STYLE_MULTIPLE_DEF);
 
         setBounds(prefs.getInt(PREF_WINDOW_X, PREF_WINDOW_X_DEF),
                 prefs.getInt(PREF_WINDOW_Y, PREF_WINDOW_Y_DEF),
@@ -498,7 +502,7 @@ public class MainFrame extends JFrame {
         JCheckBoxMenuItem windowStyleMultipleMenuItem =
                 new JCheckBoxMenuItem(windowStyleMultipleSelected);
         mnWindows.add(windowStyleMultipleMenuItem);
-        if (prefs.getBoolean(PREF_WINDOW_STYLE_MULTIPLE, PREF_WINDOW_STYLE_MULTIPLE_DEF)) {
+        if (windowStyleMultiple) {
             windowStyleMultipleMenuItem.setSelected(true);
         }
 
@@ -761,9 +765,11 @@ public class MainFrame extends JFrame {
                 TitledBorder.TOP, null, null)); //$NON-NLS-1$
         panelCameraAndInstructions.add(cameraPanel, BorderLayout.CENTER);
 
+        splitPaneMachineAndTabs.setResizeWeight(0.1);
+
         addImporterMenuOptions();
 
-        addComponentListener(componentListener);
+        addComponentListener(mainFrameListener);
         
         boolean configurationLoaded = false;
         while (!configurationLoaded) {
@@ -808,7 +814,7 @@ public class MainFrame extends JFrame {
      * long-term to separate JFrame from JPanels
      */
     public void splitWindows() {
-        if (prefs.getBoolean(PREF_WINDOW_STYLE_MULTIPLE, PREF_WINDOW_STYLE_MULTIPLE_DEF)) {
+        if (windowStyleMultiple) {
             // pin panelCameraAndInstructions to a separate JFrame
             frameCamera = new JDialog(this, "OpenPnp - Camera", false); //$NON-NLS-1$
             // as of today no smart way found to get an adjusted size
@@ -1116,7 +1122,7 @@ public class MainFrame extends JFrame {
         tabs.setSelectedIndex(index);
     }
 
-    private ComponentListener componentListener = new ComponentAdapter() {
+    private ComponentListener mainFrameListener = new ComponentAdapter() {
         @Override
         public void componentMoved(ComponentEvent e) {
             prefs.putInt(PREF_WINDOW_X, getLocation().x);
@@ -1127,6 +1133,19 @@ public class MainFrame extends JFrame {
         public void componentResized(ComponentEvent e) {
             prefs.putInt(PREF_WINDOW_WIDTH, getSize().width);
             prefs.putInt(PREF_WINDOW_HEIGHT, getSize().height);
+            if (!windowStyleMultiple) {
+                /* when resizing then divider is limited apparently by panel constraints
+                   but they are somehow magically changed constraining e.g. jog panel
+                   is not reflected by outer panel as expected.
+                */
+                Dimension size = splitPaneMachineAndTabs.getSize();
+                Dimension dim = splitPaneMachineAndTabs.getLeftComponent().getMinimumSize();
+                dim.width = (int) Math.min(Math.round(size.width * 0.1), 300);
+                splitPaneMachineAndTabs.getLeftComponent().setMinimumSize(dim);
+                dim = splitPaneMachineAndTabs.getRightComponent().getMinimumSize();
+                dim.width = (int) Math.min(Math.round(size.width * 0.1), 200);
+                splitPaneMachineAndTabs.getRightComponent().setMinimumSize(dim);
+            }
         }
     };
 
