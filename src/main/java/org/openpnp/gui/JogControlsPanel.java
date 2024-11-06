@@ -296,11 +296,21 @@ public class JogControlsPanel extends JPanel {
         panelControls.add(sliderIncrements, "18, 3, 1, 10"); //$NON-NLS-1$
         sliderIncrements.setOrientation(SwingConstants.VERTICAL);
         sliderIncrements.setMajorTickSpacing(1);
-        sliderIncrements.setValue(1);
+        sliderIncrements.setValue(configuration.getDistance());
         sliderIncrements.setSnapToTicks(true);
         sliderIncrements.setPaintLabels(true);
         sliderIncrements.setMinimum(1);
         sliderIncrements.setMaximum(5);
+        sliderIncrements.addChangeListener(new ChangeListener() {
+            int oldValue = configuration.getDistance();
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                if (sliderIncrements.getValue() != oldValue) {
+                    oldValue = sliderIncrements.getValue();
+                    configuration.setDistance(oldValue);
+                }
+            }
+        });
 
         JButton yPlusButton = new JButton(yPlusAction);
         yPlusButton.setHideActionText(true);
