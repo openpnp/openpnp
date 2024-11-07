@@ -75,6 +75,7 @@ import org.openpnp.events.PlacementsHolderLocationSelectedEvent;
 import org.openpnp.events.JobLoadedEvent;
 import org.openpnp.events.PlacementSelectedEvent;
 import org.openpnp.events.PlacementsHolderLocationChangedEvent;
+import org.openpnp.gui.JobPanel.OpenRecentJobAction;
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.components.ExistingBoardOrPanelDialog;
 import org.openpnp.gui.processes.MultiPlacementBoardLocationProcess;
@@ -174,22 +175,22 @@ public class JobPanel extends JPanel {
                 new ActionGroup(captureToolBoardLocationAction, moveCameraToBoardLocationAction,
                         moveCameraToBoardLocationNextAction, moveToolToBoardLocationAction,
                         twoPointLocateBoardLocationAction, fiducialCheckAction,
-                        setEnabledAction, setCheckFidsAction, setSideAction);
+                        setEnabledAction, setCheckFidsAction, setSideAction, viewerAction);
         singleSelectionActionGroup.setEnabled(false);
         
         multiSelectionActionGroup = new ActionGroup(captureToolBoardLocationAction, setEnabledAction, 
-                setCheckFidsAction, setSideAction);
+                setCheckFidsAction, setSideAction, viewerAction);
         multiSelectionActionGroup.setEnabled(false);
         
         singleTopLevelSelectionActionGroup = new ActionGroup(captureToolBoardLocationAction, removeBoardAction, captureCameraBoardLocationAction,
                 moveCameraToBoardLocationAction,
                 moveCameraToBoardLocationNextAction, moveToolToBoardLocationAction,
                 twoPointLocateBoardLocationAction, fiducialCheckAction,
-                setEnabledAction, setCheckFidsAction, setSideAction);
+                setEnabledAction, setCheckFidsAction, setSideAction, viewerAction);
         singleTopLevelSelectionActionGroup.setEnabled(false);
         
         multiTopLevelSelectionActionGroup = new ActionGroup(captureToolBoardLocationAction, removeBoardAction, setEnabledAction, 
-                setCheckFidsAction, setSideAction);
+                setCheckFidsAction, setSideAction, viewerAction);
         multiTopLevelSelectionActionGroup.setEnabled(false);
         
         jobTableModel = new PlacementsHolderLocationsTableModel(configuration);
@@ -341,6 +342,9 @@ public class JobPanel extends JPanel {
                             }
                         }
                         MainFrame.get().updateMenuState(JobPanel.this);
+                        if (jobViewer != null) {
+                            jobViewer.setPlacementsHolder(job.getRootPanelLocation().getPlacementsHolder(), getSelections());
+                        }
                     }
                 });
 
@@ -568,7 +572,7 @@ public class JobPanel extends JPanel {
         updateJobActions();
         jobPlacementsPanel.updateActivePlacements();
         if (jobViewer != null) {
-            jobViewer.setPlacementsHolder(job.getRootPanelLocation().getPlacementsHolder());
+            jobViewer.setPlacementsHolder(job.getRootPanelLocation().getPlacementsHolder(), getSelections());
         }
         Configuration.get().getBus().post(new JobLoadedEvent(job));
     }
@@ -1500,9 +1504,9 @@ public class JobPanel extends JPanel {
         }
 
         @Override
-        public void actionPerformed(ActionEvent arg0) {
+        public void actionPerformed(ActionEvent arg0) {            
             if (jobViewer == null) {
-                jobViewer = new PlacementsHolderLocationViewerDialog(job.getRootPanelLocation(), true);
+                jobViewer = new PlacementsHolderLocationViewerDialog(job.getRootPanelLocation(), true, getSelections());
                 jobViewer.addWindowListener(new WindowAdapter() {
                     @Override
                     public void windowClosing(WindowEvent e) {
@@ -1511,6 +1515,7 @@ public class JobPanel extends JPanel {
                 });
             }
             else {
+                jobViewer.setPlacementsHolder(job.getRootPanelLocation().getPlacementsHolder(), getSelections());
                 jobViewer.setExtendedState(Frame.NORMAL);
             }
             jobViewer.setVisible(true);

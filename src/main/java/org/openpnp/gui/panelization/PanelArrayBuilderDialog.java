@@ -609,7 +609,7 @@ public class PanelArrayBuilderDialog extends JDialog {
                 }
             }
             {
-                panelLayout = new PlacementsHolderLocationViewer(panelLocation, false);
+                panelLayout = new PlacementsHolderLocationViewer(panelLocation, false, null);
                 panelLayout.setArrayRoot(rootChildLocation);
                 panelLayout.setShowLocations(false);
                 panelLayout.setShowReticle(false);

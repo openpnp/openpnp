@@ -150,6 +150,7 @@ public class PlacementsHolderLocationViewer extends JPanel implements PropertyCh
     private double aspectRatio;
     private PlacementsHolder<?> placementsHolder;
     private PlacementsHolderLocation<?> placementsHolderLocation;
+    private List<PlacementsHolderLocation<?>> selections;
     private boolean isJob = false;
     private LengthUnit units;
     private Rectangle2D graphicsBounds;
@@ -201,8 +202,9 @@ public class PlacementsHolderLocationViewer extends JPanel implements PropertyCh
     /**
      * Create the Panel.
      */
-    public PlacementsHolderLocationViewer(PlacementsHolderLocation<?> placementsHolderLocation, boolean isJob) {
+    public PlacementsHolderLocationViewer(PlacementsHolderLocation<?> placementsHolderLocation, boolean isJob, List<PlacementsHolderLocation<?>> selections) {
         this.placementsHolderLocation = placementsHolderLocation;
+        this.selections = selections;
         this.isJob = isJob;
         if (placementsHolderLocation instanceof BoardLocation) {
             placementsHolder = (Board) placementsHolderLocation.getPlacementsHolder();
@@ -475,7 +477,7 @@ public class PlacementsHolderLocationViewer extends JPanel implements PropertyCh
         drawingPanelRowHeader.setSize(VERTICAL_SCALE_WIDTH, newSize.height);
         drawingPanelRowHeader.setPreferredSize(new Dimension(VERTICAL_SCALE_WIDTH, newSize.height));
 
-        setPlacementsHolder(placementsHolder);
+        setPlacementsHolder(placementsHolder, selections);
         
         Configuration.get().getBus().register(this);
     }
@@ -570,11 +572,12 @@ public class PlacementsHolderLocationViewer extends JPanel implements PropertyCh
         }
     }
 
-    public void setPlacementsHolder(PlacementsHolder<?> placementsHolder) {
+    public void setPlacementsHolder(PlacementsHolder<?> placementsHolder, List<PlacementsHolderLocation<?>> selections) {
         if (placementsHolder == null) {
             return;
         }
         this.placementsHolder = placementsHolder;
+        this.selections = selections;
         if (placementsHolder instanceof Board) {
             placementsHolderLocation = new BoardLocation((Board) placementsHolder);
         }
@@ -808,7 +811,7 @@ public class PlacementsHolderLocationViewer extends JPanel implements PropertyCh
 
     public void generateGraphicalObjects(PlacementsHolderLocation<?> placementsHolderLocation) {
         
-        if (placementsHolderLocation == null || placementsHolderLocation.getPlacementsHolder() == null) {
+        if (placementsHolderLocation == null || placementsHolderLocation.getPlacementsHolder() == null || (selections != null && selections.size() == 0)) {
             return;
         }
         AffineTransform at = placementsHolderLocation.getLocalToGlobalTransform();
@@ -828,7 +831,7 @@ public class PlacementsHolderLocationViewer extends JPanel implements PropertyCh
                 graphicsBounds = null;
             }
         }
-        if (!atRoot || !isJob) {
+        if ((!atRoot || !isJob) && (selections == null || selections.indexOf(placementsHolderLocation) >= 0)) {
             if (graphicsBounds == null) {
                 graphicsBounds = profile.getBounds2D();
             }
@@ -873,6 +876,9 @@ public class PlacementsHolderLocationViewer extends JPanel implements PropertyCh
         }
         if ((atRoot || !showChildrenOnly) && placementsHolderLocation instanceof PanelLocation) {
             for (PlacementsHolderLocation<?> child : ((PanelLocation) placementsHolderLocation).getChildren()) {
+                if (selections != null && selections.indexOf(child) < 0 && !(child instanceof PanelLocation)) {
+                    continue;
+                }
                 generateGraphicalObjects(child);
             }
         }

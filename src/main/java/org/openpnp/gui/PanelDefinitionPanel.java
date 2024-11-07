@@ -925,7 +925,7 @@ public class PanelDefinitionPanel extends JPanel implements PropertyChangeListen
         @Override
         public void actionPerformed(ActionEvent arg0) {
             if (panelViewer == null) {
-                panelViewer = new PlacementsHolderLocationViewerDialog(rootPanelLocation, false);
+                panelViewer = new PlacementsHolderLocationViewerDialog(rootPanelLocation, false, null);
                 panelViewer.addWindowListener(new WindowAdapter() {
                     @Override
                     public void windowClosing(WindowEvent e) {
