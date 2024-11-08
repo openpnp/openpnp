@@ -23,6 +23,7 @@ import java.awt.EventQueue;
 import java.io.File;
 import java.util.Locale;
 
+import javax.swing.ToolTipManager;
 import javax.swing.UIManager;
 
 import org.openpnp.gui.MainFrame;
@@ -166,6 +167,7 @@ public class Main {
         ThemeInfo theme = configuration.getThemeInfo();
         new ThemeSettingsPanel().setTheme(theme, configuration.getFontSize(), configuration.isAlternateRows());
         ThemeDialog.getInstance().setOldTheme(theme);
+        ToolTipManager.sharedInstance().setDismissDelay(60000);
 
         EventQueue.invokeLater(new Runnable() {
             public void run() {
