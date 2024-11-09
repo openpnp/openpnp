@@ -86,6 +86,7 @@ public class PackageVisionPanel extends JPanel {
         tableModel = new FootprintTableModel(footprint, pkg);
 
         deleteAction.setEnabled(false);
+        toggleMarkAction.setEnabled(false);
 
         JPanel propertiesPanel = new JPanel();
         add(propertiesPanel, BorderLayout.NORTH);
@@ -212,6 +213,7 @@ public class PackageVisionPanel extends JPanel {
         table = new AutoSelectTextTable(tableModel);
         table.setAutoCreateRowSorter(true);
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        table.getColumnModel().getColumn(1).setPreferredWidth(14);
         table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
             @Override
             public void valueChanged(ListSelectionEvent e) {
@@ -222,6 +224,7 @@ public class PackageVisionPanel extends JPanel {
                 Pad pad = getSelectedPad();
 
                 deleteAction.setEnabled(pad != null);
+                toggleMarkAction.setEnabled(pad != null);
             }
         });
         tablePanel.setLayout(new BorderLayout(0, 0));
@@ -236,6 +239,7 @@ public class PackageVisionPanel extends JPanel {
 
         toolBar.add(newAction);
         toolBar.add(deleteAction);
+        toolBar.add(toggleMarkAction);
 
         JScrollPane tableScrollPane = new JScrollPane(table);
         tableScrollPane.setPreferredSize(new Dimension(454, 100));
@@ -329,6 +333,20 @@ public class PackageVisionPanel extends JPanel {
         }
     };
 
+    public final Action toggleMarkAction = new AbstractAction() {
+        {
+            putValue(SMALL_ICON, Icons.footprintToggle);
+            putValue(NAME, Translations.getString("PackageVisionPanel.PadsPanel.Action.ToggleMark")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString(
+                    "PackageVisionPanel.PadsPanel.Action.ToggleMark.Description")); //$NON-NLS-1$
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            footprint.toggleMark(getSelectedPad());
+            tableModel.fireTableDataChanged();
+        }
+    };
 
     public final Action generateDualAction = new AbstractAction() {
         {

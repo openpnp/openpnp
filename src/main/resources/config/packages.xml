@@ -58,7 +58,7 @@
 		<outline units="Millimeters" />
 		<footprint units="Millimeters" body-width="7.0" body-height="7.0">
 			<pad name="1" x="-4.0" y="-2.625" width="0.36" height="1.0"
-				rotation="90.0" roundness="0.0" />
+				rotation="90.0" roundness="0.0" mark="true" />
 			<pad name="2" x="-4.0" y="-1.875" width="0.36" height="1.0"
 				rotation="90.0" roundness="0.0" />
 			<pad name="3" x="-4.0" y="-1.125" width="0.36" height="1.0"

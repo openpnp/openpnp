@@ -123,6 +123,7 @@ public class Icons {
     public static Icon footprintQuad = getIcon("/icons/footprint-quad.svg");
     public static Icon footprintDual = getIcon("/icons/footprint-dual.svg");
     public static Icon footprintBga = getIcon("/icons/footprint-bga.svg");
+    public static Icon footprintToggle = getIcon("/icons/footprint-mark.svg");
     public static Icon kicad = getIcon("/icons/kicad-logo.svg");
 
     public static Icon getIcon(String resourceName, int width, int height) {
