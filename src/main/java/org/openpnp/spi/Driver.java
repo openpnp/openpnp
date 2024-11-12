@@ -58,6 +58,14 @@ import org.openpnp.spi.MotionPlanner.CompletionType;
     public void home(Machine machine) throws Exception;
 
     /**
+     * Delay operation for given time in milliseconds.
+     * 
+     * @param milliseconds
+     * @throws Exception
+     */
+    public void delay(int milliseconds) throws Exception;
+    
+    /**
      * Set the current physical axis positions to be reinterpreted as the specified coordinates. 
      * Used after visual homing and to reset a rotation angle after it has wrapped around. 
      * 

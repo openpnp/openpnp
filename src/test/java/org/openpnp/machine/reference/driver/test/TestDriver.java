@@ -34,6 +34,11 @@ public class TestDriver extends AbstractDriver implements Driver {
     public void home(Machine machine) throws Exception {
         delegate.home(machine);
     }
+    
+    @Override
+    public void delay(int milliseconds) throws Exception {
+        delegate.delay(milliseconds);
+    }
 
     @Override
     public void setGlobalOffsets(Machine machine, AxesLocation location)
@@ -88,6 +93,10 @@ public class TestDriver extends AbstractDriver implements Driver {
 
         }
 
+        @Override
+        public void delay(int milliseconds) throws Exception {
+        }
+        
         @Override
         public void setGlobalOffsets(Machine machine, AxesLocation location)
                 throws Exception {

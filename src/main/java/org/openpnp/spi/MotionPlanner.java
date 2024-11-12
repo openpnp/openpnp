@@ -89,6 +89,15 @@ public interface MotionPlanner extends PropertySheetHolder, Solutions.Subject {
     public void home() throws Exception;
 
     /**
+     * Delay for a given time in milliseconds
+     *
+     * @param hm
+     * @param milliseconds
+     * @throws Exception
+     */
+    public void delay(HeadMountable hm, int milliseconds) throws Exception;
+
+    /**
      * Mark the motion planner and underlying drivers as unhomed.
      */
     public void unhome();

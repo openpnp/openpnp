@@ -888,6 +888,9 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                         commandBuilt = null;
                     }
                     break;
+                case DELAY_COMMAND:
+                    commandBuilt = "{TimeMS:G4 P%d} ; Delay for given time in [ms]";
+                    break;
                 case MOVE_TO_COMMAND:
                     if (hasAxes) {
                         // Determine minimum rates to compute needed decimal digits.

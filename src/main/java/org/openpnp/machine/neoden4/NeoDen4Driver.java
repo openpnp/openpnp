@@ -425,6 +425,15 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
     }
 
     @Override
+    public void delay(int milliseconds) throws Exception {
+        // ToDO: execute delay in hardware. As workaround, use Thread.Sleep()
+        // force full machine synchonization
+        waitForCompletion(null, CompletionType.WaitForStillstand);
+        // time delay using OS
+        Thread.sleep(milliseconds);
+    }
+
+    @Override
     public void setGlobalOffsets(Machine machine, AxesLocation location) throws Exception {
         // Take only this driver's axes.
         AxesLocation newDriverLocation = location.drivenBy(this);

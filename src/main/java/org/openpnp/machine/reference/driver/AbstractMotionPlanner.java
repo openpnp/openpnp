@@ -126,6 +126,26 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
     }
 
     @Override
+    public void delay(HeadMountable hm, int milliseconds) throws Exception {
+        ReferenceMachine machine = getMachine();
+        // If the hm is given, we just delay for the drivers of that hm, otherwise we delay for all drivers,
+        // including those that do not have any axes attached.
+        if (hm != null) {
+            AxesLocation mappedAxes = hm.getMappedAxes(machine);
+            if (!mappedAxes.isEmpty()) {
+                for (Driver driver : mappedAxes.getAxesDrivers(machine)) {
+                    driver.delay(milliseconds);
+                }
+            }
+        }
+        else {
+            for (Driver driver : machine.getDrivers()) {
+                driver.delay(milliseconds);
+            }
+        }
+    }
+
+    @Override
     public synchronized void setGlobalOffsets(AxesLocation axesLocation) throws Exception {
         // Make sure we're on the same page with the controller, but there is no need to  wait for it to physically complete.
         executeMotionPlan(CompletionType.CommandStillstand);
