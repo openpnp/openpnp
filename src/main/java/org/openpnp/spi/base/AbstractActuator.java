@@ -363,7 +363,7 @@ public abstract class AbstractActuator extends AbstractHeadMountable implements 
      */
     protected void coordinateWithMachineBeforeActuate() throws Exception {
         if (isCoordinatedBeforeActuate()) {
-            coordinateWithMachine(CompletionType.WaitForStillstand);
+            coordinateWithMachine(CompletionType.CommandStillstand);
         }
     }
     protected void coordinateWithMachineAfterActuate() throws Exception {
