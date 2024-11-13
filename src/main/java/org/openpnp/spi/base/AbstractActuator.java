@@ -353,22 +353,50 @@ public abstract class AbstractActuator extends AbstractHeadMountable implements 
         return null;
     }
 
-    protected void coordinateWithMachine(boolean unconditional) throws Exception {
+    /**
+     * The following three methods are used to execute the requested coordination
+     * between actuator and machine. They are separated by type to allow checking
+     * if coordination is requested and to use the minimum completion types
+     * required.
+     * 
+     * @throws Exception
+     */
+    protected void coordinateWithMachineBeforeActuate() throws Exception {
+        if (isCoordinatedBeforeActuate()) {
+            coordinateWithMachine(CompletionType.WaitForStillstand);
+        }
+    }
+    protected void coordinateWithMachineAfterActuate() throws Exception {
+        if (isCoordinatedAfterActuate()) {
+            coordinateWithMachine(CompletionType.WaitForUnconditionalCoordination);
+        }
+    }
+    protected void coordinateWithMachineBeforeRead() throws Exception {
+        if (isCoordinatedBeforeActuate()) {
+            coordinateWithMachine(CompletionType.WaitForStillstand);
+        }
+    }
+
+    /**
+     * This method is used to executed the actual actuator to machine coordination using
+     * the given completion type. It is called by one of the three coordination points
+     * that can be configured per actuator.
+     * 
+     * @param completionType
+     * @throws Exception
+     */
+    private void coordinateWithMachine(CompletionType completionType) throws Exception {
         Machine machine = Configuration.get().getMachine();
         if (!machine.isTask(Thread.currentThread())) {
             throw new Exception("Actuator "+getName()+" must not coordinate with machine when actuated outside machine task.");
         }
         machine.getMotionPlanner()
-        .waitForCompletion(null, unconditional ? 
-                CompletionType.WaitForUnconditionalCoordination
-                : CompletionType.WaitForStillstand);
+        .waitForCompletion(null, completionType);
     }
-
+    
     @Override
     public String read() throws Exception {
-        if (isCoordinatedBeforeRead()) {
-            coordinateWithMachine(false);
-        }
+        coordinateWithMachineBeforeRead();
         return null;
     }
 
