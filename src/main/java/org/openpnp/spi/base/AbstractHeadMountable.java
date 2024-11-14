@@ -294,6 +294,16 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
         }
     }
 
+    @Override
+    public void delay(int milliseconds) throws Exception {
+        if (milliseconds > 0) {
+             Machine machine = getMachine();
+            if (machine.isEnabled() && machine instanceof ReferenceMachine) {
+                ((ReferenceMachine) machine)
+                    .getMotionPlanner().delay(getHead() == null ? null : this, milliseconds);
+            }
+        }
+    }
 
     @Override
     public AxesLocation getMappedAxes(Machine machine) {

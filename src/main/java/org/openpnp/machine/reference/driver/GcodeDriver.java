@@ -684,9 +684,14 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
 
     @Override
     public void delay(int milliseconds) throws Exception {
-        String command = getCommand(null, CommandType.DELAY_COMMAND);
-        command = substituteVariable(command, "TimeMS", milliseconds); 
-        sendGcode(command);
+        if (milliseconds > 0) {
+            String command = getCommand(null, CommandType.DELAY_COMMAND);
+            if (command == null) {
+                throw new Exception(getName()+" configuration error: missing DELAY_COMMAND.");
+            }
+            command = substituteVariable(command, "TimeMS", milliseconds); 
+            sendGcode(command);
+        }
     }
 
     @Override
