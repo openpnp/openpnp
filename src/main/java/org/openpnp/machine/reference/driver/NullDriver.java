@@ -88,10 +88,6 @@ public class NullDriver extends AbstractDriver {
         homeLocation.setToDriverCoordinates(this);
     }
 
-    @Override
-    public void delay(int milliseconds) throws Exception {
-        // ignore any delay request
-    }
 
     @Override
     public void setGlobalOffsets(Machine machine, AxesLocation location)

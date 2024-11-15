@@ -63,7 +63,12 @@ import org.openpnp.spi.MotionPlanner.CompletionType;
      * @param milliseconds
      * @throws Exception
      */
-    public void delay(int milliseconds) throws Exception;
+    default void delay(int milliseconds) throws Exception {
+        // force full machine synchonization
+        waitForCompletion(null, CompletionType.WaitForStillstand);
+        // time delay using OS
+        Thread.sleep(milliseconds);
+    }
     
     /**
      * Set the current physical axis positions to be reinterpreted as the specified coordinates. 
