@@ -35,6 +35,7 @@ import java.awt.event.MouseListener;
 import javax.swing.ButtonGroup;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -68,6 +69,7 @@ import org.openpnp.model.Solutions;
 import org.openpnp.model.Solutions.Issue;
 import org.openpnp.model.Solutions.Issue.ActionProperty;
 import org.openpnp.model.Solutions.Issue.DoubleProperty;
+import org.openpnp.model.Solutions.Issue.BooleanProperty;
 import org.openpnp.model.Solutions.Issue.IntegerProperty;
 import org.openpnp.model.Solutions.Issue.LengthProperty;
 import org.openpnp.model.Solutions.Issue.MultiLineTextProperty;
@@ -324,6 +326,30 @@ public class IssuePanel extends JPanel {
                     textField.setEnabled(issue.getState() == Solutions.State.Open);
                     panel.add(textField, "4, "+(formRow*2)+", left, default");
                 }
+            }
+            else if (property instanceof BooleanProperty) {
+                BooleanProperty booleanProperty = (BooleanProperty) property;
+                JLabel lbl = new JLabel(property.getLabel());
+                lbl.setToolTipText(property.getToolTip());
+                panel.add(lbl, "2, "+(formRow*2)+", right, default");
+                JCheckBox button = new JCheckBox();
+                button.addChangeListener(new ChangeListener() {
+                    public void stateChanged(ChangeEvent e) {
+                        boolean state = (boolean) button.isSelected();
+                        UiUtils.messageBoxOnException(() -> {
+                            booleanProperty.set(state);
+                        });
+                        boolean newState = booleanProperty.get();
+                        if (newState != state) {
+                            button.setSelected(newState);
+                        }
+                    }
+                });
+                boolean state = booleanProperty.get();
+                button.setSelected(state);
+                button.setToolTipText(property.getToolTip());
+                button.setEnabled(issue.getState() == Solutions.State.Open);
+                panel.add(button, "4, "+(formRow*2)+", left, default");
             }
             else if (property instanceof IntegerProperty) {
                 IntegerProperty intProperty = (IntegerProperty) property;

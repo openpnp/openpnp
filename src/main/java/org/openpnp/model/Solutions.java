@@ -405,6 +405,13 @@ public class Solutions extends AbstractTableModel {
                 super(label, toolTip);
             }
         }
+        public abstract class BooleanProperty extends CustomProperty {
+            public BooleanProperty(String label, String toolTip) {
+                super(label, toolTip);
+            }
+            public abstract boolean get();
+            public abstract void set(boolean value);
+        }
         public abstract class IntegerProperty extends CustomProperty {
             private final int min;
             private final int max;
