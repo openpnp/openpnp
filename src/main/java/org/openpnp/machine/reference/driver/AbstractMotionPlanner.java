@@ -127,6 +127,8 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
 
     @Override
     public void delay(HeadMountable hm, int milliseconds) throws Exception {
+        // Plan and execute any queued motion commands. 
+        executeMotionPlan(CompletionType.CommandStillstand);
         ReferenceMachine machine = getMachine();
         // If the hm is given, we just delay for the drivers of that hm, otherwise we delay for all drivers,
         // including those that do not have any axes attached.

@@ -120,7 +120,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         @Deprecated
         ACTUATOR_READ_WITH_DOUBLE_COMMAND(true, "Id", "Name", "Index", "DoubleValue", "IntegerValue"),
         ACTUATOR_READ_REGEX(true),
-        DELAY_COMMAND("TimeMS");  // delay in [ms]
+        DELAY_COMMAND("TimeMS", "TimeSeconds");  // delay in [ms]
 
         final boolean headMountable;
         final String[] variableNames;
@@ -494,7 +494,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         commands.add(new Command(null, CommandType.SET_GLOBAL_OFFSETS_COMMAND, "G92 {XL}{X:%.4f} {YL}{Y:%.4f} {ZL}{Z:%.4f} {RotationL}{Rotation:%.4f} ; Reset current position to given coordinates"));
         commands.add(new Command(null, CommandType.MOVE_TO_COMMAND, "{Acceleration:M204 S%.1f} G0 {XL}{X:%.4f} {YL}{Y:%.4f} {ZL}{Z:%.4f} {RotationL}{Rotation:%.4f} {FeedRate:F%.1f} ; Send standard Gcode move"));
         commands.add(new Command(null, CommandType.MOVE_TO_COMPLETE_COMMAND, "M400 ; Wait for moves to complete before returning"));
-        commands.add(new Command(null, CommandType.DELAY_COMMAND, "{TimeMS:G4 P%d} ; Delay for given time in [ms]"));
+        commands.add(new Command(null, CommandType.DELAY_COMMAND, "G4 {TimeMS:P%d}{TimeSeconds:S%.3f} ; Delay for given time in [ms] or [s]"));
     }
 
     public synchronized void connect() throws Exception {
@@ -690,6 +690,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
                 throw new Exception(getName()+" configuration error: missing DELAY_COMMAND.");
             }
             command = substituteVariable(command, "TimeMS", milliseconds); 
+            command = substituteVariable(command, "TimeSeconds", (double)milliseconds / 1000.0); 
             sendGcode(command);
         }
     }
