@@ -116,7 +116,8 @@ public class ReferenceMachineConfigurationWizard extends AbstractConfigurationWi
         
         JLabel lblNewLabel = new JLabel(Translations.getString(
                 "ReferenceMachineConfigurationWizard.PanelGeneral.UnsafeZRoamingLabel.text")); //$NON-NLS-1$
-        lblNewLabel.setToolTipText("<html>Maximum allowable roaming distance at unsafe Z.<br/><br/>\r\nVirtual Z axes (typically on cameras) are invisible, therefore it can easily be overlooked<br/>\r\nthat you are at unsafe Z. When you later press the <strong>Move tool to camera location</strong><br/>\r\nbutton, an unexpected Z down-move will result, potentially crashing the tool.<br/>\r\nThe maximum allowable roaming distance at unsafe Z therefore limits the jogging area<br/>\r\nwithin which an unsafe virtual Z is kept, it should be enough to fine-adjust a captured<br/>\r\nlocation. Jogging further away will automatically move the virtual axis to Safe Z.\r\n</html>");
+        lblNewLabel.setToolTipText(Translations.getString(
+                "ReferenceMachineConfigurationWizard.PanelGeneral.UnsafeZRoamingLabel.toolTipText")); //$NON-NLS-1$
         panelGeneral.add(lblNewLabel, "2, 10, right, default");
         
         unsafeZRoamingDistance = new JTextField();
