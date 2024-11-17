@@ -683,11 +683,11 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     }
 
     @Override
-    public void delay(int milliseconds) throws Exception {
+    public boolean delay(int milliseconds) throws Exception {
         if (milliseconds > 0) {
             String command = getCommand(null, CommandType.DELAY_COMMAND);
             if (command == null) {
-                throw new Exception(getName()+" configuration error: missing DELAY_COMMAND.");
+                return false;
             }
             command = substituteVariable(command, "TimeMS", milliseconds); 
             command = substituteVariable(command, "TimeSeconds", (double)milliseconds / 1000.0); 
@@ -696,7 +696,10 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
             // consider is delay a pending motion for subsequent WaitForCompletion to actually
             // wait which might otherwise be optimized away.
             motionPending = true;
+            return true;
         }
+        
+        return false;
     }
 
     @Override

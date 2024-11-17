@@ -127,6 +127,7 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
 
     @Override
     public void delay(HeadMountable hm, int milliseconds) throws Exception {
+        boolean delayNotExecuted = false;   // set to true if any driver requested to delay does not support delaying
         // Plan and execute any queued motion commands. 
         executeMotionPlan(CompletionType.CommandStillstand);
         ReferenceMachine machine = getMachine();
@@ -136,14 +137,22 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
             AxesLocation mappedAxes = hm.getMappedAxes(machine);
             if (!mappedAxes.isEmpty()) {
                 for (Driver driver : mappedAxes.getAxesDrivers(machine)) {
-                    driver.delay(milliseconds);
+                    delayNotExecuted |= driver.delay(milliseconds);
                 }
             }
         }
         else {
             for (Driver driver : machine.getDrivers()) {
-                driver.delay(milliseconds);
+                delayNotExecuted |= driver.delay(milliseconds);
             }
+        }
+        
+        // if any driver was not able to execute the delay, fabllback using Thread.sleep()
+        if (delayNotExecuted) {
+            // force full machine synchonization
+            waitForCompletion(null, CompletionType.WaitForStillstand);
+            // time delay using OS
+            Thread.sleep(milliseconds);
         }
     }
 

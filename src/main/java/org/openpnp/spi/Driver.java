@@ -61,13 +61,11 @@ import org.openpnp.spi.MotionPlanner.CompletionType;
      * Delay operation for given time in milliseconds.
      * 
      * @param milliseconds
+     * @return true if delay is executed by driver
      * @throws Exception
      */
-    default void delay(int milliseconds) throws Exception {
-        // force full machine synchonization
-        waitForCompletion(null, CompletionType.WaitForStillstand);
-        // time delay using OS
-        Thread.sleep(milliseconds);
+    default boolean delay(int milliseconds) throws Exception {
+        return false;
     }
     
     /**
