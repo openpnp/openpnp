@@ -324,9 +324,8 @@ public class GcodeAsyncDriver extends GcodeDriver {
         CommandLine commandLine = new CommandLine(command, timeout);
         commandQueue.offer(commandLine, writerQueueTimeout, TimeUnit.MILLISECONDS);
         if (command.startsWith("$")) {
-            waitForEmptyCommandQueue();
             Logger.trace(getName()+" $-command, waiting "+dollarWaitTimeMilliseconds+"ms");
-            Thread.sleep(dollarWaitTimeMilliseconds);
+            delay(dollarWaitTimeMilliseconds);
         }
     }
 
