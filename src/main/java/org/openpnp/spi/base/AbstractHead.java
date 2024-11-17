@@ -431,7 +431,7 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
                         pump.actuate(on);
                         if (on) {
                             Logger.trace(getName()+" dwell for pump on "+getPumpOnWaitMilliseconds()+"ms");
-                            pump.delay(getPumpOnWaitMilliseconds());
+                            Thread.sleep(getPumpOnWaitMilliseconds());
                         }
                     }
                     break;
@@ -442,7 +442,7 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
                         if (pump.isActuated() == null || !pump.isActuated()) {
                             pump.actuate(on);
                             Logger.trace(getName()+" dwell for pump on, keep running "+getPumpOnWaitMilliseconds()+"ms");
-                            pump.delay(getPumpOnWaitMilliseconds());
+                            Thread.sleep(getPumpOnWaitMilliseconds());
                         }
                     }
                     break;

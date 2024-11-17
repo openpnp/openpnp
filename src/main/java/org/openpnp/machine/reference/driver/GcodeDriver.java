@@ -1266,7 +1266,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         }
         waitForConfirmation(command, timeout);
         if (command.startsWith("$")) {
-            delay(dollarWaitTimeMilliseconds);
+            Thread.sleep(dollarWaitTimeMilliseconds);
         }
     }
 
