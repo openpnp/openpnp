@@ -380,9 +380,6 @@
             <command type="MOVE_TO_COMPLETE_COMMAND">
                <text><![CDATA[M400 ; Wait for moves to complete before returning]]></text>
             </command>
-            <command type="DELAY_COMMAND">
-               <text><![CDATA[{TimeMS:G4 P%d} ; Delay for given time in [ms]]]></text>
-            </command>
             <junction-deviation value="0.02" units="Millimeters"/>
          </driver>
       </drivers>
