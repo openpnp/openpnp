@@ -38,6 +38,7 @@ import org.openpnp.gui.support.PartsComboBoxModel;
 import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Part;
+import org.openpnp.Translations;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
@@ -84,7 +85,7 @@ public abstract class AbstractReferenceFeederConfigurationWizard
 
         panelPart = new JPanel();
         panelPart.setBorder(
-                new TitledBorder(null, "General Settings", TitledBorder.LEADING, TitledBorder.TOP, null));
+                new TitledBorder(null, Translations.getString("AbstractReferenceFeederConfigurationWizard.GeneralPanel.Border.title"), TitledBorder.LEADING, TitledBorder.TOP, null)); //$NON-NLS-1$
         contentPanel.add(panelPart);
         panelPart.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -111,12 +112,12 @@ public abstract class AbstractReferenceFeederConfigurationWizard
             // in WindowBuilder but doesn't happen during normal run.
         }
         
-        JLabel lblPart = new JLabel("Part");
+        JLabel lblPart = new JLabel(Translations.getString("AbstractReferenceFeederConfigurationWizard.GeneralPanel.PartLabel.text")); //$NON-NLS-1$
         panelPart.add(lblPart, "2, 2, right, default");
         comboBoxPart.setRenderer(new IdentifiableListCellRenderer<Part>());
         panelPart.add(comboBoxPart, "4, 2, left, default");
         
-        JLabel lblRetryCount = new JLabel("Feed Retry Count");
+        JLabel lblRetryCount = new JLabel(Translations.getString("AbstractReferenceFeederConfigurationWizard.GeneralPanel.FeedRetryCountLabel.text")); //$NON-NLS-1$
         panelPart.add(lblRetryCount, "2, 4, right, default");
         
         feedRetryCount = new JTextField();
@@ -124,7 +125,7 @@ public abstract class AbstractReferenceFeederConfigurationWizard
         panelPart.add(feedRetryCount, "4, 4");
         feedRetryCount.setColumns(3);
         
-        lblPickRetryCount = new JLabel("Pick Retry Count");
+        lblPickRetryCount = new JLabel(Translations.getString("AbstractReferenceFeederConfigurationWizard.GeneralPanel.PickRetryCountLabel.text")); //$NON-NLS-1$
         panelPart.add(lblPickRetryCount, "2, 6, right, default");
         
         pickRetryCount = new JTextField();
@@ -135,7 +136,7 @@ public abstract class AbstractReferenceFeederConfigurationWizard
         if (includePickLocation) {
             panelLocation = new JPanel();
             panelLocation.setBorder(new TitledBorder(
-                    null, "Pick Location",
+                    null, Translations.getString("AbstractReferenceFeederConfigurationWizard.PickLocationPanel.Border.title"), //$NON-NLS-1$
                     TitledBorder.LEADING, TitledBorder.TOP, null));
             contentPanel.add(panelLocation);
             panelLocation
