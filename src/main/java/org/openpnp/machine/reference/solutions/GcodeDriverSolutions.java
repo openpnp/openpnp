@@ -987,6 +987,7 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                             commandBuilt = "^.*";
                             int axisIndex = 0;
                             int lastAxisIndex = 26;
+                            int axesAdded = 0;
                             String pattern = "";
                             List<String> letters = gcodeDriver.getReportedAxesLetters();
                             if (letters.isEmpty()) {
@@ -1000,7 +1001,12 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                                             // Skipped some axes, add a wild.card.
                                             commandBuilt += ".*";
                                         }
-                                        commandBuilt += variable+":(?<"+variable+">-?\\d+\\.\\d+) ";
+                                        if (axesAdded > 0) {
+                                            // if any axis as been added, allow any number of whitespace
+                                            commandBuilt += "\\s*";
+                                        }
+                                        commandBuilt += variable+":(?<"+variable+">-?\\d+\\.\\d+)";
+                                        axesAdded++;
                                         pattern += variable+" ";
                                         lastAxisIndex = axisIndex;
                                     }
