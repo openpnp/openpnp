@@ -400,7 +400,8 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
 
         lblHue = new JLabel(Translations.getString(
                 "ReferenceNozzleTipCalibrationWizard.BackgroundCalibrationPanel.HueLabel.text")); //$NON-NLS-1$
-        lblHue.setToolTipText("Base Color, Hue in the HSV color model");
+        lblHue.setToolTipText(Translations.getString(
+                "ReferenceNozzleTipCalibrationWizard.BackgroundCalibrationPanel.HueLabel.toolTipText")); //$NON-NLS-1$
         panelBackground.add(lblHue, "2, 10, right, default");
 
         backgroundMinHue = new JTextField();
@@ -466,6 +467,8 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
 
         btnShowProblems = new JButton(Translations.getString(
                 "ReferenceNozzleTipCalibrationWizard.BackgroundCalibrationPanel.ShowProblemsButton.text")); //$NON-NLS-1$
+        btnShowProblems.setToolTipText(Translations.getString(
+                "ReferenceNozzleTipCalibrationWizard.BackgroundCalibrationPanel.ShowProblemsButton.toolTipText")); //$NON-NLS-1$        
         btnShowProblems.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent arg0) {
                 showBackgroundProblems(nozzleTip, true);

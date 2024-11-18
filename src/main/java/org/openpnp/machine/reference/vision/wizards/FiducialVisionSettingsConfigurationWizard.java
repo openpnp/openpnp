@@ -119,14 +119,9 @@ public class FiducialVisionSettingsConfigurationWizard extends AbstractConfigura
             btnSpecializeSetting.setText(Translations.getString(
                     "FiducialVisionSettingsConfigurationWizard.GeneralPanel.SpecializeSettingsButton.OptimizeText" //$NON-NLS-1$
             ));
-            btnSpecializeSetting.setToolTipText("<html>Optimize the Fiducial Vision Settings and their assignments:<br/>"
-                    + "<ul>"
-                    + "<li>Consolidate duplicate settings.</li>"
-                    + "<li>Remove unused settings.</li>"
-                    + "<li>Configure the most common Part settings as inherited Package settings.</li>"
-                    + "<li>Remove assignments where the same settings would be inherited anyway.</li>"
-                    + "</ul>"
-                    + "</html>");
+            btnSpecializeSetting.setToolTipText(Translations.getString(
+                    "FiducialVisionSettingsConfigurationWizard.GeneralPanel.SpecializeSettingsButton.OptimizeText.toolTipText" //$NON-NLS-1$
+            ));
         }
         else {
             btnSpecializeSetting.setEnabled(false);
