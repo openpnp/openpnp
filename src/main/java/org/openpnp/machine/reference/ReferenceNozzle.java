@@ -1141,8 +1141,6 @@ public class ReferenceNozzle extends AbstractNozzle implements HeadMountable {
         }
         else {
             // simple method, just dwell
-            // if dwelling is handled via Thread.sleep() full machine coordination with wait for stillstand is required
-            waitForCompletion(CompletionType.WaitForStillstand);
             Logger.trace(getName()+" dwell for pick vacuum "+milliseconds+"ms");
             delay(milliseconds);
         }
@@ -1178,8 +1176,6 @@ public class ReferenceNozzle extends AbstractNozzle implements HeadMountable {
         }
         else {
             // simple method, just dwell
-            // if dwelling is handled via Thread.sleep() full machine coordination with wait for stillstand is required
-            waitForCompletion(CompletionType.WaitForStillstand);
             Logger.trace(getName()+" dwell for place vacuum dissipation "+milliseconds+"ms");
             delay(milliseconds);
         }
@@ -1238,9 +1234,7 @@ public class ReferenceNozzle extends AbstractNozzle implements HeadMountable {
                 }
             }
             else {
-                // simple method, just dwell
-                // if dwelling is handled via Thread.sleep() full machine coordination with wait for stillstand is required
-                waitForCompletion(CompletionType.WaitForStillstand);
+                // simple method, just dwell 
                 Logger.trace(getName()+" dwell for part off probing, open valve "+probingMilliseconds+"ms");
                 delay(probingMilliseconds);
                 if (dwellMilliseconds <= 0) {
@@ -1280,8 +1274,6 @@ public class ReferenceNozzle extends AbstractNozzle implements HeadMountable {
         else {
             // simple method, just dwell and then read the level
             if (dwellMilliseconds > 0) {
-                // if dwelling is handled via Thread.sleep() full machine coordination with wait for stillstand is required
-                waitForCompletion(CompletionType.WaitForStillstand);
                 Logger.trace(getName()+" dwell for part off probing, closed valve "+dwellMilliseconds+"ms");
                 delay(dwellMilliseconds);
                 returnedVacuumLevel = readVacuumLevel();
