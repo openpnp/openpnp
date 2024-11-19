@@ -53,6 +53,7 @@ import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
 import org.openpnp.spi.base.AbstractActuator;
+import org.openpnp.spi.base.AbstractActuator.ActuatorCoordinationEnumType;
 import org.openpnp.spi.base.AbstractHead;
 import org.openpnp.util.Collect;
 import org.openpnp.util.MovableUtils;
@@ -818,7 +819,7 @@ public class ContactProbeNozzle extends ReferenceNozzle {
                 }
                 else if (getContactProbeActuator() instanceof AbstractActuator) {
                     AbstractActuator contactProbeActuator = (AbstractActuator) getContactProbeActuator();
-                    if (!contactProbeActuator.isCoordinatedAfterActuate()) {
+                    if (contactProbeActuator.getCoordinatedAfterActuateEnum() != ActuatorCoordinationEnumType.WaitForStillstand) {
                         solutions.add(new Solutions.Issue(
                                 contactProbeActuator, 
                                 "Contact probe actuator needs machine coordination after actuation.", 
@@ -828,7 +829,9 @@ public class ContactProbeNozzle extends ReferenceNozzle {
 
                             @Override
                             public void setState(Solutions.State state) throws Exception {
-                                contactProbeActuator.setCoordinatedAfterActuate((state == Solutions.State.Solved));
+                                if (state == Solutions.State.Solved) {
+                                    contactProbeActuator.setCoordinatedAfterActuateEnum(ActuatorCoordinationEnumType.WaitForStillstand);
+                                }
                                 super.setState(state);
                             }
                         });

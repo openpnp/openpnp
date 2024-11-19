@@ -142,12 +142,6 @@ public interface Actuator
 
     public String read(Object value) throws Exception;
 
-    boolean isCoordinatedBeforeActuate();
-
-    boolean isCoordinatedAfterActuate();
-
-    boolean isCoordinatedBeforeRead();
-
     /**
      * The InterlockMonitor controls an actuator to perform an interlock functions in the course of machine motion. 
      * It can actuate its actuator according to specific axis positions or movements. Or it can read its actuator to 

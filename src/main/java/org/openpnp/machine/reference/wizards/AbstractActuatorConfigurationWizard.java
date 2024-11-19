@@ -46,6 +46,7 @@ import org.openpnp.model.Configuration;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.Actuator.ActuatorValueType;
+import org.openpnp.spi.base.AbstractActuator.ActuatorCoordinationEnumType;
 import org.openpnp.spi.base.AbstractAxis;
 import org.openpnp.spi.base.AbstractMachine;
 
@@ -69,28 +70,28 @@ public abstract class AbstractActuatorConfigurationWizard extends AbstractConfig
     private JPanel generalPanel;
     private JLabel lblIndex;
     private JTextField indexTextField;
-    private JComboBox axisX;
-    private JComboBox axisY;
-    private JComboBox axisZ;
+    private JComboBox<AxesComboBoxModel> axisX;
+    private JComboBox<AxesComboBoxModel> axisY;
+    private JComboBox<AxesComboBoxModel> axisZ;
     private JLabel lblRotation;
-    private JComboBox axisRotation;
+    private JComboBox<AxesComboBoxModel> axisRotation;
     private JTextField locationRotation;
     private JLabel lblAxis;
     private JLabel lblOffset;
 
     private JPanel panelCoordination;
-    private JCheckBox coordinatedBeforeActuate;
     private JLabel lblBeforeActuation;
+    private JComboBox<ActuatorCoordinationEnumType> coordinatedBeforeActuate;
     private JLabel lblAfterActuation;
-    private JCheckBox coordinatedAfterActuate;
+    private JComboBox<ActuatorCoordinationEnumType> coordinatedAfterActuate;
     private JLabel lblBeforeRead;
-    private JCheckBox coordinatedBeforeRead;
+    private JComboBox<ActuatorCoordinationEnumType> coordinatedBeforeRead;
 
     private boolean reloadWizard;
     private JLabel lblAxisInterlock;
     private JCheckBox interlockActuator;
     private JLabel lblValueType;
-    protected JComboBox valueType;
+    protected JComboBox<Actuator.ActuatorValueType> valueType;
     private JTextField defaultOnDouble;
     private JLabel lblOnDouble;
     private JLabel lblOffDouble;
@@ -100,11 +101,11 @@ public abstract class AbstractActuatorConfigurationWizard extends AbstractConfig
     private JTextField defaultOnString;
     private JTextField defaultOffString;
     private JLabel lblHomingActuation;
-    private JComboBox homedActuation;
+    private JComboBox<ReferenceActuator.MachineStateActuation> homedActuation;
     private JLabel lblEnableActuation;
+    private JComboBox<ReferenceActuator.MachineStateActuation> enabledActuation;
     private JLabel lblDisableActuation;
-    private JComboBox enabledActuation;
-    private JComboBox disabledActuation;
+    private JComboBox<ReferenceActuator.MachineStateActuation> disabledActuation;
     private JLabel lblMachineStateActuation;
     private JLabel lblMachineState;
 
@@ -161,16 +162,16 @@ public abstract class AbstractActuatorConfigurationWizard extends AbstractConfig
                 "AbstractActuatorConfigurationWizard.CoordinateSystemPanel.AxisLabel.text")); //$NON-NLS-1$
         panelOffsets.add(lblAxis, "2, 4, right, default");
 
-        axisX = new JComboBox(new AxesComboBoxModel(machine, AbstractAxis.class, Axis.Type.X, true));
+        axisX = new JComboBox<AxesComboBoxModel>(new AxesComboBoxModel(machine, AbstractAxis.class, Axis.Type.X, true));
         panelOffsets.add(axisX, "4, 4, fill, default");
 
-        axisY = new JComboBox(new AxesComboBoxModel(machine, AbstractAxis.class, Axis.Type.Y, true));
+        axisY = new JComboBox<AxesComboBoxModel>(new AxesComboBoxModel(machine, AbstractAxis.class, Axis.Type.Y, true));
         panelOffsets.add(axisY, "6, 4, fill, default");
 
-        axisZ = new JComboBox(new AxesComboBoxModel(machine, AbstractAxis.class, Axis.Type.Z, true));
+        axisZ = new JComboBox<AxesComboBoxModel>(new AxesComboBoxModel(machine, AbstractAxis.class, Axis.Type.Z, true));
         panelOffsets.add(axisZ, "8, 4, fill, default");
 
-        axisRotation = new JComboBox(new AxesComboBoxModel(machine, AbstractAxis.class, Axis.Type.Rotation, true));
+        axisRotation = new JComboBox<AxesComboBoxModel>(new AxesComboBoxModel(machine, AbstractAxis.class, Axis.Type.Rotation, true));
         panelOffsets.add(axisRotation, "10, 4, fill, default");
 
         lblOffset = new JLabel(Translations.getString(
@@ -254,7 +255,7 @@ public abstract class AbstractActuatorConfigurationWizard extends AbstractConfig
                 "AbstractActuatorConfigurationWizard.CoordinationPanel.BeforeActuationLabel.toolTipText")); //$NON-NLS-1$
         panelCoordination.add(lblBeforeActuation, "2, 2, right, default");
         
-        coordinatedBeforeActuate = new JCheckBox("");
+        coordinatedBeforeActuate = new JComboBox<ActuatorCoordinationEnumType>(ActuatorCoordinationEnumType.values());
         panelCoordination.add(coordinatedBeforeActuate, "4, 2, center, bottom");
         
         lblAfterActuation = new JLabel(Translations.getString(
@@ -263,7 +264,7 @@ public abstract class AbstractActuatorConfigurationWizard extends AbstractConfig
                 "AbstractActuatorConfigurationWizard.CoordinationPanel.AfterActuationLabel.toolTipText")); //$NON-NLS-1$
         panelCoordination.add(lblAfterActuation, "2, 4, right, default");
         
-        coordinatedAfterActuate = new JCheckBox("");
+        coordinatedAfterActuate = new JComboBox<ActuatorCoordinationEnumType>(ActuatorCoordinationEnumType.values());
         panelCoordination.add(coordinatedAfterActuate, "4, 4");
         
         lblBeforeRead = new JLabel(Translations.getString(
@@ -272,7 +273,7 @@ public abstract class AbstractActuatorConfigurationWizard extends AbstractConfig
                 "AbstractActuatorConfigurationWizard.CoordinationPanel.BeforeReadLabel.toolTipText")); //$NON-NLS-1$
         panelCoordination.add(lblBeforeRead, "2, 6, right, default");
         
-        coordinatedBeforeRead = new JCheckBox("");
+        coordinatedBeforeRead = new JComboBox<ActuatorCoordinationEnumType>(ActuatorCoordinationEnumType.values());
         panelCoordination.add(coordinatedBeforeRead, "4, 6");
         
         generalPanel = new JPanel();
@@ -312,7 +313,7 @@ public abstract class AbstractActuatorConfigurationWizard extends AbstractConfig
                 "AbstractActuatorConfigurationWizard.GeneralPanel.ValueTypeLabel.toolTipText")); //$NON-NLS-1$
         generalPanel.add(lblValueType, "2, 2, right, default");
         
-        valueType = new JComboBox(Actuator.ActuatorValueType.values());
+        valueType = new JComboBox<Actuator.ActuatorValueType>(Actuator.ActuatorValueType.values());
         valueType.addItemListener(new ItemListener() {
             public void itemStateChanged(ItemEvent e) {
                 reloadWizard = true;
@@ -376,13 +377,13 @@ public abstract class AbstractActuatorConfigurationWizard extends AbstractConfig
                 "AbstractActuatorConfigurationWizard.GeneralPanel.ActuationLabel.toolTipText")); //$NON-NLS-1$
         generalPanel.add(lblMachineStateActuation, "2, 11, right, default");
         
-        enabledActuation = new JComboBox(ReferenceActuator.MachineStateActuation.values());
+        enabledActuation = new JComboBox<ReferenceActuator.MachineStateActuation>(ReferenceActuator.MachineStateActuation.values());
         generalPanel.add(enabledActuation, "4, 11, fill, default");
         
-        homedActuation = new JComboBox(ReferenceActuator.MachineStateActuation.values());
+        homedActuation = new JComboBox<ReferenceActuator.MachineStateActuation>(ReferenceActuator.MachineStateActuation.values());
         generalPanel.add(homedActuation, "6, 11, fill, default");
         
-        disabledActuation = new JComboBox(ReferenceActuator.MachineStateActuation.values());
+        disabledActuation = new JComboBox<ReferenceActuator.MachineStateActuation>(ReferenceActuator.MachineStateActuation.values());
         generalPanel.add(disabledActuation, "8, 11, fill, default");
         
         lblIndex = new JLabel(Translations.getString(
@@ -435,9 +436,9 @@ public abstract class AbstractActuatorConfigurationWizard extends AbstractConfig
 
         addWrappedBinding(actuator, "safeZ", textFieldSafeZ, "text", lengthConverter);
 
-        addWrappedBinding(actuator, "coordinatedBeforeActuate", coordinatedBeforeActuate, "selected");
-        addWrappedBinding(actuator, "coordinatedAfterActuate", coordinatedAfterActuate, "selected");
-        addWrappedBinding(actuator, "coordinatedBeforeRead", coordinatedBeforeRead, "selected");
+        addWrappedBinding(actuator, "coordinatedBeforeActuateEnum", coordinatedBeforeActuate, "selectedItem");
+        addWrappedBinding(actuator, "coordinatedAfterActuateEnum", coordinatedAfterActuate, "selectedItem");
+        addWrappedBinding(actuator, "coordinatedBeforeReadEnum", coordinatedBeforeRead, "selectedItem");
 
         addWrappedBinding(actuator, "valueType", valueType, "selectedItem");
         addWrappedBinding(actuator, "defaultOnDouble", defaultOnDouble, "text", doubleConverter);
