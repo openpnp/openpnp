@@ -411,6 +411,22 @@ public class VisionSolutions implements Solutions.Subject {
                     },
             };
         }
+
+        @Override
+        public Solutions.Issue.Choice[] getChoices() {
+            return new Solutions.Issue.Choice[]{
+                new Solutions.Issue.Choice(true,  
+                                  "<html><h3>Use Auto-Focus</h3>" 
+                                + "<p>This is the recommended setting.</p>"
+                                + "</html>", 
+                                null), 
+                new Solutions.Issue.Choice(false,  
+                                  "<html><h3>Use nozzle Z location</h3>" 
+                                + "<p><span style=\"color:red;\">CAUTION:</span> This will invalidate part height auto detection using auto focus.</p>" 
+                                + "</html>", 
+                                null), 
+            };
+        }
     }
 
     private void perDownLookingCameraSolutions(Solutions solutions, ReferenceHead head, Camera defaultCamera, Nozzle defaultNozzle, ReferenceCamera camera) {
@@ -469,7 +485,7 @@ public class VisionSolutions implements Solutions.Subject {
                         UiUtils.submitUiMachineTask(
                                 () -> {
                                     // Perform preliminary camera calibration. 
-                                    Length fiducialDiameter = autoCalibrateCamera(camera, camera, (double) featureDiameter, "Primary Fiducial & Camera Calibration", false);
+                                    Length fiducialDiameter = autoCalibrateCamera(camera, camera, (double) featureDiameter, "Primary Fiducial & Camera Calibration", false, false);
                                     // Get the precise fiducial location.
                                     Location fiducialLocation = centerInOnSubjectLocation(camera, camera, fiducialDiameter, "Primary Fiducial & Camera Calibration", false);
                                     // Store it.
@@ -551,7 +567,7 @@ public class VisionSolutions implements Solutions.Subject {
                         UiUtils.submitUiMachineTask(
                                 () -> {
                                     // Perform preliminary 3D camera calibration. 
-                                    Length fiducialDiameter = autoCalibrateCamera(camera, camera, (double) featureDiameter, "Secondary Fiducial Calibration", true);
+                                    Length fiducialDiameter = autoCalibrateCamera(camera, camera, (double) featureDiameter, "Secondary Fiducial Calibration", true, false);
                                     // Set location as fiducial location.
                                     Location fiducialLocation = centerInOnSubjectLocation(camera, camera, 
                                             fiducialDiameter, "Secondary Fiducial Calibration", true);
@@ -633,7 +649,7 @@ public class VisionSolutions implements Solutions.Subject {
                         UiUtils.submitUiMachineTask(
                                 () -> {
                                     // Perform preliminary camera calibration. 
-                                    autoCalibrateCamera(camera, camera, (double) featureDiameter, "Camera Positional Calibration", false);
+                                    autoCalibrateCamera(camera, camera, (double) featureDiameter, "Camera Positional Calibration", false, false);
                                     // Get the precise fiducial location.
                                     Location fiducialLocation = centerInOnSubjectLocation(camera, camera, 
                                             head.getCalibrationPrimaryFiducialDiameter(), "Camera Positional Calibration", false);
@@ -707,6 +723,7 @@ public class VisionSolutions implements Solutions.Subject {
                             + " over the camera "+camera.getName()+". Target it with the cross-hairs.</p><br/>"
                             + "<p>Jog the nozzle tip point down in Z so it is in focus. This should be more or less on the same Z level "
                             + "as the PCB surface. If not, consider adjusting the camera focus to make it so.</p><br/>"
+                            + "<p>If enabled, auto-focus will be used to detect the precise Z location.</p><br/>"
                             + "<p>Adjust the <strong>Feature diameter</strong> up and down and see if it is detected right in the "
                             + "camera view. A green circle and cross-hairs should appear and hug the wanted contour. "
                             + "Zoom the camera using the scroll-wheel.</p><br/>"
@@ -742,10 +759,11 @@ public class VisionSolutions implements Solutions.Subject {
                         }
                         oldVisionDiameter = referenceNozzleTip.getCalibration().getCalibrationTipDiameter();
                         final State oldState = getState();
+                        final boolean autoFocus = (boolean)getChoice();
                         UiUtils.submitUiMachineTask(
                                 () -> {
                                     // Perform preliminary camera calibration. 
-                                    Length visionDiameter = autoCalibrateCamera(camera, defaultNozzle, Double.valueOf(featureDiameter), "Camera Positional Calibration", false);
+                                    Length visionDiameter = autoCalibrateCamera(camera, defaultNozzle, Double.valueOf(featureDiameter), "Camera Positional Calibration", false, autoFocus);
                                     // Get the nozzle location.
                                     Location nozzleLocation = centerInOnSubjectLocation(camera, defaultNozzle, visionDiameter, "Camera Positional Calibration", false);
                                     // Determine the camera offsets, the nozzle now shows the true offset.
@@ -1139,7 +1157,7 @@ public class VisionSolutions implements Solutions.Subject {
      * @return The diameter of the detected feature.
      * @throws Exception
      */
-    public Length autoCalibrateCamera(ReferenceCamera camera, HeadMountable movable, Double expectedDiameter, String diagnostics, boolean secondary) 
+    public Length autoCalibrateCamera(ReferenceCamera camera, HeadMountable movable, Double expectedDiameter, String diagnostics, boolean secondary, boolean autoFocus) 
             throws Exception {
         if (camera.getAdvancedCalibration().isOverridingOldTransformsAndDistortionCorrectionSettings()) {
             throw new Exception("Preliminary camera "+camera.getName()+" calibration cannot be performed, "
@@ -1299,7 +1317,7 @@ public class VisionSolutions implements Solutions.Subject {
                     camera.setCameraPrimaryZ(camera.getCameraPhysicalLocation().getLengthZ());
                 }
 
-                if (pass == 0 && movable != camera && zeroKnowledgeAutoFocusDepthMm != 0) {
+                if (autoFocus == true && pass == 0 && movable != camera && zeroKnowledgeAutoFocusDepthMm != 0) {
                     // Auto-focus and set Z of camera.
                     Location location0 = initialLocation.add(new Location(LengthUnit.Millimeters, 0, 0, zeroKnowledgeAutoFocusDepthMm, 0));
                     Location location1 = initialLocation.add(new Location(LengthUnit.Millimeters, 0, 0, -zeroKnowledgeAutoFocusDepthMm, 0));
