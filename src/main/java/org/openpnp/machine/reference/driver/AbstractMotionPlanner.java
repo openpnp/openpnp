@@ -149,8 +149,6 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
         
         // if any driver was not able to execute the delay, fabllback using Thread.sleep()
         if (delayNotExecuted) {
-            // force full machine synchonization
-            waitForCompletion(null, CompletionType.WaitForStillstand);
             // time delay using OS
             Thread.sleep(milliseconds);
         }

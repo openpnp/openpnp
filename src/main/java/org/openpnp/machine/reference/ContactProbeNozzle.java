@@ -543,7 +543,7 @@ public class ContactProbeNozzle extends ReferenceNozzle {
                 for (int i = 0; i < count; i++) {
                     probedLocation = probedLocation.subtract(probeIncrement);
                     moveTo(probedLocation);
-                    delay((int)sniffleDwellTime);
+                    delay(sniffleDwellTime);
                     if (! isPartOff()) {
                         // We got contact.
                         probedLocation = probedLocation.add(new Location(contactProbeAdjustZ .getUnits(), 0, 0, contactProbeAdjustZ.getValue(), 0));
