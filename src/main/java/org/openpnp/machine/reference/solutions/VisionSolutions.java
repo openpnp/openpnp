@@ -417,11 +417,12 @@ public class VisionSolutions implements Solutions.Subject {
             return new Solutions.Issue.Choice[]{
                 new Solutions.Issue.Choice(true,  
                                   "<html><h3>Use Auto-Focus</h3>" 
+                                + "<p>This is the recommended setting.</p>"
                                 + "</html>", 
                                 null), 
                 new Solutions.Issue.Choice(false,  
                                   "<html><h3>Use nozzle Z location</h3>" 
-                                + "<p><b>CAUTION</b> This will invalidate part height auto detection using auto focus.</p>" 
+                                + "<p><span style=\"color:red;\">CAUTION:</span> This will invalidate part height auto detection using auto focus.</p>" 
                                 + "</html>", 
                                 null), 
             };
