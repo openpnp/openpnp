@@ -413,14 +413,41 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     protected class PanelFiducialCheck implements Step {
         public Step step() throws JobProcessorException {
             FiducialLocator locator = Configuration.get().getMachine().getFiducialLocator();
+            Location currentLocation;
             
-            for (PanelLocation panelLocation : job.getPanelLocations()) {
-                if (!panelLocation.isEnabled()) {
-                    continue;
-                }
-                if (!panelLocation.isCheckFiducials()) {
-                    continue;
-                }
+            // collect all panel fiducial locations
+            List<PanelLocation> panelLocations = job.getPanelLocations()
+                    .stream()
+                    .filter(pl -> { return pl.isEnabled(); })
+                    .filter(pl -> { return pl.isCheckFiducials(); })
+                    .collect(Collectors.toList());
+
+            // try to get current location as start location
+            try {
+                currentLocation = head.getDefaultCamera().getLocation();
+            }
+            catch (Exception e) {
+                currentLocation = null;
+            }
+            
+            // optimize panel fiducial using travelling salesman
+            TravellingSalesman<PanelLocation> tsm = new TravellingSalesman<>(
+                    panelLocations, 
+                    new TravellingSalesman.Locator<PanelLocation>() { 
+                        @Override
+                        public Location getLocation(PanelLocation locatable) {
+                            return locatable.getGlobalLocation();
+                        }
+                    }, 
+                    // start from current camera location
+                    currentLocation,
+                    null);
+            
+            // Solve it (using the default heuristics).
+            tsm.solve();
+            
+            // perform fudicual check in optimized order
+            for (PanelLocation panelLocation : tsm.getTravel()) {
                 fireTextStatus("Panel fiducial check on %s", panelLocation);
                 try {
                     locator.locatePlacementsHolder(panelLocation);
@@ -438,18 +465,42 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         
         public Step step() throws JobProcessorException {
             FiducialLocator locator = Configuration.get().getMachine().getFiducialLocator();
+            Location currentLocation;
+            
+            // collect all panel fiducial locations
+            List<BoardLocation> boardLocations = job.getBoardLocations()
+                    .stream()
+                    .filter(bl -> { return bl.isEnabled(); })
+                    .filter(bl -> { return bl.isCheckFiducials(); })
+                    .filter(bl -> { return !completed.contains(bl); })
+                    .collect(Collectors.toList());
 
-            for (BoardLocation boardLocation : job.getBoardLocations()) {
-                if (!boardLocation.isEnabled()) {
-                    continue;
-                }
-                if (!boardLocation.isCheckFiducials()) {
-                    continue;
-                }
-                if (completed.contains(boardLocation)) {
-                    continue;
-                }
-                
+            // try to get current location as start location
+            try {
+                currentLocation = head.getDefaultCamera().getLocation();
+            }
+            catch (Exception e) {
+                currentLocation = null;
+            }
+            
+            // optimize panel fiducial using travelling salesman
+            TravellingSalesman<BoardLocation> tsm = new TravellingSalesman<>(
+                    boardLocations, 
+                    new TravellingSalesman.Locator<BoardLocation>() { 
+                        @Override
+                        public Location getLocation(BoardLocation locatable) {
+                            return locatable.getGlobalLocation();
+                        }
+                    }, 
+                    // start from current camera location
+                    currentLocation,
+                    null);
+            
+            // Solve it (using the default heuristics).
+            tsm.solve();
+            
+            // perform fudicual check in optimized order
+            for (BoardLocation boardLocation : tsm.getTravel()) {
                 fireTextStatus("Fiducial check for %s", boardLocation);
                 try {
                     locator.locatePlacementsHolder(boardLocation);
