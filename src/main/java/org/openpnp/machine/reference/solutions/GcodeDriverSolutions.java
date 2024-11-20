@@ -28,6 +28,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.openpnp.gui.support.Icons;
 import org.openpnp.machine.reference.ReferenceMachine;
@@ -987,11 +988,16 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                             commandBuilt = "^.*";
                             int axisIndex = 0;
                             int lastAxisIndex = 26;
+                            int axesAdded = 0;
                             String pattern = "";
                             List<String> letters = gcodeDriver.getReportedAxesLetters();
                             if (letters.isEmpty()) {
                                 // we don't have reported letters, take a theoretical set
                                 letters = new ArrayList<>(Arrays.asList(AxisSolutions.VALID_AXIS_LETTERS));
+                            }
+                            // if the reportedAxes contains "C:" before the first axis letter, add it to the pattern
+                            if (gcodeDriver.getReportedAxes().matches("^.*C:\\s*[" + Arrays.stream(AxisSolutions.VALID_AXIS_LETTERS).collect(Collectors.joining()) + "].*")) {
+                                commandBuilt += "C:\\s*";
                             }
                             for (String axisLetter : letters) {
                                 for (String variable : gcodeDriver.getAxisVariables(machine)) {
@@ -1000,7 +1006,12 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                                             // Skipped some axes, add a wild.card.
                                             commandBuilt += ".*";
                                         }
-                                        commandBuilt += variable+":(?<"+variable+">-?\\d+\\.\\d+) ";
+                                        if (axesAdded > 0) {
+                                            // if any axis as been added, allow any number of whitespace
+                                            commandBuilt += "\\s*";
+                                        }
+                                        commandBuilt += variable+":(?<"+variable+">-?\\d+\\.\\d+)";
+                                        axesAdded++;
                                         pattern += variable+" ";
                                         lastAxisIndex = axisIndex;
                                     }
