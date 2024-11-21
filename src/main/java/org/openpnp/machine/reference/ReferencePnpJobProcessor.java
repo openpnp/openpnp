@@ -418,8 +418,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             // collect all panel fiducial locations
             List<PanelLocation> panelLocations = job.getPanelLocations()
                     .stream()
-                    .filter(pl -> { return pl.isEnabled(); })
-                    .filter(pl -> { return pl.isCheckFiducials(); })
+                    .filter(PanelLocation::isEnabled)
+                    .filter(PanelLocation::isCheckFiducials)
                     .collect(Collectors.toList());
 
             // try to get current location as start location
@@ -446,7 +446,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             // Solve it (using the default heuristics).
             tsm.solve();
             
-            // perform fudicual check in optimized order
+            // perform fiducial check in optimized order
             for (PanelLocation panelLocation : tsm.getTravel()) {
                 fireTextStatus("Panel fiducial check on %s", panelLocation);
                 try {
@@ -467,11 +467,11 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             FiducialLocator locator = Configuration.get().getMachine().getFiducialLocator();
             Location currentLocation;
             
-            // collect all panel fiducial locations
+            // collect all board fiducial locations
             List<BoardLocation> boardLocations = job.getBoardLocations()
                     .stream()
-                    .filter(bl -> { return bl.isEnabled(); })
-                    .filter(bl -> { return bl.isCheckFiducials(); })
+                    .filter(BoardLocation::isEnabled)
+                    .filter(BoardLocation::isCheckFiducials)
                     .filter(bl -> { return !completed.contains(bl); })
                     .collect(Collectors.toList());
 
@@ -483,7 +483,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 currentLocation = null;
             }
             
-            // optimize panel fiducial using travelling salesman
+            // optimize board fiducial using travelling salesman
             TravellingSalesman<BoardLocation> tsm = new TravellingSalesman<>(
                     boardLocations, 
                     new TravellingSalesman.Locator<BoardLocation>() { 
@@ -499,7 +499,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             // Solve it (using the default heuristics).
             tsm.solve();
             
-            // perform fudicual check in optimized order
+            // perform fiducial check in optimized order
             for (BoardLocation boardLocation : tsm.getTravel()) {
                 fireTextStatus("Fiducial check for %s", boardLocation);
                 try {
