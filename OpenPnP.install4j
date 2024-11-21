@@ -19,7 +19,7 @@
         <entry>webcam-*</entry>
       </macSearchedJars>
     </codeSigning>
-    <jreBundles jdkProviderId="AdoptOpenJDK" release="17/jdk-17.0.8.1+1" />
+    <jreBundles jdkProviderId="AdoptOpenJDK" release="23/latest" />
   </application>
   <files>
     <roots>
