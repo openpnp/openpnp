@@ -56,6 +56,7 @@ import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
 import org.openpnp.spi.PartAlignment;
 import org.openpnp.spi.PnpJobPlanner;
+import org.openpnp.spi.Locatable.LocationOption;
 import org.openpnp.spi.PnpJobPlanner.PlannedPlacement;
 import org.openpnp.spi.PnpJobProcessor.JobPlacement.Status;
 import org.openpnp.spi.base.AbstractJobProcessor;
@@ -1433,7 +1434,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             Location location;
             
             try {
-                location = hm.toHeadLocation(ref);
+                location = hm.toHeadLocation(ref, LocationOption.Quiet);
             } catch (Exception e) {
                 location = null;
             }
@@ -1804,7 +1805,6 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             
             // if other placements have been planned, select the next by distance
             if (plannedPlacements != null && !plannedPlacements.isEmpty()) {
-                //Locator placeLocator = new PlaceLocator();
                 Location averagePlaceLocation = calcCenterLocation(plannedPlacements, placeLocator);
                 
                 // now sort compatibleJobPlacements by distance to averagePlaceLocation
