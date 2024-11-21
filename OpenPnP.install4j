@@ -981,7 +981,7 @@ if (context.isUnattended()) {
       <variables>
         <variable name="native_path" value="windows/x86" />
       </variables>
-      <jreBundle manualJreEntry="true" />
+      <jreBundle jreBundleSource="none" manualJreEntry="true" />
     </windows>
     <windows name="Windows_64" id="28" installDir="openpnp" architecture="64">
       <variables>
