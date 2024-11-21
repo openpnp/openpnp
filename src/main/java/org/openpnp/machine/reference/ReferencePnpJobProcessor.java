@@ -59,6 +59,7 @@ import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
 import org.openpnp.spi.PartAlignment;
 import org.openpnp.spi.PnpJobPlanner;
+import org.openpnp.spi.Locatable.LocationOption;
 import org.openpnp.spi.PnpJobPlanner.PlannedPlacement;
 import org.openpnp.spi.PnpJobProcessor.JobPlacement.Status;
 import org.openpnp.spi.base.AbstractJobProcessor;
@@ -138,9 +139,9 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
     protected Head head;
 
-    protected Locator pickLocator;
-    protected Locator alignLocator;
-    protected Locator placeLocator;
+    protected static Locator pickLocator;
+    protected static Locator alignLocator;
+    protected static Locator placeLocator;
     
     protected List<JobPlacement> jobPlacements = new ArrayList<>();
 
@@ -1929,29 +1930,6 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             this.plannedPlacements = planner.sort(plannedPlacements);
         }
 
-        private Location calcCenterLocation(TravellingSalesman.Locator<PlannedPlacement> locator) {
-            Location centerLocation = null;
-            if (locator != null) {
-                centerLocation = new Location(LengthUnit.Millimeters);
-                int cnt = 0;
-                for (PlannedPlacement p : plannedPlacements) {
-                    Location l = locator.getLocation(p);
-                    if (l != null) {
-                        centerLocation = centerLocation.add(l);
-                        cnt++;
-                    }
-                }
-                
-                if (cnt > 0) {
-                    centerLocation = centerLocation.multiply(1.0 / cnt);
-                } else {
-                    centerLocation = null;
-                }
-            }
-            
-            return centerLocation;
-        }
-        
         /**
          * Sort the list of planned placements for better performance
          * this is done by first collecting the locations where the head will move
@@ -1992,7 +1970,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             start = sortLocator.convertToHeadLocation(nozzle, nozzle.getLocation());
             
             // b) calculate end location as center between all locations of the next step
-            Location endLocation = calcCenterLocation(endLocator);
+            Location endLocation = calcCenterLocation(plannedPlacements, endLocator);
             
             // c) sort PlanndPlacements according to sortLocation
             // Use a traveling salesman algorithm to optimize the path to visit the placements
@@ -2024,6 +2002,36 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             
             return optimizedPlannedPlacements;
         }
+    }
+
+    /**
+     * Calculate the center location between a given set of PlannedPlacements using the given locator.
+     * 
+     * @param plannedPlacements
+     * @param locator
+     * @return
+     */
+    private static Location calcCenterLocation(List<PlannedPlacement> plannedPlacements, Locator locator) {
+        Location centerLocation = null;
+        if (locator != null) {
+            centerLocation = new Location(LengthUnit.Millimeters);
+            int cnt = 0;
+            for (PlannedPlacement p : plannedPlacements) {
+                Location l = locator.getLocation(p);
+                if (l != null) {
+                    centerLocation = centerLocation.add(l);
+                    cnt++;
+                }
+            }
+            
+            if (cnt > 0) {
+                centerLocation = centerLocation.multiply(1.0 / cnt);
+            } else {
+                centerLocation = null;
+            }
+        }
+        
+        return centerLocation;
     }
     
     /**
@@ -2078,7 +2086,12 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
          * The location is in the reference system of the head in order to compare it with others
          * or to apply math like calculating the center between them.
          */
-        abstract public Location getLocation(PlannedPlacement p);
+        abstract public Location getLocation(JobPlacement jobPlacement, Nozzle nozzle);
+        public Location getLocation(PlannedPlacement plannedPlacement) {
+            final Nozzle nozzle = plannedPlacement.nozzle;
+            final JobPlacement jobPlacement = plannedPlacement.jobPlacement;
+            return getLocation(jobPlacement, nozzle);
+        }
         
         /**
          * toString is used in log messages to generate meaningful messages where it locator as been used.
@@ -2109,10 +2122,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     }
     
     private class PickLocator extends Locator {
-        public Location getLocation(PlannedPlacement p) {
+        public Location getLocation(JobPlacement jobPlacement, Nozzle nozzle) {
             Location location;
-            final Nozzle nozzle = p.nozzle;
-            final JobPlacement jobPlacement = p.jobPlacement;
             final Placement placement = jobPlacement.getPlacement();
             final Part part = placement.getPart();
 
@@ -2135,11 +2146,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     }
     
     private class AlignLocator extends Locator {
-        public Location getLocation(PlannedPlacement p) {
+        public Location getLocation(JobPlacement jobPlacement, Nozzle nozzle) {
             Location location;
-
-            final Nozzle nozzle = p.nozzle;
-            final JobPlacement jobPlacement = p.jobPlacement;
             final Placement placement = jobPlacement.getPlacement();
             final BoardLocation boardLocation = jobPlacement.getBoardLocation();
             final Part part = placement.getPart();
@@ -2172,6 +2180,19 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     }
     
     private class PlaceLocator extends Locator {
+        // this version returns an approximative location without bottom vision - used for N+1 nozzle optimization
+        public Location getLocation(JobPlacement jobPlacement, Nozzle nozzle) {
+            final Placement placement = jobPlacement.getPlacement();
+            final BoardLocation boardLocation = jobPlacement.getBoardLocation();
+        
+            Location location = Utils2D.calculateBoardPlacementLocation(boardLocation,
+                    placement.getLocation());
+        
+            // convert location to where the head will move to to place the part
+            return convertToHeadLocation(nozzle, location);
+        }
+
+        // this version takes possible bottom vision results into account - used for eg. nozzle pre-rotation
         public Location getLocation(PlannedPlacement p) {
             final Nozzle nozzle = p.nozzle;
         
@@ -2422,7 +2443,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                  * respective lists so that we don't plan the same one again.
                  */
                 for (Nozzle nozzle : new ArrayList<>(nozzles)) {
-                    PlannedPlacement plannedPlacement = planWithoutNozzleTipChange(nozzle, jobPlacements);
+                    PlannedPlacement plannedPlacement = planWithoutNozzleTipChange(nozzle, 
+                            nozzle.getNozzleTip(), jobPlacements, plannedPlacements);
                     if (plannedPlacement != null) {
                         plannedPlacements.add(plannedPlacement);
                         jobPlacements.remove(plannedPlacement.jobPlacement);
@@ -2435,11 +2457,12 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             
             /**
              * Now we'll try to plan any nozzles that didn't get planned on the first pass by
-             * seeing if a nozzle change helps. This is nearly the same as above, except this
+             * seeing if a nozzle tip change helps. This is nearly the same as above, except this
              * time we allow a nozzle tip change to happen.
              */
             for (Nozzle nozzle : new ArrayList<>(nozzles)) {
-                PlannedPlacement plannedPlacement = planWithNozzleTipChange(nozzle, jobPlacements, nozzleTips);
+                PlannedPlacement plannedPlacement = planWithNozzleTipChange(nozzle, jobPlacements, 
+                        nozzleTips, plannedPlacements);
                 if (plannedPlacement != null) {
                     plannedPlacements.add(plannedPlacement);
                     jobPlacements.remove(plannedPlacement.jobPlacement);
@@ -2466,21 +2489,39 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
          * @param jobPlacements
          * @return
          */
-        protected PlannedPlacement planWithoutNozzleTipChange(Nozzle nozzle, 
-                List<JobPlacement> jobPlacements) {
-            if (nozzle.getNozzleTip() == null) {
+        protected PlannedPlacement planWithoutNozzleTipChange(Nozzle nozzle, NozzleTip nozzleTip,
+                List<JobPlacement> jobPlacements, List<PlannedPlacement>plannedPlacements) {
+            if (nozzleTip == null) {
                 return null;
             }
-            for (JobPlacement jobPlacement : jobPlacements) {
-                Placement placement = jobPlacement.getPlacement();
-                Part part = placement.getPart();
-                org.openpnp.model.Package pkg = part.getPackage();
-                NozzleTip nozzleTip = nozzle.getNozzleTip();
-                if (pkg.getCompatibleNozzleTips().contains(nozzleTip)) {
-                    return new PlannedPlacement(nozzle, nozzleTip, jobPlacement);
-                }
+            // collect all placements that are compatible with the loaded nozzle tip
+            List <JobPlacement> compatibleJobPlacements = jobPlacements
+                    .stream()
+                    .filter(jobPlacement -> {
+                        Placement placement = jobPlacement.getPlacement();
+                        Part part = placement.getPart();
+                        org.openpnp.model.Package pkg = part.getPackage();
+                        return pkg.getCompatibleNozzleTips().contains(nozzleTip);
+                    })
+                    .collect(Collectors.toList());
+
+            // if there are no compatible job placements, leave now
+            if (compatibleJobPlacements.isEmpty()) {
+                return null;
             }
-            return null;
+            
+            // if other placements have been planned, select the next by distance
+            if (plannedPlacements != null && !plannedPlacements.isEmpty()) {
+                Location averagePlaceLocation = calcCenterLocation(plannedPlacements, placeLocator);
+                
+                // now sort compatibleJobPlacements by distance to averagePlaceLocation
+                compatibleJobPlacements.sort(Comparator.comparing(jobPlacement -> { 
+                    return placeLocator.getLocation(jobPlacement, nozzle).getLinearDistanceTo(averagePlaceLocation); 
+                }));
+            }
+            
+            // return the first of the list
+            return new PlannedPlacement(nozzle, nozzleTip, compatibleJobPlacements.get(0));
         }
 
         /**
@@ -2495,7 +2536,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
          */
         protected PlannedPlacement planWithNozzleTipChange(Nozzle nozzle, 
                 List<JobPlacement> jobPlacements,
-                List<NozzleTip> nozzleTips) {
+                List<NozzleTip> nozzleTips, List<PlannedPlacement> plannedPlacements) {
             for (JobPlacement jobPlacement : jobPlacements) {
                 Placement placement = jobPlacement.getPlacement();
                 Part part = placement.getPart();
@@ -2512,7 +2553,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                         })
                         .collect(Collectors.toList());
                 if (!goodNozzleTips.isEmpty()) {
-                    return new PlannedPlacement(nozzle, goodNozzleTips.get(0), jobPlacement);
+                    // plan again with the selected nozzle tip using the same strategy as without nozzle tip change
+                    return planWithoutNozzleTipChange(nozzle, goodNozzleTips.get(0), jobPlacements, plannedPlacements);
                 }
             }
             return null;
