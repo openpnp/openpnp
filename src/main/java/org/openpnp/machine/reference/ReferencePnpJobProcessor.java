@@ -46,6 +46,7 @@ import org.openpnp.model.Location;
 import org.openpnp.model.PanelLocation;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
+import org.openpnp.model.PlacementsHolderLocation;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.FiducialLocator;
@@ -200,7 +201,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             
             planner.restart();
 
-            return new PanelFiducialCheck();
+            return new FiducialCheck();
         }
         
         private void checkSetupErrors() throws JobProcessorException {
@@ -410,17 +411,15 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         }
     }
     
-    protected class PanelFiducialCheck implements Step {
+    protected class FiducialCheck implements Step {
+        protected Set<BoardLocation> completed = new HashSet<>();
+
         public Step step() throws JobProcessorException {
             FiducialLocator locator = Configuration.get().getMachine().getFiducialLocator();
             Location currentLocation;
             
-            // collect all panel fiducial locations
-            List<PanelLocation> panelLocations = job.getPanelLocations()
-                    .stream()
-                    .filter(PanelLocation::isEnabled)
-                    .filter(PanelLocation::isCheckFiducials)
-                    .collect(Collectors.toList());
+            // add all panel fiducial locations
+            List<BoardLocationWithNestingLevel> boardLocations = collectAllBoardLocations(job.getRootPanelLocation(), 0);
 
             // try to get current location as start location
             try {
@@ -431,64 +430,11 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             }
             
             // optimize panel fiducial using travelling salesman
-            TravellingSalesman<PanelLocation> tsm = new TravellingSalesman<>(
-                    panelLocations, 
-                    new TravellingSalesman.Locator<PanelLocation>() { 
-                        @Override
-                        public Location getLocation(PanelLocation locatable) {
-                            return locatable.getGlobalLocation();
-                        }
-                    }, 
-                    // start from current camera location
-                    currentLocation,
-                    null);
-            
-            // Solve it (using the default heuristics).
-            tsm.solve();
-            
-            // perform fiducial check in optimized order
-            for (PanelLocation panelLocation : tsm.getTravel()) {
-                fireTextStatus("Panel fiducial check on %s", panelLocation);
-                try {
-                    locator.locatePlacementsHolder(panelLocation);
-                }
-                catch (Exception e) {
-                    throw new JobProcessorException(panelLocation, e);
-                }
-            }
-            return new BoardLocationFiducialCheck();
-        }
-    }
-    
-    protected class BoardLocationFiducialCheck implements Step {
-        protected Set<BoardLocation> completed = new HashSet<>();
-        
-        public Step step() throws JobProcessorException {
-            FiducialLocator locator = Configuration.get().getMachine().getFiducialLocator();
-            Location currentLocation;
-            
-            // collect all board fiducial locations
-            List<BoardLocation> boardLocations = job.getBoardLocations()
-                    .stream()
-                    .filter(BoardLocation::isEnabled)
-                    .filter(BoardLocation::isCheckFiducials)
-                    .filter(bl -> { return !completed.contains(bl); })
-                    .collect(Collectors.toList());
-
-            // try to get current location as start location
-            try {
-                currentLocation = head.getDefaultCamera().getLocation();
-            }
-            catch (Exception e) {
-                currentLocation = null;
-            }
-            
-            // optimize board fiducial using travelling salesman
-            TravellingSalesman<BoardLocation> tsm = new TravellingSalesman<>(
+            TravellingSalesmanFiducialCheck tsm = new TravellingSalesmanFiducialCheck(
                     boardLocations, 
-                    new TravellingSalesman.Locator<BoardLocation>() { 
+                    new TravellingSalesman.Locator<BoardLocationWithNestingLevel>() { 
                         @Override
-                        public Location getLocation(BoardLocation locatable) {
+                        public Location getLocation(BoardLocationWithNestingLevel locatable) {
                             return locatable.getGlobalLocation();
                         }
                     }, 
@@ -499,8 +445,10 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             // Solve it (using the default heuristics).
             tsm.solve();
             
+            List<BoardLocationWithNestingLevel> optimizedBoardLocations = tsm.getTravel();
+            
             // perform fiducial check in optimized order
-            for (BoardLocation boardLocation : tsm.getTravel()) {
+            for (BoardLocationWithNestingLevel boardLocation : tsm.getTravel()) {
                 fireTextStatus("Fiducial check for %s", boardLocation);
                 try {
                     locator.locatePlacementsHolder(boardLocation);
@@ -514,6 +462,72 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             }
             
             return new Plan();
+        }
+
+        class TravellingSalesmanFiducialCheck extends TravellingSalesman<BoardLocationWithNestingLevel> {
+            public TravellingSalesmanFiducialCheck(List<BoardLocationWithNestingLevel> travelInput, Locator<? super BoardLocationWithNestingLevel> locator, Location startLocation, Location endLocation) {
+                super(travelInput, locator, startLocation, endLocation);
+            }
+            
+            // use a modified distance method to preserve the nesting level of the list
+            @Override
+            public double getTravellingDistance() {
+                // check that the path preserves the nesting level
+                List <BoardLocationWithNestingLevel> travel = getTravel();
+                for (int i = 0; i < travel.size() -1; ++i) {
+                    if (travel.get(i).getNestingLevel() > travel.get(i+1).getNestingLevel()) {
+                        // if the nestingLevel(i) > nestingLevel(i+1) > return MAX_VALULE to signal that this is a very bad path
+                        return Double.MAX_VALUE;
+                    }
+                }
+                
+                // if nestingLevel is preserved, continue evaluation as before
+                return super.getTravellingDistance();
+            }
+        }
+        
+        // collect all board locations of all panels recursively
+        List <BoardLocationWithNestingLevel> collectAllBoardLocations(PanelLocation rootPanelLocation, int nestingLevel) {
+            List<BoardLocationWithNestingLevel> boardLocations = new ArrayList<>();
+
+            // get all descendants of the rootPanel
+            List<PlacementsHolderLocation<?>> children = rootPanelLocation.getPanel().getChildren();
+            
+            // loop over all children and add their board locations to the return list
+            boardLocations.addAll(children.stream()
+                    .filter(c -> { return (c instanceof BoardLocation); })
+                    .map(c -> { return (BoardLocation)c; })
+                    .filter(BoardLocation::isEnabled)
+                    .filter(BoardLocation::isCheckFiducials)
+                    .filter(bl -> { return !completed.contains(bl); })
+                    .map(bl -> { return new BoardLocationWithNestingLevel(bl, nestingLevel); })
+                    .collect(Collectors.toList()));
+            
+            // loop over all children again and collect their descendants
+            int nextNestingLevel = nestingLevel +1;
+            boardLocations.addAll(children.stream()
+                    .filter(c -> { return (c instanceof PanelLocation); })
+                    .map(c -> { return (PanelLocation)c; })
+                    .filter(PanelLocation::isEnabled)
+                    .filter(PanelLocation::isCheckFiducials)
+                    .map(pl -> { return collectAllBoardLocations(pl, nextNestingLevel); })
+                    .flatMap(List::stream)
+                    .collect(Collectors.toList()));
+            
+            // return the complete list
+            return boardLocations;
+        }
+
+        // this class holds BoardLocations together with their nesting level to optimiize them respecting the nesting level
+        class BoardLocationWithNestingLevel extends BoardLocation {
+            private int nestingLevel;
+            BoardLocationWithNestingLevel(BoardLocation boardLocation, int nestingLevel) {
+                super(boardLocation);
+                this.nestingLevel = nestingLevel;
+            }
+            int getNestingLevel() {
+                return nestingLevel;
+            }
         }
     }
 
