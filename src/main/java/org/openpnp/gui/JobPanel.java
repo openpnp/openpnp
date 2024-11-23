@@ -175,22 +175,22 @@ public class JobPanel extends JPanel {
                 new ActionGroup(captureToolBoardLocationAction, moveCameraToBoardLocationAction,
                         moveCameraToBoardLocationNextAction, moveToolToBoardLocationAction,
                         twoPointLocateBoardLocationAction, fiducialCheckAction,
-                        setEnabledAction, setCheckFidsAction, setSideAction, viewerAction);
+                        setEnabledAction, setCheckFidsAction, setSideAction);
         singleSelectionActionGroup.setEnabled(false);
         
         multiSelectionActionGroup = new ActionGroup(captureToolBoardLocationAction, setEnabledAction, 
-                setCheckFidsAction, setSideAction, viewerAction);
+                setCheckFidsAction, setSideAction);
         multiSelectionActionGroup.setEnabled(false);
         
         singleTopLevelSelectionActionGroup = new ActionGroup(captureToolBoardLocationAction, removeBoardAction, captureCameraBoardLocationAction,
                 moveCameraToBoardLocationAction,
                 moveCameraToBoardLocationNextAction, moveToolToBoardLocationAction,
                 twoPointLocateBoardLocationAction, fiducialCheckAction,
-                setEnabledAction, setCheckFidsAction, setSideAction, viewerAction);
+                setEnabledAction, setCheckFidsAction, setSideAction);
         singleTopLevelSelectionActionGroup.setEnabled(false);
         
         multiTopLevelSelectionActionGroup = new ActionGroup(captureToolBoardLocationAction, removeBoardAction, setEnabledAction, 
-                setCheckFidsAction, setSideAction, viewerAction);
+                setCheckFidsAction, setSideAction);
         multiTopLevelSelectionActionGroup.setEnabled(false);
         
         jobTableModel = new PlacementsHolderLocationsTableModel(configuration);

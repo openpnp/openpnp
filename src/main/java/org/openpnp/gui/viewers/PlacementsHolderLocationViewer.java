@@ -34,6 +34,7 @@ import java.awt.Shape;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.MouseAdapter;
@@ -107,7 +108,7 @@ import com.google.common.eventbus.Subscribe;
 import java.awt.Component;
 import javax.swing.Box;
 import javax.swing.JButton;
-
+import javax.swing.JComboBox;
 
 @SuppressWarnings("serial")
 public class PlacementsHolderLocationViewer extends JPanel implements PropertyChangeListener {
@@ -181,11 +182,11 @@ public class PlacementsHolderLocationViewer extends JPanel implements PropertyCh
     protected boolean showFiducials = false;
     protected boolean showOrigins = false;
     protected boolean showLocations = true;
-    protected boolean showChildrenOnly = true;
+    protected ViewingOption viewingOption = ViewingOption.CHILDREN;
     private PlacementsHolderLocation<?> arrayRoot;
     private List<PlacementsHolderLocation<?>> newArrayMembers;
     private JButton btnViewingSide;
-    private JButton btnShowChildrenOnly;
+    private JComboBox <Enum> cbxViewingOptions;
     private JCheckBox chckbxReticle;
     private JCheckBox chckbxLocations;
     private JCheckBox chckbxOrigins;
@@ -198,6 +199,24 @@ public class PlacementsHolderLocationViewer extends JPanel implements PropertyCh
     private JLabel lblNewLabel_4;
     private JLabel lblNewLabel_5;
     private JLabel lblNewLabel_6;
+
+    public enum ViewingOption {
+        ALL(Translations.getString("PlacementsHolderLocationViewer.ViewingOption.AllDescendants")),  //$NON-NLS-1$
+        CHILDREN(Translations.getString("PlacementsHolderLocationViewer.ViewingOption.ChildrenOnly")),  //$NON-NLS-1$
+        SELECTED(Translations.getString("PlacementsHolderLocationViewer.ViewingOption.SelectedOnly"));  //$NON-NLS-1$
+
+        private String name;
+
+        private ViewingOption(String name) {
+            this.name = name;
+        }
+
+        @Override
+        public String toString() {
+            return name;
+        }
+
+    }
 
     /**
      * Create the Panel.
@@ -212,7 +231,7 @@ public class PlacementsHolderLocationViewer extends JPanel implements PropertyCh
             showFiducials = true;
             showOrigins = true;
             showLocations = true;
-            showChildrenOnly = true;
+            viewingOption = ViewingOption.CHILDREN;
         }
         else if (placementsHolderLocation instanceof PanelLocation) {
             if (!isJob) {
@@ -223,7 +242,15 @@ public class PlacementsHolderLocationViewer extends JPanel implements PropertyCh
             showFiducials = false;
             showOrigins = false;
             showLocations = true;
-            showChildrenOnly = !isJob;
+            if (isJob) {
+                if (selections != null && selections.size() > 1) {   // when one selected row only then likely by default user wants to see all
+                    viewingOption = ViewingOption.SELECTED;
+                } else {
+                    viewingOption = ViewingOption.ALL;
+                }
+            } else {
+                viewingOption = ViewingOption.CHILDREN;
+            }
         }
         else {
             throw new UnsupportedOperationException("Viewing of "  //$NON-NLS-1$
@@ -254,32 +281,24 @@ public class PlacementsHolderLocationViewer extends JPanel implements PropertyCh
             }
         });
         
-        //This dummy label is invisible but forces the container width to be at least wide enough
-        //to display it. The intent is to keep the panel width from changing whenever the text in 
-        //btnViewingSide and/or btnShowChildrenOnly changes.
-        JLabel lblNewLabel = new JLabel("This is just some wide dummy text"); //$NON-NLS-1$
-        lblNewLabel.setForeground(lblNewLabel.getBackground());
-        panel.add(lblNewLabel);
-        
-        btnShowChildrenOnly = new JButton();
-        btnShowChildrenOnly.setToolTipText(
-                Translations.getString("PlacementsHolderLocationViewer.ViewingOption.ToolTip")); //$NON-NLS-1$
-        if (showChildrenOnly) {
-            btnShowChildrenOnly.setText(
-                    Translations.getString("PlacementsHolderLocationViewer.ViewingOption.ChildrenOnly")); //$NON-NLS-1$
+        cbxViewingOptions = new JComboBox <>();
+        cbxViewingOptions.setToolTipText(Translations.getString("PlacementsHolderLocationViewer.ViewingOption.ToolTip"));
+        cbxViewingOptions.addItem(ViewingOption.ALL);
+        cbxViewingOptions.addItem(ViewingOption.CHILDREN);
+        if (isJob) {
+            cbxViewingOptions.addItem(ViewingOption.SELECTED);
         }
-        else {
-            btnShowChildrenOnly.setText(
-                    Translations.getString("PlacementsHolderLocationViewer.ViewingOption.AllDescendants")); //$NON-NLS-1$
-        }
-        btnShowChildrenOnly.addActionListener(new ActionListener() {
+        cbxViewingOptions.setSelectedItem(viewingOption);
+        cbxViewingOptions.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                setShowChildrenOnly(!isShowChildrenOnly());
+                JComboBox cb = (JComboBox)e.getSource();
+                setViewingOption((ViewingOption) cb.getSelectedItem());
             }
         });
-        btnShowChildrenOnly.setVisible(placementsHolderLocation instanceof PanelLocation);
-        panel.add(btnShowChildrenOnly);
+        cbxViewingOptions.setVisible(placementsHolderLocation instanceof PanelLocation);
+        cbxViewingOptions.setMaximumSize(cbxViewingOptions.getPreferredSize());
+        panel.add(cbxViewingOptions);
         
         Component verticalStrut = Box.createVerticalStrut(15);
         panel.add(verticalStrut);
@@ -811,7 +830,7 @@ public class PlacementsHolderLocationViewer extends JPanel implements PropertyCh
 
     public void generateGraphicalObjects(PlacementsHolderLocation<?> placementsHolderLocation) {
         
-        if (placementsHolderLocation == null || placementsHolderLocation.getPlacementsHolder() == null || (selections != null && selections.size() == 0)) {
+        if (placementsHolderLocation == null || placementsHolderLocation.getPlacementsHolder() == null) {
             return;
         }
         AffineTransform at = placementsHolderLocation.getLocalToGlobalTransform();
@@ -831,7 +850,7 @@ public class PlacementsHolderLocationViewer extends JPanel implements PropertyCh
                 graphicsBounds = null;
             }
         }
-        if ((!atRoot || !isJob) && (selections == null || selections.indexOf(placementsHolderLocation) >= 0)) {
+        if ((!atRoot || !isJob) && (viewingOption != ViewingOption.SELECTED || selections.indexOf(placementsHolderLocation) >= 0)) {
             if (graphicsBounds == null) {
                 graphicsBounds = profile.getBounds2D();
             }
@@ -874,9 +893,9 @@ public class PlacementsHolderLocationViewer extends JPanel implements PropertyCh
             }
             profileMap.put(new Area(profile), placementsHolderLocation);
         }
-        if ((atRoot || !showChildrenOnly) && placementsHolderLocation instanceof PanelLocation) {
+        if ((atRoot || viewingOption != ViewingOption.CHILDREN) && placementsHolderLocation instanceof PanelLocation) {
             for (PlacementsHolderLocation<?> child : ((PanelLocation) placementsHolderLocation).getChildren()) {
-                if (selections != null && selections.indexOf(child) < 0 && !(child instanceof PanelLocation)) {
+                if (viewingOption == ViewingOption.SELECTED && selections.indexOf(child) < 0 && !(child instanceof PanelLocation)) {
                     continue;
                 }
                 generateGraphicalObjects(child);
@@ -1714,20 +1733,8 @@ public class PlacementsHolderLocationViewer extends JPanel implements PropertyCh
         drawingPanel.repaint();
     }
 
-    public boolean isShowChildrenOnly() {
-        return showChildrenOnly;
-    }
-
-    public void setShowChildrenOnly(boolean showChildrenOnly) {
-        this.showChildrenOnly = showChildrenOnly;
-        if (showChildrenOnly) {
-            btnShowChildrenOnly.setText(
-                    Translations.getString("PlacementsHolderLocationViewer.ViewingOption.ChildrenOnly")); //$NON-NLS-1$
-        }
-        else {
-            btnShowChildrenOnly.setText(
-                    Translations.getString("PlacementsHolderLocationViewer.ViewingOption.AllDescendants")); //$NON-NLS-1$
-        }
+    public void setViewingOption(ViewingOption option) {
+        viewingOption = option;
         regenerate();
         drawingPanel.repaint();
     }
