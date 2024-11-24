@@ -34,7 +34,6 @@ import java.awt.Shape;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.ItemEvent;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.MouseAdapter;
@@ -285,6 +284,7 @@ public class PlacementsHolderLocationViewer extends JPanel implements PropertyCh
         cbxViewingOptions.setToolTipText(Translations.getString("PlacementsHolderLocationViewer.ViewingOption.ToolTip"));
         cbxViewingOptions.addItem(ViewingOption.ALL);
         cbxViewingOptions.addItem(ViewingOption.CHILDREN);
+        cbxViewingOptions.setAlignmentX(Component.LEFT_ALIGNMENT);
         if (isJob) {
             cbxViewingOptions.addItem(ViewingOption.SELECTED);
         }
@@ -298,6 +298,7 @@ public class PlacementsHolderLocationViewer extends JPanel implements PropertyCh
         });
         cbxViewingOptions.setVisible(placementsHolderLocation instanceof PanelLocation);
         cbxViewingOptions.setMaximumSize(cbxViewingOptions.getPreferredSize());
+        panel.add(Box.createVerticalStrut(5));
         panel.add(cbxViewingOptions);
         
         Component verticalStrut = Box.createVerticalStrut(15);
