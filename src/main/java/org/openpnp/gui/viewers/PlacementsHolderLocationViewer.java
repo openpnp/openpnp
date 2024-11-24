@@ -298,7 +298,7 @@ public class PlacementsHolderLocationViewer extends JPanel implements PropertyCh
         });
         cbxViewingOptions.setVisible(placementsHolderLocation instanceof PanelLocation);
         cbxViewingOptions.setMaximumSize(cbxViewingOptions.getPreferredSize());
-        panel.add(Box.createVerticalStrut(5));
+        panel.add(Box.createVerticalStrut(15));
         panel.add(cbxViewingOptions);
         
         Component verticalStrut = Box.createVerticalStrut(15);
