@@ -2510,13 +2510,40 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 return null;
             }
             
-            // if other placements have been planned, select the next by distance
-            if (plannedPlacements != null && !plannedPlacements.isEmpty()) {
+            // if strategy is not Minimize (do best optimization) only consider placements
+            // that use the same feeder as the first placement.
+            if (strategy != Strategy.Minimize) {
+                Machine machine = Configuration.get().getMachine();
+                Feeder referenceFeeder = findFeederWithoutException(machine, compatibleJobPlacements.get(0).getPlacement().getPart());
+
+                // if the first/reference placement has not feeder, return just that placement to avoid any unwonted optimization
+                if (referenceFeeder == null) {
+                    compatibleJobPlacements.subList(1, compatibleJobPlacements.size()).clear();
+                }
+                else {
+                    // now filter compatible job placements for same feeder as reference
+                    compatibleJobPlacements = compatibleJobPlacements
+                            .stream()
+                            .filter(jobPlacement -> {
+                                Feeder feeder = findFeederWithoutException(machine, jobPlacement.getPlacement().getPart());
+                                return feeder != null && feeder.equals(referenceFeeder);
+                            })
+                            .collect(Collectors.toList());
+                }
+            }
+            
+            // if strategy is not FullyAsPlanned (no optimization at all) and if other placements 
+            // have been planned, sort compatible placements by distance to pick and place location
+            if (strategy != Strategy.FullyAsPlanned
+                && plannedPlacements != null && !plannedPlacements.isEmpty()
+                && compatibleJobPlacements.size() > 1) {
+                Location averagePickLocation  = calcCenterLocation(plannedPlacements, pickLocator);
                 Location averagePlaceLocation = calcCenterLocation(plannedPlacements, placeLocator);
                 
-                // now sort compatibleJobPlacements by distance to averagePlaceLocation
+                // now sort compatibleJobPlacements by distance to averagePickLocation + averagePlaceLocation
                 compatibleJobPlacements.sort(Comparator.comparing(jobPlacement -> { 
-                    return placeLocator.getLocation(jobPlacement, nozzle).getLinearDistanceTo(averagePlaceLocation); 
+                    return pickLocator.getLocation(jobPlacement, nozzle).getLinearDistanceTo(averagePickLocation) 
+                         + placeLocator.getLocation(jobPlacement, nozzle).getLinearDistanceTo(averagePlaceLocation); 
                 }));
             }
             
@@ -2524,6 +2551,23 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             return new PlannedPlacement(nozzle, nozzleTip, compatibleJobPlacements.get(0));
         }
 
+        /**
+         * variante of findFeeder() that consumes exceptions by returning NULL
+         * @param part
+         * @return
+         */
+        protected Feeder findFeederWithoutException(Machine machine, Part part) {
+            Feeder feeder;
+            try {
+                feeder = findFeeder(machine, part);
+            }
+            catch (Exception e) {
+                feeder = null;
+            }
+            
+            return feeder;
+        }
+        
         /**
          * Try to find a planning solution that allows for a nozzle tip change. This is very
          * similar to planWithoutNozzleTipChange() except that it considers all available nozzle
