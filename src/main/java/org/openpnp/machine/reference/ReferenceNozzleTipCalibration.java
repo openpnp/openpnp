@@ -3,6 +3,8 @@ package org.openpnp.machine.reference;
 import java.awt.Color;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -16,6 +18,7 @@ import org.opencv.core.KeyPoint;
 import org.opencv.core.Mat;
 import org.opencv.core.RotatedRect;
 import org.opencv.core.Size;
+import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.machine.reference.camera.ReferenceCamera;
@@ -29,6 +32,7 @@ import org.openpnp.spi.Camera;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
+import org.openpnp.util.LogUtils;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.NanosecondTime;
 import org.openpnp.util.OpenCvUtils;
@@ -1020,6 +1024,15 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
             int kernelSize = ((int)getMinimumDetailSize()
                     .divide(camera.getUnitsPerPixel().getLengthX()))|1;
             Imgproc.GaussianBlur(image, image, new Size(kernelSize, kernelSize), 0);
+            if (LogUtils.isDebugEnabled()) {
+                try {
+                    File file = Configuration.get().createResourceFile(getClass(), "background-calibrate", ".png");
+                    Imgcodecs.imwrite(file.getAbsolutePath(), image);
+                }
+                catch (IOException e) {
+                    Logger.debug(e);
+                }
+            }
             Imgproc.cvtColor(image, image, FluentCv.ColorCode.Bgr2HsvFull.getCode());
             backgroundImageRows = image.rows();
             backgroundImageCols = image.cols();
@@ -1036,7 +1049,7 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
             backgroundCalibrationImages = new ArrayList<BufferedImage>();
             ReferenceNozzleTip nozzleTip = nozzle.getCalibrationNozzleTip();
             if (nozzleTip != null 
-                    && backgroundImages.size() > 3) {
+                    && backgroundImages.size() >= 3) {
                 double t0 = NanosecondTime.getRuntimeSeconds();
                 double maskDiameterPixels = nozzleTip.getMaxPartDiameter()
                 .add(nozzleTip.getMaxPickTolerance().multiply(2.0))
@@ -1161,6 +1174,14 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
                             }
                         }
                     }
+                    if ((bestMinSaturation > bestMaxSaturation)
+                    || (bestMinValue > bestMaxValue))
+                    { // not a single pixel in the eligible value range was saturated enough
+                      bestMinSaturation = backgroundWorstSaturation-1;
+                      bestMaxSaturation = 255;
+                      bestMinValue = minBackgroundMaskValue-1;
+                      bestMaxValue = minBackgroundMaskValue-1;
+                    }
                     // Set the result.
                     setBackgroundMinHue(bestMinHue);
                     setBackgroundMaxHue(bestMaxHue);
@@ -1251,8 +1272,11 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
                         else if (hueSpan > backgroundWorstHueSpan/2) {
                             report.append("sufficiently consistent.<br/>");
                         }
-                        else {
+                        else if (hueSpan > 1) {
                             report.append("very consistent. Perfect!<br/>");
+                        }
+                        else {
+                            report.append("not detectable.<br/>");
                         }
                         if (hueSpan <= backgroundWorstHueSpan) {
                             report.append("<hr/>");
