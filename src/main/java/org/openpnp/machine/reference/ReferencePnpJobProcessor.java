@@ -43,6 +43,7 @@ import org.openpnp.model.Job;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.model.Panel;
 import org.openpnp.model.PanelLocation;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
@@ -418,7 +419,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             FiducialLocator locator = Configuration.get().getMachine().getFiducialLocator();
             Location currentLocation;
             
-            // add all panel fiducial locations
+            // add all board and panel fiducial locations
             List<PlacementsHolderLocationWithNestingLevel<?>> boardLocations = collectAllBoardLocations(job.getRootPanelLocation(), 0);
 
             // try to get current location as start location
@@ -445,6 +446,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             // Solve it (using the default heuristics).
             tsm.solve();
             
+            // FIXME: remove me
             List<PlacementsHolderLocationWithNestingLevel<?>> optimizedBoardLocations = tsm.getTravel();
             
             // perform fiducial check in optimized order
@@ -499,17 +501,20 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             else if (rootLocation instanceof PanelLocation) {
                 PanelLocation panelLocation = (PanelLocation)rootLocation;
 
+                // add the panel itself if enabled
                 if (panelLocation.isEnabled() && panelLocation.isCheckFiducials()) {
-                    // get all descendants of the rootPanel
-                    List<PlacementsHolderLocation<?>> children = panelLocation.getPanel().getChildren();
-                    
-                    // loop over all children and collect their descendants
-                    int nextNestingLevel = nestingLevel +1;
-                    locations.addAll(children.stream()
-                            .map(pl -> { return collectAllBoardLocations(pl, nextNestingLevel); })
-                            .flatMap(List::stream)
-                            .collect(Collectors.toList()));
+                    locations.add(new PlacementsHolderLocationWithNestingLevel<PanelLocation>(panelLocation, nestingLevel));
                 }
+                
+                // get all descendants of the rootPanel
+                List<PlacementsHolderLocation<?>> children = ((Panel)panelLocation.getPlacementsHolder()).getDescendants();
+
+                // loop over all children and collect their descendants
+                int nextNestingLevel = nestingLevel +1;
+                locations.addAll(children.stream()
+                        .map(pl -> { return collectAllBoardLocations(pl, nextNestingLevel); })
+                        .flatMap(List::stream)
+                        .collect(Collectors.toList()));
             }
             
             // return the complete list
@@ -518,7 +523,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
         // this class holds BoardLocations together with their nesting level to optimize them respecting the nesting level
         class PlacementsHolderLocationWithNestingLevel<T extends PlacementsHolderLocation<T>> extends PlacementsHolderLocation<T> {
-            private int nestingLevel;
+            private final int nestingLevel;
             PlacementsHolderLocationWithNestingLevel(T location, int nestingLevel) {
                 super(location);
                 this.nestingLevel = nestingLevel;
