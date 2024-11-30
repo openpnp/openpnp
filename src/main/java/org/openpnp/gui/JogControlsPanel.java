@@ -110,6 +110,8 @@ public class JogControlsPanel extends JPanel {
         cPlusAction.setEnabled(enabled);
         cMinusAction.setEnabled(enabled);
         discardAction.setEnabled(enabled);
+        clearPartAction.setEnabled(enabled);
+        clearTipAction.setEnabled(enabled);
         safezAction.setEnabled(enabled);
         xyParkAction.setEnabled(enabled);
         zParkAction.setEnabled(enabled);
@@ -404,9 +406,11 @@ public class JogControlsPanel extends JPanel {
         flowLayout_1.setAlignment(FlowLayout.LEFT);
 
         JButton btnSafeZ = new JButton(safezAction);
+        btnSafeZ.setToolTipText(Translations.getString("JogControlsPanel.btnSafeZ.toolTipText")); //$NON-NLS-1$
         panelSpecial.add(btnSafeZ);
 
         JButton btnDiscard = new JButton(discardAction);
+        btnDiscard.setToolTipText(Translations.getString("JogControlsPanel.btnDiscard.toolTipText")); //$NON-NLS-1$
         panelSpecial.add(btnDiscard);
 
         JButton btnRecycle = new JButton(recycleAction);
@@ -414,6 +418,14 @@ public class JogControlsPanel extends JPanel {
         btnRecycle.setToolTipText(Translations.getString("JogControlsPanel.btnRecycle.toolTipText")); //$NON-NLS-1$
         btnRecycle.setText(Translations.getString("JogControlsPanel.btnRecycle.text")); //$NON-NLS-1$
         panelSpecial.add(btnRecycle);
+
+        JButton btnClearPart = new JButton(clearPartAction);
+        btnClearPart.setToolTipText(Translations.getString("JogControlsPanel.btnClearPart.toolTipText")); //$NON-NLS-1$
+        panelSpecial.add(btnClearPart);
+
+        JButton btnClearTip = new JButton(clearTipAction);
+        btnClearTip.setToolTipText(Translations.getString("JogControlsPanel.btnClearTip.toolTipText")); //$NON-NLS-1$
+        panelSpecial.add(btnClearTip);
 
         panelActuators = new JPanel();
         tabbedPane_1.addTab(Translations.getString("JogControlsPanel.Tab.Actuators"), //$NON-NLS-1$
@@ -623,6 +635,28 @@ public class JogControlsPanel extends JPanel {
             UiUtils.submitUiMachineTask(() -> {
                 Nozzle nozzle = machineControlsPanel.getSelectedNozzle();
                 Cycles.discard(nozzle);
+            });
+        }
+    };
+
+    @SuppressWarnings("serial")
+    public Action clearPartAction = new AbstractAction(Translations.getString("JogControlsPanel.Action.ClearPart")) { //$NON-NLS-1$
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            UiUtils.submitUiMachineTask(() -> {
+                Nozzle nozzle = machineControlsPanel.getSelectedNozzle();
+                Cycles.clear(nozzle);
+            });
+        }
+    };
+
+    @SuppressWarnings("serial")
+    public Action clearTipAction = new AbstractAction(Translations.getString("JogControlsPanel.Action.ClearTip")) { //$NON-NLS-1$
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            UiUtils.submitUiMachineTask(() -> {
+                Nozzle nozzle = machineControlsPanel.getSelectedNozzle();
+                nozzle.clearNozzleTip();
             });
         }
     };

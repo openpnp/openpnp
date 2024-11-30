@@ -122,6 +122,15 @@ public interface Nozzle
     public void place() throws Exception;
 
     /**
+     * Clear the Nozzle tip. It will just programatically reset part from nozzle and switch off vacuum.
+     * It satisfies situation when part is lost from nozzle, manually removed or part state does
+     * not correspond to real situation.
+     * 
+     * @throws Exception
+     */
+    public void clear() throws Exception;
+
+    /**
      * Changer interface:
      * 
      * Command the Nozzle to load the given NozzleTip as it's current NozzleTip. If this returns
@@ -149,7 +158,18 @@ public interface Nozzle
      * @throws Exception
      */
     public void unloadNozzleTip() throws Exception;
-    
+
+    /**
+     * Changer interface:
+     * 
+     * Clear the current NozzleTip from the Nozzle, leaving it empty. No action is performed, just status is adjusted
+     * 
+     * After this call getNozzleTip() should return null.
+     * 
+     * @throws Exception
+     */
+    public void clearNozzleTip() throws Exception;
+
     /**
      * Get the part that is currently picked on the Nozzle, or null if none is picked.
      * Should typically be non-null after a pick operation and before a place operation and null
