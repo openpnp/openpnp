@@ -217,7 +217,7 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
         // case means the feeder is set up incorrectly but has been tested to behave in a 
         // reasonable way, even if the two points are coincident
         if (holeCount > 0) {
-            partPitchAdjusted = Math.round(partPitch.getValue() / holePitch.getValue()) * partPitchAdjusted / holeCount;
+            partPitchAdjusted = partPitch.getValue() / holePitch.getValue() * partPitchAdjusted / holeCount;
         } else {
             partPitchAdjusted = holePitch.getValue();
         }
