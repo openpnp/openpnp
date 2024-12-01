@@ -210,16 +210,16 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
         // It's the P1 value according to EIA-481-C, October 2003, pg. 9, 11, 13
         // Accuracy variations as specified in the document are not taken into account!
         double partPitchAdjusted = lineLocations[0].getLinearDistanceTo(lineLocations[1]);
-        double holeCount = (Math.round(partPitchAdjusted / partPitch.getValue()));
+        double holeCount = (Math.round(partPitchAdjusted / holePitch.getValue()));
 
         // if the two points are at least 1 hole apart, we can compute the adjusted pitch. 
         // otherwise use the un-adjusted holePitch (and avoid a divide by zero).  The second 
         // case means the feeder is set up incorrectly but has been tested to behave in a 
         // reasonable way, even if the two points are coincident
         if (holeCount > 0) {
-        	partPitchAdjusted = partPitchAdjusted / (Math.round(partPitchAdjusted / partPitch.getValue()));
+            partPitchAdjusted = Math.round(partPitch.getValue() / holePitch.getValue()) * partPitchAdjusted / holeCount;
         } else {
-        	partPitchAdjusted = holePitch.getValue();
+            partPitchAdjusted = holePitch.getValue();
         }
         	
         Location l = Utils2D.getPointAlongLine(lineLocations[0], lineLocations[1],
