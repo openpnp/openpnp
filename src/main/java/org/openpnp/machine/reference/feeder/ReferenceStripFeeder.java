@@ -497,9 +497,9 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
             // Find the closest result
             results.sort((a, b) -> {
                 Double da = VisionUtils.getPixelLocation(camera, a.x, a.y)
-                        .getLinearDistanceTo(camera.getLocation());
+                        .getLinearDistanceTo(expectedLocation);
                 Double db = VisionUtils.getPixelLocation(camera, b.x, b.y)
-                        .getLinearDistanceTo(camera.getLocation());
+                        .getLinearDistanceTo(expectedLocation);
                 return da.compareTo(db);
             });
     
