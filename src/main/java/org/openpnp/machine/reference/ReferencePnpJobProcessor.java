@@ -43,7 +43,6 @@ import org.openpnp.model.Job;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
-import org.openpnp.model.Panel;
 import org.openpnp.model.PanelLocation;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
@@ -413,44 +412,18 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     }
     
     protected class FiducialCheck implements Step {
-        protected Set<PlacementsHolderLocationWithNestingLevel<?>> completed = new HashSet<>();
+        protected Set<PlacementsHolderLocation<?>> completed = new HashSet<>();
 
         public Step step() throws JobProcessorException {
             FiducialLocator locator = Configuration.get().getMachine().getFiducialLocator();
-            Location currentLocation;
             
-            // add all board and panel fiducial locations
-            List<PlacementsHolderLocationWithNestingLevel<?>> boardLocations = collectAllBoardLocations(job.getRootPanelLocation(), 0);
+            // collect all board and panel fiducial locations
+            List<PlacementsHolderLocation<?>> locations = collectAllBoardLocations(job.getRootPanelLocation(), completed);
 
-            // try to get current location as start location
-            try {
-                currentLocation = head.getDefaultCamera().getLocation();
-            }
-            catch (Exception e) {
-                currentLocation = null;
-            }
+            // TODO: it would be possible to optimize the fiducial check order by optimizing them while respecting the original parent-child relation
             
-            // optimize panel fiducial using travelling salesman
-            TravellingSalesmanFiducialCheck tsm = new TravellingSalesmanFiducialCheck(
-                    boardLocations, 
-                    new TravellingSalesman.Locator<PlacementsHolderLocationWithNestingLevel<?>>() { 
-                        @Override
-                        public Location getLocation(PlacementsHolderLocationWithNestingLevel<?> locatable) {
-                            return locatable.getGlobalLocation();
-                        }
-                    }, 
-                    // start from current camera location
-                    currentLocation,
-                    null);
-            
-            // Solve it (using the default heuristics).
-            tsm.solve();
-            
-            // FIXME: remove me
-            List<PlacementsHolderLocationWithNestingLevel<?>> optimizedBoardLocations = tsm.getTravel();
-            
-            // perform fiducial check in optimized order
-            for (PlacementsHolderLocationWithNestingLevel<?> location : tsm.getTravel()) {
+            // perform fiducial check
+            for (PlacementsHolderLocation<?> location : locations) {
                 fireTextStatus("Fiducial check for %s", location);
                 try {
                     locator.locatePlacementsHolder(location);
@@ -466,71 +439,38 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             return new Plan();
         }
 
-        class TravellingSalesmanFiducialCheck extends TravellingSalesman<PlacementsHolderLocationWithNestingLevel<?>> {
-            public TravellingSalesmanFiducialCheck(List<PlacementsHolderLocationWithNestingLevel<?>> travelInput, Locator<? super PlacementsHolderLocationWithNestingLevel<?>> locator, Location startLocation, Location endLocation) {
-                super(travelInput, locator, startLocation, endLocation);
-            }
-            
-            // use a modified distance method to preserve the nesting level of the list
-            @Override
-            public double getTravellingDistance() {
-                // check that the path preserves the nesting level
-                List <PlacementsHolderLocationWithNestingLevel<?>> travel = getTravel();
-                for (int i = 0; i < travel.size() -1; ++i) {
-                    if (travel.get(i).getNestingLevel() > travel.get(i+1).getNestingLevel()) {
-                        // if the nestingLevel(i) > nestingLevel(i+1) return MAX_VALULE to signal that this is a very bad path
-                        return Double.MAX_VALUE;
-                    }
-                }
-                
-                // if nestingLevel is preserved, continue evaluation using the default method
-                return super.getTravellingDistance();
-            }
-        }
-        
         // collect all board locations of all panels recursively
-        List <PlacementsHolderLocationWithNestingLevel<?>> collectAllBoardLocations(PlacementsHolderLocation<?> rootLocation, int nestingLevel) {
-            List<PlacementsHolderLocationWithNestingLevel<?>> locations = new ArrayList<>();
+        List <PlacementsHolderLocation<?>> collectAllBoardLocations(PlacementsHolderLocation<?> rootLocation, Set<PlacementsHolderLocation<?>> completed) {
+            List<PlacementsHolderLocation<?>> locations = new ArrayList<>();
 
             if (rootLocation instanceof BoardLocation) {
                 BoardLocation boardLocation = (BoardLocation)rootLocation;
-                if (boardLocation.isEnabled() && boardLocation.isCheckFiducials()) {
-                    locations.add(new PlacementsHolderLocationWithNestingLevel<BoardLocation>(boardLocation, nestingLevel));
+                if (boardLocation.isEnabled() && boardLocation.isCheckFiducials() && !completed.contains(boardLocation)) {
+                    locations.add(boardLocation);
                 }
             }
             else if (rootLocation instanceof PanelLocation) {
                 PanelLocation panelLocation = (PanelLocation)rootLocation;
 
-                // add the panel itself if enabled
-                if (panelLocation.isEnabled() && panelLocation.isCheckFiducials()) {
-                    locations.add(new PlacementsHolderLocationWithNestingLevel<PanelLocation>(panelLocation, nestingLevel));
-                }
-                
-                // get all descendants of the rootPanel
-                List<PlacementsHolderLocation<?>> children = ((Panel)panelLocation.getPlacementsHolder()).getDescendants();
+                // only continue if the panel is enabled
+                if (panelLocation.isEnabled()) {
+                    // add the panel itself if enabled and not yet completed
+                    if (panelLocation.isCheckFiducials() && !completed.contains(panelLocation)) {
+                        locations.add(panelLocation);
+                    }
+                    
+                    // get all children of the panel
+                    List<PlacementsHolderLocation<?>> children = panelLocation.getPanel().getChildren();
 
-                // loop over all children and collect their descendants
-                int nextNestingLevel = nestingLevel +1;
-                locations.addAll(children.stream()
-                        .map(pl -> { return collectAllBoardLocations(pl, nextNestingLevel); })
-                        .flatMap(List::stream)
-                        .collect(Collectors.toList()));
+                    // loop over all children and collect their descendants
+                    for (PlacementsHolderLocation<?> child : children) {
+                       locations.addAll(collectAllBoardLocations(child, completed));
+                    }
+                }
             }
             
             // return the complete list
             return locations;
-        }
-
-        // this class holds BoardLocations together with their nesting level to optimize them respecting the nesting level
-        class PlacementsHolderLocationWithNestingLevel<T extends PlacementsHolderLocation<T>> extends PlacementsHolderLocation<T> {
-            private final int nestingLevel;
-            PlacementsHolderLocationWithNestingLevel(T location, int nestingLevel) {
-                super(location);
-                this.nestingLevel = nestingLevel;
-            }
-            int getNestingLevel() {
-                return nestingLevel;
-            }
         }
     }
 
