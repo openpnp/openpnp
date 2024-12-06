@@ -24,7 +24,7 @@
 package org.openpnp.machine.pandaplacer;
 
 import org.openpnp.ConfigurationListener;
-import org.openpnp.machine.reference.ReferenceFeeder;
+import org.openpnp.machine.reference.FeederWithOptions;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
@@ -43,7 +43,7 @@ import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 
-public abstract class AbstractPandaplacerVisionFeeder extends ReferenceFeeder {
+public abstract class AbstractPandaplacerVisionFeeder extends FeederWithOptions {
 
     // Rotation of the part within the feeder (i.e. within the tape)
     // This is compatible with tonyluken's PR #943 or a similar solution.

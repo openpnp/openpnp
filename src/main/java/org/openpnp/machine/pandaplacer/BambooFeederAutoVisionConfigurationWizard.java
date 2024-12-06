@@ -49,6 +49,7 @@ import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.LongConverter;
 import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.gui.support.NamedConverter;
+import org.openpnp.machine.reference.FeederWithOptions.FeedOptions;
 import org.openpnp.machine.reference.feeder.wizards.AbstractReferenceFeederConfigurationWizard;
 import org.openpnp.machine.pandaplacer.BambooFeederAutoVision;
 import org.openpnp.machine.pandaplacer.AbstractPandaplacerVisionFeeder.CalibrationTrigger;
@@ -420,9 +421,12 @@ extends AbstractReferenceFeederConfigurationWizard {
         feedActuatorValue.setColumns(10);
         feedActuatorValue.setToolTipText("<html>\r\n<p>For Duble: numerical value<br/>\r\nFor Boolean: 1 = True, 0 = False</p></html>");
 
+        comboBoxFeedOptions = new JComboBox(FeedOptions.values());
+        panelActuator.add(comboBoxFeedOptions, "8, 4, fill, default");
+        comboBoxFeedOptions.setToolTipText("Enables skipping physical tape transition which is handy for feeder tuning or fixing abnormal situation as e.g. manual part replacement on tape when lost from nozzle tip.");
 
         btnTestFeedActuator = new JButton(testFeedActuatorAction);
-        panelActuator.add(btnTestFeedActuator, "8, 4");
+        panelActuator.add(btnTestFeedActuator, "10, 4");
 
         lblPostPick = new JLabel("Post Pick");
         panelActuator.add(lblPostPick, "2, 6, right, default");
@@ -442,7 +446,7 @@ extends AbstractReferenceFeederConfigurationWizard {
 
 
         btnTestPostPickActuator = new JButton(testPostPickActuatorAction);
-        panelActuator.add(btnTestPostPickActuator, "8, 6");
+        panelActuator.add(btnTestPostPickActuator, "10, 6");
 
         lblMoveBeforeFeed = new JLabel("Move before feed");
         panelActuator.add(lblMoveBeforeFeed, "2, 8, right, default");
@@ -515,6 +519,7 @@ extends AbstractReferenceFeederConfigurationWizard {
 
         addWrappedBinding(feeder, "feedActuator", comboBoxFeedActuator, "selectedItem", actuatorConverter);
         addWrappedBinding(feeder, "feedActuatorValue", feedActuatorValue, "text", doubleConverter);
+        addWrappedBinding(feeder, "feedOptions", comboBoxFeedOptions, "selectedItem");
 
         addWrappedBinding(feeder, "postPickActuator", comboBoxPostPickActuator, "selectedItem", actuatorConverter);
         addWrappedBinding(feeder, "postPickActuatorValue", postPickActuatorValue, "text", doubleConverter);
@@ -794,4 +799,5 @@ extends AbstractReferenceFeederConfigurationWizard {
     private JLabel lblPostPick;
     private JLabel lblMoveBeforeFeed;
     private NamedConverter<Actuator> actuatorConverter;
+    private JComboBox comboBoxFeedOptions;
 }

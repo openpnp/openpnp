@@ -23,7 +23,7 @@ import javax.swing.Action;
 
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.Wizard;
-import org.openpnp.machine.reference.ReferenceFeeder;
+import org.openpnp.machine.reference.FeederWithOptions;
 import org.openpnp.machine.reference.feeder.wizards.ReferenceAutoFeederConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
@@ -33,9 +33,10 @@ import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractActuator;
 import org.openpnp.util.MovableUtils;
 import org.pmw.tinylog.Logger;
+import org.python.apache.commons.compress.compressors.snappy.FramedSnappyDialect;
 import org.simpleframework.xml.Attribute;
 
-public class ReferenceAutoFeeder extends ReferenceFeeder {
+public class ReferenceAutoFeeder extends FeederWithOptions {
     @Attribute(required=false)
     protected String actuatorName;
     
@@ -58,6 +59,9 @@ public class ReferenceAutoFeeder extends ReferenceFeeder {
     
     @Attribute(required=false)
     protected boolean moveBeforeFeed;
+
+    @Attribute(required = false)
+    protected boolean recycleSupport = false;
 
     @Override
     public Location getPickLocation() throws Exception {
@@ -85,6 +89,12 @@ public class ReferenceAutoFeeder extends ReferenceFeeder {
 
     @Override
     public void feed(Nozzle nozzle) throws Exception {
+        if (getFeedOptions() != FeedOptions.Normal) {
+            if (getFeedOptions() == FeedOptions.SkipNext) {
+                setFeedOptions(FeedOptions.Normal);
+            }
+            return;
+        }
         if (actuatorName == null || actuatorName.equals("")) {
             Logger.warn("No actuatorName specified for feeder {}.", getName());
             return;
@@ -118,7 +128,38 @@ public class ReferenceAutoFeeder extends ReferenceFeeder {
         // Note by using the Object generic method, the value will be properly interpreted according to actuator.valueType.
         actuator.actuate((Object)postPickActuatorValue);
     }
-    
+
+    @Override
+    public boolean canTakeBackPart() {
+        /* in case SkipNext is supposed part already ready at location so we cannot recycle part over it.
+           If feed is disabled then recycle is fully on user decision
+        */
+        return (recycleSupport && getFeedOptions() != FeedOptions.SkipNext);
+    }
+
+    @Override
+    public void takeBackPart(Nozzle nozzle) throws Exception {
+        // first check if we can and want to take back this part (should be always be checked before calling, but to be sure)
+        if (nozzle.getPart() == null) {
+            throw new UnsupportedOperationException("No part loaded that could be taken back.");
+        }
+        if (!nozzle.getPart().equals(getPart())) {
+            throw new UnsupportedOperationException("Feeder: " + getName() + " - Can not take back " + nozzle.getPart().getId() + " this feeder only supports " + getPart().getId());
+        }
+        if (!canTakeBackPart()) {
+            throw new UnsupportedOperationException("Feeder: " + getName() + " - Currently no free slot or recycle disabled. Can not take back the part.");
+        }
+
+        // ok, now put the part back on the location of the last pick
+        nozzle.moveToPickLocation(this);
+        nozzle.place();
+        nozzle.moveToSafeZ();
+        if (nozzle.isPartOffEnabled(Nozzle.PartOffStep.AfterPlace) && !nozzle.isPartOff()) {
+            throw new Exception("Feeder: " + getName() + " - Putting part back failed, check nozzle tip");
+        }
+        feedOptions = FeedOptions.SkipNext;
+    }
+
     public String getActuatorName() {
         return actuatorName;
     }
@@ -158,6 +199,14 @@ public class ReferenceAutoFeeder extends ReferenceFeeder {
 	public void setMoveBeforeFeed(boolean moveBeforeFeed) {
 		this.moveBeforeFeed = moveBeforeFeed;
 	}
+
+    public boolean getRecycleSupport() {
+        return recycleSupport;
+    }
+
+    public void setRecycleSupport(boolean recycleSupport) {
+        this.recycleSupport = recycleSupport;
+    }
 
 	@Override
     public Wizard getConfigurationWizard() {

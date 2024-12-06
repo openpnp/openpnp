@@ -29,7 +29,7 @@ import org.apache.commons.io.IOUtils;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Wizard;
-import org.openpnp.machine.reference.ReferenceFeeder;
+import org.openpnp.machine.reference.FeederWithOptions;
 import org.openpnp.machine.reference.feeder.wizards.ReferenceStripFeederConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
@@ -74,7 +74,7 @@ import org.simpleframework.xml.core.Persist;
  * 
  * hole to part lateral is tape width / 2 - 0.5mm
  */
-public class ReferenceStripFeeder extends ReferenceFeeder {
+public class ReferenceStripFeeder extends FeederWithOptions {
     public enum TapeType {
         WhitePaper("White Paper"),
         BlackPlastic("Black Plastic"),
@@ -288,7 +288,9 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
     }
 
     public void feed(Nozzle nozzle) throws Exception {
-        setFeedCount(getFeedCount() + 1);
+        if (getFeedOptions() == FeedOptions.Normal) {
+            setFeedCount(getFeedCount() + 1);
+        }
 
         // Throw an exception when the feeder runs out of parts
         if ((maxFeedCount > 0) && (feedCount > maxFeedCount)) {
@@ -301,7 +303,12 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
             updateVisionOffsets(nozzle,1);
         }
 
-        updateVisionOffsets(nozzle,feedCount);
+        if (feedOptions == FeedOptions.Normal) {
+            updateVisionOffsets(nozzle,feedCount);
+        }
+        if (getFeedOptions() == FeedOptions.SkipNext) {
+            setFeedOptions(FeedOptions.Normal);
+        }
     }
 
     private void updateVisionOffsets(Nozzle nozzle,Integer visionFeedCount) throws Exception {
@@ -403,7 +410,7 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
      */
     @Override
     public boolean canTakeBackPart() {
-        if (feedCount > 0 ) {  
+        if (feedCount > 0 ) {
             return true;
         } else {
             return false;
