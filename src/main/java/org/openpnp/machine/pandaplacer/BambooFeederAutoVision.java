@@ -174,29 +174,40 @@ public class BambooFeederAutoVision extends AbstractPandaplacerVisionFeeder {
 
       Head head = nozzle.getHead();
 
-      if (getFeedCount() % getPartsPerFeedCycle() == 0) {
-          // Modulo of feed count is zero - no more parts there to pick, must feed
+      if (getFeedOptions() == FeedOptions.Normal) {
+            if (getFeedCount() % getPartsPerFeedCycle() == 0) {
+            // Modulo of feed count is zero - no more parts there to pick, must feed
 
-          // Make sure we're calibrated
-          assertCalibrated(false);
+            // Make sure we're calibrated
+            assertCalibrated(false);
 
-          long feedsPerPart = (long)Math.ceil(getPartPitch().divide(getFeedPitch()));
-          long n = feedsPerPart;
-          for (long i = 0; i < n; i++) {  // perform multiple feed actuations if required
-            // Actuate the tape once for the length equal to Tape Pitch
-            feedTape(nozzle, getFeedPitch().getValue());
-          }
+            long feedsPerPart = (long)Math.ceil(getPartPitch().divide(getFeedPitch()));
+            long n = feedsPerPart;
+            for (long i = 0; i < n; i++) {  // perform multiple feed actuations if required
+                // Actuate the tape once for the length equal to Tape Pitch
+                feedTape(nozzle, getFeedPitch().getValue());
+            }
 
-          head.moveToSafeZ();
-          // Make sure we're calibrated after type feed
-          assertCalibrated(true);
+            head.moveToSafeZ();
+            // Make sure we're calibrated after type feed
+            assertCalibrated(true);
+        }
+        else {
+            Logger.debug("Multi parts feed: skipping tape feed at feed count " + getFeedCount());
+        }
+      } else {
+        assertCalibrated(false);
+        head.moveToSafeZ();
       }
-      else {
-          Logger.debug("Multi parts feed: skipping tape feed at feed count " + getFeedCount());
+
+      if (getFeedOptions() == FeedOptions.SkipNext) {
+        setFeedOptions(FeedOptions.Normal);
       }
 
-      // increment feed count
-      setFeedCount(getFeedCount()+1);
+      if (getFeedOptions() == FeedOptions.Normal) {
+        // increment feed count
+        setFeedCount(getFeedCount()+1);
+      }
   }
 
   private void feedTape(Nozzle nozzle, Double feedPitch) throws Exception {
@@ -229,6 +240,34 @@ public class BambooFeederAutoVision extends AbstractPandaplacerVisionFeeder {
         }
         // Note by using the Object generic method, the value will be properly interpreted according to actuator.valueType.
         actuator.actuate((Object)postPickActuatorValue);
+    }
+
+    @Override
+    public boolean canTakeBackPart() {
+        return (getFeedOptions() != FeedOptions.SkipNext && getFeedCount() > 0);
+    }
+
+    @Override
+    public void takeBackPart(Nozzle nozzle) throws Exception {
+        // first check if we can and want to take back this part (should be always be checked before calling, but to be sure)
+        if (nozzle.getPart() == null) {
+            throw new UnsupportedOperationException("No part loaded that could be taken back.");
+        }
+        if (!nozzle.getPart().equals(getPart())) {
+            throw new UnsupportedOperationException("Feeder: " + getName() + " - Can not take back " + nozzle.getPart().getId() + " this feeder only supports " + getPart().getId());
+        }
+        if (!canTakeBackPart()) {
+            throw new UnsupportedOperationException("Feeder: " + getName() + " - Currently no free slot. Can not take back the part.");
+        }
+
+        // ok, now put the part back on the location of the last pick
+        nozzle.moveToPickLocation(this);
+        nozzle.place();
+        nozzle.moveToSafeZ();
+        if (nozzle.isPartOffEnabled(Nozzle.PartOffStep.AfterPlace) && !nozzle.isPartOff()) {
+            throw new Exception("Feeder: " + getName() + " - Putting part back failed, check nozzle tip");
+        }
+        feedOptions = FeedOptions.SkipNext;
     }
 
 // standard wizard overrides

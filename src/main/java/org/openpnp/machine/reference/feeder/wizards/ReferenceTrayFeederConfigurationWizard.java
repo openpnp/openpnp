@@ -23,6 +23,7 @@ import java.awt.event.ActionEvent;
 
 import javax.swing.AbstractAction;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSeparator;
@@ -30,11 +31,13 @@ import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
+import org.openpnp.Translations;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.MutableLocationProxy;
+import org.openpnp.machine.reference.FeederWithOptions.FeedOptions;
 import org.openpnp.machine.reference.feeder.ReferenceTrayFeeder;
 
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -52,6 +55,7 @@ public class ReferenceTrayFeederConfigurationWizard
     private JTextField textFieldTrayCountX;
     private JTextField textFieldTrayCountY;
     private JTextField textFieldFeedCount;
+    private JComboBox comboBoxFeedOptions;
 
     public ReferenceTrayFeederConfigurationWizard(ReferenceTrayFeeder feeder) {
         super(feeder);
@@ -129,6 +133,10 @@ public class ReferenceTrayFeederConfigurationWizard
         });
         btnResetFeedCount.setHorizontalAlignment(SwingConstants.LEFT);
         panelFields.add(btnResetFeedCount, "6, 10, left, default");
+
+        comboBoxFeedOptions = new JComboBox(FeedOptions.values());
+        comboBoxFeedOptions.setToolTipText("Enables skipping nozzle transition which is handy for feeder tuning or fixing abnormal situation as e.g. manual part replacement on tray when lost from nozzle tip.");
+        panelFields.add(comboBoxFeedOptions, "4, 12, fill, default");
     }
 
     @Override
@@ -147,6 +155,7 @@ public class ReferenceTrayFeederConfigurationWizard
         addWrappedBinding(feeder, "trayCountY", textFieldTrayCountY, "text", integerConverter);
 
         addWrappedBinding(feeder, "feedCount", textFieldFeedCount, "text", integerConverter);
+        addWrappedBinding(feeder, "feedOptions", comboBoxFeedOptions, "selectedItem");
 
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldOffsetsX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldOffsetsY);

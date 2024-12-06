@@ -61,6 +61,7 @@ import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.gui.support.PartsComboBoxModel;
+import org.openpnp.machine.reference.FeederWithOptions.FeedOptions;
 import org.openpnp.machine.reference.camera.BufferedImageCamera;
 import org.openpnp.machine.reference.feeder.ReferenceStripFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceStripFeeder.TapeType;
@@ -136,6 +137,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
     private JTextField parallaxDiameter;
     private JLabel lblParallaxAngle;
     private JTextField parallaxAngle;
+    private JComboBox comboBoxFeedOptions;
 
     private boolean logDebugInfo = false;
     private Location firstPartLocation;
@@ -256,6 +258,10 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         textFieldTapeWidth = new JTextField();
         panelTapeSettings.add(textFieldTapeWidth, "10, 4");
         textFieldTapeWidth.setColumns(5);
+
+        comboBoxFeedOptions = new JComboBox(FeedOptions.values());
+        comboBoxFeedOptions.setToolTipText(Translations.getString("ReferenceStripFeederConfigurationWizard.FeedOptionsComboBox.toolTipText")); //$NON-NLS-1$
+        panelTapeSettings.add(comboBoxFeedOptions, "12, 4, fill, default");
 
         lblPartPitch = new JLabel(Translations.getString(
                 "ReferenceStripFeederConfigurationWizard.PartPitchLabel.text")); //$NON-NLS-1$
@@ -482,6 +488,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         addWrappedBinding(feeder, "extrapolationDistance", textFieldExtrapolationDistance, "text", lengthConverter);
         addWrappedBinding(feeder, "parallaxDiameter", parallaxDiameter, "text", lengthConverter);
         addWrappedBinding(feeder, "parallaxAngle", parallaxAngle, "text", doubleConverter);
+        addWrappedBinding(feeder, "feedOptions", comboBoxFeedOptions, "selectedItem");
 
         MutableLocationProxy feedStartLocation = new MutableLocationProxy();
         bind(UpdateStrategy.READ_WRITE, feeder, "referenceHoleLocation", feedStartLocation,
