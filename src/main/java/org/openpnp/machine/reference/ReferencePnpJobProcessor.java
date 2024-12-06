@@ -418,35 +418,81 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             FiducialLocator locator = Configuration.get().getMachine().getFiducialLocator();
             
             // collect all board and panel fiducial locations
-            List<PlacementsHolderLocation<?>> locations = collectAllBoardLocations(job.getRootPanelLocation(), completed);
+            List<ExtendedPlacementsHolderLocation> locations = collectAllBoardLocations(job.getRootPanelLocation(), 0);
 
-            // TODO: it would be possible to optimize the fiducial check order by optimizing them while respecting the original parent-child relation
-            
-            // perform fiducial check
-            for (PlacementsHolderLocation<?> location : locations) {
-                fireTextStatus("Fiducial check for %s", location);
-                try {
-                    locator.locatePlacementsHolder(location);
-                }
-                catch (Exception e) {
-                    throw new JobProcessorException(location, e);
-                }
-                
-                completed.add(location);
-                return this;
+            // remove all locations, that have been completed already
+            locations = locations.stream()
+                    .filter(bl -> { return !completed.contains(bl.getPlacementsHolderLocation()); })
+                    .collect(Collectors.toList());
+
+            // if there are no more fiducial checks to perform, leave the loop now
+            if (locations.isEmpty()) {
+                return new Plan();
             }
             
-            return new Plan();
+            // process all locations with the first nesting level
+            int nestingLevel = locations.get(0).getNestingLevel();
+            locations = locations.stream()
+                    .filter(bl -> { return bl.getNestingLevel() == nestingLevel; })
+                    .collect(Collectors.toList());
+            
+            // choose the (best) location to perform the fiducial check next
+            PlacementsHolderLocation<?> locationToCheck;
+            if (locations.size() > 1) {
+                // try to get current location as start location
+                Location currentLocation;
+                try {
+                    currentLocation = head.getDefaultCamera().getLocation();
+                }
+                catch (Exception e) {
+                    currentLocation = null;
+                }
+                
+                // optimize panel fiducial using travelling salesman
+                TravellingSalesman<ExtendedPlacementsHolderLocation> tsm = new TravellingSalesman<ExtendedPlacementsHolderLocation>(
+                        locations, 
+                        new TravellingSalesman.Locator<ExtendedPlacementsHolderLocation>() { 
+                            @Override
+                            public Location getLocation(ExtendedPlacementsHolderLocation locatable) {
+                                return locatable.getPlacementsHolderLocation().getGlobalLocation();
+                            }
+                        }, 
+                        // start from current camera location
+                        currentLocation,
+                        null);
+                
+                // Solve it (using the default heuristics).
+                tsm.solve();
+                
+                // preform fiducial check on the first location
+                locationToCheck = tsm.getTravel().get(0).getPlacementsHolderLocation();
+            }
+            else {
+                // the list only contains a single location, skip optimization
+                locationToCheck = locations.get(0).getPlacementsHolderLocation();
+            }
+                
+            // perform fiducial check on the first location of the optimized list
+            fireTextStatus("Fiducial check for %s", locationToCheck);
+            try {
+                locator.locatePlacementsHolder(locationToCheck);
+            }
+            catch (Exception e) {
+                throw new JobProcessorException(locationToCheck, e);
+            }
+            
+            completed.add(locationToCheck);
+            return this;
         }
 
         // collect all board locations of all panels recursively
-        List <PlacementsHolderLocation<?>> collectAllBoardLocations(PlacementsHolderLocation<?> rootLocation, Set<PlacementsHolderLocation<?>> completed) {
-            List<PlacementsHolderLocation<?>> locations = new ArrayList<>();
+        List <ExtendedPlacementsHolderLocation> collectAllBoardLocations(PlacementsHolderLocation<?> rootLocation, int nestingLevel) {
+            List<ExtendedPlacementsHolderLocation> locations = new ArrayList<>();
 
             if (rootLocation instanceof BoardLocation) {
                 BoardLocation boardLocation = (BoardLocation)rootLocation;
-                if (boardLocation.isEnabled() && boardLocation.isCheckFiducials() && !completed.contains(boardLocation)) {
-                    locations.add(boardLocation);
+                if (boardLocation.isEnabled() && boardLocation.isCheckFiducials()) {
+                    locations.add(new ExtendedPlacementsHolderLocation(boardLocation, nestingLevel));
                 }
             }
             else if (rootLocation instanceof PanelLocation) {
@@ -454,23 +500,46 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
                 // only continue if the panel is enabled
                 if (panelLocation.isEnabled()) {
-                    // add the panel itself if enabled and not yet completed
-                    if (panelLocation.isCheckFiducials() && !completed.contains(panelLocation)) {
-                        locations.add(panelLocation);
+                    // add the panel itself if enabled
+                    if (panelLocation.isCheckFiducials()) {
+                        locations.add(new ExtendedPlacementsHolderLocation(panelLocation, nestingLevel));
                     }
                     
                     // get all children of the panel
                     List<PlacementsHolderLocation<?>> children = panelLocation.getPanel().getChildren();
 
                     // loop over all children and collect their descendants
+                    int nextNestingLevel = nestingLevel +1;
                     for (PlacementsHolderLocation<?> child : children) {
-                       locations.addAll(collectAllBoardLocations(child, completed));
+                       locations.addAll(collectAllBoardLocations(child, nextNestingLevel));
                     }
                 }
             }
             
             // return the complete list
             return locations;
+        }
+
+        // this class holds BoardLocations together with their nesting level to optimize them respecting the nesting level
+        class ExtendedPlacementsHolderLocation {
+            private final PlacementsHolderLocation<?> placementsHolderLocation;
+            private final int nestingLevel;
+            ExtendedPlacementsHolderLocation(PlacementsHolderLocation<?> placementsHolderLocation, int nestingLevel) {
+                super();
+                this.placementsHolderLocation = placementsHolderLocation;
+                this.nestingLevel = nestingLevel;
+            }
+            PlacementsHolderLocation<?> getPlacementsHolderLocation() {
+                return placementsHolderLocation;
+            }
+            int getNestingLevel() {
+                return nestingLevel;
+            }
+            
+            @Override
+            public String toString() {
+                return "@" + nestingLevel + ": " + placementsHolderLocation;
+            }
         }
     }
 
