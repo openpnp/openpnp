@@ -219,8 +219,18 @@ public class TravellingSalesman<T> {
             System.out.println("Initial distance of travel: " + bestDistance);
         }
         if (this.travelSize > 1) {
-            // make this repeatable by seeding the random generator
-            Random rnd = new java.util.Random(0);
+            List<TravelLocation> globalTravel = null;   // global best route, null if unset
+            double globalBestDistance = 0.0;            // cost of global best route (if defined)
+            Random rnd;
+            
+            if (debugLevel > 0) {
+                // make this repeatable by seeding the random generator
+                rnd = new java.util.Random(0);
+            }
+            else {
+                // if outside of debugging environment, do not seed the random number generate to generate true random number.
+                rnd = new java.util.Random();
+            }
             for (; i > 0; i--) {
                 if (t > 0.1) {
                     int a = (int) (rnd.nextDouble() * this.travelSize);
@@ -258,9 +268,23 @@ public class TravellingSalesman<T> {
 
                     if (swapDistance < 0.0 || (Math.exp(-swapDistance / t) >= rnd.nextDouble())) {
                         // better or within annealing probability
+                        if (!(swapDistance < 0.0)) {
+                            // swap accepted due to annealiing probability only
+                            // -> remember current best route and it's cost
+                            if (globalTravel == null || globalBestDistance > bestDistance) {
+                                globalBestDistance = bestDistance;
+                                globalTravel = new ArrayList<>(this.travel);
+                            }
+                        }
                         this.swapLocations(a, b, twist);
+                        bestDistance += swapDistance;   // keep bestDistance up-to-date
                         swaps++;
                         twists += twist ? 1 : 0;
+                        
+                        // reset the global best route if worth then local best
+                        if (globalTravel != null && globalBestDistance > bestDistance) {
+                            globalTravel = null;
+                        }
                     }
                     t *= coolingRate;
                 } else {
@@ -274,6 +298,14 @@ public class TravellingSalesman<T> {
                     }
                 }
             }
+            // if we have a global best route, test if its better then the local best route
+            if (globalTravel != null && globalBestDistance < bestDistance) {
+                // global best route is bettern the local, return global as result
+                this.travel.clear();
+                this.travel.addAll(globalTravel);
+                globalTravel = null;
+            }
+            
         }
         bestDistance = getTravellingDistance();
         if (debugLevel > 0) {
