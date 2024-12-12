@@ -93,7 +93,7 @@ public class ReferenceTrayFeeder extends FeederWithOptions {
             throw new Exception("Feeder: " + getName() + " (" + getPart().getId() + ") - tray empty.");
         }
 
-        if (getFeedOptions() == FeedOptions.Normal) {
+        if (getFeedOptions() == FeedOptions.Normal || getFeedCount() == 0) {
             setFeedCount(getFeedCount() + 1);
         }
         if (getFeedOptions() == FeedOptions.SkipNext) {
@@ -136,7 +136,9 @@ public class ReferenceTrayFeeder extends FeederWithOptions {
             throw new Exception("Feeder: " + getName() + " - Putting part back failed, check nozzle tip");
         }
         // change FeedCount
-        setFeedCount(getFeedCount() - 1);
+        if (getFeedOptions() == FeedOptions.Normal) {
+            setFeedCount(getFeedCount() - 1);
+        }
     }
 
     

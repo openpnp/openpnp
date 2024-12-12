@@ -200,13 +200,12 @@ public class BambooFeederAutoVision extends AbstractPandaplacerVisionFeeder {
         head.moveToSafeZ();
       }
 
-      if (getFeedOptions() == FeedOptions.SkipNext) {
-        setFeedOptions(FeedOptions.Normal);
-      }
-
       if (getFeedOptions() == FeedOptions.Normal) {
         // increment feed count
         setFeedCount(getFeedCount()+1);
+      }
+      if (getFeedOptions() == FeedOptions.SkipNext) {
+        setFeedOptions(FeedOptions.Normal);
       }
   }
 
@@ -244,7 +243,8 @@ public class BambooFeederAutoVision extends AbstractPandaplacerVisionFeeder {
 
     @Override
     public boolean canTakeBackPart() {
-        return (getFeedOptions() != FeedOptions.SkipNext && getFeedCount() > 0);
+        // in multi nozzle setup prevent recycle multiple parts on the same place
+        return (getFeedOptions() != FeedOptions.SkipNext);
     }
 
     @Override
@@ -267,7 +267,7 @@ public class BambooFeederAutoVision extends AbstractPandaplacerVisionFeeder {
         if (nozzle.isPartOffEnabled(Nozzle.PartOffStep.AfterPlace) && !nozzle.isPartOff()) {
             throw new Exception("Feeder: " + getName() + " - Putting part back failed, check nozzle tip");
         }
-        feedOptions = FeedOptions.SkipNext;
+        setFeedOptions(FeedOptions.SkipNext);
     }
 
 // standard wizard overrides
