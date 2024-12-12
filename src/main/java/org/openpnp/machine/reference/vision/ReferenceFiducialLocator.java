@@ -300,7 +300,7 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
             errString = errString.substring(0, errString.length()-2); //strip off the last comma and space
             placementsHolderLocation.setLocalToParentTransform(savedPlacementTransform);
             throw new Exception("Fiducial locator results are invalid for " + 
-                    placementsHolderLocation.getId() + " because: " + errString + ".  Potential remidies include " +
+                    placementsHolderLocation.getUniqueId() + " because: " + errString + ". Potential remidies include " +
                     "setting the initial board X, Y, Z, and Rotation in the Boards panel; using a different set of fiducials; " +
                     "or changing the allowable tolerances in the <tolerances> section of the fiducial-locator section in machine.xml.");
         }
