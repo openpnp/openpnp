@@ -99,9 +99,12 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
     /**
      * Number of ficudial nesting level to check separately before checking the remaining all at once.
+     * Default is 1 to check root-level panels/boards separately avoiding missdetections and/or extra
+     * camera movements while checking fiducials on other layers while still preserving some benefit
+     * of an optimized route.
      */
     @Attribute(required = false)
-    int fiducialLevel = 0;
+    int fiducialLevel = 1;
     
     @Element(required = false)
     public PnpJobPlanner planner = new SimplePnpJobPlanner();

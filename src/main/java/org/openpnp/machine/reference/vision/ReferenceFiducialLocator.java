@@ -192,12 +192,13 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
         // loop over all fiducial and visit/measure them
         for (Fiducial fiducial : tsm.getTravel()) {
             Placement placement = fiducial.placement;
-            fiducial.measuredLocation = getFiducialLocation(fiducial.placementsHolderLocation, placement);
+            PlacementsHolderLocation<?> placementsHolderLocation = fiducial.placementsHolderLocation;
+            fiducial.measuredLocation = getFiducialLocation(placementsHolderLocation, placement);
             if (fiducial.measuredLocation == null) {
-                throw new Exception("Unable to locate " + placement.getId());
+                throw new Exception("Unable to locate " + placement.getId() + " on " + placementsHolderLocation.getId());
             }
             
-            Logger.debug("Found {} at {}", placement.getId(), fiducial.measuredLocation);
+            Logger.debug("Found {} on {} at {}", placement.getId(), placementsHolderLocation.getId(), fiducial.measuredLocation);
         }
     }
     
@@ -242,25 +243,25 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
         newBoardLocation = newBoardLocation.derive(null, null, placementsHolderLocation.getLocation().getZ(), null);
 
         Utils2D.AffineInfo ai = Utils2D.affineInfo(tx);
-        Logger.info("Fiducial results: " + ai);
+        Logger.info(placementsHolderLocation.getId() + " fiducial results: " + ai);
         double[] matrix = new double[6];
         tx.getMatrix(matrix);
-        Logger.info("Placement to machine transform X:"
+        Logger.info(placementsHolderLocation.getId() + " placement to machine transform X:"
                 + " X Factor: "+String.format("%12.6f", matrix[0])
                 + " Y Factor: "+String.format("%12.6f", matrix[1])
                 + " X Offset: "+String.format("%12.6f", matrix[4]));
-        Logger.info("Placement to machine transform Y:"
+        Logger.info(placementsHolderLocation.getId() + " placement to machine transform Y:"
                 + " X Factor: "+String.format("%12.6f", matrix[2])
                 + " Y Factor: "+String.format("%12.6f", matrix[3])
                 + " Y Offset: "+String.format("%12.6f", matrix[5]));
         try {
             AffineTransform invTx = tx.createInverse();
             invTx.getMatrix(matrix);
-            Logger.info("Machine to placement transform X:"
+            Logger.info(placementsHolderLocation.getId() + " machine to placement transform X:"
                     + " X Factor: "+String.format("%12.6f", matrix[0])
                     + " Y Factor: "+String.format("%12.6f", matrix[1])
                     + " X Offset: "+String.format("%12.6f", matrix[4]));
-            Logger.info("Machine to placement transform Y:"
+            Logger.info(placementsHolderLocation.getId() + " machine to placement transform Y:"
                     + " X Factor: "+String.format("%12.6f", matrix[2])
                     + " Y Factor: "+String.format("%12.6f", matrix[3])
                     + " Y Offset: "+String.format("%12.6f", matrix[5]));
@@ -270,7 +271,7 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
         }
 
         double boardOffset = newBoardLocation.getLinearLengthTo(savedBoardLocation).convertToUnits(LengthUnit.Millimeters).getValue();
-        Logger.info("Board origin offset distance: " + boardOffset + "mm");
+        Logger.info(placementsHolderLocation.getId() + " origin offset distance: " + boardOffset + "mm");
         
         //Check for out-of-nominal conditions
         String errString = "";
@@ -298,7 +299,8 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
         if (errString.length() > 0) {
             errString = errString.substring(0, errString.length()-2); //strip off the last comma and space
             placementsHolderLocation.setLocalToParentTransform(savedPlacementTransform);
-            throw new Exception("Fiducial locator results are invalid because: " + errString + ".  Potential remidies include " +
+            throw new Exception("Fiducial locator results are invalid for " + 
+                    placementsHolderLocation.getId() + " because: " + errString + ".  Potential remidies include " +
                     "setting the initial board X, Y, Z, and Rotation in the Boards panel; using a different set of fiducials; " +
                     "or changing the allowable tolerances in the <tolerances> section of the fiducial-locator section in machine.xml.");
         }
@@ -461,7 +463,7 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
      */
     private Location getFiducialLocation(PlacementsHolderLocation<?> boardLocation, Placement fid)
             throws Exception {
-        Logger.debug("Locating {}", fid.getId());
+        Logger.debug("Locating {} on {}", fid.getId(), boardLocation.getId());
 
         Part part = fid.getPart();
         if (part == null) {
@@ -604,7 +606,7 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
             Logger.debug("{} averaged location is at {}", partSettingsHolder.getId(), location);
         }
         if (location.convertToUnits(maxDistance.getUnits()).getLinearDistanceTo(nominalLocation) > maxDistance.getValue()) {
-            throw new Exception("Fiducial "+partSettingsHolder.getShortName()+" detected too far away.");
+            throw new Exception("Fiducial "+partSettingsHolder.getShortName()+ " detected too far away.");
         }
         return location;
     }
