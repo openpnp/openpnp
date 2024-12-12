@@ -135,7 +135,7 @@ public class ReferenceTrayFeederConfigurationWizard
         panelFields.add(btnResetFeedCount, "6, 10, left, default");
 
         comboBoxFeedOptions = new JComboBox(FeedOptions.values());
-        comboBoxFeedOptions.setToolTipText("Enables skipping nozzle transition which is handy for feeder tuning or fixing abnormal situation as e.g. manual part replacement on tray when lost from nozzle tip.");
+        comboBoxFeedOptions.setToolTipText("Enables skipping nozzle transition to pick again from the last location which is handy for feeder tuning or fixing abnormal situation as e.g. manual part replacement on tray when lost from nozzle tip.");
         panelFields.add(comboBoxFeedOptions, "4, 12, fill, default");
     }
 

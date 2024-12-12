@@ -157,7 +157,7 @@ public class ReferenceAutoFeeder extends FeederWithOptions {
         if (nozzle.isPartOffEnabled(Nozzle.PartOffStep.AfterPlace) && !nozzle.isPartOff()) {
             throw new Exception("Feeder: " + getName() + " - Putting part back failed, check nozzle tip");
         }
-        feedOptions = FeedOptions.SkipNext;
+        setFeedOptions(FeedOptions.SkipNext);
     }
 
     public String getActuatorName() {

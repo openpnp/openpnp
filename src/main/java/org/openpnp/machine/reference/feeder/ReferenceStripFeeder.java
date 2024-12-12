@@ -288,7 +288,7 @@ public class ReferenceStripFeeder extends FeederWithOptions {
     }
 
     public void feed(Nozzle nozzle) throws Exception {
-        if (getFeedOptions() == FeedOptions.Normal) {
+        if (getFeedOptions() == FeedOptions.Normal || getFeedCount() == 0) {
             setFeedCount(getFeedCount() + 1);
         }
 
@@ -439,7 +439,9 @@ public class ReferenceStripFeeder extends FeederWithOptions {
             throw new Exception("Feeder: " + getName() + " - Putting part back failed, check nozzle tip");
         }
         // change FeedCount
-        setFeedCount(getFeedCount() - 1);
+        if (getFeedOptions() == FeedOptions.Normal) {
+            setFeedCount(getFeedCount() - 1);
+        }
     }
         
     
