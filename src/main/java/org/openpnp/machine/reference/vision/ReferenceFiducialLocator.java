@@ -195,10 +195,10 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
             PlacementsHolderLocation<?> placementsHolderLocation = fiducial.placementsHolderLocation;
             fiducial.measuredLocation = getFiducialLocation(placementsHolderLocation, placement);
             if (fiducial.measuredLocation == null) {
-                throw new Exception("Unable to locate " + placement.getId() + " on " + placementsHolderLocation.getId());
+                throw new Exception("Unable to locate " + placement.getId() + " on " + placementsHolderLocation.getUniqueId());
             }
             
-            Logger.debug("Found {} on {} at {}", placement.getId(), placementsHolderLocation.getId(), fiducial.measuredLocation);
+            Logger.debug("Found {} on {} at {}", placement.getId(), placementsHolderLocation.getUniqueId(), fiducial.measuredLocation);
         }
     }
     
@@ -243,25 +243,25 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
         newBoardLocation = newBoardLocation.derive(null, null, placementsHolderLocation.getLocation().getZ(), null);
 
         Utils2D.AffineInfo ai = Utils2D.affineInfo(tx);
-        Logger.info(placementsHolderLocation.getId() + " fiducial results: " + ai);
+        Logger.info(placementsHolderLocation.getUniqueId() + " fiducial results: " + ai);
         double[] matrix = new double[6];
         tx.getMatrix(matrix);
-        Logger.info(placementsHolderLocation.getId() + " placement to machine transform X:"
+        Logger.info(placementsHolderLocation.getUniqueId() + " placement to machine transform X:"
                 + " X Factor: "+String.format("%12.6f", matrix[0])
                 + " Y Factor: "+String.format("%12.6f", matrix[1])
                 + " X Offset: "+String.format("%12.6f", matrix[4]));
-        Logger.info(placementsHolderLocation.getId() + " placement to machine transform Y:"
+        Logger.info(placementsHolderLocation.getUniqueId() + " placement to machine transform Y:"
                 + " X Factor: "+String.format("%12.6f", matrix[2])
                 + " Y Factor: "+String.format("%12.6f", matrix[3])
                 + " Y Offset: "+String.format("%12.6f", matrix[5]));
         try {
             AffineTransform invTx = tx.createInverse();
             invTx.getMatrix(matrix);
-            Logger.info(placementsHolderLocation.getId() + " machine to placement transform X:"
+            Logger.info(placementsHolderLocation.getUniqueId() + " machine to placement transform X:"
                     + " X Factor: "+String.format("%12.6f", matrix[0])
                     + " Y Factor: "+String.format("%12.6f", matrix[1])
                     + " X Offset: "+String.format("%12.6f", matrix[4]));
-            Logger.info(placementsHolderLocation.getId() + " machine to placement transform Y:"
+            Logger.info(placementsHolderLocation.getUniqueId() + " machine to placement transform Y:"
                     + " X Factor: "+String.format("%12.6f", matrix[2])
                     + " Y Factor: "+String.format("%12.6f", matrix[3])
                     + " Y Offset: "+String.format("%12.6f", matrix[5]));
@@ -271,7 +271,7 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
         }
 
         double boardOffset = newBoardLocation.getLinearLengthTo(savedBoardLocation).convertToUnits(LengthUnit.Millimeters).getValue();
-        Logger.info(placementsHolderLocation.getId() + " origin offset distance: " + boardOffset + "mm");
+        Logger.info(placementsHolderLocation.getUniqueId() + " origin offset distance: " + boardOffset + "mm");
         
         //Check for out-of-nominal conditions
         String errString = "";
@@ -463,7 +463,7 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
      */
     private Location getFiducialLocation(PlacementsHolderLocation<?> boardLocation, Placement fid)
             throws Exception {
-        Logger.debug("Locating {} on {}", fid.getId(), boardLocation.getId());
+        Logger.debug("Locating {} on {}", fid.getId(), boardLocation.getUniqueId());
 
         Part part = fid.getPart();
         if (part == null) {
