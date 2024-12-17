@@ -529,7 +529,10 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
             Rectangle2D bounds = footprint.getPadsShape().getBounds2D();
             Length diameter = new Length(Math.max(bounds.getWidth(), bounds.getHeight()), footprint.getUnits());
             pipeline.setProperty("fiducial.diameter", diameter);
-            pipeline.setProperty("fiducial.maxDistance", getMaxDistance());
+            if(pipeline.getStage("maxDistance")==null) {
+                Logger.info("Setting maxDistance override because this pipeline does not have a maxDistance stage");
+                pipeline.setProperty("fiducial.maxDistance", getMaxDistance());
+            }
         }
         pipeline.addProperties(pipelineParameterAssignments);
     }
