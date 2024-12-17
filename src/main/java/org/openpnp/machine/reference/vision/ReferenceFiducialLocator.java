@@ -111,62 +111,116 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
         });
     }
 
-    public Location locatePlacementsHolder(PlacementsHolderLocation<?> placementsHolderLocation) throws Exception {
-        List<Placement> fiducials;
+    /**
+     * Process a list PlacementsHolderLocations in an optimized way: measure all fiducial locations first then then
+     * calculate all their affine transformations. 
+     * The disadvantage is that fiducials whose location depends on other fiducials
+     * and their affine transformation might be processed with a larger offset compared to when they would be processed with
+     * the others transformation already fixed.
+     * The advantage is that that all all fiducial locations will be visited taking an optimized route minimizing the time
+     * of travel.
+     *
+     * @param allPlacementsHolderLocation if of all PlacementsHolderLocation to process
+     * @param endLocation to consider then optimizing the route. Can be null. 
+     * @throws Exception
+     * @return compensated board location of last PlacementsHolderLocation processed (in list)
+     */
+    public Location locateAllPlacementsHolder(List<PlacementsHolderLocation<?>> allPlacementsHolderLocation, Location endLocation) throws Exception {
 
-        Side boardSide = placementsHolderLocation.getGlobalSide();  // save for later
-        Location savedBoardLocation = placementsHolderLocation.getGlobalLocation();
-        AffineTransform savedPlacementTransform = placementsHolderLocation.getLocalToParentTransform();
-       
-        fiducials = getFiducials(placementsHolderLocation);
+        // collect all placementsHolderLocations with their fiducials into new classes grouping
+        // required data to process the following steps in an optimized order
+        List<PlacementsHolderLocationWithFiducials> allPlacementsHolderLocationWithFiducials = new ArrayList<PlacementsHolderLocationWithFiducials>();
+        for (PlacementsHolderLocation<?> placementsHolderLocation : allPlacementsHolderLocation) {
+            allPlacementsHolderLocationWithFiducials.add(new PlacementsHolderLocationWithFiducials(placementsHolderLocation));
 
-        if (fiducials.size() < 2) {
-            throw new Exception(String.format(
-                    "The panel/board side contains only %d placements marked as fiducials, but at least 2 are required.",
-                    fiducials.size()));
+            // Clear the current transform so it doesn't potentially send us to the wrong spot
+            // to find the fiducials.
+            placementsHolderLocation.setLocalToParentTransform(null);
         }
 
-        // Clear the current transform so it doesn't potentially send us to the wrong spot
-        // to find the fiducials.
-        placementsHolderLocation.setLocalToParentTransform(null);
+        // measure all fiducial of all placementsHolderLocations at once
+        getAllFiducialLocations(allPlacementsHolderLocationWithFiducials, endLocation);
 
+        // calculate the transformation for all placementsHolderLocation in their original order
+        Location newBoardLocation = null;
+        for (PlacementsHolderLocationWithFiducials placementsHolderLocationWithFiducials : allPlacementsHolderLocationWithFiducials) {
+            newBoardLocation = calculateTransformation(placementsHolderLocationWithFiducials);
+        }
+        
+        // return the compensated board location of the last placementsHolderLocation processed
+        return newBoardLocation;
+    }
+
+    /**
+     * Measure all fiduial locations of all placementsHolderLocations at once.
+     * 
+     * @param allPlacementsHolderLocationWithFiducials
+     * @param endLocation
+     * @throws Exception
+     */
+    private void getAllFiducialLocations(List<PlacementsHolderLocationWithFiducials> allPlacementsHolderLocationWithFiducials, Location endLocation) throws Exception {
+        List<Fiducial> fiducials = new ArrayList<Fiducial>();
+        for (PlacementsHolderLocationWithFiducials placementsHolderLocationWithFiducials : allPlacementsHolderLocationWithFiducials) {
+            fiducials.addAll(placementsHolderLocationWithFiducials.fiducials);
+        }
+        
         //Define where the fiducial trip will begin
         Location currentCameraLocation = new Location(LengthUnit.Millimeters);
         try {
             currentCameraLocation = MainFrame.get().getMachineControls().getSelectedTool().getHead().getDefaultCamera().getLocation();
         } catch (Exception e) {
-            currentCameraLocation = placementsHolderLocation.getGlobalLocation();
+            currentCameraLocation = null;
         }
         
         // Use a traveling salesman algorithm to optimize the path to visit the fiducials
-        TravellingSalesman<Placement> tsm = new TravellingSalesman<>(
+        TravellingSalesman<Fiducial> tsm = new TravellingSalesman<>(
                 fiducials, 
-                new TravellingSalesman.Locator<Placement>() { 
+                new TravellingSalesman.Locator<Fiducial>() { 
                     @Override
-                    public Location getLocation(Placement locatable) {
-                        return Utils2D.calculateBoardPlacementLocation(placementsHolderLocation, locatable.getLocation());
+                    public Location getLocation(Fiducial locatable) {
+                        return Utils2D.calculateBoardPlacementLocation(locatable.placementsHolderLocation, locatable.placement.getLocation());
                     }
                 }, 
                 // start from current camera location
                 currentCameraLocation,
                 // and end at the board origin
-                placementsHolderLocation.getGlobalLocation());
+                endLocation);
 
         // Solve it using the default heuristics.
         tsm.solve();
 
-        // Visit each fiducial and store its expected and measured location
+        // loop over all fiducial and visit/measure them
+        for (Fiducial fiducial : tsm.getTravel()) {
+            Placement placement = fiducial.placement;
+            PlacementsHolderLocation<?> placementsHolderLocation = fiducial.placementsHolderLocation;
+            fiducial.measuredLocation = getFiducialLocation(placementsHolderLocation, placement);
+            if (fiducial.measuredLocation == null) {
+                throw new Exception("Unable to locate " + placement.getId() + " on " + placementsHolderLocation.getUniqueId());
+            }
+            
+            Logger.debug("Found {} on {} at {}", placement.getId(), placementsHolderLocation.getUniqueId(), fiducial.measuredLocation);
+        }
+    }
+    
+    /**
+     * Calculate the affine transformation for a single placementsHolderLocation with fiducial locations already measured.
+     * 
+     * @param placementsHolderLocationWithFiducials
+     * @throws Exception
+     * @return compensated board location
+     */
+    private Location calculateTransformation(PlacementsHolderLocationWithFiducials placementsHolderLocationWithFiducials) throws Exception {
+        PlacementsHolderLocation<?> placementsHolderLocation = placementsHolderLocationWithFiducials.placementsHolderLocation;
+        Side boardSide = placementsHolderLocation.getGlobalSide();  // save for later
+        Location savedBoardLocation = placementsHolderLocation.getGlobalLocation();
+        AffineTransform savedPlacementTransform = placementsHolderLocation.getLocalToParentTransform();
+
+        // collect all measured locations and recalculate all expected locations
         List<Location> expectedLocations = new ArrayList<>();
         List<Location> measuredLocations = new ArrayList<>();
-        for (Placement fiducial : tsm.getTravel()) {
-            Location measuredLocation = getFiducialLocation(placementsHolderLocation, fiducial);
-            if (measuredLocation == null) {
-                throw new Exception("Unable to locate " + fiducial.getId());
-            }
-            expectedLocations.add(fiducial.getLocation().invert(boardSide==Side.Bottom, false, false, false));
-            measuredLocations.add(measuredLocation);
-            
-            Logger.debug("Found {} at {}", fiducial.getId(), measuredLocation);
+        for (Fiducial fiducial : placementsHolderLocationWithFiducials.fiducials) {
+            expectedLocations.add(fiducial.placement.getLocation().invert(boardSide==Side.Bottom, false, false, false));
+            measuredLocations.add(fiducial.measuredLocation);
         }
         
         // Calculate the transform.
@@ -189,25 +243,25 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
         newBoardLocation = newBoardLocation.derive(null, null, placementsHolderLocation.getLocation().getZ(), null);
 
         Utils2D.AffineInfo ai = Utils2D.affineInfo(tx);
-        Logger.info("Fiducial results: " + ai);
+        Logger.info(placementsHolderLocation.getUniqueId() + " fiducial results: " + ai);
         double[] matrix = new double[6];
         tx.getMatrix(matrix);
-        Logger.info("Placement to machine transform X:"
+        Logger.info(placementsHolderLocation.getUniqueId() + " placement to machine transform X:"
                 + " X Factor: "+String.format("%12.6f", matrix[0])
                 + " Y Factor: "+String.format("%12.6f", matrix[1])
                 + " X Offset: "+String.format("%12.6f", matrix[4]));
-        Logger.info("Placement to machine transform Y:"
+        Logger.info(placementsHolderLocation.getUniqueId() + " placement to machine transform Y:"
                 + " X Factor: "+String.format("%12.6f", matrix[2])
                 + " Y Factor: "+String.format("%12.6f", matrix[3])
                 + " Y Offset: "+String.format("%12.6f", matrix[5]));
         try {
             AffineTransform invTx = tx.createInverse();
             invTx.getMatrix(matrix);
-            Logger.info("Machine to placement transform X:"
+            Logger.info(placementsHolderLocation.getUniqueId() + " machine to placement transform X:"
                     + " X Factor: "+String.format("%12.6f", matrix[0])
                     + " Y Factor: "+String.format("%12.6f", matrix[1])
                     + " X Offset: "+String.format("%12.6f", matrix[4]));
-            Logger.info("Machine to placement transform Y:"
+            Logger.info(placementsHolderLocation.getUniqueId() + " machine to placement transform Y:"
                     + " X Factor: "+String.format("%12.6f", matrix[2])
                     + " Y Factor: "+String.format("%12.6f", matrix[3])
                     + " Y Offset: "+String.format("%12.6f", matrix[5]));
@@ -217,7 +271,7 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
         }
 
         double boardOffset = newBoardLocation.getLinearLengthTo(savedBoardLocation).convertToUnits(LengthUnit.Millimeters).getValue();
-        Logger.info("Board origin offset distance: " + boardOffset + "mm");
+        Logger.info(placementsHolderLocation.getUniqueId() + " origin offset distance: " + boardOffset + "mm");
         
         //Check for out-of-nominal conditions
         String errString = "";
@@ -245,12 +299,55 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
         if (errString.length() > 0) {
             errString = errString.substring(0, errString.length()-2); //strip off the last comma and space
             placementsHolderLocation.setLocalToParentTransform(savedPlacementTransform);
-            throw new Exception("Fiducial locator results are invalid because: " + errString + ".  Potential remidies include " +
+            throw new Exception("Fiducial locator results are invalid for " + 
+                    placementsHolderLocation.getUniqueId() + " because: " + errString + ". Potential remidies include " +
                     "setting the initial board X, Y, Z, and Rotation in the Boards panel; using a different set of fiducials; " +
                     "or changing the allowable tolerances in the <tolerances> section of the fiducial-locator section in machine.xml.");
         }
 
         return newBoardLocation;
+    }
+    
+    /**
+     * PlacementsHolderLocatioinsWithFiducials groups PlacementsHolderLocation with their fiducials
+     * just referencing the input as required to separated fiducial measurements from affine transformation
+     * calculation.
+     */
+    private class PlacementsHolderLocationWithFiducials {
+        final PlacementsHolderLocation<?> placementsHolderLocation;
+        List<Fiducial> fiducials;
+        
+        public PlacementsHolderLocationWithFiducials(PlacementsHolderLocation<?> placementsHolderLocation) throws Exception {
+            this.placementsHolderLocation = placementsHolderLocation;
+
+            List<Placement> fiducials = getFiducials(placementsHolderLocation);
+            if (fiducials.size() < 2) {
+                throw new Exception(String.format(
+                        "The panel/board side contains only %d placements marked as fiducials, but at least 2 are required.",
+                        fiducials.size()));
+            }
+
+            this.fiducials = new ArrayList<Fiducial>();
+            for (Placement fiducial : fiducials) {
+                this.fiducials.add(new Fiducial(fiducial, placementsHolderLocation));
+            }
+
+        }
+    }
+    
+    /**
+     * Ficucial groups a fiducial placement with its measured location as required to measure the fiducial's location.
+     */
+    private class Fiducial {
+        final Placement placement;
+        final PlacementsHolderLocation<?> placementsHolderLocation;
+        Location measuredLocation;
+        
+        public Fiducial(Placement placement, PlacementsHolderLocation<?> placementsHolderLocation) {
+            this.placement = placement;
+            this.placementsHolderLocation = placementsHolderLocation;
+            this.measuredLocation = null;
+        }
     }
     
     /**
@@ -366,7 +463,7 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
      */
     private Location getFiducialLocation(PlacementsHolderLocation<?> boardLocation, Placement fid)
             throws Exception {
-        Logger.debug("Locating {}", fid.getId());
+        Logger.debug("Locating {} on {}", fid.getId(), boardLocation.getUniqueId());
 
         Part part = fid.getPart();
         if (part == null) {
@@ -509,7 +606,7 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
             Logger.debug("{} averaged location is at {}", partSettingsHolder.getId(), location);
         }
         if (location.convertToUnits(maxDistance.getUnits()).getLinearDistanceTo(nominalLocation) > maxDistance.getValue()) {
-            throw new Exception("Fiducial "+partSettingsHolder.getShortName()+" detected too far away.");
+            throw new Exception("Fiducial "+partSettingsHolder.getShortName()+ " detected too far away.");
         }
         return location;
     }
