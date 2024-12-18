@@ -557,12 +557,12 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
         try(CvPipeline pipeline = getFiducialPipeline(camera, partSettingsHolder, nominalLocation)) {
             int repeatFiducialRecognition = visionSettings.getMaxVisionPasses();
             for (int i = 0; i < repeatFiducialRecognition; i++) {
-                Location newLocation = detectFiducialFromViewpoint(camera, location, pipeline,
+                Location newLocation = detectFiducialFromViewpoint(camera, nominalLocation, pipeline,
                         partSettingsHolder);
                 if (parallaxOperation) {
                     Location viewPointLocation2 = location.subtract(parallaxDisplacement);
                     camera.moveTo(viewPointLocation2);
-                    Location newLocation2 = detectFiducialFromViewpoint(camera, location, pipeline,
+                    Location newLocation2 = detectFiducialFromViewpoint(camera, nominalLocation, pipeline,
                             partSettingsHolder);
                     // Mid-point is the detected location, canceling out any errors.
                     newLocation = newLocation.add(newLocation2).multiply(0.5);
@@ -604,9 +604,6 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
                     sumY / matchedLocations.size(), null, null);
 
             Logger.debug("{} averaged location is at {}", partSettingsHolder.getId(), location);
-        }
-        if (location.convertToUnits(maxDistance.getUnits()).getLinearDistanceTo(nominalLocation) > maxDistance.getValue()) {
-            throw new Exception("Fiducial "+partSettingsHolder.getShortName()+ " detected too far away.");
         }
         return location;
     }
