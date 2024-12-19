@@ -23,10 +23,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.Test;
+import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.util.TravellingSalesman;
+
+import com.google.common.io.Files;
 
 public class TavellingSalesmanTest {
     /**
@@ -43,6 +47,22 @@ public class TavellingSalesmanTest {
      */
     @Test
     public void testTravellingSalesman() throws Exception {
+        File workingDirectory = Files.createTempDir();
+        workingDirectory = new File(workingDirectory, ".openpnp");
+        System.out.println("Configuration directory: " + workingDirectory);
+
+        // Copy the required configuration files over to the new configuration
+        // directory.
+        FileUtils.copyURLToFile(ClassLoader.getSystemResource("config/BasicJobTest/machine.xml"),
+                new File(workingDirectory, "machine.xml"));
+        FileUtils.copyURLToFile(ClassLoader.getSystemResource("config/BasicJobTest/packages.xml"),
+                new File(workingDirectory, "packages.xml"));
+        FileUtils.copyURLToFile(ClassLoader.getSystemResource("config/BasicJobTest/parts.xml"),
+                new File(workingDirectory, "parts.xml"));
+
+        Configuration.initialize(workingDirectory);
+        Configuration.get().load();
+
         for (int t = 2, scale = 100; scale > 0; t--, scale /= 10) {
             // make this test repeatable, by seeding the random generator.
             Random rnd = new java.util.Random(42);
@@ -77,8 +97,8 @@ public class TavellingSalesmanTest {
             // now solve the bugger
             double bestDistance = tsm.solve();
             // for the unit test, roughly check expected solution distance   
-            double target = new double [] { 3000.0, 5100.0, 12000.0 } [t];
-            System.out.println("TavellingSalesmanTest.testTravellingSalesman() solved "+list.size()+" locations, distance: "+Math.round(bestDistance)+"mm, target: "+target+"mm, time: "+tsm.getSolverDuration()+"ms");
+            double target = new double [] { 20.0, 50.0, 260.0 } [t];
+            System.out.println("TavellingSalesmanTest.testTravellingSalesman() solved "+list.size()+" locations, cost: "+Math.round(bestDistance)+"sec, target: "+target+"sec, time: "+tsm.getSolverDuration()+"ms");
             // save the solution, so we can have a look
             File file = File.createTempFile("travelling-salesman", ".svg");
             try (PrintWriter out = new PrintWriter(file.getAbsolutePath())) {

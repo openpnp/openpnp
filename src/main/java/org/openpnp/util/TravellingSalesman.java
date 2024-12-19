@@ -23,8 +23,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
+import org.openpnp.machine.reference.solutions.HeadSolutions;
+import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.spi.CoordinateAxis;
+import org.openpnp.spi.HeadMountable;
+import org.openpnp.spi.Machine;
 
 /**
  * A simple solver for the Travelling Salesman Problem. 
@@ -54,8 +60,9 @@ public class TravellingSalesman<T> {
      * the start of the route freely. 
      * @param endLocation Optional end Location, e.g. the Location for the next task after this. If left open, the solver will choose 
      * the end of the route freely. 
+     * @param movable head mountable's axis to use for cost estimation
      */
-    public TravellingSalesman(List<T> travelInput, Locator<? super T> locator, Location startLocation, Location endLocation) {
+    public TravellingSalesman(List<T> travelInput, Locator<? super T> locator, Location startLocation, Location endLocation, HeadMountable movable) {
         super();
         // register the problem
         this.travelInput = travelInput;
@@ -69,6 +76,38 @@ public class TravellingSalesman<T> {
         // register start/end Locations
         this.startLocation = startLocation != null ? new TravelLocation(-1, startLocation) : null;
         this.endLocation = endLocation != null ? new TravelLocation(this.travelSize, endLocation) : null;
+
+        // collect axis parameter
+        Machine machine = Configuration.get().getMachine();
+        // if no movable is specified, use the default camera of the default head
+        if (movable == null) {
+            try {
+                movable = machine.getDefaultHead().getDefaultCamera();
+            }
+            catch (Exception e) {
+                // run without axes based cost estimation
+                this.xAxis = null;
+                this.yAxis = null;
+                return;
+            }
+        }
+        CoordinateAxis rawAxisX = HeadSolutions.getRawAxis(machine, movable.getAxisX());
+        CoordinateAxis rawAxisY = HeadSolutions.getRawAxis(machine, movable.getAxisY());
+        if (! (rawAxisX instanceof ReferenceControllerAxis
+                && rawAxisY instanceof ReferenceControllerAxis)) {
+            // run without axes based cost estimation
+            this.xAxis = null;
+            this.yAxis = null;
+            return;
+        }
+        ReferenceControllerAxis referenceControllerAxisX = (ReferenceControllerAxis)rawAxisX;
+        ReferenceControllerAxis referenceControllerAxisY = (ReferenceControllerAxis)rawAxisY;
+
+        this.xAxis = new AxisParameter(referenceControllerAxisX);
+        this.yAxis = new AxisParameter(referenceControllerAxisY);
+    }
+    public TravellingSalesman(List<T> travelInput, Locator<? super T> locator, Location startLocation, Location endLocation) {
+        this(travelInput, locator, startLocation, endLocation, null);
     }
     
     public interface Locator<T> {
@@ -90,10 +129,29 @@ public class TravellingSalesman<T> {
     private static final double globalBestDistanceScalingFactor = 1.0 - 1e-5;
     
     /**
+     * Collect and group axis parameter for later use for cost estimation
+     */
+    private static class AxisParameter {
+        private double acceleration;
+        private double feedrate;
+        
+        private AxisParameter(ReferenceControllerAxis axis) {
+            this.acceleration = axis.getAccelerationPerSecond2().convertToUnits(LengthUnit.Millimeters).getValue();
+            this.feedrate     = axis.getFeedratePerSecond().convertToUnits(LengthUnit.Millimeters).getValue();
+        }
+        private double getAcceleration() {
+            return acceleration;
+        }
+        private double getFeedrate() {
+            return feedrate;
+        }
+    }
+    
+    /**
      * Plain old data TravelLocation for faster processing. Improved solving by a factor of 6 from using
      * OpenPNP Locations directly. These are always in Millimeters, no conversions needed.  
      */
-    private static class TravelLocation {
+    private class TravelLocation {
         private  double x, y, z;
         private  int index;
 
@@ -108,6 +166,49 @@ public class TravellingSalesman<T> {
         private double getLinearDistanceTo(TravelLocation other) {
             return Math.sqrt(Math.pow(this.x-other.x, 2.0) + Math.pow(this.y-other.y, 2.0) + Math.pow(this.z-other.z, 2.0));
         }
+
+        /**
+         * return cost to travel to other location
+         * @param other
+         * @return
+         * @throws Exception
+         */
+        private double getCostTo(TravelLocation other) {
+
+            double costX = estimateCost(this.x - other.x, xAxis);
+            double costY = estimateCost(this.y - other.y, yAxis);
+            
+            return Math.max(costX, costY);
+        }
+
+        /**
+         * return a cost estimation to travel <distance> using <axis>
+         * the feedrate and acceleration limits of the axis are used to
+         * estimate the cost assuming the motion is at stand still before
+         * and after distance.
+         *
+         * @param distance distance to travel
+         * @param axis axis to take acceleration and feedrate from
+         * @return
+         */
+        private double estimateCost(double distance, AxisParameter axis) {
+            double acceleration = axis.getAcceleration();
+            double feedrate     = axis.getFeedrate();
+            double cost;
+            
+            // make distance a positive number
+            distance = Math.abs(distance);
+            
+            // on short distances, only acceleration has to be taken into account
+            if (distance < feedrate * feedrate / acceleration) {
+                cost = 2 * Math.sqrt(distance / acceleration);
+            }
+            else {
+                cost = feedrate / acceleration + distance / feedrate;
+            }
+            
+            return cost;
+        }
     }
 
     private final List<T> travelInput; 
@@ -116,6 +217,8 @@ public class TravellingSalesman<T> {
     private final TravelLocation startLocation;
     private final TravelLocation endLocation;
     private final List<TravelLocation> travel;
+    private final AxisParameter xAxis;
+    private final AxisParameter yAxis;
     
     private long solverDuration = 0; 
 
@@ -136,7 +239,13 @@ public class TravellingSalesman<T> {
             // no start and/or end location, so the distance is just 0.0
             return 0.0;
         }
-        return la.getLinearDistanceTo(lb);
+        if (this.xAxis != null && this.yAxis != null) {
+            return la.getCostTo(lb);
+        }
+        else {
+            return la.getLinearDistanceTo(lb);
+        }
+            
     }
 
     public double getTravellingDistance() {
