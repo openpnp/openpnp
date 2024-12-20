@@ -59,7 +59,6 @@ import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
 import org.openpnp.spi.PartAlignment;
 import org.openpnp.spi.PnpJobPlanner;
-import org.openpnp.spi.Locatable.LocationOption;
 import org.openpnp.spi.PnpJobPlanner.PlannedPlacement;
 import org.openpnp.spi.PnpJobProcessor.JobPlacement.Status;
 import org.openpnp.spi.base.AbstractJobProcessor;
@@ -1809,7 +1808,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             return null;
         }
     }
-    
+     
     private Location getPlacementLocation(PlannedPlacement plannedPlacement) {
         final JobPlacement jobPlacement = plannedPlacement.jobPlacement;
         final Placement placement = jobPlacement.getPlacement();
@@ -2516,7 +2515,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 Machine machine = Configuration.get().getMachine();
                 Feeder referenceFeeder = findFeederWithoutException(machine, compatibleJobPlacements.get(0).getPlacement().getPart());
 
-                // if the first/reference placement has not feeder, return just that placement to avoid any unwonted optimization
+                // if the first/reference placement has no feeder, return just that placement to avoid any unwonted optimization
                 if (referenceFeeder == null) {
                     compatibleJobPlacements.subList(1, compatibleJobPlacements.size()).clear();
                 }
@@ -2534,25 +2533,37 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             
             // if strategy is not FullyAsPlanned (no optimization at all) and if other placements 
             // have been planned, sort compatible placements by distance to pick and place location
+            JobPlacement bestPlacement = null;
             if (strategy != Strategy.FullyAsPlanned
                 && plannedPlacements != null && !plannedPlacements.isEmpty()
                 && compatibleJobPlacements.size() > 1) {
                 Location averagePickLocation  = calcCenterLocation(plannedPlacements, pickLocator);
                 Location averagePlaceLocation = calcCenterLocation(plannedPlacements, placeLocator);
                 
-                // now sort compatibleJobPlacements by distance to averagePickLocation + averagePlaceLocation
-                compatibleJobPlacements.sort(Comparator.comparing(jobPlacement -> { 
-                    return pickLocator.getLocation(jobPlacement, nozzle).getLinearDistanceTo(averagePickLocation) 
-                         + placeLocator.getLocation(jobPlacement, nozzle).getLinearDistanceTo(averagePlaceLocation); 
-                }));
+                // find the placement with the shortest distance to averagePlickLocation and averagePlaceLocation
+                double bestDistance = Double.MAX_VALUE;
+                for (JobPlacement p : compatibleJobPlacements) {
+                    double distance = pickLocator.getLocation(p, nozzle).getLinearDistanceTo(averagePickLocation) 
+                                    + placeLocator.getLocation(p, nozzle).getLinearDistanceTo(averagePlaceLocation);
+
+                    // if this placement is closes with respect to its pick and place 
+                    if (bestDistance > distance) {
+                        bestDistance = distance;
+                        bestPlacement = p;
+                    }
+                }
+            }
+            else {
+                // no further optimization possible or requested, just choose the first of the list
+                bestPlacement = compatibleJobPlacements.get(0);
             }
             
             // return the first of the list
-            return new PlannedPlacement(nozzle, nozzleTip, compatibleJobPlacements.get(0));
+            return new PlannedPlacement(nozzle, nozzleTip, bestPlacement);
         }
 
         /**
-         * variante of findFeeder() that consumes exceptions by returning NULL
+         * Variant of findFeeder() that consumes exceptions by returning NULL
          * @param part
          * @return
          */
