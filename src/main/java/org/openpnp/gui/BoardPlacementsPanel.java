@@ -651,7 +651,7 @@ public class BoardPlacementsPanel extends JPanel {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             if (boardViewer == null) {
-                boardViewer = new PlacementsHolderLocationViewerDialog(new BoardLocation(board), false);
+                boardViewer = new PlacementsHolderLocationViewerDialog(new BoardLocation(board), false, null);
                 boardViewer.addWindowListener(new WindowAdapter() {
                     @Override
                     public void windowClosing(WindowEvent e) {

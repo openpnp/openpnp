@@ -25,6 +25,7 @@ import java.awt.event.ComponentEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.prefs.Preferences;
+import java.util.List;
 
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
@@ -54,9 +55,10 @@ public class PlacementsHolderLocationViewerDialog extends JFrame {
     private String prefsSuffix;
     
     /**
-     * Create the frame.
+     * Create the frame with filter.
      */
-    public PlacementsHolderLocationViewerDialog(PlacementsHolderLocation<?> placementsHolderLocation, boolean isJob) {
+    public PlacementsHolderLocationViewerDialog(PlacementsHolderLocation<?> placementsHolderLocation, boolean isJob, List<PlacementsHolderLocation<?>> selections) {
+
         this.isJob = isJob;
         
         setTitle(placementsHolderLocation.getPlacementsHolder());
@@ -104,7 +106,7 @@ public class PlacementsHolderLocationViewerDialog extends JFrame {
             }
         });
 
-        contentPane = new PlacementsHolderLocationViewer(placementsHolderLocation, isJob);
+        contentPane = new PlacementsHolderLocationViewer(placementsHolderLocation, isJob, selections);
         setContentPane(contentPane);
     }
 
@@ -125,9 +127,13 @@ public class PlacementsHolderLocationViewerDialog extends JFrame {
             prefsSuffix = ".Panel"; //$NON-NLS-1$
         }
     }
-    
+
     public void setPlacementsHolder(PlacementsHolder<?> placementsHolder) {
-        contentPane.setPlacementsHolder(placementsHolder);
+        setPlacementsHolder(placementsHolder, null);
+    }
+
+    public void setPlacementsHolder(PlacementsHolder<?> placementsHolder, List<PlacementsHolderLocation<?>> selections) {
+        contentPane.setPlacementsHolder(placementsHolder, selections);
         SwingUtilities.invokeLater(() -> {
             setTitle(placementsHolder);
         });
