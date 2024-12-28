@@ -49,7 +49,7 @@ public class LengthConverter extends Converter<Length, String> {
             throw new RuntimeException("Unable to parse " + s);
         }
         if (length.getUnits() == null) {
-            length.setUnits(Configuration.get().getSystemUnits());
+            length = length.changeUnits(Configuration.get().getSystemUnits());
         }
         return length;
     }

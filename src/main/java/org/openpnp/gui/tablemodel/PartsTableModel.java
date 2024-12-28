@@ -104,10 +104,10 @@ public class PartsTableModel extends AbstractObjectTableModel implements Propert
                 Length oldLength = part.getHeight();
                 if (length.getUnits() == null) {
                     if (oldLength != null) {
-                        length.setUnits(oldLength.getUnits());
+                        length = length.changeUnits(oldLength.getUnits());
                     }
                     if (length.getUnits() == null) {
-                        length.setUnits(Configuration.get().getSystemUnits());
+                        length = length.changeUnits(Configuration.get().getSystemUnits());
                     }
                 }
                 part.setHeight(length);

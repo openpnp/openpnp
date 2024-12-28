@@ -81,7 +81,7 @@ public class ComponentDecorators {
             return;
         }
         if (length.getUnits() == null) {
-            length.setUnits(Configuration.get().getSystemUnits());
+            length = length.changeUnits(Configuration.get().getSystemUnits());
         }
         length = length.convertToUnits(Configuration.get().getSystemUnits());
         textField.setText(String.format(Locale.US, format, length.getValue()));

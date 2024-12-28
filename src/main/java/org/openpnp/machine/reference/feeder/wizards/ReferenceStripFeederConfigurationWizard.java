@@ -669,7 +669,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
                                  if (standardPitchIncrements == 0) {
                                      throw new Exception("The same part was selected both times");
                                  }
-                                 partPitchMM.setValue(2.0 * standardPitchIncrements);
+                                 partPitchMM = new Length(2.0 * standardPitchIncrements,LengthUnit.Millimeters);
 
                                  final Length partPitch_ = partPitchMM.convertToUnits(firstPartLocation.getUnits());
                                  SwingUtilities.invokeLater(new Runnable() {

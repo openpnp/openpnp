@@ -36,7 +36,8 @@ public class Length {
     private LengthUnit units;
 
     public Length() {
-
+        this.value = 0;
+        this.units = null;
     }
 
     public Length(double value, LengthUnit units) {
@@ -89,16 +90,12 @@ public class Length {
         return value;
     }
 
-    public void setValue(double value) {
-        this.value = value;
-    }
-
     public LengthUnit getUnits() {
         return units;
     }
 
-    public void setUnits(LengthUnit units) {
-        this.units = units;
+    public Length changeUnits(LengthUnit units) {
+        return new Length(value,units);
     }
 
     public Length convertToUnits(LengthUnit units) {
@@ -180,7 +177,7 @@ public class Length {
 
         s = s.trim();
 
-        Length length = new Length(0, null);
+        LengthUnit units = null;
         // find the index of the first character that is not a -, . or digit.
         int startOfUnits = -1;
         for (int i = 0; i < s.length(); i++) {
@@ -199,7 +196,7 @@ public class Length {
             unitsString = unitsString.replace('u', 'μ'); //convert u to μ
             for (LengthUnit lengthUnit : LengthUnit.values()) {
                 if (lengthUnit.getShortName().equalsIgnoreCase(unitsString)) {
-                    length.setUnits(lengthUnit);
+                    units = lengthUnit;
                     break;
                 }
             }
@@ -208,19 +205,17 @@ public class Length {
             valueString = s;
         }
 
-        if (requireUnits && length.getUnits() == null) {
+        if (requireUnits && units == null) {
             return null;
         }
 
         try {
             double value = Double.parseDouble(valueString);
-            length.setValue(value);
+            return new Length(value,units);
         }
         catch (Exception e) {
             return null;
         }
-
-        return length;
     }
 
     @Override
@@ -289,10 +284,10 @@ public class Length {
         }
         if (length.getUnits() == null) {
             if (defaultToOldUnits) {
-                length.setUnits(oldLength.getUnits());
+                length = length.changeUnits(oldLength.getUnits());
             }
             if (length.getUnits() == null) {
-                length.setUnits(configuration.getSystemUnits());
+                length = length.changeUnits(configuration.getSystemUnits());
             }
         }
         if (location.getUnits() == null) {

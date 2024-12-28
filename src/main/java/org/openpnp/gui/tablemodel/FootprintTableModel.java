@@ -94,7 +94,7 @@ public class FootprintTableModel extends AbstractTableModel {
                 LengthCellValue value = (LengthCellValue) aValue;
                 Length length = value.getLength();
                 if (length.getUnits() == null) {
-                    length.setUnits(footprint.getUnits());
+                    length = length.changeUnits(footprint.getUnits());
                 }
                 length = length.convertToUnits(footprint.getUnits());
                 pad.setX(length.getValue());
@@ -103,7 +103,7 @@ public class FootprintTableModel extends AbstractTableModel {
                 LengthCellValue value = (LengthCellValue) aValue;
                 Length length = value.getLength();
                 if (length.getUnits() == null) {
-                    length.setUnits(footprint.getUnits());
+                    length = length.changeUnits(footprint.getUnits());
                 }
                 length = length.convertToUnits(footprint.getUnits());
                 pad.setY(length.getValue());
@@ -112,7 +112,7 @@ public class FootprintTableModel extends AbstractTableModel {
                 LengthCellValue value = (LengthCellValue) aValue;
                 Length length = value.getLength();
                 if (length.getUnits() == null) {
-                    length.setUnits(footprint.getUnits());
+                    length = length.changeUnits(footprint.getUnits());
                 }
                 length = length.convertToUnits(footprint.getUnits());
                 pad.setWidth(length.getValue());
@@ -121,7 +121,7 @@ public class FootprintTableModel extends AbstractTableModel {
                 LengthCellValue value = (LengthCellValue) aValue;
                 Length length = value.getLength();
                 if (length.getUnits() == null) {
-                    length.setUnits(footprint.getUnits());
+                    length = length.changeUnits(footprint.getUnits());
                 }
                 length = length.convertToUnits(footprint.getUnits());
                 pad.setHeight(length.getValue());
