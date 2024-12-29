@@ -226,10 +226,10 @@ public class TravellingSalesman<T> {
             Random rnd = new java.util.Random(0);
             for (; i > 0; i--) {
                 if (t > 0.1) {
-                    int a = (int) (rnd.nextDouble() * this.travelSize);
+                    int a = rnd.nextInt(this.travelSize);
                     int b;
                     do {
-                        b = (int) (rnd.nextDouble() * this.travelSize);
+                        b = rnd.nextInt(this.travelSize);
                     }
                     while (b == a);
                     /* creates a locale emphasis when swapping
@@ -250,12 +250,12 @@ public class TravellingSalesman<T> {
 
                     if (debugLevel > 1) {
                         // validate the differential swapDistance
-                        bestDistance = getTravellingDistance();
+                        double oldDistance = getTravellingDistance();
                         this.swapLocations(a, b, twist);
                         double newDistance = getTravellingDistance();
                         this.swapLocations(a, b, twist);
-                        if (Math.abs((newDistance - bestDistance) - swapDistance) > 0.1) {
-                            System.err.println("** Swap distance wrong - newDistance:" + newDistance + ", bestDistance:" + bestDistance +", swapDistance: "+swapDistance + " != "+(newDistance - bestDistance)+", twist: "+twist);
+                        if (Math.abs((newDistance - oldDistance) - swapDistance) > 0.1) {
+                            System.err.println("** Swap distance wrong - newDistance:" + newDistance + ", oldDistance:" + oldDistance +", swapDistance: "+swapDistance + " != "+(newDistance - oldDistance)+", twist: "+twist);
                         }
                     }
 
@@ -265,7 +265,8 @@ public class TravellingSalesman<T> {
                         bestDistance += swapDistance;   // keep bestDistance up-to-date
                         // if the new route is better then the best, remember it
                         if (bestDistance < globalBestDistance) {
-                            globalBestDistance = bestDistance;
+                            // remember slightly worth distance do avoid excessive copies due to rounding effects
+                            globalBestDistance = 0.999 * bestDistance;
                             globalTravel = new ArrayList<>(this.travel);
                         }
                         swaps++;
@@ -278,7 +279,7 @@ public class TravellingSalesman<T> {
                 if (debugLevel > 0) {
                     if (i % 100000 == 0) {
                         bestDistance = getTravellingDistance();
-                        System.out.println("Iterations #" + i +", temperature: "+t+", distance of travel:" + bestDistance+", swaps: "+swaps+", twists: "+twists);
+                        System.out.println("Iterations #" + i +", temperature: "+t+", distance of travel:" + bestDistance + ", best distance to travel: " + globalBestDistance + ", swaps: "+swaps+", twists: "+twists);
                         //System.out.println(this.asSvg());
                     }
                 }
