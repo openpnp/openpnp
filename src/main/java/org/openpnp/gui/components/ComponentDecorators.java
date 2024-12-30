@@ -76,12 +76,9 @@ public class ComponentDecorators {
     }
 
     private static void convertLength(JTextField textField, String format) {
-        Length length = Length.parse(textField.getText(), false);
+        Length length = Length.parseWithDefaultUnits(textField.getText(), Configuration.get().getSystemUnits());
         if (length == null) {
             return;
-        }
-        if (length.getUnits() == null) {
-            length = length.changeUnits(Configuration.get().getSystemUnits());
         }
         length = length.convertToUnits(Configuration.get().getSystemUnits());
         textField.setText(String.format(Locale.US, format, length.getValue()));

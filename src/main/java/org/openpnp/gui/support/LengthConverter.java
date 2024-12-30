@@ -44,12 +44,9 @@ public class LengthConverter extends Converter<Length, String> {
 
     @Override
     public Length convertReverse(String s) {
-        Length length = Length.parse(s, false);
+        Length length = Length.parseWithDefaultUnits(s, Configuration.get().getSystemUnits());
         if (length == null) {
             throw new RuntimeException("Unable to parse " + s);
-        }
-        if (length.getUnits() == null) {
-            length = length.changeUnits(Configuration.get().getSystemUnits());
         }
         return length;
     }

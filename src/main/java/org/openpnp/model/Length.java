@@ -94,8 +94,12 @@ public class Length {
         return units;
     }
 
-    public Length changeUnits(LengthUnit units) {
-        return new Length(value,units);
+    public Length changeUnitsIfUnspecified(LengthUnit units) {
+        if (this.units == null) {
+            return new Length(value,units);
+        } else {
+            return this;
+        }
     }
 
     public Length convertToUnits(LengthUnit units) {
@@ -159,6 +163,14 @@ public class Length {
 
     public static double convertToUnits(double value, LengthUnit fromUnits, LengthUnit toUnits) {
         return new Length(value, fromUnits).convertToUnits(toUnits).getValue();
+    }
+
+    public static Length parseWithDefaultUnits(String s,LengthUnit units) {
+        Length length = parse(s);
+        if (length!=null) {
+            length = length.changeUnitsIfUnspecified(units);
+        }
+        return length;
     }
 
     public static Length parse(String s) {
@@ -282,14 +294,10 @@ public class Length {
         else if (field == Field.Z) {
             oldLength = location.getLengthZ();
         }
-        if (length.getUnits() == null) {
-            if (defaultToOldUnits) {
-                length = length.changeUnits(oldLength.getUnits());
-            }
-            if (length.getUnits() == null) {
-                length = length.changeUnits(configuration.getSystemUnits());
-            }
+        if (defaultToOldUnits) {
+            length = length.changeUnitsIfUnspecified(oldLength.getUnits());
         }
+        length = length.changeUnitsIfUnspecified(configuration.getSystemUnits());
         if (location.getUnits() == null) {
             throw new Error("This can't happen!");
         }
