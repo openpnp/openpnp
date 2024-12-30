@@ -278,8 +278,8 @@ public class TravellingSalesman<T> {
                 }
                 if (debugLevel > 0) {
                     if (i % 100000 == 0) {
-                        bestDistance = getTravellingDistance();
-                        System.out.println("Iterations #" + i +", temperature: "+t+", distance of travel:" + bestDistance + ", best distance to travel: " + globalBestDistance + ", swaps: "+swaps+", twists: "+twists);
+                        double distance = getTravellingDistance();
+                        System.out.println("Iterations #" + i +", temperature: "+t+", distance of travel:" + distance + ", best distance to travel: " + globalBestDistance + ", swaps: "+swaps+", twists: "+twists);
                         //System.out.println(this.asSvg());
                     }
                 }
