@@ -71,8 +71,6 @@ a complete change list, only those that may directly interest or affect users.
 * Optimize placements of multi nozzle machines https://github.com/openpnp/openpnp/pull/1574 https://github.com/openpnp/openpnp/pull/1614
 * Changes the actuator usage for automatic nozzle tip changers to use False for unload and True for load. Previously it was using True for both load and unload. https://github.com/openpnp/openpnp/pull/1620
 
-## Bug Fixes
-
 ## Installation and distribution changes
 
 * Modernize macOS app icon https://github.com/openpnp/openpnp/pull/1633
