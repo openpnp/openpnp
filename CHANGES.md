@@ -236,3 +236,6 @@ Numeric columns on those tabs are also now aligned on their decimal points.
 See also:
 https://github.com/openpnp/openpnp/pull/1507
 
+# Older Changes
+
+Older changes to OpenPnp are recorded at https://github.com/openpnp/openpnp/blob/29d18e30346ac68c9b73221f6083ed4a7942fbf5/CHANGES.md
