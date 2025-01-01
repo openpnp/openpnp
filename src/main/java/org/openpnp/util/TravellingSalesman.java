@@ -84,6 +84,12 @@ public class TravellingSalesman<T> {
     private static final int debugLevel = 0;
 
     /**
+     * Factor to scale current travel distance before coping it over to global
+     * best distance to avoid excessive copies due to rounding effects.
+     */
+    private static final double globalBestDistanceScalingFactor = 1.0 - 1e-5;
+    
+    /**
      * Plain old data TravelLocation for faster processing. Improved solving by a factor of 6 from using
      * OpenPNP Locations directly. These are always in Millimeters, no conversions needed.  
      */
@@ -212,15 +218,15 @@ public class TravellingSalesman<T> {
             System.out.println("Simulated Annealing, size: "+this.travelSize+" temperature: " + startingTemperature + ", max iterations: " + maxIterations + ", cooling rate: " + coolingRate);
         }
         int i = maxIterations;
-        int swaps = 0, twists = 0;
+        int swaps = 0, twists = 0, copies = 0;
         double bestDistance = getTravellingDistance();
         double t = startingTemperature;
         if (debugLevel > 0) {
             System.out.println("Initial distance of travel: " + bestDistance);
         }
         if (this.travelSize > 1) {
-            List<TravelLocation> globalTravel = new ArrayList<>(this.travel);   // global best route
-            double globalBestDistance = bestDistance;                           // cost of global best route
+            List<TravelLocation> globalTravel = new ArrayList<>(this.travel);           // global best route
+            double globalBestDistance = globalBestDistanceScalingFactor * bestDistance; // cost of global best route
 
             // make this repeatable by seeding the random generator
             Random rnd = new java.util.Random(0);
@@ -255,7 +261,7 @@ public class TravellingSalesman<T> {
                         double newDistance = getTravellingDistance();
                         this.swapLocations(a, b, twist);
                         if (Math.abs((newDistance - oldDistance) - swapDistance) > 0.1) {
-                            System.err.println("** Swap distance wrong - newDistance:" + newDistance + ", oldDistance:" + oldDistance +", swapDistance: "+swapDistance + " != "+(newDistance - oldDistance)+", twist: "+twist);
+                            System.err.println("** Swap distance wrong - newDistance: " + newDistance + ", oldDistance: " + oldDistance +", swapDistance: "+swapDistance + " != "+(newDistance - oldDistance)+", twist: "+twist);
                         }
                     }
 
@@ -266,8 +272,9 @@ public class TravellingSalesman<T> {
                         // if the new route is better then the best, remember it
                         if (bestDistance < globalBestDistance) {
                             // remember slightly worth distance do avoid excessive copies due to rounding effects
-                            globalBestDistance = 0.999 * bestDistance;
+                            globalBestDistance = globalBestDistanceScalingFactor * bestDistance;
                             globalTravel = new ArrayList<>(this.travel);
+                            copies++;
                         }
                         swaps++;
                         twists += twist ? 1 : 0;
@@ -279,10 +286,14 @@ public class TravellingSalesman<T> {
                 if (debugLevel > 0) {
                     if (i % 100000 == 0) {
                         double distance = getTravellingDistance();
-                        System.out.println("Iterations #" + i +", temperature: "+t+", distance of travel:" + distance + ", best distance to travel: " + globalBestDistance + ", swaps: "+swaps+", twists: "+twists);
+                        System.out.println("Iterations #" + i +", temperature: "+t+", distance of travel: " + distance + ", best distance to travel: " + globalBestDistance + ", swaps: "+swaps+", twists: "+twists+", copies: "+copies);
                         //System.out.println(this.asSvg());
                     }
                 }
+            }
+            // log if global best route is better then last best route
+            if (globalBestDistance < globalBestDistanceScalingFactor * bestDistance) {
+                System.out.println("Simulated Annealing: global best route better then last best route");
             }
             // global best route is always the best route we have
             this.travel.clear();
@@ -290,7 +301,7 @@ public class TravellingSalesman<T> {
         }
         bestDistance = getTravellingDistance();
         if (debugLevel > 0) {
-            System.out.println("Iterations #" + i +", temperature: "+t+",  distance of travel:" + bestDistance+", swaps: "+swaps+", twists: "+twists);
+            System.out.println("Iterations #" + i +", temperature: "+t+",  distance of travel: " + bestDistance+", swaps: "+swaps+", twists: "+twists+", copies: "+copies);
         }
         long endTime = System.currentTimeMillis();
         this.solverDuration = endTime - startTime;
