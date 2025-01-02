@@ -276,8 +276,11 @@ public class TravellingSalesman<T> {
                             globalTravel = new ArrayList<>(this.travel);
                             copies++;
                         }
-                        swaps++;
-                        twists += twist ? 1 : 0;
+                        if (twist) {
+                            twists++;
+                        } else {
+                            swaps++;
+                        }
                     }
                     t *= coolingRate;
                 } else {
