@@ -1116,10 +1116,10 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                     if (suggestedCommand.isEmpty()) {
                         r += "<p>Delete it.</p>\n";
                     } else {
-                        r += "<p>Suggested cgode is:</p><pre>"+suggestedCommand+"</pre>\n";
+                        r += "<p>Suggested gcode is:</p><pre>"+suggestedCommand+"</pre>\n";
                     }
                     String prev = gcodeDriver.getCommand(headMountable, commandType);
-                    if(!prev.isEmpty()) {
+                    if(prev != null && !prev.isEmpty()) {
                         r += "<p>Current gcode is:</p><pre>"+prev+"</pre>\n";
                     }
                     r += "</html>";
