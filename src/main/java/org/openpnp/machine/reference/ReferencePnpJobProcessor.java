@@ -79,7 +79,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     
     public enum JobOrderHint {
         PartHeight,
-        Part
+        Part,
+        Sequence,
     }
 
     @Attribute(required = false)
@@ -548,13 +549,17 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                             .sorted(Comparator.comparing(JobPlacement::getPartId))
                             .collect(Collectors.toList());
             } 
-            else {
+            else if (jobOrder.equals(JobOrderHint.PartHeight)) {
                 // Get the list of unfinished placements and sort them by part height.
                     jobPlacements = getPendingJobPlacements().stream()
                             .sorted(Comparator
                                 .comparing(JobPlacement::getPartHeight)
                                 .thenComparing(JobPlacement::getPartId))
                             .collect(Collectors.toList());
+            } else {
+                // Get the list of unfinished placements and left order as is
+                jobPlacements = getPendingJobPlacements().stream()
+                .collect(Collectors.toList());
             }
 
             if (jobPlacements.isEmpty()) {
