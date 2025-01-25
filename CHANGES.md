@@ -5,35 +5,35 @@ a complete change list, only those that may directly interest or affect users.
 
 ## New Features
 
-* Optimize fiducial checking in job using travelling salesman. https://github.com/openpnp/openpnp/pull/1707
-* I&S supports controllers which send compressed position reports without whitespaces between the axes. https://github.com/openpnp/openpnp/pull/1705
-* An option to skip auto-focus calibration of the up looking camera via issues & solutions. https://github.com/openpnp/openpnp/pull/1700
-* Improved Chinese translation. https://github.com/openpnp/openpnp/pull/1701 https://github.com/openpnp/openpnp/pull/1703 https://github.com/openpnp/openpnp/pull/1696
-* Tooltip delay timeout is prolonged to 1min. The text are rather long and require focus on info so long dismiss timeout. https://github.com/openpnp/openpnp/pull/1691
-* On job error: Automatically select the nozzle, and update all linked tables for the cause. https://github.com/openpnp/openpnp/pull/1678
-* Add Feeder.Before/AfterFeed scripts, and Feeder.Before/AfterTakeBack. These events can be used for stock control purposes. https://github.com/openpnp/openpnp/pull/1685
-* Add Machine.AfterDriverHoming scripting event which gets called after homing all the drivers, and before calibration using the homing fiducial. https://github.com/openpnp/openpnp/pull/1681
-* Pandaplacer Feeder - use full camera image for auto setup https://github.com/openpnp/openpnp/pull/1686
-* A new I&S solution to warn if safe z is not in the conventional negative range https://github.com/openpnp/openpnp/pull/1682
-* Improve usability of I&S solutions that suggest gcode changes https://github.com/openpnp/openpnp/pull/1682
-* Nozzle tip loading strategy options in the job processor https://github.com/openpnp/openpnp/pull/1659
+* Optimize fiducial checking in job using travelling salesman. [PR 1707](https://github.com/openpnp/openpnp/pull/1707)
+* I&S supports controllers which send compressed position reports without whitespaces between the axes. [PR 1705](https://github.com/openpnp/openpnp/pull/1705)
+* An option to skip auto-focus calibration of the up looking camera via issues & solutions. [PR 1700](https://github.com/openpnp/openpnp/pull/1700)
+* Improved Chinese translation. [PR 1701](https://github.com/openpnp/openpnp/pull/1701) [PR 1703](https://github.com/openpnp/openpnp/pull/1703) [PR 1696](https://github.com/openpnp/openpnp/pull/1696)
+* Tooltip delay timeout is prolonged to 1min. The text are rather long and require focus on info so long dismiss timeout. [PR 1691](https://github.com/openpnp/openpnp/pull/1691)
+* On job error: Automatically select the nozzle, and update all linked tables for the cause. [PR 1678](https://github.com/openpnp/openpnp/pull/1678)
+* Add Feeder.Before/AfterFeed scripts, and Feeder.Before/AfterTakeBack. These events can be used for stock control purposes. [PR 1685](https://github.com/openpnp/openpnp/pull/1685)
+* Add Machine.AfterDriverHoming scripting event which gets called after homing all the drivers, and before calibration using the homing fiducial. [PR 1681](https://github.com/openpnp/openpnp/pull/1681)
+* Pandaplacer Feeder - use full camera image for auto setup [PR 1686](https://github.com/openpnp/openpnp/pull/1686)
+* A new I&S solution to warn if safe z is not in the conventional negative range [PR 1682](https://github.com/openpnp/openpnp/pull/1682)
+* Improve usability of I&S solutions that suggest gcode changes [PR 1682](https://github.com/openpnp/openpnp/pull/1682)
+* Nozzle tip loading strategy options in the job processor [PR 1659](https://github.com/openpnp/openpnp/pull/1659)
 
 ## Bug Fixes
 
-* Fix the Nozzle background calibration diagnostics in case there is not a single pixel matching the worst-case limits https://github.com/openpnp/openpnp/pull/1709
-* Main frame window divider does not work correctly when changing window size. Eg. when switching to multiwindow and back. https://github.com/openpnp/openpnp/pull/1689
-* The Z offset of the second, third, etc. nozzle is now definitively calibrated by I&S solution https://github.com/openpnp/openpnp/pull/1680
-* Fix bug in BlindsFeeder where the nozzle tip was moving in the wrong direction. https://github.com/openpnp/openpnp/pull/1679
+* Fix the Nozzle background calibration diagnostics in case there is not a single pixel matching the worst-case limits [PR 1709](https://github.com/openpnp/openpnp/pull/1709)
+* Main frame window divider does not work correctly when changing window size. Eg. when switching to multiwindow and back. [PR 1689](https://github.com/openpnp/openpnp/pull/1689)
+* The Z offset of the second, third, etc. nozzle is now definitively calibrated by I&S solution [PR 1680](https://github.com/openpnp/openpnp/pull/1680)
+* Fix bug in BlindsFeeder where the nozzle tip was moving in the wrong direction. [PR 1679](https://github.com/openpnp/openpnp/pull/1679)
 
 ## Installation and distribution changes
 
 * Disabled bundling a JDK with the Win32 build. It's no longer available for download.
 * Update install4j bundled JDK version from 17 to 23. 17 is no longer supported, and the minimum is 21, which is already considered out of date. 23 is the current supported version.
-* Permanent fix for MacOS builds (https://github.com/openpnp/openpnp/pull/1653)
+* Permanent fix for MacOS builds ([PR 1653](https://github.com/openpnp/openpnp/pull/1653))
 
 ## Internal Changes
 
-* Design cleanup for ReferenceHeadMountable https://github.com/openpnp/openpnp/pull/1687
+* Design cleanup for ReferenceHeadMountable [PR 1687](https://github.com/openpnp/openpnp/pull/1687)
 
 
 
@@ -41,23 +41,23 @@ a complete change list, only those that may directly interest or affect users.
 
 ## New Features
 
-* Allow use of an arbitrary gstreamer pipeline as a video source. This can be for example a v4l2src, nvarguscamerasrc, rpicamsrc, rtsp receiver and decoder, media file reader and playbin, etc., etc https://github.com/openpnp/openpnp/pull/1665
-* Avoid accidental leading or trailing whitespace in Part IDs etc https://github.com/openpnp/openpnp/pull/1668
-* I&S works when using a generic G-code setup instead of using M115 (auto-discover known controller firmwares) https://github.com/openpnp/openpnp/pull/1663
-* Avoid inefficient Z moves https://github.com/openpnp/openpnp/pull/1656 https://github.com/openpnp/openpnp/pull/1657
-* Allow some movement around the bottom camera to move without going via safe Z https://github.com/openpnp/openpnp/pull/1657
+* Allow use of an arbitrary gstreamer pipeline as a video source. This can be for example a v4l2src, nvarguscamerasrc, rpicamsrc, rtsp receiver and decoder, media file reader and playbin, etc., etc [PR 1665](https://github.com/openpnp/openpnp/pull/1665)
+* Avoid accidental leading or trailing whitespace in Part IDs etc [PR 1668](https://github.com/openpnp/openpnp/pull/1668)
+* I&S works when using a generic G-code setup instead of using M115 (auto-discover known controller firmwares) [PR 1663](https://github.com/openpnp/openpnp/pull/1663)
+* Avoid inefficient Z moves [PR 1656](https://github.com/openpnp/openpnp/pull/1656) [PR 1657](https://github.com/openpnp/openpnp/pull/1657)
+* Allow some movement around the bottom camera to move without going via safe Z [PR 1657](https://github.com/openpnp/openpnp/pull/1657)
 
 ## Bug Fixes
 
-* ReferencePushPullFeeder - use full camera image for auto setup https://github.com/openpnp/openpnp/pull/1673
-* Fix nozzle calibration when using greyscale method https://github.com/openpnp/openpnp/pull/1676
-* Default bottom vision pipeline size and position accuracy impovement https://github.com/openpnp/openpnp/pull/1672
-* Various fixes for part size checking, and part size measurement using vision compositing. https://github.com/openpnp/openpnp/pull/1671
-* Fix mirrored vision compositing preview. https://github.com/openpnp/openpnp/pull/1670
-* Fix searchAngle parameter in minAreaRect vision pipeline stage https://github.com/openpnp/openpnp/pull/1667
-* Fix ReferenceStripFeeder vision. https://github.com/openpnp/openpnp/pull/1660
-* Fix exception handler that suppressed movement exceptions during vision https://github.com/openpnp/openpnp/pull/1657
-* BambooFeeder removes the unwanted reset of a custom vision pipeline during Auto Setup https://github.com/openpnp/openpnp/pull/1651
+* ReferencePushPullFeeder - use full camera image for auto setup [PR 1673](https://github.com/openpnp/openpnp/pull/1673)
+* Fix nozzle calibration when using greyscale method [PR 1676](https://github.com/openpnp/openpnp/pull/1676)
+* Default bottom vision pipeline size and position accuracy impovement [PR 1672](https://github.com/openpnp/openpnp/pull/1672)
+* Various fixes for part size checking, and part size measurement using vision compositing. [PR 1671](https://github.com/openpnp/openpnp/pull/1671)
+* Fix mirrored vision compositing preview. [PR 1670](https://github.com/openpnp/openpnp/pull/1670)
+* Fix searchAngle parameter in minAreaRect vision pipeline stage [PR 1667](https://github.com/openpnp/openpnp/pull/1667)
+* Fix ReferenceStripFeeder vision. [PR 1660](https://github.com/openpnp/openpnp/pull/1660)
+* Fix exception handler that suppressed movement exceptions during vision [PR 1657](https://github.com/openpnp/openpnp/pull/1657)
+* BambooFeeder removes the unwanted reset of a custom vision pipeline during Auto Setup [PR 1651](https://github.com/openpnp/openpnp/pull/1651)
 
 
 
@@ -65,20 +65,20 @@ a complete change list, only those that may directly interest or affect users.
 
 ## New Features
 
-* Improved masking for Multi-Shot vision pipeline. https://github.com/openpnp/openpnp/pull/1638
-* BambooFeederAutoVision https://github.com/openpnp/openpnp/pull/1622
-* If using a manual nozzle tip change: Jobs continue with just a single click after performing the requested nozzle tip change https://github.com/openpnp/openpnp/pull/1617
-* Optimize placements of multi nozzle machines https://github.com/openpnp/openpnp/pull/1574 https://github.com/openpnp/openpnp/pull/1614
-* Changes the actuator usage for automatic nozzle tip changers to use False for unload and True for load. Previously it was using True for both load and unload. https://github.com/openpnp/openpnp/pull/1620
+* Improved masking for Multi-Shot vision pipeline. [PR 1638](https://github.com/openpnp/openpnp/pull/1638)
+* BambooFeederAutoVision [PR 1622](https://github.com/openpnp/openpnp/pull/1622)
+* If using a manual nozzle tip change: Jobs continue with just a single click after performing the requested nozzle tip change [PR 1617](https://github.com/openpnp/openpnp/pull/1617)
+* Optimize placements of multi nozzle machines [PR 1574](https://github.com/openpnp/openpnp/pull/1574) [PR 1614](https://github.com/openpnp/openpnp/pull/1614)
+* Changes the actuator usage for automatic nozzle tip changers to use False for unload and True for load. Previously it was using True for both load and unload. [PR 1620](https://github.com/openpnp/openpnp/pull/1620)
 
 ## Installation and distribution changes
 
-* Modernize macOS app icon https://github.com/openpnp/openpnp/pull/1633
-* Fix broken Camera permissions on MacOS Monterey https://github.com/openpnp/openpnp/pull/1628
+* Modernize macOS app icon [PR 1633](https://github.com/openpnp/openpnp/pull/1633)
+* Fix broken Camera permissions on MacOS Monterey [PR 1628](https://github.com/openpnp/openpnp/pull/1628)
 
 ## Internal Changes
 
-* Update ReferencePushPullFeeder to use FeederVisionHelper https://github.com/openpnp/openpnp/pull/1623
+* Update ReferencePushPullFeeder to use FeederVisionHelper [PR 1623](https://github.com/openpnp/openpnp/pull/1623)
 
 
 
@@ -86,18 +86,17 @@ a complete change list, only those that may directly interest or affect users.
 
 ## New Features
 
-* Add an option to automatically load the most recent job https://github.com/openpnp/openpnp/pull/1616
-* If using a manual nozzle tip change: Combine the interruptions for unload and load. https://github.com/openpnp/openpnp/pull/1609
-* Enhanced UI for Manual Change Location https://github.com/openpnp/openpnp/pull/1611
-* Linux support for Neoden 4 cameras https://github.com/openpnp/openpnp/pull/1604
-* Send FeedRate and Acceleration on change only https://github.com/openpnp/openpnp/pull/1600
-* Optimize placements of multi nozzle machines https://github.com/openpnp/openpnp/pull/1574
-* Allow children of panels to be replaced https://github.com/openpnp/openpnp/pull/1598
+* Add an option to automatically load the most recent job [PR 1616](https://github.com/openpnp/openpnp/pull/1616)
+* If using a manual nozzle tip change: Combine the interruptions for unload and load. [PR 1609](https://github.com/openpnp/openpnp/pull/1609)
+* Enhanced UI for Manual Change Location [PR 1611](https://github.com/openpnp/openpnp/pull/1611)
+* Linux support for Neoden 4 cameras [PR 1604](https://github.com/openpnp/openpnp/pull/1604)
+* Send FeedRate and Acceleration on change only [PR 1600](https://github.com/openpnp/openpnp/pull/1600)
+* Allow children of panels to be replaced [PR 1598](https://github.com/openpnp/openpnp/pull/1598)
 
 ## Bug Fixes
 
-* Fix pick location for ReferenceRotatedTrayFeeder https://github.com/openpnp/openpnp/pull/1607 and ReferenceTrayFeeder https://github.com/openpnp/openpnp/pull/1606
-* Fix manual change location shifted when recalibrating the camera to nozzle offset using I&S https://github.com/openpnp/openpnp/pull/1612 https://github.com/openpnp/openpnp/pull/1613
+* Fix pick location for ReferenceRotatedTrayFeeder [PR 1607](https://github.com/openpnp/openpnp/pull/1607) and ReferenceTrayFeeder [PR 1606](https://github.com/openpnp/openpnp/pull/1606)
+* Fix manual change location shifted when recalibrating the camera to nozzle offset using I&S [PR 1612](https://github.com/openpnp/openpnp/pull/1612) [PR 1613](https://github.com/openpnp/openpnp/pull/1613)
 
 
 
@@ -105,11 +104,11 @@ a complete change list, only those that may directly interest or affect users.
 
 ## New Features
 
-* Log the time it takes to get a response from the write queue https://github.com/openpnp/openpnp/pull/1595
+* Log the time it takes to get a response from the write queue [PR 1595](https://github.com/openpnp/openpnp/pull/1595)
 
 ## Bug Fixes
 
-* Fix erroneous reset of placement transform when cell selected not edited https://github.com/openpnp/openpnp/pull/1597
+* Fix erroneous reset of placement transform when cell selected not edited [PR 1597](https://github.com/openpnp/openpnp/pull/1597)
 
 
 
@@ -117,25 +116,25 @@ a complete change list, only those that may directly interest or affect users.
 
 ## New Features
 
-* Better Test Alignment. Take another picture after the part has been centered, making sure the lights are switched on and the camera image settled. Plus it also displays the final (overall) offsets result. https://github.com/openpnp/openpnp/pull/1584
-* On a job error: select the object which was the cause of the error https://github.com/openpnp/openpnp/pull/1577
-* Enhance the Job Placements table by immediately updating the Status column if a placement is enabled or disabled using the mouse https://github.com/openpnp/openpnp/pull/1576
-* CSV UFT-16 support https://github.com/openpnp/openpnp/pull/1573
+* Better Test Alignment. Take another picture after the part has been centered, making sure the lights are switched on and the camera image settled. Plus it also displays the final (overall) offsets result. [PR 1584](https://github.com/openpnp/openpnp/pull/1584)
+* On a job error: select the object which was the cause of the error [PR 1577](https://github.com/openpnp/openpnp/pull/1577)
+* Enhance the Job Placements table by immediately updating the Status column if a placement is enabled or disabled using the mouse [PR 1576](https://github.com/openpnp/openpnp/pull/1576)
+* CSV UFT-16 support [PR 1573](https://github.com/openpnp/openpnp/pull/1573)
 
 ## Bug Fixes
 
-* Proper condition for SimulationModeMachine simulated actuator delay https://github.com/openpnp/openpnp/pull/1596
-* ReferenceRotatedTrayFeeder pick from correct location https://github.com/openpnp/openpnp/pull/1451 https://github.com/openpnp/openpnp/pull/1581
+* Proper condition for SimulationModeMachine simulated actuator delay [PR 1596](https://github.com/openpnp/openpnp/pull/1596)
+* ReferenceRotatedTrayFeeder pick from correct location [PR 1451](https://github.com/openpnp/openpnp/pull/1451) [PR 1581](https://github.com/openpnp/openpnp/pull/1581)
 
 ## Installation and distribution changes
 
 * It appears AdoptOpenJDK released a new version that only has builds for a few archs. Changed the version spec from "latest" the most recent with all the archs.
-* Switch to the release jSerialComm 2.10.2 https://github.com/openpnp/openpnp/pull/1571
+* Switch to the release jSerialComm 2.10.2 [PR 1571](https://github.com/openpnp/openpnp/pull/1571)
 
 ## Internal Changes
 
-* AdvancedCameraCalibration aids in offline-debugging https://github.com/openpnp/openpnp/pull/1583
-* ImageCamera fixes for using a picture of a real machine in simulation https://github.com/openpnp/openpnp/pull/1579
+* AdvancedCameraCalibration aids in offline-debugging [PR 1583](https://github.com/openpnp/openpnp/pull/1583)
+* ImageCamera fixes for using a picture of a real machine in simulation [PR 1579](https://github.com/openpnp/openpnp/pull/1579)
 
 
 
@@ -143,16 +142,16 @@ a complete change list, only those that may directly interest or affect users.
 
 ## New Features
 
-* Parallax fiducial locator https://github.com/openpnp/openpnp/pull/1565
+* Parallax fiducial locator [PR 1565](https://github.com/openpnp/openpnp/pull/1565)
 
 ## Bug Fixes
 
-* Make sure the NashornScriptEngineFactory is always loaded https://github.com/openpnp/openpnp/pull/1564
+* Make sure the NashornScriptEngineFactory is always loaded [PR 1564](https://github.com/openpnp/openpnp/pull/1564)
 
 ## Installation and distribution changes
 
-* Update Nashorn to version 15.4 for supporting Java 17 & 19 https://github.com/openpnp/openpnp/pull/1563
-* Update openpnp-capture-java to 0.028 https://github.com/openpnp/openpnp/pull/1562
+* Update Nashorn to version 15.4 for supporting Java 17 & 19 [PR 1563](https://github.com/openpnp/openpnp/pull/1563)
+* Update openpnp-capture-java to 0.028 [PR 1562](https://github.com/openpnp/openpnp/pull/1562)
 
 
 
@@ -177,7 +176,7 @@ correctly handles the rotation of bottom side parts.
 ## Java 17+ Support
 
 OpenPnP is now compatible with Java versions 11, 17, and 19. Thank you to @lags
-and others! See the PR at https://github.com/openpnp/openpnp/pull/1493 for more
+and others! See the PR at [PR 1493](https://github.com/openpnp/openpnp/pull/1493) for more
 details.
 
 Other versions of Java are no longer explicity supported or tested but they may
@@ -209,7 +208,7 @@ Changed the Capture Tool Location button on the Job table to only update the Z
 and not the X, Y, or Rotation of the selected board. Also added the capability
 to update multiple boards to the same Z value.
 
-https://github.com/openpnp/openpnp/pull/1527
+[PR 1527](https://github.com/openpnp/openpnp/pull/1527)
 
 # 2023-02-14
 
@@ -232,7 +231,7 @@ The column widths on the Job, Panels, and Boards tabs are now remembered between
 Numeric columns on those tabs are also now aligned on their decimal points. 
 
 See also:
-https://github.com/openpnp/openpnp/pull/1507
+[PR 1507](https://github.com/openpnp/openpnp/pull/1507)
 
 # Older Changes
 
