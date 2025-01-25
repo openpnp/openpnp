@@ -600,8 +600,8 @@ public class CameraView extends JComponent implements CameraListener {
         if (renderingQuality == RenderingQuality.BestScale) {
             // Bring to an integral scaling factor.
             double scalingFactor = lastSourceWidth > scaledWidth ? 
-                    1./Math.max(1, Math.round(lastSourceWidth/scaledWidth))
-                    : Math.max(1, Math.round(scaledWidth/lastSourceWidth));
+                    1./Math.max(1, Math.ceil(lastSourceWidth/scaledWidth))
+                    : Math.max(1, Math.floor(scaledWidth/lastSourceWidth));
             scaledWidth = (int)(lastSourceWidth*scalingFactor);
             scaledHeight = (int)(lastSourceHeight*scalingFactor);
         }
