@@ -28,6 +28,7 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Feeder;
 import org.openpnp.util.BeanUtils;
+import org.openpnp.machine.reference.FeederWithOptions;
 
 public class FeedersTableModel extends AbstractObjectTableModel {
     final private Configuration configuration;
@@ -36,7 +37,8 @@ public class FeedersTableModel extends AbstractObjectTableModel {
             Translations.getString("FeedersTableModel.ColumnName.Name"), //$NON-NLS-1$
             Translations.getString("FeedersTableModel.ColumnName.Type"), //$NON-NLS-1$
             Translations.getString("FeedersTableModel.ColumnName.Part"), //$NON-NLS-1$
-            Translations.getString("FeedersTableModel.ColumnName.Enabled") //$NON-NLS-1$
+            Translations.getString("FeedersTableModel.ColumnName.Enabled"), //$NON-NLS-1$
+            Translations.getString("FeedersTableModel.ColumnName.FeedOptions") //$NON-NLS-1$
     };
 
     private List<Feeder> feeders;
@@ -55,6 +57,13 @@ public class FeedersTableModel extends AbstractObjectTableModel {
 
     public void refresh() {
         feeders = new ArrayList<>(configuration.getMachine().getFeeders());
+        for (Feeder f : feeders) {
+            if (f instanceof FeederWithOptions) {
+                ((FeederWithOptions)f).addPropertyChangeListener("feedOptions",  event-> {
+                    fireTableRowsUpdated(0, feeders.size()-1);
+                });
+            }
+        }
         fireTableDataChanged();
     }
 
@@ -83,7 +92,7 @@ public class FeedersTableModel extends AbstractObjectTableModel {
 
     @Override
     public boolean isCellEditable(int rowIndex, int columnIndex) {
-        return columnIndex == 0 || columnIndex == 3;
+        return columnIndex == 0 || columnIndex == 3 || (columnIndex == 4 && feeders.get(rowIndex) instanceof FeederWithOptions);
     }
 
     @Override
@@ -96,6 +105,9 @@ public class FeedersTableModel extends AbstractObjectTableModel {
             else if (columnIndex == 3) {
                 feeder.setEnabled((Boolean) aValue);
             }
+            else if (columnIndex == 4) {
+                ((FeederWithOptions)feeder).setFeedOptions((FeederWithOptions.FeedOptions) aValue);
+            }
         }
         catch (Exception e) {
             // TODO: dialog, bad input
@@ -106,6 +118,9 @@ public class FeedersTableModel extends AbstractObjectTableModel {
     public Class<?> getColumnClass(int columnIndex) {
         if (columnIndex == 3) {
             return Boolean.class;
+        }
+        else if (columnIndex == 4) {
+            return FeederWithOptions.FeedOptions.class;
         }
         return super.getColumnClass(columnIndex);
     }
@@ -125,6 +140,13 @@ public class FeedersTableModel extends AbstractObjectTableModel {
             }
             case 3:
                 return feeders.get(row).isEnabled();
+            case 4:
+                Feeder feeder = feeders.get(row);
+                if (feeders.get(row) instanceof FeederWithOptions) {
+                    return ((FeederWithOptions)feeder).getFeedOptions();
+                } else {
+                    return null;
+                }
             default:
                 return null;
         }

@@ -36,8 +36,6 @@ import org.openpnp.Translations;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.ActuatorsComboBoxModel;
 import org.openpnp.gui.support.DoubleConverter;
-import org.openpnp.machine.reference.FeederWithOptions;
-import org.openpnp.machine.reference.FeederWithOptions.FeedOptions;
 import org.openpnp.machine.reference.feeder.ReferenceAutoFeeder;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Actuator;
@@ -60,7 +58,6 @@ public class ReferenceAutoFeederConfigurationWizard extends AbstractReferenceFee
     private JButton btnTestPostPickActuator;
     private JCheckBox ckBoxMoveBeforeFeed;
     private JCheckBox ckBoxRecycleSupport;
-    private JComboBox comboBoxFeedOptions;
 
 
     public ReferenceAutoFeederConfigurationWizard(ReferenceAutoFeeder feeder) {
@@ -112,10 +109,6 @@ public class ReferenceAutoFeederConfigurationWizard extends AbstractReferenceFee
         actuatorValue.setToolTipText("For Boolean: 1 = True, 0 = False");
         actuatorValue.setColumns(10);
 
-        comboBoxFeedOptions = new JComboBox(FeedOptions.values());
-        comboBoxFeedOptions.setToolTipText("Enables skipping physical tape transition which is handy for feeder tuning, part recycle or fixing abnormal situation as e.g. manual part replacement on tape when lost from nozzle tip.");
-        panelActuator.add(comboBoxFeedOptions, "8, 4, fill, default");
-
         btnTestFeedActuator = new JButton(testFeedActuatorAction);
         panelActuator.add(btnTestFeedActuator, "10, 4");
 
@@ -164,7 +157,6 @@ public class ReferenceAutoFeederConfigurationWizard extends AbstractReferenceFee
 
         addWrappedBinding(feeder, "moveBeforeFeed", ckBoxMoveBeforeFeed, "selected");
         addWrappedBinding(feeder, "recycleSupport", ckBoxRecycleSupport, "selected");
-        addWrappedBinding(feeder, "feedOptions", comboBoxFeedOptions, "selectedItem");
 
         ComponentDecorators.decorateWithAutoSelect(actuatorValue);
         ComponentDecorators.decorateWithAutoSelect(postPickActuatorValue);
