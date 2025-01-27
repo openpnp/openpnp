@@ -207,21 +207,14 @@ public class KinematicSolutions implements Solutions.Subject {
                                     else {
                                         if (bothSafeZoneHighAndLowEnabled
                                             && hm.getSafeZ().convertToUnits(LengthUnit.Millimeters).getValue() > 2.0) {
-                                            solutions.add(new Solutions.Issue(
+                                            solutions.add(new Solutions.PlainIssue(
                                                     hm,
                                                     "Unconventional Z Axis on "+hm.getName()+".",
                                                     "The Safe Z of "+hm.getName()+" is positive, which is unconventional. "+
                                                     "OpenPnp typically uses Z coordinates that have Z=0 when the nozzle is retracted, with the PCB surface in the negative Z range. "+
                                                     "Please read the Wiki to understand the implications of not following this convention.",
                                                     Solutions.Severity.Warning,
-                                                    "https://github.com/openpnp/openpnp/wiki/Machine-Axes#a-word-about-z-coordinates") {
-                                                @Override
-                                                public void setState(Solutions.State state) throws Exception {
-                                                    axisZ.setSafeZoneLowEnabled(state != State.Solved);
-                                                    axisZ.setSafeZoneHighEnabled(state != State.Solved);
-                                                    MainFrame.get().getIssuesAndSolutionsTab().findIssuesAndSolutions();
-                                                }
-                                            });
+                                                    "https://github.com/openpnp/openpnp/wiki/Machine-Axes#a-word-about-z-coordinates"));
                                         }
 
                                         safeZSolved = solutions.add(new Solutions.Issue(
