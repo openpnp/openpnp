@@ -589,6 +589,7 @@ public class CameraSolutions implements Solutions.Subject  {
         camera.setAfterCaptureLightOff(oldCamera.isAfterCaptureLightOff());
         camera.setUserActionLightOn(oldCamera.isUserActionLightOn());
         camera.setAntiGlareLightOff(oldCamera.isAntiGlareLightOff());
+        camera.setVisionProvider(oldCamera.getVisionProvider());
         return camera;
     }
 
