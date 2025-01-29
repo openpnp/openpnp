@@ -70,7 +70,18 @@ public class CameraSolutions implements Solutions.Subject  {
 
     @Override
     public void findIssues(Solutions solutions) {
-        if (solutions.isTargeting(Milestone.Basics)) {
+        if (solutions.isTargeting(Milestone.Connect)) {
+            if (camera instanceof OpenPnpCaptureCamera
+                && ((OpenPnpCaptureCamera) camera).getDevice() == null) {
+                solutions.add(new Solutions.PlainIssue(
+                        camera, 
+                        "Select the camera to use.", 
+                        "Choose the camera you wont to use.", 
+                        Severity.Fundamental,
+                        "https://github.com/openpnp/openpnp/wiki/OpenPnpCaptureCamera"));
+            }
+        }
+        else if (solutions.isTargeting(Milestone.Basics)) {
             ActuatorSolutions.findActuateIssues(solutions, camera, camera.getLightActuator(), "camera light",
                 "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Camera-Lighting");
             if (camera instanceof SwitcherCamera) {
@@ -78,7 +89,7 @@ public class CameraSolutions implements Solutions.Subject  {
                     "https://github.com/openpnp/openpnp/wiki/SwitcherCamera#configuration");
             }
         }
-        if (solutions.isTargeting(Milestone.Vision)) {
+        else if (solutions.isTargeting(Milestone.Vision)) {
             final double previewFps = camera.getPreviewFps();
             if (previewFps > 15) {
                 solutions.add(new Solutions.Issue(
