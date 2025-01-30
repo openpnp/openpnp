@@ -54,7 +54,7 @@ public class ReferencePnpJobProcessorConfigurationWizard extends AbstractConfigu
         contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
 
         JPanel panelGeneral = new JPanel();
-        panelGeneral.setBorder(new TitledBorder(null, "General", TitledBorder.LEADING,
+        panelGeneral.setBorder(new TitledBorder(null, Translations.getString("ReferencePnpJobProcessorConfigurationWizard.GeneralPanel.Border.title"), TitledBorder.LEADING, //$NON-NLS-1$
                 TitledBorder.TOP, null, null));
         contentPanel.add(panelGeneral);
         panelGeneral.setLayout(new FormLayout(new ColumnSpec[] {
@@ -75,6 +75,7 @@ public class ReferencePnpJobProcessorConfigurationWizard extends AbstractConfigu
                         FormSpecs.DEFAULT_ROWSPEC,}));
 
         JLabel lblJobOrder = new JLabel(Translations.getString("MachineSetup.JobProcessors.ReferencePnpJobProcessor.Label.JobOrder")); //$NON-NLS-1$
+        lblJobOrder.setToolTipText(Translations.getString("MachineSetup.JobProcessors.ReferencePnpJobProcessor.Label.JobOrder.toolTipText")); //$NON-NLS-1$
         panelGeneral.add(lblJobOrder, "2, 2, right, default");
 
         comboBoxJobOrder = new JComboBox<JobOrderHint>(JobOrderHint.values());
@@ -88,6 +89,7 @@ public class ReferencePnpJobProcessorConfigurationWizard extends AbstractConfigu
         panelGeneral.add(comboBoxPlannerStrategy, "4, 4");
 
         JLabel lblMaxVisionRetries = new JLabel(Translations.getString("MachineSetup.JobProcessors.ReferencePnpJobProcessor.Label.MaxVisionRetries")); //$NON-NLS-1$
+        lblMaxVisionRetries.setToolTipText(Translations.getString("MachineSetup.JobProcessors.ReferencePnpJobProcessor.Label.MaxVisionRetries.toolTipText")); //$NON-NLS-1$
         panelGeneral.add(lblMaxVisionRetries, "2, 6, right, default");
 
         maxVisionRetriesTextField = new JTextField();
