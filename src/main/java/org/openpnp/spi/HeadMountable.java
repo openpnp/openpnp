@@ -73,10 +73,15 @@ public interface HeadMountable extends MovableMountable, Identifiable, Named, So
     void setHeadOffsets(Location headOffsets);
     
     /**
-     * Instruct to controller/driver to wait for a given time before continuing with the next command.
-     * 
+     * Wait for a given time before continuing with the next command. The delay my be executed
+     * using the OS (via Thread.sleep()) or - if supported - by the driver. 
+     * If addition head mountables are given, they are taken into account. This shall be use
+     * to indicate, that eg a nozzle is in relation to it's vacuum valve when timing a dwell
+     * delay.
+     *
      * @param milliseconds
+     * @param hms
      * @throws Exception
      */
-    void delay(int milliseconds) throws Exception;
+    void delay(int milliseconds, HeadMountable... hms) throws Exception;
 }

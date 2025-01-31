@@ -89,13 +89,18 @@ public interface MotionPlanner extends PropertySheetHolder, Solutions.Subject {
     public void home() throws Exception;
 
     /**
-     * Delay for a given time in milliseconds
+     * Delay for a given time in milliseconds taking all given head mountables
+     * into account. This is especially required if a machine uses multiple drivers.
+     * If eg. the vacuum actuator for a nozzle uses a different driver then the
+     * head or nozzle, then the delay is to be executed on all this drivers to make
+     * sure the order of execution is preserved - besides the usual coordination 
+     * requirement.
      *
-     * @param hm
      * @param milliseconds
+     * @param hms
      * @throws Exception
      */
-    public void delay(HeadMountable hm, int milliseconds) throws Exception;
+    public void delay(int milliseconds, HeadMountable... hms) throws Exception;
 
     /**
      * Mark the motion planner and underlying drivers as unhomed.

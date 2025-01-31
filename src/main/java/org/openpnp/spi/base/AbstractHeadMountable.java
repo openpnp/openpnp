@@ -3,6 +3,7 @@ package org.openpnp.spi.base;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
@@ -295,12 +296,17 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
     }
 
     @Override
-    public void delay(int milliseconds) throws Exception {
+    public void delay(int milliseconds, HeadMountable... hms) throws Exception {
         if (milliseconds > 0) {
              Machine machine = getMachine();
             if (machine.isEnabled() && machine instanceof ReferenceMachine) {
+                // if this actuator has an associated head, add it to the list of
+                // head mountables to respect when executing the delay.
+                if (getHead() != null) {
+                    hms = ArrayUtils.add(hms, this);
+                }
                 ((ReferenceMachine) machine)
-                    .getMotionPlanner().delay(getHead() == null ? null : this, milliseconds);
+                    .getMotionPlanner().delay(milliseconds, hms);
             }
         }
     }
