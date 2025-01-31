@@ -73,7 +73,7 @@ public interface HeadMountable extends MovableMountable, Identifiable, Named, So
     void setHeadOffsets(Location headOffsets);
     
     /**
-     * Instruct to controller/driver to wait for a given time before continuing wit the next command.
+     * Instruct to controller/driver to wait for a given time before continuing with the next command.
      * 
      * @param milliseconds
      * @throws Exception
