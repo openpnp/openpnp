@@ -972,7 +972,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
         public Step step() throws JobProcessorException {
             
-            prerotateAllNozzles(new AlignLocator());
+            prerotateAllNozzles(alignLocator);
             
             return new Align(plannedPlacements);
         }
@@ -1084,7 +1084,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
         public Step step() throws JobProcessorException {
             
-            prerotateAllNozzles(new PlaceLocator());
+            prerotateAllNozzles(placeLocator);
             
             return new Place(plannedPlacements);
         }
