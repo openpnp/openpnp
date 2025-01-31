@@ -44,6 +44,9 @@ public abstract class AbstractReferenceDriver extends AbstractDriver {
     @Attribute(required = false)
     protected boolean syncInitialLocation = false;
 
+    @Attribute(required = false)
+    protected boolean allowUnhomedMotion = false;
+
     /**
      * TODO The following properties are for backwards compatibility and can be removed after 2019-07-15. 
      */
@@ -172,12 +175,25 @@ public abstract class AbstractReferenceDriver extends AbstractDriver {
     }
 
     public void setSyncInitialLocation(boolean syncInitialLocation) {
+        Object oldValue = this.syncInitialLocation;
         this.syncInitialLocation = syncInitialLocation;
+        firePropertyChange("syncInitialLocation", oldValue, syncInitialLocation);
+    }
+
+    @Override
+    public boolean isAllowUnhomedMotion() {
+        return allowUnhomedMotion;
+    }
+
+    public void setAllowUnhomedMotion(boolean allowUnhomedMotion) {
+        Object oldValue = this.allowUnhomedMotion;
+        this.allowUnhomedMotion = allowUnhomedMotion;
+        firePropertyChange("allowUnhomedMotion", oldValue, allowUnhomedMotion);
     }
 
     public boolean isInSimulationMode() {
         SimulationModeMachine machine = SimulationModeMachine.getSimulationModeMachine();
-        return (machine != null && machine.getSimulationMode() != SimulationMode.Off);
+        return (machine != null && machine.getSimulationMode() != SimulationMode.Off && machine.isReplacingDrivers());
     }
 
     public ReferenceDriverCommunications getCommunications() {

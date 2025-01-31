@@ -284,6 +284,10 @@ public class PackagesPanel extends JPanel implements WizardContainer {
             String id;
             while ((id = JOptionPane.showInputDialog(frame,
                     "Please enter an ID for the new package.")) != null) {
+                id = id.trim();
+                if (id.isEmpty()) {
+                    break;
+                }
                 if (configuration.getPackage(id) != null) {
                     MessageBoxes.errorBox(frame, "Error", "Package ID " + id + " already exists.");
                     continue;
@@ -384,6 +388,10 @@ public class PackagesPanel extends JPanel implements WizardContainer {
             String id;
             while ((id = JOptionPane.showInputDialog(frame,
                     "Please enter an ID for the pasted package.")) != null) {
+                id = id.trim();
+                if (id.isEmpty()) {
+                    break;
+                }
                 if (configuration.getPackage(id) == null) {
                     break;
                 }

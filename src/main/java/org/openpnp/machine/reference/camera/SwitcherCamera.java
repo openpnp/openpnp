@@ -24,7 +24,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.openpnp.gui.support.Wizard;
@@ -125,6 +124,7 @@ public class SwitcherCamera extends ReferenceCamera {
                         if (this != switchedCamera) {
                             return null;
                         }
+                        Logger.trace(getName()+" switcher actuator delay "+actuatorDelayMillis+"ms");
                         Thread.sleep(actuatorDelayMillis);
                         // Succeeded, set the new state.
                         switchers.put(switcher, this);

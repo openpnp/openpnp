@@ -41,6 +41,7 @@ import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.jdesktop.beansbinding.BeanProperty;
 import org.jdesktop.beansbinding.Bindings;
 import org.jdesktop.beansbinding.Converter;
+import org.openpnp.Translations;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.components.VisionCompositingPreview;
 import org.openpnp.gui.support.DoubleConverter;
@@ -105,11 +106,11 @@ public class PackageCompositingPanel extends JPanel {
         setLayout(new BorderLayout(0, 0));
 
         compositingPanel = new JPanel();
-        compositingPanel.setBorder(new TitledBorder(null, "Compositing", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        compositingPanel.setBorder(new TitledBorder(null, Translations.getString("PackageCompositingPanel.Border.title"), TitledBorder.LEADING, TitledBorder.TOP, null, null)); //$NON-NLS-1$
         add(compositingPanel, BorderLayout.NORTH);
         compositingPanel.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("max(70dlu;default)"),
+                ColumnSpec.decode("max(70dlu;default)"), //$NON-NLS-1$
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -117,7 +118,7 @@ public class PackageCompositingPanel extends JPanel {
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("default:grow"),},
+                ColumnSpec.decode("default:grow"),}, //$NON-NLS-1$
                 new RowSpec[] {
                         FormSpecs.RELATED_GAP_ROWSPEC,
                         FormSpecs.DEFAULT_ROWSPEC,
@@ -128,65 +129,65 @@ public class PackageCompositingPanel extends JPanel {
                         FormSpecs.RELATED_GAP_ROWSPEC,
                         FormSpecs.DEFAULT_ROWSPEC,}));
 
-        lblMethod = new JLabel("Method");
-        lblMethod.setToolTipText("<html>\n<p>Compositing method:</p>\n<ul>\n<li><strong>None:</strong> no compositing is performed.</li>\n<li><strong>Restricted:</strong> compositing is only performed, when the <br/>\nfootprint size is too large, or if it is asymmetric.</li>\n<li><strong>Automatic:</strong> compositing is always performed. It can still <br/>\nresult in a one-shot solution, if the corners are all convex <br/>\nand symmetric.</li>\n<li><strong>SingleCorner:</strong> compositing is always performed. Each <br/>\ncorner is individually shot. Reduces parallax errors, as <br/>\neach corner is centered in the camera.</li>\n</ul>\n</html>\n\n");
-        compositingPanel.add(lblMethod, "2, 2, right, default");
+        lblMethod = new JLabel(Translations.getString("PackageCompositingPanel.MethodLabel.text")); //$NON-NLS-1$
+        lblMethod.setToolTipText(Translations.getString("PackageCompositingPanel.MethodLabel.toolTipText")); //$NON-NLS-1$
+        compositingPanel.add(lblMethod, "2, 2, right, default"); //$NON-NLS-1$
 
         compositingMethod = new JComboBox(VisionCompositing.CompositingMethod.values());
-        compositingPanel.add(compositingMethod, "4, 2, fill, default");
+        compositingPanel.add(compositingMethod, "4, 2, fill, default"); //$NON-NLS-1$
 
-        lblExtraShots = new JLabel("Extra Shots");
-        lblExtraShots.setToolTipText("<html>\n<p>Vision Compositing determines the optimal minimum set of required shot to determine<br/>\nthe part position and angle. On top of that, it suggests extra shots, that can be used to <br/>\nimprove positional and angular accuracy. </p>\n<br/>\n<p>Example: a square part can be determined in two diagonal corner shots. The opposite two<br/>\ncorners of the square are proposed as extra shots.</p>\n<br/>\n<p><strong>Extra Shots</strong> indicates how man of these extra shots should be used. \n</html>");
-        compositingPanel.add(lblExtraShots, "2, 4, right, default");
+        lblExtraShots = new JLabel(Translations.getString("PackageCompositingPanel.ExtraShotsLabel.text")); //$NON-NLS-1$
+        lblExtraShots.setToolTipText(Translations.getString("PackageCompositingPanel.ExtraShotsLabel.toolTipText")); //$NON-NLS-1$
+        compositingPanel.add(lblExtraShots, "2, 4, right, default"); //$NON-NLS-1$
 
         extraShots = new JTextField();
-        compositingPanel.add(extraShots, "4, 4, fill, default");
+        compositingPanel.add(extraShots, "4, 4, fill, default"); //$NON-NLS-1$
         extraShots.setColumns(10);
 
-        lblMaxPickTolerance = new JLabel("Max. Pick Tolerance");
-        lblMaxPickTolerance.setToolTipText("<html>\n<p>If zero, the <strong>Max. Pick Tolerance</strong> on the nozzle tip is taken.</p>\n<br/>\n<p>If non-zero, this <strong>Max. Pick Tolerance</strong> overrides it for this package.</p>\n<br/>\n<p>In both cases, the <strong>Max. Pick Tolerance</strong> must cover linear <br/>\noffsets of the picked part on the nozzle, and corner offsets <br/>\ncaused by rotational offsets, as well as combinations of the two.</p>\n</html>");
-        compositingPanel.add(lblMaxPickTolerance, "6, 4, right, default");
+        lblMaxPickTolerance = new JLabel(Translations.getString("PackageCompositingPanel.MaxPickToleranceLabel.text")); //$NON-NLS-1$
+        lblMaxPickTolerance.setToolTipText(Translations.getString("PackageCompositingPanel.MaxPickToleranceLabel.toolTipText")); //$NON-NLS-1$
+        compositingPanel.add(lblMaxPickTolerance, "6, 4, right, default"); //$NON-NLS-1$
 
         maxPickTolerance = new JTextField();
-        compositingPanel.add(maxPickTolerance, "8, 4, fill, default");
+        compositingPanel.add(maxPickTolerance, "8, 4, fill, default"); //$NON-NLS-1$
         maxPickTolerance.setColumns(10);
 
-        lblMinAngleLeverage = new JLabel("Min. Angle Leverage");
-        lblMinAngleLeverage.setToolTipText("<html>\n<p>Minimum leverage required to derive angular information from two corners.</p>\n<br/>\n<p><strong>Min. Angle Leverage</strong> is given <em>relative</em> to the footprint width and height<br/>\n(the lesser of the two).</p>\n<br/>\n<p>Example: setting 0.5 requires two corners to span at least half the part dimension<br/>\nto provide angular information.</p>\n</html>");
-        compositingPanel.add(lblMinAngleLeverage, "2, 6, right, default");
+        lblMinAngleLeverage = new JLabel(Translations.getString("PackageCompositingPanel.MinAngleLeverageLabel.text")); //$NON-NLS-1$
+        lblMinAngleLeverage.setToolTipText(Translations.getString("PackageCompositingPanel.MinAngleLeverageLabel.toolTipText")); //$NON-NLS-1$
+        compositingPanel.add(lblMinAngleLeverage, "2, 6, right, default"); //$NON-NLS-1$
 
         minLeverageFactor = new JTextField();
-        compositingPanel.add(minLeverageFactor, "4, 6, fill, default");
+        compositingPanel.add(minLeverageFactor, "4, 6, fill, default"); //$NON-NLS-1$
         minLeverageFactor.setColumns(10);
 
-        lblAllowInsideCorner = new JLabel("Allow inside corner?");
-        lblAllowInsideCorner.setToolTipText("<html>\n<p>Allows the inclusion of corners facing inside, towards the center of the part. <br/>\nThis can be used to align parts that are still too large, i.e., where the <strong>Roaming Radius</strong><br/>\nof the camera is too small. It typically requires large, well-spaced pads.</p>\n<br/>\n<p>Example: SMD power rectifiers.</p>\n</html>");
-        compositingPanel.add(lblAllowInsideCorner, "6, 6, right, default");
+        lblAllowInsideCorner = new JLabel(Translations.getString("PackageCompositingPanel.AllowInsideCornerLabel.text")); //$NON-NLS-1$
+        lblAllowInsideCorner.setToolTipText(Translations.getString("PackageCompositingPanel.AllowInsideCornerLabel.toolTipText")); //$NON-NLS-1$
+        compositingPanel.add(lblAllowInsideCorner, "6, 6, right, default"); //$NON-NLS-1$
 
-        allowInside = new JCheckBox("");
-        compositingPanel.add(allowInside, "8, 6");
+        allowInside = new JCheckBox(""); //$NON-NLS-1$
+        compositingPanel.add(allowInside, "8, 6"); //$NON-NLS-1$
 
         btnTest = new JButton(computeCompositingAction);
-        btnTest.setToolTipText("Compute the vision compositing, and preview the result.");
-        compositingPanel.add(btnTest, "2, 8");
+        btnTest.setToolTipText(Translations.getString("PackageCompositingPanel.TestButton.toolTipText")); //$NON-NLS-1$
+        compositingPanel.add(btnTest, "2, 8"); //$NON-NLS-1$
 
         compositeSolution = new JTextField();
         compositeSolution.setEditable(false);
-        compositingPanel.add(compositeSolution, "4, 8, 7, 1, fill, default");
+        compositingPanel.add(compositeSolution, "4, 8, 7, 1, fill, default"); //$NON-NLS-1$
         compositeSolution.setColumns(10);
 
         visionPreview = new VisionCompositingPreview();
         visionPreview.setBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
         add(visionPreview, BorderLayout.CENTER);
 
-        pkg.addPropertyChangeListener("footprint", (e) -> computeCompositingAction.actionPerformed(null));
+        pkg.addPropertyChangeListener("footprint", (e) -> computeCompositingAction.actionPerformed(null)); //$NON-NLS-1$
     }
 
     public final Action computeCompositingAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.refresh);
-            putValue(NAME, "Compute");
-            putValue(SHORT_DESCRIPTION, "Recompute the vision compositing.");
+            putValue(NAME, Translations.getString("PackageCompositingPanel.ComputeCompositing.Name")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("PackageCompositingPanel.ComputeCompositing.ShortDescription")); //$NON-NLS-1$
         }
 
         @Override
@@ -206,7 +207,7 @@ public class PackageCompositingPanel extends JPanel {
     public void setStatus(String status) {
         Object oldValue = this.status;
         this.status = status;
-        firePropertyChange("status", oldValue, status);
+        firePropertyChange("status", oldValue, status); //$NON-NLS-1$
     }
 
     public VisionCompositing.Composite getComposite() {
@@ -216,7 +217,7 @@ public class PackageCompositingPanel extends JPanel {
     public void setComposite(VisionCompositing.Composite composite) {
         Object oldValue = this.composite;
         this.composite = composite;
-        firePropertyChange("composite", oldValue, composite);
+        firePropertyChange("composite", oldValue, composite); //$NON-NLS-1$
     }
 
     private VisionCompositing.Composite computePreviewComposite() {
@@ -246,7 +247,7 @@ public class PackageCompositingPanel extends JPanel {
             BottomVisionSettings bottomVisionSettings = ReferenceBottomVision.getDefault()
                     .getInheritedVisionSettings(pkg);
             if (nozzleTip == null) {
-                throw new Exception("No compatible nozzle tip found for "+pkg.getId()+".");
+                throw new Exception(Translations.getString("PackageCompositingPanel.NoCompatibleNozzleTipError.text")+pkg.getId()+"."); //$NON-NLS-1$ //$NON-NLS-2$
             }
             Composite composite = visionCompositing.new Composite(pkg, bottomVisionSettings, nozzle, nozzleTip, camera, Location.origin);
             int minShots = 0;
@@ -259,58 +260,58 @@ public class PackageCompositingPanel extends JPanel {
             }
             setComposite(composite);
             if (composite.getCompositingSolution().isInvalid()) {
-                setStatus("Error: "+composite.getCompositingSolution()+" | "+composite.getDiagnostics());
+                setStatus("Error: "+composite.getCompositingSolution()+" | "+composite.getDiagnostics()); //$NON-NLS-1$ //$NON-NLS-2$
             }
             else {
-                setStatus("Solution: "+composite.getCompositingSolution()+" | Min. shots: "+minShots+" | Max. shots: "+maxShots
-                        +" | Computation: "+String.format("%.2f", composite.getComputeTime())+"ms");
+                setStatus("Solution: "+composite.getCompositingSolution()+" | Min. shots: "+minShots+" | Max. shots: "+maxShots //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                        +" | Computation: "+String.format("%.2f", composite.getComputeTime())+"ms"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
             }
             return composite;
         }
         catch (Exception e) {
-            setStatus("Error: "+e.getMessage());
+            setStatus(Translations.getString("PackageCompositingPanel.Error.text")+e.getMessage()); //$NON-NLS-1$
             return null;
         }
     }
 
     protected void initDataBindings() {
-        BeanProperty<VisionCompositing, CompositingMethod> visionCompositingBeanProperty = BeanProperty.create("compositingMethod");
-        BeanProperty<JComboBox, Object> jComboBoxBeanProperty = BeanProperty.create("selectedItem");
+        BeanProperty<VisionCompositing, CompositingMethod> visionCompositingBeanProperty = BeanProperty.create("compositingMethod"); //$NON-NLS-1$
+        BeanProperty<JComboBox, Object> jComboBoxBeanProperty = BeanProperty.create("selectedItem"); //$NON-NLS-1$
         AutoBinding<VisionCompositing, CompositingMethod, JComboBox, Object> autoBinding = Bindings.createAutoBinding(UpdateStrategy.READ_WRITE, visionCompositing, visionCompositingBeanProperty, compositingMethod, jComboBoxBeanProperty);
         autoBinding.bind();
         //
-        BeanProperty<VisionCompositing, Length> visionCompositingBeanProperty_1 = BeanProperty.create("maxPickTolerance");
-        BeanProperty<JTextField, String> jTextFieldBeanProperty = BeanProperty.create("text");
+        BeanProperty<VisionCompositing, Length> visionCompositingBeanProperty_1 = BeanProperty.create("maxPickTolerance"); //$NON-NLS-1$
+        BeanProperty<JTextField, String> jTextFieldBeanProperty = BeanProperty.create("text"); //$NON-NLS-1$
         AutoBinding<VisionCompositing, Length, JTextField, String> autoBinding_1 = Bindings.createAutoBinding(UpdateStrategy.READ_WRITE, visionCompositing, visionCompositingBeanProperty_1, maxPickTolerance, jTextFieldBeanProperty);
         Converter lengthConverter = new LengthConverter();
         autoBinding_1.setConverter(lengthConverter);
         autoBinding_1.bind();
         //
-        BeanProperty<VisionCompositing, Double> visionCompositingBeanProperty_3 = BeanProperty.create("minLeverageFactor");
-        BeanProperty<JTextField, String> jTextFieldBeanProperty_2 = BeanProperty.create("text");
+        BeanProperty<VisionCompositing, Double> visionCompositingBeanProperty_3 = BeanProperty.create("minLeverageFactor"); //$NON-NLS-1$
+        BeanProperty<JTextField, String> jTextFieldBeanProperty_2 = BeanProperty.create("text"); //$NON-NLS-1$
         AutoBinding<VisionCompositing, Double, JTextField, String> autoBinding_3 = Bindings.createAutoBinding(UpdateStrategy.READ_WRITE, visionCompositing, visionCompositingBeanProperty_3, minLeverageFactor, jTextFieldBeanProperty_2);
         Converter doubleConverter = new DoubleConverter(Configuration.get().getLengthDisplayFormat());
         autoBinding_3.setConverter(doubleConverter);
         autoBinding_3.bind();
         //
-        BeanProperty<VisionCompositing, Boolean> visionCompositingBeanProperty_4 = BeanProperty.create("allowInside");
-        BeanProperty<JCheckBox, Boolean> jCheckBoxBeanProperty = BeanProperty.create("selected");
+        BeanProperty<VisionCompositing, Boolean> visionCompositingBeanProperty_4 = BeanProperty.create("allowInside"); //$NON-NLS-1$
+        BeanProperty<JCheckBox, Boolean> jCheckBoxBeanProperty = BeanProperty.create("selected"); //$NON-NLS-1$
         AutoBinding<VisionCompositing, Boolean, JCheckBox, Boolean> autoBinding_4 = Bindings.createAutoBinding(UpdateStrategy.READ_WRITE, visionCompositing, visionCompositingBeanProperty_4, allowInside, jCheckBoxBeanProperty);
         autoBinding_4.bind();
         //
-        BeanProperty<VisionCompositing, Integer> extraShotsBeanProperty_5 = BeanProperty.create("extraShots");
-        BeanProperty<JTextField, String> jTextFieldBeanProperty_3 = BeanProperty.create("text");
+        BeanProperty<VisionCompositing, Integer> extraShotsBeanProperty_5 = BeanProperty.create("extraShots"); //$NON-NLS-1$
+        BeanProperty<JTextField, String> jTextFieldBeanProperty_3 = BeanProperty.create("text"); //$NON-NLS-1$
         AutoBinding<VisionCompositing, Integer, JTextField, String> autoBinding_5 = Bindings.createAutoBinding(UpdateStrategy.READ_WRITE, visionCompositing, extraShotsBeanProperty_5, extraShots, jTextFieldBeanProperty_3);
         autoBinding_5.bind();
 
         //
-        BeanProperty<PackageCompositingPanel, String> statusBeanProperty_2 = BeanProperty.create("status");
-        BeanProperty<JTextField, String> jTextFieldBeanProperty_1 = BeanProperty.create("text");
+        BeanProperty<PackageCompositingPanel, String> statusBeanProperty_2 = BeanProperty.create("status"); //$NON-NLS-1$
+        BeanProperty<JTextField, String> jTextFieldBeanProperty_1 = BeanProperty.create("text"); //$NON-NLS-1$
         AutoBinding<PackageCompositingPanel, String, JTextField, String> autoBinding_2 = Bindings.createAutoBinding(UpdateStrategy.READ, this, statusBeanProperty_2, compositeSolution, jTextFieldBeanProperty_1);
         autoBinding_2.bind();
 
-        BeanProperty<PackageCompositingPanel,  VisionCompositing.Composite> cameraBeanProperty = BeanProperty.create("composite");
-        BeanProperty<VisionCompositingPreview,  VisionCompositing.Composite> cameraProperty = BeanProperty.create("composite");
+        BeanProperty<PackageCompositingPanel,  VisionCompositing.Composite> cameraBeanProperty = BeanProperty.create("composite"); //$NON-NLS-1$
+        BeanProperty<VisionCompositingPreview,  VisionCompositing.Composite> cameraProperty = BeanProperty.create("composite"); //$NON-NLS-1$
         AutoBinding<PackageCompositingPanel,  VisionCompositing.Composite, VisionCompositingPreview,  VisionCompositing.Composite> autoBinding_6 = 
                 Bindings.createAutoBinding(UpdateStrategy.READ, this, cameraBeanProperty, visionPreview, cameraProperty);
         autoBinding_6.bind();

@@ -1,11 +1,14 @@
 package org.openpnp.spi;
 
+import java.awt.image.BufferedImage;
+
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Location;
 import org.openpnp.model.Named;
 import org.openpnp.model.Part;
 import org.openpnp.model.PartSettingsHolder;
+import org.openpnp.model.Placement;
 import org.openpnp.model.Solutions;
 
 /**
@@ -52,7 +55,7 @@ public interface PartAlignment extends PartSettingsHolder, Named, Solutions.Subj
      * @return
      * @throws Exception if the alignment fails for any reason. The caller may retry.
      */
-    PartAlignmentOffset findOffsets(Part part, BoardLocation boardLocation, Location placementLocation, Nozzle nozzle) throws Exception;
+    PartAlignmentOffset findOffsets(Part part, BoardLocation boardLocation, Placement placement, Nozzle nozzle) throws Exception;
     
     /**
      * Get a Wizard for configuring the PartAlignment instance properties for a specific
@@ -65,5 +68,17 @@ public interface PartAlignment extends PartSettingsHolder, Named, Solutions.Subj
     public boolean canHandle(PartSettingsHolder partSettingsHolder, boolean allowDisabled);
 
     boolean isEnabled();
+
+    /**
+     * Display the result of an Alignment on the camera view. 
+     * 
+     * @param image
+     * @param part
+     * @param offsets
+     * @param camera
+     * @param nozzle
+     */
+    void displayResult(BufferedImage image, Part part, Location offsets, Camera camera,
+            Nozzle nozzle);
 
 }

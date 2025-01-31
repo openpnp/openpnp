@@ -22,14 +22,11 @@ package org.openpnp.spi;
 import org.openpnp.model.Identifiable;
 import org.openpnp.model.Named;
 import org.openpnp.spi.base.AbstractJobProcessor;
-import org.openpnp.spi.base.AbstractMachine;
 
 /**
  * A Signaler is capable of signaling certain machine or job states like errors or warnings.
  */
 public interface Signaler extends Identifiable, Named, PropertySheetHolder {
-
-    public void signalMachineState(AbstractMachine.State state);
 
     public void signalJobProcessorState(AbstractJobProcessor.State state);
 }

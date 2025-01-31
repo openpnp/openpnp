@@ -224,10 +224,12 @@ public abstract class AbstractNozzle extends AbstractHeadMountable implements No
         setRotationModeOffset(newRotationModeOffset);
     }
 
+    @Override
     public Double getRotationModeOffset() {
         return rotationModeOffset;
     }
 
+    @Override
     public void setRotationModeOffset(Double rotationModeOffset) {
         Object oldValue = this.rotationModeOffset;
         this.rotationModeOffset = rotationModeOffset;

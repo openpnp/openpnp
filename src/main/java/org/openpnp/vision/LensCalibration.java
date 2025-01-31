@@ -27,7 +27,7 @@ import org.pmw.tinylog.Logger;
  */
 public class LensCalibration {
     static {
-        nu.pattern.OpenCV.loadShared();
+        nu.pattern.OpenCV.loadLocally();
     }
 
     public enum Pattern {

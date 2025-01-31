@@ -86,7 +86,7 @@ public class CameraSolutions implements Solutions.Subject  {
                         "A high Preview FPS value might create undue CPU load.", 
                         "Set to 5 FPS.", 
                         Severity.Suggestion,
-                        "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-General-Camera-Setup#general-configuration") {
+                        "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration_General-Camera-Setup#general-configuration") {
 
 
                     @Override
@@ -103,7 +103,7 @@ public class CameraSolutions implements Solutions.Subject  {
                         +" to suspend camera preview during machine tasks / Jobs.", 
                         "Enable Suspend during tasks.", 
                         ((camera instanceof SwitcherCamera) ? Severity.Error : Severity.Suggestion),
-                        "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-General-Camera-Setup#general-configuration") {
+                        "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration_General-Camera-Setup#general-configuration") {
 
                     @Override
                     public void setState(Solutions.State state) throws Exception {
@@ -118,7 +118,7 @@ public class CameraSolutions implements Solutions.Subject  {
                         "In single camera preview OpenPnP can automatically switch the camera for you.", 
                         "Enable Auto Camera View.", 
                         Severity.Suggestion,
-                        "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-General-Camera-Setup#general-configuration") {
+                        "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration_General-Camera-Setup#general-configuration") {
 
                     @Override
                     public void setState(Solutions.State state) throws Exception {
@@ -137,7 +137,7 @@ public class CameraSolutions implements Solutions.Subject  {
                             "The preview rendering quality can be improved.", 
                             "Set to Rendering Quality to High (right click the Camera View to see other options).", 
                             Severity.Suggestion,
-                            "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-General-Camera-Setup#camera-view-configuration") {
+                            "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration_General-Camera-Setup#camera-view-configuration") {
 
                         @Override
                         public void setState(Solutions.State state) throws Exception {
@@ -589,6 +589,7 @@ public class CameraSolutions implements Solutions.Subject  {
         camera.setAfterCaptureLightOff(oldCamera.isAfterCaptureLightOff());
         camera.setUserActionLightOn(oldCamera.isUserActionLightOn());
         camera.setAntiGlareLightOff(oldCamera.isAntiGlareLightOff());
+        camera.setVisionProvider(oldCamera.getVisionProvider());
         return camera;
     }
 

@@ -28,7 +28,7 @@ import org.openpnp.machine.reference.signaler.ActuatorSignaler;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.base.AbstractJobProcessor;
-import org.openpnp.spi.base.AbstractMachine;
+import org.openpnp.spi.base.AbstractJobProcessor.State;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
@@ -40,10 +40,8 @@ public class ActuatorSignalerConfigurationWizard extends AbstractConfigurationWi
     private final ActuatorSignaler signaler;
     private JLabel lblNewLabel;
     private JLabel lblNewLabel_1;
-    private JLabel lblNewLabel_2;
-    private JComboBox actuator;
-    private JComboBox jobState;
-    private JComboBox machineState;
+    private JComboBox<Actuator> actuator;
+    private JComboBox<State> jobState;
 
     public ActuatorSignalerConfigurationWizard(ActuatorSignaler actuator) {
         this.signaler = actuator;
@@ -59,27 +57,19 @@ public class ActuatorSignalerConfigurationWizard extends AbstractConfigurationWi
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
         lblNewLabel = new JLabel(Translations.getString("ActuatorSignalerConfigurationWizard.ActuatorLabel")); //$NON-NLS-1$
         contentPanel.add(lblNewLabel, "2, 2, right, default");
         
-        actuator = new JComboBox();
+        actuator = new JComboBox<Actuator>();
         contentPanel.add(actuator, "4, 2, fill, default");
         
         lblNewLabel_1 = new JLabel(Translations.getString("ActuatorSignalerConfigurationWizard.JobStateLabel")); //$NON-NLS-1$
         contentPanel.add(lblNewLabel_1, "2, 4, right, default");
         
-        jobState = new JComboBox();
+        jobState = new JComboBox<State>();
         contentPanel.add(jobState, "4, 4, fill, default");
-        
-        lblNewLabel_2 = new JLabel(Translations.getString("ActuatorSignalerConfigurationWizard.MachineStateLabel")); //$NON-NLS-1$
-        contentPanel.add(lblNewLabel_2, "2, 6, right, default");
-        
-        machineState = new JComboBox();
-        contentPanel.add(machineState, "4, 6, fill, default");
         
         for (Actuator actuator : Configuration.get().getMachine().getActuators()) {
             this.actuator.addItem(actuator);
@@ -89,17 +79,11 @@ public class ActuatorSignalerConfigurationWizard extends AbstractConfigurationWi
         for (AbstractJobProcessor.State state : AbstractJobProcessor.State.values()) {
             this.jobState.addItem(state);
         }
-        
-        machineState.addItem(null);
-        for (AbstractMachine.State state : AbstractMachine.State.values()) {
-            this.machineState.addItem(state);
-        }
     }
 
     @Override
     public void createBindings() {
         addWrappedBinding(signaler, "actuator", actuator, "selectedItem");
         addWrappedBinding(signaler, "jobState", jobState, "selectedItem");
-        addWrappedBinding(signaler, "machineState", machineState, "selectedItem");
     }
 }

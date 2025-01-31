@@ -23,7 +23,6 @@ import java.awt.AWTEvent;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.FlowLayout;
@@ -40,7 +39,6 @@ import java.awt.event.WindowEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.lang.reflect.Method;
-import java.net.URI;
 import java.security.InvalidParameterException;
 import java.util.HashMap;
 import java.util.Locale;
@@ -74,18 +72,15 @@ import javax.swing.UIManager;
 import javax.swing.border.BevelBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.undo.UndoManager;
 
+import org.openpnp.Main;
 import org.openpnp.Translations;
 import org.openpnp.gui.components.CameraPanel;
 import org.openpnp.gui.components.ThemeDialog;
 import org.openpnp.gui.importer.BoardImporter;
-import org.openpnp.gui.importer.DipTraceImporter;
-import org.openpnp.gui.importer.EagleBoardImporter;
-import org.openpnp.gui.importer.EagleMountsmdUlpImporter;
-import org.openpnp.gui.importer.KicadPosImporter;
-import org.openpnp.gui.importer.LabcenterProteusImporter; //
-import org.openpnp.gui.importer.NamedCSVImporter;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.HeadCellValue;
 import org.openpnp.gui.support.Icons;
@@ -94,10 +89,12 @@ import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.OSXAdapter;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.RotationCellValue;
+import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Configuration.TablesLinked;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.scripting.ScriptFileWatcher;
+import org.openpnp.util.UiUtils;
 import org.pmw.tinylog.Logger;
 
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -140,12 +137,15 @@ public class MainFrame extends JFrame {
     private static final int PREF_MACHINECONTROLS_WINDOW_WIDTH_DEF = 490;
     private static final String PREF_MACHINECONTROLS_WINDOW_HEIGHT = "MachineControlsFrame.windowHeight"; //$NON-NLS-1$
     private static final int PREF_MACHINECONTROLS_WINDOW_HEIGHT_DEF = 340;
+    private static final int MINIMUM_WINDOW_SIZE = 50;
 
     private final Configuration configuration;
 
     private static MainFrame mainFrame;
 
     private MachineControlsPanel machineControlsPanel;
+    private PanelsPanel panelsPanel;
+    private BoardsPanel boardsPanel;
     private PartsPanel partsPanel;
     private PackagesPanel packagesPanel;
     private FeedersPanel feedersPanel;
@@ -161,6 +161,7 @@ public class MainFrame extends JFrame {
     private Map<KeyStroke, Action> hotkeyActionMap;
     private AbstractConfigurationWizard wizardWithActiveProcess = null;
     private UndoManager undoManager = new UndoManager();
+    private boolean windowStyleMultiple;
 
     public static MainFrame get() {
         return mainFrame;
@@ -202,6 +203,14 @@ public class MainFrame extends JFrame {
 
     public MachineControlsPanel getMachineControls() {
         return machineControlsPanel;
+    }
+
+    public PanelsPanel getPanelsTab() {
+        return panelsPanel;
+    }
+
+    public BoardsPanel getBoardsTab() {
+        return boardsPanel;
     }
 
     public PartsPanel getPartsTab() {
@@ -267,6 +276,9 @@ public class MainFrame extends JFrame {
     private ActionListener instructionsProceedActionListener;
 
     private ScriptFileWatcher scriptFileWatcher;
+    private JMenuItem mnEditRemoveBoard;
+    private JMenu mnEditAddBoard;
+    private JMenuItem mnCaptureToolLocation;
 
     public MainFrame(Configuration configuration) {
         mainFrame = this;
@@ -287,19 +299,23 @@ public class MainFrame extends JFrame {
             }
         });
 
-        if (prefs.getInt(PREF_WINDOW_WIDTH, 50) < 50) {
+        if (prefs.getInt(PREF_WINDOW_WIDTH, MINIMUM_WINDOW_SIZE) < MINIMUM_WINDOW_SIZE) {
             prefs.putInt(PREF_WINDOW_WIDTH, PREF_WINDOW_WIDTH_DEF);
         }
 
-        if (prefs.getInt(PREF_WINDOW_HEIGHT, 50) < 50) {
+        if (prefs.getInt(PREF_WINDOW_HEIGHT, MINIMUM_WINDOW_SIZE) < MINIMUM_WINDOW_SIZE) {
             prefs.putInt(PREF_WINDOW_HEIGHT, PREF_WINDOW_HEIGHT_DEF);
         }
+
+        windowStyleMultiple = prefs.getBoolean(PREF_WINDOW_STYLE_MULTIPLE, PREF_WINDOW_STYLE_MULTIPLE_DEF);
 
         setBounds(prefs.getInt(PREF_WINDOW_X, PREF_WINDOW_X_DEF),
                 prefs.getInt(PREF_WINDOW_Y, PREF_WINDOW_Y_DEF),
                 prefs.getInt(PREF_WINDOW_WIDTH, PREF_WINDOW_WIDTH_DEF),
                 prefs.getInt(PREF_WINDOW_HEIGHT, PREF_WINDOW_HEIGHT_DEF));
         jobPanel = new JobPanel(configuration, this);
+        panelsPanel = new PanelsPanel(configuration, this);
+        boardsPanel = new BoardsPanel(configuration, this);
         partsPanel = new PartsPanel(configuration, this);
         packagesPanel = new PackagesPanel(configuration, this);
         feedersPanel = new FeedersPanel(configuration, this);
@@ -331,8 +347,9 @@ public class MainFrame extends JFrame {
         // File -> Import
         //////////////////////////////////////////////////////////////////////
         mnFile.addSeparator();
-        mnImport = new JMenu(Translations.getString("Menu.File.ImportBoard")); //$NON-NLS-1$
+        mnImport = new JMenu(Translations.getString("BoardsPanel.BoardPlacements.Action.Import")); //$NON-NLS-1$
         mnImport.setMnemonic(KeyEvent.VK_I);
+        mnImport.setEnabled(false);
         mnFile.add(mnImport);
 
 
@@ -350,13 +367,18 @@ public class MainFrame extends JFrame {
         mnEdit.add(new JMenuItem(undoAction));
         mnEdit.add(new JMenuItem(redoAction));
         mnEdit.addSeparator();
-        JMenu mnEditAddBoard = new JMenu(jobPanel.addBoardAction);
+        mnEditAddBoard = new JMenu(jobPanel.addBoardAction);
         mnEditAddBoard.add(new JMenuItem(jobPanel.addNewBoardAction));
         mnEditAddBoard.add(new JMenuItem(jobPanel.addExistingBoardAction));
+        mnEditAddBoard.addSeparator();
+        mnEditAddBoard.add(new JMenuItem(jobPanel.addNewPanelAction));
+        mnEditAddBoard.add(new JMenuItem(jobPanel.addExistingPanelAction));
         mnEdit.add(mnEditAddBoard);
-        mnEdit.add(new JMenuItem(jobPanel.removeBoardAction));
+        mnEditRemoveBoard = new JMenuItem(jobPanel.removeBoardAction);
+        mnEdit.add(mnEditRemoveBoard);
         mnEdit.addSeparator();
-        mnEdit.add(new JMenuItem(jobPanel.captureToolBoardLocationAction));
+        mnCaptureToolLocation = new JMenuItem(jobPanel.captureToolBoardLocationAction);
+        mnEdit.add(mnCaptureToolLocation);
 
         // View
         //////////////////////////////////////////////////////////////////////
@@ -480,7 +502,7 @@ public class MainFrame extends JFrame {
         JCheckBoxMenuItem windowStyleMultipleMenuItem =
                 new JCheckBoxMenuItem(windowStyleMultipleSelected);
         mnWindows.add(windowStyleMultipleMenuItem);
-        if (prefs.getBoolean(PREF_WINDOW_STYLE_MULTIPLE, PREF_WINDOW_STYLE_MULTIPLE_DEF)) {
+        if (windowStyleMultiple) {
             windowStyleMultipleMenuItem.setSelected(true);
         }
 
@@ -669,6 +691,10 @@ public class MainFrame extends JFrame {
 
         tabs.addTab(Translations.getString("MainFrame.RightComponent.tabs.Job"), //$NON-NLS-1$
                 null, jobPanel, null);
+        tabs.addTab(Translations.getString("MainFrame.RightComponent.tabs.Panels"), //$NON-NLS-1$
+                null, panelsPanel, null);
+        tabs.addTab(Translations.getString("MainFrame.RightComponent.tabs.Boards" //$NON-NLS-1$
+        ),null, boardsPanel, null);
         tabs.addTab(Translations.getString("MainFrame.RightComponent.tabs.Parts"), //$NON-NLS-1$
                 null, partsPanel, null);
         tabs.addTab(Translations.getString("MainFrame.RightComponent.tabs.Packages" //$NON-NLS-1$
@@ -686,6 +712,12 @@ public class MainFrame extends JFrame {
         tabs.addTab(Translations.getString("MainFrame.RightComponent.tabs.Log"),
                 null, logPanel, null); //$NON-NLS-1$
 
+        tabs.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                updateMenuState(tabs.getSelectedComponent());
+            }});
+        
         panelStatusAndDros = new JPanel();
         panelStatusAndDros.setBorder(null);
         contentPane.add(panelStatusAndDros, BorderLayout.SOUTH);
@@ -733,9 +765,11 @@ public class MainFrame extends JFrame {
                 TitledBorder.TOP, null, null)); //$NON-NLS-1$
         panelCameraAndInstructions.add(cameraPanel, BorderLayout.CENTER);
 
-        registerBoardImporters();
+        splitPaneMachineAndTabs.setResizeWeight(0.1);
 
-        addComponentListener(componentListener);
+        addImporterMenuOptions();
+
+        addComponentListener(mainFrameListener);
         
         boolean configurationLoaded = false;
         while (!configurationLoaded) {
@@ -780,7 +814,7 @@ public class MainFrame extends JFrame {
      * long-term to separate JFrame from JPanels
      */
     public void splitWindows() {
-        if (prefs.getBoolean(PREF_WINDOW_STYLE_MULTIPLE, PREF_WINDOW_STYLE_MULTIPLE_DEF)) {
+        if (windowStyleMultiple) {
             // pin panelCameraAndInstructions to a separate JFrame
             frameCamera = new JDialog(this, "OpenPnp - Camera", false); //$NON-NLS-1$
             // as of today no smart way found to get an adjusted size
@@ -851,44 +885,84 @@ public class MainFrame extends JFrame {
         return droLbl;
     }
 
-    private void registerBoardImporters() {
-    	registerBoardImporter(LabcenterProteusImporter.class);
-        registerBoardImporter(EagleBoardImporter.class);
-        registerBoardImporter(EagleMountsmdUlpImporter.class);
-        registerBoardImporter(KicadPosImporter.class);
-        registerBoardImporter(DipTraceImporter.class);
-        registerBoardImporter(NamedCSVImporter.class);
+    private void addImporterMenuOptions() {
+        for (BoardImporter bi : boardsPanel.getBoardPlacementsPanel().getBoardImporters()) {
+            final BoardImporter boardImporter = bi;
+            JMenuItem menuItem = new JMenuItem(new AbstractAction() {
+                {
+                    putValue(NAME, boardImporter.getImporterName());
+                    putValue(SHORT_DESCRIPTION, boardImporter.getImporterDescription());
+                    putValue(MNEMONIC_KEY, KeyEvent.VK_I);
+                }
+
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    boardsPanel.getBoardPlacementsPanel().importBoard(boardImporter.getClass());
+                }
+            });
+            mnImport.add(menuItem);
+        }
     }
+
 
     /**
-     * Register a BoardImporter with the system, causing it to gain a menu location in the
-     * File->Import menu.
-     * 
-     * @param boardImporterClass
+     * Enables/disables the Import Board, Add Board/Panel, and Remove Board(s)/Panel(s) menu items
+     * appropriately depending on which tab is selected and what is selected within the tab
+     * @param selectedTab - the selected tab
      */
-    public void registerBoardImporter(final Class<? extends BoardImporter> boardImporterClass) {
-        final BoardImporter boardImporter;
-        try {
-            boardImporter = boardImporterClass.newInstance();
+    public void updateMenuState(Component selectedTab) {
+        if (selectedTab != tabs.getSelectedComponent()) {
+            return;
         }
-        catch (Exception e) {
-            throw new Error(e);
+        if (selectedTab == jobPanel) {
+            if (jobPanel.getSelections().size() == 1 && jobPanel.getSelection() instanceof BoardLocation &&
+                    jobPanel.getJob().instanceCount(jobPanel.getSelection().getPlacementsHolder()) == 1 &&
+                    jobPanel.getJob().getRootPanelLocation().getChildren().containsAll(jobPanel.getSelections())) {
+                mnImport.setEnabled(true);
+            }
+            else {
+                mnImport.setEnabled(false);
+            }
+            mnEditAddBoard.setEnabled(true);
+            if (jobPanel.getSelections().size() >= 1) {
+                mnEditRemoveBoard.setEnabled(jobPanel.getJob().getRootPanelLocation().getChildren().
+                        containsAll(jobPanel.getSelections()));
+            }
+            else {
+                mnEditRemoveBoard.getAction().setEnabled(false);
+            }
+            if (jobPanel.getSelections().size() == 1 && jobPanel.getJob().getRootPanelLocation().getChildren().containsAll(jobPanel.getSelections()) ) {
+                mnCaptureToolLocation.setEnabled(true);
+            }
+            else {
+                mnCaptureToolLocation.setEnabled(false);
+            }
         }
-        JMenuItem menuItem = new JMenuItem(new AbstractAction() {
-            {
-                putValue(NAME, boardImporter.getImporterName());
-                putValue(SHORT_DESCRIPTION, boardImporter.getImporterDescription());
-                putValue(MNEMONIC_KEY, KeyEvent.VK_I);
+        else if (selectedTab == panelsPanel) {
+            mnImport.setEnabled(false);
+            mnEditAddBoard.setEnabled(false);
+            mnEditRemoveBoard.setEnabled(false);
+            mnCaptureToolLocation.setEnabled(false);
+        }
+        else if (selectedTab == boardsPanel) {
+            if (boardsPanel.getSelections().size() == 1) {
+                mnImport.setEnabled(true);
             }
-
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                jobPanel.importBoard(boardImporterClass);
+            else {
+                mnImport.setEnabled(false);
             }
-        });
-        mnImport.add(menuItem);
+            mnEditAddBoard.setEnabled(false);
+            mnEditRemoveBoard.setEnabled(false);
+            mnCaptureToolLocation.setEnabled(false);
+        }
+        else {
+            mnImport.setEnabled(false);
+            mnEditAddBoard.setEnabled(false);
+            mnEditRemoveBoard.setEnabled(false);
+            mnCaptureToolLocation.setEnabled(false);
+        }
     }
-
+    
     public void showInstructions(String title, String instructions, boolean showCancelButton,
             boolean showProceedButton, String proceedButtonText,
             ActionListener cancelActionListener, ActionListener proceedActionListener) {
@@ -1048,7 +1122,7 @@ public class MainFrame extends JFrame {
         tabs.setSelectedIndex(index);
     }
 
-    private ComponentListener componentListener = new ComponentAdapter() {
+    private ComponentListener mainFrameListener = new ComponentAdapter() {
         @Override
         public void componentMoved(ComponentEvent e) {
             prefs.putInt(PREF_WINDOW_X, getLocation().x);
@@ -1059,6 +1133,19 @@ public class MainFrame extends JFrame {
         public void componentResized(ComponentEvent e) {
             prefs.putInt(PREF_WINDOW_WIDTH, getSize().width);
             prefs.putInt(PREF_WINDOW_HEIGHT, getSize().height);
+            if (!windowStyleMultiple) {
+                /* when resizing then divider is limited apparently by panel constraints
+                   but they are somehow magically changed constraining e.g. jog panel
+                   is not reflected by outer panel as expected.
+                */
+                Dimension size = splitPaneMachineAndTabs.getSize();
+                Dimension dim = splitPaneMachineAndTabs.getLeftComponent().getMinimumSize();
+                dim.width = (int) Math.min(Math.round(size.width * 0.1), 300);
+                splitPaneMachineAndTabs.getLeftComponent().setMinimumSize(dim);
+                dim = splitPaneMachineAndTabs.getRightComponent().getMinimumSize();
+                dim.width = (int) Math.min(Math.round(size.width * 0.1), 200);
+                splitPaneMachineAndTabs.getRightComponent().setMinimumSize(dim);
+            }
         }
     };
 
@@ -1206,72 +1293,28 @@ public class MainFrame extends JFrame {
     private Action quickStartLinkAction = new AbstractAction(Translations.getString("Menu.Help.QuickStart")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            String uri = "https://github.com/openpnp/openpnp/wiki/Quick-Start"; //$NON-NLS-1$
-            try {
-                if (Desktop.isDesktopSupported()) {
-                    Desktop.getDesktop().browse(new URI(uri));
-                }
-                else {
-                    throw new Exception("Not supported."); //$NON-NLS-1$
-                }
-            }
-            catch (Exception e) {
-                MessageBoxes.errorBox(MainFrame.this, "Unable to launch default browser.", "Unable to launch default browser. Please visit " + uri); //$NON-NLS-1$ //$NON-NLS-2$
-            }
+            UiUtils.browseUri("https://github.com/openpnp/openpnp/wiki/Quick-Start"); //$NON-NLS-1$
         }
     };
     
     private Action setupAndCalibrationLinkAction = new AbstractAction(Translations.getString("Menu.Help.SetupAndCalibration")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            String uri = "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration"; //$NON-NLS-1$
-            try {
-                if (Desktop.isDesktopSupported()) {
-                    Desktop.getDesktop().browse(new URI(uri));
-                }
-                else {
-                    throw new Exception("Not supported."); //$NON-NLS-1$
-                }
-            }
-            catch (Exception e) {
-                MessageBoxes.errorBox(MainFrame.this, "Unable to launch default browser.", "Unable to launch default browser. Please visit " + uri); //$NON-NLS-1$ //$NON-NLS-2$
-            }
+            UiUtils.browseUri("https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration"); //$NON-NLS-1$
         }
     };
     
     private Action userManualLinkAction = new AbstractAction(Translations.getString("Menu.Help.UserManual")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            String uri = "https://github.com/openpnp/openpnp/wiki/User-Manual"; //$NON-NLS-1$
-            try {
-                if (Desktop.isDesktopSupported()) {
-                    Desktop.getDesktop().browse(new URI(uri));
-                }
-                else {
-                    throw new Exception("Not supported."); //$NON-NLS-1$
-                }
-            }
-            catch (Exception e) {
-                MessageBoxes.errorBox(MainFrame.this, "Unable to launch default browser.", "Unable to launch default browser. Please visit " + uri); //$NON-NLS-1$ //$NON-NLS-2$
-            }
+            UiUtils.browseUri("https://github.com/openpnp/openpnp/wiki/User-Manual"); //$NON-NLS-1$
         }
     };
     
     private Action changeLogAction = new AbstractAction(Translations.getString("Menu.Help.ChangeLog")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            String uri = "https://github.com/openpnp/openpnp/blob/develop/CHANGES.md"; //$NON-NLS-1$
-            try {
-                if (Desktop.isDesktopSupported()) {
-                    Desktop.getDesktop().browse(new URI(uri));
-                }
-                else {
-                    throw new Exception("Not supported."); //$NON-NLS-1$
-                }
-            }
-            catch (Exception e) {
-                MessageBoxes.errorBox(MainFrame.this, "Unable to launch default browser.", "Unable to launch default browser. Please visit " + uri); //$NON-NLS-1$ //$NON-NLS-2$
-            }
+            UiUtils.browseUri(Main.getSourceUri()+"CHANGES.md"); //$NON-NLS-1$
         }
     };
     

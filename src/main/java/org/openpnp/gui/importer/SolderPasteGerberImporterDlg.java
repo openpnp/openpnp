@@ -23,10 +23,11 @@ import javax.swing.JTextField;
 import javax.swing.KeyStroke;
 import javax.swing.border.TitledBorder;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.importer.rs274x.Rs274xParser;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.model.Board;
-import org.openpnp.model.Board.Side;
+import org.openpnp.model.Abstract2DLocatable.Side;
 import org.openpnp.model.BoardPad;
 
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -50,37 +51,37 @@ class SolderPasteGerberImporterDlg extends JDialog {
         getContentPane().setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
 
         JPanel panel = new JPanel();
-        panel.setBorder(new TitledBorder(null, "Files", TitledBorder.LEADING, TitledBorder.TOP,
+        panel.setBorder(new TitledBorder(null, Translations.getString("SolderPasteGerberImporterDlg.FilesPanel.Border.title"), TitledBorder.LEADING, TitledBorder.TOP, //$NON-NLS-1$
                 null, null));
         getContentPane().add(panel);
         panel.setLayout(new FormLayout(
                 new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"),
+                        FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"), //$NON-NLS-1$
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
                 new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
 
-        JLabel lblTopFilemnt = new JLabel("Top Paste Gerber");
-        panel.add(lblTopFilemnt, "2, 2, right, default");
+        JLabel lblTopFilemnt = new JLabel(Translations.getString("SolderPasteGerberImporterDlg.FilesPanel.topFilemntLabel.text")); //$NON-NLS-1$
+        panel.add(lblTopFilemnt, "2, 2, right, default"); //$NON-NLS-1$
 
         textFieldTopFile = new JTextField();
-        panel.add(textFieldTopFile, "4, 2, fill, default");
+        panel.add(textFieldTopFile, "4, 2, fill, default"); //$NON-NLS-1$
         textFieldTopFile.setColumns(10);
 
-        JButton btnBrowse = new JButton("Browse");
+        JButton btnBrowse = new JButton(Translations.getString("SolderPasteGerberImporterDlg.FilesPanel.browseButton.text")); //$NON-NLS-1$
         btnBrowse.setAction(browseTopFileAction);
-        panel.add(btnBrowse, "6, 2");
+        panel.add(btnBrowse, "6, 2"); //$NON-NLS-1$
 
-        JLabel lblBottomFilemnb = new JLabel("Bottom Paste Gerber");
-        panel.add(lblBottomFilemnb, "2, 4, right, default");
+        JLabel lblBottomFilemnb = new JLabel(Translations.getString("SolderPasteGerberImporterDlg.FilesPanel.bottomFilemnbLabel.text")); //$NON-NLS-1$
+        panel.add(lblBottomFilemnb, "2, 4, right, default"); //$NON-NLS-1$
 
         textFieldBottomFile = new JTextField();
-        panel.add(textFieldBottomFile, "4, 4, fill, default");
+        panel.add(textFieldBottomFile, "4, 4, fill, default"); //$NON-NLS-1$
         textFieldBottomFile.setColumns(10);
 
-        JButton btnBrowse_1 = new JButton("Browse");
+        JButton btnBrowse_1 = new JButton(Translations.getString("SolderPasteGerberImporterDlg.FilesPanel.browseButton.text")); //$NON-NLS-1$
         btnBrowse_1.setAction(browseBottomFileAction);
-        panel.add(btnBrowse_1, "6, 4");
+        panel.add(btnBrowse_1, "6, 4"); //$NON-NLS-1$
 
         JSeparator separator = new JSeparator();
         getContentPane().add(separator);
@@ -90,11 +91,11 @@ class SolderPasteGerberImporterDlg extends JDialog {
         flowLayout.setAlignment(FlowLayout.RIGHT);
         getContentPane().add(panel_2);
 
-        JButton btnCancel = new JButton("Cancel");
+        JButton btnCancel = new JButton(Translations.getString("SolderPasteGerberImporterDlg.ButtonsPanel.cancelButton.text")); //$NON-NLS-1$
         btnCancel.setAction(cancelAction);
         panel_2.add(btnCancel);
 
-        JButton btnImport = new JButton("Import");
+        JButton btnImport = new JButton(Translations.getString("SolderPasteGerberImporterDlg.ButtonsPanel.importButton.text")); //$NON-NLS-1$
         btnImport.setAction(importAction);
         panel_2.add(btnImport);
 
@@ -102,16 +103,16 @@ class SolderPasteGerberImporterDlg extends JDialog {
         setLocationRelativeTo(parent);
 
         JRootPane rootPane = getRootPane();
-        KeyStroke stroke = KeyStroke.getKeyStroke("ESCAPE");
+        KeyStroke stroke = KeyStroke.getKeyStroke("ESCAPE"); //$NON-NLS-1$
         InputMap inputMap = rootPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
-        inputMap.put(stroke, "ESCAPE");
-        rootPane.getActionMap().put("ESCAPE", cancelAction);
+        inputMap.put(stroke, "ESCAPE"); //$NON-NLS-1$
+        rootPane.getActionMap().put("ESCAPE", cancelAction); //$NON-NLS-1$
     }
 
     private class SwingAction extends AbstractAction {
         public SwingAction() {
-            putValue(NAME, "Browse");
-            putValue(SHORT_DESCRIPTION, "Browse");
+            putValue(NAME, Translations.getString("SolderPasteGerberImporterDlg.BrowseAction.Name")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("SolderPasteGerberImporterDlg.BrowseAction.ShortDescription")); //$NON-NLS-1$
         }
 
         public void actionPerformed(ActionEvent e) {
@@ -133,8 +134,8 @@ class SolderPasteGerberImporterDlg extends JDialog {
 
     private class SwingAction_1 extends AbstractAction {
         public SwingAction_1() {
-            putValue(NAME, "Browse");
-            putValue(SHORT_DESCRIPTION, "Browse");
+            putValue(NAME, Translations.getString("SolderPasteGerberImporterDlg.BrowseAction2.Name")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("SolderPasteGerberImporterDlg.BrowseAction2.ShortDescription")); //$NON-NLS-1$
         }
 
         public void actionPerformed(ActionEvent e) {
@@ -156,8 +157,8 @@ class SolderPasteGerberImporterDlg extends JDialog {
 
     private class SwingAction_2 extends AbstractAction {
         public SwingAction_2() {
-            putValue(NAME, "Import");
-            putValue(SHORT_DESCRIPTION, "Import");
+            putValue(NAME, Translations.getString("SolderPasteGerberImporterDlg.ImportAction.Name")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("SolderPasteGerberImporterDlg.ImportAction.ShortDescription")); //$NON-NLS-1$
         }
 
         public void actionPerformed(ActionEvent e) {
@@ -187,7 +188,7 @@ class SolderPasteGerberImporterDlg extends JDialog {
                 }
             }
             catch (Exception e1) {
-                MessageBoxes.errorBox(SolderPasteGerberImporterDlg.this, "Import Error", e1);
+                MessageBoxes.errorBox(SolderPasteGerberImporterDlg.this, Translations.getString("SolderPasteGerberImporterDlg.ImportErrorMessage"), e1); //$NON-NLS-1$
                 return;
             }
             for (BoardPad pad : pads) {
@@ -200,8 +201,8 @@ class SolderPasteGerberImporterDlg extends JDialog {
 
     private class SwingAction_3 extends AbstractAction {
         public SwingAction_3() {
-            putValue(NAME, "Cancel");
-            putValue(SHORT_DESCRIPTION, "Cancel");
+            putValue(NAME, Translations.getString("SolderPasteGerberImporterDlg.CancelAction.Name")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("SolderPasteGerberImporterDlg.CancelAction.ShortDescription")); //$NON-NLS-1$
         }
 
         public void actionPerformed(ActionEvent e) {

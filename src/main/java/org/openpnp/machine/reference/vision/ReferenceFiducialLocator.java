@@ -24,10 +24,8 @@ import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.vision.wizards.FiducialVisionSettingsConfigurationWizard;
 import org.openpnp.machine.reference.vision.wizards.ReferenceFiducialLocatorConfigurationWizard;
+import org.openpnp.model.Abstract2DLocatable.Side;
 import org.openpnp.model.AbstractVisionSettings;
-import org.openpnp.model.Board;
-import org.openpnp.model.Board.Side;
-import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.FiducialVisionSettings;
 import org.openpnp.model.Footprint;
@@ -40,6 +38,8 @@ import org.openpnp.model.PartSettingsHolder;
 import org.openpnp.model.PartSettingsRoot;
 import org.openpnp.model.Placement;
 import org.openpnp.model.Placement.Type;
+import org.openpnp.model.PlacementsHolder;
+import org.openpnp.model.PlacementsHolderLocation;
 import org.openpnp.model.Point;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.FiducialLocator;
@@ -76,9 +76,10 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
 
     @Attribute(required = false)
     protected boolean enabledAveraging = false;
-    
+
+    @Deprecated
     @Attribute(required = false)
-    protected int repeatFiducialRecognition = 3;
+    protected Integer repeatFiducialRecognition = null;
 
     @Element(required = false)
     protected Length maxDistance = new Length(4, LengthUnit.Millimeters);
@@ -110,116 +111,157 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
         });
     }
 
-    public Location locateBoard(BoardLocation boardLocation) throws Exception {
-        return locateBoard(boardLocation, false);
+    /**
+     * Process a list PlacementsHolderLocations in an optimized way: measure all fiducial locations first then then
+     * calculate all their affine transformations. 
+     * The disadvantage is that fiducials whose location depends on other fiducials
+     * and their affine transformation might be processed with a larger offset compared to when they would be processed with
+     * the others transformation already fixed.
+     * The advantage is that that all all fiducial locations will be visited taking an optimized route minimizing the time
+     * of travel.
+     *
+     * @param allPlacementsHolderLocation if of all PlacementsHolderLocation to process
+     * @param endLocation to consider then optimizing the route. Can be null. 
+     * @throws Exception
+     * @return compensated board location of last PlacementsHolderLocation processed (in list)
+     */
+    public Location locateAllPlacementsHolder(List<PlacementsHolderLocation<?>> allPlacementsHolderLocation, Location endLocation) throws Exception {
+
+        // collect all placementsHolderLocations with their fiducials into new classes grouping
+        // required data to process the following steps in an optimized order
+        List<PlacementsHolderLocationWithFiducials> allPlacementsHolderLocationWithFiducials = new ArrayList<PlacementsHolderLocationWithFiducials>();
+        for (PlacementsHolderLocation<?> placementsHolderLocation : allPlacementsHolderLocation) {
+            allPlacementsHolderLocationWithFiducials.add(new PlacementsHolderLocationWithFiducials(placementsHolderLocation));
+
+            // Clear the current transform so it doesn't potentially send us to the wrong spot
+            // to find the fiducials.
+            placementsHolderLocation.setLocalToParentTransform(null);
+        }
+
+        // measure all fiducial of all placementsHolderLocations at once
+        getAllFiducialLocations(allPlacementsHolderLocationWithFiducials, endLocation);
+
+        // calculate the transformation for all placementsHolderLocation in their original order
+        Location newBoardLocation = null;
+        for (PlacementsHolderLocationWithFiducials placementsHolderLocationWithFiducials : allPlacementsHolderLocationWithFiducials) {
+            newBoardLocation = calculateTransformation(placementsHolderLocationWithFiducials);
+        }
+        
+        // return the compensated board location of the last placementsHolderLocation processed
+        return newBoardLocation;
     }
-    
-    public Location locateBoard(BoardLocation boardLocation, boolean checkPanel) throws Exception {
-        List<Placement> fiducials;
 
-        Side boardSide = boardLocation.getSide();  // save for later
-        Location savedBoardLocation = boardLocation.getLocation();
-        AffineTransform savedPlacementTransform = boardLocation.getPlacementTransform();
-       
-        if (checkPanel) {
-            Panel panel = MainFrame.get().getJobTab().getJob().getPanels()
-                    .get(boardLocation.getPanelId());
-            fiducials = panel.getFiducials();
-            // If we are looking for panel fiducials, we need to treat the board as top side
-            boardLocation.setSide(Side.Top);
+    /**
+     * Measure all fiduial locations of all placementsHolderLocations at once.
+     * 
+     * @param allPlacementsHolderLocationWithFiducials
+     * @param endLocation
+     * @throws Exception
+     */
+    private void getAllFiducialLocations(List<PlacementsHolderLocationWithFiducials> allPlacementsHolderLocationWithFiducials, Location endLocation) throws Exception {
+        List<Fiducial> fiducials = new ArrayList<Fiducial>();
+        for (PlacementsHolderLocationWithFiducials placementsHolderLocationWithFiducials : allPlacementsHolderLocationWithFiducials) {
+            fiducials.addAll(placementsHolderLocationWithFiducials.fiducials);
         }
-        else {
-            fiducials = getFiducials(boardLocation);
-        }
-
-        if (fiducials.size() < 2) {
-            throw new Exception(String.format(
-                    "The board side contains only %d placements marked as fiducials, but at least 2 are required.",
-                    fiducials.size()));
-        }
-
-        // Clear the current transform so it doesn't potentially send us to the wrong spot
-        // to find the fiducials.
-        boardLocation.setPlacementTransform(null);
-
+        
         //Define where the fiducial trip will begin
         Location currentCameraLocation = new Location(LengthUnit.Millimeters);
         try {
             currentCameraLocation = MainFrame.get().getMachineControls().getSelectedTool().getHead().getDefaultCamera().getLocation();
         } catch (Exception e) {
-            currentCameraLocation = boardLocation.getLocation();
+            currentCameraLocation = null;
         }
         
         // Use a traveling salesman algorithm to optimize the path to visit the fiducials
-        TravellingSalesman<Placement> tsm = new TravellingSalesman<>(
+        TravellingSalesman<Fiducial> tsm = new TravellingSalesman<>(
                 fiducials, 
-                new TravellingSalesman.Locator<Placement>() { 
+                new TravellingSalesman.Locator<Fiducial>() { 
                     @Override
-                    public Location getLocation(Placement locatable) {
-                        return Utils2D.calculateBoardPlacementLocation(boardLocation, locatable.getLocation());
+                    public Location getLocation(Fiducial locatable) {
+                        return Utils2D.calculateBoardPlacementLocation(locatable.placementsHolderLocation, locatable.placement.getLocation());
                     }
                 }, 
                 // start from current camera location
                 currentCameraLocation,
                 // and end at the board origin
-                boardLocation.getLocation());
+                endLocation);
 
         // Solve it using the default heuristics.
         tsm.solve();
 
-        // Visit each fiducial and store its expected and measured location
+        // loop over all fiducial and visit/measure them
+        for (Fiducial fiducial : tsm.getTravel()) {
+            Placement placement = fiducial.placement;
+            PlacementsHolderLocation<?> placementsHolderLocation = fiducial.placementsHolderLocation;
+            fiducial.measuredLocation = getFiducialLocation(placementsHolderLocation, placement);
+            if (fiducial.measuredLocation == null) {
+                throw new Exception("Unable to locate " + placement.getId() + " on " + placementsHolderLocation.getUniqueId());
+            }
+            
+            Logger.debug("Found {} on {} at {}", placement.getId(), placementsHolderLocation.getUniqueId(), fiducial.measuredLocation);
+        }
+    }
+    
+    /**
+     * Calculate the affine transformation for a single placementsHolderLocation with fiducial locations already measured.
+     * 
+     * @param placementsHolderLocationWithFiducials
+     * @throws Exception
+     * @return compensated board location
+     */
+    private Location calculateTransformation(PlacementsHolderLocationWithFiducials placementsHolderLocationWithFiducials) throws Exception {
+        PlacementsHolderLocation<?> placementsHolderLocation = placementsHolderLocationWithFiducials.placementsHolderLocation;
+        Side boardSide = placementsHolderLocation.getGlobalSide();  // save for later
+        Location savedBoardLocation = placementsHolderLocation.getGlobalLocation();
+        AffineTransform savedPlacementTransform = placementsHolderLocation.getLocalToParentTransform();
+
+        // collect all measured locations and recalculate all expected locations
         List<Location> expectedLocations = new ArrayList<>();
         List<Location> measuredLocations = new ArrayList<>();
-        for (Placement fiducial : tsm.getTravel()) {
-            Location measuredLocation = getFiducialLocation(boardLocation, fiducial);
-            if (measuredLocation == null) {
-                throw new Exception("Unable to locate " + fiducial.getId());
-            }
-            expectedLocations.add(fiducial.getLocation().invert(boardSide==Side.Bottom, false, false, false));
-            measuredLocations.add(measuredLocation);
-            
-            Logger.debug("Found {} at {}", fiducial.getId(), measuredLocation);
+        for (Fiducial fiducial : placementsHolderLocationWithFiducials.fiducials) {
+            expectedLocations.add(fiducial.placement.getLocation().invert(boardSide==Side.Bottom, false, false, false));
+            measuredLocations.add(fiducial.measuredLocation);
         }
         
         // Calculate the transform.
         AffineTransform tx = Utils2D.deriveAffineTransform(expectedLocations, measuredLocations);
         
+        if (boardSide == Side.Bottom) {
+            tx.scale(-1, 1);
+        }
+        
         // Set the transform.
-        boardLocation.setPlacementTransform(tx);
+        placementsHolderLocation.setLocalToGlobalTransform(tx);
         
         // Return the compensated board location
         Location origin = new Location(LengthUnit.Millimeters);
-        if (boardLocation.getSide() == Side.Bottom) {
-            origin = origin.add(boardLocation.getBoard().getDimensions().derive(null, 0., 0., 0.));
+        if (boardSide == Side.Bottom) {
+            origin = origin.add(placementsHolderLocation.getPlacementsHolder().getDimensions().derive(null, 0., 0., 0.));
         }
-        Location newBoardLocation = Utils2D.calculateBoardPlacementLocation(boardLocation, origin);
-        newBoardLocation = newBoardLocation.convertToUnits(boardLocation.getLocation().getUnits());
-        newBoardLocation = newBoardLocation.derive(null, null, boardLocation.getLocation().getZ(), null);
+        Location newBoardLocation = Utils2D.calculateBoardPlacementLocation(placementsHolderLocation, origin);
+        newBoardLocation = newBoardLocation.convertToUnits(placementsHolderLocation.getLocation().getUnits());
+        newBoardLocation = newBoardLocation.derive(null, null, placementsHolderLocation.getLocation().getZ(), null);
 
-        if (checkPanel) {
-            boardLocation.setSide(boardSide);	// restore side
-        }
-        
         Utils2D.AffineInfo ai = Utils2D.affineInfo(tx);
-        Logger.info("Fiducial results: " + ai);
+        Logger.info(placementsHolderLocation.getUniqueId() + " fiducial results: " + ai);
         double[] matrix = new double[6];
         tx.getMatrix(matrix);
-        Logger.info("Placement to machine transform X:"
+        Logger.info(placementsHolderLocation.getUniqueId() + " placement to machine transform X:"
                 + " X Factor: "+String.format("%12.6f", matrix[0])
                 + " Y Factor: "+String.format("%12.6f", matrix[1])
                 + " X Offset: "+String.format("%12.6f", matrix[4]));
-        Logger.info("Placement to machine transform Y:"
+        Logger.info(placementsHolderLocation.getUniqueId() + " placement to machine transform Y:"
                 + " X Factor: "+String.format("%12.6f", matrix[2])
                 + " Y Factor: "+String.format("%12.6f", matrix[3])
                 + " Y Offset: "+String.format("%12.6f", matrix[5]));
         try {
             AffineTransform invTx = tx.createInverse();
             invTx.getMatrix(matrix);
-            Logger.info("Machine to placement transform X:"
+            Logger.info(placementsHolderLocation.getUniqueId() + " machine to placement transform X:"
                     + " X Factor: "+String.format("%12.6f", matrix[0])
                     + " Y Factor: "+String.format("%12.6f", matrix[1])
                     + " X Offset: "+String.format("%12.6f", matrix[4]));
-            Logger.info("Machine to placement transform Y:"
+            Logger.info(placementsHolderLocation.getUniqueId() + " machine to placement transform Y:"
                     + " X Factor: "+String.format("%12.6f", matrix[2])
                     + " Y Factor: "+String.format("%12.6f", matrix[3])
                     + " Y Offset: "+String.format("%12.6f", matrix[5]));
@@ -229,13 +271,17 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
         }
 
         double boardOffset = newBoardLocation.getLinearLengthTo(savedBoardLocation).convertToUnits(LengthUnit.Millimeters).getValue();
-        Logger.info("Board origin offset distance: " + boardOffset + "mm");
+        Logger.info(placementsHolderLocation.getUniqueId() + " origin offset distance: " + boardOffset + "mm");
         
         //Check for out-of-nominal conditions
         String errString = "";
-        if (Math.abs(ai.xScale-1) > tolerances.scalingTolerance) {
+        if (ai.xScale > 0 && Math.abs(ai.xScale-1) > tolerances.scalingTolerance) {
             errString += "x scaling = " + String.format("%.5f", ai.xScale) + " which is outside the expected range of [" +
                     String.format("%.5f", 1-tolerances.scalingTolerance) + ", " + String.format("%.5f", 1+tolerances.scalingTolerance) + "], ";
+        }
+        else if (ai.xScale < 0 && Math.abs(ai.xScale+1) > tolerances.scalingTolerance) {
+            errString += "x scaling = " + String.format("%.5f", ai.xScale) + " which is outside the expected range of [" +
+                    String.format("-%.5f", 1+tolerances.scalingTolerance) + ", " + String.format("-%.5f", 1-tolerances.scalingTolerance) + "], ";
         }
         if (Math.abs(ai.yScale-1) > tolerances.scalingTolerance) {
             errString += "the y scaling = " + String.format("%.5f", ai.yScale) + " which is outside the expected range of [" +
@@ -252,13 +298,56 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
         }
         if (errString.length() > 0) {
             errString = errString.substring(0, errString.length()-2); //strip off the last comma and space
-            boardLocation.setPlacementTransform(savedPlacementTransform);
-            throw new Exception("Fiducial locator results are invalid because: " + errString + ".  Potential remidies include " +
+            placementsHolderLocation.setLocalToParentTransform(savedPlacementTransform);
+            throw new Exception("Fiducial locator results are invalid for " + 
+                    placementsHolderLocation.getUniqueId() + " because: " + errString + ". Potential remidies include " +
                     "setting the initial board X, Y, Z, and Rotation in the Boards panel; using a different set of fiducials; " +
                     "or changing the allowable tolerances in the <tolerances> section of the fiducial-locator section in machine.xml.");
         }
 
         return newBoardLocation;
+    }
+    
+    /**
+     * PlacementsHolderLocatioinsWithFiducials groups PlacementsHolderLocation with their fiducials
+     * just referencing the input as required to separated fiducial measurements from affine transformation
+     * calculation.
+     */
+    private class PlacementsHolderLocationWithFiducials {
+        final PlacementsHolderLocation<?> placementsHolderLocation;
+        List<Fiducial> fiducials;
+        
+        public PlacementsHolderLocationWithFiducials(PlacementsHolderLocation<?> placementsHolderLocation) throws Exception {
+            this.placementsHolderLocation = placementsHolderLocation;
+
+            List<Placement> fiducials = getFiducials(placementsHolderLocation);
+            if (fiducials.size() < 2) {
+                throw new Exception(String.format(
+                        "The panel/board side contains only %d placements marked as fiducials, but at least 2 are required.",
+                        fiducials.size()));
+            }
+
+            this.fiducials = new ArrayList<Fiducial>();
+            for (Placement fiducial : fiducials) {
+                this.fiducials.add(new Fiducial(fiducial, placementsHolderLocation));
+            }
+
+        }
+    }
+    
+    /**
+     * Ficucial groups a fiducial placement with its measured location as required to measure the fiducial's location.
+     */
+    private class Fiducial {
+        final Placement placement;
+        final PlacementsHolderLocation<?> placementsHolderLocation;
+        Location measuredLocation;
+        
+        public Fiducial(Placement placement, PlacementsHolderLocation<?> placementsHolderLocation) {
+            this.placement = placement;
+            this.placementsHolderLocation = placementsHolderLocation;
+            this.measuredLocation = null;
+        }
     }
     
     /**
@@ -372,9 +461,9 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
      * @return
      * @throws Exception
      */
-    private Location getFiducialLocation(BoardLocation boardLocation, Placement fid)
+    private Location getFiducialLocation(PlacementsHolderLocation<?> boardLocation, Placement fid)
             throws Exception {
-        Logger.debug("Locating {}", fid.getId());
+        Logger.debug("Locating {} on {}", fid.getId(), boardLocation.getUniqueId());
 
         Part part = fid.getPart();
         if (part == null) {
@@ -388,7 +477,7 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
         return getFiducialLocation(location, part);
     }
 
-    public CvPipeline getFiducialPipeline(Camera camera, PartSettingsHolder partSettingsHolder) throws Exception {
+    public CvPipeline getFiducialPipeline(Camera camera, PartSettingsHolder partSettingsHolder, Location nominalLocation) throws Exception {
         FiducialVisionSettings visionSettings = getInheritedVisionSettings(partSettingsHolder);
         if (!visionSettings.isEnabled()) {
             throw new  Exception(String.format(
@@ -396,12 +485,13 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
                     partSettingsHolder.getClass().getSimpleName(), partSettingsHolder.getShortName(), visionSettings.getName()));
         }
         CvPipeline pipeline = visionSettings.getPipeline(); 
-        preparePipeline(pipeline, visionSettings.getPipelineParameterAssignments(), camera, partSettingsHolder);
+        preparePipeline(pipeline, visionSettings.getPipelineParameterAssignments(), camera, partSettingsHolder, nominalLocation);
         return pipeline;
     }
 
     public void preparePipeline(CvPipeline pipeline, Map<String, Object> pipelineParameterAssignments, Camera camera,
-            PartSettingsHolder partSettingsHolder) throws Exception {
+            PartSettingsHolder partSettingsHolder, Location nominalLocation) throws Exception {
+        pipeline.resetReusedPipeline();
         org.openpnp.model.Package pkg = null;
         Footprint footprint = null;
         if (partSettingsHolder instanceof Part) {
@@ -435,6 +525,7 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
         pipeline.setProperty("package", pkg);
         if (footprint != null) {
             pipeline.setProperty("footprint", footprint);
+            pipeline.setProperty("footprint.rotation", nominalLocation.getRotation());
             Rectangle2D bounds = footprint.getPadsShape().getBounds2D();
             Length diameter = new Length(Math.max(bounds.getWidth(), bounds.getHeight()), footprint.getUnits());
             pipeline.setProperty("fiducial.diameter", diameter);
@@ -446,70 +537,57 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
     public Location getFiducialLocation(Location nominalLocation, PartSettingsHolder partSettingsHolder) throws Exception {
         Location location = nominalLocation;
         Camera camera = getVisionCamera();
-
-        int repeatFiducialRecognition = 3;
-        if ( this.repeatFiducialRecognition > 3 ) {
-            repeatFiducialRecognition = this.repeatFiducialRecognition;
-        }
+        FiducialVisionSettings visionSettings = getInheritedVisionSettings(partSettingsHolder);
 
         Logger.debug("Looking for {} at {}", partSettingsHolder.getShortName(), location);
-        MovableUtils.moveToLocationAtSafeZ(camera, location);
+        boolean parallaxOperation = visionSettings.getParallaxDiameter().getValue() != 0;
+        Location parallaxDisplacement = new Location(visionSettings.getParallaxDiameter().getUnits(), visionSettings.getParallaxDiameter().getValue(), 0, 0, 0)
+                .multiply(0.5) // Diameter -> Radius
+                .rotateXy(visionSettings.getParallaxAngle());
+        if (camera.getLocation().getLinearLengthTo(location.add(parallaxDisplacement))
+                .compareTo(camera.getLocation().getLinearLengthTo(location.subtract(parallaxDisplacement))) > 0) {
+            // Go to the closer view-point first.
+            parallaxDisplacement = parallaxDisplacement.multiply(-1);
+        }
+        Location viewPointLocation = location.add(parallaxDisplacement);
+        MovableUtils.moveToLocationAtSafeZ(camera, viewPointLocation);
 
         List<Location> matchedLocations = new ArrayList<Location>();
 
-        try(CvPipeline pipeline = getFiducialPipeline(camera, partSettingsHolder)) {
+        try(CvPipeline pipeline = getFiducialPipeline(camera, partSettingsHolder, nominalLocation)) {
+            int repeatFiducialRecognition = visionSettings.getMaxVisionPasses();
             for (int i = 0; i < repeatFiducialRecognition; i++) {
-                // Perform vision operation
-                pipeline.process();
-
-                // Get the results
-                List<KeyPoint> keypoints = pipeline.getExpectedResult(VisionUtils.PIPELINE_RESULTS_NAME)
-                        .getExpectedListModel(KeyPoint.class, 
-                                new Exception(partSettingsHolder.getId()+" no matches found."));
-
-                // Convert to Locations
-                List<Location> locations = new ArrayList<Location>();
-                for (KeyPoint keypoint : keypoints) {
-                    locations.add(VisionUtils.getPixelLocation(camera, keypoint.pt.x, keypoint.pt.y));
+                Location newLocation = detectFiducialFromViewpoint(camera, location, pipeline,
+                        partSettingsHolder);
+                if (parallaxOperation) {
+                    Location viewPointLocation2 = location.subtract(parallaxDisplacement);
+                    camera.moveTo(viewPointLocation2);
+                    Location newLocation2 = detectFiducialFromViewpoint(camera, location, pipeline,
+                            partSettingsHolder);
+                    // Mid-point is the detected location, canceling out any errors.
+                    newLocation = newLocation.add(newLocation2).multiply(0.5);
+                    // Next iteration will go to the second point first.
+                    parallaxDisplacement = parallaxDisplacement.multiply(-1);
+                }
+                Length offset = location.getLinearLengthTo(newLocation);
+                location = newLocation;
+                if (offset.compareTo(visionSettings.getMaxLinearOffset()) < 0) {
+                    // We already reached sufficient accuracy.
+                    Logger.trace("{} less than max. linear offset {} < {}, locator satisfied.", partSettingsHolder.getId(), offset, visionSettings.getMaxLinearOffset());
+                    break;
                 }
 
-                // Sort by distance from center.
-                Collections.sort(locations, new Comparator<Location>() {
-                    @Override
-                    public int compare(Location o1, Location o2) {
-                        double d1 = o1.getLinearDistanceTo(camera.getLocation());
-                        double d2 = o2.getLinearDistanceTo(camera.getLocation());
-                        return Double.compare(d1, d2);
-                    }
-                });
+                // Move to the next location.
+                viewPointLocation = location.add(parallaxDisplacement);
+                camera.moveTo(viewPointLocation);
 
-                // And use the closest result
-                location = locations.get(0);
-
-                MainFrame frame = MainFrame.get(); 
-                if (frame != null) {
-                    CameraView cameraView = frame.getCameraViews().getCameraView(camera);
-                    if (cameraView != null) {    
-                        LengthConverter lengthConverter = new LengthConverter();
-                        cameraView.showFilteredImage(OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), 
-                                lengthConverter.convertForward(location.getLengthX())+", "
-                                        +lengthConverter.convertForward(location.getLengthY())+" "
-                                        +location.getUnits().getShortName(),
-                                1500);
-                    }
-                }
-
-                Logger.debug("{} located at {}", partSettingsHolder.getId(), location);
-                // Move to where we actually found the fid
-                camera.moveTo(location);
-    
                 if (i > 0) {
-                	//to average, keep a list of all matches except the first, since its probably most off
-                	matchedLocations.add(location);
+                    //to average, keep a list of all matches except the first, since its probably most off
+                    matchedLocations.add(location);
                 }
             }
         }
-        
+
         if (this.enabledAveraging && matchedLocations.size() >= 2) {
             // the arithmetic average is calculated if user wishes to do so and there were at least
             // 2 matches
@@ -526,21 +604,77 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
                     sumY / matchedLocations.size(), null, null);
 
             Logger.debug("{} averaged location is at {}", partSettingsHolder.getId(), location);
-
-            camera.moveTo(location);
         }
         if (location.convertToUnits(maxDistance.getUnits()).getLinearDistanceTo(nominalLocation) > maxDistance.getValue()) {
-            throw new Exception("Fiducial "+partSettingsHolder.getShortName()+" detected too far away.");
+            throw new Exception("Fiducial "+partSettingsHolder.getShortName()+ " detected too far away.");
         }
         return location;
     }
-    
-    private static IdentifiableList<Placement> getFiducials(BoardLocation boardLocation) {
-        Board board = boardLocation.getBoard();
+
+    private Location detectFiducialFromViewpoint(Camera camera, Location location,
+            CvPipeline pipeline, PartSettingsHolder partSettingsHolder) throws Exception {
+        // Perform vision operation
+        try {
+            pipeline.setProperty("fiducial.center", location);
+            pipeline.setProperty("MaskCircle.center", location);
+            pipeline.process();
+
+            // Get the results
+            List<KeyPoint> keypoints = pipeline.getExpectedResult(VisionUtils.PIPELINE_RESULTS_NAME)
+                    .getExpectedListModel(KeyPoint.class,
+                            new Exception(partSettingsHolder.getId()+" no matches found."));
+
+            // Convert to Locations
+            List<Location> locations = new ArrayList<Location>();
+            for (KeyPoint keypoint : keypoints) {
+                locations.add(VisionUtils.getPixelLocation(camera, keypoint.pt.x, keypoint.pt.y));
+            }
+
+            // Sort by distance from center.
+            Collections.sort(locations, new Comparator<Location>() {
+                @Override
+                public int compare(Location o1, Location o2) {
+                    double d1 = o1.getLinearDistanceTo(location);
+                    double d2 = o2.getLinearDistanceTo(location);
+                    return Double.compare(d1, d2);
+                }
+            });
+
+            // And use the closest result
+            Location newLocation = locations.get(0);
+
+            MainFrame frame = MainFrame.get();
+            if (frame != null) {
+                CameraView cameraView = frame.getCameraViews().getCameraView(camera);
+                if (cameraView != null) {
+                    LengthConverter lengthConverter = new LengthConverter();
+                    cameraView.showFilteredImage(OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()),
+                            lengthConverter.convertForward(newLocation.getLengthX())+", "
+                                    +lengthConverter.convertForward(newLocation.getLengthY())+" "
+                                    +newLocation.getUnits().getShortName(),
+                                    1500);
+                }
+            }
+
+            Logger.debug("{} located at {}", partSettingsHolder.getId(), newLocation);
+            return newLocation;
+        }
+        finally {
+            pipeline.setProperty("fiducial.center", null);
+            pipeline.setProperty("MaskCircle.center", null);
+        }
+    }
+
+    private static IdentifiableList<Placement> getFiducials(PlacementsHolderLocation<?> placementsHolderLocation) {
+        PlacementsHolder<?> placementsHolder = placementsHolderLocation.getPlacementsHolder();
+        IdentifiableList<Placement> placements = new IdentifiableList<>(placementsHolder.getPlacements());
+        if (placementsHolder instanceof Panel) {
+            placements.addAll(((Panel) placementsHolder).getPseudoPlacements());
+        }
         IdentifiableList<Placement> fiducials = new IdentifiableList<>();
-        for (Placement placement : board.getPlacements()) {
+        for (Placement placement : placements) {
             if (placement.getType() == Type.Fiducial
-                    && placement.getSide() == boardLocation.getSide()
+                    && placement.getSide() == placementsHolderLocation.getGlobalSide()
                     && placement.isEnabled()) {
                 fiducials.add(placement);
             }
@@ -559,14 +693,6 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
 
     public void setEnabledAveraging(boolean enabledAveraging) {
         this.enabledAveraging = enabledAveraging;
-    }
-
-    public int getRepeatFiducialRecognition() {
-    	return this.repeatFiducialRecognition;
-    }
-    
-    public void setRepeatFiducialRecognition(int repeatFiducialRecognition) {
-        this.repeatFiducialRecognition = repeatFiducialRecognition;
     }
 
     public Length getMaxDistance() {

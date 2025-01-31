@@ -7,7 +7,6 @@ import org.openpnp.model.Configuration;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.base.AbstractJobProcessor;
-import org.openpnp.spi.base.AbstractMachine;
 import org.openpnp.spi.base.AbstractSignaler;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.core.Persist;
@@ -17,7 +16,6 @@ import org.simpleframework.xml.core.Persist;
  */
 public class ActuatorSignaler extends AbstractSignaler {
 
-    protected Machine machine;
     protected Actuator actuator;
 
     @Attribute(required = false)
@@ -26,14 +24,11 @@ public class ActuatorSignaler extends AbstractSignaler {
     @Attribute(required = false)
     protected AbstractJobProcessor.State jobState;
 
-    @Attribute(required = false)
-    protected AbstractMachine.State machineState;
-
     public ActuatorSignaler() {
         Configuration.get().addListener(new ConfigurationListener.Adapter() {
             @Override
             public void configurationLoaded(Configuration configuration) throws Exception {
-                machine = configuration.getMachine();
+                Machine machine = configuration.getMachine();
                 actuator = machine.getActuator(actuatorId);
             }
         });
@@ -46,33 +41,24 @@ public class ActuatorSignaler extends AbstractSignaler {
         }
     }
 
-    @Override
-    public void signalMachineState(AbstractMachine.State state) {
-        if(actuator != null && machineState != null) {
+    // update given actuator to newState
+    // only execute an update if the state changes
+    private void updateActuatorState(boolean newState) {
+        if (actuator != null                                 // make sure an actuator is defined
+                && (   actuator.isActuated() == null         // some actuator don't provide isActuated()
+                    || actuator.isActuated() != newState)) { // if they do, check if the new state is different
             try {
-                if(state == machineState) {
-                    this.actuator.actuate(true);
-                } else {
-                    this.actuator.actuate(false);
-                }
+            	actuator.actuate(newState);                  // then set new state
             } catch (Exception e) {
                 e.printStackTrace();
             }
-        }
+    	}
     }
-
+    
     @Override
     public void signalJobProcessorState(AbstractJobProcessor.State state) {
         if(actuator != null && jobState != null) {
-            try {
-                if(state == jobState) {
-                    this.actuator.actuate(true);
-                } else {
-                    this.actuator.actuate(false);
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            updateActuatorState(state == jobState);
         }
     }
     
@@ -92,15 +78,6 @@ public class ActuatorSignaler extends AbstractSignaler {
     public void setJobState(AbstractJobProcessor.State jobState) {
         this.jobState = jobState;
         firePropertyChange("jobState", null, jobState);
-    }
-
-    public AbstractMachine.State getMachineState() {
-        return machineState;
-    }
-
-    public void setMachineState(AbstractMachine.State machineState) {
-        this.machineState = machineState;
-        firePropertyChange("machineState", null, machineState);
     }
 
     @Override

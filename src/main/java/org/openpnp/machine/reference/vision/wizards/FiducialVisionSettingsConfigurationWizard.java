@@ -17,8 +17,12 @@ import javax.swing.border.TitledBorder;
 
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.openpnp.Translations;
+import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.components.PipelineControls;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
+import org.openpnp.gui.support.DoubleConverter;
+import org.openpnp.gui.support.IntegerConverter;
+import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.machine.reference.vision.ReferenceFiducialLocator;
 import org.openpnp.model.AbstractVisionSettings;
 import org.openpnp.model.Configuration;
@@ -54,6 +58,14 @@ public class FiducialVisionSettingsConfigurationWizard extends AbstractConfigura
     private JButton btnSpecializeSetting;
     private JButton btnGeneralizeSettings;
     private PipelineControls pipelinePanel;
+    private JLabel lblParallaxDiameter;
+    private JTextField parallaxDiameter;
+    private JLabel lblParallaxAngle;
+    private JTextField parallaxAngle;
+    private JLabel lblMaxVisionPasses;
+    private JTextField maxVisionPasses;
+    private JLabel lblMaxLinearOffset;
+    private JTextField maxLinearOffset;
 
     public FiducialVisionSettingsConfigurationWizard(FiducialVisionSettings visionSettings, 
             PartSettingsHolder settingsHolder) {
@@ -107,14 +119,9 @@ public class FiducialVisionSettingsConfigurationWizard extends AbstractConfigura
             btnSpecializeSetting.setText(Translations.getString(
                     "FiducialVisionSettingsConfigurationWizard.GeneralPanel.SpecializeSettingsButton.OptimizeText" //$NON-NLS-1$
             ));
-            btnSpecializeSetting.setToolTipText("<html>Optimize the Fiducial Vision Settings and their assignments:<br/>"
-                    + "<ul>"
-                    + "<li>Consolidate duplicate settings.</li>"
-                    + "<li>Remove unused settings.</li>"
-                    + "<li>Configure the most common Part settings as inherited Package settings.</li>"
-                    + "<li>Remove assignments where the same settings would be inherited anyway.</li>"
-                    + "</ul>"
-                    + "</html>");
+            btnSpecializeSetting.setToolTipText(Translations.getString(
+                    "FiducialVisionSettingsConfigurationWizard.GeneralPanel.SpecializeSettingsButton.OptimizeText.toolTipText" //$NON-NLS-1$
+            ));
         }
         else {
             btnSpecializeSetting.setEnabled(false);
@@ -190,9 +197,7 @@ public class FiducialVisionSettingsConfigurationWizard extends AbstractConfigura
                     ReferenceFiducialLocator fiducialVision = ReferenceFiducialLocator.getDefault();
                     if (fiducialVision.getFiducialVisionSettings() == visionSettings) {
                         // Already the default. Set stock.
-                        FiducialVisionSettings stockVisionSettings = (FiducialVisionSettings) Configuration.get()
-                                .getVisionSettings(AbstractVisionSettings.STOCK_FIDUCIAL_ID);
-                        visionSettings.setValues(stockVisionSettings);
+                        visionSettings.resetToDefault();
                     }
                     else {
                         visionSettings.setValues(fiducialVision.getFiducialVisionSettings());
@@ -248,10 +253,7 @@ public class FiducialVisionSettingsConfigurationWizard extends AbstractConfigura
 
         JPanel panelAlign = new JPanel();
         contentPanel.add(panelAlign);
-        panelAlign.setBorder(new TitledBorder(new LineBorder(new Color(184, 207, 229)),
-                Translations.getString(
-                "FiducialVisionSettingsConfigurationWizard.TestFiducialLocatorPanel.Border.title"), //$NON-NLS-1$
-                TitledBorder.LEADING, TitledBorder.TOP, null, new Color(51, 51, 51)));
+        panelAlign.setBorder(new TitledBorder(new LineBorder(new Color(184, 207, 229)), "Fiducial Locator", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(51, 51, 51)));
         panelAlign.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("right:max(70dlu;default)"),
@@ -262,18 +264,55 @@ public class FiducialVisionSettingsConfigurationWizard extends AbstractConfigura
                 FormSpecs.RELATED_GAP_COLSPEC,
                 new ColumnSpec(ColumnSpec.FILL, Sizes.bounded(Sizes.DEFAULT, Sizes.constant("50dlu", true), Sizes.constant("70dlu", true)), 0),
                 FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("default:grow"),},
-                new RowSpec[] {
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,}));
-
+                FormSpecs.DEFAULT_COLSPEC,},
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
+        
+        lblMaxVisionPasses = new JLabel(Translations.getString("FiducialVisionSettingsConfigurationWizard.lblMaxVisionPasses.text")); //$NON-NLS-1$
+        lblMaxVisionPasses.setToolTipText(Translations.getString("FiducialVisionSettingsConfigurationWizard.lblMaxVisionPasses.toolTipText")); //$NON-NLS-1$
+        panelAlign.add(lblMaxVisionPasses, "2, 2, right, default");
+        
+        maxVisionPasses = new JTextField();
+        panelAlign.add(maxVisionPasses, "4, 2, fill, default");
+        maxVisionPasses.setColumns(10);
+        
+        lblMaxLinearOffset = new JLabel(Translations.getString("FiducialVisionSettingsConfigurationWizard.lblMaxLinearOffset.text")); //$NON-NLS-1$
+        lblMaxLinearOffset.setToolTipText(Translations.getString("FiducialVisionSettingsConfigurationWizard.lblMaxLinearOffset.toolTipText")); //$NON-NLS-1$
+        panelAlign.add(lblMaxLinearOffset, "8, 2, right, default");
+        
+        maxLinearOffset = new JTextField();
+        panelAlign.add(maxLinearOffset, "10, 2, fill, default");
+        maxLinearOffset.setColumns(10);
+        
+        lblParallaxDiameter = new JLabel(Translations.getString("FiducialVisionSettingsConfigurationWizard.lblParallaxDiameter.text")); //$NON-NLS-1$
+        lblParallaxDiameter.setToolTipText(Translations.getString("FiducialVisionSettingsConfigurationWizard.lblParallaxDiameter.toolTipText")); //$NON-NLS-1$
+        panelAlign.add(lblParallaxDiameter, "2, 4, right, default");
+        
+        parallaxDiameter = new JTextField();
+        panelAlign.add(parallaxDiameter, "4, 4, fill, default");
+        parallaxDiameter.setColumns(10);
+        
+        lblParallaxAngle = new JLabel(Translations.getString("FiducialVisionSettingsConfigurationWizard.lblParallaxAngle.text")); //$NON-NLS-1$
+        lblParallaxAngle.setToolTipText(Translations.getString("FiducialVisionSettingsConfigurationWizard.lblParallaxAngle.toolTipText")); //$NON-NLS-1$
+        panelAlign.add(lblParallaxAngle, "8, 4, right, default");
+        
+        parallaxAngle = new JTextField();
+        panelAlign.add(parallaxAngle, "10, 4, fill, default");
+        parallaxAngle.setColumns(10);
+        
         JButton btnTestFiducialLocator = new JButton(Translations.getString(
                 "FiducialVisionSettingsConfigurationWizard.TestFiducialLocatorPanel.TestFiducialLocatorButton.text" //$NON-NLS-1$
-        ));
-        panelAlign.add(btnTestFiducialLocator, "4, 2");
+                ));
+        panelAlign.add(btnTestFiducialLocator, "4, 8");
         btnTestFiducialLocator.addActionListener((e) -> {
+            applyAction.actionPerformed(null);
             UiUtils.submitUiMachineTask(() -> {
                 testFiducialLocation();
             });
@@ -296,6 +335,11 @@ public class FiducialVisionSettingsConfigurationWizard extends AbstractConfigura
             }
         }
 
+        LengthConverter lengthConverter = new LengthConverter();
+        IntegerConverter intConverter = new IntegerConverter();
+        DoubleConverter doubleConverter = new DoubleConverter(Configuration.get()
+                .getLengthDisplayFormat());
+
         addWrappedBinding(visionSettings, "name", name, "text");
         bind(UpdateStrategy.READ, visionSettings, "usedFiducialVisionIn", usedIn, "text", 
                 new AbstractVisionSettings.ListConverter(true, settingsHolder));
@@ -303,6 +347,19 @@ public class FiducialVisionSettingsConfigurationWizard extends AbstractConfigura
 
         bind(UpdateStrategy.READ_WRITE, visionSettings, "pipeline", pipelinePanel, "pipeline");
         addWrappedBinding(visionSettings, "pipelineParameterAssignments", pipelinePanel, "pipelineParameterAssignments");
+
+        addWrappedBinding(visionSettings, "maxVisionPasses", maxVisionPasses, "text", intConverter);
+        addWrappedBinding(visionSettings, "maxLinearOffset", maxLinearOffset, "text", lengthConverter);
+
+        addWrappedBinding(visionSettings, "parallaxDiameter", parallaxDiameter, "text", lengthConverter);
+        addWrappedBinding(visionSettings, "parallaxAngle", parallaxAngle, "text", doubleConverter);
+
+        ComponentDecorators.decorateWithAutoSelect(maxVisionPasses);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(maxLinearOffset);
+
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(parallaxDiameter);
+        ComponentDecorators.decorateWithAutoSelect(parallaxAngle);
+
     }
 
     private void createPanel() {
@@ -344,7 +401,7 @@ public class FiducialVisionSettingsConfigurationWizard extends AbstractConfigura
     }
 
     private void pipelineConfiguration(CvPipeline pipeline, Map<String, Object> pipelineParameterAssignments, boolean edit) throws Exception {
-        fiducialLocator.preparePipeline(pipeline, pipelineParameterAssignments, fiducialLocator.getVisionCamera(), settingsHolder);
+        fiducialLocator.preparePipeline(pipeline, pipelineParameterAssignments, fiducialLocator.getVisionCamera(), settingsHolder, Location.origin);
 
         if (edit) {
             pipelinePanel.openPipelineEditor("Fiducial Vision Pipeline", pipeline);

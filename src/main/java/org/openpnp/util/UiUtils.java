@@ -1,6 +1,10 @@
 package org.openpnp.util;
 
 import java.awt.Component;
+import java.awt.Desktop;
+import java.awt.Toolkit;
+import java.awt.datatransfer.StringSelection;
+import java.net.URI;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import java.util.function.Consumer;
@@ -8,6 +12,7 @@ import java.util.function.Consumer;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
+import org.apache.commons.lang3.SystemUtils;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.model.Configuration;
@@ -25,6 +30,29 @@ public class UiUtils {
      */
     public interface Thrunnable {
         public void thrun() throws Exception;
+    }
+
+    /**
+     * This extends the exception class by allowing to specify a task to be executed once the user has agreed.
+     */
+    public static class ExceptionWithContinuation extends Exception {
+        private static final long serialVersionUID = 1L;
+    
+        protected Thrunnable continuation = null;
+        
+        public ExceptionWithContinuation(Throwable cause, Thrunnable continuation) {
+            super(cause.getMessage(), cause);
+            this.continuation = continuation;
+        }
+        
+        public ExceptionWithContinuation(String message, Thrunnable continuation) {
+            super(message, null);
+            this.continuation = continuation;
+        }
+        
+        public Thrunnable getContinuation() {
+            return continuation;
+        }
     }
 
     /**
@@ -59,18 +87,61 @@ public class UiUtils {
 
     /**
      * Show an error using a message box, if the GUI is present, otherwise just log the error.
+     * @param parent
+     * @param title
      * @param t
      */
-    public static void showError(Throwable t) {
-        if (MainFrame.get() != null) {
-            MessageBoxes.errorBox(MainFrame.get(), "Error", t);
+    public static void showError(Component parent, String title, Throwable t) {
+        
+        // Go through all causes, creating a combined continuation
+        Thrunnable combinedContinuation = null;
+        for (Throwable cause = t; cause != null; cause = cause.getCause()) {
+            if (cause instanceof ExceptionWithContinuation) {
+                Thrunnable continuation = ((ExceptionWithContinuation)cause).getContinuation();
+                if (continuation != null) {
+                    if (combinedContinuation == null) {
+                        combinedContinuation = continuation; // just take the first one
+                    } else {
+                        final Thrunnable outerCombinedContinuation = combinedContinuation;
+                        combinedContinuation = (() -> { 
+                            // combine the two
+                            try {
+                                continuation.thrun(); // inner first
+                            }
+                            catch (ExceptionWithContinuation e) {
+                                throw new ExceptionWithContinuation(e, () -> {
+                                    outerCombinedContinuation.thrun(); // requeue outer, in case of exception
+                                });
+                            }
+                            outerCombinedContinuation.thrun(); // outer
+                        });
+                    }
+                }
+            }
+        }
+
+        if (parent != null) {
+            boolean haveContinuations = combinedContinuation != null;
+            boolean execContinuations = MessageBoxes.errorBox(parent, title, t, haveContinuations);
+
+            // execution continuation, if user agrees
+            if (haveContinuations && execContinuations) {
+                submitUiMachineTask(combinedContinuation);
+            }
         }
         else {
             Logger.error(t);
         }
     }
 
-
+    /**
+     * Show an error using a message box. This version provides the simplified interface where the
+     * title is fixed to "Error" and the parent is the main frame.
+     */
+    public static void showError(Throwable t) {
+        showError(MainFrame.get(), "Error", t);
+    }
+    
     /**
      * Functional version of Machine.submit which guarantees that the the onSuccess and onFailure
      * handlers will be run on the Swing event thread.
@@ -239,6 +310,59 @@ public class UiUtils {
                     if (result == JOptionPane.YES_OPTION) {
                         actionThrunnable.thrun();
                     }
+                }
+            }
+        });
+    }
+
+    /**
+     * Browse to the given uri, trying different methods.
+     * 
+     * @param uri
+     */
+    public static void browseUri(String uri) {
+        UiUtils.messageBoxOnException(() -> {
+            Logger.trace("Browse to "+uri);
+            try {
+                // First try the official desktop method.
+                if (Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
+                    Desktop.getDesktop().browse(new URI(uri));
+                }
+                else {
+                    // No luck, try a more direct & hacky method. 
+                    // Adapted from Teocci's https://stackoverflow.com/a/51758886 CC BY-SA 4.0
+                    Runtime rt = Runtime.getRuntime();
+                    if (SystemUtils.IS_OS_WINDOWS) {
+                        rt.exec("rundll32 url.dll,FileProtocolHandler " + uri).waitFor();
+                    } 
+                    else if (SystemUtils.IS_OS_MAC) {
+                        String[] cmd = {"open", uri};
+                        rt.exec(cmd).waitFor();
+                    } 
+                    else {
+                        // Default to Unix flavor.
+                        // See https://portland.freedesktop.org/doc/xdg-open.html
+                        String[] cmd = {"xdg-open", uri};
+                        rt.exec(cmd).waitFor();
+                    }
+                }
+            }
+            catch (Exception e) {
+                try {
+                    // Still no luck, at least copy the uri to the clipboard.
+                    Toolkit.getDefaultToolkit().getSystemClipboard()
+                    .setContents(new StringSelection(uri), null);
+                    // And tell the user.
+                    MessageBoxes.infoBox("Open Web Browser", 
+                            "<html>"
+                                    + "<p>This platform does not support direct web browsing.</p><br/>"
+                                    + "<p>However, the URI was copied to the clipboard, please paste into your favorite browser's address line.</p><br/>"
+                                    + "<p><a href=\""+uri+"\">"+uri+"</a></p>"
+                                    + "</html>");
+                }
+                catch (Exception e1) {
+                    // Even that failed, nothing left but to lament.
+                    throw new Exception("No system support for URI browsing found. See the log. "+uri, e1);
                 }
             }
         });

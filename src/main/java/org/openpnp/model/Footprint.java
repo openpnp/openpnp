@@ -27,6 +27,8 @@ import java.awt.geom.RoundRectangle2D;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.openpnp.gui.importer.KicadModImporter;
+
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.ElementList;
 
@@ -68,7 +70,8 @@ public class Footprint extends AbstractModelObject{
     public enum Generator {
         Dual,
         Quad,
-        Bga;
+        Bga,
+        Kicad;
     }
 
     public Shape getShape() {
@@ -310,8 +313,8 @@ public class Footprint extends AbstractModelObject{
                     r, r);
             }
             AffineTransform tx = new AffineTransform();
-            tx.translate(x, -y);
-            tx.rotate(Math.toRadians(-rotation));
+            tx.translate(x, y);
+            tx.rotate(Math.toRadians(rotation));
             return tx.createTransformedShape(shape);
         }
 
@@ -493,6 +496,14 @@ public class Footprint extends AbstractModelObject{
                 if (bodyWidth == 0 && bodyHeight == 0) {
                     setBodyWidth(outerDimension+padPitch);
                     setBodyHeight(outerDimension+padPitch);
+                }
+                break;
+            }
+            case Kicad:
+            {
+                KicadModImporter importer = new KicadModImporter();
+                for (Pad pad : importer.getPads()) {
+                    addPad(pad);
                 }
                 break;
             }

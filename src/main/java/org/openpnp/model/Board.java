@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
+ * Copyright (C) 2023 Jason von Nieda <jason@vonnieda.org>, Tony Luken <tonyluken62+openpnp@gmail.com>
  * 
  * This file is part of OpenPnP.
  * 
@@ -20,15 +20,12 @@
 
 package org.openpnp.model;
 
-import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.simpleframework.xml.Attribute;
-import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.Version;
@@ -39,104 +36,79 @@ import org.simpleframework.xml.core.Commit;
  * to specify pick and place operations.
  */
 @Root(name = "openpnp-board")
-public class Board extends AbstractModelObject implements PropertyChangeListener {
-    public enum Side {
-        Bottom, Top
-    }
+public class Board extends PlacementsHolder<Board> implements PropertyChangeListener {
 
     @Version(revision=1.1)
     private double version;    
 
-    @Attribute
-    private String name;
-
-    @Element(required = false)
-    private Location dimensions = new Location(LengthUnit.Millimeters);
-
+    /**
+     * @deprecated Fiducials are now held in the placements List inherited from 
+     * {@link PlacementsHolder}
+     */
+    @Deprecated
     @ElementList(required = false)
     private ArrayList<Fiducial> fiducials = new ArrayList<>();
-
-    @ElementList
-    private ArrayList<Placement> placements = new ArrayList<>();
 
     @ElementList(required = false)
     private ArrayList<BoardPad> solderPastePads = new ArrayList<>();
 
-    private transient File file;
-    private transient boolean dirty;
-
-    public Board() {
-        this(null);
-    }
-
-    public Board(File file) {
-        setFile(file);
-        addPropertyChangeListener(this);
-    }
-
-    @SuppressWarnings("unused")
     @Commit
-    private void commit() {
-        for (Placement placement : placements) {
-            placement.addPropertyChangeListener(this);
-        }
+    protected void commit() {
+        super.commit();
         for (BoardPad pad : solderPastePads) {
             pad.addPropertyChangeListener(this);
         }
     }
 
-    public List<Fiducial> getFiducials() {
-        return Collections.unmodifiableList(fiducials);
+    /**
+     * Default constructor
+     */
+    public Board() {
+        super();
+        setFile(null);
     }
 
-    public Location getDimensions() {
-        return dimensions;
+    /**
+     * Constructs a new board and sets its file
+     * @param file - the file in which this board will be stored
+     */
+    public Board(File file) {
+        super();
+        setFile(file);
     }
-
-    public void setDimensions(Location location) {
-        Location oldValue = this.dimensions;
-        this.dimensions = location;
-        firePropertyChange("dimensions", oldValue, location);
-    }
-
-    public void addFiducial(Fiducial fiducial) {
-        ArrayList<Fiducial> oldValue = fiducials;
-        fiducials = new ArrayList<>(fiducials);
-        fiducials.add(fiducial);
-        firePropertyChange("fiducials", oldValue, fiducials);
-    }
-
-    public void removeFiducial(Fiducial fiducial) {
-        ArrayList<Fiducial> oldValue = fiducials;
-        fiducials = new ArrayList<>(fiducials);
-        fiducials.remove(fiducial);
-        firePropertyChange("fiducials", oldValue, fiducials);
-    }
-
-    public List<Placement> getPlacements() {
-        return Collections.unmodifiableList(placements);
-    }
-
-    public void addPlacement(Placement placement) {
-        Object oldValue = placements;
-        placements = new ArrayList<>(placements);
-        placements.add(placement);
-        firePropertyChange("placements", oldValue, placements);
-        if (placement != null) {
-            placement.addPropertyChangeListener(this);
+    
+    /**
+     * Constructs a deep copy of the specified Board
+     * @param boardToCopy
+     */
+    public Board(Board boardToCopy) {
+        super(boardToCopy);
+        this.solderPastePads = new ArrayList<>();
+        for (BoardPad pad : boardToCopy.solderPastePads) {
+            BoardPad newPad = new BoardPad(pad);
+            newPad.addPropertyChangeListener(this);
+            this.solderPastePads.add(newPad);
         }
     }
 
-    public void removePlacement(Placement placement) {
-        Object oldValue = placements;
-        placements = new ArrayList<>(placements);
-        placements.remove(placement);
-        firePropertyChange("placements", oldValue, placements);
-        if (placement != null) {
-            placement.removePropertyChangeListener(this);
+    /**
+     * Cleans-up (removes all property change listeners) from this Board
+     */
+    @Override
+    public void dispose() {
+        for (BoardPad pad : solderPastePads) {
+            pad.removePropertyChangeListener(this);
+            pad.dispose();
         }
+        super.dispose();
     }
-
+    
+    //Note that when/if solder paste dispensing is added back to OpenPnp, the following three 
+    //methods and the field solderPastePads should be reviewed.  BoardPad should probably be changed
+    //to extent AbstractLocatable and be handled similarly to how placements are handled in 
+    //PlacementsHolder.  On second thought, it might make more sense to move all this to the 
+    //footprint associated with each package. And then change the enabled field of Placement to 
+    //be an enumeration something like: Place Only, Paste Only, Paste and Place, and Disabled.
     public List<BoardPad> getSolderPastePads() {
         return Collections.unmodifiableList(solderPastePads);
     }
@@ -158,43 +130,12 @@ public class Board extends AbstractModelObject implements PropertyChangeListener
         firePropertyChange("solderPastePads", oldValue, solderPastePads);
         if (pad != null) {
             pad.removePropertyChangeListener(this);
+            pad.dispose();
         }
     }
 
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        Object oldValue = this.name;
-        this.name = name;
-        firePropertyChange("name", oldValue, name);
-    }
-
-    public File getFile() {
-        return file;
-    }
-
-    void setFile(File file) {
-        Object oldValue = this.file;
-        this.file = file;
-        firePropertyChange("file", oldValue, file);
-    }
-
-    public boolean isDirty() {
-        return dirty;
-    }
-
-    public void setDirty(boolean dirty) {
-        boolean oldValue = this.dirty;
-        this.dirty = dirty;
-        firePropertyChange("dirty", oldValue, dirty);
-    }
-
-    public void propertyChange(PropertyChangeEvent evt) {
-        if (evt.getSource() != Board.this || !evt.getPropertyName().equals("dirty")) {
-            setDirty(true);
-        }
+    @Override
+    public String toString() {
+        return String.format("Board @%08x defined by @%08x: file %s, dims: %sx%s, placements: %d @%08x (@%08x)", hashCode(), definition.hashCode(), file, dimensions.getLengthX(), dimensions.getLengthY(), placements.size(), placements.hashCode(), definition.placements.hashCode());
     }
 }

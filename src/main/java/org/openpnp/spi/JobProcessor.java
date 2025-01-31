@@ -26,6 +26,7 @@ public interface JobProcessor extends PropertySheetHolder, WizardConfigurable {
         private static final long serialVersionUID = 1L;
 
         private final Object source;
+        private Object secondarySource = null;
         private boolean interrupting = false;
 
         private static String getThrowableMessage(Throwable throwable) {
@@ -44,13 +45,33 @@ public interface JobProcessor extends PropertySheetHolder, WizardConfigurable {
             super(getThrowableMessage(throwable), throwable);
             this.source = source;
             if (throwable instanceof JobProcessorException) {
-                this.interrupting = ((JobProcessorException) throwable).isInterrupting();
+                JobProcessorException e = ((JobProcessorException) throwable);
+                this.interrupting = e.isInterrupting();
+                if (e.secondarySource !=null) {
+                    this.secondarySource = e.secondarySource;
+                }
             }
+        }
+
+        public JobProcessorException(Object source, Object secondarySource, Throwable throwable) {
+            super(getThrowableMessage(throwable), throwable);
+            this.source = source;
+            if (throwable instanceof JobProcessorException) {
+                JobProcessorException e = ((JobProcessorException) throwable);
+                this.interrupting = e.isInterrupting();
+            }
+            this.secondarySource = secondarySource;
         }
 
         public JobProcessorException(Object source, String message) {
             super(message);
             this.source = source;
+        }
+
+        public JobProcessorException(Object source, Object secondarySource, String message) {
+            super(message);
+            this.source = source;
+            this.secondarySource = source;
         }
 
         public JobProcessorException(Object source, String message, boolean interrupting) {
@@ -59,8 +80,18 @@ public interface JobProcessor extends PropertySheetHolder, WizardConfigurable {
             this.interrupting = interrupting;
         }
 
+        public JobProcessorException(Object source, Throwable throwable, boolean interrupting) {
+            super(getThrowableMessage(throwable), throwable);
+            this.source = source;
+            this.interrupting = interrupting;
+        }
+
         public Object getSource() {
             return source;
+        }
+
+        public Object getSecondarySource() {
+            return secondarySource;
         }
 
         public boolean isInterrupting() {

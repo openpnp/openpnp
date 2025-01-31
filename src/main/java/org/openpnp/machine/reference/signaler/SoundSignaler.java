@@ -10,7 +10,6 @@ import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.signaler.wizards.SoundSignalerConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.base.AbstractJobProcessor;
-import org.openpnp.spi.base.AbstractMachine;
 import org.openpnp.spi.base.AbstractSignaler;
 import org.simpleframework.xml.Attribute;
 
@@ -67,16 +66,7 @@ public class SoundSignaler extends AbstractSignaler {
         }
     }
 
-    @Override
-    public void signalMachineState(AbstractMachine.State state) {
-        switch (state) {
-            case ERROR: {
-                playErrorSound();
-                break;
-            }
-        }
-    }
-
+    @SuppressWarnings("incomplete-switch")
     @Override
     public void signalJobProcessorState(AbstractJobProcessor.State state) {
         switch (state) {

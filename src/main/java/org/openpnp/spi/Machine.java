@@ -340,6 +340,8 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
 
     public Location getDiscardLocation();
 
+    public Location getDefaultBoardLocation();
+
     public void setSpeed(double speed);
 
     public double getSpeed();
@@ -395,4 +397,9 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
      * @return True if scripting engines should be pooled for faster reuse.
      */
     public boolean isPoolScriptingEngines();
+
+    /**
+     * @return True if automatic loading of most recent job at start has been enabled.
+     */
+    public boolean isAutoLoadMostRecentJob();
 }

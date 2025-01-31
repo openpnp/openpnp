@@ -50,7 +50,7 @@ import org.simpleframework.xml.stream.Style;
 @Root
 public class CvPipeline implements AutoCloseable {
     static {
-        nu.pattern.OpenCV.loadShared();
+        nu.pattern.OpenCV.loadLocally();
     }
 
     @ElementList
@@ -525,7 +525,7 @@ public class CvPipeline implements AutoCloseable {
          * Process the composite result of all the shots. 
          * Override this method to define custom operations.
          */
-        public abstract Result processCompositeResult();
+        public abstract Result processCompositeResult() throws Exception;
     }
 
     public List<PipelineShot> getPipelineShots() {

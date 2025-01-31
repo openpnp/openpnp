@@ -46,9 +46,10 @@ import javax.swing.JTextField;
 import javax.swing.KeyStroke;
 import javax.swing.border.TitledBorder;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.model.Board;
-import org.openpnp.model.Board.Side;
+import org.openpnp.model.Abstract2DLocatable.Side;
 import org.openpnp.model.BoardPad;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
@@ -74,9 +75,9 @@ import com.jgoodies.forms.layout.RowSpec;
 
 @SuppressWarnings("serial")
 public class EagleBoardImporter implements BoardImporter {
-    private final static String NAME = "CadSoft EAGLE Board";
+    private final static String NAME = "CadSoft EAGLE Board"; //$NON-NLS-1$
     private final static String DESCRIPTION =
-            "Import files directly from EAGLE's <filename>.brd file.";
+            Translations.getString("EagleBoardImporter.Importer.Description"); //$NON-NLS-1$
 
     private static Board board;
     private File boardFile;
@@ -102,18 +103,18 @@ public class EagleBoardImporter implements BoardImporter {
     private static List<Placement> parseFile(File file, Side side, boolean createMissingParts,
             boolean updateExistingParts, boolean addLibraryPrefix) throws Exception {
 
-        String dimensionLayer = "";
-        String topLayer = "";
-        String bottomLayer = "";
-        String tCreamLayer = "";
-        String bCreamLayer = "";
+        String dimensionLayer = ""; //$NON-NLS-1$
+        String topLayer = ""; //$NON-NLS-1$
+        String bottomLayer = ""; //$NON-NLS-1$
+        String tCreamLayer = ""; //$NON-NLS-1$
+        String bCreamLayer = ""; //$NON-NLS-1$
 
         String mmMinCreamFrame_string;
         double mmMinCreamFrame_number = 0;
         String mmMaxCreamFrame_string;
         double mmMaxCreamFrame_number = 0;
-        String libraryId = "";
-        String packageId = "";
+        String libraryId = ""; //$NON-NLS-1$
+        String packageId = ""; //$NON-NLS-1$
 
         List<BoardPad> pads = new ArrayList<>();
 
@@ -132,23 +133,23 @@ public class EagleBoardImporter implements BoardImporter {
             // the board has non-standard layer numbering
             for (Layer layer : boardToProcess.layers.getLayer()) {
                 if (layer.getName()
-                         .equalsIgnoreCase("Dimension")) {
+                         .equalsIgnoreCase("Dimension")) { //$NON-NLS-1$
                     dimensionLayer = layer.getNumber();
                 }
                 else if (layer.getName()
-                              .equalsIgnoreCase("Top")) {
+                              .equalsIgnoreCase("Top")) { //$NON-NLS-1$
                     topLayer = layer.getNumber();
                 }
                 else if (layer.getName()
-                              .equalsIgnoreCase("Bottom")) {
+                              .equalsIgnoreCase("Bottom")) { //$NON-NLS-1$
                     bottomLayer = layer.getNumber();
                 }
                 else if (layer.getName()
-                              .equalsIgnoreCase("tCream")) {
+                              .equalsIgnoreCase("tCream")) { //$NON-NLS-1$
                     tCreamLayer = layer.getNumber();
                 }
                 else if (layer.getName()
-                              .equalsIgnoreCase("bCream")) {
+                              .equalsIgnoreCase("bCream")) { //$NON-NLS-1$
                     bCreamLayer = layer.getNumber();
                 }
             }
@@ -175,26 +176,26 @@ public class EagleBoardImporter implements BoardImporter {
                                                     .getParam()) {
 
                 if (params.getName()
-                          .compareToIgnoreCase("mlMinCreamFrame") == 0) { // found exact match when
+                          .compareToIgnoreCase("mlMinCreamFrame") == 0) { // found exact match when //$NON-NLS-1$
                                                                           // 0 returned
                     mmMinCreamFrame_string = params.getValue()
-                                                   .replaceAll("[A-Za-z ]", ""); // remove all
+                                                   .replaceAll("[A-Za-z ]", ""); // remove all //$NON-NLS-1$ //$NON-NLS-2$
                                                                                  // letters, i.e.
                                                                                  // 0mil becomes 0
                     if (params.getValue()
                               .toUpperCase()
-                              .endsWith("MIL")) {
+                              .endsWith("MIL")) { //$NON-NLS-1$
                         mmMinCreamFrame_number =
                                 Double.parseDouble(mmMinCreamFrame_string) * mil_to_mm;
                     }
                     else if (params.getValue()
                                    .toUpperCase()
-                                   .endsWith("MM")) {
+                                   .endsWith("MM")) { //$NON-NLS-1$
                         mmMinCreamFrame_number =
                                 Double.parseDouble(mmMinCreamFrame_string) * mil_to_mm;
                     }
                     else {
-                        throw new Exception("mlMinCream must either be in mil or mm"); // Force the
+                        throw new Exception("mlMinCream must either be in mil or mm"); // Force the //$NON-NLS-1$
                                                                                        // importer
                                                                                        // to abort,
                                                                                        // something
@@ -203,25 +204,25 @@ public class EagleBoardImporter implements BoardImporter {
                     }
                 }
                 if (params.getName()
-                          .compareToIgnoreCase("mlMaxCreamFrame") == 0) { // found exact match when
+                          .compareToIgnoreCase("mlMaxCreamFrame") == 0) { // found exact match when //$NON-NLS-1$
                                                                           // 0 returned
                     mmMaxCreamFrame_string = params.getValue()
-                                                   .replaceAll("[A-Za-z ]", ""); // remove all
+                                                   .replaceAll("[A-Za-z ]", ""); // remove all //$NON-NLS-1$ //$NON-NLS-2$
                                                                                  // letters, i.e.
                                                                                  // "0mil" becomes 0
                     if (params.getValue()
                               .toUpperCase()
-                              .endsWith("MIL")) {
+                              .endsWith("MIL")) { //$NON-NLS-1$
                         mmMaxCreamFrame_number =
                                 Double.parseDouble(mmMaxCreamFrame_string) * mil_to_mm;
                     }
                     else if (params.getValue()
                                    .toUpperCase()
-                                   .endsWith("MM")) {
+                                   .endsWith("MM")) { //$NON-NLS-1$
                         mmMaxCreamFrame_number = Double.parseDouble(mmMaxCreamFrame_string);
                     }
                     else {
-                        throw new Exception("mlMaxCream must either be in mil or mm"); // Force the
+                        throw new Exception("mlMaxCream must either be in mil or mm"); // Force the //$NON-NLS-1$
                                                                                        // importer
                                                                                        // to abort,
                                                                                        // something
@@ -247,7 +248,7 @@ public class EagleBoardImporter implements BoardImporter {
                     Side element_side;
                     String rot = element.getRot();
                     if (rot.toUpperCase()
-                           .startsWith("M")) {
+                           .startsWith("M")) { //$NON-NLS-1$
                         // The part is mirrored and therefore is on the bottom of the board
                         element_side = Side.Bottom;
                     }
@@ -264,7 +265,7 @@ public class EagleBoardImporter implements BoardImporter {
                         }
                     }
 
-                    String rot_number = rot.replaceAll("[A-Za-z ]", ""); // remove all letters, i.e.
+                    String rot_number = rot.replaceAll("[A-Za-z ]", ""); // remove all letters, i.e. //$NON-NLS-1$ //$NON-NLS-2$
                                                                          // R180 becomes 180
 
                     Placement placement = new Placement(element.getName());
@@ -325,9 +326,9 @@ public class EagleBoardImporter implements BoardImporter {
                     if (cfg != null && (createMissingParts || updateExistingParts)) {
                         String value = element.getValue(); // Value
 
-                        String pkgId = addLibraryPrefix ? libraryId + "-" + packageId : packageId;
+                        String pkgId = addLibraryPrefix ? libraryId + "-" + packageId : packageId; //$NON-NLS-1$
                         String partId = value.trim()
-                                             .length() > 0 ? pkgId + "-" + value : pkgId;
+                                             .length() > 0 ? pkgId + "-" + value : pkgId; //$NON-NLS-1$
 
                         // Only create or update a part the first time we encounter it
                         if (!parts.containsKey(partId)) {
@@ -355,8 +356,8 @@ public class EagleBoardImporter implements BoardImporter {
                                         p.setWidth(Double.parseDouble(s.getDx()));
                                         p.setHeight(Double.parseDouble(s.getDy()));
                                         p.setRotation(Double.parseDouble(s.getRot()
-                                                                          .replaceAll("[A-Za-z]",
-                                                                                  "")));
+                                                                          .replaceAll("[A-Za-z]", //$NON-NLS-1$
+                                                                                  ""))); //$NON-NLS-1$
                                         p.setRoundness(Double.parseDouble(s.getRoundness()));
 
                                         fp.addPad(p);
@@ -400,7 +401,7 @@ public class EagleBoardImporter implements BoardImporter {
                             // to to add the pad to the boardPads
 
                             if (!((org.openpnp.model.eagle.xml.Smd) e).getCream()
-                                                                      .equalsIgnoreCase("No")) { // if
+                                                                      .equalsIgnoreCase("No")) { // if //$NON-NLS-1$
                                                                                                  // cream="no"
                                                                                                  // then
                                                                                                  // we
@@ -433,8 +434,8 @@ public class EagleBoardImporter implements BoardImporter {
                                 pad_rotation += Double.parseDouble(
                                         ((org.openpnp.model.eagle.xml.Smd) e).getRot()
                                                                              .replaceAll(
-                                                                                     "[A-Za-z ]",
-                                                                                     ""))
+                                                                                     "[A-Za-z ]", //$NON-NLS-1$
+                                                                                     "")) //$NON-NLS-1$
                                         % 360;
 
                                 Point a = new Point(
@@ -501,7 +502,7 @@ public class EagleBoardImporter implements BoardImporter {
 
                                 // TODO add support for Circle pads
 
-                                boardPad.setName(element.getName() + "-"
+                                boardPad.setName(element.getName() + "-" //$NON-NLS-1$
                                         + ((org.openpnp.model.eagle.xml.Smd) e).getName());
 
                                 if (((org.openpnp.model.eagle.xml.Smd) e).getLayer()
@@ -535,8 +536,8 @@ public class EagleBoardImporter implements BoardImporter {
                                     }
                                 }
                                 else {
-                                    Logger.info("Warning: " + file
-                                            + "contains a SMD pad that is not on a topLayer or bottomLayer");
+                                    Logger.info("Warning: " + file //$NON-NLS-1$
+                                            + "contains a SMD pad that is not on a topLayer or bottomLayer"); //$NON-NLS-1$
                                 }
 
                                 // TODO figure out if it is possible for an SMD pad to have a drill,
@@ -564,9 +565,9 @@ public class EagleBoardImporter implements BoardImporter {
                                     || ((org.openpnp.model.eagle.xml.Polygon) e).getLayer()
                                                                                 .equalsIgnoreCase(
                                                                                         bCreamLayer)) {
-                                Logger.info("Warning: " + file
-                                        + " contains a Polygon pad - this functionality has been implmented as the smallest bounded rectangle and may over paste the area");
-                                Logger.info("Layer"
+                                Logger.info("Warning: " + file //$NON-NLS-1$
+                                        + " contains a Polygon pad - this functionality has been implmented as the smallest bounded rectangle and may over paste the area"); //$NON-NLS-1$
+                                Logger.info("Layer" //$NON-NLS-1$
                                         + ((org.openpnp.model.eagle.xml.Polygon) e).getLayer()
                                                                                    .toString());
                                 Double vertex_x_min = 0.0;
@@ -588,7 +589,7 @@ public class EagleBoardImporter implements BoardImporter {
                                     vertex_y_max = Math.max(vertex_y_max,
                                             Double.parseDouble(vertex.getY()));
                                     Logger.info(
-                                            "Vertex: X=" + vertex.getX() + " y=" + vertex.getY());
+                                            "Vertex: X=" + vertex.getX() + " y=" + vertex.getY()); //$NON-NLS-1$ //$NON-NLS-2$
                                 }
                                 // TODO implement polygon pad in Pad.java
                                 Pad.RoundRectangle pad = new Pad.RoundRectangle();
@@ -601,13 +602,13 @@ public class EagleBoardImporter implements BoardImporter {
                                         new Location(LengthUnit.Millimeters,
                                                 x + (vertex_x_max + vertex_x_min) / 2,
                                                 y + (vertex_y_max + vertex_y_min) / 2, 0, 0));
-                                Logger.info("Pad generated width is " + pad.getWidth() + " height "
-                                        + pad.getHeight() + " centered at x = "
+                                Logger.info("Pad generated width is " + pad.getWidth() + " height " //$NON-NLS-1$ //$NON-NLS-2$
+                                        + pad.getHeight() + " centered at x = " //$NON-NLS-1$
                                         + boardPad.getLocation()
                                                   .getX()
-                                        + " y = " + boardPad.getLocation()
+                                        + " y = " + boardPad.getLocation() //$NON-NLS-1$
                                                             .getY());
-                                boardPad.setName(element.getName() + "-" + "Polygon "); // Polygons
+                                boardPad.setName(element.getName() + "-" + "Polygon "); // Polygons //$NON-NLS-1$ //$NON-NLS-2$
                                                                                         // are not
                                                                                         // named so
                                                                                         // just name
@@ -665,29 +666,29 @@ public class EagleBoardImporter implements BoardImporter {
             getContentPane().setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
 
             JPanel panel = new JPanel();
-            panel.setBorder(new TitledBorder(null, "Files", TitledBorder.LEADING, TitledBorder.TOP,
+            panel.setBorder(new TitledBorder(null, Translations.getString("EagleBoardImporter.FilesPanel.Border.title"), TitledBorder.LEADING, TitledBorder.TOP, //$NON-NLS-1$
                     null, null));
             getContentPane().add(panel);
             panel.setLayout(new FormLayout(
                     new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                            FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"),
+                            FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"), //$NON-NLS-1$
                             FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
                     new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                             FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
 
-            JLabel lblBoardFilebrd = new JLabel("Eagle PCB Board File (.brd)");
-            panel.add(lblBoardFilebrd, "2, 2, right, default");
+            JLabel lblBoardFilebrd = new JLabel(Translations.getString("EagleBoardImporter.FilesPanel.BoardFileLabel.text")); //$NON-NLS-1$
+            panel.add(lblBoardFilebrd, "2, 2, right, default"); //$NON-NLS-1$
 
             textFieldBoardFile = new JTextField();
-            panel.add(textFieldBoardFile, "4, 2, fill, default");
+            panel.add(textFieldBoardFile, "4, 2, fill, default"); //$NON-NLS-1$
             textFieldBoardFile.setColumns(10);
 
-            JButton btnBrowse = new JButton("Browse");
+            JButton btnBrowse = new JButton(Translations.getString("EagleBoardImporter.FilesPanel.browseButton.text")); //$NON-NLS-1$
             btnBrowse.setAction(browseBoardFileAction);
-            panel.add(btnBrowse, "6, 2");
+            panel.add(btnBrowse, "6, 2"); //$NON-NLS-1$
 
             JPanel panel_1 = new JPanel();
-            panel_1.setBorder(new TitledBorder(null, "Options", TitledBorder.LEADING,
+            panel_1.setBorder(new TitledBorder(null, Translations.getString("EagleBoardImporter.OptionsPanel.Border.title"), TitledBorder.LEADING, //$NON-NLS-1$
                     TitledBorder.TOP, null, null));
             getContentPane().add(panel_1);
             panel_1.setLayout(new FormLayout(
@@ -698,25 +699,25 @@ public class EagleBoardImporter implements BoardImporter {
                             FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                             FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
 
-            chckbxCreateMissingParts = new JCheckBox("Create Missing Parts");
+            chckbxCreateMissingParts = new JCheckBox(Translations.getString("EagleBoardImporter.OptionsPanel.createMissingPartsChkbox.text")); //$NON-NLS-1$
             chckbxCreateMissingParts.setSelected(true);
-            panel_1.add(chckbxCreateMissingParts, "2, 2");
+            panel_1.add(chckbxCreateMissingParts, "2, 2"); //$NON-NLS-1$
 
-            chckbxUpdateExistingParts = new JCheckBox("Update Existing Parts");
+            chckbxUpdateExistingParts = new JCheckBox(Translations.getString("EagleBoardImporter.OptionsPanel.updateExistingPartsChkbox.text")); //$NON-NLS-1$
             chckbxUpdateExistingParts.setSelected(false);
-            panel_1.add(chckbxUpdateExistingParts, "2, 4");
+            panel_1.add(chckbxUpdateExistingParts, "2, 4"); //$NON-NLS-1$
 
-            chckbxAddLibraryPrefix = new JCheckBox("Add Library Prefix to Part Names");
+            chckbxAddLibraryPrefix = new JCheckBox(Translations.getString("EagleBoardImporter.OptionsPanel.addLibraryPrefixChkbox.text")); //$NON-NLS-1$
             chckbxAddLibraryPrefix.setSelected(false);
-            panel_1.add(chckbxAddLibraryPrefix, "2, 6");
+            panel_1.add(chckbxAddLibraryPrefix, "2, 6"); //$NON-NLS-1$
 
-            chckbxImportTop = new JCheckBox("Import Parts on the Top of the board");
+            chckbxImportTop = new JCheckBox(Translations.getString("EagleBoardImporter.OptionsPanel.importTopChkbox.text")); //$NON-NLS-1$
             chckbxImportTop.setSelected(true);
-            panel_1.add(chckbxImportTop, "2, 8");
+            panel_1.add(chckbxImportTop, "2, 8"); //$NON-NLS-1$
 
-            chckbxImportBottom = new JCheckBox("Import Parts on the Bottom of the board");
+            chckbxImportBottom = new JCheckBox(Translations.getString("EagleBoardImporter.OptionsPanel.ImportBottomChkbox.text")); //$NON-NLS-1$
             chckbxImportBottom.setSelected(true);
-            panel_1.add(chckbxImportBottom, "2, 10");
+            panel_1.add(chckbxImportBottom, "2, 10"); //$NON-NLS-1$
 
             JSeparator separator = new JSeparator();
             getContentPane().add(separator);
@@ -726,11 +727,11 @@ public class EagleBoardImporter implements BoardImporter {
             flowLayout.setAlignment(FlowLayout.RIGHT);
             getContentPane().add(panel_2);
 
-            JButton btnCancel = new JButton("Cancel");
+            JButton btnCancel = new JButton(Translations.getString("EagleBoardImporter.ButtonsPanel.CancelButton.text")); //$NON-NLS-1$
             btnCancel.setAction(cancelAction);
             panel_2.add(btnCancel);
 
-            JButton btnImport = new JButton("Import");
+            JButton btnImport = new JButton(Translations.getString("EagleBoardImporter.ButtonsPanel.ImportButton.text")); //$NON-NLS-1$
             btnImport.setAction(importAction);
             panel_2.add(btnImport);
 
@@ -738,17 +739,17 @@ public class EagleBoardImporter implements BoardImporter {
             setLocationRelativeTo(parent);
 
             JRootPane rootPane = getRootPane();
-            KeyStroke stroke = KeyStroke.getKeyStroke("ESCAPE");
+            KeyStroke stroke = KeyStroke.getKeyStroke("ESCAPE"); //$NON-NLS-1$
             InputMap inputMap = rootPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
-            inputMap.put(stroke, "ESCAPE");
+            inputMap.put(stroke, "ESCAPE"); //$NON-NLS-1$
             rootPane.getActionMap()
-                    .put("ESCAPE", cancelAction);
+                    .put("ESCAPE", cancelAction); //$NON-NLS-1$
         }
 
         private class SwingAction extends AbstractAction {
             public SwingAction() {
-                putValue(NAME, "Browse");
-                putValue(SHORT_DESCRIPTION, "Browse");
+                putValue(NAME, Translations.getString("EagleBoardImporter.BrowseAction.Name")); //$NON-NLS-1$
+                putValue(SHORT_DESCRIPTION, Translations.getString("EagleBoardImporter.BrowseAction.ShortDescription")); //$NON-NLS-1$
             }
 
             public void actionPerformed(ActionEvent e) {
@@ -757,7 +758,7 @@ public class EagleBoardImporter implements BoardImporter {
                     @Override
                     public boolean accept(File dir, String name) {
                         return name.toLowerCase()
-                                   .endsWith(".brd");
+                                   .endsWith(".brd"); //$NON-NLS-1$
                     }
                 });
                 fileDialog.setVisible(true);
@@ -771,8 +772,8 @@ public class EagleBoardImporter implements BoardImporter {
 
         private class SwingAction_2 extends AbstractAction {
             public SwingAction_2() {
-                putValue(NAME, "Import");
-                putValue(SHORT_DESCRIPTION, "Import");
+                putValue(NAME, Translations.getString("EagleBoardImporter.ImportAction.Name")); //$NON-NLS-1$
+                putValue(SHORT_DESCRIPTION, Translations.getString("EagleBoardImporter.ImportAction.ShortDescription")); //$NON-NLS-1$
             }
 
             public void actionPerformed(ActionEvent e) {
@@ -805,7 +806,7 @@ public class EagleBoardImporter implements BoardImporter {
                     }
                 }
                 catch (Exception e1) {
-                    MessageBoxes.errorBox(Dlg.this, "Import Error", e1);
+                    MessageBoxes.errorBox(Dlg.this, Translations.getString("EagleBoardImporter.ImportErrorMessage"), e1); //$NON-NLS-1$
                     return;
                 }
 
@@ -815,8 +816,8 @@ public class EagleBoardImporter implements BoardImporter {
 
         private class SwingAction_3 extends AbstractAction {
             public SwingAction_3() {
-                putValue(NAME, "Cancel");
-                putValue(SHORT_DESCRIPTION, "Cancel");
+                putValue(NAME, Translations.getString("EagleBoardImporter.CancelAction.Name")); //$NON-NLS-1$
+                putValue(SHORT_DESCRIPTION, Translations.getString("EagleBoardImporter.CancelAction.ShortDescription")); //$NON-NLS-1$
             }
 
             public void actionPerformed(ActionEvent e) {

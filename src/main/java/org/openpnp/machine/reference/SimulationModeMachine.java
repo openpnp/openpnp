@@ -55,7 +55,6 @@ import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Locatable.LocationOption;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;
-import org.openpnp.spi.base.AbstractNozzle;
 import org.openpnp.util.Collect;
 import org.openpnp.util.GcodeServer;
 import org.openpnp.util.NanosecondTime;
@@ -113,6 +112,9 @@ public class SimulationModeMachine extends ReferenceMachine {
     }
     @Attribute(required = false)
     private SimulationMode simulationMode = SimulationMode.Off;
+
+    @Attribute(required = false)
+    private boolean replacingDrivers = true;
 
     /**
      * The simulated non-squareness is applied to what the simulated cameras see.
@@ -199,6 +201,14 @@ public class SimulationModeMachine extends ReferenceMachine {
             }
         }
         this.simulationMode = simulationMode;
+    }
+
+    public boolean isReplacingDrivers() {
+        return replacingDrivers;
+    }
+
+    public void setReplacingDrivers(boolean replacingDrivers) {
+        this.replacingDrivers = replacingDrivers;
     }
 
     public double getSimulatedNonSquarenessFactor() {
@@ -310,8 +320,8 @@ public class SimulationModeMachine extends ReferenceMachine {
             }
         }
         for (BoardLocation boardLocation : MainFrame.get().getJobTab().getJob().getBoardLocations()) {
-            boardLocation.setLocation(boardLocation.getLocation().derive(null, null, 
-                    machineTableZ.convertToUnits(boardLocation.getLocation().getUnits())
+            boardLocation.setGlobalLocation(boardLocation.getGlobalLocation().derive(null, null, 
+                    machineTableZ.convertToUnits(boardLocation.getGlobalLocation().getUnits())
                     .getValue(), 
                     null));
         }
@@ -369,20 +379,18 @@ public class SimulationModeMachine extends ReferenceMachine {
                                             && (location.getLinearDistanceTo(machine.getDiscardLocation()) > 4.0); 
                                     if ((Boolean)value == true) {
                                         // Pick
-                                        if (checkPnP) {
+                                        if (checkPnP && !nozzle.getPart().getId().equals("TEST-OBJECT")) {
                                             if (!((ImageCamera) camera).isPickLocation(location, nozzle)) {
                                                 throw new Exception("Nozzle "+nozzle.getName()+" part "+nozzle.getPart().getId()
                                                         +" pick location not recognized.");
                                             }
                                         }
-                                        if (nozzle instanceof AbstractNozzle) {
-                                            Double rotationModeOffset = ((AbstractNozzle) nozzle).getRotationModeOffset();
-                                            rotationModeOffsetAtPick.put(nozzle, rotationModeOffset == null ? 0.0 : rotationModeOffset);
-                                        }
+                                        Double rotationModeOffset = nozzle.getRotationModeOffset();
+                                        rotationModeOffsetAtPick.put(nozzle, rotationModeOffset == null ? 0.0 : rotationModeOffset);
                                     }
                                     else {
                                         // Place
-                                        if (checkPnP) {
+                                        if (checkPnP && !nozzle.getPart().getId().equals("TEST-OBJECT")) {
                                             rotationModeOffsetAtPick.remove(nozzle);
                                             if (!((ImageCamera) camera).isPlaceLocation(location, nozzle)) {
                                                 throw new Exception("Nozzle "+nozzle.getName()+" part "+nozzle.getPart().getId()
@@ -396,12 +404,13 @@ public class SimulationModeMachine extends ReferenceMachine {
                     }
                 }
             }
-        }
-        if (realtime) {
-            try {
-                Thread.sleep(50);
-            }
-            catch (InterruptedException e) {
+            if (realtime) {
+                try {
+                    Logger.trace("{} simulate actuation, sleep 5ms", actuator.getName());
+                    Thread.sleep(5);
+                }
+                catch (InterruptedException e) {
+                }
             }
         }
     }
@@ -526,13 +535,13 @@ public class SimulationModeMachine extends ReferenceMachine {
                         LocationOption.SuppressStaticCompensation,
                         LocationOption.SuppressDynamicCompensation);
                 // If the part rotation is wanted, we need to adjust the 
-                if (partRotation && hm instanceof AbstractNozzle) {
+                if (partRotation && hm instanceof Nozzle) {
                     Double rotationOffset = rotationModeOffsetAtPick.get(hm);
                     if (rotationOffset != null) {
                         location = location.derive(null, null, null, location.getRotation() + rotationOffset);
                     }
                     else {
-                        rotationOffset = ((AbstractNozzle)hm).getRotationModeOffset();
+                        rotationOffset = ((Nozzle)hm).getRotationModeOffset();
                         if (rotationOffset != null) {
                             location = location.derive(null, null, null, location.getRotation() + rotationOffset);
                         }

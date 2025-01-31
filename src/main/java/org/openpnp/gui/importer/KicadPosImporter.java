@@ -30,8 +30,9 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.openpnp.Translations;
 import org.openpnp.model.Board;
-import org.openpnp.model.Board.Side;
+import org.openpnp.model.Abstract2DLocatable.Side;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
@@ -41,8 +42,8 @@ import org.openpnp.model.Placement;
 
 @SuppressWarnings("serial")
 public class KicadPosImporter implements BoardImporter {
-    private final static String NAME = "KiCAD .pos";
-    final static String DESCRIPTION = "Import KiCAD .pos Files.";
+    private final static String NAME = "KiCAD .pos"; //$NON-NLS-1$
+    final static String DESCRIPTION = Translations.getString("KicadPosImporter.Importer.Description"); //$NON-NLS-1$
 
     Board board;
     File topFile;
@@ -88,7 +89,7 @@ public class KicadPosImporter implements BoardImporter {
         // C3 100u Capacitors_SMD:c 67.9450 -77.4700 180.0 F.Cu
 
         Pattern pattern = Pattern.compile(
-                "(\\S+)\\s+(.*?)\\s+(.*?)\\s+(-?\\d+\\.\\d+)\\s+(-?\\d+\\.\\d+)\\s+(-?\\d+\\.\\d+)\\s(.*?)");
+                "(\\S+)\\s+(.*?)\\s+(.*?)\\s+(-?\\d+\\.\\d+)\\s+(-?\\d+\\.\\d+)\\s+(-?\\d+\\.\\d+)\\s(.*?)"); //$NON-NLS-1$
 
         while ((line = reader.readLine()) != null) {
             line = line.trim();
@@ -109,7 +110,7 @@ public class KicadPosImporter implements BoardImporter {
             double placementRotation = Double.parseDouble(matcher.group(6));
             String placementLayer = matcher.group(7);
 
-            if (placementLayer.contains("bottom")) {
+            if (placementLayer.contains("bottom")) { //$NON-NLS-1$
             	/* With the board origin set to the lower left, KiCad exports the position
             	 * for the bottom parts with negative X position. The negative number is the distance from the
             	 * 'right border' if the board is turned around with the original origin now on the right lower side.
@@ -135,7 +136,7 @@ public class KicadPosImporter implements BoardImporter {
                 if(useOnlyValueAsPartId == true) {
                 	partId = partValue;
                 }else {
-                	partId = pkgName + "-" + partValue;
+                	partId = pkgName + "-" + partValue; //$NON-NLS-1$
                 }
                 Part part = cfg.getPart(partId);
                 if (part != null) {

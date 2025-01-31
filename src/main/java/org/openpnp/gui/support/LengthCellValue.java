@@ -34,19 +34,25 @@ public class LengthCellValue implements Comparable<LengthCellValue> {
      * converting to the system units.
      */
     private boolean displayNativeUnits;
+    private boolean displayAligned;
 
     public static void setConfiguration(Configuration configuration) {
 
         LengthCellValue.configuration = configuration;
     }
 
-    public LengthCellValue(Length length, boolean displayNativeUnits) {
+    public LengthCellValue(Length length, boolean displayNativeUnits, boolean displayAligned) {
         setLength(length);
         setDisplayNativeUnits(displayNativeUnits);
+        setDisplayAligned(displayAligned);
+    }
+
+    public LengthCellValue(Length length, boolean displayNativeUnits) {
+        this(length, displayNativeUnits, false);
     }
 
     public LengthCellValue(Length length) {
-        this(length, false);
+        this(length, false, false);
     }
 
     public LengthCellValue(String value) {
@@ -65,6 +71,14 @@ public class LengthCellValue implements Comparable<LengthCellValue> {
         this.length = length;
     }
 
+    /**
+     * Gets the length rounded to the precision displayed in the cell
+     * @return the length
+     */
+    public Length getDisplayedLength() {
+        return Length.parse(toString());
+    }
+    
     public boolean isDisplayNativeUnits() {
         return displayNativeUnits;
     }
@@ -73,20 +87,45 @@ public class LengthCellValue implements Comparable<LengthCellValue> {
         this.displayNativeUnits = displayNativeUnits;
     }
 
+    public boolean isDisplayAligned() {
+        return displayAligned;
+    }
+
+    public void setDisplayAligned(boolean displayAligned) {
+        this.displayAligned = displayAligned;
+    }
+
     @Override
     public String toString() {
         Length l = length;
         if (l.getUnits() == null) {
-            return String.format(Locale.US, configuration.getLengthDisplayFormatWithUnits(),
+            if (displayAligned) {
+                return String.format(Locale.US, configuration.getLengthDisplayAlignedFormatWithUnits(),
+                        l.getValue(), "?");
+            }
+            else {
+                return String.format(Locale.US, configuration.getLengthDisplayFormatWithUnits(),
                     l.getValue(), "?");
+            }
         }
         if (displayNativeUnits && l.getUnits() != configuration.getSystemUnits()) {
-            return String.format(Locale.US, configuration.getLengthDisplayFormatWithUnits(),
+            if (displayAligned) {
+                return String.format(Locale.US, configuration.getLengthDisplayAlignedFormatWithUnits(),
+                        l.getValue(), l.getUnits().getShortName());
+            }
+            else {
+                return String.format(Locale.US, configuration.getLengthDisplayFormatWithUnits(),
                     l.getValue(), l.getUnits().getShortName());
+            }
         }
         else {
             l = l.convertToUnits(configuration.getSystemUnits());
-            return String.format(Locale.US, configuration.getLengthDisplayFormat(), l.getValue());
+            if (displayAligned) {
+                return String.format(Locale.US, configuration.getLengthDisplayAlignedFormat(), l.getValue());
+            }
+            else {
+                return String.format(Locale.US, configuration.getLengthDisplayFormat(), l.getValue());
+            }
         }
     }
 

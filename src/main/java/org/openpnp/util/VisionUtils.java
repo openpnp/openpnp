@@ -22,6 +22,7 @@ import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 import org.openpnp.model.Package;
 import org.openpnp.model.Part;
+import org.openpnp.model.Placement;
 import org.openpnp.model.Point;
 import org.openpnp.model.Footprint.Pad;
 import org.openpnp.spi.Camera;
@@ -263,7 +264,7 @@ public class VisionUtils {
         }
     }
     
-    public static PartAlignment.PartAlignmentOffset findPartAlignmentOffsets(PartAlignment p, Part part, BoardLocation boardLocation, Location placementLocation, Nozzle nozzle) throws Exception {
+    public static PartAlignment.PartAlignmentOffset findPartAlignmentOffsets(PartAlignment p, Part part, BoardLocation boardLocation, Placement placement, Nozzle nozzle) throws Exception {
         Map<String, Object> globals = new HashMap<>();
         globals.put("part", part);
         globals.put("nozzle", nozzle);
@@ -271,7 +272,7 @@ public class VisionUtils {
 
         PartAlignmentOffset offsets = null;
         try {
-            offsets = p.findOffsets(part, boardLocation, placementLocation, nozzle);
+            offsets = p.findOffsets(part, boardLocation, placement, nozzle);
             return offsets;
         }
         finally {

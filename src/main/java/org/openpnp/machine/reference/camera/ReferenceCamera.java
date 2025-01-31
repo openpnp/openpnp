@@ -48,7 +48,6 @@ import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.WizardUtils;
 import org.openpnp.gui.wizards.CameraConfigurationWizard;
 import org.openpnp.gui.wizards.CameraVisionConfigurationWizard;
-import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceNozzleTipCalibration;
 import org.openpnp.machine.reference.camera.calibration.AdvancedCalibration;
 import org.openpnp.machine.reference.camera.calibration.LensCalibrationParams;
@@ -66,6 +65,7 @@ import org.openpnp.model.Solutions;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.FocusProvider;
 import org.openpnp.spi.Head;
+import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Machine;
 import org.openpnp.util.Collect;
 import org.openpnp.util.OpenCvUtils;
@@ -78,9 +78,9 @@ import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 
-public abstract class ReferenceCamera extends AbstractBroadcastingCamera implements ReferenceHeadMountable {
+public abstract class ReferenceCamera extends AbstractBroadcastingCamera implements HeadMountable {
     static {
-        nu.pattern.OpenCV.loadShared();
+        nu.pattern.OpenCV.loadLocally();
     }
 
     @Attribute(required = false)
@@ -661,8 +661,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
             if (undistortionMap2 == null) {
                 undistortionMap2 = new Mat();
             }
-            advancedCalibration.initUndistortRectifyMap(mat.size(), 
-                    undistortionMap1, undistortionMap2);
+            advancedCalibration.initUndistortRectifyMap(undistortionMap1, undistortionMap2);
         }
         Imgproc.remap(mat, dst, undistortionMap1, undistortionMap2, Imgproc.INTER_LINEAR);
         mat.release();

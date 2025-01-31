@@ -1,4 +1,4 @@
-## Getting Started with OpenPnP 2.0
+## Getting Started with OpenPnP 2.2
 
 Be sure to check out the Issues & Solutions system to help you setup your initial machine
 configuration or use the latest feature after an upgrade. Go to the Issues & Solutions tab and work 

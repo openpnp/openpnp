@@ -48,6 +48,10 @@ public class Icons {
     public static Icon autoPanelize = getIcon("/icons/panelize.svg");
     public static Icon autoPanelizeXOut = getIcon("/icons/panelize_xout.svg");
     public static Icon autoPanelizeFidCheck = getIcon("/icons/panelize_fiducialcheck.svg");
+    public static Icon useChildFiducial = getIcon("/icons/panelize_use_board_fiducial.svg");
+    public static Icon board = getIcon("/icons/board.svg");
+    public static Icon panel = getIcon("/icons/panel.svg");
+    public static Icon clean = getIcon("/icons/clean-sweep.svg");
 
     public static Icon feed = getIcon("/icons/feeder-feed.svg");
     public static Icon pick = getIcon("/icons/pick.svg");
@@ -119,6 +123,7 @@ public class Icons {
     public static Icon footprintQuad = getIcon("/icons/footprint-quad.svg");
     public static Icon footprintDual = getIcon("/icons/footprint-dual.svg");
     public static Icon footprintBga = getIcon("/icons/footprint-bga.svg");
+    public static Icon kicad = getIcon("/icons/kicad-logo.svg");
 
     public static Icon getIcon(String resourceName, int width, int height) {
         if (resourceName.endsWith(".svg")) {

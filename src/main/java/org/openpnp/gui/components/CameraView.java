@@ -74,6 +74,7 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.model.Motion;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.HeadMountable;
@@ -599,8 +600,8 @@ public class CameraView extends JComponent implements CameraListener {
         if (renderingQuality == RenderingQuality.BestScale) {
             // Bring to an integral scaling factor.
             double scalingFactor = lastSourceWidth > scaledWidth ? 
-                    1./Math.max(1, Math.round(lastSourceWidth/scaledWidth))
-                    : Math.max(1, Math.round(scaledWidth/lastSourceWidth));
+                    1./Math.max(1, Math.ceil(lastSourceWidth/scaledWidth))
+                    : Math.max(1, Math.floor(scaledWidth/lastSourceWidth));
             scaledWidth = (int)(lastSourceWidth*scalingFactor);
             scaledHeight = (int)(lastSourceHeight*scalingFactor);
         }
@@ -1548,7 +1549,7 @@ public class CameraView extends JComponent implements CameraListener {
                 if (currentLocation.getLinearLengthTo(camera.getLocation()).compareTo(camera.getRoamingRadius()) < 0
                         && location.getLinearLengthTo(camera.getLocation()).compareTo(camera.getRoamingRadius()) < 0) {
                     // Within the roaming area, no need to go to Safe Z.
-                    nozzle.moveTo(location);
+                    nozzle.moveTo(location, Motion.MotionOption.JogMotion);
                 }
                 else {
                     // Current or new location outside roaming area. Move to safe Z.

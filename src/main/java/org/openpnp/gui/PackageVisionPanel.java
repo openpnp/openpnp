@@ -90,7 +90,7 @@ public class PackageVisionPanel extends JPanel {
         JPanel propertiesPanel = new JPanel();
         add(propertiesPanel, BorderLayout.NORTH);
         propertiesPanel.setBorder(
-                new TitledBorder(null, Translations.getString("PackageVisionPanel.SettingsPanel.Boprder.title"), //$NON-NLS-1$
+                new TitledBorder(null, Translations.getString("PackageVisionPanel.SettingsPanel.Border.title"), //$NON-NLS-1$
                         TitledBorder.LEADING, TitledBorder.TOP, null));
         propertiesPanel.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -139,6 +139,9 @@ public class PackageVisionPanel extends JPanel {
 
         JButton generateBga = new JButton(generateBgaAction);
         panelGenerate.add(generateBga);
+
+        JButton generateKicad = new JButton(generateFromKicad);
+        panelGenerate.add(generateKicad);
 
         JLabel lblBodyWidth = new JLabel(Translations.getString("PackageVisionPanel.SettingsPanel.BodyWidthLabel.text")); //$NON-NLS-1$
         propertiesPanel.add(lblBodyWidth, "2, 4, right, default");
@@ -290,6 +293,10 @@ public class PackageVisionPanel extends JPanel {
             String name;
             while ((name = JOptionPane.showInputDialog(getTopLevelAncestor(),
                     "Please enter a name for the new pad.")) != null) {
+                name = name.trim();
+                if (name.isEmpty()) {
+                    break;
+                }
                 Pad pad = new Pad();
                 pad.setName(name);
                 footprint.addPad(pad);
@@ -356,6 +363,17 @@ public class PackageVisionPanel extends JPanel {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             generatePads(Generator.Bga);
+        }
+    };
+
+    public final Action generateFromKicad = new AbstractAction() {
+        {
+            putValue(SMALL_ICON, Icons.kicad);
+            putValue(SHORT_DESCRIPTION, "Import a footprint from KiCad module.");
+        }
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            generatePads(Generator.Kicad);
         }
     };
 

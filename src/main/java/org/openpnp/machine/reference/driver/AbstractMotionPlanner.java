@@ -32,7 +32,6 @@ import javax.swing.Icon;
 
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
-import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
 import org.openpnp.machine.reference.axis.ReferenceControllerAxis.BacklashCompensationMethod;
@@ -88,7 +87,9 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
     protected TreeMap<Double, Motion> motionPlan = new TreeMap<Double, Motion>();
 
     private AxesLocation lastDirectionalBacklashOffset = new AxesLocation();
-    private List<Driver> lastPlannedDrivers = new ArrayList<Driver>(); 
+    private List<Driver> lastPlannedDrivers = new ArrayList<Driver>();
+
+    private boolean homed = false; 
 
     @Override
     public synchronized void home() throws Exception {
@@ -111,6 +112,17 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
         }
         // Make sure we're on the same page with the controller and wait for still-stand.
         waitForCompletion(null, CompletionType.WaitForStillstandIndefinitely);
+        homed = true;
+    }
+
+    @Override
+    public void unhome() {
+        homed  = false;
+    }
+
+    @Override
+    public boolean isHomed() {
+        return homed;
     }
 
     @Override
@@ -149,6 +161,26 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
         AxesLocation newLocation = 
                 currentLocation
                 .put(axesLocation);
+
+        if (!homed) {
+            // Machine is unhomed, check if move is legal.
+            int optionFlags = Motion.optionFlags(options);
+            AxesLocation segment = currentLocation.motionSegmentTo(newLocation);
+            for (Driver driver : segment.getAxesDrivers(getMachine())) {
+                if (Motion.MotionOption.JogMotion.isSetIn(optionFlags)) {
+                    // This is a jog move, allow if initial position was synced.
+                    if (!driver.isSyncInitialLocation()) {
+                        throw new Exception("Machine not homed. Jogging only allowed if driver "+driver.getName()+" has option \"Sync. Initial Location\" enabled.");
+                    }
+                }
+                else {
+                    // Not a jog move.
+                    if (!(driver.isSyncInitialLocation() && driver.isAllowUnhomedMotion())) {
+                        throw new Exception("Machine not homed. Motion only allowed if driver "+driver.getName()+" has option \"Allow Unhomed Motion\" enabled.");
+                    }
+                }
+            }
+        }
 
         // Make sure we don't collide axes across multiple drivers.
         interlockMotionAcrossDrivers(hm, currentLocation, newLocation);
@@ -424,7 +456,7 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
                 plannedMotion.setPlannedTime1(t);
                 motionPlan.put(t, plannedMotion);
                 // Execute across drivers.
-                ReferenceHeadMountable  hm = (ReferenceHeadMountable) plannedMotion.getHeadMountable();
+                HeadMountable  hm = plannedMotion.getHeadMountable();
                 if (hm != null) {
                     movedHeads.add(hm.getHead());
                     if (executeMoveTo(machine, hm, plannedMotion, first)) {
@@ -461,7 +493,7 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
      * @return true if a driver move was executed.
      * @throws Exception
      */
-    protected boolean executeMoveTo(ReferenceMachine machine, ReferenceHeadMountable hm,
+    protected boolean executeMoveTo(ReferenceMachine machine, HeadMountable hm,
             Motion plannedMotion, boolean firstAfterCoordination) throws Exception {
         AxesLocation motionSegment = plannedMotion.getLocation0().motionSegmentTo(plannedMotion.getLocation1());
         // Note, this loop will be empty if the motion is empty, i.e. if it only contains VirtualAxis movement.
@@ -811,7 +843,7 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
             AxesLocation mappedAxes = hm.getMappedAxes(machine);
             if (!mappedAxes.isEmpty()) {
                 for (Driver driver : mappedAxes.getAxesDrivers(machine)) {
-                    driver.waitForCompletion((ReferenceHeadMountable) hm, completionType);
+                    driver.waitForCompletion(hm, completionType);
                 }
             }
         }

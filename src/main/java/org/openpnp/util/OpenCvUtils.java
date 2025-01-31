@@ -37,7 +37,7 @@ public class OpenCvUtils {
 
 
     static {
-        nu.pattern.OpenCV.loadShared();
+        nu.pattern.OpenCV.loadLocally();
     }
 
     public static BufferedImage toBufferedImage(Mat m) {
@@ -340,6 +340,10 @@ public class OpenCvUtils {
      * 
      * @param camera The camera to get the pixel scale from.
      * @param footprint Footprint to be drawn.
+     * @param xOffset Vision offset in X in pixels
+     * @param yOffset Vision offset in Y in pixels
+     * @param maxWidth 
+     * @param maxHeight 
      * @param topView Whether the body is drawn over the pads rather than vice versa. 
      * @param padsColor Color of the pads. Pads are not drawn if null.
      * @param bodyColor Color of the body. Body is not drawn if null.
@@ -350,7 +354,7 @@ public class OpenCvUtils {
      * @throws Exception
      */
     public static BufferedImage createFootprintTemplate(Camera camera, Footprint footprint, double rotation,
-            boolean topView, Color padsColor, Color bodyColor, Color backgroundColor, double marginFactor, int minimumMarginSize)
+            double xOffset, double yOffset, double maxWidth, double maxHeight, boolean topView, Color padsColor, Color bodyColor, Color backgroundColor, double marginFactor, int minimumMarginSize)
                     throws Exception {
         Location unitsPerPixel = camera.getUnitsPerPixelAtZ();
 
@@ -372,11 +376,13 @@ public class OpenCvUtils {
         // Create a transform to scale the Shape by
         AffineTransform tx = new AffineTransform();
 
-        // First we scale by units to convert the units and then we scale
-        // by the camera X and Y units per pixels to get pixel locations.
-        tx.scale(unitScale, unitScale);
-        tx.scale(1.0 / unitsPerPixel.getX(), 1.0 / unitsPerPixel.getY());
+        // Left-hand coordinate system, so we invert rotation.
         tx.rotate(Math.toRadians(-rotation));
+        // Translate from the offset (=negated) but in left-hand coordinates, Y inverted.
+        tx.translate(-xOffset, yOffset);
+        // First we scale by units to convert the units and then we divide
+        // by the camera X and Y units per pixels to get pixel locations, again Y inverted.
+        tx.scale(unitScale/unitsPerPixel.getX(), -unitScale/unitsPerPixel.getY());
 
         // Transform the Shape and draw it out.
         shape = tx.createTransformedShape(shape);
@@ -394,6 +400,14 @@ public class OpenCvUtils {
         // recognition performance because it allows some border around the edges.
         double width = Math.max(bounds.getWidth() * marginFactor, bounds.getWidth()+2*minimumMarginSize);
         double height = Math.max(bounds.getHeight() * marginFactor, bounds.getHeight()+2*minimumMarginSize);
+        if (maxWidth > 0) {
+            width = Math.min(maxWidth,  width);
+        }
+        if (maxHeight > 0) {
+            height = Math.min(maxHeight, height);
+        }
+        width = Math.round(width);
+        height = Math.round(height);
         BufferedImage template =
                 new BufferedImage((int) width, (int) height, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g2d = (Graphics2D) template.getGraphics();

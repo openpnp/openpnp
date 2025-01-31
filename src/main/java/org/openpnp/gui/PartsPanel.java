@@ -289,6 +289,10 @@ public class PartsPanel extends JPanel implements WizardContainer {
             String id;
             while ((id = JOptionPane.showInputDialog(frame,
                     "Please enter an ID for the new part.")) != null) {
+                id = id.trim();
+                if (id.isEmpty()) {
+                    break;
+                }
                 if (configuration.getPart(id) != null) {
                     MessageBoxes.errorBox(frame, "Error", "Part ID " + id + " already exists.");
                     continue;
@@ -402,6 +406,10 @@ public class PartsPanel extends JPanel implements WizardContainer {
             String id;
             while ((id = JOptionPane.showInputDialog(frame,
                     "Please enter an ID for the pasted part.")) != null) {
+                id = id.trim();
+                if (id.isEmpty()) {
+                    break;
+                }
                 if (configuration.getPart(id) == null) {
                     break;
                 }
@@ -491,6 +499,21 @@ public class PartsPanel extends JPanel implements WizardContainer {
         revalidate();
         repaint();
 
+    }
+
+    public void selectPartInTableAndUpdateLinks(Part part) {
+        selectPartInTable(part);
+
+        if(Configuration.get().getTablesLinked() == TablesLinked.Linked)
+        {
+            MainFrame mainFrame = MainFrame.get();
+            mainFrame.getPartsTab().selectPartInTable(part);
+            if (part != null) {
+                mainFrame.getPackagesTab().selectPackageInTable(part.getPackage());
+            }
+            mainFrame.getFeedersTab().selectFeederForPart(part);
+            mainFrame.getVisionSettingsTab().selectVisionSettingsInTable(part);
+        }
     }
 
     public void selectPartInTable(Part part) {

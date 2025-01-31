@@ -51,6 +51,18 @@ public interface Nozzle
     public RotationMode getRotationMode();
 
     /**
+     * @return the rotation mode offset currently set.
+     */
+    public Double getRotationModeOffset();
+
+    /**
+     * Set the rotation mode offset to be applied.
+     * 
+     * @param rotationModeOffset
+     */
+    void setRotationModeOffset(Double rotationModeOffset);
+
+    /**
      * @return Whether the bottom vision aligment of parts adjust the Rotation Mode of the nozzle to include the 
      * alignment rotation offset.
      */
@@ -119,9 +131,13 @@ public interface Nozzle
      * If the specified NozzleTip is already loaded this method should do nothing.
      * 
      * @param nozzleTip
+     * @param withCalibration
      * @throws Exception
      */
-    public void loadNozzleTip(NozzleTip nozzleTip) throws Exception;
+    default void loadNozzleTip(NozzleTip nozzleTip) throws Exception {
+        loadNozzleTip(nozzleTip, true);
+    }
+    public void loadNozzleTip(NozzleTip nozzleTip, boolean withCalibration) throws Exception;
 
     /**
      * Changer interface:
@@ -224,4 +240,5 @@ public interface Nozzle
      * If part is null, a zero Length is returned.  
      */
     Length getSafePartHeight(Part part);
+
 }

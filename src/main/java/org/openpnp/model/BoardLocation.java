@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
+ * Copyright (C) 2023 Jason von Nieda <jason@vonnieda.org>, Tony Luken <tonyluken62+openpnp@gmail.com>
  * 
  * This file is part of OpenPnP.
  * 
@@ -23,206 +23,185 @@ import java.awt.geom.AffineTransform;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.openpnp.model.Board.Side;
-import org.openpnp.model.Placement.Type;
+import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
-import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementMap;
 import org.simpleframework.xml.core.Commit;
+import org.simpleframework.xml.core.Persist;
 
-public class BoardLocation extends AbstractModelObject {
-    @Element
-    private Location location;
+/**
+ * A container for a Board that gives the board a physical Location relative to its parent. It 
+ * also holds a coordinate transformation that is used to convert the board's local coordinates to
+ * its parent's coordinates.  In addition, it contains information on where the Board's definition 
+ * is stored in the file system.
+ */
+public class BoardLocation extends PlacementsHolderLocation<BoardLocation> {
+
+    public static final String ID_PREFIX = "Brd";
     
-    @Attribute
-    private Side side = Side.Top;
-    private Board board;
-
-    @Attribute
+    /**
+     * @deprecated The file name of a BoardLocation is now carried by the fileName field inherited 
+     * from {@link PlacementsHolderLocation}
+     */
+    @Deprecated
+    @Attribute(required = false)
     private String boardFile;
 
+    /**
+     * @deprecated BoardLocations that are part of a Panel are now held by the {@link Panel}'s 
+     * children List. As such the BoardLocation no longer needs to identify the Panel to which it
+     * belongs.
+     */
+    @Deprecated
     @Attribute(required = false)
-    private String panelId = new String("Panel1"); // UI doesn't have a way to specify multiple
-                                                    // panels at this point
+    private String panelId; 
 
+    /**
+     * @deprecated The enabled state of a BoardLocation is now carried by the locallyEnabled
+     * field inherited from {@link PlacementsHolderLocation}
+     */
+    @Deprecated
     @Attribute(required = false)
-    private boolean checkFiducials;
+    private Boolean enabled; 
 
-    @Attribute(required = false)
-    private boolean enabled = true;
-
+    /**
+     * @deprecated The placed status for each Placement is now maintained by the placedStatusMap
+     * field of the {@link Job}
+     */
+    @Deprecated
     @ElementMap(required = false)
     private Map<String, Boolean> placed = new HashMap<>();
 
     /**
-     * Important note: The placement transform is in Millimeters no matter what the source
-     * units are.
+     * Default constructor
      */
-    private AffineTransform placementTransform;
-
-    BoardLocation() {
+    public BoardLocation() {
         setLocation(new Location(LengthUnit.Millimeters));
     }
 
-    // Copy constructor needed for deep copy of object.
-    public BoardLocation(BoardLocation obj) {
-        this.location = obj.location;
-        this.side = obj.side;
-        this.board = obj.board;
-        this.boardFile = obj.boardFile;
-        this.panelId = obj.panelId;
-        this.checkFiducials = obj.checkFiducials;
-        this.enabled = obj.enabled;
-        this.placed = obj.placed;
+    /**
+     * Constructs a deep copy of the specified BoardLocation
+     * @param boardLocation
+     */
+    public BoardLocation(BoardLocation boardLocation) {
+        super(boardLocation);
     }
 
+    /**
+     * Constructs a BoardLocation for the specified Board
+     * @param board - the specified board
+     */
     public BoardLocation(Board board) {
         this();
         setBoard(board);
     }
 
-    @SuppressWarnings("unused")
+    /**
+     * Called immediately after de-serialization
+     */
     @Commit
-    private void commit() {
-        setLocation(location);
-        setBoard(board);
-    }
-
-    public Location getLocation() {
-        return location;
-    }
-
-    public void setLocation(Location location) {
-        Location oldValue = this.location;
-        this.location = location;
-        firePropertyChange("location", oldValue, location);
-        // If the location is changing it is not possible the placement transform is
-        // still valid, so clear it.
-        if (!this.location.equals(oldValue)) {
-            setPlacementTransform(null);
+    protected void commit() {
+        super.commit();
+        
+        //Converted deprecated attributes/elements
+        if (boardFile != null) {
+            setFileName(boardFile);
+            boardFile = null;
+        }
+        if (enabled != null) {
+            setLocallyEnabled(enabled);
+            enabled = null;
         }
     }
     
-    public Side getSide() {
-        return side;
+    /**
+     * Called just prior to serialization
+     */
+    @Persist
+    protected void persist() {
+        //Remove deprecated fields
+        boardFile = null;
+        enabled = null;
+        placed = null;
     }
     
-    public int getTotalActivePlacements(){
-    	if (board == null) {
-    		return 0;
-    	}
-    	int counter = 0;
-    	for(Placement placement : board.getPlacements()) {
-    		if (placement.getSide() == getSide()
-    		        && placement.getType() == Type.Placement
-    		        && placement.isEnabled()) {
-    				counter++;
-        	}
-    	}
-    	return counter;
-    }
-    
-    public int getActivePlacements() {
-    	if (board == null) {
-    		return 0;
-    	}
-    	int counter = 0;
-	    for(Placement placement : board.getPlacements()) {
-            if (placement.getSide() == getSide()
-                    && placement.getType() == Type.Placement
-                    && placement.isEnabled()
-                    && !getPlaced(placement.getId())) {
-                    counter++;
-            }
-        }
-    	return counter;
-    }
-
-    public void setSide(Side side) {
-        Object oldValue = this.side;
-        this.side = side;
-        firePropertyChange("side", oldValue, side);
-    }
-
+    /**
+     * 
+     * @return - the Board associated with this BoardLocation
+     */
     public Board getBoard() {
-        return board;
+        return (Board) getPlacementsHolder();
     }
 
+    /**
+     * Sets the board associated with this BoardLocation
+     * @param board - the board to set
+     */
     public void setBoard(Board board) {
-        Board oldValue = this.board;
-        this.board = board;
-        firePropertyChange("board", oldValue, board);
+        setPlacementsHolder(board);
     }
 
+    /**
+     * 
+     * @return - the filename where the Board associated with this BoardLocation is stored
+     */
     String getBoardFile() {
-        return boardFile;
+        return getFileName();
     }
 
-    void setBoardFile(String boardFile) {
-        this.boardFile = boardFile;
+    /**
+     * Sets the filename where the Board associated with this BoardLocation is stored
+     * @param boardFileName - the filename to set
+     */
+    void setBoardFile(String boardFileName) {
+        setFileName(boardFileName);
     }
 
-    public String getPanelId() {
-        return panelId;
-    }
-
-    public void setPanelId(String id) {
-        String oldValue = this.panelId;
-        this.panelId = id;
-        firePropertyChange("panelId", oldValue, panelId);
-    }
-
-    public boolean isCheckFiducials() {
-        return checkFiducials;
-    }
-
-    public void setCheckFiducials(boolean checkFiducials) {
-        boolean oldValue = this.checkFiducials;
-        this.checkFiducials = checkFiducials;
-        firePropertyChange("checkFiducials", oldValue, checkFiducials);
-    }
-
-    public boolean isEnabled() {
-        return enabled;
-    }
-
-    public void setEnabled(boolean enabled) {
-        boolean oldValue = this.enabled;
-        this.enabled = enabled;
-        firePropertyChange("enabled", oldValue, enabled);
-    }
-
-    public void setPlaced(String placementId, boolean placed) {
-        this.placed.put(placementId, placed);
-        firePropertyChange("placed", null, this.placed);
-    }
-
-    public boolean getPlaced(String placementId) {
-        if (placed.containsKey(placementId)) {
-            return placed.get(placementId);
-        } 
-        else {
-            return false;
-        }
+    /**
+     * @deprecated placement status is now saved with the job
+     * @return the placement status
+     */
+    @Deprecated
+    public Map<String, Boolean> getPlaced() {
+        return placed;
     }
     
-    public void clearAllPlaced() {
-        this.placed.clear();
-        firePropertyChange("placed", null, this.placed);
-    }
-    
+    /**
+     * 
+     * @return - the transform that converts the Board's local coordinates to those of its parent
+     */
     public AffineTransform getPlacementTransform() {
-        return placementTransform;
+        return getLocalToParentTransform();
     }
 
+    /**
+     * Sets the transform that converts the Board's local coordinates to those of its parent
+     * @param placementTransform - the transform to set
+     */
     public void setPlacementTransform(AffineTransform placementTransform) {
-        Object oldValue = this.placementTransform;
-        this.placementTransform = placementTransform;
-        firePropertyChange("placementTransform", oldValue, placementTransform);
+        setLocalToParentTransform(placementTransform);
     }
 
     @Override
     public String toString() {
-        return String.format("board (%s), location (%s), side (%s)", boardFile, location, side);
+        return String.format("BoardLocation %s @%08x defined by @%08x: (%s), location (%s), side (%s)", getId(), hashCode(), definition != null ? definition.hashCode() : 0, fileName, getLocation(), side);
     }
+    
+    /**
+     * Provides a formated dump to the log file
+     * @param leader - prefix to indent the dump 
+     */
+    public void dump(String leader) {
+        PanelLocation parentPanelLocation = getParent();
+        int parentHashCode = 0;
+        if (parentPanelLocation != null) {
+            parentHashCode = parentPanelLocation.hashCode();
+        }
+        Logger.trace(String.format("%s (%s) BoardLocation:@%08x defined by @%08x child of @%08x, "
+                + "%s, location=%s globalLocation=%s, side=%s (%s)", leader,  this.id, 
+                this.hashCode(), this.getDefinition().hashCode(), parentHashCode, fileName, 
+                getLocation(), getGlobalLocation(), side, 
+                getBoard() == null ? "Null" : getBoard().toString()));
+    }
+
 }

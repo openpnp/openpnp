@@ -1,11 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<install4j version="8.0.6" transformSequenceNumber="8">
-  <directoryPresets config="./OPENPNP_2_0.md" />
-  <application name="OpenPnP" applicationId="9204-4030-0867-1434" mediaDir="./installers" mediaFilePattern="${compiler:sys.fullName}-${compiler:sys.platform}-${compiler:mediaFileVersion}" shortName="openpnp" publisher="OpenPnP" publisherWeb="http://openpnp.org" version="develop" allPathsRelative="true" macVolumeId="2f75d25b539292d5" javaMinVersion="1.7">
+<install4j version="10.0.5" transformSequenceNumber="10">
+  <directoryPresets config="./.github/OpenPnP-Developer-ID-Application.p12" />
+  <application name="OpenPnP" applicationId="9204-4030-0867-1434" mediaDir="./installers" mediaFilePattern="${compiler:sys.fullName}-${compiler:sys.platform}-${compiler:mediaFileVersion}" shortName="openpnp" publisher="OpenPnP" publisherWeb="http://openpnp.org" version="develop" allPathsRelative="true" macVolumeId="2f75d25b539292d5" javaMinVersion="11">
     <variables>
       <variable name="native_path" />
       <variable name="mediaFileVersion" value="${compiler:sys.version}" />
     </variables>
+    <codeSigning macEnabled="true" macPkcs12File=".github/OpenPnP-Developer-ID-Application.p12" macNotarize="true" appleId="jason@vonnieda.org">
+      <macSearchedJars>
+        <entry>jna-*</entry>
+        <entry>swt-*</entry>
+        <entry>javafx-*</entry>
+        <entry>bridj-*</entry>
+        <entry>jSerialComm-*</entry>
+        <entry>jython-*</entry>
+        <entry>opencv-*</entry>
+        <entry>openpnp-*</entry>
+        <entry>webcam-*</entry>
+      </macSearchedJars>
+    </codeSigning>
+    <jreBundles jdkProviderId="AdoptOpenJDK" release="23/latest" />
   </application>
   <files>
     <roots>
@@ -58,7 +72,7 @@
     <launcher name="OpenPnP" id="23" icnsFile="./src/main/resources/icons/OpenPnP-logo.icns">
       <executable name="OpenPnP" iconSet="true" executableMode="gui" singleInstance="true" dpiAware="false" />
       <splashScreen bitmapFile="./logo/OpenPnP-logo.iconset/icon_128x128.png" />
-      <java mainClass="org.openpnp.Main">
+      <java mainClass="org.openpnp.Main" vmParameters="--add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.desktop/java.awt=ALL-UNNAMED --add-opens=java.desktop/java.awt.color=ALL-UNNAMED">
         <classPath>
           <archive location="openpnp-gui-0.0.1-alpha-SNAPSHOT.jar" failOnError="false" />
           <scanDirectory location="lib" failOnError="false" />
@@ -67,7 +81,8 @@
           <directory name="native/${compiler:native_path}" />
         </nativeLibraryDirectories>
       </java>
-      <macStaticAssociationActions mode="selected" />
+      <infoPlist>&lt;key&gt;NSCameraUsageDescription&lt;/key&gt;
+&lt;string&gt;openpnp-capture needs permission to access the camera to capture images.&lt;/string&gt;</infoPlist>
       <iconImageFiles>
         <file path="./src/main/resources/icons/OpenPnP-logo.iconset/icon_32x32.png" />
         <file path="./src/main/resources/icons/OpenPnP-logo.iconset/icon_128x128.png" />
@@ -760,11 +775,19 @@ if (context.isUnattended()) {
           <group id="271" beanClass="com.install4j.runtime.beans.groups.VerticalFormComponentGroup" useExternalParametrization="true" externalParametrizationName="Customize banner image" externalParametrizationMode="include">
             <serializedBean>
               <property name="backgroundColor">
-                <object class="java.awt.Color">
-                  <int>255</int>
-                  <int>255</int>
-                  <int>255</int>
-                  <int>255</int>
+                <object class="com.install4j.runtime.beans.LightOrDarkColor">
+                  <object class="java.awt.Color">
+                    <int>255</int>
+                    <int>255</int>
+                    <int>255</int>
+                    <int>255</int>
+                  </object>
+                  <object class="java.awt.Color">
+                    <int>49</int>
+                    <int>52</int>
+                    <int>53</int>
+                    <int>255</int>
+                  </object>
                 </object>
               </property>
               <property name="borderSides">
@@ -773,11 +796,19 @@ if (context.isUnattended()) {
                 </object>
               </property>
               <property name="imageEdgeBackgroundColor">
-                <object class="java.awt.Color">
-                  <int>25</int>
-                  <int>143</int>
-                  <int>220</int>
-                  <int>255</int>
+                <object class="com.install4j.runtime.beans.LightOrDarkColor">
+                  <object class="java.awt.Color">
+                    <int>25</int>
+                    <int>143</int>
+                    <int>220</int>
+                    <int>255</int>
+                  </object>
+                  <object class="java.awt.Color">
+                    <int>0</int>
+                    <int>74</int>
+                    <int>151</int>
+                    <int>255</int>
+                  </object>
                 </object>
               </property>
               <property name="imageEdgeBorder" type="boolean" value="true" />
@@ -831,11 +862,19 @@ if (context.isUnattended()) {
               <group id="278" beanClass="com.install4j.runtime.beans.groups.VerticalFormComponentGroup" useExternalParametrization="true" externalParametrizationName="Customize title bar" externalParametrizationMode="include">
                 <serializedBean>
                   <property name="backgroundColor">
-                    <object class="java.awt.Color">
-                      <int>255</int>
-                      <int>255</int>
-                      <int>255</int>
-                      <int>255</int>
+                    <object class="com.install4j.runtime.beans.LightOrDarkColor">
+                      <object class="java.awt.Color">
+                        <int>255</int>
+                        <int>255</int>
+                        <int>255</int>
+                        <int>255</int>
+                      </object>
+                      <object class="java.awt.Color">
+                        <int>49</int>
+                        <int>52</int>
+                        <int>53</int>
+                        <int>255</int>
+                      </object>
                     </object>
                   </property>
                   <property name="borderSides">
@@ -938,31 +977,32 @@ if (context.isUnattended()) {
     </styles>
   </installerGui>
   <mediaSets>
-    <windows name="Windows_32" id="24" installDir="openpnp" jreBitType="32">
+    <windows name="Windows_32" id="24" installDir="openpnp" architecture="32">
       <variables>
         <variable name="native_path" value="windows/x86" />
       </variables>
-      <jreBundle jreBundleSource="preCreated" includedJre="windows-x86-1.8.0_131" />
+      <jreBundle jreBundleSource="none" manualJreEntry="true" />
     </windows>
-    <windows name="Windows_64" id="28" installDir="openpnp">
+    <windows name="Windows_64" id="28" installDir="openpnp" architecture="64">
       <variables>
         <variable name="native_path" value="windows/x64" />
       </variables>
-      <jreBundle jreBundleSource="preCreated" includedJre="windows-amd64-1.8.0_131" />
     </windows>
-    <macosFolder name="Mac OS X Folder" id="119" installDir="OpenPnP">
-      <variables>
-        <variable name="native_path" value="mac/universal" />
-      </variables>
-      <jreBundle jreBundleSource="preCreated" includedJre="macosx-amd64-1.8.0_131" bundleUrl="http://openpnp.org" />
-    </macosFolder>
-    <unixInstaller name="Unix Installer" id="121" installDir="openpnp" />
-    <unixArchive name="Unix Archive" id="122" installDir="openpnp" />
-    <linuxRPM name="Linux RPM" id="123" installDir="/opt/openpnp" />
-    <linuxDeb name="Linux Deb Archive" id="124" installDir="/opt/openpnp" bzip="true" description="Open Source SMT Pick and Place Software" maintainerEmail="jason@vonnieda.org" />
+    <macosArchive name="macOS Single Bundle Archive" id="337" architecture="universal" launcherId="23" />
+    <unixInstaller name="Unix Installer" id="121" installDir="openpnp">
+      <jreBundle jreBundleSource="none" />
+    </unixInstaller>
+    <unixArchive name="Unix Archive" id="122" installDir="openpnp">
+      <jreBundle jreBundleSource="none" />
+    </unixArchive>
+    <linuxRPM name="Linux RPM" id="123" installDir="/opt/openpnp">
+      <jreBundle jreBundleSource="none" />
+    </linuxRPM>
+    <linuxDeb name="Linux Deb Archive" id="124" installDir="/opt/openpnp" bzip="true" description="Open Source SMT Pick and Place Software" maintainerEmail="jason@vonnieda.org">
+      <jreBundle jreBundleSource="none" />
+    </linuxDeb>
   </mediaSets>
-  <buildIds>
-    <mediaSet refId="119" />
+  <buildIds buildAll="false">
+    <mediaSet refId="337" />
   </buildIds>
-  <buildOptions disableJreBundling="true" />
 </install4j>

@@ -38,6 +38,7 @@ import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
+import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
 import org.openpnp.spi.PropertySheetHolder;
@@ -47,7 +48,7 @@ import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 
-public class ReferenceActuator extends AbstractActuator implements ReferenceHeadMountable {
+public class ReferenceActuator extends AbstractActuator implements HeadMountable {
 
     @Element
     private Location headOffsets = new Location(LengthUnit.Millimeters);

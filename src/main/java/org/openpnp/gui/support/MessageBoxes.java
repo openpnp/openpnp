@@ -30,9 +30,20 @@ import org.pmw.tinylog.Logger;
 
 public class MessageBoxes {
 
+    // prepare message for use in a message box
+    static String prepareMessage(String message) {
+        if (message == null) {
+            message = "";
+        }
+        message = message.replaceAll("\n", "<br/>");
+        message = message.replaceAll("\r", "");
+        message = "<html><body width=\"400\">" + message + "</body></html>";
+        return message;
+    }    
 
-    public static void errorBox(Component parent, String title, Throwable cause) {
+    public static boolean errorBox(Component parent, String title, Throwable cause, boolean withContinuation) {
         String message = null;
+        boolean ret = false;
         if (cause != null) {
             message = cause.getMessage();
             if (message == null || message.trim().isEmpty()) {
@@ -47,12 +58,22 @@ public class MessageBoxes {
             message = "No message supplied.";
         }
         Logger.debug("{}: {}", title, cause);
-        message = message.replaceAll("\n", "<br/>");
-        message = message.replaceAll("\r", "");
         message = message.replaceAll("<", "&lt;");
         message = message.replaceAll(">", "&gt;");
-        message = "<html><body width=\"400\">" + message + "</body></html>";
-        JOptionPane.showMessageDialog(parent, message, title, JOptionPane.ERROR_MESSAGE);
+        message = prepareMessage(message);
+
+        // if this errorBox shall ask for Continuation, show a ConfirmDialog and return if the user selected YES
+        if (withContinuation) {
+            ret = JOptionPane.showConfirmDialog(parent, message, title, JOptionPane.OK_CANCEL_OPTION, JOptionPane.ERROR_MESSAGE) == JOptionPane.OK_OPTION;
+        } else {
+            JOptionPane.showMessageDialog(parent, message, title, JOptionPane.ERROR_MESSAGE);
+        }
+        
+        return ret;
+    }
+
+    public static void errorBox(Component parent, String title, Throwable cause) {
+        errorBox(parent, title, cause, false);
     }
 
     public static void errorBox(Component parent, String title, String message) {
@@ -60,9 +81,7 @@ public class MessageBoxes {
             message = "";
         }
         Logger.debug("{}: {}", title, message);
-        message = message.replaceAll("\n", "<br/>");
-        message = message.replaceAll("\r", "");
-        message = "<html><body width=\"400\">" + message + "</body></html>";
+        message = prepareMessage(message);
         JOptionPane.showMessageDialog(parent, message, title, JOptionPane.ERROR_MESSAGE);
     }
 
@@ -71,9 +90,7 @@ public class MessageBoxes {
             message = "";
         }
         Logger.debug("{}: {}", title, message);
-        message = message.replaceAll("\n", "<br/>");
-        message = message.replaceAll("\r", "");
-        message = "<html><body width=\"400\">" + message + "</body></html>";
+        message = prepareMessage(message);
         return JOptionPane.showConfirmDialog(parent, message, title, JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION;
     }
 
@@ -81,9 +98,7 @@ public class MessageBoxes {
         if (message == null) {
             message = "";
         }
-        message = message.replaceAll("\n", "<br/>");
-        message = message.replaceAll("\r", "");
-        message = "<html><body width=\"400\">" + message + "</body></html>";
+        message = prepareMessage(message);
         JOptionPane.showMessageDialog(MainFrame.get(), message, title, JOptionPane.INFORMATION_MESSAGE);
     }
 

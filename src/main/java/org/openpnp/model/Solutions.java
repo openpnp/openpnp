@@ -22,10 +22,8 @@
 package org.openpnp.model;
 
 import java.awt.Color;
-import java.awt.Desktop;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -52,8 +50,10 @@ import org.openpnp.spi.Camera;
 import org.openpnp.spi.ControllerAxis;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.PropertySheetHolder;
+import org.openpnp.util.UiUtils;
 import org.openpnp.util.VisionUtils;
 import org.openpnp.util.XmlSerialize;
+import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.ElementList;
 
@@ -323,6 +323,11 @@ public class Solutions extends AbstractTableModel {
             return state;
         }
 
+        public void setStateCall(State state) throws Exception {
+            Logger.debug("About to set state "+state+" (from "+getState()+") on "+getSubject().getSubjectText()+": "+getIssue());
+            setState(state);
+        }
+
         public void setState(State state) throws Exception {
             Object oldValue = this.state;
             this.state = state;
@@ -399,6 +404,13 @@ public class Solutions extends AbstractTableModel {
             public MultiLineTextProperty(String label, String toolTip) {
                 super(label, toolTip);
             }
+        }
+        public abstract class BooleanProperty extends CustomProperty {
+            public BooleanProperty(String label, String toolTip) {
+                super(label, toolTip);
+            }
+            public abstract boolean get();
+            public abstract void set(boolean value);
         }
         public abstract class IntegerProperty extends CustomProperty {
             private final int min;
@@ -506,8 +518,7 @@ public class Solutions extends AbstractTableModel {
         @Override
         public void setState(State state) throws Exception {
             if (state == State.Solved) {
-                Desktop dt = Desktop.getDesktop();
-                dt.browse(new URI(uri));
+                UiUtils.browseUri(uri);
             }
             super.setState(state);
         }

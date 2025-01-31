@@ -134,7 +134,7 @@ public class GcodeAsyncDriver extends GcodeDriver {
     protected LinkedBlockingQueue<CommandLine> commandQueue;
 
     private boolean waitedForCommands;
-    private boolean confirmationComplete;
+    private volatile boolean confirmationComplete;
 
     public boolean isConfirmationFlowControl() {
         return confirmationFlowControl;
@@ -229,10 +229,12 @@ public class GcodeAsyncDriver extends GcodeDriver {
 
         @Override
         public void run() {
-            // Get the copy that is valid for this thread. 
+            // Get the copies that are valid for this thread.
             LinkedBlockingQueue<CommandLine> commandQueue = GcodeAsyncDriver.this.commandQueue;
-            CommandLine lastCommand = null;
+            ReferenceDriverCommunications comms = getCommunications();
+            String connectionName = comms.getConnectionName();
 
+            CommandLine lastCommand = null;
             while (!disconnectRequested) {
                 CommandLine command;
                 try {
@@ -260,8 +262,8 @@ public class GcodeAsyncDriver extends GcodeDriver {
                         // Set up the wanted confirmations for next time.
                         lastCommand = command;
                         receivedConfirmationsQueue.clear();
-                        getCommunications().writeLine(command.line);
-                        Logger.trace("[{}] >> {}", getCommunications().getConnectionName(), command);
+                        comms.writeLine(command.line);
+                        Logger.trace("[{}] >> {}", connectionName, command);
                     }
                     else {
                         confirmationComplete = true;
@@ -272,7 +274,7 @@ public class GcodeAsyncDriver extends GcodeDriver {
                     }
                 }
                 catch (IOException e) {
-                    Logger.error("Write error on {}: {}", getCommunications().getConnectionName(), e);
+                    Logger.error(e, "[{}] Write error", connectionName);
                     return;
                 }
                 catch (Exception e) {
@@ -282,7 +284,7 @@ public class GcodeAsyncDriver extends GcodeDriver {
                     //Logger.error("[{}] {}", getCommunications().getConnectionName(), e);
                 }
             }
-            Logger.trace("[{}] disconnectRequested, bye-bye.", getCommunications().getConnectionName());
+            Logger.trace("[{}] disconnectRequested, bye-bye.", connectionName);
         }
     }
 
@@ -310,7 +312,7 @@ public class GcodeAsyncDriver extends GcodeDriver {
             return;
         }
 
-        Logger.debug("{} commandQueue.offer({}, {})...", getCommunications().getConnectionName(), command, timeout);
+        Logger.debug("[{}] commandQueue offer >> {}", getCommunications().getConnectionName(), command);
         command = preProcessCommand(command);
         if (command.isEmpty()) {
             Logger.debug("{} empty command after pre process", getCommunications().getConnectionName());
@@ -323,6 +325,7 @@ public class GcodeAsyncDriver extends GcodeDriver {
         commandQueue.offer(commandLine, writerQueueTimeout, TimeUnit.MILLISECONDS);
         if (command.startsWith("$")) {
             waitForEmptyCommandQueue();
+            Logger.trace(getName()+" $-command, waiting "+dollarWaitTimeMilliseconds+"ms");
             Thread.sleep(dollarWaitTimeMilliseconds);
         }
     }
@@ -341,13 +344,17 @@ public class GcodeAsyncDriver extends GcodeDriver {
      * @throws InterruptedException
      */
     protected void waitForEmptyCommandQueue() {
-        long t1 = System.currentTimeMillis() + getTimeoutAtMachineSpeed();
+        long t0 = System.currentTimeMillis();
+        long t1 = t0 + getTimeoutAtMachineSpeed();
         while (System.currentTimeMillis() < t1) {
             if (commandQueue.size() == 0) {
+                long dt = System.currentTimeMillis() - t0;
+                if (dt > 1) {
+                        Logger.trace("{} waited {}ms for empty command queue.", getName(), dt);
+                }
                 return; // --->
             }
             try {
-                Logger.trace("{} wait for empty command queue.", getName());
                 Thread.sleep(10);
             }
             catch (InterruptedException e) {
@@ -389,6 +396,7 @@ public class GcodeAsyncDriver extends GcodeDriver {
         confirmationComplete = false;
         CommandLine commandLine = new CommandLine(null, 1);
         commandQueue.offer(commandLine, writerQueueTimeout, TimeUnit.MILLISECONDS);
+        long t0 = System.currentTimeMillis();
         while (!confirmationComplete) {
             try {
                 synchronized(this) { 
@@ -398,6 +406,10 @@ public class GcodeAsyncDriver extends GcodeDriver {
             catch (InterruptedException e) {
                 Logger.warn(e, getName() +" was interrupted while waiting for completion.");
             }
+        }
+        long dt = System.currentTimeMillis() - t0;
+        if (dt > 1) {
+            Logger.trace("{} waited {}ms to drain command queue.", getName(), dt);
         }
     }
 

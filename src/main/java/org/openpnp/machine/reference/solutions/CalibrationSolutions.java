@@ -1268,6 +1268,11 @@ public class CalibrationSolutions implements Solutions.Subject {
                                 testPatternImagePointsList, size, mirrored,
                                 apparentMotionDirection);
 
+                        if (advCal.getPrimaryLocation() != null) {
+                            //Do this here rather than in advCal.applyCalibrationToMachine so that
+                            //when calibrating manually, a different defaultZ can be used if desired
+                            camera.setDefaultZ(advCal.getPrimaryLocation().getLengthZ());
+                        }
                         advCal.applyCalibrationToMachine(head, camera);
 
                         // Tidy up.

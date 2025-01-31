@@ -310,7 +310,6 @@ public class BlindsFeeder extends ReferenceFeeder {
     } 
 
     public Location getPickLocation(double pocketNumber) throws Exception {
-        assertCalibration();
         return getUncalibratedPickLocation(pocketNumber);
     }
 
@@ -1506,9 +1505,10 @@ public class BlindsFeeder extends ReferenceFeeder {
 
     @Override
     public Location getJobPreparationLocation() {
-        if ((getOcrAction() != OcrAction.None
-                || getCoverActuation() == CoverActuation.OpenOnJobStart)
-                && ! isCoverOpen()) {
+        if ((isVisionEnabled() && !isCalibrated())
+            || getOcrAction() != OcrAction.None
+            || (getCoverActuation() == CoverActuation.OpenOnJobStart
+                && ! isCoverOpen())) {
             return getUncalibratedPickLocation(0);
         }
         else {
@@ -1524,6 +1524,8 @@ public class BlindsFeeder extends ReferenceFeeder {
     public void prepareForJob(boolean visit) throws Exception {
         super.prepareForJob(visit);
         if (visit) {
+            assertCalibration();
+            
             ocrChangedPartId = null;
             if (getCoverActuation() == CoverActuation.OpenOnJobStart
                     && ! isCoverOpen()) {
@@ -1612,13 +1614,13 @@ public class BlindsFeeder extends ReferenceFeeder {
                 // Calculate the motion for the cover to be pushed in feeder local coordinates. 
                 Length feederX0 = (openState ^ isBlindsCoverAlignmentReversed() ? 
                         edgeOpenDistance.multiply(-1.0)
-                        .subtract(pocketPitch).multiply(0.5)
+                        .subtract(pocketPitch.multiply(0.5))
                         .subtract(sprocketPitch.multiply(0.5)) // go half sprocket too far back
                         .subtract(nozzleTipDiameter.multiply(0.5)) 
                         : 
                             edgeClosedDistance
                             .add(tapeLength) 
-                            .add(pocketPitch).multiply(0.5)
+                            .add(pocketPitch.multiply(0.5))
                             .add(sprocketPitch.multiply(0.5)) // go half sprocket too far
                             .add(nozzleTipDiameter.multiply(0.5)))
                         .convertToUnits(location.getUnits());
