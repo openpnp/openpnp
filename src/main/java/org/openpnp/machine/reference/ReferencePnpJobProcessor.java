@@ -1190,12 +1190,6 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                     throw new JobProcessorException(nozzle, e);
                 }
             }
-            catch (JobProcessorException e) {
-                throw e;
-            }
-            catch (Exception e) {
-                throw new JobProcessorException(nozzle, e);
-            }
         }
         
         private void scriptBeforeAssembly(PlannedPlacement plannedPlacement, Location placementLocation) throws JobProcessorException {
