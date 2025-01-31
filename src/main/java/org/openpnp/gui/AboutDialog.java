@@ -69,7 +69,7 @@ public class AboutDialog extends JDialog {
     }
 
     private void createUi() {
-        setTitle("About OpenPnP 2.2");
+        setTitle(String.format("About OpenPnP %s", Main.getVersionString()));
         setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
         setBounds(100, 100, 347, 360);
         getContentPane().setLayout(new BorderLayout());

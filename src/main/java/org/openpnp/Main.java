@@ -37,6 +37,7 @@ import org.pmw.tinylog.Configurator;
 import org.pmw.tinylog.Level;
 import org.pmw.tinylog.Logger;
 import org.pmw.tinylog.writers.RollingFileWriter;
+import org.apache.commons.io.FileUtils;
 
 import javassist.CannotCompileException;
 import javassist.ClassPool;
@@ -51,7 +52,27 @@ import javassist.NotFoundException;
  *
  */
 public class Main {
+
     public static String getVersion() {
+        return getVersionString()+"_"+getBuildString();
+    }
+
+    public static String getVersionString() {
+        String version = null;
+        try {
+            version = FileUtils.readFileToString(new File("VERSION.txt"));
+        }
+        catch (Exception e) {
+        }
+
+        if (version==null) {
+            version = "n/a";
+        }
+
+        return version.strip();
+    }
+
+    public static String getBuildString() {
         String version = Main.class.getPackage().getImplementationVersion();
         if (version == null) {
             version = "INTERNAL BUILD";
