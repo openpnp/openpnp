@@ -694,7 +694,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
             command = substituteVariable(command, "TimeSeconds", (double)milliseconds / 1000.0); 
             sendGcode(command);
             
-            // consider is delay a pending motion for subsequent WaitForCompletion to actually
+            // consider this delay a pending motion for subsequent WaitForCompletion to actually
             // wait which might otherwise be optimized away.
             motionPending = true;
         }

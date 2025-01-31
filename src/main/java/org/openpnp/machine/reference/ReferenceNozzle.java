@@ -1283,14 +1283,14 @@ public class ReferenceNozzle extends AbstractNozzle implements HeadMountable {
         }
     }
 
-	/**
-	 * Delay for a given time in milliseconds and take the respective vacuum valve into account.
-	 * @param milliseconds
-	 * @throws Exception 
-	 */
-	private void delay(int milliseconds) throws Exception  {
+    /**
+     * Delay for a given time in milliseconds and take the respective vacuum valve into account.
+     * @param milliseconds
+     * @throws Exception 
+     */
+    private void delay(int milliseconds) throws Exception  {
         delay(milliseconds, getExpectedVacuumActuator());
-	}
+    }
 
     @Override
     public boolean isPartOn() throws Exception {
