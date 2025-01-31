@@ -289,7 +289,7 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
 
         // Handle soft limits and rotation axes limiting and wrap-around.
         axesLocation = limitAxesLocation(hm, axesLocation, false);
-        
+
         // If this is a subordinate motion, queue it now
         AxesLocation subordinateMotionAxes = new AxesLocation();
         if (Motion.MotionOption.SubordinateX.isSetIn(optionFlags)) {

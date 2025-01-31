@@ -49,7 +49,7 @@ public class ReferencePnpJobProcessorConfigurationWizard extends AbstractConfigu
     private JCheckBox steppingToNextMotion;
     private JCheckBox optimizeMultipleNozzles;
     private JCheckBox preRotateAllNozzles;
-
+    
     public ReferencePnpJobProcessorConfigurationWizard(ReferencePnpJobProcessor jobProcessor) {
         this.jobProcessor = jobProcessor;
         contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));

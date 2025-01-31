@@ -311,7 +311,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
             return new PartAlignment.PartAlignmentOffset(offsets, true);
         }
     }
-    
+
     private PartAlignmentOffset findOffsetsPostRotate(Part part, BoardLocation boardLocation,
             Placement placement, Nozzle nozzle, Camera camera, BottomVisionSettings bottomVisionSettings)
                     throws Exception {
