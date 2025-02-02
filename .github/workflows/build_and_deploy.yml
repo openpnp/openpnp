@@ -28,7 +28,7 @@ jobs:
     runs-on: macos-latest
     name: Deploy
     needs: test
-    if: github.repository == 'openpnp/openpnp' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/test')
+    if: github.repository == 'openpnp/openpnp' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/test')
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v2
