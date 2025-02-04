@@ -1130,6 +1130,14 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             totalPartsPlaced++;
             
             scriptComplete(plannedPlacement, placementLocation);
+
+            // update placements within the UI thread (we are currently in a machine thread)
+            SwingUtilities.invokeLater(() -> {
+                MainFrame f = MainFrame.get();
+                if (f != null) {
+                    f.getJobTab().getJobPlacementsPanel().updateActivePlacements();
+                }
+            });
             
             return this;
         }
