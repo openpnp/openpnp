@@ -9,7 +9,6 @@ public interface PnpJobPlanner {
         public final JobPlacement jobPlacement;
         public final Nozzle nozzle;
         public final NozzleTip nozzleTip;
-        public Feeder feeder;
         public PartAlignment.PartAlignmentOffset alignmentOffsets;
         
         public PlannedPlacement(Nozzle nozzle, NozzleTip nozzleTip, JobPlacement jobPlacement) {
@@ -37,10 +36,11 @@ public interface PnpJobPlanner {
 
     /**
      * Call restart() to signal that a new job run will start next. That allows to
-     * support a first-run strategies (Strategy.Relaxed).
+     * support a first-run strategies (Strategy.StartAsPlanned).
      */
     public void restart();
     public Strategy getStrategy();
     public void setStrategy(Strategy strategy);
-    public List<PlannedPlacement> plan(Head head, List<JobPlacement> placements);
+    public List<PlannedPlacement> plan(Head head, List<JobPlacement> jobPlacements);
+    public List<PlannedPlacement> sort(List<PlannedPlacement> plannedPlacements);
 }

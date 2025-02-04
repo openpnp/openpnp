@@ -94,7 +94,14 @@ public class Motion {
         /**
          * Signaling failed interpolation. 
          */
-        InterpolationFailed;
+        InterpolationFailed,
+        /**
+         * Combine this motion with next and let the next motion take precedence.
+         */
+        SubordinateX,
+        SubordinateY,
+        SubordinateZ,
+        SubordinateRotation;
 
         public int flag() {
             return 1 << this.ordinal();
