@@ -28,6 +28,7 @@ import java.util.function.Function;
 
 import javax.swing.SwingUtilities;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.CameraPanel;
 import org.openpnp.gui.components.CameraView;
@@ -75,10 +76,10 @@ public class CameraSolutions implements Solutions.Subject  {
                 && ((OpenPnpCaptureCamera) camera).getDevice() == null) {
                 solutions.add(new Solutions.PlainIssue(
                         camera, 
-                        "Select the camera to use.", 
-                        "Choose the camera you wont to use.", 
+                        Translations.getString("CameraSolutions.Connect.Issue"),  //$NON-NLS-1$
+                        Translations.getString("CameraSolutions.Connect.Solution"),  //$NON-NLS-1$
                         Severity.Fundamental,
-                        "https://github.com/openpnp/openpnp/wiki/OpenPnpCaptureCamera"));
+                        "https://github.com/openpnp/openpnp/wiki/OpenPnpCaptureCamera")); //$NON-NLS-1$
             }
         }
         else if (solutions.isTargeting(Milestone.Basics)) {
