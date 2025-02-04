@@ -41,25 +41,36 @@ public interface JobProcessor extends PropertySheetHolder, WizardConfigurable {
             return sw.toString();
         }
 
+        /**
+         * Inherit the interrupting state and secondarySource from the first JobProcessorException in the
+         * chain of causes.
+         * 
+         * @param exception
+         * @param throwable
+         */
+        private static void inheritInterruptingAndSecondarySource(JobProcessorException exception, final Throwable throwable) {
+            // loop the chain to throwables/causes
+            for (Throwable t = throwable; t != null; t = t.getCause()) {
+                if (t instanceof JobProcessorException) {
+                    JobProcessorException e = ((JobProcessorException) t);
+                    exception.interrupting = e.isInterrupting();
+                    exception.secondarySource = e.secondarySource;
+                    // leave the loop here at the first JobProcessorException
+                    break;
+                }
+            }
+        }
+        
         public JobProcessorException(Object source, Throwable throwable) {
             super(getThrowableMessage(throwable), throwable);
             this.source = source;
-            if (throwable instanceof JobProcessorException) {
-                JobProcessorException e = ((JobProcessorException) throwable);
-                this.interrupting = e.isInterrupting();
-                if (e.secondarySource !=null) {
-                    this.secondarySource = e.secondarySource;
-                }
-            }
+            inheritInterruptingAndSecondarySource(this, throwable);
         }
 
         public JobProcessorException(Object source, Object secondarySource, Throwable throwable) {
             super(getThrowableMessage(throwable), throwable);
             this.source = source;
-            if (throwable instanceof JobProcessorException) {
-                JobProcessorException e = ((JobProcessorException) throwable);
-                this.interrupting = e.isInterrupting();
-            }
+            inheritInterruptingAndSecondarySource(this, throwable);
             this.secondarySource = secondarySource;
         }
 
