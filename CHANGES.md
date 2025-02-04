@@ -1,6 +1,17 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# Version 2.3
+
+## New Features
+
+* Added the Pre-Rotate All Nozzles optimisation which provides a speed enhancement in situations where the rotation takes longer then the actual XY move eg when moving the second nozzle over the bottom camera and reduces the risk of parts slipping on nozzles. [PR 1654](https://github.com/openpnp/openpnp/pull/1654)
+
+## Bug Fixes
+
+* Fix bug causing manual nozzle tip changes to get swallowed if the corresponding placement is set to defer errors. [PR 1741](https://github.com/openpnp/openpnp/pull/1741)
+
+
 # 2024 Q4
 
 ## New Features
