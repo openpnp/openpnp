@@ -92,39 +92,19 @@ public class FootprintTableModel extends AbstractTableModel {
             }
             else if (columnIndex == 1) {
                 LengthCellValue value = (LengthCellValue) aValue;
-                Length length = value.getLength();
-                if (length.getUnits() == null) {
-                    length.setUnits(footprint.getUnits());
-                }
-                length = length.convertToUnits(footprint.getUnits());
-                pad.setX(length.getValue());
+                pad.setX(lengthValueFromLengthCellValue(value));
             }
             else if (columnIndex == 2) {
                 LengthCellValue value = (LengthCellValue) aValue;
-                Length length = value.getLength();
-                if (length.getUnits() == null) {
-                    length.setUnits(footprint.getUnits());
-                }
-                length = length.convertToUnits(footprint.getUnits());
-                pad.setY(length.getValue());
+                pad.setY(lengthValueFromLengthCellValue(value));
             }
             else if (columnIndex == 3) {
                 LengthCellValue value = (LengthCellValue) aValue;
-                Length length = value.getLength();
-                if (length.getUnits() == null) {
-                    length.setUnits(footprint.getUnits());
-                }
-                length = length.convertToUnits(footprint.getUnits());
-                pad.setWidth(length.getValue());
+                pad.setWidth(lengthValueFromLengthCellValue(value));
             }
             else if (columnIndex == 4) {
                 LengthCellValue value = (LengthCellValue) aValue;
-                Length length = value.getLength();
-                if (length.getUnits() == null) {
-                    length.setUnits(footprint.getUnits());
-                }
-                length = length.convertToUnits(footprint.getUnits());
-                pad.setHeight(length.getValue());
+                pad.setHeight(lengthValueFromLengthCellValue(value));
             }
             else if (columnIndex == 5) {
                 pad.setRotation(Double.parseDouble(aValue.toString()));
@@ -140,6 +120,13 @@ public class FootprintTableModel extends AbstractTableModel {
         catch (Exception e) {
             // TODO: dialog, bad input
         }
+    }
+
+    private double lengthValueFromLengthCellValue(LengthCellValue value) {
+        Length length = value.getLength();
+        length = length.changeUnitsIfUnspecified(footprint.getUnits());
+        length = length.convertToUnits(footprint.getUnits());
+        return length.getValue();
     }
 
     public Object getValueAt(int row, int col) {

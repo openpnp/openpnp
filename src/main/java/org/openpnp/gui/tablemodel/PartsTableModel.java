@@ -102,14 +102,10 @@ public class PartsTableModel extends AbstractObjectTableModel implements Propert
                 value.setDisplayNativeUnits(true);
                 Length length = value.getLength();
                 Length oldLength = part.getHeight();
-                if (length.getUnits() == null) {
-                    if (oldLength != null) {
-                        length.setUnits(oldLength.getUnits());
-                    }
-                    if (length.getUnits() == null) {
-                        length.setUnits(Configuration.get().getSystemUnits());
-                    }
+                if (oldLength != null) {
+                    length = length.changeUnitsIfUnspecified(oldLength.getUnits());
                 }
+                length = length.changeUnitsIfUnspecified(Configuration.get().getSystemUnits());
                 part.setHeight(length);
             }
             else if (columnIndex == 3) {
