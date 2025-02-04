@@ -401,7 +401,6 @@ public class PlacementsHolderPlacementsTableModel extends AbstractObjectTableMod
                 // TODO STOPSHIP: Both of these are huge performance hogs and do not belong
                 // in the render process. At the least we should cache this information but it
                 // would be better if the information was updated out of band by a listener.
-                jobPlacementsPanel.updateActivePlacements();
                 return MainFrame.get().getJobTab().getJob()
                         .retrievePlacedStatus(placementsHolderLocation, placement.getId());
             case 9:

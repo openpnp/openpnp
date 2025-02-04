@@ -10,6 +10,7 @@ a complete change list, only those that may directly interest or affect users.
 ## Bug Fixes
 
 * Fix bug causing manual nozzle tip changes to get swallowed if the corresponding placement is set to defer errors. [PR 1741](https://github.com/openpnp/openpnp/pull/1741)
+* Fix bug preventing the status bar "Placements N / M" from updating when viewing the wrong tab in the main window. [PR 1724](https://github.com/openpnp/openpnp/pull/1724)
 
 
 # 2024 Q4
