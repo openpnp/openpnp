@@ -140,7 +140,7 @@ public class FootprintTableModel extends AbstractTableModel {
                 return pad.getName();
             case 1:
                 if (pad.getMark()) {
-                    return "*";
+                    return "O";
                 } else {
                     return "";
                 }
