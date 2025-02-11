@@ -26,6 +26,7 @@ import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
+import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.StringReader;
@@ -171,7 +172,15 @@ public class PartsPanel extends JPanel implements WizardContainer {
 
         tabbedPane = new JTabbedPane(JTabbedPane.TOP);
 
-        table = new AutoSelectTextTable(tableModel);
+        table = new AutoSelectTextTable(tableModel) {
+            @Override
+            public String getToolTipText(MouseEvent evt) {
+                int column = columnAtPoint(evt.getPoint());
+                if(column==2) { return Translations.getString("PartsTableModel.Column.Height.toolTip"); } //$NON-NLS-1$
+                if(column==3) { return Translations.getString("PartsTableModel.Column.ThroughHoleDepth.toolTip"); } //$NON-NLS-1$
+                return null;
+            }
+        };
         table.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         table.setDefaultEditor(org.openpnp.model.Package.class,
                 new DefaultCellEditor(packagesCombo));

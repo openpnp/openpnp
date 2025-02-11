@@ -40,6 +40,7 @@ public class PartsTableModel extends AbstractObjectTableModel implements Propert
             new String[] {Translations.getString("PartsTableModel.ColumnName.ID"), //$NON-NLS-1$
                     Translations.getString("PartsTableModel.ColumnName.Description"), //$NON-NLS-1$
                     Translations.getString("PartsTableModel.ColumnName.Height"), //$NON-NLS-1$
+                    Translations.getString("PartsTableModel.ColumnName.ThroughHoleDepth"), //$NON-NLS-1$
                     Translations.getString("PartsTableModel.ColumnName.Package"), //$NON-NLS-1$
                     Translations.getString("PartsTableModel.ColumnName.SpeedPercent"), //$NON-NLS-1$
                     Translations.getString("PartsTableModel.ColumnName.BottomVision"), //$NON-NLS-1$
@@ -47,7 +48,7 @@ public class PartsTableModel extends AbstractObjectTableModel implements Propert
                     Translations.getString("PartsTableModel.ColumnName.Placements"), //$NON-NLS-1$
                     Translations.getString("PartsTableModel.ColumnName.Feeders") //$NON-NLS-1$
     };
-    private Class[] columnTypes = new Class[] {String.class, String.class, LengthCellValue.class,
+    private Class[] columnTypes = new Class[] {String.class, String.class, LengthCellValue.class, LengthCellValue.class,
             Package.class, String.class, BottomVisionSettings.class, FiducialVisionSettings.class, Integer.class, Integer.class};
     private List<Part> parts;
     private PercentConverter percentConverter = new PercentConverter();
@@ -109,15 +110,26 @@ public class PartsTableModel extends AbstractObjectTableModel implements Propert
                 part.setHeight(length);
             }
             else if (columnIndex == 3) {
-                part.setPackage((Package) aValue);
+                LengthCellValue value = (LengthCellValue) aValue;
+                value.setDisplayNativeUnits(true);
+                Length length = value.getLength();
+                Length oldDepth = part.getThroughHoleDepth();
+                if (oldDepth != null) {
+                    length = length.changeUnitsIfUnspecified(oldDepth.getUnits());
+                }
+                length = length.changeUnitsIfUnspecified(Configuration.get().getSystemUnits());
+                part.setThroughHoleDepth(length);
             }
             else if (columnIndex == 4) {
-                part.setSpeed(percentConverter.convertReverse(aValue.toString()));
+                part.setPackage((Package) aValue);
             }
             else if (columnIndex == 5) {
-                part.setBottomVisionSettings((BottomVisionSettings) aValue);
+                part.setSpeed(percentConverter.convertReverse(aValue.toString()));
             }
             else if (columnIndex == 6) {
+                part.setBottomVisionSettings((BottomVisionSettings) aValue);
+            }
+            else if (columnIndex == 7) {
                 part.setFiducialVisionSettings((FiducialVisionSettings) aValue);
             }
         }
@@ -136,16 +148,18 @@ public class PartsTableModel extends AbstractObjectTableModel implements Propert
             case 2:
                 return new LengthCellValue(part.getHeight(), true);
             case 3:
-                return part.getPackage();
+                return new LengthCellValue(part.getThroughHoleDepth(), true);
             case 4:
-                return percentConverter.convertForward(part.getSpeed());
+                return part.getPackage();
             case 5:
-                return part.getBottomVisionSettings();
+                return percentConverter.convertForward(part.getSpeed());
             case 6:
-                return part.getFiducialVisionSettings();
+                return part.getBottomVisionSettings();
             case 7:
-                return part.getPlacementCount();
+                return part.getFiducialVisionSettings();
             case 8:
+                return part.getPlacementCount();
+            case 9:
                 return part.getAssignedFeeders();
             default:
                 return null;

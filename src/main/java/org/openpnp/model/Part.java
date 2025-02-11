@@ -41,6 +41,11 @@ public class Part extends AbstractPartSettingsHolder {
     @Attribute
     private double height;
 
+    @Attribute(required = false)
+    private LengthUnit throughHoleDepthUnits = LengthUnit.Millimeters;
+    @Attribute(required = false)
+    private double throughHoleDepth;
+
     private Package packag;
 
     @Attribute
@@ -122,6 +127,28 @@ public class Part extends AbstractPartSettingsHolder {
             this.heightUnits = height.getUnits();
         }
         firePropertyChange("height", oldValue, getHeight());
+    }
+
+    public Length getThroughHoleDepth() {
+        return new Length(throughHoleDepth, throughHoleDepthUnits);
+    }
+
+    public void setThroughHoleDepth(Length depth) {
+        Length oldValue = getThroughHoleDepth();
+        if (depth == null) {
+            this.throughHoleDepth = 0;
+            this.throughHoleDepthUnits = null;
+        }
+        else {
+            this.throughHoleDepth = depth.getValue();
+            this.throughHoleDepthUnits = depth.getUnits();
+        }
+        firePropertyChange("throughHoleDepth", oldValue, getThroughHoleDepth());
+    }
+
+    public Length getHeightForSafeZ() {
+        // The length that dangles under a nozzle when carried
+        return getHeight().add(getThroughHoleDepth());
     }
 
     public Package getPackage() {
