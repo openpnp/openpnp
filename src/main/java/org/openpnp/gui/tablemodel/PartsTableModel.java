@@ -78,7 +78,7 @@ public class PartsTableModel extends AbstractObjectTableModel implements Propert
 
     @Override
     public boolean isCellEditable(int rowIndex, int columnIndex) {
-        return columnIndex >= 1 && columnIndex <= 6;
+        return columnIndex >= 1 && columnIndex <= 7;
     }
 
     @Override
