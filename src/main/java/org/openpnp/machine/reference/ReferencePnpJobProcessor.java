@@ -943,9 +943,10 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             final Part part = placement.getPart();
             final BoardLocation boardLocation = plannedPlacement.jobPlacement.getBoardLocation();
 
-            Location placementLocation = getPlacementLocation(plannedPlacement);
+            scriptBeforeAssembly(plannedPlacement);
             
-            scriptBeforeAssembly(plannedPlacement, placementLocation);
+            // Calculate this after running the script, because the script might have fine-tuned the location data
+            Location placementLocation = getPlacementLocation(plannedPlacement);
 
             checkPartOn(nozzle);
             
@@ -1020,13 +1021,14 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             }
         }
         
-        private void scriptBeforeAssembly(PlannedPlacement plannedPlacement, Location placementLocation) throws JobProcessorException {
+        private void scriptBeforeAssembly(PlannedPlacement plannedPlacement) throws JobProcessorException {
             final Nozzle nozzle = plannedPlacement.nozzle;
             final JobPlacement jobPlacement = plannedPlacement.jobPlacement;
             final Placement placement = jobPlacement.getPlacement();
             final Part part = placement.getPart();
             final BoardLocation boardLocation = plannedPlacement.jobPlacement.getBoardLocation();
             Length partHeight = part.getHeight();
+            Location placementLocation = getPlacementLocation(plannedPlacement);
             Location placementLocationPart = placementLocation.add(new Location(partHeight.getUnits(), 0, 0, partHeight.getValue(), 0));
             try {
                 HashMap<String, Object> params = new HashMap<>();
