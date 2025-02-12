@@ -36,6 +36,8 @@ import java.awt.event.ComponentListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.awt.KeyEventDispatcher;
+import java.awt.KeyboardFocusManager;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.lang.reflect.Method;
@@ -279,6 +281,11 @@ public class MainFrame extends JFrame {
     private JMenuItem mnEditRemoveBoard;
     private JMenu mnEditAddBoard;
     private JMenuItem mnCaptureToolLocation;
+
+    private boolean isShiftDown;
+    public boolean getShiftDown() {
+        return isShiftDown;
+    }
 
     public MainFrame(Configuration configuration) {
         mainFrame = this;
@@ -544,8 +551,6 @@ public class MainFrame extends JFrame {
         // Add global hotkeys for the arrow keys
         hotkeyActionMap = new HashMap<>();
 
-        int mask = KeyEvent.CTRL_DOWN_MASK;
-
         Toolkit.getDefaultToolkit().getSystemEventQueue().push(new EventQueue() {
             @Override
             protected void dispatchEvent(AWTEvent event) {
@@ -628,28 +633,31 @@ public class MainFrame extends JFrame {
         mnCommands.add(new JMenuItem(machineControlsPanel.homeAction));
         mnCommands.add(new JMenuItem(machineControlsPanel.startStopMachineAction));
 
-        hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_UP, mask),
-                machineControlsPanel.getJogControlsPanel().yPlusAction);
-        hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, mask),
-                machineControlsPanel.getJogControlsPanel().yMinusAction);
-        hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, mask),
-                machineControlsPanel.getJogControlsPanel().xMinusAction);
-        hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, mask),
-                machineControlsPanel.getJogControlsPanel().xPlusAction);
-        hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_QUOTE, mask),
-                machineControlsPanel.getJogControlsPanel().zPlusAction);
-        hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_SLASH, mask),
-                machineControlsPanel.getJogControlsPanel().zMinusAction);
-        hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_COMMA, mask),
-                machineControlsPanel.getJogControlsPanel().cPlusAction);
-        hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_PERIOD, mask),
-                machineControlsPanel.getJogControlsPanel().cMinusAction);
-        hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_MINUS, mask),
-                machineControlsPanel.getJogControlsPanel().lowerIncrementAction);
-        hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_EQUALS, mask),
-                machineControlsPanel.getJogControlsPanel().raiseIncrementAction);
-        hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_H, mask),
-                machineControlsPanel.homeAction);
+        int[] ctrl_shift_mask = {KeyEvent.CTRL_DOWN_MASK, KeyEvent.CTRL_DOWN_MASK | KeyEvent.SHIFT_DOWN_MASK};
+        for (int mask : ctrl_shift_mask) {
+            hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_UP, mask),
+                    machineControlsPanel.getJogControlsPanel().yPlusAction);
+            hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, mask),
+                    machineControlsPanel.getJogControlsPanel().yMinusAction);
+            hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, mask),
+                    machineControlsPanel.getJogControlsPanel().xMinusAction);
+            hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, mask),
+                    machineControlsPanel.getJogControlsPanel().xPlusAction);
+            hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_QUOTE, mask),
+                    machineControlsPanel.getJogControlsPanel().zPlusAction);
+            hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_SLASH, mask),
+                    machineControlsPanel.getJogControlsPanel().zMinusAction);
+            hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_COMMA, mask),
+                    machineControlsPanel.getJogControlsPanel().cPlusAction);
+            hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_PERIOD, mask),
+                    machineControlsPanel.getJogControlsPanel().cMinusAction);
+            hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_MINUS, mask),
+                    machineControlsPanel.getJogControlsPanel().lowerIncrementAction);
+            hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_EQUALS, mask),
+                    machineControlsPanel.getJogControlsPanel().raiseIncrementAction);
+            hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_H, mask),
+                    machineControlsPanel.homeAction);
+        }
         hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_R, KeyEvent.CTRL_DOWN_MASK | KeyEvent.SHIFT_DOWN_MASK),
                 jobPanel.startPauseResumeJobAction); // Ctrl-Shift-R for Start
         hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_S, KeyEvent.CTRL_DOWN_MASK | KeyEvent.SHIFT_DOWN_MASK),
@@ -674,7 +682,16 @@ public class MainFrame extends JFrame {
                 machineControlsPanel.getJogControlsPanel().setIncrement4Action);
         hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_F5, KeyEvent.CTRL_DOWN_MASK | KeyEvent.SHIFT_DOWN_MASK),
                 machineControlsPanel.getJogControlsPanel().setIncrement5Action);
-				
+
+        isShiftDown = false;
+        KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(
+            new KeyEventDispatcher() {
+                public boolean dispatchKeyEvent(KeyEvent e) {
+                    isShiftDown = e.isShiftDown();
+                    return false;
+                }
+            });
+
         tabs = new JTabbedPane(JTabbedPane.TOP);
         splitPaneMachineAndTabs.setRightComponent(tabs);
 

@@ -145,11 +145,15 @@ public class JogControlsPanel extends JPanel {
     }
 
     public double getJogIncrement() {
+        int val = sliderIncrements.getValue();
+        if (MainFrame.get().getShiftDown()) {
+            val = Math.max(1, val - 2);   // finer movement by 2 levels
+        }
         if (configuration.getSystemUnits() == LengthUnit.Millimeters) {
-            return 0.01 * Math.pow(10, sliderIncrements.getValue() - 1);
+            return 0.01 * Math.pow(10, val - 1);
         }
         else if (configuration.getSystemUnits() == LengthUnit.Inches) {
-            return 0.001 * Math.pow(10, sliderIncrements.getValue() - 1);
+            return 0.001 * Math.pow(10, val - 1);
         }
         else {
             throw new Error(
@@ -286,6 +290,7 @@ public class JogControlsPanel extends JPanel {
 
         JLabel lblDistance = new JLabel("<html>" + Translations.getString("JogControlsPanel.Label.Distance") + "<br>[" + configuration.getSystemUnits().getShortName() + "/deg]</html>"); //$NON-NLS-1$
         lblDistance.setFont(new Font("Lucida Grande", Font.PLAIN, 10)); //$NON-NLS-1$
+        lblDistance.setToolTipText(Translations.getString("JogControlsPanel.Label.Distance.toolTipText")); //$NON-NLS-1$
         panelControls.add(lblDistance, "18, 2, center, center"); //$NON-NLS-1$
 
         JLabel lblSpeed = new JLabel("<html>" + Translations.getString("JogControlsPanel.Label.Speed") + "<br>[%]</html>"); //$NON-NLS-1$
