@@ -265,18 +265,24 @@ public class PackageVisionPanel extends JPanel {
 
     private void showReticle() {
         try {
-            Camera camera = Configuration.get().getMachine().getDefaultHead().getDefaultCamera();
-            CameraView cameraView = MainFrame.get().getCameraViews().getCameraView(camera);
-            if (cameraView == null) {
-                return;
-            }
-            cameraView.removeReticle(PackageVisionPanel.class.getName());
-            Reticle reticle = new FootprintReticle(footprint);
-            cameraView.setReticle(PackageVisionPanel.class.getName(), reticle);
+            // Add the reticle to the top camera
+            showReticleCamera(Configuration.get().getMachine().getDefaultHead().getDefaultCamera());
+            // Add the reticle to the bottom camera
+            for (Camera camera : Configuration.get().getMachine().getCameras()) { showReticleCamera(camera); }
         }
         catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private void showReticleCamera(Camera camera) {
+        CameraView cameraView = MainFrame.get().getCameraViews().getCameraView(camera);
+        if (cameraView == null) {
+            return;
+        }
+        cameraView.removeReticle(PackageVisionPanel.class.getName());
+        Reticle reticle = new FootprintReticle(footprint);
+        cameraView.setReticle(PackageVisionPanel.class.getName(), reticle);
     }
 
     private Pad getSelectedPad() {
