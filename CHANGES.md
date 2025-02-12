@@ -6,6 +6,16 @@ a complete change list, only those that may directly interest or affect users.
 ## New Features
 
 * Added the Pre-Rotate All Nozzles optimisation which provides a speed enhancement in situations where the rotation takes longer then the actual XY move eg when moving the second nozzle over the bottom camera and reduces the risk of parts slipping on nozzles. [PR 1654](https://github.com/openpnp/openpnp/pull/1654)
+* A right-click menu to copy the machine position to the clipboard [PR 1727](https://github.com/openpnp/openpnp/pull/1727)
+* Improvements to the part footprint camera overlay:
+  * A marker to indicate the part orientation, typically pad #1, cathode, etc. [PR 1694](https://github.com/openpnp/openpnp/pull/1694)
+  * Draw that overlay on bottom camera too. [PR 1745](https://github.com/openpnp/openpnp/pull/1745)
+* Improvements to the manual jog interface:
+  * Pressing the shift key reduces jog distance by 100x. [PR 1710](https://github.com/openpnp/openpnp/pull/1710)
+  * Remember the position of the jog distance slider when OpenPnP is restarted. [PR 1690](https://github.com/openpnp/openpnp/pull/1690)
+* Improvements for strip feeders:
+  * A performance improvements relating to vision. It (optionally) no longer checks every single hole. [PR 1662](https://github.com/openpnp/openpnp/pull/1662)
+  * A parallax vision feature for transparent tape where the holes can be difficult to see when viewed from above [PR 1713](https://github.com/openpnp/openpnp/pull/1713)
 
 ## Bug Fixes
 
