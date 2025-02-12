@@ -79,6 +79,9 @@ public class Configuration extends AbstractModelObject {
     private static final String PREF_UNITS = "Configuration.units";
     private static final String PREF_UNITS_DEF = "Millimeters";
 
+    private static final String PREF_DISTANCE = "Configuration.distance";
+    private static final int PREF_DISTANCE_DEF = 2;
+
     private static final String PREF_TABLE_LINKS = "Configuration.tableLinks";
 
     private static final String PREF_THEME_INFO = "Configuration.theme.info";
@@ -196,6 +199,14 @@ public class Configuration extends AbstractModelObject {
 
     public void setSystemUnits(LengthUnit lengthUnit) {
         prefs.put(PREF_UNITS, lengthUnit.name());
+    }
+
+    public void setDistance(int distance) {
+        prefs.putInt(PREF_DISTANCE, distance);
+    }
+
+    public int getDistance() {
+        return prefs.getInt(PREF_DISTANCE, PREF_DISTANCE_DEF);
     }
 
     public TablesLinked getTablesLinked() {
