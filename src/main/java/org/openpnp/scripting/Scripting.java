@@ -136,6 +136,10 @@ public class Scripting {
 
     public void execute(File script, Map<String, Object> additionalGlobals) throws Exception {
         String extension = Files.getFileExtension(script.getName());
+        String engineName = extensionToEngineNameMap.get(extension);
+        if(engineName==null) {
+            throw new Exception("Unknown scripting engine for "+extension);
+        }
         boolean usePool = Configuration.get()
                                        .getMachine()
                                        .isPoolScriptingEngines();
@@ -145,15 +149,21 @@ public class Scripting {
 
         if (usePool) {
             startTimeNs = System.nanoTime();
-            engine = enginePool.borrowObject(extensionToEngineNameMap.get(extension));
+            engine = enginePool.borrowObject(engineName);
+            if(engine==null) {
+                throw new Exception("Failed to borrow "+engineName+" scripting engine");
+            }
             elapsedTimeNs = System.nanoTime() - startTimeNs;
             Logger.trace(engine + " scripting engine borrowed from pool in " + elapsedTimeNs / 1E6
                     + " milliseconds");
         }
         else {
             startTimeNs = System.nanoTime();
-            engine = manager.getEngineByName(extensionToEngineNameMap.get(extension));
+            engine = manager.getEngineByName(engineName);
             elapsedTimeNs = System.nanoTime() - startTimeNs;
+            if(engine==null) {
+                throw new Exception("Failed to create "+engineName+" scripting engine");
+            }
             Logger.trace("Engine pooling disabled, " + engine + " scripting engine loaded in "
                     + elapsedTimeNs / 1E6 + " milliseconds");
         }
