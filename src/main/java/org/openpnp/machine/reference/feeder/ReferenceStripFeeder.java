@@ -121,6 +121,13 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
 	@Attribute(required = false)
 	private int maxFeedCount = 0;
 
+    // If the distance between the expected hole location and the previous vision is less
+    // than this threshold, then avoid updating the vision location and extrapolate the
+    // pick location based on the previous vision measurements.
+    // Set this to k times larger than the hole pitch, to use vision on 1 hole in k.
+    @Element(required = false)
+    private Length extrapolationDistance = new Length(0, LengthUnit.Millimeters);
+
     private Length holeDiameter = new Length(1.5, LengthUnit.Millimeters);
 
     private Length holePitch = new Length(4, LengthUnit.Millimeters);
@@ -308,27 +315,17 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
         if (!visionEnabled) {
             return;
         }
+
+        Location expectedLocation = getExpectedLocation(visionFeedCount);
+        if (!visionUpdateRequired(expectedLocation)) {
+            // We do not need to update the vision for this pick
+            return;
+        }
+
         // go to where we expect to find the next reference hole
         Camera camera = nozzle.getHead().getDefaultCamera();
         ensureFeederZ(camera);
-        Location expectedLocation = null;
-        Location[] lineLocations = getIdealLineLocations();
 
-        if (partPitch.convertToUnits(LengthUnit.Millimeters).getValue() < 4) {
-            // For tapes with a part pitch < 4 we need to check each hole
-            // twice since there are two parts per reference hole.
-            // Note the use of holePitch here and partPitch in the
-            // alternate case below.
-            expectedLocation = Utils2D.getPointAlongLine(lineLocations[0], lineLocations[1],
-                    holePitch.multiply((visionFeedCount - 1) / 2));
-        }
-        else {
-            // For tapes with a part pitch >= 4 there is always a reference
-            // hole 2mm from a part so we just multiply by the part pitch
-            // skipping over holes that are not reference holes.
-            expectedLocation = Utils2D.getPointAlongLine(lineLocations[0], lineLocations[1],
-                    partPitch.multiply(visionFeedCount - 1));
-        }
         MovableUtils.moveToLocationAtSafeZ(camera, expectedLocation);
         // and look for the hole
         Location actualLocation = findClosestHole(camera);
@@ -347,6 +344,84 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
         }
 
         visionLocation = actualLocation;
+    }
+
+    private Location getExpectedLocation(Integer visionFeedCount) throws Exception {
+        Location expectedLocation = null;
+        Location[] lineLocations = getIdealLineLocations();
+
+        if (partPitch.convertToUnits(LengthUnit.Millimeters).getValue() < 4) {
+            // For tapes with a part pitch < 4 we need to check each hole
+            // twice since there are two parts per reference hole.
+            // Note the use of holePitch here and partPitch in the
+            // alternate case below.
+            expectedLocation = Utils2D.getPointAlongLine(lineLocations[0], lineLocations[1],
+                    holePitch.multiply((visionFeedCount - 1) / 2));
+        }
+        else {
+            // For tapes with a part pitch >= 4 there is always a reference
+            // hole 2mm from a part so we just multiply by the part pitch
+            // skipping over holes that are not reference holes.
+            expectedLocation = Utils2D.getPointAlongLine(lineLocations[0], lineLocations[1],
+                    partPitch.multiply(visionFeedCount - 1));
+        }
+        return expectedLocation;
+    }
+
+    private Boolean visionUpdateRequired(Location holeLocation) {
+        if (visionLocation == null) {
+            // There is no stored vision offset
+            return true;
+        }
+
+        double distanceHoleToVision = holeLocation.getLinearLengthTo(visionLocation).convertToUnits(LengthUnit.Millimeters).getValue();
+        double holePitchValue = holePitch.convertToUnits(LengthUnit.Millimeters).getValue();
+        if(distanceHoleToVision <  holePitchValue*0.5) {
+            // The new location is the same as the previous location (within half the hole pitch).
+            // There is no need to re-check the same hole.
+            return false;
+        }
+
+        if (distanceHoleToVision >= getEffectiveExtrapolationDistance() ) {
+            // The expected location is distant from the previous vision location,
+            // so vision update is needed
+            // For example, if extrapolationDistance is set to 12mm and holeSpan is 4mm then,
+            // once it is up to speed, it will skip three holes (at position 4mm, 8mm, 12mm)
+            // then use vision to calibrate the 4th (at position 16mm).
+            // The default extrapolationDistance is zero, which causes this branch to always
+            // return true, and always check every new hole. This default is safe, and the user
+            // can set a larger value for higher performance.
+            return true;
+        }
+
+        // No need to update vision in this case. We can extrapolate from the previous measurements
+        return false;
+    }
+
+    private double getEffectiveExtrapolationDistance() {
+        // When picking from the very start of the tape we need to reduce the extrapolation
+        // distance in proportion to the span of the calibrated region. This gives extra vision
+        // checks at the start of the strip, where the pick location calculation is more sensitive
+        // to vision inaccuracy. This is a geometric progression of extrapolation distance,
+        // which pretty quickly stretches out to the configured distance.
+        //
+        // For the extrapolationDistance=12mm example above, the consequences of this are:
+        // * We definitely use vision on the first three holes.
+        // * The 4th hole can be skipped.
+        // * We then use vision on the 5th hole.
+        // * Skip 6th and 7th.
+        // * Then use vision on the 8th hole.
+        // * Then we are up to full speed. Skip 3, and use vision for every 4th hole.
+        Location[] lineLocations = getIdealLineLocations();
+        double referenceSpan = lineLocations[0].getLinearLengthTo(lineLocations[1]).convertToUnits(LengthUnit.Millimeters).getValue();
+        double extrapolationDistanceLimit = referenceSpan*0.7;
+        double extrapolationDistanceMm = extrapolationDistance.convertToUnits(LengthUnit.Millimeters).getValue();
+        //
+        // A 1% margin, to cover the case where the user specifies an extrapolation distance of 4mm
+        // but vision indicates this next hole is expected to be 4.00000001 mm away.
+        extrapolationDistanceMm *= 1.01;
+        //
+        return Double.min(extrapolationDistanceMm,extrapolationDistanceLimit);
     }
 
     private Location findClosestHole(Camera camera) throws Exception {
@@ -506,6 +581,14 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
 
     public void setPartPitch(Length partPitch) {
         this.partPitch = partPitch;
+    }
+
+    public Length getExtrapolationDistance() {
+        return extrapolationDistance;
+    }
+
+    public void setExtrapolationDistance(Length extrapolationDistance) {
+        this.extrapolationDistance = extrapolationDistance;
     }
 
     public Length getTapeWidth() {

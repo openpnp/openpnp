@@ -130,6 +130,8 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
     private JLabel lblPart;
     private JLabel lblRetryCount;
     private JTextField retryCountTf;
+    private JLabel lblExtrapolationDistance;
+    private JTextField textFieldExtrapolationDistance;
 
     private boolean logDebugInfo = false;
     private Location firstPartLocation;
@@ -313,6 +315,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC},
                 new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
 
         lblUseVision = new JLabel(Translations.getString(
@@ -352,6 +355,16 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
             }
         });
         panelVision.add(btnClearVisionCache, "6, 4");
+
+        lblExtrapolationDistance = new JLabel(Translations.getString(
+                "ReferenceStripFeederConfigurationWizard.PanelVision.ExtrapolationDistanceLabel.text")); //$NON-NLS-1$
+        panelVision.add(lblExtrapolationDistance, "2, 6, right, default");
+
+        textFieldExtrapolationDistance = new JTextField();
+        textFieldExtrapolationDistance.setToolTipText(Translations.getString(
+                "ReferenceStripFeederConfigurationWizard.PanelVision.ExtrapolationDistanceLabel.toolTipText")); //$NON-NLS-1$
+        panelVision.add(textFieldExtrapolationDistance, "4, 6");
+        textFieldExtrapolationDistance.setColumns(5);
 
         panelLocations = new JPanel();
         contentPanel.add(panelLocations);
@@ -443,6 +456,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         addWrappedBinding(feeder, "partPitch", textFieldPartPitch, "text", lengthConverter);
         addWrappedBinding(feeder, "feedCount", textFieldFeedCount, "text", intConverter);
         addWrappedBinding(feeder, "maxFeedCount", textFieldMaxFeedCount, "text", intConverter);
+        addWrappedBinding(feeder, "extrapolationDistance", textFieldExtrapolationDistance, "text", lengthConverter);
 
         MutableLocationProxy feedStartLocation = new MutableLocationProxy();
         bind(UpdateStrategy.READ_WRITE, feeder, "referenceHoleLocation", feedStartLocation,
@@ -475,6 +489,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedEndX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedEndY);
 //        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedEndZ);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldExtrapolationDistance);
     }
 
     private void updatePartInfo(ActionEvent e)
