@@ -307,6 +307,8 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.UNRELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.UNRELATED_GAP_ROWSPEC,
@@ -518,35 +520,37 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
         sliderAlpha.setPaintLabels(true);
         sliderAlpha.addChangeListener(sliderAlphaChanged);
         
+        lblNewLabel_3 = new JLabel(Translations.getString(
+                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.SliderLabel.text")); //$NON-NLS-1$
+        panelCameraCalibration.add(lblNewLabel_3, "4, 36, 7, 1");
+        
         lblNewLabel = new JLabel(Translations.getString(
                 "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.CropInvalidPixelsLabel.text")); //$NON-NLS-1$
         lblNewLabel.setHorizontalAlignment(SwingConstants.TRAILING);
-        panelCameraCalibration.add(lblNewLabel, "2, 36");
-        sliderAlpha.setToolTipText(Translations.getString(
-                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.AlfaSlider.toolTipText")); //$NON-NLS-1$
-        panelCameraCalibration.add(sliderAlpha, "4, 36, 5, 1");
+        panelCameraCalibration.add(lblNewLabel, "2, 38");
+        panelCameraCalibration.add(sliderAlpha, "4, 38, 5, 1");
         
-        lblNewLabel_3 = new JLabel(Translations.getString(
+        lblNewLabel_38 = new JLabel(Translations.getString(
                 "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.ShowValidPixelsLabel.text")); //$NON-NLS-1$
-        panelCameraCalibration.add(lblNewLabel_3, "10, 36");
+        panelCameraCalibration.add(lblNewLabel_38, "10, 38");
         
         separator_1 = new JSeparator();
-        panelCameraCalibration.add(separator_1, "2, 38, 13, 1");
+        panelCameraCalibration.add(separator_1, "2, 40, 13, 1");
         
         lblNewLabel_33 = new JLabel(Translations.getString(
                 "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.CalibrationResults.text")); //$NON-NLS-1$
         lblNewLabel_33.setHorizontalAlignment(SwingConstants.CENTER);
         lblNewLabel_33.setFont(new Font("Tahoma", Font.BOLD, 14));
-        panelCameraCalibration.add(lblNewLabel_33, "2, 40, 7, 1");
+        panelCameraCalibration.add(lblNewLabel_33, "2, 42, 7, 1");
         
         lblNewLabel_25 = new JLabel("X");
-        panelCameraCalibration.add(lblNewLabel_25, "4, 42");
+        panelCameraCalibration.add(lblNewLabel_25, "4, 44");
         
         lblNewLabel_26 = new JLabel("Y");
-        panelCameraCalibration.add(lblNewLabel_26, "6, 42");
+        panelCameraCalibration.add(lblNewLabel_26, "6, 44");
         
         lblNewLabel_27 = new JLabel("Z");
-        panelCameraCalibration.add(lblNewLabel_27, "8, 42");
+        panelCameraCalibration.add(lblNewLabel_27, "8, 44");
         
         String offsetOrPositionLabel;
         if (isMovable) {
@@ -559,134 +563,134 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
         }
         lblHeadOffsetOrPosition = new JLabel(offsetOrPositionLabel);
         lblHeadOffsetOrPosition.setHorizontalAlignment(SwingConstants.TRAILING);
-        panelCameraCalibration.add(lblHeadOffsetOrPosition, "2, 44, right, default");
+        panelCameraCalibration.add(lblHeadOffsetOrPosition, "2, 46, right, default");
         
         textFieldXOffset = new JTextField();
         textFieldXOffset.setEditable(false);
-        panelCameraCalibration.add(textFieldXOffset, "4, 44, fill, default");
+        panelCameraCalibration.add(textFieldXOffset, "4, 46, fill, default");
         textFieldXOffset.setColumns(10);
         
         textFieldYOffset = new JTextField();
         textFieldYOffset.setEditable(false);
-        panelCameraCalibration.add(textFieldYOffset, "6, 44, fill, default");
+        panelCameraCalibration.add(textFieldYOffset, "6, 46, fill, default");
         textFieldYOffset.setColumns(10);
         
         textFieldZOffset = new JTextField();
         textFieldZOffset.setEditable(false);
-        panelCameraCalibration.add(textFieldZOffset, "8, 44, fill, default");
+        panelCameraCalibration.add(textFieldZOffset, "8, 46, fill, default");
         textFieldZOffset.setColumns(10);
         
         lblNewLabel_24 = new JLabel(Translations.getString(
                 "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.UnitsPerPixelLabel.text")); //$NON-NLS-1$
         lblNewLabel_24.setHorizontalAlignment(SwingConstants.TRAILING);
-        panelCameraCalibration.add(lblNewLabel_24, "2, 46, right, default");
+        panelCameraCalibration.add(lblNewLabel_24, "2, 48, right, default");
         
         textFieldUnitsPerPixel = new JTextField();
         textFieldUnitsPerPixel.setToolTipText(Translations.getString(
                 "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.UnitsPerPixelTextField.toolTipText")); //$NON-NLS-1$
         textFieldUnitsPerPixel.setEditable(false);
-        panelCameraCalibration.add(textFieldUnitsPerPixel, "4, 46, fill, default");
+        panelCameraCalibration.add(textFieldUnitsPerPixel, "4, 48, fill, default");
         textFieldUnitsPerPixel.setColumns(10);
         
         lblNewLabel_30 = new JLabel(Translations.getString(
                 "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.AtDefaultWorkingPlaneZLabel.text")); //$NON-NLS-1$
-        panelCameraCalibration.add(lblNewLabel_30, "6, 46");
+        panelCameraCalibration.add(lblNewLabel_30, "6, 48");
         
         lblNewLabel_4 = new JLabel(Translations.getString(
                 "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.EstimatedLocatingAccuracyLabel.text")); //$NON-NLS-1$
         lblNewLabel_4.setHorizontalAlignment(SwingConstants.TRAILING);
-        panelCameraCalibration.add(lblNewLabel_4, "2, 48, right, default");
+        panelCameraCalibration.add(lblNewLabel_4, "2, 50, right, default");
         
         textFieldRmsError = new JTextField();
         textFieldRmsError.setToolTipText(Translations.getString(
                 "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.RmsErrorTextField.toolTipText")); //$NON-NLS-1$
         textFieldRmsError.setEditable(false);
-        panelCameraCalibration.add(textFieldRmsError, "4, 48, fill, default");
+        panelCameraCalibration.add(textFieldRmsError, "4, 50, fill, default");
         textFieldRmsError.setColumns(10);
         
         lblNewLabel_29 = new JLabel(Translations.getString(
                 "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.AtDefaultWorkingPlaneZLabel.text")); //$NON-NLS-1$
-        panelCameraCalibration.add(lblNewLabel_29, "6, 48");
+        panelCameraCalibration.add(lblNewLabel_29, "6, 50");
         
         lblNewLabel_40 = new JLabel(Translations.getString(
                 "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.WidthLabel.text")); //$NON-NLS-1$
-        panelCameraCalibration.add(lblNewLabel_40, "4, 50, default, top");
+        panelCameraCalibration.add(lblNewLabel_40, "4, 52, default, top");
         
         lblNewLabel_41 = new JLabel(Translations.getString(
                 "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.HeightLabel.text")); //$NON-NLS-1$
-        panelCameraCalibration.add(lblNewLabel_41, "6, 50");
+        panelCameraCalibration.add(lblNewLabel_41, "6, 52");
         
         lblNewLabel_39 = new JLabel(Translations.getString(
                 "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.PhysicalFieldOfViewLabel.text")); //$NON-NLS-1$
         lblNewLabel_39.setHorizontalAlignment(SwingConstants.TRAILING);
-        panelCameraCalibration.add(lblNewLabel_39, "2, 52, right, default");
+        panelCameraCalibration.add(lblNewLabel_39, "2, 54, right, default");
         
         textFieldWidthFov = new JTextField();
         textFieldWidthFov.setEditable(false);
-        panelCameraCalibration.add(textFieldWidthFov, "4, 52, fill, default");
+        panelCameraCalibration.add(textFieldWidthFov, "4, 54, fill, default");
         textFieldWidthFov.setColumns(10);
         
         textFieldHeightFov = new JTextField();
         textFieldHeightFov.setEditable(false);
-        panelCameraCalibration.add(textFieldHeightFov, "6, 52, fill, default");
+        panelCameraCalibration.add(textFieldHeightFov, "6, 54, fill, default");
         textFieldHeightFov.setColumns(10);
         
         lblNewLabel_42 = new JLabel(Translations.getString(
                 "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.EffectiveFieldOfViewLabel.text")); //$NON-NLS-1$
         lblNewLabel_42.setHorizontalAlignment(SwingConstants.TRAILING);
-        panelCameraCalibration.add(lblNewLabel_42, "2, 54, right, default");
+        panelCameraCalibration.add(lblNewLabel_42, "2, 56, right, default");
         
         textFieldVirtualWidthFov = new JTextField();
         textFieldVirtualWidthFov.setEditable(false);
-        panelCameraCalibration.add(textFieldVirtualWidthFov, "4, 54, fill, default");
+        panelCameraCalibration.add(textFieldVirtualWidthFov, "4, 56, fill, default");
         textFieldVirtualWidthFov.setColumns(10);
         
         textFieldVirtualHeightFov = new JTextField();
         textFieldVirtualHeightFov.setEditable(false);
-        panelCameraCalibration.add(textFieldVirtualHeightFov, "6, 54, fill, default");
+        panelCameraCalibration.add(textFieldVirtualHeightFov, "6, 56, fill, default");
         textFieldVirtualHeightFov.setColumns(10);
         
         lblNewLabel_5 = new JLabel(Translations.getString(
                 "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.XAxisLabel.text")); //$NON-NLS-1$
-        panelCameraCalibration.add(lblNewLabel_5, "4, 56");
+        panelCameraCalibration.add(lblNewLabel_5, "4, 58");
         
         lblNewLabel_6 = new JLabel(Translations.getString(
                 "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.YAxisLabel.text")); //$NON-NLS-1$
-        panelCameraCalibration.add(lblNewLabel_6, "6, 56");
+        panelCameraCalibration.add(lblNewLabel_6, "6, 58");
         
         lblNewLabel_7 = new JLabel(Translations.getString(
                 "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.ZAxisLabel.text")); //$NON-NLS-1$
-        panelCameraCalibration.add(lblNewLabel_7, "8, 56");
+        panelCameraCalibration.add(lblNewLabel_7, "8, 58");
         
         lblNewLabel_2 = new JLabel(Translations.getString(
                 "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.CameraMountingErrorLabel.text")); //$NON-NLS-1$
-        panelCameraCalibration.add(lblNewLabel_2, "2, 58, right, default");
+        panelCameraCalibration.add(lblNewLabel_2, "2, 60, right, default");
         
         textFieldXRotationError = new JTextField();
         textFieldXRotationError.setToolTipText(Translations.getString(
                 "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.XRotationErrorTextField.toolTipText")); //$NON-NLS-1$
         textFieldXRotationError.setEditable(false);
-        panelCameraCalibration.add(textFieldXRotationError, "4, 58, fill, default");
+        panelCameraCalibration.add(textFieldXRotationError, "4, 60, fill, default");
         textFieldXRotationError.setColumns(10);
         
         textFieldYRotationError = new JTextField();
         textFieldYRotationError.setToolTipText(Translations.getString(
                 "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.YRotationErrorTextField.toolTipText")); //$NON-NLS-1$
         textFieldYRotationError.setEditable(false);
-        panelCameraCalibration.add(textFieldYRotationError, "6, 58, fill, default");
+        panelCameraCalibration.add(textFieldYRotationError, "6, 60, fill, default");
         textFieldYRotationError.setColumns(10);
         
         textFieldZRotationError = new JTextField();
         textFieldZRotationError.setToolTipText(Translations.getString(
                 "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.ZRotationErrorTextField.toolTipText")); //$NON-NLS-1$
         textFieldZRotationError.setEditable(false);
-        panelCameraCalibration.add(textFieldZRotationError, "8, 58, fill, default");
+        panelCameraCalibration.add(textFieldZRotationError, "8, 60, fill, default");
         textFieldZRotationError.setColumns(10);
         
         lblNewLabel_8 = new JLabel(Translations.getString(
                 "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.SelectedCalZForPlottingLabel.text")); //$NON-NLS-1$
         lblNewLabel_8.setHorizontalAlignment(SwingConstants.TRAILING);
-        panelCameraCalibration.add(lblNewLabel_8, "2, 60");
+        panelCameraCalibration.add(lblNewLabel_8, "2, 62");
         
         spinnerModel = new SpinnerListModel(calibrationHeightSelections);
         spinnerIndex = new JSpinner(spinnerModel);
@@ -702,12 +706,12 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
             }
             
         });
-        panelCameraCalibration.add(spinnerIndex, "4, 60");
+        panelCameraCalibration.add(spinnerIndex, "4, 62");
         
         chckbxShowOutliers = new JCheckBox(Translations.getString(
                 "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.ShowOutliersChkBox.text")); //$NON-NLS-1$
         chckbxShowOutliers.addActionListener(showOutliersActionListener);
-        panelCameraCalibration.add(chckbxShowOutliers, "6, 60");
+        panelCameraCalibration.add(chckbxShowOutliers, "6, 62");
 
         
         lblNewLabel_14 = new JLabel(Translations.getString(
@@ -715,18 +719,18 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
         ));
         lblNewLabel_14.setFont(new Font("Tahoma", Font.BOLD, 13));
         lblNewLabel_14.setHorizontalAlignment(SwingConstants.CENTER);
-        panelCameraCalibration.add(lblNewLabel_14, "4, 62, 3, 1");
+        panelCameraCalibration.add(lblNewLabel_14, "4, 64, 3, 1");
 
         lblNewLabel_9 = new VerticalLabel(String.format(Translations.getString(
                 "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.ResidualError.text") //$NON-NLS-1$
                 + " [%s]", smallDisplayUnits.getShortName()));
         lblNewLabel_9.setVerticalAlignment(SwingConstants.BOTTOM);
         lblNewLabel_9.setRotation(VerticalLabel.ROTATE_LEFT);
-        panelCameraCalibration.add(lblNewLabel_9, "2, 64");
+        panelCameraCalibration.add(lblNewLabel_9, "2, 66");
         
         modelErrorsTimeSequenceView = new SimpleGraphView();
         modelErrorsTimeSequenceView.setFont(new Font("Dialog", Font.PLAIN, 11));
-        panelCameraCalibration.add(modelErrorsTimeSequenceView, "4, 64, 3, 1, fill, fill");
+        panelCameraCalibration.add(modelErrorsTimeSequenceView, "4, 66, 3, 1, fill, fill");
 
         String legend = Translations.getString(
                 "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.Legend.text"); //$NON-NLS-1$
@@ -734,65 +738,65 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
         lblNewLabel_17 = new JLabel(String.format(Translations.getString(
                 "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.ResidualErrorsLegendDescriptionLabel.text" //$NON-NLS-1$
         ), legend));
-        panelCameraCalibration.add(lblNewLabel_17, "8, 64, 3, 1, left, default");
+        panelCameraCalibration.add(lblNewLabel_17, "8, 66, 3, 1, left, default");
         
         lblNewLabel_10 = new JLabel(Translations.getString(
                 "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.CollectionSequenceNumberLabel.text" //$NON-NLS-1$
         ));
         lblNewLabel_10.setHorizontalAlignment(SwingConstants.CENTER);
-        panelCameraCalibration.add(lblNewLabel_10, "4, 66, 3, 1");
+        panelCameraCalibration.add(lblNewLabel_10, "4, 68, 3, 1");
 
         lblNewLabel_15 = new JLabel(Translations.getString(
                 "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.ResidualErrorXYScatterPlotLabel.text")); //$NON-NLS-1$
         lblNewLabel_15.setFont(new Font("Tahoma", Font.BOLD, 13));
         lblNewLabel_15.setHorizontalAlignment(SwingConstants.CENTER);
-        panelCameraCalibration.add(lblNewLabel_15, "4, 68, 3, 1");
+        panelCameraCalibration.add(lblNewLabel_15, "4, 70, 3, 1");
 
         lblNewLabel_11 = new VerticalLabel(String.format("Y %s [%s]", Translations.getString(
                 "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.ResidualError.text"), //$NON-NLS-1$
                 smallDisplayUnits.getShortName()));
         lblNewLabel_11.setVerticalAlignment(SwingConstants.BOTTOM);
         lblNewLabel_11.setRotation(VerticalLabel.ROTATE_LEFT);
-        panelCameraCalibration.add(lblNewLabel_11, "2, 70");
+        panelCameraCalibration.add(lblNewLabel_11, "2, 72");
 
         modelErrorsScatterPlotView = new SimpleGraphView();
         modelErrorsScatterPlotView.setFont(new Font("Dialog", Font.PLAIN, 11));
-        panelCameraCalibration.add(modelErrorsScatterPlotView, "4, 70, 3, 1, fill, fill");
+        panelCameraCalibration.add(modelErrorsScatterPlotView, "4, 72, 3, 1, fill, fill");
         
         lblNewLabel_18 = new JLabel(Translations.getString(
                 "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.ResidualErrorsXYDescriptionLabel.text")); //$NON-NLS-1$
-        panelCameraCalibration.add(lblNewLabel_18, "8, 70, 3, 1, left, default");
+        panelCameraCalibration.add(lblNewLabel_18, "8, 72, 3, 1, left, default");
 
         lblNewLabel_12 = new JLabel(String.format("X %s [%s]", Translations.getString(
                 "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.ResidualError.text"), //$NON-NLS-1$
                 smallDisplayUnits.getShortName()));
         lblNewLabel_12.setHorizontalAlignment(SwingConstants.CENTER);
-        panelCameraCalibration.add(lblNewLabel_12, "4, 72, 3, 1");
+        panelCameraCalibration.add(lblNewLabel_12, "4, 74, 3, 1");
         
 
         lblNewLabel_16 = new JLabel(Translations.getString(
                 "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.ResidualErrorMapLabel.text")); //$NON-NLS-1$
         lblNewLabel_16.setFont(new Font("Tahoma", Font.BOLD, 13));
         lblNewLabel_16.setHorizontalAlignment(SwingConstants.CENTER);
-        panelCameraCalibration.add(lblNewLabel_16, "4, 74, 3, 1");
+        panelCameraCalibration.add(lblNewLabel_16, "4, 76, 3, 1");
 
         lblNewLabel_13 = new VerticalLabel(Translations.getString(
                 "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.ImageYLocationLabel.text")); //$NON-NLS-1$
         lblNewLabel_13.setVerticalAlignment(SwingConstants.BOTTOM);
         lblNewLabel_13.setRotation(VerticalLabel.ROTATE_LEFT);
-        panelCameraCalibration.add(lblNewLabel_13, "2, 76");
+        panelCameraCalibration.add(lblNewLabel_13, "2, 78");
 
         modelErrorsView = new MatView();
-        panelCameraCalibration.add(modelErrorsView, "4, 76, 3, 1, fill, fill");
+        panelCameraCalibration.add(modelErrorsView, "4, 78, 3, 1, fill, fill");
         
         lblNewLabel_19 = new JLabel(Translations.getString(
                 "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.ResidualErrorMapDescriptionLabel.text")); //$NON-NLS-1$
-        panelCameraCalibration.add(lblNewLabel_19, "8, 76, 5, 1, left, default");
+        panelCameraCalibration.add(lblNewLabel_19, "8, 78, 5, 1, left, default");
         
         lblNewLabel_12 = new JLabel(Translations.getString(
                 "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.ImageXLocationLabel.text")); //$NON-NLS-1$
         lblNewLabel_12.setHorizontalAlignment(SwingConstants.CENTER);
-        panelCameraCalibration.add(lblNewLabel_12, "4, 78, 3, 1");
+        panelCameraCalibration.add(lblNewLabel_12, "4, 80, 3, 1");
         
     }
 
@@ -1347,5 +1351,6 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
     private JLabel lblNewLabel_42;
     private JTextField textFieldVirtualWidthFov;
     private JTextField textFieldVirtualHeightFov;
+    private JLabel lblNewLabel_38;
 
 }
