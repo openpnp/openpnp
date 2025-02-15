@@ -97,7 +97,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     }
 
     @Attribute(required = false)
-    protected JobOrderHint jobOrder = JobOrderHint.PartHeight;
+    protected JobOrderHint jobOrder = JobOrderHint.NozzleTips;
 
     @Attribute(required = false)
     protected int maxVisionRetries = 3;
