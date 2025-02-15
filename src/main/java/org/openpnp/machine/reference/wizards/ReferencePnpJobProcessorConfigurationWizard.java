@@ -78,6 +78,7 @@ public class ReferencePnpJobProcessorConfigurationWizard extends AbstractConfigu
                         FormSpecs.DEFAULT_ROWSPEC,}));
 
         JLabel lblJobOrder = new JLabel(Translations.getString("MachineSetup.JobProcessors.ReferencePnpJobProcessor.Label.JobOrder")); //$NON-NLS-1$
+        lblJobOrder.setToolTipText(Translations.getString("MachineSetup.JobProcessors.ReferencePnpJobProcessor.Label.JobOrder.toolTipText")); //$NON-NLS-1$
         panelGeneral.add(lblJobOrder, "2, 2, right, default");
 
         comboBoxJobOrder = new JComboBox<JobOrderHint>(JobOrderHint.values());
