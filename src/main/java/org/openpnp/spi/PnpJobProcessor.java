@@ -18,6 +18,7 @@ public interface PnpJobProcessor extends JobProcessor {
         private final Placement placement;
         private Status status = Status.Pending;
         private Exception error;
+        private int feederIndex;
 
         public JobPlacement(BoardLocation boardLocation, Placement placement) {
             this.boardLocation = boardLocation;
@@ -69,6 +70,18 @@ public interface PnpJobProcessor extends JobProcessor {
                             : "");
         }
         
+        public String getBoardId() {
+            return boardLocation.getId();
+        }
+
+        public int getFeederIndex() {
+            return feederIndex;
+        }
+        
+        public void setFeederIndex(int index) {
+            this.feederIndex = index;
+        }
+
         @Override
         public String toString() {
             return placement.getId();
