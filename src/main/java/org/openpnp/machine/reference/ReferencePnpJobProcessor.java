@@ -80,13 +80,13 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     }
     
     public enum JobOrderHint {
-        Part, PartHeight,               // keep this values for backward compatibility
-        PartBoard, PartHeightPartBoard, // sort as default, but use the board id as final sorting order
-        BoardPart,                      // sort by board id first, then part id
-        PickLocation,                   // take the shortest route between all pick locations
-        PickPlaceLocation,              // optimize all place locations feeder wise for shortest route
-        NozzleTips,                     // group placements by compatible nozzle tips and optimize each group using PickPlaceLocation
-        Unsorted;                       // keep the placements unsorted - for hand-optimized jobs
+        Part, PartHeight,           // keep this values for backward compatibility
+        PartBoard, PartHeightBoard, // sort as default, but use the board id as final sorting order
+        BoardPart,                  // sort by board id first, then part id
+        PickLocation,               // take the shortest route between all pick locations
+        PickPlaceLocation,          // optimize all place locations feeder wise for shortest route
+        NozzleTips,                 // group placements by compatible nozzle tips and optimize each group using PickPlaceLocation
+        Unsorted;                   // keep the placements unsorted - for hand-optimized jobs
 
         // provide a dedicated toSting() method (with translation) to convert the enum values into
         // user friendly strings for the UI
@@ -650,7 +650,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                             .collect(Collectors.toList());
                     break;
                     
-                case PartHeightPartBoard:
+                case PartHeightBoard:
                     plannedJobPlacements = jobPlacements.stream()
                             .sorted(Comparator
                                     .comparing(JobPlacement::getPartHeight)
@@ -1897,6 +1897,14 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
     public void setOptimizeMultipleNozzles(boolean optimizeMultipleNozzles) {
         this.optimizeMultipleNozzles = optimizeMultipleNozzles;
+    }
+
+    public boolean isPreRotateAllNozzles() {
+        return preRotateAllNozzles;
+    }
+
+    public void setPreRotateAllNozzles(boolean preRotateAllNozzles) {
+        this.preRotateAllNozzles = preRotateAllNozzles;
     }
 
     /**
