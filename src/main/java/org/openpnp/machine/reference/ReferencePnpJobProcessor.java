@@ -828,7 +828,6 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             return location;
         }
         
-        
         /**
          * Plan placements by pick and place location: optimize the path between all feeders
          * and the path between all place locations of placements from the same feeder using
