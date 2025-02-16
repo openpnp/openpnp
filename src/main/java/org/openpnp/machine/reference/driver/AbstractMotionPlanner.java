@@ -59,6 +59,7 @@ import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Locatable.LocationOption;
 import org.openpnp.spi.MotionPlanner;
 import org.openpnp.spi.PropertySheetHolder;
+import org.openpnp.spi.base.AbstractActuator;
 import org.openpnp.util.NanosecondTime;
 import org.openpnp.util.Utils2D;
 import org.pmw.tinylog.Logger;
@@ -255,6 +256,56 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
     @Override
     public boolean isHomed() {
         return homed;
+    }
+
+    @Override
+    public void delay(int milliseconds, HeadMountable... hms) throws Exception {
+        boolean delayNotExecuted = false;   // set to true if any driver requested to delay does not support delaying
+        // Plan and execute any queued motion commands. 
+        executeMotionPlan(CompletionType.CommandStillstand);
+        ReferenceMachine machine = getMachine();
+        // If the hm is given, we just delay for the drivers of that hm, otherwise we delay for all drivers,
+        // including those that do not have any axes attached.
+        if (hms != null) {
+            List<Driver> drivers = new ArrayList<Driver>();  // list of all drivers to delay on
+
+            // loop over all head mountables and collect all affected drivers
+            // only consider each driver once to avoid executing the delay multiple times
+            for (HeadMountable hm : hms) {
+                // 1. the driver for the actuator itself
+                if (hm instanceof AbstractActuator) {
+                    Driver driver = ((AbstractActuator)hm).getDriver();
+                    if (!drivers.contains(driver)) {
+                        drivers.add(driver);
+                    }
+                }
+                // 2. it's related axes drivers
+                AxesLocation mappedAxes = hm.getMappedAxes(machine);
+                if (!mappedAxes.isEmpty()) {
+                    for (Driver driver : mappedAxes.getAxesDrivers(machine)) {
+                        if (!drivers.contains(driver)) {
+                            drivers.add(driver);
+                        }
+                    }
+                }
+            }
+            
+            // now execute the delay on all effected drivers
+            for (Driver driver : drivers) {
+                delayNotExecuted |= driver.delay(milliseconds);
+            }
+        }
+        else {
+            for (Driver driver : machine.getDrivers()) {
+                delayNotExecuted |= driver.delay(milliseconds);
+            }
+        }
+        
+        // if any driver was not able to execute the delay, fabllback using Thread.sleep()
+        if (delayNotExecuted) {
+            // time delay using OS
+            Thread.sleep(milliseconds);
+        }
     }
 
     @Override

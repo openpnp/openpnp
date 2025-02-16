@@ -92,7 +92,7 @@ public class ContactProbeNozzle extends ReferenceNozzle {
     private double contactProbeSpeed = 0.05;
 
     @Attribute(required=false)
-    private long sniffleDwellTime = 250;
+    private int sniffleDwellTime = 250;
 
     @Element(required = false)
     private Length contactProbeAdjustZ = new Length(0, LengthUnit.Millimeters);
@@ -440,7 +440,7 @@ public class ContactProbeNozzle extends ReferenceNozzle {
         return sniffleDwellTime;
     }
 
-    public void setSniffleDwellTime(long sniffleDwellTime) {
+    public void setSniffleDwellTime(int sniffleDwellTime) {
         this.sniffleDwellTime = sniffleDwellTime;
     }
 
@@ -543,7 +543,7 @@ public class ContactProbeNozzle extends ReferenceNozzle {
                 for (int i = 0; i < count; i++) {
                     probedLocation = probedLocation.subtract(probeIncrement);
                     moveTo(probedLocation);
-                    Thread.sleep(sniffleDwellTime);
+                    delay(sniffleDwellTime);
                     if (! isPartOff()) {
                         // We got contact.
                         probedLocation = probedLocation.add(new Location(contactProbeAdjustZ .getUnits(), 0, 0, contactProbeAdjustZ.getValue(), 0));
