@@ -81,7 +81,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     
     public enum JobOrderHint {
         Part, PartHeight,           // keep this values for backward compatibility
-        PartBoard, PartHeightBoard, // sort as default, but use the board id as final sorting order
+        PartBoard, HeightPartBoard, // sort as default, but use the board id as final sorting order
         BoardPart,                  // sort by board id first, then part id
         PickLocation,               // take the shortest route between all pick locations
         PickPlaceLocation,          // optimize all place locations feeder wise for shortest route
@@ -650,7 +650,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                             .collect(Collectors.toList());
                     break;
                     
-                case PartHeightBoard:
+                case HeightPartBoard:
                     plannedJobPlacements = jobPlacements.stream()
                             .sorted(Comparator
                                     .comparing(JobPlacement::getPartHeight)
