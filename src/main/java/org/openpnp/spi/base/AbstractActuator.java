@@ -72,7 +72,7 @@ public abstract class AbstractActuator extends AbstractHeadMountable implements 
         None,
         CommandStillstand,
         WaitForStillstand,
-        WaitForStillstandIndefinitely;
+        WaitForUnconditionalCoordination;
     }
     
     @Attribute(required = false)
@@ -97,7 +97,7 @@ public abstract class AbstractActuator extends AbstractHeadMountable implements 
         switch (upgradeDone) {
         case None:
             setCoordinatedBeforeActuateEnum(coordinatedBeforeActuate ? ActuatorCoordinationEnumType.WaitForStillstand : ActuatorCoordinationEnumType.None);
-            setCoordinatedAfterActuateEnum(coordinatedAfterActuate ? ActuatorCoordinationEnumType.WaitForStillstand : ActuatorCoordinationEnumType.None);
+            setCoordinatedAfterActuateEnum(coordinatedAfterActuate ? ActuatorCoordinationEnumType.WaitForUnconditionalCoordination : ActuatorCoordinationEnumType.None);
             setCoordinatedBeforeReadEnum(coordinatedBeforeRead ? ActuatorCoordinationEnumType.WaitForStillstand : ActuatorCoordinationEnumType.None);
             upgradeDone = UpgradeDone.CoordinationBooleanToEnum;
             Logger.info(getName() + " coordination configuration upgraded");
@@ -436,8 +436,8 @@ public abstract class AbstractActuator extends AbstractHeadMountable implements 
                 case WaitForStillstand:
                     completionType = CompletionType.WaitForStillstand;
                     break;
-                case WaitForStillstandIndefinitely:
-                    completionType = CompletionType.WaitForStillstandIndefinitely;
+                case WaitForUnconditionalCoordination:
+                    completionType = CompletionType.WaitForUnconditionalCoordination;
                     break;
             }
 

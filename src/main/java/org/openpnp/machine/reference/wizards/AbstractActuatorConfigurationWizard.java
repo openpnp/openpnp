@@ -255,8 +255,8 @@ public abstract class AbstractActuatorConfigurationWizard extends AbstractConfig
                 "AbstractActuatorConfigurationWizard.CoordinationPanel.BeforeActuationLabel.toolTipText")); //$NON-NLS-1$
         panelCoordination.add(lblBeforeActuation, "2, 2, right, default");
         
-        coordinatedBeforeActuate = new JComboBox<ActuatorCoordinationEnumType>(ActuatorCoordinationEnumType.values());
-        panelCoordination.add(coordinatedBeforeActuate, "4, 2, center, bottom");
+        coordinatedBeforeActuate = new JComboBox<ActuatorCoordinationEnumType>(getCoordinatedBeforeActuateOptions());
+        panelCoordination.add(coordinatedBeforeActuate, "4, 2");
         
         lblAfterActuation = new JLabel(Translations.getString(
                 "AbstractActuatorConfigurationWizard.CoordinationPanel.AfterActuationLabel.text")); //$NON-NLS-1$
@@ -264,7 +264,7 @@ public abstract class AbstractActuatorConfigurationWizard extends AbstractConfig
                 "AbstractActuatorConfigurationWizard.CoordinationPanel.AfterActuationLabel.toolTipText")); //$NON-NLS-1$
         panelCoordination.add(lblAfterActuation, "2, 4, right, default");
         
-        coordinatedAfterActuate = new JComboBox<ActuatorCoordinationEnumType>(ActuatorCoordinationEnumType.values());
+        coordinatedAfterActuate = new JComboBox<ActuatorCoordinationEnumType>(getCoordinatedAfterActuateOptions());
         panelCoordination.add(coordinatedAfterActuate, "4, 4");
         
         lblBeforeRead = new JLabel(Translations.getString(
@@ -273,7 +273,7 @@ public abstract class AbstractActuatorConfigurationWizard extends AbstractConfig
                 "AbstractActuatorConfigurationWizard.CoordinationPanel.BeforeReadLabel.toolTipText")); //$NON-NLS-1$
         panelCoordination.add(lblBeforeRead, "2, 6, right, default");
         
-        coordinatedBeforeRead = new JComboBox<ActuatorCoordinationEnumType>(ActuatorCoordinationEnumType.values());
+        coordinatedBeforeRead = new JComboBox<ActuatorCoordinationEnumType>(getCoordinatedBeforeReadOptions());
         panelCoordination.add(coordinatedBeforeRead, "4, 6");
         
         generalPanel = new JPanel();
@@ -399,6 +399,24 @@ public abstract class AbstractActuatorConfigurationWizard extends AbstractConfig
         }
     }
 
+    // return all options the user can choose from when specifying coordination the
+    private ActuatorCoordinationEnumType[] getCoordinatedBeforeActuateOptions() {
+        return new ActuatorCoordinationEnumType[] { 
+                ActuatorCoordinationEnumType.None, 
+                ActuatorCoordinationEnumType.CommandStillstand,
+                ActuatorCoordinationEnumType.WaitForStillstand };
+    }
+    private ActuatorCoordinationEnumType[] getCoordinatedAfterActuateOptions() {
+        return new ActuatorCoordinationEnumType[] { 
+                ActuatorCoordinationEnumType.None, 
+                ActuatorCoordinationEnumType.WaitForUnconditionalCoordination };
+    }
+    private ActuatorCoordinationEnumType[] getCoordinatedBeforeReadOptions() {
+        return new ActuatorCoordinationEnumType[] { 
+                ActuatorCoordinationEnumType.None, 
+                ActuatorCoordinationEnumType.WaitForStillstand };
+    }
+    
     protected void adaptDialog() {
         boolean isDouble = (valueType.getSelectedItem() == ActuatorValueType.Double);
         lblOnDouble.setVisible(isDouble);
