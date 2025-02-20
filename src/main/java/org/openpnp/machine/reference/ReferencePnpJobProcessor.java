@@ -1553,9 +1553,11 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             final Part part = placement.getPart();
             final BoardLocation boardLocation = plannedPlacement.jobPlacement.getBoardLocation();
 
-            Location placementLocation = getPlacementLocation(plannedPlacement);
+            scriptBeforeAssembly(plannedPlacement);
             
-            scriptBeforeAssembly(plannedPlacement, placementLocation);
+            // Calculate this after running the script, because the script might have fine-tuned the location data.
+            // Such scripts can be used as a crude alternative to a "local fiducial" feature.
+            Location placementLocation = getPlacementLocation(plannedPlacement);
 
             checkPartOn(nozzle, part);
             
@@ -1643,13 +1645,24 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             }
         }
         
-        private void scriptBeforeAssembly(PlannedPlacement plannedPlacement, Location placementLocation) throws JobProcessorException {
+        private void scriptBeforeAssembly(PlannedPlacement plannedPlacement) throws JobProcessorException {
+            String eventName = "Job.Placement.BeforeAssembly";
+            if(Configuration.get().getScripting().hasNoScript(eventName)) {
+                // We know for certain that there are no scripts for this event, so
+                // we can skip the parameter setup as an optimisation.
+                return;
+            }
+
             final Nozzle nozzle = plannedPlacement.nozzle;
             final JobPlacement jobPlacement = plannedPlacement.jobPlacement;
             final Placement placement = jobPlacement.getPlacement();
             final Part part = placement.getPart();
             final BoardLocation boardLocation = plannedPlacement.jobPlacement.getBoardLocation();
             Length partHeight = part.getHeight();
+            // Calculate the placement location here, so that the script knows the intended location.
+            // It will be calculated a second time by our caller, in case the script fine-tuned this placement
+            // location data as part of a "local fiducial" feature.
+            Location placementLocation = getPlacementLocation(plannedPlacement);
             Location placementLocationPart = placementLocation.add(new Location(partHeight.getUnits(), 0, 0, partHeight.getValue(), 0));
             try {
                 HashMap<String, Object> params = new HashMap<>();
@@ -1662,7 +1675,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 params.put("placementLocationBase", placementLocation);
                 params.put("placementLocation", placementLocationPart);
                 params.put("alignmentOffsets", plannedPlacement.alignmentOffsets);
-                Configuration.get().getScripting().on("Job.Placement.BeforeAssembly", params);
+                Configuration.get().getScripting().on(eventName, params);
             }
             catch (Exception e) {
                 throw new JobProcessorException(null, e);

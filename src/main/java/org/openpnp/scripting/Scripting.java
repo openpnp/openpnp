@@ -34,10 +34,12 @@ public class Scripting {
     private final File eventsDirectory;
     private final HashMap<String, String> extensionToEngineNameMap;
     private final GenericKeyedObjectPool<String, ScriptEngine> enginePool;
+    private final HashSet<String> eventsWithoutScripts;
 
     public Scripting(File scriptsDirectory) {
         this.scriptsDirectory = scriptsDirectory;
         extensionToEngineNameMap = new HashMap<>();
+        eventsWithoutScripts = new HashSet<>();
         enginePool = new GenericKeyedObjectPool<>(
                 new ScriptEngineKeyedPooledObjectFactory(this.manager));
         // Allow unlimited engines, but evict all but five per key after a short idle time
@@ -202,11 +204,34 @@ public class Scripting {
         }
     }
 
+    // This function returns false if event has some scripts, or if we do not yet know.
+    // It returns true if and only if we have found there to be no scripts
+    // associated with this event
+    public Boolean hasNoScript(String event) {
+        if (eventsDirectory == null) {
+            return true;
+        }
+
+        if(eventsWithoutScripts.contains(event)) {
+            // We know for certain that this event will not run any scripts.
+            // This might enable some optimisation where a client can avoid
+            // preparing all the script parameters if it knows there is no
+            // script to receive them.
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     public void on(String event, Map<String, Object> globals) throws Exception {
         Logger.trace("Scripting.on " + event);
         if (eventsDirectory == null) {
             return;
         }
+        if (hasNoScript(event)) {
+            return;
+        }
+        Boolean foundEventScript = false;
         for (File script : FileUtils.listFiles(eventsDirectory, getExtensions(), false)) {
             if (!script.isFile()) {
                 continue;
@@ -214,12 +239,25 @@ public class Scripting {
             if (FilenameUtils.getBaseName(script.getName())
                              .equals(event)) {
                 Logger.trace("Scripting.on found " + script.getName());
+                foundEventScript = true;
                 execute(script, globals);
             }
         }
+        if (!foundEventScript) {
+            // Remember that this event does not have any scripts. This saves
+            // having to iterate over the directory when the same event
+            // is triggered subsequently
+            eventsWithoutScripts.add(event);
+        }
+    }
+
+    public Boolean enableClearScriptingEnginePool() {
+        return (getScriptingEnginePoolObjectCount() > 0) || (!eventsWithoutScripts.isEmpty());
     }
 
     public void clearScriptingEnginePool() {
+        eventsWithoutScripts.clear();
+
         if (enginePool.listAllObjects()
                       .size() == 0) {
             Logger.info("No scripting engines in pool, nothing to do");
