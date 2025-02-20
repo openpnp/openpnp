@@ -177,7 +177,7 @@ public class PartsPanel extends JPanel implements WizardContainer {
             public String getToolTipText(MouseEvent evt) {
                 int column = columnAtPoint(evt.getPoint());
                 if(column==2) { return Translations.getString("PartsTableModel.Column.Height.toolTip"); } //$NON-NLS-1$
-                if(column==3) { return Translations.getString("PartsTableModel.Column.ThroughHoleDepth.toolTip"); } //$NON-NLS-1$
+                if(column==3) { return Translations.getString("PartsTableModel.Column.ThroughBoardDepth.toolTip"); } //$NON-NLS-1$
                 return null;
             }
         };

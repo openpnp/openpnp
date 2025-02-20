@@ -40,7 +40,7 @@ public class PartsTableModel extends AbstractObjectTableModel implements Propert
             new String[] {Translations.getString("PartsTableModel.ColumnName.ID"), //$NON-NLS-1$
                     Translations.getString("PartsTableModel.ColumnName.Description"), //$NON-NLS-1$
                     Translations.getString("PartsTableModel.ColumnName.Height"), //$NON-NLS-1$
-                    Translations.getString("PartsTableModel.ColumnName.ThroughHoleDepth"), //$NON-NLS-1$
+                    Translations.getString("PartsTableModel.ColumnName.ThroughBoardDepth"), //$NON-NLS-1$
                     Translations.getString("PartsTableModel.ColumnName.Package"), //$NON-NLS-1$
                     Translations.getString("PartsTableModel.ColumnName.SpeedPercent"), //$NON-NLS-1$
                     Translations.getString("PartsTableModel.ColumnName.BottomVision"), //$NON-NLS-1$
@@ -113,12 +113,12 @@ public class PartsTableModel extends AbstractObjectTableModel implements Propert
                 LengthCellValue value = (LengthCellValue) aValue;
                 value.setDisplayNativeUnits(true);
                 Length length = value.getLength();
-                Length oldDepth = part.getThroughHoleDepth();
+                Length oldDepth = part.getThroughBoardDepth();
                 if (oldDepth != null) {
                     length = length.changeUnitsIfUnspecified(oldDepth.getUnits());
                 }
                 length = length.changeUnitsIfUnspecified(Configuration.get().getSystemUnits());
-                part.setThroughHoleDepth(length);
+                part.setThroughBoardDepth(length);
             }
             else if (columnIndex == 4) {
                 part.setPackage((Package) aValue);
@@ -148,7 +148,7 @@ public class PartsTableModel extends AbstractObjectTableModel implements Propert
             case 2:
                 return new LengthCellValue(part.getHeight(), true);
             case 3:
-                return new LengthCellValue(part.getThroughHoleDepth(), true);
+                return new LengthCellValue(part.getThroughBoardDepth(), true);
             case 4:
                 return part.getPackage();
             case 5:

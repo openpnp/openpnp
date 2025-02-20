@@ -42,9 +42,9 @@ public class Part extends AbstractPartSettingsHolder {
     private double height;
 
     @Attribute(required = false)
-    private LengthUnit throughHoleDepthUnits = LengthUnit.Millimeters;
+    private LengthUnit throughBoardDepthUnits = LengthUnit.Millimeters;
     @Attribute(required = false)
-    private double throughHoleDepth;
+    private double throughBoardDepth;
 
     private Package packag;
 
@@ -129,26 +129,26 @@ public class Part extends AbstractPartSettingsHolder {
         firePropertyChange("height", oldValue, getHeight());
     }
 
-    public Length getThroughHoleDepth() {
-        return new Length(throughHoleDepth, throughHoleDepthUnits);
+    public Length getThroughBoardDepth() {
+        return new Length(throughBoardDepth, throughBoardDepthUnits);
     }
 
-    public void setThroughHoleDepth(Length depth) {
-        Length oldValue = getThroughHoleDepth();
+    public void setThroughBoardDepth(Length depth) {
+        Length oldValue = getThroughBoardDepth();
         if (depth == null) {
-            this.throughHoleDepth = 0;
-            this.throughHoleDepthUnits = null;
+            this.throughBoardDepth = 0;
+            this.throughBoardDepthUnits = null;
         }
         else {
-            this.throughHoleDepth = depth.getValue();
-            this.throughHoleDepthUnits = depth.getUnits();
+            this.throughBoardDepth = depth.getValue();
+            this.throughBoardDepthUnits = depth.getUnits();
         }
-        firePropertyChange("throughHoleDepth", oldValue, getThroughHoleDepth());
+        firePropertyChange("throughBoardDepth", oldValue, getThroughBoardDepth());
     }
 
     public Length getHeightForSafeZ() {
         // The length that dangles under a nozzle when carried
-        return getHeight().add(getThroughHoleDepth());
+        return getHeight().add(getThroughBoardDepth());
     }
 
     public Package getPackage() {
