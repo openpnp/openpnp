@@ -7,6 +7,9 @@ a complete change list, only those that may directly interest or affect users.
 
 * Added the Pre-Rotate All Nozzles optimisation which provides a speed enhancement in situations where the rotation takes longer then the actual XY move eg when moving the second nozzle over the bottom camera and reduces the risk of parts slipping on nozzles. [PR 1654](https://github.com/openpnp/openpnp/pull/1654)
 * A right-click menu to copy the machine position to the clipboard [PR 1727](https://github.com/openpnp/openpnp/pull/1727)
+* A performance improvement for scripting events, for the common case where events do not have any scripts configured. Openpnp now remembers that the script does not exist and can skip a filesystem check on the next time that event is triggered. NB scripting users need to use the 'Clear Scripting Engine Pool' menu after adding a script, in the same manner as is needed when changing a script. [PR 1744](https://github.com/openpnp/openpnp/pull/1744)
+* The 'Job.Placement.BeforeAssembly' event now allows any scripts to fine-tune the location of the placement. This enables script-based 'local fiducial' behaviour. [PR 1688](https://github.com/openpnp/openpnp/pull/1688)
+* Prevent unintended changes when a single click on a table row from opening cell editor or makes checkbox action. This now requires a second click. [PR 1729](https://github.com/openpnp/openpnp/pull/1729)
 * Improvements to the part footprint camera overlay:
   * A marker to indicate the part orientation, typically pad #1, cathode, etc. [PR 1694](https://github.com/openpnp/openpnp/pull/1694)
   * Draw that overlay on bottom camera too. [PR 1745](https://github.com/openpnp/openpnp/pull/1745)
@@ -16,11 +19,15 @@ a complete change list, only those that may directly interest or affect users.
 * Improvements for strip feeders:
   * A performance improvements relating to vision. It (optionally) no longer checks every single hole. [PR 1662](https://github.com/openpnp/openpnp/pull/1662)
   * A parallax vision feature for transparent tape where the holes can be difficult to see when viewed from above [PR 1713](https://github.com/openpnp/openpnp/pull/1713)
+* Changes to fiducial vision. NB update your vision pipeline to include these new features:
+  * The MatchTemplate vision pipeline stage now supports the 'center' and 'maxDistance' properties. The standard 'Footprint Fiducial' pipeline now support parallax vision features. [PR 1719](https://github.com/openpnp/openpnp/pull/1719)
+  * All Fiducial pipelines now have a 'Max Distance' gui slider to control the detection range. This allows different fiducial pipelines to have different ranges, for example a panel fiducial might benefit from a larger detection range, and a board fiducial might benefit from a shorter detection range to avoid mis-detecting other board features. [PR 1719](https://github.com/openpnp/openpnp/pull/1719)
 
 ## Bug Fixes
 
 * Fix bug causing manual nozzle tip changes to get swallowed if the corresponding placement is set to defer errors. [PR 1741](https://github.com/openpnp/openpnp/pull/1741)
 * Fix bug preventing the status bar "Placements N / M" from updating when viewing the wrong tab in the main window. [PR 1724](https://github.com/openpnp/openpnp/pull/1724)
+* Fix ReferenceStripFeeder bug when calculating distance between reference sprocket holes. [PR 1714](https://github.com/openpnp/openpnp/pull/1714)
 
 
 # 2024 Q4
