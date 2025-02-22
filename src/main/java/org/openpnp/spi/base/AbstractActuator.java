@@ -20,6 +20,15 @@ import org.simpleframework.xml.Element;
 import org.simpleframework.xml.core.Commit;
 
 public abstract class AbstractActuator extends AbstractHeadMountable implements Actuator {
+    /**
+     * History:
+     * 
+     * 1.0: Initial revision.
+     * 1.1: Migrate binary coordination configuration to enum style with more options.
+     */
+    @Attribute(required = false)
+    private double version = 1.0;
+
     @Attribute
     protected String id;
 
@@ -84,30 +93,6 @@ public abstract class AbstractActuator extends AbstractHeadMountable implements 
     @Attribute(required = false)
     private ActuatorCoordinationEnumType coordinatedBeforeReadEnum = ActuatorCoordinationEnumType.WaitForStillstand;
 
-    // provide an upgrade path from boolean to enum type actuator coordination configuration
-    enum UpgradeDone {
-        None,
-        CoordinationBooleanToEnum;
-    }
-    @Attribute(required = false)
-    private UpgradeDone upgradeDone = UpgradeDone.None;
-    
-    @Commit
-    void commit() {
-        switch (upgradeDone) {
-        case None:
-            setCoordinatedBeforeActuateEnum(coordinatedBeforeActuate ? ActuatorCoordinationEnumType.WaitForStillstand : ActuatorCoordinationEnumType.None);
-            setCoordinatedAfterActuateEnum(coordinatedAfterActuate ? ActuatorCoordinationEnumType.WaitForUnconditionalCoordination : ActuatorCoordinationEnumType.None);
-            setCoordinatedBeforeReadEnum(coordinatedBeforeRead ? ActuatorCoordinationEnumType.WaitForStillstand : ActuatorCoordinationEnumType.None);
-            upgradeDone = UpgradeDone.CoordinationBooleanToEnum;
-            Logger.info(getName() + " coordination configuration upgraded");
-            // no break here to fall allowing more upgrades to take place
-            
-        case CoordinationBooleanToEnum:
-            // no default here to allow the compiler to generate a warning in case an upgrade path is missing
-        }
-    }
-    
     public AbstractActuator() {
         this.id = Configuration.createId("ACT");
         this.name = getClass().getSimpleName();
@@ -116,6 +101,14 @@ public abstract class AbstractActuator extends AbstractHeadMountable implements 
             @Override
             public void configurationLoaded(Configuration configuration) throws Exception {
                 driver = configuration.getMachine().getDriver(driverId);
+                
+                // if version is < 1.1, upgrade binary coordination configuration to enum style
+                if (version < 1.1) {
+                    setCoordinatedBeforeActuateEnum(coordinatedBeforeActuate ? ActuatorCoordinationEnumType.WaitForStillstand : ActuatorCoordinationEnumType.None);
+                    setCoordinatedAfterActuateEnum(coordinatedAfterActuate ? ActuatorCoordinationEnumType.WaitForUnconditionalCoordination : ActuatorCoordinationEnumType.None);
+                    setCoordinatedBeforeReadEnum(coordinatedBeforeRead ? ActuatorCoordinationEnumType.WaitForStillstand : ActuatorCoordinationEnumType.None);
+                    version = 1.1;
+                }
             }
         });
     }
