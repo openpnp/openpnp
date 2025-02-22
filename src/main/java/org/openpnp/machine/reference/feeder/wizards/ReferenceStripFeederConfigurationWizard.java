@@ -132,6 +132,10 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
     private JTextField retryCountTf;
     private JLabel lblExtrapolationDistance;
     private JTextField textFieldExtrapolationDistance;
+    private JLabel lblParallaxDiameter;
+    private JTextField parallaxDiameter;
+    private JLabel lblParallaxAngle;
+    private JTextField parallaxAngle;
 
     private boolean logDebugInfo = false;
     private Location firstPartLocation;
@@ -313,8 +317,10 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         panelVision.setLayout(new FormLayout(
                 new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC},
                 new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
 
@@ -365,6 +371,23 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
                 "ReferenceStripFeederConfigurationWizard.PanelVision.ExtrapolationDistanceLabel.toolTipText")); //$NON-NLS-1$
         panelVision.add(textFieldExtrapolationDistance, "4, 6");
         textFieldExtrapolationDistance.setColumns(5);
+
+        lblParallaxDiameter = new JLabel(Translations.getString("ReferenceStripFeederConfigurationWizard.PanelVision.lblParallaxDiameter.text")); //$NON-NLS-1$
+        lblParallaxDiameter.setToolTipText(Translations.getString("ReferenceStripFeederConfigurationWizard.PanelVision.lblParallaxDiameter.toolTipText")); //$NON-NLS-1$
+        panelVision.add(lblParallaxDiameter, "2, 8, right, default");
+
+        parallaxDiameter = new JTextField();
+        panelVision.add(parallaxDiameter, "4, 8, fill, default");
+        parallaxDiameter.setColumns(10);
+
+        lblParallaxAngle = new JLabel(Translations.getString("ReferenceStripFeederConfigurationWizard.PanelVision.lblParallaxAngle.text")); //$NON-NLS-1$
+        lblParallaxAngle.setToolTipText(Translations.getString("ReferenceStripFeederConfigurationWizard.PanelVision.lblParallaxAngle.toolTipText")); //$NON-NLS-1$
+        panelVision.add(lblParallaxAngle, "6, 8, right, default");
+
+        parallaxAngle = new JTextField();
+        panelVision.add(parallaxAngle, "8, 8, fill, default");
+        parallaxAngle.setColumns(10);
+
 
         panelLocations = new JPanel();
         contentPanel.add(panelLocations);
@@ -457,6 +480,8 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         addWrappedBinding(feeder, "feedCount", textFieldFeedCount, "text", intConverter);
         addWrappedBinding(feeder, "maxFeedCount", textFieldMaxFeedCount, "text", intConverter);
         addWrappedBinding(feeder, "extrapolationDistance", textFieldExtrapolationDistance, "text", lengthConverter);
+        addWrappedBinding(feeder, "parallaxDiameter", parallaxDiameter, "text", lengthConverter);
+        addWrappedBinding(feeder, "parallaxAngle", parallaxAngle, "text", doubleConverter);
 
         MutableLocationProxy feedStartLocation = new MutableLocationProxy();
         bind(UpdateStrategy.READ_WRITE, feeder, "referenceHoleLocation", feedStartLocation,

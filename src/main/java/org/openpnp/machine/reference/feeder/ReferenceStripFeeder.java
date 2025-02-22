@@ -128,6 +128,11 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
     @Element(required = false)
     private Length extrapolationDistance = new Length(0, LengthUnit.Millimeters);
 
+    @Element(required = false)
+    private Length parallaxDiameter = new Length(0, LengthUnit.Millimeters);
+    @Element(required = false)
+    private double parallaxAngle = 0;
+
     private Length holeDiameter = new Length(1.5, LengthUnit.Millimeters);
 
     private Length holePitch = new Length(4, LengthUnit.Millimeters);
@@ -326,9 +331,8 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
         Camera camera = nozzle.getHead().getDefaultCamera();
         ensureFeederZ(camera);
 
-        MovableUtils.moveToLocationAtSafeZ(camera, expectedLocation);
         // and look for the hole
-        Location actualLocation = findClosestHole(camera);
+        Location actualLocation = findClosestHole(camera, expectedLocation);
         if (actualLocation == null) {
             throw new Exception("Unable to locate reference hole. End of strip?");
         }
@@ -424,12 +428,42 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
         return Double.min(extrapolationDistanceMm,extrapolationDistanceLimit);
     }
 
-    private Location findClosestHole(Camera camera) throws Exception {
+    private Location findClosestHole(Camera camera, Location expectedLocation) throws Exception {
+        if (getParallaxDiameter().getValue() == 0) {
+            // no parallax
+            MovableUtils.moveToLocationAtSafeZ(camera, expectedLocation);
+            return findClosestHoleFromViewpoint(camera, expectedLocation);
+        } else {
+            // parallax
+            Location parallaxDisplacement = new Location(getParallaxDiameter().getUnits(),
+                getParallaxDiameter().getValue(), 0, 0, 0)
+                    .multiply(0.5) // Diameter -> Radius
+                    .rotateXy(getParallaxAngle());
+
+            if (camera.getLocation().getLinearLengthTo(expectedLocation.add(parallaxDisplacement))
+                    .compareTo(camera.getLocation().getLinearLengthTo(expectedLocation.subtract(parallaxDisplacement))) > 0) {
+                // Go to the closer view-point first.
+                parallaxDisplacement = parallaxDisplacement.multiply(-1);
+            }
+
+            Location viewPointLocation = expectedLocation.add(parallaxDisplacement);
+            MovableUtils.moveToLocationAtSafeZ(camera, viewPointLocation);
+            Location locationA = findClosestHoleFromViewpoint(camera, expectedLocation);
+
+            viewPointLocation = expectedLocation.subtract(parallaxDisplacement);
+            MovableUtils.moveToLocationAtSafeZ(camera, viewPointLocation);
+            Location locationB = findClosestHoleFromViewpoint(camera, expectedLocation);
+
+            return locationA.add(locationB).multiply(0.5); // midpoint
+        }
+    }
+
+    private Location findClosestHoleFromViewpoint(Camera camera, Location expectedLocation) throws Exception {
         try (CvPipeline pipeline = getPipeline()) {
             Integer pxMinDistance = (int) VisionUtils.toPixels(getHolePitchMin(), camera);
             Integer pxMinDiameter = (int) VisionUtils.toPixels(getHoleDiameterMin(), camera);
             Integer pxMaxDiameter = (int) VisionUtils.toPixels(getHoleDiameterMax(), camera);
-    
+
             // Process the pipeline to clean up the image and detect the tape holes
             pipeline.setProperty("camera", camera);
             pipeline.setProperty("feeder", this);
@@ -439,6 +473,10 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
             pipeline.setProperty("sprocketHole.diameter", getHoleDiameter());
             // Search range is half-way to the next hole. 
             pipeline.setProperty("sprocketHole.maxDistance", getHolePitch().multiply(0.5));
+            // Parallax data
+            pipeline.setProperty("sprocketHole.center", expectedLocation);
+            pipeline.setProperty("MaskCircle.center", expectedLocation);
+
             pipeline.process();
     
             if (MainFrame.get() != null) {
@@ -459,15 +497,19 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
             // Find the closest result
             results.sort((a, b) -> {
                 Double da = VisionUtils.getPixelLocation(camera, a.x, a.y)
-                        .getLinearDistanceTo(camera.getLocation());
+                        .getLinearDistanceTo(expectedLocation);
                 Double db = VisionUtils.getPixelLocation(camera, b.x, b.y)
-                        .getLinearDistanceTo(camera.getLocation());
+                        .getLinearDistanceTo(expectedLocation);
                 return da.compareTo(db);
             });
     
             CvStage.Result.Circle closestResult = results.get(0);
             Location holeLocation = VisionUtils.getPixelLocation(camera, closestResult.x, closestResult.y);
             return holeLocation;
+        }
+        finally {
+            pipeline.setProperty("sprocketHole.center", null);
+            pipeline.setProperty("MaskCircle.center", null);
         }
     }
    
@@ -589,6 +631,22 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
 
     public void setExtrapolationDistance(Length extrapolationDistance) {
         this.extrapolationDistance = extrapolationDistance;
+    }
+
+    public Length getParallaxDiameter() {
+        return parallaxDiameter;
+    }
+
+    public void setParallaxDiameter(Length parallaxDiameter) {
+        this.parallaxDiameter = parallaxDiameter;
+    }
+
+    public double getParallaxAngle() {
+        return parallaxAngle;
+    }
+
+    public void setParallaxAngle(double parallaxAngle) {
+        this.parallaxAngle = parallaxAngle;
     }
 
     public Length getTapeWidth() {
