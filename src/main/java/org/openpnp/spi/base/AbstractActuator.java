@@ -14,10 +14,21 @@ import org.openpnp.spi.Driver;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.MotionPlanner.CompletionType;
+import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.core.Commit;
 
 public abstract class AbstractActuator extends AbstractHeadMountable implements Actuator {
+    /**
+     * History:
+     * 
+     * 1.0: Initial revision.
+     * 1.1: Migrate binary coordination configuration to enum style with more options.
+     */
+    @Attribute(required = false)
+    private double version = 1.0;
+
     @Attribute
     protected String id;
 
@@ -53,14 +64,34 @@ public abstract class AbstractActuator extends AbstractHeadMountable implements 
     @Attribute(required = false)
     private String driverId;
 
+    // boolean type ActuatorCoordination[] is replaced by its enum type successor
     @Attribute(required = false)
+    @Deprecated
     private boolean coordinatedBeforeActuate = true;
 
     @Attribute(required = false)
+    @Deprecated
     private boolean coordinatedAfterActuate = false;
 
     @Attribute(required = false)
+    @Deprecated
     private boolean coordinatedBeforeRead = true;
+    
+    public enum ActuatorCoordinationEnumType {
+        None,
+        CommandStillstand,
+        WaitForStillstand,
+        WaitForUnconditionalCoordination;
+    }
+    
+    @Attribute(required = false)
+    private ActuatorCoordinationEnumType coordinatedBeforeActuateEnum = ActuatorCoordinationEnumType.WaitForStillstand;
+
+    @Attribute(required = false)
+    private ActuatorCoordinationEnumType coordinatedAfterActuateEnum = ActuatorCoordinationEnumType.None;
+
+    @Attribute(required = false)
+    private ActuatorCoordinationEnumType coordinatedBeforeReadEnum = ActuatorCoordinationEnumType.WaitForStillstand;
 
     public AbstractActuator() {
         this.id = Configuration.createId("ACT");
@@ -70,6 +101,14 @@ public abstract class AbstractActuator extends AbstractHeadMountable implements 
             @Override
             public void configurationLoaded(Configuration configuration) throws Exception {
                 driver = configuration.getMachine().getDriver(driverId);
+                
+                // if version is < 1.1, upgrade binary coordination configuration to enum style
+                if (version < 1.1) {
+                    setCoordinatedBeforeActuateEnum(coordinatedBeforeActuate ? ActuatorCoordinationEnumType.WaitForStillstand : ActuatorCoordinationEnumType.None);
+                    setCoordinatedAfterActuateEnum(coordinatedAfterActuate ? ActuatorCoordinationEnumType.WaitForUnconditionalCoordination : ActuatorCoordinationEnumType.None);
+                    setCoordinatedBeforeReadEnum(coordinatedBeforeRead ? ActuatorCoordinationEnumType.WaitForStillstand : ActuatorCoordinationEnumType.None);
+                    version = 1.1;
+                }
             }
         });
     }
@@ -353,50 +392,91 @@ public abstract class AbstractActuator extends AbstractHeadMountable implements 
         return null;
     }
 
-    protected void coordinateWithMachine(boolean unconditional) throws Exception {
-        Machine machine = Configuration.get().getMachine();
-        if (!machine.isTask(Thread.currentThread())) {
-            throw new Exception("Actuator "+getName()+" must not coordinate with machine when actuated outside machine task.");
-        }
-        machine.getMotionPlanner()
-        .waitForCompletion(null, unconditional ? 
-                CompletionType.WaitForUnconditionalCoordination
-                : CompletionType.WaitForStillstand);
+    /**
+     * The following three methods are used to execute the requested coordination
+     * between actuator and machine. They are separated by type to allow checking
+     * if coordination is requested and to use the minimum completion types
+     * required.
+     * 
+     * @throws Exception
+     */
+    protected void coordinateWithMachineBeforeActuate() throws Exception {
+        coordinateWithMachine(getCoordinatedBeforeActuateEnum());
+    }
+    protected void coordinateWithMachineAfterActuate() throws Exception {
+        coordinateWithMachine(getCoordinatedAfterActuateEnum());
+    }
+    protected void coordinateWithMachineBeforeRead() throws Exception {
+        coordinateWithMachine(getCoordinatedBeforeActuateEnum());
     }
 
+    /**
+     * This method is used to executed the actual actuator to machine coordination using
+     * the given completion type. It is called by one of the three coordination points
+     * that can be configured per actuator.
+     * 
+     * @param completionType
+     * @throws Exception
+     */
+    private void coordinateWithMachine(ActuatorCoordinationEnumType coordinationType) throws Exception {
+        if (coordinationType != ActuatorCoordinationEnumType.None) {
+            CompletionType completionType;
+            switch (coordinationType) {
+                case CommandStillstand:
+                    completionType = CompletionType.CommandStillstand;
+                    break;
+                default:    // use WaitForStillstand as default in case we missed anything
+                case WaitForStillstand:
+                    completionType = CompletionType.WaitForStillstand;
+                    break;
+                case WaitForUnconditionalCoordination:
+                    completionType = CompletionType.WaitForUnconditionalCoordination;
+                    break;
+            }
+
+            Machine machine = Configuration.get().getMachine();
+            if (!machine.isTask(Thread.currentThread())) {
+                throw new Exception("Actuator "+getName()+" must not coordinate with machine when actuated outside machine task.");
+            }
+            machine.getMotionPlanner()
+            .waitForCompletion(null, completionType);
+        }
+    }
+    
     @Override
     public String read() throws Exception {
-        if (isCoordinatedBeforeRead()) {
-            coordinateWithMachine(false);
-        }
+        coordinateWithMachineBeforeRead();
         return null;
     }
 
-    @Override
-    public boolean isCoordinatedBeforeActuate() {
-        return coordinatedBeforeActuate;
+    public ActuatorCoordinationEnumType getCoordinatedBeforeActuateEnum() {
+        return coordinatedBeforeActuateEnum;
+    }
+    
+    public void setCoordinatedBeforeActuateEnum(ActuatorCoordinationEnumType coordinateBeforeActuateEnum) {
+        this.coordinatedBeforeActuateEnum = coordinateBeforeActuateEnum;
     }
 
-    public void setCoordinatedBeforeActuate(boolean coordinateBeforeActuate) {
-        this.coordinatedBeforeActuate = coordinateBeforeActuate;
+    public ActuatorCoordinationEnumType getCoordinatedAfterActuateEnum() {
+        return coordinatedAfterActuateEnum;
     }
 
-    @Override
-    public boolean isCoordinatedAfterActuate() {
-        return coordinatedAfterActuate;
+    public void setCoordinatedAfterActuateEnum(ActuatorCoordinationEnumType coordinateAfterActuateEnum) {
+        this.coordinatedAfterActuateEnum = coordinateAfterActuateEnum;
     }
 
-    public void setCoordinatedAfterActuate(boolean coordinateAfterActuate) {
-        this.coordinatedAfterActuate = coordinateAfterActuate;
+    public ActuatorCoordinationEnumType getCoordinatedBeforeReadEnum() {
+        return coordinatedBeforeReadEnum;
     }
 
-    @Override
-    public boolean isCoordinatedBeforeRead() {
-        return coordinatedBeforeRead;
+    public void setCoordinatedBeforeReadEnum(ActuatorCoordinationEnumType coordinateBeforeReadEnum) {
+        this.coordinatedBeforeReadEnum = coordinateBeforeReadEnum;
     }
 
-    public void setCoordinatedBeforeRead(boolean coordinateBeforeRead) {
-        this.coordinatedBeforeRead = coordinateBeforeRead;
+    // enum to handle configuration upgrades retaining the configuration file.
+    enum ActuatorConfigUpgradeDone {
+        None,
+        CoordinatedBooleanToEnum;   // boolean to ActuatorCoordinationEnumType
     }
 
     public boolean isInterlockActuator() {

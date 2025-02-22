@@ -257,15 +257,11 @@ public class ReferenceActuator extends AbstractActuator implements HeadMountable
             actuate((Object)on);
         }
         else {
-            if (isCoordinatedBeforeActuate()) {
-                coordinateWithMachine(false);
-            }
+            coordinateWithMachineBeforeActuate();
             Logger.debug("{}.actuate({})", getName(), on);
             driveActuation(on);
             setLastActuationValue(on);
-            if (isCoordinatedAfterActuate()) {
-                coordinateWithMachine(true);
-            }
+            coordinateWithMachineAfterActuate();
             getMachine().fireMachineHeadActivity(head);
         }
     }
@@ -276,15 +272,11 @@ public class ReferenceActuator extends AbstractActuator implements HeadMountable
 
     @Override
     public void actuate(double value) throws Exception {
-        if (isCoordinatedBeforeActuate()) {
-            coordinateWithMachine(false);
-        }
+        coordinateWithMachineBeforeActuate();
         Logger.debug("{}.actuate({})", getName(), value);
         driveActuation(value);
         setLastActuationValue(value);
-        if (isCoordinatedAfterActuate()) {
-            coordinateWithMachine(true);
-        }
+        coordinateWithMachineAfterActuate();
         getMachine().fireMachineHeadActivity(head);
     }
 
@@ -294,15 +286,11 @@ public class ReferenceActuator extends AbstractActuator implements HeadMountable
 
     @Override
     public void actuate(String value) throws Exception {
-        if (isCoordinatedBeforeActuate()) {
-            coordinateWithMachine(false);
-        }
+        coordinateWithMachineBeforeActuate();
         Logger.debug("{}.actuate({})", getName(), value);
         driveActuation(value);
         setLastActuationValue(value);
-        if (isCoordinatedAfterActuate()) {
-            coordinateWithMachine(true);
-        }
+        coordinateWithMachineAfterActuate();
         getMachine().fireMachineHeadActivity(head);
     }
 
@@ -326,23 +314,17 @@ public class ReferenceActuator extends AbstractActuator implements HeadMountable
 
     @Override
     public String read() throws Exception {
-        if (isCoordinatedBeforeRead()) {
-            coordinateWithMachine(false);
-        }
+        coordinateWithMachineBeforeRead();
         String value = getDriver().actuatorRead(this);
         Logger.debug("{}.read(): {}", getName(), value);
-        if (isCoordinatedAfterActuate()) {
-            coordinateWithMachine(true);
-        }
+        coordinateWithMachineAfterActuate();
         getMachine().fireMachineHeadActivity(head);
         return value;
     }
 
     @Override
     public String read(Object parameter) throws Exception {
-        if (isCoordinatedBeforeRead()) {
-            coordinateWithMachine(false);
-        }
+        coordinateWithMachineBeforeRead();
         String value = getDriver().actuatorRead(this, parameter);
         Logger.debug("{}.readWithParameter({}): {}", getName(), parameter, value);
         getMachine().fireMachineHeadActivity(head);
