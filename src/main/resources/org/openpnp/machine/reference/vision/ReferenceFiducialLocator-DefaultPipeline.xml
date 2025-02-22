@@ -1,9 +1,11 @@
 <cv-pipeline>
    <stages>
-      <cv-stage class="org.openpnp.vision.pipeline.stages.ImageCapture" name="image" enabled="true" default-light="true" settle-first="true" count="1"/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.ParameterNumeric" name="maxDistance" enabled="true" parameter-label="Max. Distance" parameter-description="Maximum allowed distance between nominal fiducial location and detected location." stage-name="circular" property-name="maxDistance" effect-stage-name="circular" preview-result="true" minimum-value="0.0" maximum-value="10.0" default-value="4.0" numeric-type="MillimetersToPixels"/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.ImageCapture" name="image" enabled="true" default-light="true" settle-option="Settle" count="1"/>
       <cv-stage class="org.openpnp.vision.pipeline.stages.ImageWriteDebug" name="deb0" enabled="false" prefix="fidloc_source_" suffix=".png"/>
-      <cv-stage class="org.openpnp.vision.pipeline.stages.BlurGaussian" name="blur" enabled="false" kernel-size="3"/>
-      <cv-stage class="org.openpnp.vision.pipeline.stages.DetectCircularSymmetry" name="circular" enabled="true" min-diameter="10" max-diameter="100" max-distance="200" search-width="0" search-height="0" max-target-count="1" min-symmetry="1.2" corr-symmetry="0.0" property-name="fiducial" outer-margin="0.2" inner-margin="0.4" sub-sampling="8" super-sampling="8" diagnostics="true" heat-map="false"/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.BlurGaussian" name="blur" enabled="false" kernel-size="3" property-name="BlurGaussian"/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.DetectCircularSymmetry" name="circular" enabled="true" min-diameter="10" max-diameter="100" max-distance="4" search-width="0" search-height="0" max-target-count="1" min-symmetry="1.2" corr-symmetry="0.0" outer-margin="0.2" inner-margin="0.4" sub-sampling="8" super-sampling="8" symmetry-score="OverallVarianceVsRingVarianceSum" property-name="fiducial" diagnostics="true" heat-map="true"/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.ImageRecall" name="0" enabled="true" image-stage-name="image"/>
       <cv-stage class="org.openpnp.vision.pipeline.stages.ConvertModelToKeyPoints" name="results" enabled="true" model-stage-name="circular"/>
       <cv-stage class="org.openpnp.vision.pipeline.stages.DrawCircles" name="draw" enabled="false" circles-stage-name="circular" thickness="1">
          <color r="255" g="255" b="0" a="255"/>

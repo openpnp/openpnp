@@ -132,7 +132,7 @@ public class ParameterNumeric extends CvAbstractScalarParameterStage {
 
     @Override
     public Object defaultParameterValue() {
-        return defaultValue;
+        return numericType.asTyped(defaultValue);
     }
 
     @Override
