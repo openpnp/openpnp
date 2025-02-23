@@ -30,6 +30,7 @@ import java.beans.PropertyChangeListener;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
+import org.pmw.tinylog.Logger;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -166,6 +167,11 @@ public class JogControlsPanel extends JPanel {
     }
 
     private void jog(final int x, final int y, final int z, final int c) {
+        if(UiUtils.isModalDialogBoxOpen()) {
+            Logger.info("jog blocked while modal dialog is open");
+            return;
+        }
+
         UiUtils.submitUiMachineTask(() -> {
             HeadMountable tool = machineControlsPanel.getSelectedTool();
             jogTool(x, y, z, c, tool);
