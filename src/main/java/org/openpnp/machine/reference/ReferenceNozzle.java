@@ -542,7 +542,7 @@ public class ReferenceNozzle extends AbstractNozzle implements HeadMountable {
                 return nozzleTip.getMaxPartHeight();
             }
             else {
-                return part.getHeight();
+                return part.getHeightForSafeZ();
             }
         }
         return new Length(0, LengthUnit.Millimeters);
