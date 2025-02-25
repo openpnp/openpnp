@@ -11,6 +11,9 @@ a complete change list, only those that may directly interest or affect users.
 * The 'Job.Placement.BeforeAssembly' event now allows any scripts to fine-tune the location of the placement. This enables script-based 'local fiducial' behaviour. [PR 1688](https://github.com/openpnp/openpnp/pull/1688)
 * Prevent unintended changes when a single click on a table row from opening cell editor or makes checkbox action. This now requires a second click. [PR 1729](https://github.com/openpnp/openpnp/pull/1729)
 * Added the "Through-Board Depth" property to Parts. This can be used to record the height of any mechanical alignment pips, through-hole electrical pins, lenses on down-firing leds, and connectors with features that overhang the side of the board. This additional height is considered in Safe-Z calculations when moving such parts on a nozzle tip. [PR 1749](https://github.com/openpnp/openpnp/pull/1749)
+* Added support for driver-side delaying using G4 P<> and uses it for static pick and place dwell time. This provides a better and tighter utilization of the machine while reducing the scheduler induced timing jitter. [PR 1699](https://github.com/openpnp/openpnp/pull/1699)
+* Additional placement sorting options to the job processor making the order of placements predictable even for panels of identical boards. [PR 1658](https://github.com/openpnp/openpnp/pull/1658)
+* Many translation improvements. [PR 1658](https://github.com/openpnp/openpnp/pull/1658) [PR 1704](https://github.com/openpnp/openpnp/pull/1704)
 * Improvements to the part footprint camera overlay:
   * A marker to indicate the part orientation, typically pad #1, cathode, etc. [PR 1694](https://github.com/openpnp/openpnp/pull/1694)
   * Draw that overlay on bottom camera too. [PR 1745](https://github.com/openpnp/openpnp/pull/1745)
