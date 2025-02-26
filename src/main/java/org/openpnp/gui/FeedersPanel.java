@@ -633,7 +633,6 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         if (feeder.getPart() == null) {
             throw new Exception("Feeder "+feeder.getName()+" has no part.");
         }
-
         // Simulate a "one feeder" job, prepare the feeder.
         if (feeder.getJobPreparationLocation() != null) {
             feeder.prepareForJob(true);
