@@ -28,7 +28,7 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Feeder;
 import org.openpnp.util.BeanUtils;
-import org.openpnp.machine.reference.FeederWithOptions;
+import org.openpnp.machine.reference.ReferenceFeeder;
 
 public class FeedersTableModel extends AbstractObjectTableModel {
     final private Configuration configuration;
@@ -58,8 +58,8 @@ public class FeedersTableModel extends AbstractObjectTableModel {
     public void refresh() {
         feeders = new ArrayList<>(configuration.getMachine().getFeeders());
         for (Feeder f : feeders) {
-            if (f instanceof FeederWithOptions) {
-                ((FeederWithOptions)f).addPropertyChangeListener("feedOptions",  event-> {
+            if ((f instanceof ReferenceFeeder) && ((ReferenceFeeder)f).supportsFeedOptions()) {
+                ((ReferenceFeeder)f).addPropertyChangeListener("feedOptions",  event-> {
                     fireTableRowsUpdated(0, feeders.size()-1);
                 });
             }
@@ -92,7 +92,12 @@ public class FeedersTableModel extends AbstractObjectTableModel {
 
     @Override
     public boolean isCellEditable(int rowIndex, int columnIndex) {
-        return columnIndex == 0 || columnIndex == 3 || (columnIndex == 4 && feeders.get(rowIndex) instanceof FeederWithOptions);
+        boolean result = columnIndex == 0 || columnIndex == 3;
+        if (!result && columnIndex == 4)  {
+            Feeder feeder = feeders.get(rowIndex);
+            result = feeder instanceof ReferenceFeeder && ((ReferenceFeeder)feeder).supportsFeedOptions();
+        }
+        return result;
     }
 
     @Override
@@ -106,7 +111,7 @@ public class FeedersTableModel extends AbstractObjectTableModel {
                 feeder.setEnabled((Boolean) aValue);
             }
             else if (columnIndex == 4) {
-                ((FeederWithOptions)feeder).setFeedOptions((FeederWithOptions.FeedOptions) aValue);
+                ((ReferenceFeeder)feeder).setFeedOptions((ReferenceFeeder.FeedOptions) aValue);
             }
         }
         catch (Exception e) {
@@ -120,7 +125,7 @@ public class FeedersTableModel extends AbstractObjectTableModel {
             return Boolean.class;
         }
         else if (columnIndex == 4) {
-            return FeederWithOptions.FeedOptions.class;
+            return ReferenceFeeder.FeedOptions.class;
         }
         return super.getColumnClass(columnIndex);
     }
@@ -142,8 +147,8 @@ public class FeedersTableModel extends AbstractObjectTableModel {
                 return feeders.get(row).isEnabled();
             case 4:
                 Feeder feeder = feeders.get(row);
-                if (feeders.get(row) instanceof FeederWithOptions) {
-                    return ((FeederWithOptions)feeder).getFeedOptions();
+                if (feeders.get(row) instanceof ReferenceFeeder) {
+                    return ((ReferenceFeeder)feeder).getFeedOptions();
                 } else {
                     return null;
                 }
