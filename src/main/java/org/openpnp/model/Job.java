@@ -36,6 +36,7 @@ import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.ElementMap;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.core.Persist;
+import org.simpleframework.xml.core.Resolve;
 
 /**
  * A Job specifies a list of one or more PanelLocations and/or BoardLocations.
@@ -97,6 +98,12 @@ public class Job extends AbstractModelObject implements PropertyChangeListener {
         boardLocations = null;
     }
     
+    @Resolve
+    private Object resolve() {
+        rootPanelLocation.setPanel(rootPanel);
+        return this;
+    }
+
     /**
      *
      * @return a flattened list of all BoardLocations held by the job
