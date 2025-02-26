@@ -73,7 +73,7 @@ import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.gui.tablemodel.FeedersTableModel;
 import org.openpnp.machine.reference.vision.AbstractPartAlignment;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision;
-import org.openpnp.machine.reference.FeederWithOptions;
+import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Configuration.TablesLinked;
@@ -175,7 +175,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 		});
 		panel_1.add(searchTextField);
 		searchTextField.setColumns(15);
-        JComboBox<Type> feedOptionsComboBox = new JComboBox(FeederWithOptions.FeedOptions.values());
+        JComboBox<Type> feedOptionsComboBox = new JComboBox(ReferenceFeeder.FeedOptions.values());
 
 		table = new AutoSelectTextTable(tableModel);
 		table.setDefaultRenderer(Boolean.class, new CustomBooleanRenderer() {
@@ -223,7 +223,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 				return c;
 			}
 		});
-        table.setDefaultEditor(FeederWithOptions.FeedOptions.class, new DefaultCellEditor(feedOptionsComboBox));
+        table.setDefaultEditor(ReferenceFeeder.FeedOptions.class, new DefaultCellEditor(feedOptionsComboBox));
 
         tableSorter = new TableRowSorter<>(tableModel);
         table.getColumnModel().moveColumn(1,  2);
@@ -341,7 +341,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         setEnabledMenu.add(new SetEnabledAction(false));
         popupMenu.add(setEnabledMenu);
         JMenu setFeedOptionsMenu = new JMenu(setFeedOptionsAction);
-        for (FeederWithOptions.FeedOptions opt : FeederWithOptions.FeedOptions.values()) {
+        for (ReferenceFeeder.FeedOptions opt : ReferenceFeeder.FeedOptions.values()) {
             setFeedOptionsMenu.add(new SetFeedOptionsAction(opt));
         }
         popupMenu.add(setFeedOptionsMenu);
@@ -885,9 +885,9 @@ public class FeedersPanel extends JPanel implements WizardContainer {
     };
 
     class SetFeedOptionsAction extends AbstractAction {
-        final FeederWithOptions.FeedOptions value;
+        final ReferenceFeeder.FeedOptions value;
 
-        public SetFeedOptionsAction(FeederWithOptions.FeedOptions value) {
+        public SetFeedOptionsAction(ReferenceFeeder.FeedOptions value) {
             this.value = value;
             String name = value.toString();
             putValue(NAME, name);
@@ -897,8 +897,8 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             for (Feeder f : getSelections()) {
-                if (f instanceof FeederWithOptions) {
-                    ((FeederWithOptions)f).setFeedOptions(value);
+                if (f instanceof ReferenceFeeder) {
+                    ((ReferenceFeeder)f).setFeedOptions(value);
                 }
             }
             table.repaint();

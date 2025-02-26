@@ -23,7 +23,7 @@ import javax.swing.Action;
 
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.Wizard;
-import org.openpnp.machine.reference.FeederWithOptions;
+import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.machine.reference.feeder.wizards.ReferenceAutoFeederConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
@@ -35,7 +35,7 @@ import org.openpnp.util.MovableUtils;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 
-public class ReferenceAutoFeeder extends FeederWithOptions {
+public class ReferenceAutoFeeder extends ReferenceFeeder {
     @Attribute(required=false)
     protected String actuatorName;
     
@@ -226,4 +226,10 @@ public class ReferenceAutoFeeder extends FeederWithOptions {
     public Action[] getPropertySheetHolderActions() {
         return null;
     }
+
+    @Override
+    public boolean supportsFeedOptions() {
+        return true;
+    }
+
 }

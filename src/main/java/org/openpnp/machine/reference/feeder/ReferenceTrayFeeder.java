@@ -24,7 +24,6 @@ package org.openpnp.machine.reference.feeder;
 import javax.swing.Action;
 
 import org.openpnp.gui.support.Wizard;
-import org.openpnp.machine.reference.FeederWithOptions;
 import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.machine.reference.feeder.wizards.ReferenceTrayFeederConfigurationWizard;
 import org.openpnp.model.LengthUnit;
@@ -40,7 +39,7 @@ import org.simpleframework.xml.Element;
  * Implementation of Feeder that indexes based on an offset. This allows a tray of parts to be
  * picked from without moving any tape. Can handle trays of arbitrary X and Y count.
  */
-public class ReferenceTrayFeeder extends FeederWithOptions {
+public class ReferenceTrayFeeder extends ReferenceFeeder {
 
 
     @Attribute
@@ -200,5 +199,10 @@ public class ReferenceTrayFeeder extends FeederWithOptions {
     @Override
     public Action[] getPropertySheetHolderActions() {
         return null;
+    }
+
+    @Override
+    public boolean supportsFeedOptions() {
+        return true;
     }
 }

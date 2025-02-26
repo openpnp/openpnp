@@ -29,7 +29,7 @@ import org.apache.commons.io.IOUtils;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Wizard;
-import org.openpnp.machine.reference.FeederWithOptions;
+import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.machine.reference.feeder.wizards.ReferenceStripFeederConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
@@ -74,7 +74,7 @@ import org.simpleframework.xml.core.Persist;
  * 
  * hole to part lateral is tape width / 2 - 0.5mm
  */
-public class ReferenceStripFeeder extends FeederWithOptions {
+public class ReferenceStripFeeder extends ReferenceFeeder {
     public enum TapeType {
         WhitePaper("White Paper"),
         BlackPlastic("Black Plastic"),
@@ -527,11 +527,7 @@ public class ReferenceStripFeeder extends FeederWithOptions {
      */
     @Override
     public boolean canTakeBackPart() {
-        if (feedCount > 0 ) {
-            return true;
-        } else {
-            return false;
-        }
+        return feedCount > 0;
     }
 
     @Override
@@ -764,6 +760,11 @@ public class ReferenceStripFeeder extends FeederWithOptions {
         catch (Exception e) {
             throw new Error(e);
         }
+    }
+
+    @Override
+    public boolean supportsFeedOptions() {
+        return true;
     }
 }
 
