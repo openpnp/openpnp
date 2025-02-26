@@ -626,7 +626,6 @@ public class FeedersPanel extends JPanel implements WizardContainer {
      * Perform a job-like feed operations sequence. 
      * 
      * @param feeder
-     * @param allowPartOnTip check if tip is empty and raise exception if part is loaded on tip
      * @return the nozzle to be used for a subsequent pick.
      * @throws Exception
      */
