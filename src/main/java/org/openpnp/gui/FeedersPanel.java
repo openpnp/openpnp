@@ -600,7 +600,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
             UiUtils.submitUiMachineTask(() -> {
                 Feeder feeder = getSelection();
                 // Do the feed and get the nozzle that would be used for the subsequent pick. 
-                Nozzle nozzle = feedFeeder(feeder, true);
+                Nozzle nozzle = feedFeeder(feeder);
             });
         }
     };
@@ -630,14 +630,9 @@ public class FeedersPanel extends JPanel implements WizardContainer {
      * @return the nozzle to be used for a subsequent pick.
      * @throws Exception
      */
-    public static Nozzle feedFeeder(Feeder feeder, boolean allowPartOnTip) throws Exception {
+    public static Nozzle feedFeeder(Feeder feeder) throws Exception {
         if (feeder.getPart() == null) {
             throw new Exception("Feeder "+feeder.getName()+" has no part.");
-        }
-
-        Nozzle nozzle = getCompatibleNozzleAndTip(feeder, true);
-        if (!allowPartOnTip && nozzle.getPart() != null) {
-            throw new Exception("Nozzle "+nozzle.getName()+" has loaded part.");
         }
 
         // Simulate a "one feeder" job, prepare the feeder.
@@ -645,6 +640,8 @@ public class FeedersPanel extends JPanel implements WizardContainer {
             feeder.prepareForJob(true);
         }
         feeder.prepareForJob(false);
+
+        Nozzle nozzle = getCompatibleNozzleAndTip(feeder, true);
 
         // Like in the JobProcessor, make sure it is calibrated.
         if (!nozzle.isCalibrated()) {
@@ -672,8 +669,12 @@ public class FeedersPanel extends JPanel implements WizardContainer {
      * @throws JobProcessorException
      */
     public static void pickFeeder(Feeder feeder) throws Exception, JobProcessorException {
+        Nozzle nozzle = getCompatibleNozzleAndTip(feeder, true);
+        if (nozzle.getPart() != null) {
+            throw new Exception("Nozzle "+nozzle.getName()+" has loaded part.");
+        }
         // Do the feed an get the nozzle for the pick.
-        Nozzle nozzle = feedFeeder(feeder, false);
+        nozzle = feedFeeder(feeder);
 
         // Perform the vacuum check, if enabled.
         if (nozzle.isPartOffEnabled(Nozzle.PartOffStep.BeforePick)) {
