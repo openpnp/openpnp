@@ -84,4 +84,26 @@ public class Cycles {
 
         Configuration.get().getScripting().on("Job.AfterDiscard", globals);
     }
+
+    /**
+     * Clear the Part, if any, on the given Nozzle. No other action is performed. Reason is adjusting state when
+     * part has been lost, manually removed or not picked-up and wrongly detected.
+     * 
+     * @param nozzle
+     * @throws Exception
+     */
+    public static void clear(Nozzle nozzle) throws Exception {
+        if (nozzle.getPart() == null) {
+            return;
+        }
+
+        Map<String, Object> globals = new HashMap<>();
+        globals.put("nozzle", nozzle);
+        Configuration.get().getScripting().on("Job.BeforeClear", globals);
+
+        // discard the part
+        nozzle.clear();
+        Configuration.get().getScripting().on("Job.AfterClear", globals);
+    }
+
 }

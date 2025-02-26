@@ -433,6 +433,18 @@ public class ReferenceNozzle extends AbstractNozzle implements HeadMountable {
         Configuration.get().getScripting().on("Nozzle.AfterPlace", globals);
     }
 
+    @Override
+    public void clear() throws Exception {
+        Logger.debug("{}.place()", getName());
+        if (nozzleTip == null) {
+            throw new Exception("Can't place, no nozzle tip loaded");
+        }
+        actuateVacuumValve(false);
+
+        setPart(null);
+        getMachine().fireMachineHeadActivity(head);
+}
+
     protected ReferenceNozzleTip getUnloadedNozzleTipStandin() {
         for (NozzleTip nozzleTip : this.getCompatibleNozzleTips()) {
             if (nozzleTip instanceof ReferenceNozzleTip) {
@@ -740,9 +752,7 @@ public class ReferenceNozzle extends AbstractNozzle implements HeadMountable {
     
     @Override
     public void unloadNozzleTip() throws Exception {
-        if (getPart() != null) {
-            throw new Exception("Nozzle "+getName()+" still has a part loaded. Please discard first.");
-        }
+        assertNoPart();
 
         // Make sure there is no rotation offset still applied.
         setRotationModeOffset(null);
@@ -840,6 +850,20 @@ public class ReferenceNozzle extends AbstractNozzle implements HeadMountable {
         if (calibrationNozzleTip != null && calibrationNozzleTip.getCalibration().isRecalibrateOnNozzleTipChangeNeeded(this)) {
             Logger.debug("{}.unloadNozzleTip() nozzle tip {} calibration needed", getName(), calibrationNozzleTip.getName());
             calibrationNozzleTip.getCalibration().calibrate(this);
+        }
+    }
+
+    @Override
+    public void clearNozzleTip() throws Exception {
+        assertNoPart();
+        if (nozzleTip != null) {
+            setNozzleTip(null);
+        }
+    }
+
+    protected void assertNoPart() throws Exception {
+        if (getPart() != null) {
+            throw new Exception("Nozzle "+getName()+" still has a part loaded. Please discard first.");
         }
     }
 
