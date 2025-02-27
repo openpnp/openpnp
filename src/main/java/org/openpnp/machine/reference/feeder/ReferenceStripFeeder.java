@@ -527,30 +527,13 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
      */
     @Override
     public boolean canTakeBackPart() {
-        return feedCount > 0;
+        return (feedCount > 0);
     }
 
     @Override
     public void takeBackPart(Nozzle nozzle) throws Exception {
-        // first check if we can and want to take back this part (should be always be checked before calling, but to be sure)
-        if (nozzle.getPart() == null) {
-            throw new UnsupportedOperationException("No part loaded that could be taken back.");
-        }
-        if (!nozzle.getPart().equals(getPart())) {
-            throw new UnsupportedOperationException("Feeder: " + getName() + " - Can not take back " + nozzle.getPart().getName() + " this feeder only supports " + getPart().getName());
-        }
-        if (!canTakeBackPart()) {
-            throw new UnsupportedOperationException("Feeder: " + getName() + " - Currently no free slot. Can not take back the part.");
-        }
-        
-        // ok, now put the part back on the location of the last pick
-        nozzle.moveToPickLocation(this);
-        // put the part back
-        nozzle.place();
-        nozzle.moveToSafeZ();
-        if (nozzle.isPartOffEnabled(Nozzle.PartOffStep.AfterPlace) && !nozzle.isPartOff()) {
-            throw new Exception("Feeder: " + getName() + " - Putting part back failed, check nozzle tip");
-        }
+        super.takeBackPart(nozzle);
+        putPartBack(nozzle);
         // change FeedCount
         if (getFeedOptions() == FeedOptions.Normal) {
             setFeedCount(getFeedCount() - 1);
