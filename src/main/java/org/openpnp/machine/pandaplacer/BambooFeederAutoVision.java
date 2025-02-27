@@ -111,15 +111,15 @@ public class BambooFeederAutoVision extends AbstractPandaplacerVisionFeeder {
     }
 
     public boolean isMoveBeforeFeed() {
-    return moveBeforeFeed;
-  }
+        return moveBeforeFeed;
+    }
 
-  public void setMoveBeforeFeed(boolean moveBeforeFeed) {
-    this.moveBeforeFeed = moveBeforeFeed;
-  }
+    public void setMoveBeforeFeed(boolean moveBeforeFeed) {
+        this.moveBeforeFeed = moveBeforeFeed;
+    }
 
 
-  public BambooFeederAutoVision() {
+    public BambooFeederAutoVision() {
 
         Configuration.get().addListener(new ConfigurationListener.Adapter() {
             @Override
@@ -154,54 +154,63 @@ public class BambooFeederAutoVision extends AbstractPandaplacerVisionFeeder {
             }
         });
 
-  }
+    }
 
-  @Persist
-  private void persist() {
-    // Make sure the newest names are persisted (legacy way).
-    feedActuatorName = (feedActuator == null ? null : feedActuator.getName());
-    postPickActuatorName = (postPickActuator == null ? null : postPickActuator.getName());
-  }
+    @Persist
+    private void persist() {
+        // Make sure the newest names are persisted (legacy way).
+        feedActuatorName = (feedActuator == null ? null : feedActuator.getName());
+        postPickActuatorName = (postPickActuator == null ? null : postPickActuator.getName());
+    }
 
-  // inherited from ReferenceFeeder
-  @Override
-  public void feed(Nozzle nozzle) throws Exception {
-      if (isMoveBeforeFeed()) {
-          MovableUtils.moveToLocationAtSafeZ(nozzle, getPickLocation().derive(null, null, Double.NaN, null));
-      }
+    // inherited from ReferenceFeeder
+    @Override
+    public void feed(Nozzle nozzle) throws Exception {
+        if (isMoveBeforeFeed()) {
+            MovableUtils.moveToLocationAtSafeZ(nozzle, getPickLocation().derive(null, null, Double.NaN, null));
+        }
 
-      Logger.debug("feed({})", nozzle);
+        Logger.debug("feed({})", nozzle);
 
-      Head head = nozzle.getHead();
+        Head head = nozzle.getHead();
 
-      if (getFeedCount() % getPartsPerFeedCycle() == 0) {
-          // Modulo of feed count is zero - no more parts there to pick, must feed
+        if (getFeedOptions() == FeedOptions.Normal) {
+            if (getFeedCount() % getPartsPerFeedCycle() == 0) {
+                // Modulo of feed count is zero - no more parts there to pick, must feed
 
-          // Make sure we're calibrated
-          assertCalibrated(false);
+                // Make sure we're calibrated
+                assertCalibrated(false);
 
-          long feedsPerPart = (long)Math.ceil(getPartPitch().divide(getFeedPitch()));
-          long n = feedsPerPart;
-          for (long i = 0; i < n; i++) {  // perform multiple feed actuations if required
-            // Actuate the tape once for the length equal to Tape Pitch
-            feedTape(nozzle, getFeedPitch().getValue());
-          }
+                long feedsPerPart = (long)Math.ceil(getPartPitch().divide(getFeedPitch()));
+                long n = feedsPerPart;
+                for (long i = 0; i < n; i++) {  // perform multiple feed actuations if required
+                    // Actuate the tape once for the length equal to Tape Pitch
+                    feedTape(nozzle, getFeedPitch().getValue());
+                }
 
-          head.moveToSafeZ();
-          // Make sure we're calibrated after type feed
-          assertCalibrated(true);
-      }
-      else {
-          Logger.debug("Multi parts feed: skipping tape feed at feed count " + getFeedCount());
-      }
+                head.moveToSafeZ();
+                // Make sure we're calibrated after type feed
+                assertCalibrated(true);
+            } else {
+                Logger.debug("Multi parts feed: skipping tape feed at feed count " + getFeedCount());
+            }
+        } else {
+            assertCalibrated(false);
+            head.moveToSafeZ();
+        }
 
-      // increment feed count
-      setFeedCount(getFeedCount()+1);
-  }
+        if (getFeedOptions() == FeedOptions.Normal) {
+            // increment feed count
+            setFeedCount(getFeedCount()+1);
+        }
+        if (getFeedOptions() == FeedOptions.SkipNext) {
+            setFeedOptions(FeedOptions.Normal);
+        }
+    }
 
-  private void feedTape(Nozzle nozzle, Double feedPitch) throws Exception {
-    if (feedActuatorName == null || feedActuatorName.equals("")) {
-      throw new Exception("No actuatorName specified for feeder " + getName());
+    private void feedTape(Nozzle nozzle, Double feedPitch) throws Exception {
+        if (feedActuatorName == null || feedActuatorName.equals("")) {
+            throw new Exception("No actuatorName specified for feeder " + getName());
         }
         Actuator actuator = nozzle.getHead().getActuatorByName(feedActuatorName);
         if (actuator == null) {
@@ -212,9 +221,9 @@ public class BambooFeederAutoVision extends AbstractPandaplacerVisionFeeder {
         }
         // Note by using the Object generic method, the value will be properly interpreted according to actuator.valueType.
         actuator.actuate((Object)feedActuatorValue);
-  }
+    }
 
-  @Override
+    @Override
     public void postPick(Nozzle nozzle) throws Exception {
         if (postPickActuatorName == null || postPickActuatorName.equals("")) {
           Logger.debug("Post pick cancelled. Actuator not set for feeder " + getName());
@@ -229,6 +238,19 @@ public class BambooFeederAutoVision extends AbstractPandaplacerVisionFeeder {
         }
         // Note by using the Object generic method, the value will be properly interpreted according to actuator.valueType.
         actuator.actuate((Object)postPickActuatorValue);
+    }
+
+    @Override
+    public boolean canTakeBackPart() {
+        // in multi nozzle setup prevent recycle multiple parts on the same place
+        return (getFeedOptions() != FeedOptions.SkipNext);
+    }
+
+    @Override
+    public void takeBackPart(Nozzle nozzle) throws Exception {
+        super.takeBackPart(nozzle);
+        putPartBack(nozzle);
+        setFeedOptions(FeedOptions.SkipNext);
     }
 
 // standard wizard overrides

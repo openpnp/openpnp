@@ -420,8 +420,8 @@ extends AbstractReferenceFeederConfigurationWizard {
         feedActuatorValue.setColumns(10);
         feedActuatorValue.setToolTipText("<html>\r\n<p>For Duble: numerical value<br/>\r\nFor Boolean: 1 = True, 0 = False</p></html>");
 
-
         btnTestFeedActuator = new JButton(testFeedActuatorAction);
+        btnTestFeedActuator.setToolTipText("<html>Do atomic feed, i.e. not full feed based on <i>Part&Feed pitch</i>.</html>");
         panelActuator.add(btnTestFeedActuator, "8, 4");
 
         lblPostPick = new JLabel("Post Pick");

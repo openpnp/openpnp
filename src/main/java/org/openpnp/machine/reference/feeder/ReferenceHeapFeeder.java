@@ -527,13 +527,7 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
 
     @Override
     public void takeBackPart(Nozzle nozzle) throws Exception {
-        // first check if we can and want to take back this part (should be always be checked before calling, but to be sure)
-        if (nozzle.getPart() == null) {
-            throw new UnsupportedOperationException("No part loaded that could be taken back.");
-        }
-        if (!nozzle.getPart().equals(getPart())) {
-            throw new UnsupportedOperationException("Feeder: " + getName() + " - Can not take back " + nozzle.getPart().getName() + " this feeder only supports " + getPart().getName());
-        }
+        super.takeBackPart(nozzle);
 
         // ok, now move the part back to the heap
         moveToHeap(nozzle);

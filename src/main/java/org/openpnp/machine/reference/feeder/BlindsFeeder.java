@@ -412,25 +412,12 @@ public class BlindsFeeder extends ReferenceFeeder {
      */
     @Override
     public boolean canTakeBackPart() {
-        if (getFeedCount() > 0 ) {  
-            return true;
-        } else {
-            return false;
-        }
+        return (getFeedCount() > 0);
     }
 
     @Override
     public void takeBackPart(Nozzle nozzle) throws Exception {
-        // first check if we can and want to take back this part (should be always be checked before calling, but to be sure)
-        if (nozzle.getPart() == null) {
-            throw new UnsupportedOperationException("No part loaded that could be taken back.");
-        }
-        if (!nozzle.getPart().equals(getPart())) {
-            throw new UnsupportedOperationException("Feeder: " + getName() + " - Can not take back " + nozzle.getPart().getName() + " this feeder only supports " + getPart().getName());
-        }
-        if (!canTakeBackPart()) {
-            throw new UnsupportedOperationException("Feeder: " + getName() + " - Currently no free slot. Can not take back the part.");
-        }
+        super.takeBackPart(nozzle);
 
         // if not yet open, open it (this should rarely be necessary as we likely just picked the part from this feeder;
         // however if cover opening is needed, it will only work if the machine has multiple nozzles and one is free, 
@@ -440,14 +427,7 @@ public class BlindsFeeder extends ReferenceFeeder {
             setFeedCount(getFeedCount() - 1); // is immediately increased during feed
             feed(nozzle);
         }
-        // ok, now put the part back on the location of the last pick
-        nozzle.moveToPickLocation(this);
-        // put the part back
-        nozzle.place();
-        nozzle.moveToSafeZ();
-        if (nozzle.isPartOffEnabled(Nozzle.PartOffStep.AfterPlace) && !nozzle.isPartOff()) {
-            throw new Exception("Feeder: " + getName() + " - Putting part back failed, check nozzle tip");
-        }
+        putPartBack(nozzle);
         // change FeedCount
         setFeedCount(getFeedCount() - 1);
     }
