@@ -111,8 +111,8 @@ public class BambooFeederAutoVision extends AbstractPandaplacerVisionFeeder {
     }
 
     public boolean isMoveBeforeFeed() {
-    return moveBeforeFeed;
-  }
+        return moveBeforeFeed;
+    }
 
     public void setMoveBeforeFeed(boolean moveBeforeFeed) {
         this.moveBeforeFeed = moveBeforeFeed;
