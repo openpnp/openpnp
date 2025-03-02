@@ -307,10 +307,10 @@ public class CameraView extends JComponent implements CameraListener {
 
         // load the zoom increment pref, if any
         zoomIncPerMouseWheelTick = prefs.getDouble(getZoomIncrementPrefKey(), DEFAULT_ZOOM_INCREMENT);
-// reset invalid value from before v2.3
+        // reset invalid value from before v2.3
         if (zoomIncPerMouseWheelTick <= 1) {
             setZoomIncPerMouseWheelTick(DEFAULT_ZOOM_INCREMENT);
-}
+        }
 
         // load sub.pixel rendering prefs, if any.
         try {
@@ -1783,7 +1783,7 @@ public class CameraView extends JComponent implements CameraListener {
         }
         @Override
         public void mouseReleased(MouseEvent e) {
-            if (e.isPopupTrigger()) {
+            if (e.isPopupTrigger() && !isDragJogging()) {
                 new CameraViewPopupMenu(CameraView.this).show(e.getComponent(), e.getX(), e.getY());
                 return;
             }
