@@ -91,7 +91,7 @@ public class CameraView extends JComponent implements CameraListener {
     private static final String PREF_RETICLE = "CamerView.reticle";
     private static final String PREF_ZOOM_INCREMENT = "CamerView.zoomIncrement";
     private static final String PREF_RENDERING_QUALITY = "CamerView.renderingQuality";
-    private static final double DEFAULT_ZOOM_INCREMENT = 0.1;
+    private static final double DEFAULT_ZOOM_INCREMENT = 1.1;
 
     private static final String DEFAULT_RETICLE_KEY = "DEFAULT_RETICLE_KEY";
 
@@ -307,6 +307,11 @@ public class CameraView extends JComponent implements CameraListener {
 
         // load the zoom increment pref, if any
         zoomIncPerMouseWheelTick = prefs.getDouble(getZoomIncrementPrefKey(), DEFAULT_ZOOM_INCREMENT);
+// reset invalid value from before v2.3
+        if (zoomIncPerMouseWheelTick <= 1) {
+            setZoomIncPerMouseWheelTick(DEFAULT_ZOOM_INCREMENT);
+}
+
         // load sub.pixel rendering prefs, if any.
         try {
             renderingQuality = RenderingQuality.valueOf(prefs.get(getQualityRenderingPrefKey(), RenderingQuality.Low.toString()));
@@ -1829,11 +1834,11 @@ public class CameraView extends JComponent implements CameraListener {
             boolean ctrlDown = (modifiers & InputEvent.CTRL_DOWN_MASK) != 0;
             if (!ctrlDown) { // Scroll wheel without Ctrl changes the zoom factor
                 double zoomInc = Math.max(zoomIncPerMouseWheelTick,
-                        // When best-scale is selected, we can only zoom by 1.0 or faster.
-                        renderingQuality == RenderingQuality.BestScale ? 1.0 : 0);
-                zoom = (Math.round(zoom/zoomInc) - e.getPreciseWheelRotation()) * zoomInc; 
+                        // When best-scale is selected, we can only zoom by integers
+                        renderingQuality == RenderingQuality.BestScale ? 2.0 : 0);
+                zoom = zoom * Math.pow(zoomInc, - e.getPreciseWheelRotation());
                 zoom = Math.max(zoom, 1.0d);
-                zoom = Math.min(zoom, 100d);
+                zoom = Math.min(zoom, 64d);
             }
             calculateScalingData();
             repaint();
