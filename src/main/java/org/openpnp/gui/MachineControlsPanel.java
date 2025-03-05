@@ -248,8 +248,9 @@ public class MachineControlsPanel extends JPanel {
                     }
                     if (part != null) {
                         // Subtract the part height for clearance.
+                        Length partHeight = part.getHeightForSafeZ();
                         hmLocation = hmLocation
-                                .subtract(new Location(part.getHeight().getUnits(), 0, 0, part.getHeight().getValue(), 0));
+                                .subtract(new Location(partHeight.getUnits(), 0, 0, partHeight.getValue(), 0));
                         subject += " holding "+part.getId();
                     }
                 }
