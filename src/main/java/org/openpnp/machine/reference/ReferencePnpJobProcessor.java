@@ -2235,7 +2235,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 return result;
             }
             catch (JobProcessorException e) {
-                switch (plannedPlacement.jobPlacement.getPlacement().getErrorHandling()) {
+                switch (plannedPlacement.jobPlacement.getPlacement().getEffectiveErrorHandling(job)) {
                     case Alert:
                         throw e;
                     case Defer:
