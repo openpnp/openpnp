@@ -172,7 +172,7 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
         }
         
         /**
-         * collect all axes that are ok to move (all head mountable of all heads are in SafeZ)
+         * collect all axes that are ok to move (all head mountables of all heads are in SafeZ)
          * @return
          */
         private LinkedHashSet<ControllerAxis> getOkToMoveAxes(AxesLocation targetLocation) throws Exception {
@@ -186,7 +186,7 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
                 // loop over all its head mountables
                 for (HeadMountable hm : h.getHeadMountables()) {
                     // take the raw axes location of the current hm location
-                    AxesLocation rawCurrentLocation = hm.toRaw(hm.getLocation());
+                    AxesLocation rawCurrentLocation = hm.toRaw(hm.toHeadLocation(hm.getLocation(), LocationOption.Quiet), LocationOption.Quiet);
                     // get only controller axes (Note, we don't care if virtual axes are not safe)
                     LinkedHashSet<ControllerAxis> headAxes = rawCurrentLocation.getControllerAxes();
                     // optimistically add them to the ok to move head axes
