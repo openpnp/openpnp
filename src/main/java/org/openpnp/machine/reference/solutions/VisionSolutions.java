@@ -44,6 +44,7 @@ import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.machine.reference.ReferenceNozzleTip;
 import org.openpnp.machine.reference.camera.AbstractSettlingCamera.SettleMethod;
+import org.openpnp.machine.reference.camera.ReferenceCamera.FocusSensingMethod;
 import org.openpnp.machine.reference.camera.AutoFocusProvider;
 import org.openpnp.machine.reference.camera.ReferenceCamera;
 import org.openpnp.machine.reference.camera.SimulatedUpCamera;
@@ -416,13 +417,14 @@ public class VisionSolutions implements Solutions.Subject {
         @Override
         public Solutions.Issue.Choice[] getChoices() {
             if (camera.getLooking() == Looking.Up) {
+                setChoice(camera.getFocusSensingMethod());
                 return new Solutions.Issue.Choice[]{
-                    new Solutions.Issue.Choice(true,  
+                    new Solutions.Issue.Choice(FocusSensingMethod.AutoFocus,  
                                       "<html><h3>Use Auto-Focus</h3>" 
-                                    + "<p>This is the recommended setting.</p>"
+                                    + "<p>This is the recommended setting, if a focus sensing method is configured.</p>"
                                     + "</html>", 
                                     null), 
-                    new Solutions.Issue.Choice(false,  
+                    new Solutions.Issue.Choice(FocusSensingMethod.None,  
                                       "<html><h3>Use nozzle Z location</h3>" 
                                     + "<p><span style=\"color:red;\">CAUTION:</span> This will invalidate part height auto detection using auto focus.</p>" 
                                     + "</html>", 
@@ -764,7 +766,7 @@ public class VisionSolutions implements Solutions.Subject {
                         }
                         oldVisionDiameter = referenceNozzleTip.getCalibration().getCalibrationTipDiameter();
                         final State oldState = getState();
-                        final boolean autoFocus = (boolean)getChoice();
+                        final boolean autoFocus = getChoice() == FocusSensingMethod.None ? false : true;
                         UiUtils.submitUiMachineTask(
                                 () -> {
                                     // Perform preliminary camera calibration. 
