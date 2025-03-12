@@ -24,6 +24,7 @@ import javax.swing.Action;
 import org.jdesktop.beansbinding.AbstractBindingListener;
 import org.jdesktop.beansbinding.Binding;
 import org.jdesktop.beansbinding.Binding.SyncFailure;
+import org.jdesktop.beansbinding.PropertyStateEvent;
 
 public class ApplyResetBindingListener extends AbstractBindingListener {
     private final Action saveAction;
@@ -40,7 +41,7 @@ public class ApplyResetBindingListener extends AbstractBindingListener {
     }
 
     @Override
-    public void synced(Binding binding) {
+    public void targetChanged(Binding binding, PropertyStateEvent event) {
         saveAction.setEnabled(true);
         resetAction.setEnabled(true);
     }
