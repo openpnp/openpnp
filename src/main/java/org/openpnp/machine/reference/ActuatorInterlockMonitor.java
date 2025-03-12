@@ -52,6 +52,16 @@ public class ActuatorInterlockMonitor extends AbstractModelObject implements Act
     // Another Actuator that this one interlocks with.   
     private Actuator conditionalActuator;
 
+    /**
+     * Remember the last state of the conditionalActuator, used to
+     * mask interlock if unchanged. 
+     * The Boolean type supports three states: true, false and null,
+     * which are required to handle the uninitialized state and
+     * force rechecking the interlock condition even if masking
+     * if unchanged is configured.
+     */
+    private Boolean conditionalActuatorLastState;
+    
     @Attribute(required = false)
     private String interlockAxis1Id;
     @Attribute(required = false)
@@ -100,15 +110,22 @@ public class ActuatorInterlockMonitor extends AbstractModelObject implements Act
 
     public enum ActuatorState {
         SwitchedOff,
+        SwitchedJustOff,
         SwitchedOn,
+        SwitchedJustOn,
         SwitchedOffOrUnknown,
-        SwitchedOnOrUnknown;
+        SwitchedJustOffOrUnknown,
+        SwitchedOnOrUnknown,
+        SwitchedJustOnOrUnknown;
 
         public boolean mayBeOn() {
-            return this == SwitchedOn || this == SwitchedOnOrUnknown;
+            return this == SwitchedOn || this == SwitchedJustOn || this == SwitchedOnOrUnknown;
         }
         public boolean mustBeKnown() {
-            return this == SwitchedOn || this == SwitchedOff;
+            return this == SwitchedOn || this == SwitchedJustOn || this == SwitchedOff || this == SwitchedJustOff;
+        }
+        public boolean justChanged() {
+            return this == SwitchedJustOn || this == SwitchedJustOff || this == SwitchedJustOnOrUnknown || this == SwitchedJustOffOrUnknown;
         }
     }
 
@@ -126,6 +143,7 @@ public class ActuatorInterlockMonitor extends AbstractModelObject implements Act
                 for (Head head : Configuration.get().getMachine().getHeads()) {
                     conditionalActuator = head.getActuator(conditionalActuatorId);
                     if (conditionalActuator != null) {
+                        conditionalActuatorLastState = conditionalActuator.isActuated();
                         break;
                     }
                 }
@@ -272,8 +290,19 @@ public class ActuatorInterlockMonitor extends AbstractModelObject implements Act
                 return false;
             }
             if (conditionalActuator != null) {
-                if (conditionalActuator.isActuated() != null) { 
+                Boolean conditionalActuatorIsActuatored = conditionalActuator.isActuated();
+                if (conditionalActuatorIsActuatored != null) { 
                     // The actuator has a known boolean state.
+                    if (conditionalActuatorState.justChanged()
+                        && conditionalActuatorLastState != null
+                        && conditionalActuatorLastState == conditionalActuatorIsActuatored) {
+                        // The conditional Actuator's is unchanged, interlock does not apply. 
+                        Logger.trace(actuator.getName()+" interlock masked by conditionalActuator "+conditionalActuator.getName()
+                        +" being unchanged");
+                        return false;
+                    }
+                    // update the conditional actuator's last state to correctly react on change only
+                    conditionalActuatorLastState = conditionalActuatorIsActuatored;
                     if (conditionalActuatorState.mayBeOn() != conditionalActuator.isActuated()) {
                         // The conditional Actuator has a different state, interlock does not apply. 
                         Logger.trace(actuator.getName()+" interlock masked by conditionalActuator "+conditionalActuator.getName()
@@ -354,9 +383,11 @@ public class ActuatorInterlockMonitor extends AbstractModelObject implements Act
                         Double confirmation = Double.parseDouble(actuator.read());
                         // Compare against the good range.
                         if (confirmation < confirmationGoodMin) {
+                            conditionalActuatorLastState = null;
                             throw new Exception(actuator.getName()+" interlock confirmation below good range: "+confirmation+" < "+confirmationGoodMin); 
                         }
                         if (confirmation > confirmationGoodMax) {
+                            conditionalActuatorLastState = null;
                             throw new Exception(actuator.getName()+" interlock confirmation above good range: "+confirmation+" > "+confirmationGoodMax); 
                         }
                     }
@@ -371,6 +402,7 @@ public class ActuatorInterlockMonitor extends AbstractModelObject implements Act
                         if (!(confirmationByRegex ? 
                                 confirmation.matches(confirmationPattern) 
                                 : confirmation.trim().equals(confirmationPattern.trim()))) {
+                            conditionalActuatorLastState = null;
                             throw new Exception(actuator.getName()+" interlock confirmation does not match: "+confirmation+" vs. "+confirmationPattern); 
                         }
                     }
