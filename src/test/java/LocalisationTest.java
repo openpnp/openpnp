@@ -77,14 +77,11 @@ public class LocalisationTest {
             message += filename+"\n";
             message += "You can correct this by copying the corrected file from:\n";
             message += normalisedFilename+"\n";
+            message += "For more information see https://github.com/openpnp/openpnp/wiki/Developers-Guide#translations\n";
 
             FileWriter f = new FileWriter(normalisedFilename);
             f.write(comments+normalisedFileBody);
             f.close();
-
-            //f = new FileWriter(filename+"-original");
-            //f.write(originalFileBody);
-            //f.close();
 
             throw new Exception(message);
         }
