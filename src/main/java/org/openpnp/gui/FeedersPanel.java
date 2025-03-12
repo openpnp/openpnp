@@ -845,7 +845,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
                     Translations.getString("General.Enabled") :  //$NON-NLS-1$
                     Translations.getString("General.Disabled"); //$NON-NLS-1$
             putValue(NAME, name);
-            putValue(SHORT_DESCRIPTION, Translations.getString("FeedersPanel.Action.SetEnabled.ToolTip") + " " + value); //$NON-NLS-1$ //$NON-NLS-2$
+            putValue(SHORT_DESCRIPTION, Translations.getString("FeedersPanel.Action.SetEnabled.ToolTip") + " " + name); //$NON-NLS-1$ //$NON-NLS-2$
         }
 
         @Override
