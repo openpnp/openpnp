@@ -82,7 +82,7 @@ public class CameraSolutions implements Solutions.Subject  {
                         "https://github.com/openpnp/openpnp/wiki/OpenPnpCaptureCamera")); //$NON-NLS-1$
             }
         }
-        else if (solutions.isTargeting(Milestone.Basics)) {
+        if (solutions.isTargeting(Milestone.Basics)) {
             ActuatorSolutions.findActuateIssues(solutions, camera, camera.getLightActuator(), "camera light",
                 "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Camera-Lighting");
             if (camera instanceof SwitcherCamera) {
@@ -90,7 +90,7 @@ public class CameraSolutions implements Solutions.Subject  {
                     "https://github.com/openpnp/openpnp/wiki/SwitcherCamera#configuration");
             }
         }
-        else if (solutions.isTargeting(Milestone.Vision)) {
+        if (solutions.isTargeting(Milestone.Vision)) {
             final double previewFps = camera.getPreviewFps();
             if (previewFps > 15) {
                 solutions.add(new Solutions.Issue(
