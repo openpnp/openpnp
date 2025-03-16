@@ -288,6 +288,11 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 
                     Feeder feeder = getSelection();
 
+                    for (Component comp : configurationPanel.getComponents()) {
+                        if (comp instanceof AbstractConfigurationWizard) {
+                            ((AbstractConfigurationWizard) comp).dispose();
+                        }
+                    }
                     configurationPanel.removeAll();
                     if (feeder != null) {
                         priorFeederId = feeder.getId();
