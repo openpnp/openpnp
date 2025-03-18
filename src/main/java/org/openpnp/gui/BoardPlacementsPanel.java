@@ -602,6 +602,8 @@ public class BoardPlacementsPanel extends JPanel {
                 
                 importedBoard.dispose();
                 
+                tableModel.fireTableDataChanged();
+                
                 configuration.getBus()
                     .post(new DefinitionStructureChangedEvent(board, "placements", BoardPlacementsPanel.this)); //$NON-NLS-1$
             }

@@ -273,7 +273,7 @@ public class BoardsPanel extends JPanel {
         });
     }
 
-    private void selectBoard(Board board) {
+    public void selectBoard(Board board) {
         if (board == null) {
             boardsTable.getSelectionModel().clearSelection();
             return;

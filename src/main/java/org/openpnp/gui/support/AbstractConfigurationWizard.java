@@ -122,6 +122,14 @@ public abstract class AbstractConfigurationWizard extends JPanel implements Wiza
         applyAction.setEnabled(false);
         resetAction.setEnabled(false);
     }
+    
+    /**
+     * Override this method if the wizard needs to do any cleanup like removing property change 
+     * listeners that may have been added during the wizard's construction
+     */
+    public void dispose() {
+        
+    }
 
     public WrappedBinding addWrappedBinding(Object source, String sourceProperty,
             Object target, String targetProperty, Converter converter) {

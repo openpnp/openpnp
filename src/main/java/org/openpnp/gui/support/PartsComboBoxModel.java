@@ -23,6 +23,8 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
 
 import javax.swing.DefaultComboBoxModel;
 
@@ -38,6 +40,14 @@ public class PartsComboBoxModel extends DefaultComboBoxModel implements Property
         Configuration.get().addPropertyChangeListener("parts", this);
     }
 
+    /**
+     * Call this method when done to cleanup 
+     */
+    public void dispose() {
+        Configuration.get().removePropertyChangeListener("parts", this);
+    }
+    
+    @SuppressWarnings("unchecked")
     private void addAllElements() {
         ArrayList<Part> parts = new ArrayList<>(Configuration.get().getParts());
         Collections.sort(parts, comparator);
@@ -46,9 +56,46 @@ public class PartsComboBoxModel extends DefaultComboBoxModel implements Property
         }
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
-        removeAllElements();
-        addAllElements();
+        //Create a sorted list of parts that the parts combo box should have
+        HashMap<String, Part> newParts = (HashMap<String, Part>) evt.getNewValue();
+        List<Part> parts = new ArrayList<Part>(newParts.values());
+        Collections.sort(parts, comparator);
+        
+        //Remove any parts from the existing combo box that are not in the new list of parts
+        int idx = 0;
+        while (idx < getSize()) {
+            if (!parts.contains(getElementAt(idx))) {
+                removeElementAt(idx);
+            }
+            else {
+                idx++;
+            }
+        }
+        
+        //Insert the new parts into the existing combo box at their correct positions
+        idx = 0;
+        for (Part part : parts) {
+            if (this.getSize() == 0) {
+                insertElementAt(part, idx);
+                continue;
+            }
+            int cmp = comparator.compare(part, (Part) getElementAt(idx));
+            if (cmp < 0) {
+                insertElementAt(part, idx);
+                idx++;
+                continue;
+            }
+            else if (cmp > 0) {
+                while (idx < this.getSize() && comparator.compare(part, (Part) getElementAt(idx)) > 0) {
+                    idx++;
+                }
+                if (idx == this.getSize() || comparator.compare(part, (Part) getElementAt(idx)) < 0) {
+                    insertElementAt(part, idx);
+                }
+            }
+        }
     }
 }

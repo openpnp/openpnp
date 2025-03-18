@@ -91,6 +91,7 @@ import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.OSXAdapter;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.RotationCellValue;
+import org.openpnp.model.Board;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Configuration.TablesLinked;
@@ -914,6 +915,7 @@ public class MainFrame extends JFrame {
 
                 @Override
                 public void actionPerformed(ActionEvent e) {
+                    boardsPanel.selectBoard((Board) jobPanel.getSelection().getPlacementsHolder().getDefinition());
                     boardsPanel.getBoardPlacementsPanel().importBoard(boardImporter.getClass());
                 }
             });
