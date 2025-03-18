@@ -206,7 +206,8 @@ public class CalibrationSolutions implements Solutions.Subject {
                                 "Calibrate backlash compensation for axis "+axis.getName()+".", 
                                 "Automatically calibrates the backlash compensation for "+axis.getName()+" using the primary calibration fiducial.", 
                                 Solutions.Severity.Fundamental,
-                                "https://github.com/openpnp/openpnp/wiki/Calibration-Solutions#calibrating-backlash-compensation") {
+                                "https://github.com/openpnp/openpnp/wiki/Calibration-Solutions#calibrating-backlash-compensation",
+                                true) {
 
                             {
                                 tolerance = oldAcceptableTolerance;
@@ -318,7 +319,8 @@ public class CalibrationSolutions implements Solutions.Subject {
                         "Advanced camera "+camera.getName()+" calibration.", 
                         "Automatically calibrates the camera "+camera.getName()+" using the primary and secondary calibration fiducials.", 
                         Solutions.Severity.Suggestion,
-                        "https://github.com/openpnp/openpnp/wiki/Calibration-Solutions#advanced-camera-calibration") {
+                        "https://github.com/openpnp/openpnp/wiki/Calibration-Solutions#advanced-camera-calibration",
+                        true) {
 
                     @Override 
                     public void activate() throws Exception {
@@ -376,7 +378,8 @@ public class CalibrationSolutions implements Solutions.Subject {
                     "Calibrate precise camera ↔ nozzle "+nozzle.getName()+" offsets.", 
                     "Use a test object to perform the precision camera ↔ nozzle "+nozzle.getName()+" offsets calibration.", 
                     Solutions.Severity.Fundamental,
-                    "https://github.com/openpnp/openpnp/wiki/Calibration-Solutions#calibrating-precision-camera-to-nozzle-offsets") {
+                    "https://github.com/openpnp/openpnp/wiki/Calibration-Solutions#calibrating-precision-camera-to-nozzle-offsets",
+                    true) {
 
                 private Location oldNozzleOffsets = null;
 
@@ -476,7 +479,8 @@ public class CalibrationSolutions implements Solutions.Subject {
                     "Advanced camera "+camera.getName()+" calibration.", 
                     "Automatically calibrates the camera "+camera.getName()+" using the nozzle "+defaultNozzle.getName()+".", 
                     Solutions.Severity.Suggestion,
-                    "https://github.com/openpnp/openpnp/wiki/Calibration-Solutions#advanced-camera-calibration") {
+                    "https://github.com/openpnp/openpnp/wiki/Calibration-Solutions#advanced-camera-calibration",
+                    true) {
 
                 @Override 
                 public void activate() throws Exception {

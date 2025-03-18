@@ -24,6 +24,9 @@ package org.openpnp.model;
 import java.awt.Color;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -68,10 +71,61 @@ public class Solutions extends AbstractTableModel {
     @Attribute(required = false)
     private boolean showIndicator = true;
 
+    /**
+     * The flag disableNonPortableSolutions considers solutions marked as non-
+     * portable as portable.
+     * Non-portable solutions are intended to make sure they are raised even
+     * if a machine.xml was shared. This may happen if a manufactures sells
+     * identical machines to multiple users. Sharing a machine.xml makes it
+     * easy to start but otherwise hides the requirement that some issues
+     * and calibration steps have to be solved anyhow.
+     * The disableNonPortableSolutions flag is considered as workaround for
+     * machines that have been setup already to prevent raising solutions that
+     * have already been solved locally.
+     */
+    @Attribute(required = false)
+    private boolean disableNonPortableSolutions = false;
+
     private boolean showSolved;
 
     private boolean showDismissed;
 
+    /**
+     * Provide local unique data that is populated with the Mainboard's
+     * serial number.
+     */
+    private static String localUnique = null;
+    
+    public Solutions() {
+        // create a local Unique string using the mainboards serial number
+        // code taken from https://stackoverflow.com/questions/35698321/how-to-get-motherboard-serial-number-on-gui-in-java
+        if (!disableNonPortableSolutions) {
+            try
+            {
+                String result = null;
+                Process p = Runtime.getRuntime().exec("wmic baseboard get serialnumber");
+                BufferedReader input
+                        = new BufferedReader(new InputStreamReader(p.getInputStream()));
+                String line;
+                while ((line = input.readLine()) != null)
+                {
+                    result += line;
+                }
+                if (result.equalsIgnoreCase(" ")) {
+                    System.out.println("Result is empty");
+                } else
+                {
+                    localUnique = result;
+                    Logger.trace("Mainboard serial number read, localUnique set to " + localUnique);
+                }
+                input.close();
+            } catch (IOException ex)
+            {
+                Logger.error("Reading mainboard serial number failed: " + ex);
+            }
+        }
+    }
+    
     public enum Milestone implements Subject, Named {
         Welcome(Translations.getString("Solutions.Milestone.Welcome.name"), //$NON-NLS-1$
                 "welcome",
@@ -286,22 +340,28 @@ public class Solutions extends AbstractTableModel {
         final String solution;
         final Severity severity;
         final String uri;
+        final boolean isNonPortable;
         private State state;
         private Object choice;
 
-        public Issue(Subject subject, String issue, String solution, Severity severity, String uri) {
+        public Issue(Subject subject, String issue, String solution, Severity severity, String uri, boolean isNonPortable) {
             super();
             this.subject = subject; 
             this.issue = issue;
             this.solution = solution;
             this.severity = severity;
             this.uri = uri;
+            this.isNonPortable = isNonPortable;
             if (solution.isEmpty()) {
                 state = State.Dismissed;
             }
             else {
                 state = State.Open;
             }
+        }
+        // default constructor: consider Issue as portable
+        public Issue(Subject subject, String issue, String solution, Severity severity, String uri) {
+            this(subject, issue, solution, severity, uri, false);
         }
         public Subject getSubject() {
             return subject;
@@ -316,7 +376,13 @@ public class Solutions extends AbstractTableModel {
             return severity;
         }
         public String getFingerprint() {
-            return DigestUtils.shaHex(subject.getSubjectText()+"\n"+issue+"\n"+solution);
+            // primary key of this issue
+            String s = subject.getSubjectText()+"\n"+issue+"\n"+solution;
+            // if the issue is marked as nonPortable, add localUnique
+            if (isNonPortable && localUnique != null) {
+                s += localUnique;
+            }
+            return DigestUtils.shaHex(s);
         }
 
         public State getState() {
