@@ -7,19 +7,23 @@ a complete change list, only those that may directly interest or affect users.
 
 * Added the Pre-Rotate All Nozzles optimisation which provides a speed enhancement in situations where the rotation takes longer then the actual XY move eg when moving the second nozzle over the bottom camera and reduces the risk of parts slipping on nozzles. [PR 1654](https://github.com/openpnp/openpnp/pull/1654)
 * A right-click menu to copy the machine position to the clipboard [PR 1727](https://github.com/openpnp/openpnp/pull/1727)
-* A performance improvement for scripting events, for the common case where events do not have any scripts configured. Openpnp now remembers that the script does not exist and can skip a filesystem check on the next time that event is triggered. NB scripting users need to use the 'Clear Scripting Engine Pool' menu after adding a script, in the same manner as is needed when changing a script. [PR 1744](https://github.com/openpnp/openpnp/pull/1744)
-* The 'Job.Placement.BeforeAssembly' event now allows any scripts to fine-tune the location of the placement. This enables script-based 'local fiducial' behaviour. [PR 1688](https://github.com/openpnp/openpnp/pull/1688)
 * Prevent unintended changes when a single click on a table row from opening cell editor or makes checkbox action. This now requires a second click. [PR 1729](https://github.com/openpnp/openpnp/pull/1729)
 * Added the "Through-Board Depth" property to Parts. This can be used to record the height of any mechanical alignment pips, through-hole electrical pins, lenses on down-firing leds, and connectors with features that overhang the side of the board. This additional height is considered in Safe-Z calculations when moving such parts on a nozzle tip. [PR 1749](https://github.com/openpnp/openpnp/pull/1749)
 * Added support for driver-side delaying using G4 P<> and uses it for static pick and place dwell time. This provides a better and tighter utilization of the machine while reducing the scheduler induced timing jitter. [PR 1699](https://github.com/openpnp/openpnp/pull/1699)
 * Additional placement sorting options to the job processor making the order of placements predictable even for panels of identical boards. [PR 1658](https://github.com/openpnp/openpnp/pull/1658)
+* Avoid unnecessary "Feeder X changed. Apply changes?" messages. [PR 1773](https://github.com/openpnp/openpnp/pull/1773)
 * Many translation improvements. [PR 1658](https://github.com/openpnp/openpnp/pull/1658) [PR 1704](https://github.com/openpnp/openpnp/pull/1704)
+* Changes related to scripting:
+  * A performance improvement for scripting events, for the common case where events do not have any scripts configured. Openpnp now remembers that the script does not exist and can skip a filesystem check on the next time that event is triggered. NB scripting users need to use the 'Clear Scripting Engine Pool' menu after adding a script, in the same manner as is needed when changing a script. [PR 1744](https://github.com/openpnp/openpnp/pull/1744)
+  * The 'Job.Placement.BeforeAssembly' event now allows any scripts to fine-tune the location of the placement. This enables script-based 'local fiducial' behaviour. [PR 1688](https://github.com/openpnp/openpnp/pull/1688)
+  * Added the `config.scriptState` object to hold state which is shared between scripts. This is stored in the `script-state.xml` file. [PR 1778](https://github.com/openpnp/openpnp/pull/1778)
 * Improvements to the part footprint camera overlay:
   * A marker to indicate the part orientation, typically pad #1, cathode, etc. [PR 1694](https://github.com/openpnp/openpnp/pull/1694)
   * Draw that overlay on bottom camera too. [PR 1745](https://github.com/openpnp/openpnp/pull/1745)
 * Improvements to the manual jog interface:
   * Pressing the shift key reduces jog distance by 100x. [PR 1710](https://github.com/openpnp/openpnp/pull/1710)
   * Remember the position of the jog distance slider when OpenPnP is restarted. [PR 1690](https://github.com/openpnp/openpnp/pull/1690)
+  * The jog buttons are disabled when a modal dialog box is shown. This prevents having multiple nested error message boxes when jogging into a soft limit. [PR 1761](https://github.com/openpnp/openpnp/pull/1761)
 * Improvements for strip feeders:
   * A performance improvements relating to vision. It (optionally) no longer checks every single hole. [PR 1662](https://github.com/openpnp/openpnp/pull/1662)
   * A parallax vision feature for transparent tape where the holes can be difficult to see when viewed from above [PR 1713](https://github.com/openpnp/openpnp/pull/1713)
@@ -29,6 +33,7 @@ a complete change list, only those that may directly interest or affect users.
 
 ## Bug Fixes
 
+* Fix bug causing a Feeder's Part configuration to change unexpectedly, when creating new parts. [PR 1775](https://github.com/openpnp/openpnp/pull/1775)
 * Fix bug causing manual nozzle tip changes to get swallowed if the corresponding placement is set to defer errors. [PR 1741](https://github.com/openpnp/openpnp/pull/1741)
 * Fix bug preventing the status bar "Placements N / M" from updating when viewing the wrong tab in the main window. [PR 1724](https://github.com/openpnp/openpnp/pull/1724)
 * Fix ReferenceStripFeeder bug when calculating distance between reference sprocket holes. [PR 1714](https://github.com/openpnp/openpnp/pull/1714)
