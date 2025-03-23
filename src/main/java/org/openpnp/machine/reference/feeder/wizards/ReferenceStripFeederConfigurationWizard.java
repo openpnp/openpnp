@@ -136,6 +136,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
     private JTextField parallaxDiameter;
     private JLabel lblParallaxAngle;
     private JTextField parallaxAngle;
+    private JComboBox comboBoxFeedOptions;
 
     private boolean logDebugInfo = false;
     private Location firstPartLocation;
@@ -482,6 +483,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         addWrappedBinding(feeder, "extrapolationDistance", textFieldExtrapolationDistance, "text", lengthConverter);
         addWrappedBinding(feeder, "parallaxDiameter", parallaxDiameter, "text", lengthConverter);
         addWrappedBinding(feeder, "parallaxAngle", parallaxAngle, "text", doubleConverter);
+        addWrappedBinding(feeder, "feedOptions", comboBoxFeedOptions, "selectedItem");
 
         MutableLocationProxy feedStartLocation = new MutableLocationProxy();
         bind(UpdateStrategy.READ_WRITE, feeder, "referenceHoleLocation", feedStartLocation,
