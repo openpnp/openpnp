@@ -13,6 +13,8 @@ a complete change list, only those that may directly interest or affect users.
 * Additional placement sorting options to the job processor making the order of placements predictable even for panels of identical boards. [PR 1658](https://github.com/openpnp/openpnp/pull/1658)
 * Avoid unnecessary "Feeder X changed. Apply changes?" messages. [PR 1773](https://github.com/openpnp/openpnp/pull/1773)
 * Many translation improvements. [PR 1658](https://github.com/openpnp/openpnp/pull/1658) [PR 1704](https://github.com/openpnp/openpnp/pull/1704)
+* Change camera view zoom behaviour from linear to log. [PR 1766](https://github.com/openpnp/openpnp/pull/1766)
+* Added "Skip Next Feed" and "Disable Feed" feeder options. This provides limited recycle support to some feeders that previously had none. [PR 1716](https://github.com/openpnp/openpnp/pull/1716)
 * Changes related to scripting:
   * A performance improvement for scripting events, for the common case where events do not have any scripts configured. Openpnp now remembers that the script does not exist and can skip a filesystem check on the next time that event is triggered. NB scripting users need to use the 'Clear Scripting Engine Pool' menu after adding a script, in the same manner as is needed when changing a script. [PR 1744](https://github.com/openpnp/openpnp/pull/1744)
   * The 'Job.Placement.BeforeAssembly' event now allows any scripts to fine-tune the location of the placement. This enables script-based 'local fiducial' behaviour. [PR 1688](https://github.com/openpnp/openpnp/pull/1688)
