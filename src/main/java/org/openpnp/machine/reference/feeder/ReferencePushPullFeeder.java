@@ -372,6 +372,13 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                     getName()));
         }
 
+        if (getFeedOptions() != FeedOptions.Normal) {
+            if (getFeedOptions() == FeedOptions.SkipNext) {
+                setFeedOptions(FeedOptions.Normal);
+            }
+            return;
+        }
+
         if (getFeedCount() % getPartsPerFeedCycle() == 0) {
             // Modulo of feed count is zero - no more parts there to pick, must feed 
 
@@ -516,6 +523,23 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
             }
             performVisionOperations(camera, pipeline, false, false, true, ocrAction, ocrStop, null);
         }
+    }
+
+    @Override
+    public boolean canTakeBackPart() {
+        return getFeedOptions() != FeedOptions.SkipNext;
+    }
+
+    @Override
+    public void takeBackPart(Nozzle nozzle) throws Exception {
+        super.takeBackPart(nozzle);
+        putPartBack(nozzle);
+        setFeedOptions(FeedOptions.SkipNext);
+    }
+
+    @Override
+    public boolean supportsFeedOptions() {
+        return true;
     }
 
     @Override
