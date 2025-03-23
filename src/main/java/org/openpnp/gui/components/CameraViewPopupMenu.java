@@ -35,6 +35,7 @@ import javax.swing.JRadioButtonMenuItem;
 
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.CameraView.RenderingQuality;
+import org.openpnp.gui.components.CameraView.ZoomSensitivity;
 import org.openpnp.gui.components.reticle.CrosshairReticle;
 import org.openpnp.gui.components.reticle.FiducialReticle;
 import org.openpnp.gui.components.reticle.GridReticle;
@@ -113,65 +114,50 @@ public class CameraViewPopupMenu extends JPopupMenu {
     }
 
     private JMenu createZoomIncMenu() {
-        JMenu subMenu = new JMenu("Zoom Increment Per Mouse Wheel Tick");
+        JMenu subMenu = new JMenu("Zoom Sensitivity");
         ButtonGroup buttonGroup = new ButtonGroup();
-        JRadioButtonMenuItem menuItem = new JRadioButtonMenuItem("10.0");
+        JRadioButtonMenuItem menuItem = new JRadioButtonMenuItem("High");
         buttonGroup.add(menuItem);
-        if (cameraView.getZoomIncPerMouseWheelTick() == 10.0) {
+        if (cameraView.getZoomIncPerMouseWheelTick()
+                == CameraView.zoomIncrements.get(ZoomSensitivity.High)) {
             menuItem.setSelected(true);
         }
+        menuItem.setToolTipText("One mouse wheel tick changes the zoom by 2x.");
         menuItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                cameraView.setZoomIncPerMouseWheelTick(10.0);
+                cameraView.setZoomIncPerMouseWheelTick(
+                        CameraView.zoomIncrements.get(ZoomSensitivity.High));
             }
         });
         subMenu.add(menuItem);
-        menuItem = new JRadioButtonMenuItem("1.0");
+        menuItem = new JRadioButtonMenuItem("Medium");
         buttonGroup.add(menuItem);
-        if (cameraView.getZoomIncPerMouseWheelTick() == 1.0) {
+        if (cameraView.getZoomIncPerMouseWheelTick()
+                == CameraView.zoomIncrements.get(ZoomSensitivity.Medium)) {
             menuItem.setSelected(true);
         }
+        menuItem.setToolTipText("Two mouse wheel ticks change the zoom by 2x.");
         menuItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                cameraView.setZoomIncPerMouseWheelTick(1.0);
+                cameraView.setZoomIncPerMouseWheelTick(
+                        CameraView.zoomIncrements.get(ZoomSensitivity.Medium));
             }
         });
         subMenu.add(menuItem);
-        menuItem = new JRadioButtonMenuItem("0.1");
+        menuItem = new JRadioButtonMenuItem("Low");
         buttonGroup.add(menuItem);
-        if (cameraView.getZoomIncPerMouseWheelTick() == 0.1) {
+        if (cameraView.getZoomIncPerMouseWheelTick()
+                == CameraView.zoomIncrements.get(ZoomSensitivity.Low)) {
             menuItem.setSelected(true);
         }
+        menuItem.setToolTipText("Four mouse wheel ticks change the zoom by 2x.");
         menuItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                cameraView.setZoomIncPerMouseWheelTick(0.1);
-            }
-        });
-        subMenu.add(menuItem);
-        menuItem = new JRadioButtonMenuItem("0.01");
-        buttonGroup.add(menuItem);
-        if (cameraView.getZoomIncPerMouseWheelTick() == 0.01) {
-            menuItem.setSelected(true);
-        }
-        menuItem.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                cameraView.setZoomIncPerMouseWheelTick(0.01);
-            }
-        });
-        subMenu.add(menuItem);
-        menuItem = new JRadioButtonMenuItem("0.001");
-        buttonGroup.add(menuItem);
-        if (cameraView.getZoomIncPerMouseWheelTick() == 0.001) {
-            menuItem.setSelected(true);
-        }
-        menuItem.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                cameraView.setZoomIncPerMouseWheelTick(0.001);
+                cameraView.setZoomIncPerMouseWheelTick(
+                        CameraView.zoomIncrements.get(ZoomSensitivity.Low));
             }
         });
         subMenu.add(menuItem);
