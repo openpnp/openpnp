@@ -492,6 +492,12 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         setFeedCount(getFeedCount()+1);
     }
 
+    public void discardParts() {
+        // round the feed count up to the next multiple of the parts per feed operation
+        setFeedCount(((getFeedCount()-1)/getPartsPerFeedCycle()+1)*getPartsPerFeedCycle());
+        resetCalibration();
+    }
+
     public void ensureCameraZ(Camera camera, boolean setZ) throws Exception {
         if (camera.isUnitsPerPixelAtZCalibrated()
                 && !getLocation().getLengthZ().isInitialized()) {
