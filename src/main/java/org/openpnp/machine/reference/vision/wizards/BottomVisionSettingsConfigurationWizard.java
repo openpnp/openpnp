@@ -284,6 +284,9 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
             }
 
             @Override
+            public Camera getCamera() throws Exception { return VisionUtils.getBottomVisionCamera(); }
+
+            @Override
             public void resetPipeline() throws Exception {
                 int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
                         "This will replace the Pipeline with the default. Are you sure??", null,
