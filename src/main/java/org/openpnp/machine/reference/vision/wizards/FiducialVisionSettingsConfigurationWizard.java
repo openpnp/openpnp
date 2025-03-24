@@ -228,6 +228,9 @@ public class FiducialVisionSettingsConfigurationWizard extends AbstractConfigura
             }
 
             @Override
+            public Camera getCamera() throws Exception { return fiducialLocator.getVisionCamera(); }
+
+            @Override
             public void resetPipeline() throws Exception {
                 int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
                         "This will replace the Pipeline with the default. Are you sure??", null,
