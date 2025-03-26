@@ -685,7 +685,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     @Override
     public boolean delay(int milliseconds) throws Exception {
             String command = getCommand(null, CommandType.DELAY_COMMAND);
-        if (command == null) {
+        if (command == null || command.isEmpty()) {
             // return false to signal that delaying in driver is not supported
             return false;
         }
