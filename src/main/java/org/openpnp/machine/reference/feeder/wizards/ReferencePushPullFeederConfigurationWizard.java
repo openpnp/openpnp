@@ -712,9 +712,7 @@ extends AbstractReferenceFeederConfigurationWizard {
             UiUtils.messageBoxOnException(() -> {
                 // we apply this because it is OpenPNP custom to do so 
                 applyAction.actionPerformed(e);
-                // round the feed count up to the next multiple of the parts per feed operation
-                feeder.setFeedCount(((feeder.getFeedCount()-1)/feeder.getPartsPerFeedCycle()+1)*feeder.getPartsPerFeedCycle());
-                feeder.resetCalibration();
+                feeder.discardParts();
             });
         }
     };
