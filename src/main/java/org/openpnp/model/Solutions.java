@@ -24,15 +24,14 @@ package org.openpnp.model;
 import java.awt.Color;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 import javax.swing.Action;
 import javax.swing.Icon;
@@ -59,6 +58,7 @@ import org.openpnp.util.XmlSerialize;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.ElementList;
+import org.simpleframework.xml.Serializer;
 
 public class Solutions extends AbstractTableModel {
 
@@ -71,57 +71,53 @@ public class Solutions extends AbstractTableModel {
     @Attribute(required = false)
     private boolean showIndicator = true;
 
-    /**
-     * The flag disableNonPortableSolutions considers solutions marked as non-
-     * portable as portable.
-     * Non-portable solutions are intended to make sure they are raised even
-     * if a machine.xml was shared. This may happen if a manufactures sells
-     * identical machines to multiple users. Sharing a machine.xml makes it
-     * easy to start but otherwise hides the requirement that some issues
-     * and calibration steps have to be solved anyhow.
-     * The disableNonPortableSolutions flag is considered as workaround for
-     * machines that have been setup already to prevent raising solutions that
-     * have already been solved locally.
-     */
-    @Attribute(required = false)
-    private boolean disableNonPortableSolutions = false;
-
     private boolean showSolved;
 
     private boolean showDismissed;
 
     /**
-     * Provide local unique data that is populated with the Mainboard's
-     * serial number.
+     * Specify the name of the file where the uuid is stored in
      */
-    private static String localUnique = null;
+    private final static String machineUuidFile = "machine.uuid";
+
+    /**
+     * The uuid (as string) used to provide uniqueness to non-portable solutions
+     * The value is read from machineUuidFile at startup. If the file is empty
+     * uuid is initialized to null which falls back to thus days where all issues
+     * where considered portable.
+     */
+    private static String uuid;
     
     public Solutions() {
-        // create a local Unique string using the mainboards serial number
-        // code taken from https://stackoverflow.com/questions/35698321/how-to-get-motherboard-serial-number-on-gui-in-java
-        if (!disableNonPortableSolutions) {
-            try
-            {
-                String result = null;
-                Process p = Runtime.getRuntime().exec("wmic baseboard get serialnumber");
-                BufferedReader input
-                        = new BufferedReader(new InputStreamReader(p.getInputStream()));
-                String line;
-                while ((line = input.readLine()) != null)
-                {
-                    result += line;
+        // try to load the uuid from file - if any
+        File file = new File(Configuration.get().getConfigurationDirectory(), machineUuidFile);
+        if (!file.exists()) {
+            Logger.info("No machine.uuid found in configuration directory, creating it.");
+            String newUuid = UUID.randomUUID().toString();
+            Serializer serializer = Configuration.get().createSerializer();
+            try {
+                serializer.write(newUuid, file);
+            }
+            catch (Exception e) {
+                Logger.error("Writing " + machineUuidFile + " failed: " + e);
+            }
+        }
+        // keep this separated to always load the uuid from file even if just created
+        if (file.exists()) {
+            if (file.length() < 16) {
+                // uuid file empty (its minimum content is <String> ... </String>, which is about 16 characters -> consider all small files as empty
+                uuid = null;
+                Logger.trace(machineUuidFile + " is (almost) empty, machine UUID force to null");
+            }
+            else {
+                Serializer serializer = Configuration.get().createSerializer();
+                try {
+                    uuid = serializer.read(String.class, file);
+                } 
+                catch (Exception e) {
+                    Logger.error("Reading " + machineUuidFile + " failed: " + e);
                 }
-                if (result.equalsIgnoreCase(" ")) {
-                    System.out.println("Result is empty");
-                } else
-                {
-                    localUnique = result;
-                    Logger.trace("Mainboard serial number read, localUnique set to " + localUnique);
-                }
-                input.close();
-            } catch (IOException ex)
-            {
-                Logger.error("Reading mainboard serial number failed: " + ex);
+                Logger.trace("Machine UUID is " + uuid);
             }
         }
     }
@@ -335,23 +331,32 @@ public class Solutions extends AbstractTableModel {
     }
 
     public static abstract class Issue extends AbstractModelObject {
+        /**
+         * Declare the portability of Issues between machines
+         */
+        public enum Portability {
+            Portable,               //* issue is full portable
+            NonPortableController,  //* issue shall be checked between controllers - falls back to NonPortablePC if not available
+            NonPortablePC           //* issue shall be checked between PCs
+        };
+        
         final Subject subject;
         final String issue;
         final String solution;
         final Severity severity;
         final String uri;
-        final boolean isNonPortable;
+        final Portability portability;
         private State state;
         private Object choice;
 
-        public Issue(Subject subject, String issue, String solution, Severity severity, String uri, boolean isNonPortable) {
+        public Issue(Subject subject, String issue, String solution, Severity severity, String uri, Portability portability) {
             super();
             this.subject = subject; 
             this.issue = issue;
             this.solution = solution;
             this.severity = severity;
             this.uri = uri;
-            this.isNonPortable = isNonPortable;
+            this.portability = portability;
             if (solution.isEmpty()) {
                 state = State.Dismissed;
             }
@@ -361,7 +366,7 @@ public class Solutions extends AbstractTableModel {
         }
         // default constructor: consider Issue as portable
         public Issue(Subject subject, String issue, String solution, Severity severity, String uri) {
-            this(subject, issue, solution, severity, uri, false);
+            this(subject, issue, solution, severity, uri, Portability.Portable);
         }
         public Subject getSubject() {
             return subject;
@@ -378,9 +383,10 @@ public class Solutions extends AbstractTableModel {
         public String getFingerprint() {
             // primary key of this issue
             String s = subject.getSubjectText()+"\n"+issue+"\n"+solution;
-            // if the issue is marked as nonPortable, add localUnique
-            if (isNonPortable && localUnique != null) {
-                s += localUnique;
+            // if the issue is marked as nonPortable, add uuid
+            // FIXME: this could be extended to distinguish between PC and Controller bases non-portability as indicated by the issue.
+            if (portability != Portability.Portable && uuid != null) {
+                s += uuid;
             }
             return DigestUtils.shaHex(s);
         }
@@ -577,8 +583,12 @@ public class Solutions extends AbstractTableModel {
     public static class PlainIssue extends Issue {
 
         public PlainIssue(Subject subject, String issue, String solution, Severity severity,
+                String uri, Portability portability) {
+            super(subject, issue, solution, severity, uri, portability);
+        }
+        public PlainIssue(Subject subject, String issue, String solution, Severity severity,
                 String uri) {
-            super(subject, issue, solution, severity, uri);
+            this(subject, issue, solution, severity, uri, Portability.Portable);
         }
 
         @Override
