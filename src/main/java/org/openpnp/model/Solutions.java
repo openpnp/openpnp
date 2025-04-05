@@ -75,53 +75,6 @@ public class Solutions extends AbstractTableModel {
 
     private boolean showDismissed;
 
-    /**
-     * Specify the name of the file where the uuid is stored in
-     */
-    private final static String machineUuidFile = "machine.uuid";
-
-    /**
-     * The uuid (as string) used to provide uniqueness to non-portable solutions
-     * The value is read from machineUuidFile at startup. If the file is empty
-     * uuid is initialized to null which falls back to thus days where all issues
-     * where considered portable.
-     */
-    private static String uuid;
-    
-    public Solutions() {
-        // try to load the uuid from file - if any
-        File file = new File(Configuration.get().getConfigurationDirectory(), machineUuidFile);
-        if (!file.exists()) {
-            Logger.info("No machine.uuid found in configuration directory, creating it.");
-            String newUuid = UUID.randomUUID().toString();
-            Serializer serializer = Configuration.get().createSerializer();
-            try {
-                serializer.write(newUuid, file);
-            }
-            catch (Exception e) {
-                Logger.error("Writing " + machineUuidFile + " failed: " + e);
-            }
-        }
-        // keep this separated to always load the uuid from file even if just created
-        if (file.exists()) {
-            if (file.length() < 16) {
-                // uuid file empty (its minimum content is <String> ... </String>, which is about 16 characters -> consider all small files as empty
-                uuid = null;
-                Logger.trace(machineUuidFile + " is (almost) empty, machine UUID force to null");
-            }
-            else {
-                Serializer serializer = Configuration.get().createSerializer();
-                try {
-                    uuid = serializer.read(String.class, file);
-                } 
-                catch (Exception e) {
-                    Logger.error("Reading " + machineUuidFile + " failed: " + e);
-                }
-                Logger.trace("Machine UUID is " + uuid);
-            }
-        }
-    }
-    
     public enum Milestone implements Subject, Named {
         Welcome(Translations.getString("Solutions.Milestone.Welcome.name"), //$NON-NLS-1$
                 "welcome",
@@ -383,10 +336,13 @@ public class Solutions extends AbstractTableModel {
         public String getFingerprint() {
             // primary key of this issue
             String s = subject.getSubjectText()+"\n"+issue+"\n"+solution;
-            // if the issue is marked as nonPortable, add uuid
+            // if the issue is marked as nonPortable, add machine uuid
             // FIXME: this could be extended to distinguish between PC and Controller bases non-portability as indicated by the issue.
-            if (portability != Portability.Portable && uuid != null) {
-                s += uuid;
+            if (portability != Portability.Portable) {
+                UUID uuid = Configuration.get().getMachineUuid();
+                if (uuid != null) {
+                    s += uuid;
+                }
             }
             return DigestUtils.shaHex(s);
         }
