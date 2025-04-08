@@ -51,9 +51,6 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
-import org.jdesktop.beansbinding.BeanProperty;
-import org.jdesktop.beansbinding.AutoBinding;
-import org.jdesktop.beansbinding.Bindings;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 
@@ -661,7 +658,6 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
         for (CaptureDevice dev : camera.getCaptureDevices()) {
             deviceCb.addItem(dev);
         }
-        initDataBindings();
     }
 
     @Override
@@ -669,6 +665,8 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
         IntegerConverter intConverter = new IntegerConverter();
         DoubleConverter doubleConverter = new DoubleConverter(Configuration.get().getLengthDisplayFormat());
 
+        bind(UpdateStrategy.READ, freezeProperties, "selected", btnReapplyToCamera, "enabled");
+        
         addWrappedBinding(camera, "device", deviceCb, "selectedItem");
         // Note: due to an instability of the CaptureFormat.equals() 
         // method, we use the String representation (Name) as selection.
@@ -757,11 +755,5 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
         public Boolean convertReverse(Boolean arg0) {
             return !arg0;
         }
-    }
-    protected void initDataBindings() {
-        BeanProperty<JCheckBox, Boolean> jCheckBoxBeanProperty = BeanProperty.create("selected");
-        BeanProperty<JButton, Boolean> jButtonBeanProperty = BeanProperty.create("enabled");
-        AutoBinding<JCheckBox, Boolean, JButton, Boolean> autoBinding = Bindings.createAutoBinding(UpdateStrategy.READ, freezeProperties, jCheckBoxBeanProperty, btnReapplyToCamera, jButtonBeanProperty);
-        autoBinding.bind();
     }
 }

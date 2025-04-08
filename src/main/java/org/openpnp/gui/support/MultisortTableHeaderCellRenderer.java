@@ -4,12 +4,14 @@
  *
  * Open licence code.
  */
-package org.openpnp.gui;
+package org.openpnp.gui.support;
 
 import javax.swing.Icon;
 import javax.swing.JTable;
 import javax.swing.RowSorter;
 import javax.swing.UIManager;
+
+import org.openpnp.gui.AlphaIcon;
 
 /**
  * An extension of <code>DefaultTableHeaderCellRenderer</code> that paints sort icons

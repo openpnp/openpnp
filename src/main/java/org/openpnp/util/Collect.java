@@ -2,6 +2,7 @@ package org.openpnp.util;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -142,5 +143,123 @@ public class Collect {
             ret.add(list.get(indices[i]));
         }
         return ret;
+    }
+    
+    /**
+     * Computes a list of index ranges to remove and a list of index ranges to add that updates one 
+     * list to match another list without disturbing the elements that are common to both lists. 
+     * Useful for updating combo boxes and tables without disturbing the currently selected item.
+     * 
+     * <pre>
+     * <code>Example:
+     *      listToUpdate = [3, 5, 7, 8, 10, 11, 12, 17, 18, 20, 21, 26, 33, 36]
+     *      targetList = [2, 5, 9, 11, 14, 17, 22, 23, 24, 27, 28, 31, 32, 37, 38]
+     *      
+     *      results in:
+     *      indicesToRemove = [ [13, 8], [6, 6], [4, 2], [0, 0] ]
+     *      indicesToAdd =    [ [0, 0], [2, 2], [4, 4], [6, 14] ]
+     *      
+     *      Removing elements 13 down to 9 results in listToUpdate = [3, 5, 7, 8, 10, 11, 12, 17],
+     *      removing element 6 results in listToUpdate = [3, 5, 7, 8, 10, 11, 17],
+     *      removing elements 4 down to 2 results in listToUpdate = [3, 5, 11, 17],
+     *      and finally removing element 0 results in listToUpdate = [5, 11, 17].
+     *      
+     *      Now inserting element 0 (2) results in listToUpdate = [2, 5, 11, 17],
+     *      inserting element 2 (9) results in listToUpdate = [2, 5, 9, 11, 17],
+     *      inserting element 4 (14) results in listToUpdate = [2, 5, 9, 11, 14, 17],
+     *      and finally inserting elements 6 to 14 (22, 23, 24, 27, 28, 31, 32, 37, 38) results in 
+     *      listToUpdate = [2, 5, 9, 11, 14, 17, 22, 23, 24, 27, 28, 31, 32, 37, 38] which is 
+     *      exactly the same as newList. Note the the elements common to both lists (5, 11, and 17)
+     *      were never touched.
+     * </code>
+     * </pre>
+     * @param listToModify - the list that is to be updated. Must contain unique items and must be 
+     * sorted in the same order as targetList.
+     * @param targetList - the list that listToModify is to be updated to match. Must contain unique 
+     * items and must be sorted in the same order as listToModify.
+     * @param indicesToRemove - a list of index ranges that are to be removed from listToModify. 
+     * Each entry is a two element array of indices [a, b] where a >= b. All elements in the range a
+     * down to b (inclusive) should be removed from the listToModify. The list of index ranges is 
+     * sorted highest to lowest so that the removals don't change the indices of elements that are 
+     * yet to be removed.
+     * @param indicesToAdd - a list of index ranges that are of the elements in targetList that are 
+     * to be added to listToModify. Each entry is a two element array of indices [a, b] where 
+     * a <= b. All elements in the range a to b (inclusive) need to be copied from the targetList 
+     * and inserted into the listToModify. The list of index ranges is sorted lowest to highest so 
+     * that the insertion point in listToModify is the same as the index of the item in targetList.
+     */
+    public static <T> void computeInPlaceUpdateIndices(List<T> listToModify, List<T> targetList, 
+            List<int[]> indicesToRemove, List<int[]> indicesToAdd) {
+        
+        indicesToRemove.clear();
+        indicesToAdd.clear();
+        
+        //Find those items that need to be removed from the old list
+        List<Integer> idxToRemove = new ArrayList<>();
+        if (listToModify != null) {
+            for (int idx = 0; idx<listToModify.size(); idx++) {
+                if (targetList == null || !targetList.contains(listToModify.get(idx))) {
+                    idxToRemove.add(idx);
+                }
+            }
+        }
+        
+        //The items to be removed should be removed from highest index to lowest so as to not 
+        //disturb the indices of those items that are yet to be removed
+        Collections.reverse(idxToRemove);
+        
+        //Group the indices into contiguous ranges
+        boolean starting = true;
+        int a = 0;
+        int b = 0;
+        for (int idx : idxToRemove) {
+            if (starting) {
+                a = idx;
+                b = idx;
+                starting = false;
+            }
+            else if (idx == b-1) {
+                b = idx;
+            }
+            else if (idx < b-1) {
+                indicesToRemove.add(new int[] {a, b});
+                a = idx;
+                b = idx;
+            }
+        }
+        if (!starting) {
+            indicesToRemove.add(new int[] {a, b});
+        }
+        
+        //Find those items that need to be added to the list
+        List<Integer> idxToAdd = new ArrayList<>();
+        if (targetList != null) {
+            for (int idx=0; idx<targetList.size(); idx++) {
+                if (listToModify == null || !listToModify.contains(targetList.get(idx))) {
+                    idxToAdd.add(idx);
+                }
+            }
+            
+            //Group the indices into contiguous ranges
+            starting = true;
+            for (int idx : idxToAdd) {
+                if (starting) {
+                    a = idx;
+                    b = idx;
+                    starting = false;
+                }
+                else if (idx == b+1) {
+                    b = idx;
+                }
+                else if (idx > b+1) {
+                    indicesToAdd.add(new int[] {a, b});
+                    a = idx;
+                    b = idx;
+                }
+            }
+            if (!starting) {
+                indicesToAdd.add(new int[] {a, b});
+            }
+        }
     }
 }

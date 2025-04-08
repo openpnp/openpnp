@@ -301,6 +301,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
                         }
                     }
                     configurationPanel.removeAll();
+                    
                     if (feeder != null) {
                         priorFeederId = feeder.getId();
                         PropertySheet[] propertySheets = feeder.getPropertySheets();

@@ -34,10 +34,7 @@ import javax.swing.JSlider;
 import javax.swing.SwingUtilities;
 import javax.swing.border.TitledBorder;
 
-import org.jdesktop.beansbinding.AutoBinding;
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
-import org.jdesktop.beansbinding.BeanProperty;
-import org.jdesktop.beansbinding.Bindings;
 import org.openpnp.Translations;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.CameraView;
@@ -46,7 +43,6 @@ import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.PercentIntegerConverter;
 import org.openpnp.machine.reference.camera.ReferenceCamera;
 import org.openpnp.util.MovableUtils;
-import org.openpnp.util.SimpleGraph;
 import org.openpnp.util.UiUtils;
 
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -209,11 +205,18 @@ public class ReferenceCameraWhiteBalanceConfigurationWizard extends AbstractConf
         lblInputLevel = new JLabel(Translations.getString(
                 "ReferenceCameraWhiteBalanceConfigurationWizard.ColorBalancePanel.InputLevelLabel.text")); //$NON-NLS-1$
         panelColorBalance.add(lblInputLevel, "4, 34, center, default");
-        initDataBindings();
     }
 
     @Override
     public void createBindings() {
+        PercentIntegerConverter percentIntegerConverter = new PercentIntegerConverter();
+        bind(UpdateStrategy.READ_WRITE, referenceCamera, "redBalance", redBalance, "value", percentIntegerConverter);
+        bind(UpdateStrategy.READ_WRITE, referenceCamera, "greenBalance", greenBalance, "value", percentIntegerConverter);
+        bind(UpdateStrategy.READ_WRITE, referenceCamera, "blueBalance", blueBalance, "value", percentIntegerConverter);
+        bind(UpdateStrategy.READ_WRITE, referenceCamera, "redGamma", redGammaPercent, "value", percentIntegerConverter);
+        bind(UpdateStrategy.READ_WRITE, referenceCamera, "greenGamma", greenGammaPercent, "value", percentIntegerConverter);
+        bind(UpdateStrategy.READ_WRITE, referenceCamera, "blueGamma", blueGammaPercent, "value", percentIntegerConverter);
+        bind(UpdateStrategy.READ, referenceCamera, "colorBalanceGraph", colorGraph, "graph");
     }
 
     private final Action autoWhiteBalanceAction = new AbstractAction() {
@@ -318,49 +321,6 @@ public class ReferenceCameraWhiteBalanceConfigurationWizard extends AbstractConf
     private JLabel lblOutput;
     private JLabel lblInputLevel;
     private JLabel lblAutoWhitebalance;
-
-    protected void initDataBindings() {
-        BeanProperty<ReferenceCamera, Double> referenceCameraBeanProperty = BeanProperty.create("redBalance");
-        BeanProperty<JSlider, Integer> jSliderBeanProperty = BeanProperty.create("value");
-        AutoBinding<ReferenceCamera, Double, JSlider, Integer> autoBinding = Bindings.createAutoBinding(UpdateStrategy.READ_WRITE, referenceCamera, referenceCameraBeanProperty, redBalance, jSliderBeanProperty);
-        autoBinding.setConverter(new PercentIntegerConverter());
-        autoBinding.bind();
-        //
-        BeanProperty<ReferenceCamera, Double> referenceCameraBeanProperty_1 = BeanProperty.create("greenBalance");
-        BeanProperty<JSlider, Integer> jSliderBeanProperty_1 = BeanProperty.create("value");
-        AutoBinding<ReferenceCamera, Double, JSlider, Integer> autoBinding_1 = Bindings.createAutoBinding(UpdateStrategy.READ_WRITE, referenceCamera, referenceCameraBeanProperty_1, greenBalance, jSliderBeanProperty_1);
-        autoBinding_1.setConverter(new PercentIntegerConverter());
-        autoBinding_1.bind();
-        //
-        BeanProperty<ReferenceCamera, Double> referenceCameraBeanProperty_2 = BeanProperty.create("blueBalance");
-        BeanProperty<JSlider, Integer> jSliderBeanProperty_2 = BeanProperty.create("value");
-        AutoBinding<ReferenceCamera, Double, JSlider, Integer> autoBinding_2 = Bindings.createAutoBinding(UpdateStrategy.READ_WRITE, referenceCamera, referenceCameraBeanProperty_2, blueBalance, jSliderBeanProperty_2);
-        autoBinding_2.setConverter(new PercentIntegerConverter());
-        autoBinding_2.bind();
-        //
-        BeanProperty<ReferenceCamera, Double> referenceCameraBeanProperty_3 = BeanProperty.create("redGamma");
-        BeanProperty<JSlider, Integer> jSliderBeanProperty_3 = BeanProperty.create("value");
-        AutoBinding<ReferenceCamera, Double, JSlider, Integer> autoBinding_3 = Bindings.createAutoBinding(UpdateStrategy.READ_WRITE, referenceCamera, referenceCameraBeanProperty_3, redGammaPercent, jSliderBeanProperty_3);
-        autoBinding_3.setConverter(new PercentIntegerConverter());
-        autoBinding_3.bind();
-        //
-        BeanProperty<ReferenceCamera, Double> referenceCameraBeanProperty_4 = BeanProperty.create("greenGamma");
-        BeanProperty<JSlider, Integer> jSliderBeanProperty_4 = BeanProperty.create("value");
-        AutoBinding<ReferenceCamera, Double, JSlider, Integer> autoBinding_4 = Bindings.createAutoBinding(UpdateStrategy.READ_WRITE, referenceCamera, referenceCameraBeanProperty_4, greenGammaPercent, jSliderBeanProperty_4);
-        autoBinding_4.setConverter(new PercentIntegerConverter());
-        autoBinding_4.bind();
-        //
-        BeanProperty<ReferenceCamera, Double> referenceCameraBeanProperty_5 = BeanProperty.create("blueGamma");
-        BeanProperty<JSlider, Integer> jSliderBeanProperty_5 = BeanProperty.create("value");
-        AutoBinding<ReferenceCamera, Double, JSlider, Integer> autoBinding_5 = Bindings.createAutoBinding(UpdateStrategy.READ_WRITE, referenceCamera, referenceCameraBeanProperty_5, blueGammaPercent, jSliderBeanProperty_5);
-        autoBinding_5.setConverter(new PercentIntegerConverter());
-        autoBinding_5.bind();
-        //
-        BeanProperty<ReferenceCamera, SimpleGraph> referenceCameraBeanProperty_6 = BeanProperty.create("colorBalanceGraph");
-        BeanProperty<SimpleGraphView, SimpleGraph> simpleGraphViewBeanProperty = BeanProperty.create("graph");
-        AutoBinding<ReferenceCamera, SimpleGraph, SimpleGraphView, SimpleGraph> autoBinding_6 = Bindings.createAutoBinding(UpdateStrategy.READ, referenceCamera, referenceCameraBeanProperty_6, colorGraph, simpleGraphViewBeanProperty);
-        autoBinding_6.bind();
-    }
 
     protected void refreshUi() {
         MovableUtils.fireTargetedUserAction(referenceCamera);

@@ -915,7 +915,9 @@ public class MainFrame extends JFrame {
 
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    boardsPanel.selectBoard((Board) jobPanel.getSelection().getPlacementsHolder().getDefinition());
+                    if (tabs.getSelectedComponent() == jobPanel) {
+                        boardsPanel.selectBoard((Board) jobPanel.getSelection().getPlacementsHolder().getDefinition());
+                    }
                     boardsPanel.getBoardPlacementsPanel().importBoard(boardImporter.getClass());
                 }
             });

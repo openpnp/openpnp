@@ -22,6 +22,7 @@ package org.openpnp.model;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.machine.reference.vision.AbstractPartSettingsHolder;
 import org.openpnp.spi.Feeder;
+import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.core.Persist;
 
@@ -166,8 +167,9 @@ public class Part extends AbstractPartSettingsHolder {
     }
 
     public void setPickRetryCount(int pickRetryCount) {
+        Object oldValue = this.pickRetryCount;
         this.pickRetryCount = pickRetryCount;
-        firePropertyChange("pickRetryCount", null, pickRetryCount);
+        firePropertyChange("pickRetryCount", oldValue, pickRetryCount);
     }
 
     @Override

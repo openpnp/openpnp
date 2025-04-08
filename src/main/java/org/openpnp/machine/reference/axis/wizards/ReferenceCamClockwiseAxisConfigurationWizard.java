@@ -26,9 +26,6 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.border.TitledBorder;
 
-import org.jdesktop.beansbinding.AutoBinding;
-import org.jdesktop.beansbinding.BeanProperty;
-import org.jdesktop.beansbinding.Bindings;
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.openpnp.gui.support.AxesComboBoxModel;
 import org.openpnp.gui.support.NamedConverter;
@@ -36,7 +33,6 @@ import org.openpnp.machine.reference.axis.ReferenceCamCounterClockwiseAxis;
 import org.openpnp.machine.reference.axis.ReferenceCamClockwiseAxis;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Axis;
-import org.openpnp.spi.Axis.Type;
 import org.openpnp.spi.base.AbstractMachine;
 
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -94,7 +90,6 @@ public class ReferenceCamClockwiseAxisConfigurationWizard extends AbstractAxisCo
         inputAxisModel = new AxesComboBoxModel(machine, ReferenceCamCounterClockwiseAxis.class, null, true);
         inputAxis = new JComboBox(inputAxisModel);
         panelTransformation.add(inputAxis, "4, 2, fill, default");
-        initDataBindings();
     }
 
     @Override
@@ -104,13 +99,8 @@ public class ReferenceCamClockwiseAxisConfigurationWizard extends AbstractAxisCo
 
         NamedConverter<Axis> axisConverter = new NamedConverter<>(machine.getAxes()); 
 
+        bind(UpdateStrategy.READ, type, "selectedItem", inputAxisModel, "axisType");
+        
         addWrappedBinding(axis, "inputAxis", inputAxis, "selectedItem", axisConverter);
-    }
-
-    protected void initDataBindings() {
-        BeanProperty<JComboBox, Axis.Type> jComboBoxBeanProperty = BeanProperty.create("selectedItem");
-        BeanProperty<AxesComboBoxModel, Type> axesComboBoxModelBeanProperty = BeanProperty.create("axisType");
-        AutoBinding<JComboBox, Axis.Type, AxesComboBoxModel, Axis.Type> autoBinding = Bindings.createAutoBinding(UpdateStrategy.READ, type, jComboBoxBeanProperty, inputAxisModel, axesComboBoxModelBeanProperty);
-        autoBinding.bind();
     }
 }
