@@ -44,12 +44,7 @@ public class PackageNozzleTipsWizard extends AbstractConfigurationWizard /*JPane
         createUi();
     }
     private void createUi() {
-//        setLayout(new BorderLayout(0, 0));
-//        scrollPane = new JScrollPane();
-//        add(scrollPane);
-        
         table = new JTable(new NozzleTipsTableModel());
-//        scrollPane.setViewportView(table);
         contentPanel.add(table);
     }
 

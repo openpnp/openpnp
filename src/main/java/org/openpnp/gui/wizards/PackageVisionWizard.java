@@ -249,8 +249,6 @@ public class PackageVisionWizard extends AbstractConfigurationWizard {
         tablePanel.add(tableScrollPane);
 
         showReticle();
-//        initDataBindings();
-
     }
 
     private void showReticle() {

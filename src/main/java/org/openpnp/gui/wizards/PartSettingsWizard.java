@@ -40,7 +40,7 @@ public class PartSettingsWizard extends AbstractConfigurationWizard {
     private final Part part;
     private JPanel pickConditionsPanel;
     private JLabel lblNewLabel;
-    private JTextField txtFieldPickRetryCount;
+    private JTextField textFieldPickRetryCount;
 
     public PartSettingsWizard(Part part) {
         super();
@@ -67,16 +67,16 @@ public class PartSettingsWizard extends AbstractConfigurationWizard {
                 "PartSettingsWizard.pickConditionsPanel.pickRetryCountLabel.text")); //$NON-NLS-1$
         pickConditionsPanel.add(lblNewLabel, "2, 2, right, default");
         
-        txtFieldPickRetryCount = new JTextField();
-        pickConditionsPanel.add(txtFieldPickRetryCount, "4, 2, left, default");
-        txtFieldPickRetryCount.setColumns(10);
+        textFieldPickRetryCount = new JTextField();
+        pickConditionsPanel.add(textFieldPickRetryCount, "4, 2, left, default");
+        textFieldPickRetryCount.setColumns(10);
     }
     
     @Override
     public void createBindings() {
         IntegerConverter intConverter = new IntegerConverter();
-        bind(UpdateStrategy.READ_WRITE, part, "pickRetryCount", txtFieldPickRetryCount, "text", intConverter); 
+        bind(UpdateStrategy.READ_WRITE, part, "pickRetryCount", textFieldPickRetryCount, "text", intConverter); 
         
-        ComponentDecorators.decorateWithAutoSelect(txtFieldPickRetryCount);
+        ComponentDecorators.decorateWithAutoSelect(textFieldPickRetryCount);
     }
 }
