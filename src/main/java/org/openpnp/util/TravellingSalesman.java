@@ -151,20 +151,15 @@ public class TravellingSalesman<T> {
      * Plain old data TravelLocation for faster processing. Improved solving by a factor of 6 from using
      * OpenPNP Locations directly. These are always in Millimeters, no conversions needed.  
      */
-    private class TravelLocation {
-        private  double x, y, z;
-        private  int index;
+    private class TravelLocation extends Location {
+        private int index;
 
         private  TravelLocation(int index, Location l) {
-            super();
+            super(l.convertToUnits(LengthUnit.Millimeters));
             this.index = index;
-            l = l.convertToUnits(LengthUnit.Millimeters);
-            this.x = l.getX();
-            this.y = l.getY();
-            this.z = l.getZ();
         }
         private double getLinearDistanceTo(TravelLocation other) {
-            return Math.sqrt(Math.pow(this.x-other.x, 2.0) + Math.pow(this.y-other.y, 2.0) + Math.pow(this.z-other.z, 2.0));
+            return getXyzDistanceTo(other);
         }
 
         /**
@@ -175,8 +170,8 @@ public class TravellingSalesman<T> {
          */
         private double getCostTo(TravelLocation other) {
 
-            double costX = estimateCost(this.x - other.x, xAxis);
-            double costY = estimateCost(this.y - other.y, yAxis);
+            double costX = estimateCost(this.getX() - other.getX(), xAxis);
+            double costY = estimateCost(this.getY() - other.getY(), yAxis);
             
             return Math.max(costX, costY);
         }
@@ -436,11 +431,11 @@ public class TravellingSalesman<T> {
     }
 
     public Location getStartLocation() {
-        return new Location(LengthUnit.Millimeters, startLocation.x, startLocation.y, startLocation.z, 0.);
+        return startLocation;
     }
 
     public Location getEndLocation() {
-        return new Location(LengthUnit.Millimeters, endLocation.x, endLocation.y, endLocation.z, 0.);
+        return endLocation;
     }
 
     public long getSolverDuration() {
@@ -453,17 +448,17 @@ public class TravellingSalesman<T> {
         for (int i = -1; i <= this.travelSize; i++) {
             TravelLocation l = this.getLocation(i);
             if (l != null) {
-                if (Double.isNaN(minX) || minX > l.x) {
-                    minX = l.x;
+                if (Double.isNaN(minX) || minX > l.getX()) {
+                    minX = l.getX();
                 }
-                if (Double.isNaN(minY) || minY > l.y) {
-                    minY = l.y;
+                if (Double.isNaN(minY) || minY > l.getY()) {
+                    minY = l.getY();
                 }
-                if (Double.isNaN(maxX) || maxX < l.x + l.z) {
-                    maxX = l.x + l.z;
+                if (Double.isNaN(maxX) || maxX < l.getX() + l.getZ()) {
+                    maxX = l.getX() + l.getZ();
                 }
-                if (Double.isNaN(maxY) || maxY < l.y + l.z) {
-                    maxY = l.y + l.z;
+                if (Double.isNaN(maxY) || maxY < l.getY() + l.getZ()) {
+                    maxY = l.getY() + l.getZ();
                 }
             }
         }
@@ -486,8 +481,8 @@ public class TravellingSalesman<T> {
             TravelLocation la = this.getLocation(i);
             TravelLocation lb = this.getLocation(i+1);
             if (la != null && lb != null) {
-                svg.append("<line x1=\""+(la.x+la.z)+"\" y1=\""+(la.y+la.z)+"\" x2=\""+(lb.x+lb.z)+"\" y2=\""+(lb.y+lb.z)+"\" style=\"stroke:lightgrey;\"/>");
-                svg.append("<circle cx=\""+(lb.x+lb.z)+"\" cy=\""+(lb.y+lb.z)+"\" r=\"2\" style=\"fill:lightgrey;\"/>\n");
+                svg.append("<line x1=\""+(la.getX()+la.getZ())+"\" y1=\""+(la.getY()+la.getZ())+"\" x2=\""+(lb.getX()+lb.getZ())+"\" y2=\""+(lb.getY()+lb.getZ())+"\" style=\"stroke:lightgrey;\"/>");
+                svg.append("<circle cx=\""+(lb.getX()+lb.getZ())+"\" cy=\""+(lb.getY()+lb.getZ())+"\" r=\"2\" style=\"fill:lightgrey;\"/>\n");
             }
         }
         // lines
@@ -495,14 +490,14 @@ public class TravellingSalesman<T> {
             TravelLocation la = this.getLocation(i);
             TravelLocation lb = this.getLocation(i+1);
             if (la != null && lb != null) {
-                svg.append("<line x1=\""+la.x+"\" y1=\""+la.y+"\" x2=\""+lb.x+"\" y2=\""+lb.y+"\" style=\"stroke:black;\"/>");
+                svg.append("<line x1=\""+la.getX()+"\" y1=\""+la.getY()+"\" x2=\""+lb.getX()+"\" y2=\""+lb.getY()+"\" style=\"stroke:black;\"/>");
             }
         }
         // nodes
         for (int i = -1; i <= this.travelSize; i++) {
             TravelLocation la = this.getLocation(i);
             if (la != null) {
-                svg.append("<circle cx=\""+la.x+"\" cy=\""+la.y+"\" r=\"2\" style=\"");
+                svg.append("<circle cx=\""+la.getX()+"\" cy=\""+la.getY()+"\" r=\"2\" style=\"");
                 if (la == this.startLocation) { 
                     svg.append("stroke:blue; fill:white;");
                 } 
