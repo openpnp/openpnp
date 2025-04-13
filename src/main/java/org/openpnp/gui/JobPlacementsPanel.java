@@ -321,6 +321,7 @@ public class JobPlacementsPanel extends JPanel {
         popupMenu.add(setEnabledMenu);
 
         JMenu setErrorHandlingMenu = new JMenu(setErrorHandlingAction);
+        setErrorHandlingMenu.add(new SetErrorHandlingAction(ErrorHandling.Default));
         setErrorHandlingMenu.add(new SetErrorHandlingAction(ErrorHandling.Alert));
         setErrorHandlingMenu.add(new SetErrorHandlingAction(ErrorHandling.Defer));
         popupMenu.add(setErrorHandlingMenu);
@@ -848,11 +849,17 @@ public class JobPlacementsPanel extends JPanel {
         public SetErrorHandlingAction(Placement.ErrorHandling errorHandling) {
             this.errorHandling = errorHandling;
             String name;
-            if (errorHandling == Placement.ErrorHandling.Alert) {
+            switch(errorHandling) {
+            case Alert:
+            default:
                 name = Translations.getString("Placement.ErrorHandling.Alert"); //$NON-NLS-1$
-            }
-            else {
+                break;
+            case Defer:
                 name = Translations.getString("Placement.ErrorHandling.Defer"); //$NON-NLS-1$
+                break;
+            case Default:
+                name = Translations.getString("Placement.ErrorHandling.Default"); //$NON-NLS-1$
+                break;
             }
             putValue(NAME, name);
             putValue(SHORT_DESCRIPTION, Translations.getString("JobPlacementsPanel.SetErrorHandling.MenuTip") //$NON-NLS-1$
