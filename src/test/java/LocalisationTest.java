@@ -1,7 +1,6 @@
 import org.junit.jupiter.api.Test;
 import java.util.*;
 import java.io.*;
-import java.net.URL;
 import java.util.regex.Pattern;
 
 // Any developer using WindowBuilder will cause the translations properties file to be normalised.
@@ -65,17 +64,38 @@ public class LocalisationTest {
         StringWriter normalisedFileBodyWriter = new StringWriter();
         properties.store(normalisedFileBodyWriter,newComments);
 
-        // Remove comments from the normalised file too
         String normalisedFileBody = normalisedFileBodyWriter.toString();
+        
+        //On Windows machines, lines get stored with CRLF line endings, so we need to convert to LFs only
+        normalisedFileBody = Pattern.compile("\r\n",Pattern.MULTILINE).matcher(normalisedFileBody).replaceAll("\n");
+        
+        //On Mac machines, lines get stored with CR line endings, so we need to convert them LFs only
+        normalisedFileBody = Pattern.compile("\r",Pattern.MULTILINE).matcher(normalisedFileBody).replaceAll("\n");
+               
+        // Remove comments from the normalised file too
         normalisedFileBody = Pattern.compile("^#.*\n",Pattern.MULTILINE).matcher(normalisedFileBody).replaceAll("");
 
         // If the files are different, then the original was not in normalised form
         if(! normalisedFileBody.equals(originalFileBody))
         {
+            //Find the first position where the two differ
+            int idx = 0;
+            while ((idx<Math.min(normalisedFileBody.length(), originalFileBody.length())) && 
+                    (normalisedFileBody.charAt(idx) == originalFileBody.charAt(idx))) {
+                idx++;
+            }
+            //Extract the lines that differ
+            String foundLine = extractLineAt(originalFileBody, idx);
+            String expectedLine = extractLineAt(normalisedFileBody, idx);
+            
             String message = new String();
             message += "This file containing translated text is not in normalised form:\n";
             message += filename+"\n";
-            message += "You can correct this by copying the corrected file from:\n";
+            message += "The first error was found on this line:\n";
+            message += foundLine + "\n";
+            message += "But was expected to be:\n";
+            message += expectedLine + "\n";
+            message += "You can correct this and any additional errors by copying the corrected file from:\n";
             message += normalisedFilename+"\n";
             message += "For more information see https://github.com/openpnp/openpnp/wiki/Developers-Guide#translations\n";
 
@@ -83,7 +103,22 @@ public class LocalisationTest {
             f.write(comments+normalisedFileBody);
             f.close();
 
+            System.out.println(message);
             throw new Exception(message);
         }
+    }
+    
+    private String extractLineAt(String str, int idx) {
+        if (idx >= str.length()) {
+            return "";
+        }
+        //Backup to find the start of the line
+        int startIdx = str.lastIndexOf("\n", idx) + 1;
+        //Go forward to find the end of the line
+        int endIdx = str.indexOf("\n", idx);
+        if (endIdx < idx) {
+            endIdx = str.length();
+        }
+        return str.substring(startIdx, endIdx);
     }
 }
