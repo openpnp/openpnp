@@ -1516,10 +1516,13 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                     if (n++ > 0) {
                         status += ",<br/>";
                     }
+                    else {
+                        status += "<br/>";
+                    }
                     status += targetFeeder.getName()+" "+targetFeeder.getPart().getId();
                 }
             }
-            status += n == 0 ? "none." : " (Count: "+n+")";
+            status += n == 0 ? "none." : "<br/>(Count: "+n+")";
         }
         else {
             ReferencePushPullFeeder templateFeeder = getTemplateFeeder(null);

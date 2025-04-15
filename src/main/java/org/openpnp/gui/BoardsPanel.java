@@ -59,6 +59,7 @@ import org.openpnp.events.PlacementsHolderSelectedEvent;
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.support.ActionGroup;
 import org.openpnp.gui.support.MonospacedFontTableCellRenderer;
+import org.openpnp.gui.support.MultisortTableHeaderCellRenderer;
 import org.openpnp.gui.support.TableUtils;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.LengthCellValue;

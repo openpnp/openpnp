@@ -20,6 +20,7 @@
 package org.openpnp.gui;
 
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.Frame;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
@@ -62,15 +63,22 @@ import javax.swing.table.TableRowSorter;
 import org.openpnp.Translations;
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.components.CameraView;
+import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.ActionGroup;
 import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.MessageBoxes;
+import org.openpnp.gui.support.MultisortTableHeaderCellRenderer;
 import org.openpnp.gui.support.NamedListCellRenderer;
 import org.openpnp.gui.support.NamedTableCellRenderer;
+import org.openpnp.gui.support.VisionSettingsComboBoxModel;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.gui.tablemodel.PackagesTableModel;
+import org.openpnp.gui.wizards.PackageCompositingWizard;
+import org.openpnp.gui.wizards.PackageNozzleTipsWizard;
+import org.openpnp.gui.wizards.PackageSettingsWizard;
+import org.openpnp.gui.wizards.PackageVisionWizard;
 import org.openpnp.model.AbstractVisionSettings;
 import org.openpnp.model.BottomVisionSettings;
 import org.openpnp.model.Configuration;
@@ -235,7 +243,7 @@ public class PackagesPanel extends JPanel implements WizardContainer {
                     if (cameraView == null) {
                         return;
                     }
-                    cameraView.removeReticle(PackageVisionPanel.class.getName());
+                    cameraView.removeReticle(PackageVisionWizard.class.getName());
                 }
                 catch (Exception e1) {
                 }
@@ -444,36 +452,51 @@ public class PackagesPanel extends JPanel implements WizardContainer {
         if (tabbedPane.getTabCount() > 0) {
             selectedTab = tabbedPane.getSelectedIndex();
         }
+        
+        for (Component comp : tabbedPane.getComponents()) {
+            if (comp instanceof AbstractConfigurationWizard) {
+                ((AbstractConfigurationWizard) comp).dispose();
+            }
+        }
         tabbedPane.removeAll();
+        
         if (selectedPackage != null) {
+            PackageNozzleTipsWizard packageNozzleTipsWizard = new PackageNozzleTipsWizard(selectedPackage);
+            packageNozzleTipsWizard.setWizardContainer(PackagesPanel.this);
             tabbedPane.add(Translations.getString("PackagesPanel.NozzleTipsTab.title"), //$NON-NLS-1$
-                    new PackageNozzleTipsPanel(selectedPackage));
+                    packageNozzleTipsWizard);
+            
+            PackageSettingsWizard packageSettingsPanel = new PackageSettingsWizard(selectedPackage);
+            packageSettingsPanel.setWizardContainer(PackagesPanel.this);
             tabbedPane.add(Translations.getString("PackagesPanel.SettingsTab.title"), //$NON-NLS-1$
-                    new JScrollPane(new PackageSettingsPanel(selectedPackage)));
+                    packageSettingsPanel);
+            
+            PackageVisionWizard packageVisionPanel = new PackageVisionWizard(selectedPackage);
+            packageVisionPanel.setWizardContainer(PackagesPanel.this);
             tabbedPane.add(Translations.getString("PackagesPanel.VisionTab.title"), //$NON-NLS-1$
-                    new JScrollPane(new PackageVisionPanel(selectedPackage)));
+                    packageVisionPanel);
+            
+            PackageCompositingWizard packageCompositingPanel = new PackageCompositingWizard(selectedPackage);
+            packageCompositingPanel.setWizardContainer(PackagesPanel.this);
             tabbedPane.add(Translations.getString("PackagesPanel.VisionCompositingTab.title"), //$NON-NLS-1$
-                    new JScrollPane(new PackageCompositingPanel(selectedPackage)));
+                    packageCompositingPanel);
+            
             Machine machine = Configuration.get().getMachine();
             for (PartAlignment partAlignment : machine.getPartAlignments()) {
                 Wizard wizard = partAlignment.getPartConfigurationWizard(selectedPackage);
                 if (wizard != null) {
-                    JPanel panel = new JPanel();
-                    panel.setLayout(new BorderLayout());
-                    panel.add(wizard.getWizardPanel());
-                    tabbedPane.add(wizard.getWizardName(), new JScrollPane(panel));
+                    tabbedPane.add(wizard.getWizardName(), (JPanel) wizard);
                     wizard.setWizardContainer(PackagesPanel.this);
                 }
             }
+            
             FiducialLocator fiducialLocator = machine.getFiducialLocator();
             Wizard wizard = fiducialLocator.getPartConfigurationWizard(selectedPackage);
             if (wizard != null) {
-                JPanel panel = new JPanel();
-                panel.setLayout(new BorderLayout());
-                panel.add(wizard.getWizardPanel());
-                tabbedPane.add(wizard.getWizardName(), new JScrollPane(panel));
+                tabbedPane.add(wizard.getWizardName(), (JPanel) wizard);
                 wizard.setWizardContainer(PackagesPanel.this);
             }
+            
             if (selectedTab != -1 
                     && tabbedPane.getTabCount() > selectedTab) {
                 tabbedPane.setSelectedIndex(selectedTab);

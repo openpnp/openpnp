@@ -417,9 +417,6 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
                 determineVisionOffset();
             });
         });
-        initDataBindings();
-
-
     }
 
     @Override
@@ -428,6 +425,13 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
         DoubleConverter doubleConverter = new DoubleConverter(Configuration.get().getLengthDisplayFormat());
         LengthConverter lengthConverter = new LengthConverter();
 
+        bind(UpdateStrategy.READ, asymmetric, "selected", tfBottomVisionOffsetX, "enabled");
+        bind(UpdateStrategy.READ, asymmetric, "selected", tfBottomVisionOffsetY, "enabled");
+        bind(UpdateStrategy.READ, asymmetric, "selected", btnAutoVisionCenterOffset, "enabled");
+        bind(UpdateStrategy.READ, asymmetric, "selected", lblX, "enabled");
+        bind(UpdateStrategy.READ, asymmetric, "selected", lblY, "enabled");
+        bind(UpdateStrategy.READ, asymmetric, "selected", lblVisionCenterOffset, "enabled");
+        
         lblName.setVisible(settingsHolder != null);
         name.setVisible(settingsHolder != null);
         if (visionSettings.isStockSetting()) {
@@ -671,28 +675,5 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
     @Override
     public String getWizardName() {
         return Translations.getString("BottomVisionSettingsConfigurationWizard.wizardName"); //$NON-NLS-1$
-    }
-    protected void initDataBindings() {
-        BeanProperty<JCheckBox, Boolean> jCheckBoxBeanProperty = BeanProperty.create("selected");
-        BeanProperty<JTextField, Boolean> jTextFieldBeanProperty = BeanProperty.create("enabled");
-        AutoBinding<JCheckBox, Boolean, JTextField, Boolean> autoBinding = Bindings.createAutoBinding(UpdateStrategy.READ, asymmetric, jCheckBoxBeanProperty, tfBottomVisionOffsetX, jTextFieldBeanProperty);
-        autoBinding.bind();
-        //
-        AutoBinding<JCheckBox, Boolean, JTextField, Boolean> autoBinding_1 = Bindings.createAutoBinding(UpdateStrategy.READ, asymmetric, jCheckBoxBeanProperty, tfBottomVisionOffsetY, jTextFieldBeanProperty);
-        autoBinding_1.bind();
-        //
-        BeanProperty<JButton, Boolean> jButtonBeanProperty = BeanProperty.create("enabled");
-        AutoBinding<JCheckBox, Boolean, JButton, Boolean> autoBinding_2 = Bindings.createAutoBinding(UpdateStrategy.READ, asymmetric, jCheckBoxBeanProperty, btnAutoVisionCenterOffset, jButtonBeanProperty);
-        autoBinding_2.bind();
-        //
-        BeanProperty<JLabel, Boolean> jLabelBeanProperty = BeanProperty.create("enabled");
-        AutoBinding<JCheckBox, Boolean, JLabel, Boolean> autoBinding_3 = Bindings.createAutoBinding(UpdateStrategy.READ, asymmetric, jCheckBoxBeanProperty, lblX, jLabelBeanProperty);
-        autoBinding_3.bind();
-        //
-        AutoBinding<JCheckBox, Boolean, JLabel, Boolean> autoBinding_4 = Bindings.createAutoBinding(UpdateStrategy.READ, asymmetric, jCheckBoxBeanProperty, lblY, jLabelBeanProperty);
-        autoBinding_4.bind();
-        //
-        AutoBinding<JCheckBox, Boolean, JLabel, Boolean> autoBinding_5 = Bindings.createAutoBinding(UpdateStrategy.READ, asymmetric, jCheckBoxBeanProperty, lblVisionCenterOffset, jLabelBeanProperty);
-        autoBinding_5.bind();
     }
 }

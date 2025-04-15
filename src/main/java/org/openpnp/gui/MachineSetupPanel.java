@@ -60,6 +60,7 @@ import javax.swing.tree.TreeSelectionModel;
 
 import org.openpnp.ConfigurationListener;
 import org.openpnp.Translations;
+import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.model.Configuration;
@@ -208,7 +209,14 @@ public class MachineSetupPanel extends JPanel implements WizardContainer {
 
     public void selectCurrentTreePath() {
         disableLastSelectedListener = true;
+
+        for (Component comp : tabbedPane.getComponents()) {
+            if (comp instanceof AbstractConfigurationWizard) {
+                ((AbstractConfigurationWizard) comp).dispose();
+            }
+        }
         tabbedPane.removeAll();
+        
         toolBar.removeAll();
 
         TreePath path = tree.getSelectionPath();

@@ -1,6 +1,5 @@
-package org.openpnp.gui;
+package org.openpnp.gui.support;
 
-import org.openpnp.gui.support.NamedComboBoxModel;
 import org.openpnp.model.AbstractVisionSettings;
 import org.openpnp.model.Configuration;
 

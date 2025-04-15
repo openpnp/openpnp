@@ -1,6 +1,7 @@
 package org.openpnp.gui;
 
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.Frame;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
@@ -34,9 +35,11 @@ import javax.swing.table.TableRowSorter;
 
 import org.openpnp.Translations;
 import org.openpnp.gui.components.AutoSelectTextTable;
+import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.MessageBoxes;
+import org.openpnp.gui.support.MultisortTableHeaderCellRenderer;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.gui.tablemodel.VisionSettingsTableModel;
@@ -50,6 +53,7 @@ import org.openpnp.model.FiducialVisionSettings;
 import org.openpnp.model.PartSettingsHolder;
 import org.simpleframework.xml.Serializer;
 
+@SuppressWarnings("serial")
 public class VisionSettingsPanel extends JPanel implements WizardContainer {
 
     private static final String PREF_DIVIDER_POSITION = "VisionSettingsPanel.dividerPosition";
@@ -102,15 +106,18 @@ public class VisionSettingsPanel extends JPanel implements WizardContainer {
                 if (selectedVisionSettings != null) {
                     this.selectedVisionSettings = selectedVisionSettings;
                 }
+                
+                for (Component comp : tabbedPane.getComponents()) {
+                    if (comp instanceof AbstractConfigurationWizard) {
+                        ((AbstractConfigurationWizard) comp).dispose();
+                    }
+                }
                 tabbedPane.removeAll();
 
                 if (selectedVisionSettings != null) {
                     Wizard wizard = selectedVisionSettings.getConfigurationWizard();
                     if (wizard != null) {
-                        JPanel panel = new JPanel();
-                        panel.setLayout(new BorderLayout());
-                        panel.add(wizard.getWizardPanel());
-                        tabbedPane.add(wizard.getWizardName(), new JScrollPane(panel));
+                        tabbedPane.add(wizard.getWizardName(), (JPanel) wizard);
                         wizard.setWizardContainer(VisionSettingsPanel.this);
                     }
                 }

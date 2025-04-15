@@ -220,6 +220,7 @@ public abstract class AbstractReferenceFeederConfigurationWizard
     
     @Override
     public void dispose() {
+        super.dispose();
         if (partsComboBoxModel != null) {
             partsComboBoxModel.dispose();
         }

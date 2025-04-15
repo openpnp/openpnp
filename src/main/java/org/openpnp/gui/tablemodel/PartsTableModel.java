@@ -33,6 +33,7 @@ import org.openpnp.model.FiducialVisionSettings;
 import org.openpnp.model.Length;
 import org.openpnp.model.Package;
 import org.openpnp.model.Part;
+import org.openpnp.util.Collect;
 
 @SuppressWarnings("serial")
 public class PartsTableModel extends AbstractObjectTableModel implements PropertyChangeListener {
@@ -169,20 +170,71 @@ public class PartsTableModel extends AbstractObjectTableModel implements Propert
     @Override
     public void propertyChange(PropertyChangeEvent arg0) {
         if (arg0.getSource() instanceof Part) {
-            // Only single part data changed, but sort order might change, so still need fireTableDataChanged().
-            fireTableDataChanged();
+            //Only single part data changed, so notify the table as to which cell to update
+            int rowIdx = indexOf(arg0.getSource());
+            switch (arg0.getPropertyName()) {
+                case "id":
+                    fireTableCellUpdated(rowIdx, 0);
+                    break;
+                case "name":
+                    fireTableCellUpdated(rowIdx, 1);
+                    break;
+                case "height":
+                    fireTableCellUpdated(rowIdx, 2);
+                    break;
+                case "throughBoardDepth":
+                    fireTableCellUpdated(rowIdx, 3);
+                    break;
+                case "package":
+                    fireTableCellUpdated(rowIdx, 4);
+                    break;
+                case "speed":
+                    fireTableCellUpdated(rowIdx, 5);
+                    break;
+                case "bottomVisionSettings":
+                    fireTableCellUpdated(rowIdx, 6);
+                    break;
+                case "fiducialVisionSettings":
+                    fireTableCellUpdated(rowIdx, 7);
+                    break;
+                case "placementCount":
+                    fireTableCellUpdated(rowIdx, 8);
+                    break;
+                case "assignedFeeders":
+                    fireTableCellUpdated(rowIdx, 9);
+                    break;
+                default:
+                    //ok - property is not visible in the table so no need to update the table
+            }
         }
         else  {
-            // Parts list itself changes.
-            if (parts != null) { 
-                for (Part part : parts) {
+            // Parts list itself changed
+            List<Part> newParts = new ArrayList<>(Configuration.get().getParts());
+            
+            //Compute the indices of those parts to remove and those to add
+            List<int[]> indicesToRemove = new ArrayList<>();
+            List<int[]> indicesToAdd = new ArrayList<>();
+            Collect.computeInPlaceUpdateIndices(parts, newParts, indicesToRemove, indicesToAdd);
+
+            //Remove the unneeded parts in reverse order so as to not disturb indices of those 
+            //parts that are yet to be removed
+            for (int[] idxRange : indicesToRemove) {
+                for (int idx=idxRange[0]; idx>=idxRange[1]; idx--) {
+                    Part part = this.getRowObjectAt(idx);
                     part.removePropertyChangeListener(this);
+                    parts.remove(idx);
                 }
+                fireTableRowsDeleted(idxRange[1], idxRange[0]);
             }
-            parts = new ArrayList<>(Configuration.get().getParts());
-            fireTableDataChanged();
-            for (Part part : parts) {
-                part.addPropertyChangeListener(this);
+            
+            //Insert any needed parts into the table
+            for (int[] idxRange : indicesToAdd) {
+                for (int idx=idxRange[0]; idx<=idxRange[1]; idx++) {
+                    Part part = newParts.get(idx);
+                    part.addPropertyChangeListener(this);
+                    parts.add(idx, part);
+                }
+                this.fireTableRowsInserted(idxRange[0], idxRange[1]);
             }
         }
     }

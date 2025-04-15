@@ -233,6 +233,14 @@ public class FeederConfigurationWizard extends AbstractConfigurationWizard {
 		locationPanel.add(offsetLocationPanel, "12, 6, left, top"); //$NON-NLS-1$
 	}
 
+	AutoBinding<PhotonFeeder, Object, SlotProxy, Object> binding;
+	
+	@Override
+	public void dispose() {
+	    super.dispose();
+	    binding.unbind();
+	}
+	
 	@Override
 	public void createBindings() {
 		LengthConverter lengthConverter = new LengthConverter();
@@ -241,7 +249,7 @@ public class FeederConfigurationWizard extends AbstractConfigurationWizard {
 				new DoubleConverter(Configuration.get().getLengthDisplayFormat());
 
 		SlotProxy slotProxy = new SlotProxy();
-		AutoBinding<PhotonFeeder, Object, SlotProxy, Object> binding = Bindings.createAutoBinding(UpdateStrategy.READ,
+		binding = Bindings.createAutoBinding(UpdateStrategy.READ,
 				feeder, BeanProperty.create("slot"), //$NON-NLS-1$
 				slotProxy, BeanProperty.create("slot")); //$NON-NLS-1$
 		binding.setSourceNullValue(null);
