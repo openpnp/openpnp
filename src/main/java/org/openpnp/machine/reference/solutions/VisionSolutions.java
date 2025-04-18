@@ -595,8 +595,7 @@ public class VisionSolutions implements Solutions.Subject {
                         head.setCalibrationSecondaryFiducialLocation(head.getCalibrationSecondaryFiducialLocation()
                                 .derive(oldSecondaryFiducialLocation, true, true, false, false));
                         head.setCalibrationSecondaryFiducialDiameter(oldSecondaryFiducialDiameter);
-                        camera.setUnitsPerPixelSecondary(camera.getUnitsPerPixelSecondary()
-                                .derive(oldUnitsPerPixelSecondary, true, true, false, false));
+                        camera.setUnitsPerPixelSecondary(oldUnitsPerPixelSecondary);
                         // Persist this unsolved state.
                         solutions.setSolutionsIssueSolved(this, false);
                         super.setState(state);
