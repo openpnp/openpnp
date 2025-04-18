@@ -417,14 +417,13 @@ public class VisionSolutions implements Solutions.Subject {
         @Override
         public Solutions.Issue.Choice[] getChoices() {
             if (camera.getLooking() == Looking.Up) {
-                setChoice(camera.getFocusSensingMethod());
                 return new Solutions.Issue.Choice[]{
-                    new Solutions.Issue.Choice(FocusSensingMethod.AutoFocus,  
+                    new Solutions.Issue.Choice(true,  
                                       "<html><h3>Use Auto-Focus</h3>" 
-                                    + "<p>This is the recommended setting, if a focus sensing method is configured.</p>"
+                                    + "<p>This is the recommended setting.</p>"
                                     + "</html>", 
                                     null), 
-                    new Solutions.Issue.Choice(FocusSensingMethod.None,  
+                    new Solutions.Issue.Choice(false,  
                                       "<html><h3>Use nozzle Z location</h3>" 
                                     + "<p><span style=\"color:red;\">CAUTION:</span> This will invalidate part height auto detection using auto focus.</p>" 
                                     + "</html>", 
@@ -766,7 +765,7 @@ public class VisionSolutions implements Solutions.Subject {
                         }
                         oldVisionDiameter = referenceNozzleTip.getCalibration().getCalibrationTipDiameter();
                         final State oldState = getState();
-                        final boolean autoFocus = getChoice() == FocusSensingMethod.None ? false : true;
+                        final boolean autoFocus = (boolean)getChoice();
                         UiUtils.submitUiMachineTask(
                                 () -> {
                                     // Perform preliminary camera calibration. 
@@ -785,6 +784,7 @@ public class VisionSolutions implements Solutions.Subject {
                                 (result) -> {
                                     UiUtils.messageBoxOnException(() -> super.setState(state));
                                     // Persist this solved state.
+                                    camera.setFocusSensingMethod(autoFocus ? FocusSensingMethod.AutoFocus : FocusSensingMethod.None);
                                     solutions.setSolutionsIssueSolved(this, true);
                                 },
                                 (t) -> {
