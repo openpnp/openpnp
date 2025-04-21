@@ -977,7 +977,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             
             // sort lists per nozzleTips by their size such that the nozzle tip that can handle
             // the most jobPlacments is first. As second sorting criteria the nozzleTip's name is used.
-            // For mulit-nozzle machines with different nozzleTips for each nozzle that are compatible
+            // For multi-nozzle machines with different nozzleTips for each nozzle that are compatible
             // with the same jobPlacments this always results in groups of identical amounts of
             // jobPlacments. Taking the name into account makes the sorting unique again.
             perNozzleTipJobPlacements.sort(Comparator.comparing(JobPlacementNozzleTip::size).reversed()
@@ -992,7 +992,9 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             // the other nozzles. Keeping all possible tips sorted by amount of placements they can
             // handle will likely provide a good starting point in selecting the next best one.
             List<NozzleTip> plannedNozzleTips = perNozzleTipJobPlacements.stream().map(j -> j.getNozzleTip()).collect(Collectors.toList());
-            
+
+            HashMap <NozzleTip,Integer> perNozzlePlacementOptions = new HashMap<NozzleTip,Integer>();
+
             // Remove duplicate placements keeping only the first occurrence
             // Skip this step if there is only one nozzle tip left.
             if (perNozzleTipJobPlacements.size() > 1) {
@@ -1004,15 +1006,30 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                     for (int j = i + 1; j < perNozzleTipJobPlacements.size(); ++j) {
                         // remove all placements that are in the dominant group
                         JobPlacementNozzleTip recessivePlacements = perNozzleTipJobPlacements.get(j);
+                        int n = recessivePlacements.size();
                         recessivePlacements.removeAll(dominantPlacements);
                         perNozzleTipJobPlacements.set(j, recessivePlacements);
+                        n -= recessivePlacements.size(); // calculate the number of recessive placements removed
+                        if(n>0) {
+                            perNozzlePlacementOptions.put(nozzleTips.get(i), perNozzlePlacementOptions.getOrDefault(nozzleTips.get(i),0) + n);
+                            perNozzlePlacementOptions.put(nozzleTips.get(j), perNozzlePlacementOptions.getOrDefault(nozzleTips.get(j),0) + n);
+                        }
                     }
                 }
                 
                 // remove empty nozzle groups
                 perNozzleTipJobPlacements = perNozzleTipJobPlacements.stream().filter(i -> !i.isEmpty()).collect(Collectors.toList());
             }
-            
+
+            // It is a bad outcome for a multi-nozzle machine to get stuck running on only a single nozzle.
+            // We do not track enough information to optimise multi-nozzle scenarios, but we have this heuristic to minimise the chance of this occurring.
+            // Inflexible nozzle tips are run first, and the flexible nozzle tips (i.e. those that can handle parts which can also be handled
+            // by other tips) are kept for the end of the job.
+            Logger.trace("perNozzlePlacementOptions {}",perNozzlePlacementOptions);
+            perNozzleTipJobPlacements.sort(Comparator.comparing( (JobPlacementNozzleTip j) -> perNozzlePlacementOptions.getOrDefault(j.getNozzleTip(),0))
+                                                    .thenComparing(Comparator.comparing(JobPlacementNozzleTip::size).reversed())
+                                                    .thenComparing(j -> j.getNozzleTip().getName()));
+
             // optimize each nozzle tip group using PickPlaceLocation
             output = new ArrayList<JobPlacement>();
             // This variable is the return value of planJobPlacmentsByPickPlaceLocation
