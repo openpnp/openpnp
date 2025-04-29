@@ -68,6 +68,7 @@ import org.openpnp.util.TravellingSalesman;
 import org.openpnp.util.UiUtils;
 import org.openpnp.util.Utils2D;
 import org.openpnp.util.VisionUtils;
+import org.openpnp.util.MotionUtils;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -2540,15 +2541,15 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 Location averagePickLocation  = calcCenterLocation(plannedPlacements, pickLocator);
                 Location averagePlaceLocation = calcCenterLocation(plannedPlacements, placeLocator);
                 
-                // find the placement with the shortest distance to averagePlickLocation and averagePlaceLocation
-                double bestDistance = Double.MAX_VALUE;
+                // find the placement with the lowest cost to averagePickLocation and averagePlaceLocation.
+                double bestCost = Double.MAX_VALUE;
                 for (JobPlacement p : compatibleJobPlacements) {
-                    double distance = pickLocator.getLocation(p, nozzle).getLinearDistanceTo(averagePickLocation) 
-                                    + placeLocator.getLocation(p, nozzle).getLinearDistanceTo(averagePlaceLocation);
+                    double cost = MotionUtils.getMotionCost(pickLocator.getLocation(p, nozzle).subtract(averagePickLocation))
+                                + MotionUtils.getMotionCost(placeLocator.getLocation(p, nozzle).subtract(averagePlaceLocation));
 
-                    // if this placement is closes with respect to its pick and place 
-                    if (bestDistance > distance) {
-                        bestDistance = distance;
+                    // if this placement is closest with respect to its pick and place
+                    if (bestCost > cost) {
+                        bestCost = cost;
                         bestPlacement = p;
                     }
                 }
