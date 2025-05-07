@@ -62,6 +62,9 @@ public class MotionUtils {
                                             // This movement is smaller than the smallest calibrated movement.
                                             // Interpolate between that smallest, and zero time for zero distance.
                                             Set<Double> xaxis = dataRow.getXAxis();
+                                            // NB "xaxis" here refers to the independent variable of the distance/time curve
+                                            // recorded during backlash compensation. "xaxis" records distances along either
+                                            // controller axis.
                                             double sd = Collections.min(xaxis);
                                             double st = dataRow.getDataPoint(sd);
                                             return d * st/sd;
@@ -73,7 +76,7 @@ public class MotionUtils {
                                             xaxis.remove(sd); // find the second-largest; this is why we made a copy above
                                             double rd = Collections.max(xaxis);
                                             if( Math.abs(rd-sd) < 4 ) {
-                                                // The x axis positions consist of a geometric progression, plus a single point
+                                                // The xaxis datapoints consist of a geometric progression, plus a single point
                                                 // which corresponds to the maximum movement from the limit of motion range back
                                                 // to the camera. It is therefore possible that the largest and second-largest
                                                 // are quite close together, and unsuitable for extrapolation for larger moves.
