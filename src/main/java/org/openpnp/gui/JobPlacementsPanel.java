@@ -770,9 +770,19 @@ public class JobPlacementsPanel extends JPanel {
 
         public SetTypeAction(Placement.Type type) {
             this.type = type;
-            putValue(NAME, type.toString());
+            String name;
+            if (type == Placement.Type.Fiducial) {
+                name = Translations.getString("Placement.Type.Fiducial"); //$NON-NLS-1$
+            }
+            else if (type == Placement.Type.Placement) {
+                name = Translations.getString("Placement.Type.Placement"); //$NON-NLS-1$
+            }
+            else {
+                name = type.toString();
+            }
+            putValue(NAME, name);
             putValue(SHORT_DESCRIPTION, Translations.getString("JobPlacementsPanel.SetType.MenuTip") //$NON-NLS-1$ 
-                    + " " + type.toString()); //$NON-NLS-1$
+                    + " " + name); //$NON-NLS-1$
         }
 
         @Override
@@ -964,7 +974,17 @@ public class JobPlacementsPanel extends JPanel {
                 return;
             }
             Type type = (Type) value;
-            setText(type.name());
+            String name;
+            if (type == Placement.Type.Fiducial) {
+                name = Translations.getString("Placement.Type.Fiducial"); //$NON-NLS-1$
+            }
+            else if (type == Placement.Type.Placement) {
+                name = Translations.getString("Placement.Type.Placement"); //$NON-NLS-1$
+            }
+            else {
+                name = value.toString();
+            }
+            setText(name);
         }
 
         @Override

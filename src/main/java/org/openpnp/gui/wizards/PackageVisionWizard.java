@@ -197,7 +197,7 @@ public class PackageVisionWizard extends AbstractConfigurationWizard {
         propertiesPanel.add(padAcross, "10, 8, fill, default");
         padAcross.setColumns(10);
 
-        JLabel lblRound = new JLabel("% Roundness");
+        JLabel lblRound = new JLabel(Translations.getString("PackageVisionWizard.SettingsPanel.RoundnessLabel.text")); //$NON-NLS-1$
         lblRound.setToolTipText(Translations.getString("PackageVisionWizard.SettingsPanel.RoundnessLabel.toolTipText")); //$NON-NLS-1$
         propertiesPanel.add(lblRound, "12, 8, right, default");
 

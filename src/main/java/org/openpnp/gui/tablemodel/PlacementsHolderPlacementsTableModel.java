@@ -63,8 +63,8 @@ public class PlacementsHolderPlacementsTableModel extends AbstractObjectTableMod
                     "Y", //$NON-NLS-1$
                     Translations.getString("PlacementsHolderPlacementsTableModel.ColumnName.Rot"), //$NON-NLS-1$
                     Translations.getString("PlacementsHolderPlacementsTableModel.ColumnName.Type"), //$NON-NLS-1$
-                    "Placed",
-                    "Status",
+                    Translations.getString("PlacementsHolderPlacementsTableModel.ColumnName.Placed"), //$NON-NLS-1$
+                    Translations.getString("PlacementsHolderPlacementsTableModel.ColumnName.Status"), //$NON-NLS-1$
                     Translations.getString("PlacementsHolderPlacementsTableModel.ColumnName.ErrorHandling"), //$NON-NLS-1$
                     Translations.getString("PlacementsHolderPlacementsTableModel.ColumnName.Comments")}; //$NON-NLS-1$
 
