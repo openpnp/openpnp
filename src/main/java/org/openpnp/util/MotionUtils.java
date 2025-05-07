@@ -72,6 +72,15 @@ public class MotionUtils {
                                             double st = dataRow.getDataPoint(sd);
                                             xaxis.remove(sd); // find the second-largest; this is why we made a copy above
                                             double rd = Collections.max(xaxis);
+                                            if( Math.abs(rd-sd) < 4 ) {
+                                                // The x axis positions consist of a geometric progression, plus a single point
+                                                // which corresponds to the maximum movement from the limit of motion range back
+                                                // to the camera. It is therefore possible that the largest and second-largest
+                                                // are quite close together, and unsuitable for extrapolation for larger moves.
+                                                // We should extrapolate using the largest (sd found above) and the third-largest.
+                                                xaxis.remove(rd);
+                                                rd = Collections.max(xaxis);
+                                            }
                                             double rt = dataRow.getDataPoint(rd);
                                             return st + (d-sd) * (rt-st) / (rd-sd);
                                         }
