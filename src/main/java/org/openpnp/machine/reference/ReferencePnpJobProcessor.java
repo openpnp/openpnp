@@ -780,6 +780,12 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 catch (Exception e) {
                 }
             }
+
+            if (feeders.size()==0) {
+                // We were unable to find any feeders, so there is no need for TSM.
+                // We end where we started.
+                return startLocation;
+            }
             
             // route pick locations of all feeders through travelling salesman
             TravellingSalesman<Feeder> tsm = new TravellingSalesman<>(
