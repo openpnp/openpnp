@@ -2543,9 +2543,10 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 
                 // find the placement with the lowest cost to averagePickLocation and averagePlaceLocation.
                 double bestCost = Double.MAX_VALUE;
+                MotionUtils motionUtils = new MotionUtils();
                 for (JobPlacement p : compatibleJobPlacements) {
-                    double cost = MotionUtils.getMotionCost(pickLocator.getLocation(p, nozzle).subtract(averagePickLocation))
-                                + MotionUtils.getMotionCost(placeLocator.getLocation(p, nozzle).subtract(averagePlaceLocation));
+                    double cost = motionUtils.getMotionCost(pickLocator.getLocation(p, nozzle).subtract(averagePickLocation))
+                                + motionUtils.getMotionCost(placeLocator.getLocation(p, nozzle).subtract(averagePlaceLocation));
 
                     // if this placement is closest with respect to its pick and place
                     if (bestCost > cost) {
