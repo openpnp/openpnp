@@ -373,6 +373,11 @@ public abstract class AbstractActuator extends AbstractHeadMountable implements 
         }
     }
 
+    public final void actuateBoolean(boolean value) throws Exception { actuate(value); }
+    public final void actuateDouble(double value) throws Exception { actuate(value); }
+    public final void actuateString(String value) throws Exception { actuate(value); }
+    public final void actuateObject(Object value) throws Exception { actuate(value); }
+
     public void assertOnOffDefined() throws Exception {
         if (getDefaultOnValue() == null 
                 || getDefaultOffValue() == null 
