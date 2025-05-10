@@ -197,12 +197,13 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         
         lblRotationInTape = new JLabel(Translations.getString(
                 "ReferenceStripFeederConfigurationWizard.RotationInTapeLabel.text")); //$NON-NLS-1$
-        lblRotationInTape.setToolTipText("<html>\n<p>The <strong>Rotation in Tape</strong> setting must be interpreted relative to the tape's orientation, <br/>\nregardless of how the feeder/tape is oriented on the machine. </p>\n<ol>\n<li>\n<p>Look at the <strong>neutral</strong> upright orientation of the part package/footprint <br/>\nas drawn inside your E-CAD <strong>library</strong>.</p>\n</li>\n<li>\n<p>Note how pin 1, polarity, cathode etc. are oriented.  <br/>\nThis is your 0° for the part.</p>\n</li>\n<li>\n<p>Look at the tape so that the sprocket holes are at the top. <br/>\nThis is your 0° tape orientation (per EIA-481 industry standard).</p>\n</li>\n<li>\n<p>Determine how the part is rotated inside the tape pocket, <em>relative</em> from  <br/>\nits upright orientation in (1).  Positive rotation goes counter-clockwise.<br/>\nThis is your <strong>Rotation in Tape</strong>.</p>\n</li>\n</ol>\n</html>");
+        lblRotationInTape.setToolTipText(Translations.getString(
+                "ReferenceStripFeederConfigurationWizard.RotationInTapeLabel.toolTipText")); //$NON-NLS-1$
         panelPart.add(lblRotationInTape, "2, 4, left, default");
 
         textFieldLocationRotation = new JTextField();
         panelPart.add(textFieldLocationRotation, "4, 4, fill, default");
-        textFieldLocationRotation.setColumns(4);
+        textFieldLocationRotation.setColumns(10);
 
         lblRetryCount = new JLabel(Translations.getString(
                 "ReferenceStripFeederConfigurationWizard.FeedRetryCountLabel.text")); //$NON-NLS-1$
@@ -363,14 +364,12 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         });
         panelVision.add(btnClearVisionCache, "6, 4");
 
-        lblExtrapolationDistance = new JLabel(Translations.getString(
-                "ReferenceStripFeederConfigurationWizard.PanelVision.ExtrapolationDistanceLabel.text")); //$NON-NLS-1$
+        lblExtrapolationDistance = new JLabel(Translations.getString("ReferenceStripFeederConfigurationWizard.PanelVision.ExtrapolationDistanceLabel.text")); //$NON-NLS-1$
+        lblExtrapolationDistance.setToolTipText(Translations.getString("ReferenceStripFeederConfigurationWizard.PanelVision.ExtrapolationDistanceLabel.toolTipText")); //$NON-NLS-1$        
         panelVision.add(lblExtrapolationDistance, "2, 6, right, default");
 
         textFieldExtrapolationDistance = new JTextField();
-        textFieldExtrapolationDistance.setToolTipText(Translations.getString(
-                "ReferenceStripFeederConfigurationWizard.PanelVision.ExtrapolationDistanceLabel.toolTipText")); //$NON-NLS-1$
-        panelVision.add(textFieldExtrapolationDistance, "4, 6");
+        panelVision.add(textFieldExtrapolationDistance, "4, 6, fill, default");
         textFieldExtrapolationDistance.setColumns(5);
 
         lblParallaxDiameter = new JLabel(Translations.getString("ReferenceStripFeederConfigurationWizard.PanelVision.lblParallaxDiameter.text")); //$NON-NLS-1$
