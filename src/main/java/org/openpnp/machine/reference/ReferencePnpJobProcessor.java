@@ -64,6 +64,7 @@ import org.openpnp.spi.PnpJobProcessor.JobPlacement.Status;
 import org.openpnp.spi.base.AbstractJobProcessor;
 import org.openpnp.spi.base.AbstractPnpJobProcessor;
 import org.openpnp.util.MovableUtils;
+import org.openpnp.util.TravelCost;
 import org.openpnp.util.TravellingSalesman;
 import org.openpnp.util.UiUtils;
 import org.openpnp.util.Utils2D;
@@ -2540,21 +2541,32 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 Location averagePickLocation  = calcCenterLocation(plannedPlacements, pickLocator);
                 Location averagePlaceLocation = calcCenterLocation(plannedPlacements, placeLocator);
                 
-                // find the placement with the shortest distance to averagePlickLocation and averagePlaceLocation
-                double bestDistance = Double.MAX_VALUE;
-                for (JobPlacement p : compatibleJobPlacements) {
-                    double distance = pickLocator.getLocation(p, nozzle).getLinearDistanceTo(averagePickLocation) 
-                                    + placeLocator.getLocation(p, nozzle).getLinearDistanceTo(averagePlaceLocation);
-
-                    // if this placement is closes with respect to its pick and place 
-                    if (bestDistance > distance) {
-                        bestDistance = distance;
-                        bestPlacement = p;
+                TravelCost travelCost = null;
+                try {
+                    travelCost = new TravelCost(nozzle);
+                }
+                catch (Exception e) {
+                    // ignore exception and continue without optimization
+                    Logger.trace("TravelCost() failed, skipping second placement optimiation");
+                    travelCost = null;
+                }
+                if (travelCost != null) {
+                    // find the placement with the least cost for motion to averagePlickLocation and averagePlaceLocation
+                    double leastCost = Double.MAX_VALUE;
+                    for (JobPlacement p : compatibleJobPlacements) {
+                        double cost = travelCost.getCost(pickLocator.getLocation(p, nozzle), averagePickLocation) 
+                                    + travelCost.getCost(placeLocator.getLocation(p, nozzle), averagePlaceLocation);
+    
+                        // if this placement is closes with respect to its pick and place 
+                        if (leastCost > cost) {
+                            leastCost = cost;
+                            bestPlacement = p;
+                        }
                     }
                 }
             }
-            else {
-                // no further optimization possible or requested, just choose the first of the list
+            // if bestPlacement is still null, use the first
+            if (bestPlacement == null) {
                 bestPlacement = compatibleJobPlacements.get(0);
             }
             
