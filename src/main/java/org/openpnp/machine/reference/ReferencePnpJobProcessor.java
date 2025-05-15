@@ -85,7 +85,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         BoardPart,                  // sort by board id first, then part id
         PickLocation,               // take the shortest route between all pick locations
         PickPlaceLocation,          // optimize all place locations feeder wise for shortest route
-        NozzleTips,                 // group placements by compatible nozzle tips and optimize each group using PickPlaceLocation
+        NozzleTips,                 // group placements by compatible nozzle tips, optimize each group using PickPlaceLocation, tips are sorted by part count
+        NozzleTipsByFlexibility,    // group placements by compatible nozzle tips, optimize each group using PickPlaceLocation, tips are sorted by the count of parts which can be placed by a different tip
         Unsorted;                   // keep the placements unsorted - for hand-optimized jobs
 
         // provide a dedicated toSting() method (with translation) to convert the enum values into
@@ -676,7 +677,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                     break;
                     
                 case NozzleTips:
-                    plannedJobPlacementsAndNozzleTips = planJobPlacementsByNozzleTips(jobPlacements);
+                case NozzleTipsByFlexibility:
+                    plannedJobPlacementsAndNozzleTips = planJobPlacementsByNozzleTips(jobPlacements,jobOrder);
                     break;
                     
                 // FIXME: generating a error if not all enum values are handled would be more error resistant
@@ -915,7 +917,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
          * @param input
          * @return
          */
-        private ReturnJobPlacementsAndNozzleTips planJobPlacementsByNozzleTips(List<JobPlacement> input) {
+        private ReturnJobPlacementsAndNozzleTips planJobPlacementsByNozzleTips(List<JobPlacement> input,JobOrderHint jobOrder) {
             /**
              * Group nozzleTip and JobPlacements into one class to collect jobPlacements
              * per nozzleTip for further sorting, filtering and processing.
@@ -1021,14 +1023,16 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 perNozzleTipJobPlacements = perNozzleTipJobPlacements.stream().filter(i -> !i.isEmpty()).collect(Collectors.toList());
             }
 
-            // It is a bad outcome for a multi-nozzle machine to get stuck running on only a single nozzle.
-            // We do not track enough information to optimise multi-nozzle scenarios, but we have this heuristic to minimise the chance of this occurring.
-            // Inflexible nozzle tips are run first, and the flexible nozzle tips (i.e. those that can handle parts which can also be handled
-            // by other tips) are kept for the end of the job.
-            Logger.trace("perNozzlePlacementOptions {}",perNozzlePlacementOptions);
-            perNozzleTipJobPlacements.sort(Comparator.comparing( (JobPlacementNozzleTip j) -> perNozzlePlacementOptions.getOrDefault(j.getNozzleTip(),0))
-                                                    .thenComparing(Comparator.comparing(JobPlacementNozzleTip::size).reversed())
-                                                    .thenComparing(j -> j.getNozzleTip().getName()));
+            if(jobOrder==JobOrderHint.NozzleTipsByFlexibility) {
+                // It is a bad outcome for a multi-nozzle machine to get stuck running on only a single nozzle.
+                // We do not track enough information to optimise multi-nozzle scenarios, but we have this heuristic to minimise the chance of this occurring.
+                // Inflexible nozzle tips are run first, and the flexible nozzle tips (i.e. those that can handle parts which can also be handled
+                // by other tips) are kept for the end of the job.
+                Logger.trace("perNozzlePlacementOptions {}",perNozzlePlacementOptions);
+                perNozzleTipJobPlacements.sort(Comparator.comparing( (JobPlacementNozzleTip j) -> perNozzlePlacementOptions.getOrDefault(j.getNozzleTip(),0))
+                                                        .thenComparing(Comparator.comparing(JobPlacementNozzleTip::size).reversed())
+                                                        .thenComparing(j -> j.getNozzleTip().getName()));
+            }
 
             // optimize each nozzle tip group using PickPlaceLocation
             output = new ArrayList<JobPlacement>();
