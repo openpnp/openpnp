@@ -139,7 +139,7 @@ public class TavellingSalesmanTest {
             //
             // for the unit test, roughly check expected solution distance   
             double target = new double [] { 3000, 5000, 13000 } [t];
-            System.out.println("TavellingSalesmanTest.testTravellingSalesman() test "+name+t+" solved "+list.size()+" locations, cost: "+bestDistance+"sec, distance: "+linearDistance+" mm, target: "+target+"sec, time: "+tsm.getSolverDuration()+"ms");
+            System.out.println("TavellingSalesmanTest.testTravellingSalesman() test "+name+t+" solved "+list.size()+" locations, cost: "+bestDistance+"sec, distance: "+linearDistance+" mm, target: "+target+"mm, time: "+tsm.getSolverDuration()+"ms");
             // save the solution, so we can have a look
             File file = File.createTempFile("travelling-salesman", ".svg");
             try (PrintWriter out = new PrintWriter(file.getAbsolutePath())) {
