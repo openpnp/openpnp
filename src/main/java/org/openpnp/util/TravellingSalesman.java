@@ -130,9 +130,13 @@ public class TravellingSalesman<T> {
     private final TravelLocation startLocation;
     private final TravelLocation endLocation;
     private final List<TravelLocation> travel;
-    private final TravelCost travelCost;
+    private TravelCost travelCost;
     
     private long solverDuration = 0; 
+
+    public void setTravelCost (TravelCost t) {
+        travelCost = t;
+    }
 
     private TravelLocation getLocation(int i) {
         if (i < 0) {
@@ -241,7 +245,8 @@ public class TravellingSalesman<T> {
         int i = maxIterations;
         int swaps = 0, twists = 0, copies = 0;
         double bestDistance = getTravellingDistance();
-        double t = startingTemperature;
+        double temperature = startingTemperature;
+        double endTemperature = startingTemperature/10000;
         if (debugLevel > 0) {
             System.out.println("Initial distance of travel: " + bestDistance);
         }
@@ -252,7 +257,7 @@ public class TravellingSalesman<T> {
             // make this repeatable by seeding the random generator
             Random rnd = new java.util.Random(0);
             for (; i > 0; i--) {
-                if (t > 0.1) {
+                if (temperature > endTemperature) {
                     int a = rnd.nextInt(this.travelSize);
                     int b;
                     do {
@@ -286,7 +291,7 @@ public class TravellingSalesman<T> {
                         }
                     }
 
-                    if (swapDistance < 0.0 || (Math.exp(-swapDistance / t) >= rnd.nextDouble())) {
+                    if (swapDistance < 0.0 || (Math.exp(-swapDistance / temperature) >= rnd.nextDouble())) {
                         // better or within annealing probability
                         this.swapLocations(a, b, twist);
                         bestDistance += swapDistance;   // keep bestDistance up-to-date
@@ -303,14 +308,14 @@ public class TravellingSalesman<T> {
                             swaps++;
                         }
                     }
-                    t *= coolingRate;
+                    temperature *= coolingRate;
                 } else {
                     break;
                 }
                 if (debugLevel > 0) {
                     if (i % 100000 == 0) {
                         double distance = getTravellingDistance();
-                        System.out.println("Iterations #" + i +", temperature: "+t+", distance of travel: " + distance + ", best distance to travel: " + globalBestDistance + ", swaps: "+swaps+", twists: "+twists+", copies: "+copies);
+                        System.out.println("Iterations #" + i +", temperature: "+temperature+", distance of travel: " + distance + ", best distance to travel: " + globalBestDistance + ", swaps: "+swaps+", twists: "+twists+", copies: "+copies);
                         //System.out.println(this.asSvg());
                     }
                 }
@@ -325,7 +330,7 @@ public class TravellingSalesman<T> {
         }
         bestDistance = getTravellingDistance();
         if (debugLevel > 0) {
-            System.out.println("Iterations #" + i +", temperature: "+t+",  distance of travel: " + bestDistance+", swaps: "+swaps+", twists: "+twists+", copies: "+copies);
+            System.out.println("Iterations #" + i +", temperature: "+temperature+",  distance of travel: " + bestDistance+", swaps: "+swaps+", twists: "+twists+", copies: "+copies);
         }
         long endTime = System.currentTimeMillis();
         this.solverDuration = endTime - startTime;
