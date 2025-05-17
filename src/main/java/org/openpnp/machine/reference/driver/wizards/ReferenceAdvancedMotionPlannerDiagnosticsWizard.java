@@ -43,6 +43,7 @@ import org.openpnp.machine.reference.driver.ReferenceAdvancedMotionPlanner;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 import org.openpnp.spi.HeadMountable;
+import org.openpnp.Translations;
 import org.openpnp.util.UiUtils;
 
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -63,10 +64,10 @@ public class ReferenceAdvancedMotionPlannerDiagnosticsWizard extends AbstractCon
     private JButton btnTest;
 
     private Action testAction =
-            new AbstractAction("Test", Icons.start) {
+            new AbstractAction(Translations.getString("ReferenceAdvancedMotionPlannerDiagnosticsWizard.TestButton.text"), Icons.start) { //$NON-NLS-1$
         {
             putValue(Action.SHORT_DESCRIPTION,
-                    "<html>Test the motion defined in the Motion Planner Wizard.</html>");
+                    Translations.getString("ReferenceAdvancedMotionPlannerDiagnosticsWizard.TestButton.toolTipText")); //$NON-NLS-1$
         }
 
         @Override
@@ -77,7 +78,7 @@ public class ReferenceAdvancedMotionPlannerDiagnosticsWizard extends AbstractCon
                 UiUtils.submitUiMachineTask(() -> {
                     if (motionPlanner.getInitialLocation(false) == null
                             || motionPlanner.getInitialLocation(true) == null) {
-                        throw new Exception("Test Motion undefined. Please go to the Motion Planner tab and define/enable the Test Motion locations.");
+                        throw new Exception(Translations.getString("ReferenceAdvancedMotionPlannerDiagnosticsWizard.LocationsUndefined.Message")); //$NON-NLS-1$
                     }
                     Location l = selectedTool.getLocation();
                     boolean reverse = (l.getXyzcDistanceTo(motionPlanner.getInitialLocation(true)) 
@@ -136,7 +137,7 @@ public class ReferenceAdvancedMotionPlannerDiagnosticsWizard extends AbstractCon
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
-        lblDiagnostics = new JLabel("Diagnostics?");
+        lblDiagnostics = new JLabel(Translations.getString("ReferenceAdvancedMotionPlannerDiagnosticsWizard.DiagnosticsEnabledLabel.text")); //$NON-NLS-1$
         contentPanel.add(lblDiagnostics, "2, 2, right, default");
         
         diagnosticsEnabled = new JCheckBox("");
@@ -146,7 +147,7 @@ public class ReferenceAdvancedMotionPlannerDiagnosticsWizard extends AbstractCon
         btnTest.setAction(testAction);
         contentPanel.add(btnTest, "6, 2");
         
-        lblPlanned = new JLabel("Planned [s]");
+        lblPlanned = new JLabel(Translations.getString("ReferenceAdvancedMotionPlannerDiagnosticsWizard.PlannedLabel.text")); //$NON-NLS-1$
         contentPanel.add(lblPlanned, "8, 2, right, default");
         
         moveTimePlanned = new JTextField();
@@ -154,7 +155,7 @@ public class ReferenceAdvancedMotionPlannerDiagnosticsWizard extends AbstractCon
         contentPanel.add(moveTimePlanned, "10, 2, fill, default");
         moveTimePlanned.setColumns(10);
         
-        lblActual = new JLabel("Actual");
+        lblActual = new JLabel(Translations.getString("ReferenceAdvancedMotionPlannerDiagnosticsWizard.ActualLabel.text")); //$NON-NLS-1$
         contentPanel.add(lblActual, "12, 2, right, default");
         
         moveTimeActual = new JTextField();
@@ -162,11 +163,11 @@ public class ReferenceAdvancedMotionPlannerDiagnosticsWizard extends AbstractCon
         contentPanel.add(moveTimeActual, "14, 2, fill, default");
         moveTimeActual.setColumns(10);
         
-        interpolationFailed = new JLabel("Interpolation failed!");
+        interpolationFailed = new JLabel(Translations.getString("ReferenceAdvancedMotionPlannerDiagnosticsWizard.InterpolationFailedLabel.text")); //$NON-NLS-1$
         interpolationFailed.setForeground(Color.RED);
         contentPanel.add(interpolationFailed, "16, 2");
         
-        JLabel lblMotionGraph = new JLabel("<html>\r\n<body style=\"text-align:right\">\r\n<p>\r\nLocation <span style=\"color:#00BB00\">&mdash;&mdash;</span>\r\n&nbsp;&nbsp;\r\nVelocity <span style=\"color:#005BD9\">&mdash;&mdash;</span>\r\n&nbsp;&nbsp;\r\nAcceleration <span style=\"color:#FF0000\">&mdash;&mdash;</span>\r\n&nbsp;&nbsp;\r\nJerk <span style=\"color:#DDBB00\">&mdash;&mdash;</span>\r\n</p>\r\n</body>\r\n</html>");
+        JLabel lblMotionGraph = new JLabel(Translations.getString("ReferenceAdvancedMotionPlannerDiagnosticsWizard.MotionGraphLabel.text")); //$NON-NLS-1$
         contentPanel.add(lblMotionGraph, "18, 2, right, default");
         
         motionGraph = new SimpleGraphView();

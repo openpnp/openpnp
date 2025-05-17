@@ -6,6 +6,7 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.DoubleConverter;
@@ -38,7 +39,9 @@ public class GcodeAsyncDriverSettings extends AbstractConfigurationWizard {
         this.driver = driver;
 
         JPanel settingsPanel = new JPanel();
-        settingsPanel.setBorder(new TitledBorder(null, "Settings", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        settingsPanel.setBorder(new TitledBorder(null,
+                Translations.getString("GcodeAsyncDriverSettings.SettingsPanel.Border.title"), //$NON-NLS-1$ 
+                TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(settingsPanel);
         settingsPanel.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -55,7 +58,9 @@ public class GcodeAsyncDriverSettings extends AbstractConfigurationWizard {
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
         JPanel interpolationPanel = new JPanel();
-        interpolationPanel.setBorder(new TitledBorder(null, "Interpolation", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        interpolationPanel.setBorder(new TitledBorder(null, 
+                Translations.getString("GcodeAsyncDriverSettings.InterpolationPanel.Border.title"), //$NON-NLS-1$ 
+                TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(interpolationPanel);
         interpolationPanel.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -88,48 +93,48 @@ public class GcodeAsyncDriverSettings extends AbstractConfigurationWizard {
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 RowSpec.decode("fill:default:grow"),}));
 
-        JLabel lblMaximumNumberOf = new JLabel("Maximum Number of Steps");
-        lblMaximumNumberOf.setToolTipText("<html>\r\nMaximum number of steps that can be used for interpolation of one move.<br>\r\nUse a portion of your controller's maximum queue depth. <br/>\r\nIf the number is exceeded, the motion planner will fall back to a single moderated move. \r\n</html>");
+        JLabel lblMaximumNumberOf = new JLabel(Translations.getString("GcodeAsyncDriverSettings.InterpolationPanel.MaximumNumberofStepsLabel.text")); //$NON-NLS-1$
+        lblMaximumNumberOf.setToolTipText(Translations.getString("GcodeAsyncDriverSettings.InterpolationPanel.MaximumNumberofStepsLabel.toolTipText")); //$NON-NLS-1$
         interpolationPanel.add(lblMaximumNumberOf, "2, 2, right, default");
 
         interpolationMaxSteps = new JTextField();
         interpolationPanel.add(interpolationMaxSteps, "4, 2");
         interpolationMaxSteps.setColumns(10);
         
-        JLabel lblMaxumNumberOf = new JLabel("Maximum Number of Jerk Steps");
-        lblMaxumNumberOf.setToolTipText("<html>\r\nMaximum number of interpolation steps used to simulate jerk control.<br/>\r\nThis means the acceleration will be ramped up or down in so many steps <br/>\r\nrelative to maximum acceleration.\r\n</html>");
+        JLabel lblMaxumNumberOf = new JLabel(Translations.getString("GcodeAsyncDriverSettings.InterpolationPanel.MaximumNumberofJerkStepsLabel.text")); //$NON-NLS-1$
+        lblMaxumNumberOf.setToolTipText(Translations.getString("GcodeAsyncDriverSettings.InterpolationPanel.MaximumNumberofJerkStepsLabel.toolTipText")); //$NON-NLS-1$
         interpolationPanel.add(lblMaxumNumberOf, "2, 4, right, default");
         
         interpolationJerkSteps = new JTextField();
         interpolationPanel.add(interpolationJerkSteps, "4, 4, fill, default");
         interpolationJerkSteps.setColumns(10);
 
-        JLabel lblInterpolationTimeStep = new JLabel("Minimum Step Time [s]");
+        JLabel lblInterpolationTimeStep = new JLabel(Translations.getString("GcodeAsyncDriverSettings.InterpolationPanel.MinimumStepTimeLabel.text")); //$NON-NLS-1$
         interpolationPanel.add(lblInterpolationTimeStep, "2, 6, right, default");
-        lblInterpolationTimeStep.setToolTipText("<html>\r\n<p>The minimal time step used to interpolate advanced motion paths. Specified in seconds.</p>\r\n</html>\r\n");
+        lblInterpolationTimeStep.setToolTipText(Translations.getString("GcodeAsyncDriverSettings.InterpolationPanel.MinimumStepTimeLabel.toolTipText")); //$NON-NLS-1$
 
         interpolationTimeStep = new JTextField();
         interpolationPanel.add(interpolationTimeStep, "4, 6");
         interpolationTimeStep.setColumns(10);
 
-        JLabel lblInterpolationMinimumTicks = new JLabel("Minimum Axis Resolution Ticks");
+        JLabel lblInterpolationMinimumTicks = new JLabel(Translations.getString("GcodeAsyncDriverSettings.InterpolationPanel.MinimumAxisResolutionTicksLabel.text")); //$NON-NLS-1$
         interpolationPanel.add(lblInterpolationMinimumTicks, "2, 8, right, default");
-        lblInterpolationMinimumTicks.setToolTipText("<html>\r\n<p>Minimum step axis distance used to interpolate advanced motion paths.</p>\r\n<p>This is given in resolution ticks of the axes.</p>\r\n</html>\r\n");
+        lblInterpolationMinimumTicks.setToolTipText(Translations.getString("GcodeAsyncDriverSettings.InterpolationPanel.MinimumAxisResolutionTicksLabel.toolTipText")); //$NON-NLS-1$
 
         interpolationMinStep = new JTextField();
         interpolationPanel.add(interpolationMinStep, "4, 8");
         interpolationMinStep.setColumns(10);
         
-        JLabel lblJunctionDeviation = new JLabel("Maximum Junction Deviation");
-        lblJunctionDeviation.setToolTipText("The maximum Junction Deviation allowed by the driver. Please consult the driver's documentation. ");
+        JLabel lblJunctionDeviation = new JLabel(Translations.getString("GcodeAsyncDriverSettings.InterpolationPanel.MaximumJunctionDeviationLabel.text")); //$NON-NLS-1$
+        lblJunctionDeviation.setToolTipText(Translations.getString("GcodeAsyncDriverSettings.InterpolationPanel.MaximumJunctionDeviationLabel.toolTipText")); //$NON-NLS-1$
         interpolationPanel.add(lblJunctionDeviation, "2, 10, right, default");
         
         junctionDeviation = new JTextField();
         interpolationPanel.add(junctionDeviation, "4, 10, fill, default");
         junctionDeviation.setColumns(10);
 
-        JLabel lblConfirmationFlowControl = new JLabel("Confimation Flow Control?");
-        lblConfirmationFlowControl.setToolTipText("<html>\r\n<p>The communication with the controller is flow-controlled by awaiting the \"ok\"<br/>\r\nbefore sending the next command. </p>\r\n<p>This is slower than other types of flow control such as RTS/CTS on a serial connection, so <br/>\r\nthe latter should be preferred.</p>\r\n</html>");
+        JLabel lblConfirmationFlowControl = new JLabel(Translations.getString("GcodeAsyncDriverSettings.SettingsPanel.ConfirmationFlowControlLabel.text")); //$NON-NLS-1$
+        lblConfirmationFlowControl.setToolTipText(Translations.getString("GcodeAsyncDriverSettings.SettingsPanel.ConfirmationFlowControlLabel.toolTipText")); //$NON-NLS-1$
         settingsPanel.add(lblConfirmationFlowControl, "2, 2, right, default");
 
         confirmationFlowControl = new JCheckBox("");
@@ -142,8 +147,8 @@ public class GcodeAsyncDriverSettings extends AbstractConfigurationWizard {
         });
         settingsPanel.add(confirmationFlowControl, "4, 2");
 
-        JLabel lblRequestLocation = new JLabel("Location Confirmation?");
-        lblRequestLocation.setToolTipText("<html>Request the controller to report the location after a motion has completed.<br/>\r\nIf it has changed, the internal OpenPnP location is updated. The location report is <br/>\r\nalso used to synchronize OpenPnP when confirmation flow control is disabled.<br/>\r\nAt least on of the two options need to be enabled. Location Confirmation allows<br/>\r\nmore extensive asynchronous operation. \r\n</html>\r\n");
+        JLabel lblRequestLocation = new JLabel(Translations.getString("GcodeAsyncDriverSettings.SettingsPanel.LocationConfirmationLabel.text")); //$NON-NLS-1$
+        lblRequestLocation.setToolTipText(Translations.getString("GcodeAsyncDriverSettings.SettingsPanel.LocationConfirmationLabel.toolTipText")); //$NON-NLS-1$
         settingsPanel.add(lblRequestLocation, "2, 4, right, default");
 
         reportedLocationConfirmation = new JCheckBox("");

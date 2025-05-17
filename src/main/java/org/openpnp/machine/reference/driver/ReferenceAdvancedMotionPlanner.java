@@ -47,6 +47,7 @@ import org.openpnp.spi.Axis;
 import org.openpnp.spi.ControllerAxis;
 import org.openpnp.spi.Driver;
 import org.openpnp.spi.HeadMountable;
+import org.openpnp.Translations;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.NanosecondTime;
 import org.openpnp.util.SimpleGraph;
@@ -823,8 +824,8 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
     @Override
     public PropertySheet[] getPropertySheets() {
         return new PropertySheet[] {
-                new PropertySheetWizardAdapter(getConfigurationWizard(), "Motion Planner"),
-                new PropertySheetWizardAdapter(new ReferenceAdvancedMotionPlannerDiagnosticsWizard(this), "Motion Planner Diagnostics"),
+                new PropertySheetWizardAdapter(getConfigurationWizard(), Translations.getString("ReferenceAdvancedMotionPlanner.MotionPlanner.title")), //$NON-NLS-1$
+                new PropertySheetWizardAdapter(new ReferenceAdvancedMotionPlannerDiagnosticsWizard(this), Translations.getString("ReferenceAdvancedMotionPlanner.MotionPlannerDiagnostics.title")), //$NON-NLS-1$
         };
     }
 
