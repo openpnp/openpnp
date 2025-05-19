@@ -417,7 +417,7 @@ public class GcodeAsyncDriver extends GcodeDriver {
     @Override
     public PropertySheet[] getPropertySheets() {
         return Collect.concat(super.getPropertySheets(), new PropertySheet[] { 
-                new PropertySheetWizardAdapter(new GcodeAsyncDriverSettings(this), Translations.getString("GCodeAsyncDriver.AdvancedSettingsWizard.title")) //$NON-NLS-1$
+                new PropertySheetWizardAdapter(new GcodeAsyncDriverSettings(this), Translations.getString("GCodeAsyncDriver.AdvancedSettings.title")) //$NON-NLS-1$
         });
     }
 }
