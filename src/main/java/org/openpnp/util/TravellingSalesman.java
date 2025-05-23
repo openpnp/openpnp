@@ -246,7 +246,12 @@ public class TravellingSalesman<T> {
         int swaps = 0, twists = 0, copies = 0;
         double bestDistance = getTravellingDistance();
         double temperature = startingTemperature;
-        double endTemperature = startingTemperature/10000;
+        // The endTemperature defines the point until which small variations are tried. With a value to large
+        // the result is not good enough (as can be seen in the .svg the TavelingSalesmanTest generates).
+        // With a value to small the number of iterations increases without notable benefit to the end result.
+        // 10000 is a conservative setting. With 1000 only about 75% of the iterations are needed for the 610 
+        // cities test case with only a very little bit worth results.
+        double endTemperature = startingTemperature/1000;
         if (debugLevel > 0) {
             System.out.println("Initial distance of travel: " + bestDistance);
         }
@@ -255,6 +260,10 @@ public class TravellingSalesman<T> {
             double globalBestDistance = globalBestDistanceScalingFactor * bestDistance; // cost of global best route
 
             // make this repeatable by seeding the random generator
+            // It has been discussed, that the solver shall generate repeatable results.
+            // (https://github.com/openpnp/openpnp/pull/1715#issuecomment-2549791916)
+            // The overall stability can be verified by using the random number generator
+            // without a seed. (remove the "0")
             Random rnd = new java.util.Random(0);
             for (; i > 0; i--) {
                 if (temperature > endTemperature) {

@@ -55,20 +55,20 @@ public class TavellingSalesmanTest {
     // Slow acceleration
     @Test
     public void testTravellingSalesmanA() throws Exception {
-        test("A",new Length(500, LengthUnit.Millimeters), new Length(500, LengthUnit.Millimeters));
+        test("A",new Length(500, LengthUnit.Millimeters), new Length(500, LengthUnit.Millimeters), new double [] { 2870, 5230, 11360 });
     }
     // Fast acceleration on X
     @Test
     public void testTravellingSalesmanB() throws Exception {
-        test("B",new Length(3000, LengthUnit.Millimeters), new Length(500, LengthUnit.Millimeters));
+        test("B",new Length(3000, LengthUnit.Millimeters), new Length(500, LengthUnit.Millimeters), new double [] { 2940, 5550, 15300 });
     }
     // Fast acceleration on X and Y
     @Test
     public void testTravellingSalesmanC() throws Exception {
-        test("C",new Length(3000, LengthUnit.Millimeters), new Length(3000, LengthUnit.Millimeters));
+        test("C",new Length(3000, LengthUnit.Millimeters), new Length(3000, LengthUnit.Millimeters), new double [] { 2870, 5000, 11500 });
     }
 
-    public void test(String name,Length xacceleration, Length yacceleration) throws Exception {
+    public void test(String name,Length xacceleration, Length yacceleration, double targets[]) throws Exception {
         File workingDirectory = Files.createTempDir();
         workingDirectory = new File(workingDirectory, ".openpnp");
         System.out.println("Configuration directory: " + workingDirectory);
@@ -128,7 +128,7 @@ public class TavellingSalesmanTest {
                         (t == 0 ? new Location(LengthUnit.Millimeters, 1000.0, 500.0, 0.0, 0.0) : 
                             null)));
             // now solve the bugger
-            double bestDistance = tsm.solve();
+            double leastCost = tsm.solve();
             //
             // The TSM has been working with the default TravelCost, which models acceleration etc,
             // and bestDistance is actually best **time**. But now to verify that route we remove
@@ -138,8 +138,8 @@ public class TavellingSalesmanTest {
             double linearDistance = tsm.getTravellingDistance();
             //
             // for the unit test, roughly check expected solution distance   
-            double target = new double [] { 3000, 5000, 13000 } [t];
-            System.out.println("TavellingSalesmanTest.testTravellingSalesman() test "+name+t+" solved "+list.size()+" locations, cost: "+bestDistance+"sec, distance: "+linearDistance+" mm, target: "+target+"mm, time: "+tsm.getSolverDuration()+"ms");
+            double target = targets[t];
+            System.out.println("TavellingSalesmanTest.testTravellingSalesman() test "+name+t+" solved "+list.size()+" locations, cost: "+leastCost+"sec, distance: "+linearDistance+" mm, target: "+target+"mm, time: "+tsm.getSolverDuration()+"ms");
             // save the solution, so we can have a look
             File file = File.createTempFile("travelling-salesman", ".svg");
             try (PrintWriter out = new PrintWriter(file.getAbsolutePath())) {
@@ -147,7 +147,11 @@ public class TavellingSalesmanTest {
                 System.out.println(file.toURI());
             } 
             // unit test target
-            if (linearDistance > target*1.2 || linearDistance<target*0.8) {
+            // The solver was driven by total cost, which only has little relation to linear distance.
+            // Therefore a tight limit to upper and lower bound is needed to detect any deviations.
+            // This especially triggers if the eg. the seeding of the simulatedAnealing processes is
+            // changed.
+            if (linearDistance > target*1.01 || linearDistance < target*0.99) {
                 throw new Exception("org.openpnp.util.TravellingSalesman.solve("+list.size()+") bestDistance "+linearDistance+" is quite different to " + target);
             }
         }
