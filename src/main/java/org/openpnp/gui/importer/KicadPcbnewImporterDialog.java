@@ -829,49 +829,51 @@ public class KicadPcbnewImporterDialog extends javax.swing.JDialog {
             Package pnpPackage = cfg.getPackage(packageID);
             KiFootprint kiFootprint = kicadpcb.getFootprint(uuid);
 
+            boolean newPackage = false;
+
             if (pnpPackage == null) {
                 pnpPackage = new Package(packageID);
                 cfg.addPackage(pnpPackage);
+                newPackage = true;
             }
 
             // package import
-            if (getBooleanValueAtTable(jTablePackages, row, "I")) {
-                if (jCheckBoxUpdatePackage.isSelected()) {
-                    pnpPackage.setDescription(getStringValueAtTable(jTablePackages, row, "Description"));
-                    pnpPackage.setTapeSpecification(getStringValueAtTable(jTablePackages, row, "Tape Specification"));
+            if (jCheckBoxUpdatePackage.isSelected() || newPackage) {
+                pnpPackage.setDescription(getStringValueAtTable(jTablePackages, row, "Description"));
+                pnpPackage.setTapeSpecification(getStringValueAtTable(jTablePackages, row, "Tape Specification"));
 
-                    boolean newFootprint = false;
-                    Footprint pnpFootprint = pnpPackage.getFootprint();
+                Footprint pnpFootprint = pnpPackage.getFootprint();
 
-                    if (pnpFootprint == null) {
-                        pnpFootprint = new Footprint();
-                        pnpPackage.setFootprint(pnpFootprint);
-                        newFootprint = true;
-                    }
+                boolean newFootprint = false;
 
-                    // footprint import
-                    if (newFootprint || jCheckBoxUpdateFootprint.isSelected()) {
+                if (pnpFootprint == null) {
+                    pnpFootprint = new Footprint();
+                    pnpPackage.setFootprint(pnpFootprint);
+                    newFootprint = true;
+                }
 
-                        pnpFootprint.setBodyWidth(getDoubleValueAtTable(jTablePackages, row, "Width"));
-                        pnpFootprint.setBodyHeight(getDoubleValueAtTable(jTablePackages, row, "Length"));
+                // footprint import
+                if (jCheckBoxUpdateFootprint.isSelected() || newFootprint) {
 
-                        // fetch all the pads from file
-                        pnpFootprint.removeAllPads();
-                        // add pads to kiFootprint
-                        for (KiPad kipad : kiFootprint.getKiPads()) {
-                            Pad pnpPad = new Pad();
-                            pnpPad.setName(kipad.getName());
-                            pnpPad.setWidth(kipad.getWidth());
-                            pnpPad.setHeight(kipad.getHeight());
-                            pnpPad.setX(kipad.getLocation().getX());
-                            pnpPad.setY(-kipad.getLocation().getY());
+                    pnpFootprint.setBodyWidth(getDoubleValueAtTable(jTablePackages, row, "Width"));
+                    pnpFootprint.setBodyHeight(getDoubleValueAtTable(jTablePackages, row, "Length"));
 
-                            double rotation = (kipad.getLocation().getRotation() - kiFootprint.getLocation().getRotation()) % 360;
-                            pnpPad.setRotation(rotation);
-                            pnpPad.setRoundness(kipad.getRoundness());
+                    // fetch all the pads from file
+                    pnpFootprint.removeAllPads();
+                    // add pads to kiFootprint
+                    for (KiPad kipad : kiFootprint.getKiPads()) {
+                        Pad pnpPad = new Pad();
+                        pnpPad.setName(kipad.getName());
+                        pnpPad.setWidth(kipad.getWidth());
+                        pnpPad.setHeight(kipad.getHeight());
+                        pnpPad.setX(kipad.getLocation().getX());
+                        pnpPad.setY(-kipad.getLocation().getY());
 
-                            pnpFootprint.addPad(pnpPad);
-                        }
+                        double rotation = (kipad.getLocation().getRotation() - kiFootprint.getLocation().getRotation()) % 360;
+                        pnpPad.setRotation(rotation);
+                        pnpPad.setRoundness(kipad.getRoundness());
+
+                        pnpFootprint.addPad(pnpPad);
                     }
                 }
             }
@@ -905,7 +907,7 @@ public class KicadPcbnewImporterDialog extends javax.swing.JDialog {
         for (int row = 0; row < jTablePlacements.getModel().getRowCount(); row++) {
 
             // placement
-            if (getValueAtTable(jTablePlacements, row, "I").toString().equalsIgnoreCase("true")) {
+            if (getBooleanValueAtTable(jTablePlacements, row, "I")) {
                 Placement pnpPlacement = new Placement(getStringValueAtTable(jTablePlacements, row, "Ref"));
                 pnpPlacement.setLocation(new Location(LengthUnit.Millimeters,
                         getDoubleValueAtTable(jTablePlacements, row, "X"),
