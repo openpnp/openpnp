@@ -156,7 +156,7 @@ public class JogControlsPanel extends JPanel {
         // control down finer movement by 1 levels
 
         if (MainFrame.get().getShiftDown() && MainFrame.get().getCtrlDown()) {
-                val = Math.min(1, val - 2);
+                val = Math.max(1, val - 2);
         } else {
                 if (MainFrame.get().getShiftDown()) {
                         val = Math.min(val + 1, 7);
