@@ -568,7 +568,9 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             ReturnJobPlacementsAndNozzleTips jobPlacementsAndNozzleTips;
 
             // sort/plan all pending job placements
-            jobPlacementsAndNozzleTips = planJobPlacements(getPendingJobPlacements());
+            List<JobPlacement> openPendingJobPlacements = getOpenPendingJobPlacements();
+            int numberOfOpenPendingJobPlacements = openPendingJobPlacements.size();
+            jobPlacementsAndNozzleTips = planJobPlacements(openPendingJobPlacements);
             
             List<JobPlacement> plannedJobPlacements = jobPlacementsAndNozzleTips.getJobPlacements();
 
@@ -578,13 +580,14 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
             long t = System.currentTimeMillis();
             List<PlannedPlacement> plannedPlacements = planner.plan(head, plannedJobPlacements, jobPlacementsAndNozzleTips.getNozzleTips());
-            Logger.debug("Planner complete in {}ms: {}", (System.currentTimeMillis() - t), plannedPlacements);
+            Logger.info("Planner complete in {}ms: {} open, {}", (System.currentTimeMillis() - t), numberOfOpenPendingJobPlacements, plannedPlacements);
 
             if (plannedPlacements.isEmpty()) {
                 throw new JobProcessorException(planner, "Planner failed to plan any placements. Please contact support.");
             }
 
             for (PlannedPlacement plannedPlacement : plannedPlacements) {
+                Logger.info("Placement {} has rank {}", plannedPlacement, plannedPlacement.jobPlacement.getPlacement().getRank());
                 plannedPlacement.jobPlacement.setStatus(Status.Processing);
             }
             
@@ -1891,6 +1894,28 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         return placementLocation;
     }
 
+    // All the pending placements, excluding high-rank placements that are not blocked by incomplete lower-ranked placements.
+    // These are the placements that we can consider placing right now.
+    protected List<JobPlacement> getOpenPendingJobPlacements() {
+        int nextRank = getNextRank();
+        int blockedRank = nextRank+10;
+        Logger.info("Next rank is {}. Blocked up to rank {}",nextRank,blockedRank);
+        return this.jobPlacements.stream().filter((jobPlacement) -> {
+            return jobPlacement.getStatus() == Status.Pending && jobPlacement.getRank()<blockedRank;
+        }).collect(Collectors.toList());
+    }
+
+    protected int getNextRank() {
+        // Find the smallest rank in all the placements which are not complete.
+        // This is the next rank which will be placed.
+        // Errored placements block higher ranks too!
+        return this.jobPlacements.stream().filter((jobPlacement) -> {
+            return jobPlacement.getStatus() != Status.Complete;
+        }).mapToInt((jobPlacement) -> {
+            return jobPlacement.getRank();
+        }).min().orElse(0);
+    }
+
     protected List<JobPlacement> getPendingJobPlacements() {
         return this.jobPlacements.stream().filter((jobPlacement) -> {
             return jobPlacement.getStatus() == Status.Pending;
@@ -1898,7 +1923,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     }
 
     protected boolean isJobComplete() {
-        return getPendingJobPlacements().isEmpty();
+        return getOpenPendingJobPlacements().isEmpty();
     }
     
     @Override
@@ -2591,13 +2616,19 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                         }
                     }
                 }
+                Logger.info("Optimised: {} rank {}",bestPlacement,bestPlacement.getRank());
             }
             // if bestPlacement is still null, use the first
             if (bestPlacement == null) {
+                // no further optimization possible or requested, just choose the most preferred placement
+                // on the list from the job processor, but filtered by rank (which is the user's sequence number)
+                // We do that filtering using sort, which is a stable sort, which
+                // pulls the lowest rank placements to the front of the list without affecting job processor ordering.
+                compatibleJobPlacements.sort(Comparator.comparing(JobPlacement::getRank));
                 bestPlacement = compatibleJobPlacements.get(0);
+                Logger.info("No optimisation possible: {} rank {}",bestPlacement,bestPlacement.getRank());
             }
             
-            // return the first of the list
             return new PlannedPlacement(nozzle, nozzleTip, bestPlacement);
         }
 
