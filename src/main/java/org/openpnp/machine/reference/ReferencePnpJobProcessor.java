@@ -1894,8 +1894,9 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         return placementLocation;
     }
 
-    // All the pending placements, excluding high-rank placements that are not blocked by incomplete lower-ranked placements.
-    // These are the placements that we can consider placing right now.
+    // All the placements that we can consider placing right now.
+    // This is all the pending placements, excluding high-rank placements that are blocked by incomplete lower-ranked placements.
+    // We are allowed to process up to 9 ranks higher than the lowest incomplete rank. Ranks N+10 and higher are blocked.
     protected List<JobPlacement> getOpenPendingJobPlacements() {
         int nextRank = getNextRank();
         int blockedRank = nextRank+10;
