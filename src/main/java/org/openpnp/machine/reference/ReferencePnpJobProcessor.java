@@ -1898,15 +1898,15 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     // This is all the pending placements, excluding high-rank placements that are blocked by incomplete lower-ranked placements.
     // We are allowed to process up to 9 ranks higher than the lowest incomplete rank. Ranks N+10 and higher are blocked.
     protected List<JobPlacement> getOpenPendingJobPlacements() {
-        int nextRank = getNextRank();
-        int blockedRank = nextRank+10;
-        Logger.info("Next rank is {}. Blocked up to rank {}",nextRank,blockedRank);
+        int currentRank = getCurrentRank();
+        int blockedRank = currentRank+10;
+        Logger.info("Current rank is {}. Blocked up to rank {}",currentRank,blockedRank);
         return this.jobPlacements.stream().filter((jobPlacement) -> {
             return jobPlacement.getStatus() == Status.Pending && jobPlacement.getRank()<blockedRank;
         }).collect(Collectors.toList());
     }
 
-    protected int getNextRank() {
+    protected int getCurrentRank() {
         // Find the smallest rank in all the placements which are not complete.
         // This is the next rank which will be placed.
         // Errored placements block higher ranks too!
