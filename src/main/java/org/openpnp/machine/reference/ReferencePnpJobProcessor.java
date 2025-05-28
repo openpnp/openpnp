@@ -2624,7 +2624,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 // no further optimization possible or requested, just choose the most preferred placement
                 // on the list from the job processor, but filtered by rank (which is the user's sequence number)
                 // We do that filtering using sort, which is a stable sort, which
-                // pulls the lowest rank placements to the front of the list without affecting job processor ordering.
+                // pulls the lowest rank placements to the front of the list without affecting job processor
+                // ordering within ranks.
                 compatibleJobPlacements.sort(Comparator.comparing(JobPlacement::getRank));
                 bestPlacement = compatibleJobPlacements.get(0);
                 Logger.info("No optimisation possible: {} rank {}",bestPlacement,bestPlacement.getRank());
