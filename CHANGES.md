@@ -10,12 +10,14 @@ a complete change list, only those that may directly interest or affect users.
 * Prevent unintended changes when a single click on a table row from opening cell editor or makes checkbox action. This now requires a second click. [PR 1729](https://github.com/openpnp/openpnp/pull/1729)
 * Added the "Through-Board Depth" property to Parts. This can be used to record the height of any mechanical alignment pips, through-hole electrical pins, lenses on down-firing leds, and connectors with features that overhang the side of the board. This additional height is considered in Safe-Z calculations when moving such parts on a nozzle tip. [PR 1749](https://github.com/openpnp/openpnp/pull/1749)
 * Added support for driver-side delaying using G4 P<> and uses it for static pick and place dwell time. This provides a better and tighter utilization of the machine while reducing the scheduler induced timing jitter. NB if your machine setup has highly tuned dwell times, it would be prudent to revisit that tuning after changing the machine delay implementation [PR 1699](https://github.com/openpnp/openpnp/pull/1699)
-* Additional placement sorting options to the job processor making the order of placements predictable even for panels of identical boards. [PR 1658](https://github.com/openpnp/openpnp/pull/1658)
 * Avoid unnecessary "Feeder X changed. Apply changes?" messages. [PR 1773](https://github.com/openpnp/openpnp/pull/1773)
 * Many translation improvements. [PR 1658](https://github.com/openpnp/openpnp/pull/1658) [PR 1704](https://github.com/openpnp/openpnp/pull/1704) [PR 1803](https://github.com/openpnp/openpnp/pull/1803)
 * Change camera view zoom behaviour from linear to log. [PR 1766](https://github.com/openpnp/openpnp/pull/1766)
 * Added "Skip Next Feed" and "Disable Feed" feeder options. This provides limited recycle support to some feeders that previously had none. [PR 1716](https://github.com/openpnp/openpnp/pull/1716) [PR 1787](https://github.com/openpnp/openpnp/pull/1787)
-* Added the job processor order option _Nozzle Tips (Inflexible Tips First)_ which schedules the special-purpose nozzle tips first, the multi-purpose tips last, and then optimizes each of these groups using Pick and Place Locations. On a machine with multiple nozzles, this can help keep all the nozzles busy though to the end of the job. [PR 1799](https://github.com/openpnp/openpnp/pull/1799)
+* Changes relating to the job processor and placement optimisation:
+  * Use axis accelation and feedrate parameters to estimate travel time when optimising pick and place locations, and travelling salesman routing. [PR 1813](https://github.com/openpnp/openpnp/pull/1813)
+  * Additional placement sorting options making the order of placements predictable even for panels of identical boards. [PR 1658](https://github.com/openpnp/openpnp/pull/1658)
+  * Added the order option _Nozzle Tips (Inflexible Tips First)_ which schedules the special-purpose nozzle tips first, the multi-purpose tips last, and then optimizes each of these groups using Pick and Place Locations. On a machine with multiple nozzles, this can help keep all the nozzles busy though to the end of the job. [PR 1799](https://github.com/openpnp/openpnp/pull/1799)
 * Changes related to scripting:
   * A performance improvement for scripting events, for the common case where events do not have any scripts configured. Openpnp now remembers that the script does not exist and can skip a filesystem check on the next time that event is triggered. NB scripting users need to use the 'Clear Scripting Engine Pool' menu after adding a script, in the same manner as is needed when changing a script. [PR 1744](https://github.com/openpnp/openpnp/pull/1744)
   * The 'Job.Placement.BeforeAssembly' event now allows any scripts to fine-tune the location of the placement. This enables script-based 'local fiducial' behaviour. [PR 1688](https://github.com/openpnp/openpnp/pull/1688)
@@ -42,7 +44,8 @@ a complete change list, only those that may directly interest or affect users.
 * Fix bug preventing the status bar "Placements N / M" from updating when viewing the wrong tab in the main window. [PR 1724](https://github.com/openpnp/openpnp/pull/1724)
 * Fix ReferenceStripFeeder bug when calculating distance between reference sprocket holes. [PR 1714](https://github.com/openpnp/openpnp/pull/1714)
 * Fix GUI memory leaks. [PR 1793](https://github.com/openpnp/openpnp/pull/1793)
-* Fix for "Index -1 out of bounds for length 0" error message [PR 1812](https://github.com/openpnp/openpnp/pull/1812)
+* Fix for "Index -1 out of bounds for length 0" error message. [PR 1812](https://github.com/openpnp/openpnp/pull/1812)
+* Marlin-specific fixes for I&S configuring GcodeAsyncDriver. [PR 1790](https://github.com/openpnp/openpnp/pull/1790)
 
 
 # 2024 Q4
