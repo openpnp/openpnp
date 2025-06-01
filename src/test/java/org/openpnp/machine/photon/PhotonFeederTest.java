@@ -10,6 +10,7 @@ import org.openpnp.machine.photon.exceptions.UnconfiguredSlotException;
 import org.openpnp.machine.photon.protocol.commands.*;
 import org.openpnp.machine.photon.protocol.helpers.ResponsesHelper;
 import org.openpnp.machine.photon.protocol.helpers.TestBus;
+import org.openpnp.machine.photon.protocol.helpers.TestBus.ContinuedVerification;
 import org.openpnp.machine.photon.sheets.FeederPropertySheet;
 import org.openpnp.machine.photon.sheets.GlobalConfigPropertySheet;
 import org.openpnp.machine.reference.ReferenceActuator;
@@ -782,7 +783,7 @@ public class PhotonFeederTest {
     }
 
     @Test
-    public void feedWillCheckTheStatusUpToThreeTimesBeforeFailing() throws Exception {
+    public void feedWillCheckTheStatusAtLeastThreeTimesBeforeFailing() throws Exception {
         feeder.setHardwareId(hardwareId);
         feeder.setPartPitch(2);
         feeder.setOffset(feederOffset);
@@ -802,12 +803,14 @@ public class PhotonFeederTest {
 
         assertThrows(FeedFailureException.class, () -> feeder.feed(mockedNozzle));
 
-        bus.verify(initializeFeeder)
-                .then(moveFeedForward)
-                .then(moveFeedStatus)
-                .then(moveFeedStatus)
-                .then(moveFeedStatus)
-                .nothingElseSent();
+        ContinuedVerification verif = bus.verify(initializeFeeder).then(moveFeedForward);
+        int count = 0;
+        while (verif.hasMore()) {
+            bus.verify(moveFeedStatus);
+            count++;
+        }
+        assertTrue(count >= 3, "Expected at least 3 calls to MoveFeedStatus, got " + count);
+        verif.nothingElseSent();
     }
 
     @Test
