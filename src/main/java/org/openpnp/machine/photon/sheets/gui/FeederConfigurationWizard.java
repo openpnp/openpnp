@@ -6,6 +6,7 @@ import java.awt.event.ActionEvent;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -53,6 +54,8 @@ public class FeederConfigurationWizard extends AbstractConfigurationWizard {
 	private final JTextField zOffsetTf;
 	private final JTextField rotOffsetTf;
 	private final LocationButtonsPanel offsetLocationPanel;
+	private final JLabel moveWhileFeedingLabel;
+	private final JCheckBox moveWhileFeedingCheckBox;
 	private final LocationButtonsPanel slotLocationPanel;
 
 	/**
@@ -174,6 +177,8 @@ public class FeederConfigurationWizard extends AbstractConfigurationWizard {
 				FormSpecs.DEFAULT_ROWSPEC,
 				FormSpecs.RELATED_GAP_ROWSPEC,
 				FormSpecs.DEFAULT_ROWSPEC,
+				FormSpecs.RELATED_GAP_ROWSPEC,
+				FormSpecs.DEFAULT_ROWSPEC,
 				FormSpecs.RELATED_GAP_ROWSPEC,}));
 		
 		JLabel xOffsetLabel = new JLabel("X"); //$NON-NLS-1$
@@ -231,6 +236,14 @@ public class FeederConfigurationWizard extends AbstractConfigurationWizard {
 
 		offsetLocationPanel = new LocationButtonsPanel(xOffsetTf, yOffsetTf, zOffsetTf, rotOffsetTf);
 		locationPanel.add(offsetLocationPanel, "12, 6, left, top"); //$NON-NLS-1$
+
+		moveWhileFeedingLabel = new JLabel(Translations.getString("FeederConfigurationWizard.LocationPanel.moveWhileFeedingLabel.text"));
+		locationPanel.add(moveWhileFeedingLabel, "2, 8, right, default"); //$NON-NLS-1$
+		moveWhileFeedingLabel.setToolTipText(Translations.getString("FeederConfigurationWizard.LocationPanel.moveWhileFeedingLabel.toolTipText"));
+
+		moveWhileFeedingCheckBox = new JCheckBox();
+		locationPanel.add(moveWhileFeedingCheckBox, "4, 8, left, default"); //$NON-NLS-1$
+		moveWhileFeedingCheckBox.setToolTipText(Translations.getString("FeederConfigurationWizard.LocationPanel.moveWhileFeedingLabel.toolTipText"));
 	}
 
 	AutoBinding<PhotonFeeder, Object, SlotProxy, Object> binding;
@@ -292,6 +305,8 @@ public class FeederConfigurationWizard extends AbstractConfigurationWizard {
 		bind(AutoBinding.UpdateStrategy.READ_WRITE, offsets, "lengthY", yOffsetTf, "text", lengthConverter); //$NON-NLS-1$ //$NON-NLS-2$
 		bind(AutoBinding.UpdateStrategy.READ_WRITE, offsets, "lengthZ", zOffsetTf, "text", lengthConverter); //$NON-NLS-1$ //$NON-NLS-2$
 		bind(AutoBinding.UpdateStrategy.READ_WRITE, offsets, "rotation", rotOffsetTf, "text", doubleConverter); //$NON-NLS-1$ //$NON-NLS-2$
+
+		addWrappedBinding(feeder, "moveWhileFeeding", moveWhileFeedingCheckBox, "selected"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	private final Action findSlotAddressAction = new AbstractAction(Translations.getString("FeederConfigurationWizard.FindSlotAddressAction.Name")) { //$NON-NLS-1$
