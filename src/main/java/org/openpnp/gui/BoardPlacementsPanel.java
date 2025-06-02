@@ -194,7 +194,14 @@ public class BoardPlacementsPanel extends JPanel {
         tableModel = new PlacementsHolderPlacementsTableModel(this);
         tableSorter = new TableRowSorter<>(tableModel);
         
-        table = new AutoSelectTextTable(tableModel);
+        table = new AutoSelectTextTable(tableModel) {
+            @Override
+            public String getToolTipText(MouseEvent evt) {
+                int column = convertColumnIndexToModel(columnAtPoint(evt.getPoint()));
+                if(column==11) { return Translations.getString("BoardsPanel.BoardPlacements.Placements.Rank.toolTip"); } //$NON-NLS-1$
+                return null;
+            }
+        };
         
         TableColumnModel tcm = table.getColumnModel();
         tcm.removeColumn(tcm.getColumn(9)); //remove Status column
