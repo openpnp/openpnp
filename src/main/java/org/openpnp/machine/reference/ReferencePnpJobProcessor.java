@@ -579,6 +579,10 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             }
 
             long t = System.currentTimeMillis();
+
+            // Perform a stable sort using rank. This pulls the lowest rank placements to the front of the
+            // list without affecting job processor ordering within ranks.
+            plannedJobPlacements.sort(Comparator.comparing(JobPlacement::getRank));
             List<PlannedPlacement> plannedPlacements = planner.plan(head, plannedJobPlacements, jobPlacementsAndNozzleTips.getNozzleTips());
             Logger.info("Planner complete in {}ms: {} open, {}", (System.currentTimeMillis() - t), numberOfOpenPendingJobPlacements, plannedPlacements);
 
@@ -2625,12 +2629,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             }
             // if bestPlacement is still null, use the first
             if (bestPlacement == null) {
-                // no further optimization possible or requested, just choose the most preferred placement
-                // on the list from the job processor, but filtered by rank (which is the user's sequence number)
-                // We do that filtering using sort, which is a stable sort, which
-                // pulls the lowest rank placements to the front of the list without affecting job processor
-                // ordering within ranks.
-                compatibleJobPlacements.sort(Comparator.comparing(JobPlacement::getRank));
+                // no further optimization possible or requested, just choose the most preferred placement on the list
                 bestPlacement = compatibleJobPlacements.get(0);
                 Logger.info("No optimisation possible: {} rank {}",bestPlacement,bestPlacement.getRank());
             }
