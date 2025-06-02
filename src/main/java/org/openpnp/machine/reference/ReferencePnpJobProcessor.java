@@ -1910,11 +1910,15 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         // Find the smallest rank in all the placements which are not complete.
         // This is the next rank which will be placed.
         // Errored placements block higher ranks too!
+        //
+        // If "placements which are not complete" is an empty set then return a fallback
+        // whose value does not really matter.
+        //
         return this.jobPlacements.stream().filter((jobPlacement) -> {
             return jobPlacement.getStatus() != Status.Complete;
         }).mapToInt((jobPlacement) -> {
             return jobPlacement.getRank();
-        }).min().orElse(0);
+        }).min().orElse(Placement.defaultRank);
     }
 
     protected List<JobPlacement> getPendingJobPlacements() {

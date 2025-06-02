@@ -73,8 +73,10 @@ public class Placement extends Abstract2DLocatable<Placement> {
     @Attribute(required = false)
     private boolean enabled = true;
 
+    static final public int defaultRank=0;
+
     @Attribute(required = false)
-    private int rank=0;
+    private int rank=defaultRank;
 
     @SuppressWarnings("unused")
     private Placement() {
