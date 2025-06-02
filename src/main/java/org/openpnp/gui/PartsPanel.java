@@ -183,7 +183,7 @@ public class PartsPanel extends JPanel implements WizardContainer {
         table = new AutoSelectTextTable(tableModel) {
             @Override
             public String getToolTipText(MouseEvent evt) {
-                int column = columnAtPoint(evt.getPoint());
+                int column = convertColumnIndexToModel(columnAtPoint(evt.getPoint()));
                 if(column==2) { return Translations.getString("PartsTableModel.Column.Height.toolTip"); } //$NON-NLS-1$
                 if(column==3) { return Translations.getString("PartsTableModel.Column.ThroughBoardDepth.toolTip"); } //$NON-NLS-1$
                 return null;
