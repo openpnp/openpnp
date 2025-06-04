@@ -55,7 +55,7 @@ public abstract class AbstractConfigurationWizard extends JPanel implements Wiza
     private ApplyResetBindingListener listener;
     
     protected String id;
-    
+    private boolean forceApplyResetButtonsVisible = false;
 
     public AbstractConfigurationWizard() {
         setLayout(new BorderLayout());
@@ -93,6 +93,16 @@ public abstract class AbstractConfigurationWizard extends JPanel implements Wiza
     protected void notifyChange() {
         applyAction.setEnabled(true);
         resetAction.setEnabled(true);
+    }
+    
+    /**
+     * This method is provided for wizards that do not use wrapped bindings but still want to use 
+     * the Apply and Reset buttons to save and/or reset the changes. Normally the buttons are only
+     * displayed by wizards that use wrapped bindings. Calling this method forces the buttons to be
+     * displayed.
+     */
+    protected void forceApplyResetButtonsVisible() {
+        forceApplyResetButtonsVisible = true;
     }
 
     /**
@@ -179,9 +189,9 @@ public abstract class AbstractConfigurationWizard extends JPanel implements Wiza
                     .setUnitIncrement(Configuration.get().getVerticalScrollUnitIncrement());
             listener = new ApplyResetBindingListener(applyAction, resetAction);
             createBindings();
-            if (wrappedBindings.isEmpty()) {
+            if (wrappedBindings.isEmpty() && !forceApplyResetButtonsVisible) {
                 //Since we don't have any wrapped bindings, there is no need to show the panel with
-                //the reset and apply buttons
+                //the reset and apply buttons unless the forceApplyResetButtonsVisible flag is set
                 panelActions.setVisible(false);
             }
             loadFromModel();
