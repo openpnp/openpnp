@@ -241,6 +241,12 @@ public class MachineSetupPanel extends JPanel implements WizardContainer {
                     for (PropertySheet propertySheet : propertySheets) {
                         String title = propertySheet.getPropertySheetTitle();
                         JPanel panel = propertySheet.getPropertySheetPanel();
+                        if(panel instanceof AbstractConfigurationWizard) {
+                            AbstractConfigurationWizard wizard = (AbstractConfigurationWizard) panel;
+                            if (wizard.getWizardContainer() == null) {
+                                wizard.setWizardContainer(MachineSetupPanel.this);
+                            }
+                        }
                         if (title == null) {
                             title = Translations.getString("MachineSetupPanel.RightComponent.tabs.configuration.title"); //$NON-NLS-1$
                         }
