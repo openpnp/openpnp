@@ -1768,72 +1768,69 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             this.restart = true;
         }
         
-        @Override
-        public List<PlannedPlacement> plan(Head head, List<JobPlacement> jobPlacements) {
-            /**
-             * Create an empty List<PlannedPlacement> which will hold the results.
-             */
-            List<PlannedPlacement> plannedPlacements = new ArrayList<>();
-            
-            /**
-             * Get a list of all the nozzles. We make a copy of the list so that we can modify
-             * it within this function without modifying the machine. This makes the logic below
-             * easier. As we plan a nozzle we'll remove it from the list until none are left.
-             */
-            List<Nozzle> nozzles = new ArrayList<>(head.getNozzles());
-            
-            /**
-             * Same as above, except for NozzleTips.
-             */
-            List<NozzleTip> nozzleTips = new ArrayList<>(head.getMachine().getNozzleTips());
-            
-            if (    strategy == Strategy.Minimize
-                || (strategy == Strategy.StartAsPlanned && !restart)) {
-                /**
-                 * First we plan any placements that can be done without a nozzle change. For each
-                 * nozzle we see if there is a placement that we can handle without doing a nozzletip
-                 * change. If there is, we remove the nozzle, nozzle tip and job placement from their
-                 * respective lists so that we don't plan the same one again.
-                 */
-                for (Nozzle nozzle : new ArrayList<>(nozzles)) {
-                    PlannedPlacement plannedPlacement = planWithoutNozzleTipChange(nozzle, jobPlacements);
-                    if (plannedPlacement != null) {
-                        plannedPlacements.add(plannedPlacement);
-                        jobPlacements.remove(plannedPlacement.jobPlacement);
-                        nozzles.remove(plannedPlacement.nozzle);
-                        nozzleTips.remove(plannedPlacement.nozzleTip);
-                    }
-                }
-            }
-            restart = false;
-            
-            /**
-             * Now we'll try to plan any nozzles that didn't get planned on the first pass by
-             * seeing if a nozzle change helps. This is nearly the same as above, except this
-             * time we allow a nozzle tip change to happen.
-             */
-            for (Nozzle nozzle : new ArrayList<>(nozzles)) {
-                PlannedPlacement plannedPlacement = planWithNozzleTipChange(nozzle, jobPlacements, nozzleTips);
-                if (plannedPlacement != null) {
-                    plannedPlacements.add(plannedPlacement);
-                    jobPlacements.remove(plannedPlacement.jobPlacement);
-                    nozzles.remove(plannedPlacement.nozzle);
-                    nozzleTips.remove(plannedPlacement.nozzleTip);
-                }
-            }
+        // ...existing code...
+@Override
+public List<PlannedPlacement> plan(Head head, List<JobPlacement> jobPlacements) {
+    List<PlannedPlacement> plannedPlacements = new ArrayList<>();
+    List<Nozzle> nozzles = new ArrayList<>(head.getNozzles());
+    List<NozzleTip> nozzleTips = new ArrayList<>(head.getMachine().getNozzleTips());
 
-            /**
-             * Finally, we sort any planned placements by the nozzle name so that they are
-             * performed in the order of nozzle name. This is not really necessary but some users
-             * prefer it that way and it does no harm
-             */
-            plannedPlacements.sort(Comparator.comparing(plannedPlacement -> {
-                return plannedPlacement.nozzle.getName();
-            }));
+    // 1. Find the most common part type among pending placements
+    Map<String, Long> partCounts = jobPlacements.stream()
+        .collect(Collectors.groupingBy(JobPlacement::getPartId, Collectors.counting()));
 
-            return plannedPlacements;
+    // 2. Sort part types by frequency (most common first)
+    List<String> sortedPartIds = partCounts.entrySet().stream()
+        .sorted((a, b) -> Long.compare(b.getValue(), a.getValue()))
+        .map(Map.Entry::getKey)
+        .collect(Collectors.toList());
+
+    // 3. Try to fill all nozzles with the most common part, then next, etc.
+    List<JobPlacement> placementsToPlan = new ArrayList<>();
+    for (String partId : sortedPartIds) {
+        for (JobPlacement jp : jobPlacements) {
+            if (jp.getPartId().equals(partId) && placementsToPlan.size() < nozzles.size()) {
+                placementsToPlan.add(jp);
+            }
         }
-        
+        if (placementsToPlan.size() >= nozzles.size()) break;
+    }
+    // If not enough, fill remaining with any other parts
+    if (placementsToPlan.size() < nozzles.size()) {
+        for (JobPlacement jp : jobPlacements) {
+            if (!placementsToPlan.contains(jp) && placementsToPlan.size() < nozzles.size()) {
+                placementsToPlan.add(jp);
+            }
+        }
+    }
+
+    // 4. Now assign placements to nozzles (prefer no nozzle tip change)
+    for (Nozzle nozzle : new ArrayList<>(nozzles)) {
+        PlannedPlacement plannedPlacement = planWithoutNozzleTipChange(nozzle, placementsToPlan);
+        if (plannedPlacement != null) {
+            plannedPlacements.add(plannedPlacement);
+            placementsToPlan.remove(plannedPlacement.jobPlacement);
+            nozzles.remove(plannedPlacement.nozzle);
+            nozzleTips.remove(plannedPlacement.nozzleTip);
+        }
+    }
+
+    // 5. If any nozzles left, allow nozzle tip change
+    for (Nozzle nozzle : new ArrayList<>(nozzles)) {
+        PlannedPlacement plannedPlacement = planWithNozzleTipChange(nozzle, placementsToPlan, nozzleTips);
+        if (plannedPlacement != null) {
+            plannedPlacements.add(plannedPlacement);
+            placementsToPlan.remove(plannedPlacement.jobPlacement);
+            nozzles.remove(plannedPlacement.nozzle);
+            nozzleTips.remove(plannedPlacement.nozzleTip);
+        }
+    }
+
+    // 6. Sort by nozzle name for consistency
+    plannedPlacements.sort(Comparator.comparing(p -> p.nozzle.getName()));
+    return plannedPlacements;
+}
+// ...existing code...
         /**
          * Try to find a planning solution for the given nozzle that does not require
          * a nozzle tip change. This essentially just checks if there are any job placements
