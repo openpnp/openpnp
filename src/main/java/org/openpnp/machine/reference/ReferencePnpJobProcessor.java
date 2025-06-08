@@ -596,7 +596,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             }
 
             for (PlannedPlacement plannedPlacement : plannedPlacements) {
-                Logger.info("Placement {} has rank {}", plannedPlacement, plannedPlacement.jobPlacement.getPlacement().getRank());
+                Logger.info("Placement {} has rank {}", plannedPlacement, plannedPlacement.jobPlacement.getRank());
                 plannedPlacement.jobPlacement.setStatus(Status.Processing);
             }
             
