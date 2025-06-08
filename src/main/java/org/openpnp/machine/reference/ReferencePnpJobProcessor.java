@@ -2511,28 +2511,46 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         public void restart() {
             this.restart = true;
         }
-        
-        @Override
-        public List<PlannedPlacement> plan(Head head, List<JobPlacement> jobPlacements, List<NozzleTip> nozzleTips) {
+
+        class PlannerState {
             /**
              * Create an empty List<PlannedPlacement> which will hold the results.
              */
-            List<PlannedPlacement> plannedPlacements = new ArrayList<>();
-            
+            List<PlannedPlacement> plannedPlacements;
+
             /**
              * Get a list of all the nozzles. We make a copy of the list so that we can modify
              * it within this function without modifying the machine. This makes the logic below
              * easier. As we plan a nozzle we'll remove it from the list until none are left.
              */
-            List<Nozzle> nozzles = new ArrayList<>(head.getNozzles());
-            
-            /**
-             * Same as above, except for NozzleTips.
-             * Only fill the list with all available nozzle tips, if the input is empty
-             */
-            if (nozzleTips == null || nozzleTips.isEmpty()) {
-                nozzleTips = new ArrayList<>(head.getMachine().getNozzleTips());
+            List<Nozzle> nozzles;
+
+            List<NozzleTip> nozzleTips;
+
+            List<JobPlacement> jobPlacements;
+
+            public PlannerState(List<JobPlacement> jobPlacements,List<Nozzle> nozzles,List<NozzleTip> nozzleTips) {
+                this.nozzleTips = new ArrayList<NozzleTip>(nozzleTips);
+                this.jobPlacements = new ArrayList<JobPlacement>(jobPlacements);
+                this.nozzles = new ArrayList<>(nozzles);
+                plannedPlacements = new ArrayList<>();
             }
+
+            public void addPlannedPlacement(PlannedPlacement plannedPlacement) {
+                plannedPlacements.add(plannedPlacement);
+                jobPlacements.remove(plannedPlacement.jobPlacement);
+                nozzles.remove(plannedPlacement.nozzle);
+                nozzleTips.remove(plannedPlacement.nozzleTip);
+            }
+        }
+        
+        @Override
+        public List<PlannedPlacement> plan(Head head, List<JobPlacement> jobPlacements, List<NozzleTip> nozzleTips) {
+            if (nozzleTips == null || nozzleTips.isEmpty()) {
+                nozzleTips = head.getMachine().getNozzleTips();
+            }
+
+            PlannerState plannerState = new PlannerState(jobPlacements,head.getNozzles(),nozzleTips);
             
             if (    strategy == Strategy.Minimize
                 || (strategy == Strategy.StartAsPlanned && !restart)) {
@@ -2542,14 +2560,10 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                  * change. If there is, we remove the nozzle, nozzle tip and job placement from their
                  * respective lists so that we don't plan the same one again.
                  */
-                for (Nozzle nozzle : new ArrayList<>(nozzles)) {
-                    PlannedPlacement plannedPlacement = planWithoutNozzleTipChange(nozzle, 
-                            nozzle.getNozzleTip(), jobPlacements, plannedPlacements);
+                for (Nozzle nozzle : new ArrayList<>(plannerState.nozzles)) {
+                    PlannedPlacement plannedPlacement = planWithoutNozzleTipChange(nozzle, plannerState);
                     if (plannedPlacement != null) {
-                        plannedPlacements.add(plannedPlacement);
-                        jobPlacements.remove(plannedPlacement.jobPlacement);
-                        nozzles.remove(plannedPlacement.nozzle);
-                        nozzleTips.remove(plannedPlacement.nozzleTip);
+                        plannerState.addPlannedPlacement(plannedPlacement);
                     }
                 }
             }
@@ -2560,15 +2574,16 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
              * seeing if a nozzle tip change helps. This is nearly the same as above, except this
              * time we allow a nozzle tip change to happen.
              */
-            for (Nozzle nozzle : new ArrayList<>(nozzles)) {
-                PlannedPlacement plannedPlacement = planWithNozzleTipChange(nozzle, jobPlacements, 
-                        nozzleTips, plannedPlacements);
+            for (Nozzle nozzle : new ArrayList<>(plannerState.nozzles)) {
+                PlannedPlacement plannedPlacement = planWithNozzleTipChange(nozzle, plannerState);
                 if (plannedPlacement != null) {
-                    plannedPlacements.add(plannedPlacement);
-                    jobPlacements.remove(plannedPlacement.jobPlacement);
-                    nozzles.remove(plannedPlacement.nozzle);
-                    nozzleTips.remove(plannedPlacement.nozzleTip);
+                    plannerState.addPlannedPlacement(plannedPlacement);
                 }
+            }
+
+            // Update the list which was passed in
+            for (PlannedPlacement plannedPlacement : plannerState.plannedPlacements) {
+                jobPlacements.remove(plannedPlacement.jobPlacement);
             }
 
             /**
@@ -2576,9 +2591,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
              * performed in the order of nozzle name. This is not really necessary but some users
              * prefer it that way and it does no harm
              */
-            plannedPlacements = sort(plannedPlacements);
-
-            return plannedPlacements;
+            Logger.info("Planner planned {}",plannerState.plannedPlacements);
+            return sort(plannerState.plannedPlacements);
         }
         
         /**
@@ -2589,13 +2603,15 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
          * @param jobPlacements
          * @return
          */
-        protected PlannedPlacement planWithoutNozzleTipChange(Nozzle nozzle, NozzleTip nozzleTip,
-                List<JobPlacement> jobPlacements, List<PlannedPlacement>plannedPlacements) {
+        protected PlannedPlacement planWithoutNozzleTipChange(Nozzle nozzle, PlannerState plannerState) {
+            return planWithoutNozzleTipChange(nozzle,nozzle.getNozzleTip(),plannerState);
+        }
+        protected PlannedPlacement planWithoutNozzleTipChange(Nozzle nozzle, NozzleTip nozzleTip, PlannerState plannerState) {
             if (nozzleTip == null) {
                 return null;
             }
             // collect all placements that are compatible with the loaded nozzle tip
-            List <JobPlacement> compatibleJobPlacements = jobPlacements
+            List <JobPlacement> compatibleJobPlacements = plannerState.jobPlacements
                     .stream()
                     .filter(jobPlacement -> {
                         Placement placement = jobPlacement.getPlacement();
@@ -2634,7 +2650,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             // An option to exclude feeders that have already been selected for a different nozzle
             if (feederStrategy == FeederStrategy.DifferentFeeders) {
                 // Find all the parts already selected for picking
-                List <Part> busyParts = plannedPlacements
+                List <Part> busyParts = plannerState.plannedPlacements
                     .stream()
                     .map(plannedPlacement -> {
                         return plannedPlacement.jobPlacement.getPlacement().getPart();
@@ -2662,10 +2678,10 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             JobPlacement bestPlacement = null;
             Double planningCost = null;
             if (strategy != Strategy.FullyAsPlanned
-                && plannedPlacements != null && !plannedPlacements.isEmpty()
+                && plannerState.plannedPlacements != null && !plannerState.plannedPlacements.isEmpty()
                 && compatibleJobPlacements.size() > 1) {
-                Location averagePickLocation  = calcCenterLocation(plannedPlacements, pickLocator);
-                Location averagePlaceLocation = calcCenterLocation(plannedPlacements, placeLocator);
+                Location averagePickLocation  = calcCenterLocation(plannerState.plannedPlacements, pickLocator);
+                Location averagePlaceLocation = calcCenterLocation(plannerState.plannedPlacements, placeLocator);
                 
                 TravelCost travelCost = null;
                 try {
@@ -2730,16 +2746,14 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
          * @param nozzleTips
          * @return
          */
-        protected PlannedPlacement planWithNozzleTipChange(Nozzle nozzle, 
-                List<JobPlacement> jobPlacements,
-                List<NozzleTip> nozzleTips, List<PlannedPlacement> plannedPlacements) {
-            for (JobPlacement jobPlacement : jobPlacements) {
+        protected PlannedPlacement planWithNozzleTipChange(Nozzle nozzle, PlannerState plannerState) {
+            for (JobPlacement jobPlacement : plannerState.jobPlacements) {
                 Placement placement = jobPlacement.getPlacement();
                 Part part = placement.getPart();
                 org.openpnp.model.Package pkg = part.getPackage();
                 // Get the intersection of nozzle tips that are not yet used, are compatible with
                 // the package, and are compatible with the nozzle.
-                List<NozzleTip> goodNozzleTips = nozzleTips
+                List<NozzleTip> goodNozzleTips = plannerState.nozzleTips
                         .stream()
                         .filter(nozzleTip -> {
                             return pkg.getCompatibleNozzleTips().contains(nozzleTip);
@@ -2750,7 +2764,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                         .collect(Collectors.toList());
                 if (!goodNozzleTips.isEmpty()) {
                     // plan again with the selected nozzle tip using the same strategy as without nozzle tip change
-                    return planWithoutNozzleTipChange(nozzle, goodNozzleTips.get(0), jobPlacements, plannedPlacements);
+                    return planWithoutNozzleTipChange(nozzle, goodNozzleTips.get(0), plannerState);
                 }
             }
             return null;
