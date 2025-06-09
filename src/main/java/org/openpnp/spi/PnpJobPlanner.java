@@ -1,6 +1,7 @@
 package org.openpnp.spi;
 
 import java.util.List;
+import java.util.ArrayList;
 
 import org.openpnp.spi.PnpJobProcessor.JobPlacement;
 
@@ -10,16 +11,32 @@ public interface PnpJobPlanner {
         public final Nozzle nozzle;
         public final NozzleTip nozzleTip;
         public PartAlignment.PartAlignmentOffset alignmentOffsets;
+        public Double planningCost;
         
-        public PlannedPlacement(Nozzle nozzle, NozzleTip nozzleTip, JobPlacement jobPlacement) {
+        public PlannedPlacement(Nozzle nozzle, NozzleTip nozzleTip, JobPlacement jobPlacement, Double planningCost) {
             this.nozzle = nozzle;
             this.nozzleTip = nozzleTip;
             this.jobPlacement = jobPlacement;
+            this.planningCost = planningCost;
         }
 
         @Override
         public String toString() {
             return String.format("%s (%s) -> %s", nozzle.getName(), nozzleTip.getName(), jobPlacement);
+        }
+    }
+
+    public static class PlannerStepResults {
+        private final List<PlannedPlacement> plannedPlacements;
+        public final long durationMilliseconds;
+
+        public PlannerStepResults(List<PlannedPlacement> plannedPlacements,long durationMilliseconds) {
+            this.plannedPlacements = plannedPlacements;
+            this.durationMilliseconds = durationMilliseconds;
+        }
+
+        public List<PlannedPlacement> getPlannedPlacements() {
+            return new ArrayList<PlannedPlacement>(plannedPlacements);
         }
     }
     

@@ -580,11 +580,16 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
             long t = System.currentTimeMillis();
 
+            Logger.info("plannedJobPlacements {}",plannedJobPlacements);
+
             // Perform a stable sort using rank. This pulls the lowest rank placements to the front of the
             // list without affecting job processor ordering within ranks.
             plannedJobPlacements.sort(Comparator.comparing(JobPlacement::getRank));
             List<PlannedPlacement> plannedPlacements = planner.plan(head, plannedJobPlacements, jobPlacementsAndNozzleTips.getNozzleTips());
-            Logger.info("Planner complete in {}ms: {} open, {}", (System.currentTimeMillis() - t), numberOfOpenPendingJobPlacements, plannedPlacements);
+            long duration = System.currentTimeMillis() - t;
+            Logger.info("Planner complete in {}ms: {} open, {}", duration, numberOfOpenPendingJobPlacements, plannedPlacements);
+
+            Configuration.get().getBus().post(new PnpJobPlanner.PlannerStepResults(plannedPlacements,duration)); // for the unit test monitoring
 
             if (plannedPlacements.isEmpty()) {
                 throw new JobProcessorException(planner, "Planner failed to plan any placements. Please contact support.");
@@ -2408,7 +2413,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                          * It's compatible, so create a PlannedPlacement which is a holder for a 
                          * nozzle, nozzle tip and a job placement.
                          */
-                        PlannedPlacement plannedPlacement = new PlannedPlacement(nozzle, nozzle.getNozzleTip(), jobPlacement);
+                        PlannedPlacement plannedPlacement = new PlannedPlacement(nozzle, nozzle.getNozzleTip(), jobPlacement, null);
                         
                         /**
                          * Store it in the results.
@@ -2596,6 +2601,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             // if strategy is not FullyAsPlanned (no optimization at all) and if other placements 
             // have been planned, sort compatible placements by distance to pick and place location
             JobPlacement bestPlacement = null;
+            Double planningCost = null;
             if (strategy != Strategy.FullyAsPlanned
                 && plannedPlacements != null && !plannedPlacements.isEmpty()
                 && compatibleJobPlacements.size() > 1) {
@@ -2620,21 +2626,22 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     
                         // if this placement is closes with respect to its pick and place 
                         if (leastCost > cost) {
-                            leastCost = cost;
+                            planningCost = leastCost = cost;
                             bestPlacement = p;
                         }
                     }
                 }
-                Logger.info("Optimised: {} rank {}",bestPlacement,bestPlacement.getRank());
+                Logger.info("Optimised: {} rank {} from {}",bestPlacement,bestPlacement.getRank(),compatibleJobPlacements.size());
             }
             // if bestPlacement is still null, use the first
             if (bestPlacement == null) {
                 // no further optimization possible or requested, just choose the most preferred placement on the list
                 bestPlacement = compatibleJobPlacements.get(0);
+                planningCost = null;
                 Logger.info("No optimisation possible: {} rank {}",bestPlacement,bestPlacement.getRank());
             }
             
-            return new PlannedPlacement(nozzle, nozzleTip, bestPlacement);
+            return new PlannedPlacement(nozzle, nozzleTip, bestPlacement, planningCost);
         }
 
         /**
