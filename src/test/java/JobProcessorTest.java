@@ -194,15 +194,15 @@ public class JobProcessorTest {
             for (Placement placement : boardLocation.getBoard().getPlacements()) {
                 int rank;
                 if (placement.getId().equals("R10")) {
-                    rank = -5;
+                    rank = 5;
                 }
                 else if (placement.getId().equals("R11")) {
-                    rank = 5;
+                    rank = -5;
                 }
                 else {
                     rank = 0;
                 }
-                placement.setRank(-rank);
+                placement.setRank(rank);
             }
         }
         run();
@@ -215,7 +215,7 @@ public class JobProcessorTest {
         assertEquals(60, cycleCount(), 1);
         // The overshadowed parts are all placed in the first 4 cycles. This is fine.
         assertEquals(4, lastPlacementPosition("R11"));
-        // The overshadowing parts are placed in cycles 31-36. That is nicely
+        // The overshadowing parts are placed in cycles nicely
         // in the middle of the bulk group.
         assertEquals(7, firstPlacementPosition("R10"));
         assertEquals(21, lastPlacementPosition("R10"));
