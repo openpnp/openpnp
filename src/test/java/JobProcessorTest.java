@@ -68,8 +68,7 @@ public class JobProcessorTest {
     @Test
     public void testStartAsPlanned() throws Exception {
         // 'Start As Planned' is expected to be identical to 'Nozzle Tips' because
-        // this test machine is configured with no tips loaded before the job.
-        // But this test shows it is not! more on this in the next PR
+        // this test machine is configured with no tips loaded before the job
         setup("testStartAsPlanned");
         jobProcessor.planner.setStrategy(PnpJobPlanner.Strategy.StartAsPlanned);
         run();
@@ -79,8 +78,26 @@ public class JobProcessorTest {
         assertEquals(3, tipChanges());
         assertEquals(1.6, utilisation(), 0.01);
         assertEquals(60, cycleCount(), 1);
+        assertEquals(1.56, averagePlanningCost(), 0.01); // Efficiency unchanged
+        assertEquals(13, partChanges(), 5);
+    }
+
+    @Test
+    public void testFeederFocus() throws Exception {
+        // The Feeder Focus option restricts the planner to select parts from the same
+        // feeder as the first on its preference list. This causes it to empty one feeder
+        // before moving on to the next. This increases planning cost,
+        // because the planner has fewer options that it can consider.
+        setup("testFeederFocus");
+        jobProcessor.planner.setFeederStrategy(PnpJobPlanner.FeederStrategy.FeederFocus);
+        run();
+        saveCsv();
+        checkRanks();
+        assertEquals(3, tipChanges());
+        assertEquals(1.6, utilisation(), 0.01);
+        assertEquals(60, cycleCount(), 1);
         assertEquals(1.73, averagePlanningCost(), 0.01); // Efficiency somewhat worse
-        assertEquals(9, partChanges()); // This is reduced unexpectedly
+        assertEquals(9, partChanges()); // This is optimal
     }
 
     @Test

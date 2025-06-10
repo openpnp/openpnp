@@ -34,6 +34,7 @@ import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.machine.reference.ReferencePnpJobProcessor;
 import org.openpnp.machine.reference.ReferencePnpJobProcessor.JobOrderHint;
 import org.openpnp.spi.PnpJobPlanner.Strategy;
+import org.openpnp.spi.PnpJobPlanner.FeederStrategy;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
@@ -45,6 +46,7 @@ public class ReferencePnpJobProcessorConfigurationWizard extends AbstractConfigu
     private final ReferencePnpJobProcessor jobProcessor;
     private JComboBox<JobOrderHint> comboBoxJobOrder;
     private JComboBox<Strategy> comboBoxPlannerStrategy;
+    private JComboBox<FeederStrategy> comboBoxPlannerFeederStrategy;
     private JTextField maxVisionRetriesTextField;
     private JCheckBox steppingToNextMotion;
     private JCheckBox optimizeMultipleNozzles;
@@ -75,6 +77,8 @@ public class ReferencePnpJobProcessorConfigurationWizard extends AbstractConfigu
                         FormSpecs.RELATED_GAP_ROWSPEC,
                         FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
                         FormSpecs.DEFAULT_ROWSPEC,}));
 
         // FIXME: this translation reference looks quite different to the one used below and shall be synchronized
@@ -93,33 +97,40 @@ public class ReferencePnpJobProcessorConfigurationWizard extends AbstractConfigu
         comboBoxPlannerStrategy = new JComboBox<Strategy>(Strategy.values());
         panelGeneral.add(comboBoxPlannerStrategy, "4, 4");
 
+        JLabel lblFeederStrategy = new JLabel(Translations.getString("ReferencePnpJobProcessorConfigurationWizard.lblFeederStrategy.text")); //$NON-NLS-1$
+        lblFeederStrategy.setToolTipText(Translations.getString("ReferencePnpJobProcessorConfigurationWizard.lblFeederStrategy.toolTipText")); //$NON-NLS-1$
+        panelGeneral.add(lblFeederStrategy, "2, 6, right, default");
+
+        comboBoxPlannerFeederStrategy = new JComboBox<FeederStrategy>(FeederStrategy.values());
+        panelGeneral.add(comboBoxPlannerFeederStrategy, "4, 6");
+
         JLabel lblMaxVisionRetries = new JLabel(Translations.getString("MachineSetup.JobProcessors.ReferencePnpJobProcessor.Label.MaxVisionRetries")); //$NON-NLS-1$
-        panelGeneral.add(lblMaxVisionRetries, "2, 6, right, default");
+        panelGeneral.add(lblMaxVisionRetries, "2, 8, right, default");
 
         maxVisionRetriesTextField = new JTextField();
-        panelGeneral.add(maxVisionRetriesTextField, "4, 6");
+        panelGeneral.add(maxVisionRetriesTextField, "4, 8");
         maxVisionRetriesTextField.setColumns(10);
 
         JLabel lblStepsMotion = new JLabel(Translations.getString("ReferencePnpJobProcessorConfigurationWizard.lblStepsMotion.text")); //$NON-NLS-1$
         lblStepsMotion.setToolTipText(Translations.getString("ReferencePnpJobProcessorConfigurationWizard.lblStepsMotion.toolTipText")); //$NON-NLS-1$
-        panelGeneral.add(lblStepsMotion, "2, 8, right, default");
+        panelGeneral.add(lblStepsMotion, "2, 10, right, default");
 
         steppingToNextMotion = new JCheckBox(); 
-        panelGeneral.add(steppingToNextMotion, "4, 8");
+        panelGeneral.add(steppingToNextMotion, "4, 10");
 
         JLabel lblOptimizeMultipleNozzles = new JLabel(Translations.getString("ReferencePnpJobProcessorConfigurationWizard.lblOptimizeMultipleNozzles.text")); //$NON-NLS-1$
         lblOptimizeMultipleNozzles.setToolTipText(Translations.getString("ReferencePnpJobProcessorConfigurationWizard.lblOptimizeMultipleNozzles.toolTipText")); //$NON-NLS-1$
-        panelGeneral.add(lblOptimizeMultipleNozzles, "2, 10, right, default");
+        panelGeneral.add(lblOptimizeMultipleNozzles, "2, 12, right, default");
 
         optimizeMultipleNozzles = new JCheckBox(); 
-        panelGeneral.add(optimizeMultipleNozzles, "4, 10");
+        panelGeneral.add(optimizeMultipleNozzles, "4, 12");
 
         JLabel lblPreRotateAllNozzles = new JLabel(Translations.getString("ReferencePnpJobProcessorConfigurationWizard.lblPreRotateAllNozzles.text")); //$NON-NLS-1$
         lblPreRotateAllNozzles.setToolTipText(Translations.getString("ReferencePnpJobProcessorConfigurationWizard.lblPreRotateAllNozzles.toolTipText")); //$NON-NLS-1$
-        panelGeneral.add(lblPreRotateAllNozzles, "2, 12, right, default");
+        panelGeneral.add(lblPreRotateAllNozzles, "2, 14, right, default");
 
         preRotateAllNozzles = new JCheckBox(); 
-        panelGeneral.add(preRotateAllNozzles, "4, 12");
+        panelGeneral.add(preRotateAllNozzles, "4, 14");
     }
 
     @Override
@@ -128,6 +139,7 @@ public class ReferencePnpJobProcessorConfigurationWizard extends AbstractConfigu
 
         addWrappedBinding(jobProcessor, "jobOrder", comboBoxJobOrder, "selectedItem");
         addWrappedBinding(jobProcessor.planner, "strategy", comboBoxPlannerStrategy, "selectedItem");
+        addWrappedBinding(jobProcessor.planner, "feederStrategy", comboBoxPlannerFeederStrategy, "selectedItem");
         addWrappedBinding(jobProcessor, "maxVisionRetries", maxVisionRetriesTextField, "text", intConverter);
         addWrappedBinding(jobProcessor, "steppingToNextMotion", steppingToNextMotion, "selected");
         addWrappedBinding(jobProcessor, "optimizeMultipleNozzles", optimizeMultipleNozzles, "selected");

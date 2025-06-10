@@ -3,6 +3,7 @@ package org.openpnp.spi;
 import java.util.List;
 import java.util.ArrayList;
 
+import org.openpnp.Translations;
 import org.openpnp.spi.PnpJobProcessor.JobPlacement;
 
 public interface PnpJobPlanner {
@@ -41,14 +42,29 @@ public interface PnpJobPlanner {
     }
     
     /**
-     * JobPlanner strategy: depending on the strategy, the list of placements is searched to
+     * JobPlanner tip loading strategy: depending on the strategy, the list of placements is searched to
      * find a placement, that can be handled using the current nozzle tip or the list is strictly
      * followed, potentially executing more nozzle tip changes then needed.
      */
     public enum Strategy {
         Minimize,       // avoid any nozzle tip change by searching the placements list.
         StartAsPlanned, // place the first part with the required nozzle tip and then avoid nozzle tip changes.
-        FullyAsPlanned  // strictly follow the placements list executing all nozzle tip changes as needed.
+        FullyAsPlanned; // strictly follow the placements list executing all nozzle tip changes as needed.
+
+        @Override
+        public String toString() {
+            return Translations.getString("MachineSetup.JobProcessors.ReferencePnpJobProcessor.Strategy." + this.name());
+        }
+    }
+
+    public enum FeederStrategy {
+        AnyFeeder,          // Consider all feeders for most efficient movement
+        FeederFocus;        // Prefer to stick with one feeder where possible
+
+        @Override
+        public String toString() {
+            return Translations.getString("MachineSetup.JobProcessors.ReferencePnpJobProcessor.FeederStrategy." + this.name());
+        }
     }
 
     /**
@@ -58,6 +74,8 @@ public interface PnpJobPlanner {
     public void restart();
     public Strategy getStrategy();
     public void setStrategy(Strategy strategy);
+    public FeederStrategy getFeederStrategy();
+    public void setFeederStrategy(FeederStrategy feederStrategy);
     public List<PlannedPlacement> plan(Head head, List<JobPlacement> jobPlacements, List<NozzleTip> nozzleTips);
     public List<PlannedPlacement> sort(List<PlannedPlacement> plannedPlacements);
 }

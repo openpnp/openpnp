@@ -2353,7 +2353,12 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         }
         public void restart() {
         }
-        
+        public FeederStrategy getFeederStrategy() {
+            return FeederStrategy.AnyFeeder;
+        }
+        public void setFeederStrategy(FeederStrategy feederStrategy) {
+        }
+
         @Override
         public List<PlannedPlacement> plan(Head head, List<JobPlacement> jobPlacements, List<NozzleTip> nozzleTips) {
             /**
@@ -2460,7 +2465,10 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     public static class SimplePnpJobPlanner implements PnpJobPlanner {
         @Attribute(required = false)
         protected Strategy strategy = Strategy.Minimize;
-        
+
+        @Attribute(required = false)
+        protected FeederStrategy feederStrategy = FeederStrategy.AnyFeeder;
+
         private boolean restart;
         
         @Override
@@ -2471,6 +2479,13 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         @Override
         public void setStrategy(Strategy strategy) {
             this.strategy = strategy;
+        }
+
+        public FeederStrategy getFeederStrategy() {
+            return feederStrategy;
+        }
+        public void setFeederStrategy(FeederStrategy feederStrategy) {
+            this.feederStrategy = feederStrategy;
         }
 
         @Override
@@ -2576,9 +2591,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 return null;
             }
             
-            // if strategy is not Minimize (do best optimization) only consider placements
-            // that use the same feeder as the first placement.
-            if (strategy != Strategy.Minimize) {
+            // An option to only consider placements that use the same feeder as the first placement on the plan.
+            if (feederStrategy == FeederStrategy.FeederFocus) {
                 Machine machine = Configuration.get().getMachine();
                 Feeder referenceFeeder = findFeederWithoutException(machine, compatibleJobPlacements.get(0).getPlacement().getPart());
 
@@ -2597,8 +2611,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                             .collect(Collectors.toList());
                 }
             }
-            
-            // if strategy is not FullyAsPlanned (no optimization at all) and if other placements 
+
+            // if strategy is not FullyAsPlanned (no optimization at all) and if other placements
             // have been planned, sort compatible placements by distance to pick and place location
             JobPlacement bestPlacement = null;
             Double planningCost = null;
