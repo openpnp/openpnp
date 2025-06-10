@@ -61,7 +61,7 @@ public class JobProcessorTest {
         assertEquals(3, tipChanges());
         assertEquals(1.6, utilisation(), 0.01);
         assertEquals(60, cycleCount(), 1);
-        assertEquals(1.13, averagePlanningCost(), 0.01);
+        assertEquals(1.16, averagePlanningCost(), 0.01);
         assertEquals(20, partChanges(), 5);
     }
 
@@ -78,7 +78,7 @@ public class JobProcessorTest {
         assertEquals(3, tipChanges());
         assertEquals(1.6, utilisation(), 0.01);
         assertEquals(60, cycleCount(), 1);
-        assertEquals(1.13, averagePlanningCost(), 0.01); // Efficiency unchanged
+        assertEquals(1.16, averagePlanningCost(), 0.01); // Efficiency unchanged
         assertEquals(20, partChanges(), 5);
     }
 
@@ -96,7 +96,7 @@ public class JobProcessorTest {
         assertEquals(3, tipChanges());
         assertEquals(1.6, utilisation(), 0.01);
         assertEquals(60, cycleCount(), 1);
-        assertEquals(1.73, averagePlanningCost(), 0.01); // Efficiency somewhat worse
+        assertEquals(1.59, averagePlanningCost(), 0.01); // Efficiency somewhat worse
         assertEquals(8, partChanges()); // This is optimal
     }
 
@@ -112,7 +112,7 @@ public class JobProcessorTest {
         assertEquals(3, tipChanges());
         assertEquals(1.6, utilisation(), 0.01);
         assertEquals(60, cycleCount(), 1);
-        assertEquals(1.42, averagePlanningCost(), 0.01); // This is not too bad really
+        assertEquals(1.22, averagePlanningCost(), 0.01); // This is marginally worse
         assertEquals(46, partChanges(), 5); // it cycles across all feeders as it works across all boards
     }
 
@@ -152,7 +152,7 @@ public class JobProcessorTest {
         assertEquals(3, tipChanges());
         assertEquals(2.0, utilisation()); // Full utilisation has been achieved
         assertEquals(48, cycleCount()); // There are 96 placements on the board, so 48 trips with both nozzles utilised
-        assertEquals(1.64, averagePlanningCost(), 0.01); // Efficiency is somewhat worse
+        assertEquals(1.45, averagePlanningCost(), 0.01); // Efficiency is marginally worse
         assertEquals(34, partChanges(), 5);
     }
 
@@ -168,7 +168,7 @@ public class JobProcessorTest {
         saveCsv();
         checkRanks();
         assertEquals(3, tipChanges());
-        assertEquals(1.68, utilisation(), 0.01);
+        assertEquals(1.65, utilisation(), 0.01);
         assertEquals(57, cycleCount(), 1);
         assertEquals(1.14, averagePlanningCost(), 0.01); // Efficiency is great
         assertEquals(21, partChanges());
@@ -196,10 +196,10 @@ public class JobProcessorTest {
         saveCsv();
         checkRanks();
         assertEquals(3, tipChanges());
-        assertEquals(1.96, utilisation(), 0.01); // as optimal as reasonably expected here
+        assertEquals(1.92, utilisation(), 0.01); // as optimal as reasonably expected here
         assertEquals(49, cycleCount(), 1);
-        assertEquals(1.69, averagePlanningCost(), 0.01); // Efficiency worse. is this a problem?
-        assertEquals(33, partChanges());
+        assertEquals(1.46, averagePlanningCost(), 0.01); // Efficiency marginally worse
+        assertEquals(35, partChanges());
         checkThatWeNeverLoadTheSamePartOnBothNozzles();
     }
 
@@ -221,7 +221,7 @@ public class JobProcessorTest {
         assertEquals(4, tipChanges());
         assertEquals(1.84, utilisation(), 0.01);
         assertEquals(52, cycleCount(), 1);
-        assertEquals(1.44, averagePlanningCost(), 0.01);
+        assertEquals(1.42, averagePlanningCost(), 0.01);
         assertEquals(31, partChanges(), 3);
     }
 
@@ -242,8 +242,8 @@ public class JobProcessorTest {
         assertEquals(4, tipChanges());
         assertEquals(1.77, utilisation(), 0.01);
         assertEquals(54, cycleCount(), 1);
-        assertEquals(1.60, averagePlanningCost(), 0.01);
-        assertEquals(31, partChanges(), 3);
+        assertEquals(1.51, averagePlanningCost(), 0.01);
+        assertEquals(35, partChanges(), 3);
     }
 
     @Test
@@ -292,11 +292,11 @@ public class JobProcessorTest {
         assertEquals(4, lastPlacementPosition("R11"));
         // The overshadowing parts are placed in cycles nicely
         // in the middle of the bulk group.
-        assertEquals(31, firstPlacementPosition("R10"));
+        assertEquals(32, firstPlacementPosition("R10"));
         assertEquals(36, lastPlacementPosition("R10"));
         // Planning cost is only fractionally worse. This is indicative
         // of the weak ording working ok, and allowing efficient planning.
-        assertEquals(1.18, averagePlanningCost(), 0.01);
+        assertEquals(1.15, averagePlanningCost(), 0.01);
         assertEquals(25, partChanges(), 3);
     }
 
@@ -318,8 +318,8 @@ public class JobProcessorTest {
         assertEquals(5, tipChanges());
         assertEquals(1.65, utilisation(), 0.01);
         assertEquals(58, cycleCount(), 1);
-        assertEquals(1.54, averagePlanningCost(), 0.01);
-        assertEquals(27, partChanges(), 3);
+        assertEquals(1.41, averagePlanningCost(), 0.01);
+        assertEquals(31, partChanges(), 3);
     }
 
     @Test
@@ -341,8 +341,8 @@ public class JobProcessorTest {
         assertEquals(4, tipChanges());
         assertEquals(1.84, utilisation(), 0.01); // utilisation is better as expected with NozzleTipsByFlexibility
         assertEquals(52, cycleCount(), 1);
-        assertEquals(1.67, averagePlanningCost(), 0.01); // planning cost is a little worse
-        assertEquals(23, partChanges(), 3);
+        assertEquals(1.50, averagePlanningCost(), 0.01); // planning cost is a little worse
+        assertEquals(27, partChanges(), 3);
     }
 
     private void setup(String testName) throws Exception {

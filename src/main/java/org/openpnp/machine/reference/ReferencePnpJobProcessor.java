@@ -2560,10 +2560,28 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                  * change. If there is, we remove the nozzle, nozzle tip and job placement from their
                  * respective lists so that we don't plan the same one again.
                  */
+                int nozzleCount = 0;
                 for (Nozzle nozzle : new ArrayList<>(plannerState.nozzles)) {
                     PlannedPlacement plannedPlacement = planWithoutNozzleTipChange(nozzle, plannerState);
                     if (plannedPlacement != null) {
                         plannerState.addPlannedPlacement(plannedPlacement);
+                    }
+
+                    // If we have just selected a part for the second nozzle, and that part was selected
+                    // on the basis of a travelCost search, then here we consider whether there is a better
+                    // option which involves processing the first two nozzles in a different order. That is,
+                    // using the planner-based choice for the second machine nozzle, and doing the travelCost
+                    // optimisation for the first machine nozzle. If it is better then we adopt that solution.
+                    nozzleCount += 1;
+                    if (nozzleCount==2 && plannerState.plannedPlacements.size()==2 && plannerState.plannedPlacements.get(1).planningCost!=null) {
+                        PlannerState plannerStateAlt = new PlannerState(jobPlacements,head.getNozzles(),nozzleTips);
+                        plannerStateAlt.addPlannedPlacement(planWithoutNozzleTipChange(plannerState.plannedPlacements.get(1).nozzle,plannerStateAlt));
+                        plannerStateAlt.addPlannedPlacement(planWithoutNozzleTipChange(plannerState.plannedPlacements.get(0).nozzle,plannerStateAlt));
+                        if(plannerStateAlt.plannedPlacements.get(1).planningCost != null &&
+                           plannerStateAlt.plannedPlacements.get(1).planningCost<plannerState.plannedPlacements.get(1).planningCost) {
+                            Logger.info("Alternate plan accepted {} better than {}",plannerStateAlt.plannedPlacements, plannerState.plannedPlacements);
+                            plannerState = plannerStateAlt;
+                        }
                     }
                 }
             }
