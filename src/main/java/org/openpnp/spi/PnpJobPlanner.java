@@ -59,7 +59,8 @@ public interface PnpJobPlanner {
 
     public enum FeederStrategy {
         AnyFeeder,          // Consider all feeders for most efficient movement
-        FeederFocus;        // Prefer to stick with one feeder where possible
+        FeederFocus,        // Prefer to stick with one feeder where possible
+        DifferentFeeders;   // Each nozzle must pick from a different feeder
 
         @Override
         public String toString() {

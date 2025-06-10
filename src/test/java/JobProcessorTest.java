@@ -157,6 +157,53 @@ public class JobProcessorTest {
     }
 
     @Test
+    public void testDifferentFeeders() throws Exception {
+        // The Feeder Focus option restricts the planner to select parts from the same
+        // feeder as the first on its preference list. This causes it to empty one feeder
+        // before moving on to the next. This increases planning cost,
+        // because the planner has fewer options that it can consider.
+        setup("testDifferentFeeders");
+        jobProcessor.planner.setFeederStrategy(PnpJobPlanner.FeederStrategy.DifferentFeeders);
+        run();
+        saveCsv();
+        checkRanks();
+        assertEquals(3, tipChanges());
+        assertEquals(1.60, utilisation(), 0.01);
+        assertEquals(60, cycleCount(), 1);
+        assertEquals(1.72, averagePlanningCost(), 0.01); // Efficiency worse; maybe worse that we expect?
+        assertEquals(24, partChanges());
+        checkThatWeNeverLoadTheSamePartOnBothNozzles();
+    }
+
+    private void checkThatWeNeverLoadTheSamePartOnBothNozzles() {
+        for(PlannerStepResults result: results) {
+            if(result.getPlannedPlacements().size()==2)
+            {
+                assertNotEquals(result.getPlannedPlacements().get(0).jobPlacement.getPlacement().getPart().getId(),
+                                result.getPlannedPlacements().get(1).jobPlacement.getPlacement().getPart().getId());
+            }
+        }
+    }
+
+    @Test
+    public void testDifferentFeedersFlexibility() throws Exception {
+        // Another test for "Different Feeders", using the NozzleTipsByFlexibility to keep all the nozzles
+        // busy until the end of the job
+        setup("testDifferentFeedersFlexibility");
+        jobProcessor.setJobOrder(ReferencePnpJobProcessor.JobOrderHint.NozzleTipsByFlexibility);
+        jobProcessor.planner.setFeederStrategy(PnpJobPlanner.FeederStrategy.DifferentFeeders);
+        run();
+        saveCsv();
+        checkRanks();
+        assertEquals(3, tipChanges());
+        assertEquals(1.88, utilisation(), 0.01); // as optimal as reasonably expected here
+        assertEquals(51, cycleCount(), 1);
+        assertEquals(1.62, averagePlanningCost(), 0.01); // Efficiency worse
+        assertEquals(34, partChanges());
+        checkThatWeNeverLoadTheSamePartOnBothNozzles();
+    }
+
+    @Test
     public void testRank() throws Exception {
         setup("testRank");
         // For the purpose of this test we use the placement Id to set the rank.

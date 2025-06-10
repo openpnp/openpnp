@@ -2612,6 +2612,32 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 }
             }
 
+            // An option to exclude feeders that have already been selected for a different nozzle
+            if (feederStrategy == FeederStrategy.DifferentFeeders) {
+                // Find all the parts already selected for picking
+                List <Part> busyParts = plannedPlacements
+                    .stream()
+                    .map(plannedPlacement -> {
+                        return plannedPlacement.jobPlacement.getPlacement().getPart();
+                    })
+                    .collect(Collectors.toList());
+                // Exclude placements using the same part.
+                // NB this is not quite right. If there are multiple feeders for one part
+                // then the "DifferentFeeders" strategy should still allow us to pick the
+                // same part from different feeders. But we dont have great support for
+                // having multiple feeders yet.
+                compatibleJobPlacements = compatibleJobPlacements
+                    .stream()
+                    .filter(jobPlacement -> {
+                        return !busyParts.contains(jobPlacement.getPlacement().getPart());
+                    })
+                    .collect(Collectors.toList());
+
+                if(compatibleJobPlacements.isEmpty()) {
+                    return null;
+                }
+            }
+
             // if strategy is not FullyAsPlanned (no optimization at all) and if other placements
             // have been planned, sort compatible placements by distance to pick and place location
             JobPlacement bestPlacement = null;
