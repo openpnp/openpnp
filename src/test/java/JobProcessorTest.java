@@ -16,17 +16,20 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.ReferencePnpJobProcessor;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision;
+import org.openpnp.spi.Locatable.LocationOption;
 import org.openpnp.spi.PnpJobPlanner;
 import org.openpnp.spi.PnpJobProcessor.JobPlacement;
 import org.openpnp.spi.PnpJobPlanner.PlannedPlacement;
 import org.openpnp.spi.PnpJobPlanner.PlannerStepResults;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
+import org.openpnp.util.Utils2D;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Part;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Job;
 import org.openpnp.model.Placement;
+import org.openpnp.model.Location;
 import org.pmw.tinylog.Configurator;
 import org.pmw.tinylog.Level;
 import org.pmw.tinylog.Logger;
@@ -53,6 +56,7 @@ public class JobProcessorTest {
         assertEquals(jobProcessor.getJobOrder(),ReferencePnpJobProcessor.JobOrderHint.NozzleTips);
         run();
         saveCsv();
+        saveSvg();
         checkRanks();
         assertEquals(3, tipChanges());
         assertEquals(1.6, utilisation(), 0.01);
@@ -70,6 +74,7 @@ public class JobProcessorTest {
         jobProcessor.planner.setStrategy(PnpJobPlanner.Strategy.StartAsPlanned);
         run();
         saveCsv();
+        saveSvg();
         checkRanks();
         assertEquals(3, tipChanges());
         assertEquals(1.6, utilisation(), 0.01);
@@ -85,6 +90,7 @@ public class JobProcessorTest {
         jobProcessor.setJobOrder(ReferencePnpJobProcessor.JobOrderHint.BoardPart);
         run();
         saveCsv();
+        saveSvg();
         checkRanks();
         assertEquals(3, tipChanges());
         assertEquals(1.6, utilisation(), 0.01);
@@ -105,6 +111,7 @@ public class JobProcessorTest {
         jobProcessor.planner.setStrategy(PnpJobPlanner.Strategy.FullyAsPlanned);
         run();
         saveCsv();
+        saveSvg();
         checkRanks();
         assertEquals(33, tipChanges());
         assertEquals(1.95, utilisation(), 0.01);
@@ -123,6 +130,7 @@ public class JobProcessorTest {
         jobProcessor.setJobOrder(ReferencePnpJobProcessor.JobOrderHint.NozzleTipsByFlexibility);
         run();
         saveCsv();
+        saveSvg();
         checkRanks();
         assertEquals(3, tipChanges());
         assertEquals(2.0, utilisation()); // Full utilisation has been achieved
@@ -144,6 +152,7 @@ public class JobProcessorTest {
         }
         run();
         saveCsv();
+        saveSvg();
         checkRanks();
         assertEquals(4, tipChanges());
         assertEquals(1.84, utilisation(), 0.01);
@@ -164,6 +173,7 @@ public class JobProcessorTest {
         }
         run();
         saveCsv();
+        saveSvg();
         checkRanks();
         assertEquals(4, tipChanges());
         assertEquals(1.77, utilisation(), 0.01);
@@ -207,6 +217,7 @@ public class JobProcessorTest {
         }
         run();
         saveCsv();
+        saveSvg();
         checkRanks();
         assertEquals(3, tipChanges());
         // Utilisation is identical to the baseline test, indicating that
@@ -238,6 +249,7 @@ public class JobProcessorTest {
         }
         run();
         saveCsv();
+        saveSvg();
         checkRanks();
         assertEquals(5, tipChanges());
         assertEquals(1.65, utilisation(), 0.01);
@@ -260,6 +272,7 @@ public class JobProcessorTest {
         }
         run();
         saveCsv();
+        saveSvg();
         checkRanks();
         assertEquals(4, tipChanges());
         assertEquals(1.84, utilisation(), 0.01); // utilisation is better as expected with NozzleTipsByFlexibility
@@ -346,6 +359,57 @@ public class JobProcessorTest {
             cycle += 1;
         }
         csv.close();
+    }
+
+    private void saveSvg() throws Exception {
+        File svgFile = new File(workingDirectory,testName+".svg");
+        Logger.info("Saving movement cost map to {}",svgFile);
+        PrintWriter out = new PrintWriter(svgFile);
+        out.println(asSvg());
+        out.close();
+    }
+
+    private String asSvg() throws Exception {
+        StringBuilder svg1 = new StringBuilder();
+        StringBuilder svg2 = new StringBuilder();
+        svg1.append("<title>Job Planner "+testName+"</title>\n");
+        double minX=0,minY=0,maxX=0,maxY=0;
+        for(PlannerStepResults result: results) {
+            Location prevLocation = null;
+            for(PlannedPlacement p : result.getPlannedPlacements() ) {
+                Location locationNozzle = Utils2D.calculateBoardPlacementLocation(
+                    p.jobPlacement.getBoardLocation(),
+                    p.jobPlacement.getPlacement().getLocation());
+                Location locationHead = p.nozzle.toHeadLocation(locationNozzle, LocationOption.Quiet);
+                String color = p.nozzle.getId().equals("N1")?"red":"black"; // first nozzle is red
+                svg2.append("<circle cx=\""+locationHead.getX()+"\" cy=\""+locationHead.getY()+"\" r=\"1\" style=\"stroke:"+color+";fill-opacity:0;\"/>\r\n");
+                svg1.append("<line x1=\""+locationHead.getX()+"\" y1=\""+locationHead.getY()+"\" x2=\""+
+                            locationNozzle.getX()+"\" y2=\""+locationNozzle.getY()+"\" style=\"stroke:lightgrey\"/>");
+                if(prevLocation!=null) {
+                    svg1.append("<line x1=\""+prevLocation.getX()+"\" y1=\""+prevLocation.getY()+"\" x2=\""+
+                               locationHead.getX()+"\" y2=\""+locationHead.getY()+"\" style=\"stroke:darkgrey;\"/>");
+
+                }
+                minX = Math.min(minX,locationHead.getX());
+                minY = Math.min(minY,locationHead.getY());
+                maxX = Math.max(maxX,locationHead.getX());
+                maxY = Math.max(maxY,locationHead.getY());
+                prevLocation = locationHead;
+            }
+        }
+        double margin = 10;
+        minX -= margin;
+        minY -= margin;
+        maxX += margin;
+        maxY += margin;
+        svg2.append("</svg>\n");
+        String header = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+                   "<svg xmlns=\"http://www.w3.org/2000/svg\"\n" +
+                   "  xmlns:xlink=\"http://www.w3.org/1999/xlink\"\n" +
+                   "  version=\"1.1\" baseProfile=\"full\"\n" +
+                   "  width=\"100%\" height=\"100%\"\n"+
+                   "  viewBox=\""+minX+" "+minY+" "+(maxX-minX)+" "+(maxY-minY)+"\">\r\n";
+        return header + svg1.toString() + svg2.toString();
     }
 
     private void dumpResults() {
