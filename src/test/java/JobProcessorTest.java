@@ -61,8 +61,8 @@ public class JobProcessorTest {
         assertEquals(3, tipChanges());
         assertEquals(1.6, utilisation(), 0.01);
         assertEquals(60, cycleCount(), 1);
-        assertEquals(1.56, averagePlanningCost(), 0.01);
-        assertEquals(13, partChanges(), 5);
+        assertEquals(1.13, averagePlanningCost(), 0.01);
+        assertEquals(20, partChanges(), 5);
     }
 
     @Test
@@ -78,8 +78,8 @@ public class JobProcessorTest {
         assertEquals(3, tipChanges());
         assertEquals(1.6, utilisation(), 0.01);
         assertEquals(60, cycleCount(), 1);
-        assertEquals(1.56, averagePlanningCost(), 0.01); // Efficiency unchanged
-        assertEquals(13, partChanges(), 5);
+        assertEquals(1.13, averagePlanningCost(), 0.01); // Efficiency unchanged
+        assertEquals(20, partChanges(), 5);
     }
 
     @Test
@@ -97,7 +97,7 @@ public class JobProcessorTest {
         assertEquals(1.6, utilisation(), 0.01);
         assertEquals(60, cycleCount(), 1);
         assertEquals(1.73, averagePlanningCost(), 0.01); // Efficiency somewhat worse
-        assertEquals(9, partChanges()); // This is optimal
+        assertEquals(8, partChanges()); // This is optimal
     }
 
     @Test
@@ -152,7 +152,7 @@ public class JobProcessorTest {
         assertEquals(3, tipChanges());
         assertEquals(2.0, utilisation()); // Full utilisation has been achieved
         assertEquals(48, cycleCount()); // There are 96 placements on the board, so 48 trips with both nozzles utilised
-        assertEquals(1.57, averagePlanningCost(), 0.01); // Efficiency is somewhat worse
+        assertEquals(1.64, averagePlanningCost(), 0.01); // Efficiency is somewhat worse
         assertEquals(34, partChanges(), 5);
     }
 
@@ -168,10 +168,10 @@ public class JobProcessorTest {
         saveCsv();
         checkRanks();
         assertEquals(3, tipChanges());
-        assertEquals(1.60, utilisation(), 0.01);
-        assertEquals(60, cycleCount(), 1);
-        assertEquals(1.72, averagePlanningCost(), 0.01); // Efficiency worse; maybe worse that we expect?
-        assertEquals(24, partChanges());
+        assertEquals(1.68, utilisation(), 0.01);
+        assertEquals(57, cycleCount(), 1);
+        assertEquals(1.14, averagePlanningCost(), 0.01); // Efficiency is great
+        assertEquals(21, partChanges());
         checkThatWeNeverLoadTheSamePartOnBothNozzles();
     }
 
@@ -196,10 +196,10 @@ public class JobProcessorTest {
         saveCsv();
         checkRanks();
         assertEquals(3, tipChanges());
-        assertEquals(1.88, utilisation(), 0.01); // as optimal as reasonably expected here
-        assertEquals(51, cycleCount(), 1);
-        assertEquals(1.62, averagePlanningCost(), 0.01); // Efficiency worse
-        assertEquals(34, partChanges());
+        assertEquals(1.96, utilisation(), 0.01); // as optimal as reasonably expected here
+        assertEquals(49, cycleCount(), 1);
+        assertEquals(1.69, averagePlanningCost(), 0.01); // Efficiency worse. is this a problem?
+        assertEquals(33, partChanges());
         checkThatWeNeverLoadTheSamePartOnBothNozzles();
     }
 
@@ -221,7 +221,7 @@ public class JobProcessorTest {
         assertEquals(4, tipChanges());
         assertEquals(1.84, utilisation(), 0.01);
         assertEquals(52, cycleCount(), 1);
-        assertEquals(1.42, averagePlanningCost(), 0.01);
+        assertEquals(1.44, averagePlanningCost(), 0.01);
         assertEquals(31, partChanges(), 3);
     }
 
@@ -292,12 +292,12 @@ public class JobProcessorTest {
         assertEquals(4, lastPlacementPosition("R11"));
         // The overshadowing parts are placed in cycles nicely
         // in the middle of the bulk group.
-        assertEquals(7, firstPlacementPosition("R10"));
-        assertEquals(21, lastPlacementPosition("R10"));
+        assertEquals(31, firstPlacementPosition("R10"));
+        assertEquals(36, lastPlacementPosition("R10"));
         // Planning cost is only fractionally worse. This is indicative
         // of the weak ording working ok, and allowing efficient planning.
-        assertEquals(1.44, averagePlanningCost(), 0.01);
-        assertEquals(17, partChanges(), 3);
+        assertEquals(1.18, averagePlanningCost(), 0.01);
+        assertEquals(25, partChanges(), 3);
     }
 
     @Test

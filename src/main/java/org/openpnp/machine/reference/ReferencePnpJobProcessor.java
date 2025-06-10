@@ -147,6 +147,10 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     protected List<JobPlacement> jobPlacements = new ArrayList<>();
 
     private Step currentStep = null;
+
+    // This remembers the location of the first feeder in the first TSM plan of a cycle. It is used
+    // as the start location of the TSM run on a subsequent cycle to improve consistency.
+    protected Location previousPlanStartLocation;
     
     long startTime;
     int totalPartsPlaced;
@@ -224,6 +228,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             pickLocator  = new PickLocator();
             alignLocator = new AlignLocator();
             placeLocator = new PlaceLocator();
+
+            previousPlanStartLocation = new Location(LengthUnit.Millimeters);
             
             checkSetupErrors();
             
@@ -743,10 +749,10 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         }
         private ReturnListAndLocation planJobPlacementsByPickLocation(List<JobPlacement> input, Location startLocation) {
             List<JobPlacement> output;
-            Location endLocation;
+            Location firstFeederLocation;
 
             // calculate 
-            endLocation = updateFeederIndex(input, startLocation);
+            firstFeederLocation = updateFeederIndex(input, startLocation);
 
             // sort placements by feeder index
             output = input.stream()
@@ -756,10 +762,11 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                             .thenComparing(JobPlacement::getBoardId))
                     .collect(Collectors.toList());
 
-            return new ReturnListAndLocation(output, endLocation);
+            return new ReturnListAndLocation(output, firstFeederLocation);
         }
         private List<JobPlacement> planJobPlacementsByPickLocation(List<JobPlacement> input) {
-            ReturnListAndLocation data = planJobPlacementsByPickLocation(input, null);
+            ReturnListAndLocation data = planJobPlacementsByPickLocation(input, previousPlanStartLocation);
+            previousPlanStartLocation = data.getLocation();
             return data.getJobPlacements();
         }
         
@@ -770,7 +777,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
          * 
          * @param jobPlacements
          * @param startLocation location to use as start location for the traveling salesman
-         * @return end location after optimization
+         * @return location of the first feeder after optimization
          */
         private Location updateFeederIndex(List<JobPlacement> jobPlacements, Location startLocation) {
             List<Feeder> feeders = new ArrayList<>();
@@ -801,7 +808,9 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 // We end where we started.
                 return startLocation;
             }
-            
+
+            Logger.info("startLocation {}",startLocation);
+
             // route pick locations of all feeders through travelling salesman
             TravellingSalesman<Feeder> tsm = new TravellingSalesman<>(
                     feeders, 
@@ -819,6 +828,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             
             // get the optimized list of feeders
             feeders = tsm.getTravel();
+            Logger.info("feeders {}",feeders.stream().map(feeder -> { return feeder.getName(); }).collect(Collectors.toList()));
             
             // feed feeder locations back into jobPlacements as feederIndex
             for (JobPlacement p : local) {
@@ -833,7 +843,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 }
             }
             
-            return getPickLocation(feeders.get(feeders.size() -1));
+            // was return getPickLocation(feeders.get(feeders.size() -1));
+            return getPickLocation(feeders.get(0));
         }
 
         private Location getPickLocation(Feeder f) {
@@ -870,7 +881,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             return output;
         }
         private List<JobPlacement> planJobPlacementsByPickPlaceLocation(List<JobPlacement> input) {
-            ReturnListAndLocation d = planJobPlacementsByPickPlaceLocation(input, null);
+            ReturnListAndLocation d = planJobPlacementsByPickPlaceLocation(input, previousPlanStartLocation);
+            previousPlanStartLocation = d.getLocation();
             return d.getJobPlacements();
         }
 
@@ -1041,10 +1053,11 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 // We do not track enough information to optimise multi-nozzle scenarios, but we have this heuristic to minimise the chance of this occurring.
                 // Inflexible nozzle tips are run first, and the flexible nozzle tips (i.e. those that can handle parts which can also be handled
                 // by other tips) are kept for the end of the job.
-                Logger.trace("perNozzlePlacementOptions {}",perNozzlePlacementOptions);
+                Logger.info("perNozzlePlacementOptions {}",perNozzlePlacementOptions);
                 perNozzleTipJobPlacements.sort(Comparator.comparing( (JobPlacementNozzleTip j) -> perNozzlePlacementOptions.getOrDefault(j.getNozzleTip(),0))
                                                         .thenComparing(Comparator.comparing(JobPlacementNozzleTip::size).reversed())
                                                         .thenComparing(j -> j.getNozzleTip().getName()));
+                Logger.info("perNozzleTipJobPlacements {}",perNozzleTipJobPlacements);
             }
 
             // optimize each nozzle tip group using PickPlaceLocation
@@ -1053,11 +1066,17 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             // The second argument is the end location of the optimization. It is here
             // used as start location for the next group.
             // FIXME: would it be a good idea to use the current head location as start location for the optimization?
-            ReturnListAndLocation data = new ReturnListAndLocation(null, null);
+            ReturnListAndLocation data = new ReturnListAndLocation(null, previousPlanStartLocation);
             String traceMessage = "Selected nozzle tips:";
+            boolean first = true;
             for (JobPlacementNozzleTip jobPlacementNozzleTip : perNozzleTipJobPlacements) {
                 // plan optimized feeder and pick locations
                 data = planJobPlacementsByPickPlaceLocation(jobPlacementNozzleTip, data.getLocation());
+
+                if(first) {
+                    first = false;
+                    previousPlanStartLocation = data.getLocation();
+                }
                 
                 // and add the result to the output list
                 output.addAll(data.getJobPlacements());
@@ -1066,7 +1085,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 traceMessage += " " + jobPlacementNozzleTip.getNozzleTip().getName() + " (" + data.getJobPlacements().size() + ")";
             }
             
-            Logger.trace(traceMessage);
+            Logger.info(traceMessage);
             
             return new ReturnJobPlacementsAndNozzleTips(output, plannedNozzleTips);
         }
