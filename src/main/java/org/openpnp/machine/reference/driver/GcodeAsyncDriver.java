@@ -134,7 +134,8 @@ public class GcodeAsyncDriver extends GcodeDriver {
     protected LinkedBlockingQueue<CommandLine> commandQueue;
 
     private boolean waitedForCommands;
-    private volatile boolean confirmationComplete;
+
+    private boolean confirmationComplete;
 
     public boolean isConfirmationFlowControl() {
         return confirmationFlowControl;
@@ -266,8 +267,8 @@ public class GcodeAsyncDriver extends GcodeDriver {
                         Logger.trace("[{}] >> {}", connectionName, command);
                     }
                     else {
-                        confirmationComplete = true;
                         synchronized(GcodeAsyncDriver.this) {
+                            confirmationComplete = true;
                             GcodeAsyncDriver.this.notify();
                         }
                         //Logger.trace("[{}] confirmation released.", getCommunications().getConnectionName());
@@ -280,7 +281,10 @@ public class GcodeAsyncDriver extends GcodeDriver {
                 catch (Exception e) {
                     // We probably got a timeout exception. We can't throw from the writer thread. Therefore, set 
                     // the exception as an error response, it will be reported when the driver wants to do the next step. 
-                    errorResponse = new Line(e.getMessage());
+                    synchronized(GcodeAsyncDriver.this) {
+                        errorResponse = new Line(e.getMessage());
+                        GcodeAsyncDriver.this.notify();
+                    }
                     //Logger.error("[{}] {}", getCommunications().getConnectionName(), e);
                 }
             }
@@ -393,24 +397,24 @@ public class GcodeAsyncDriver extends GcodeDriver {
     protected void drainCommandQueue(long timeout) throws Exception {
         // Normal confirmation report wanted. We queue a null command to drain the queue and confirm 
         // the last real command. 
-        confirmationComplete = false;
-        CommandLine commandLine = new CommandLine(null, 1);
-        commandQueue.offer(commandLine, writerQueueTimeout, TimeUnit.MILLISECONDS);
-        long t0 = System.currentTimeMillis();
-        while (!confirmationComplete) {
-            try {
-                synchronized(this) { 
+        synchronized (this) {
+            confirmationComplete = false;
+            CommandLine commandLine = new CommandLine(null, 1);
+            commandQueue.offer(commandLine, writerQueueTimeout, TimeUnit.MILLISECONDS);
+            long t0 = System.currentTimeMillis();
+            while (!confirmationComplete) {
+                try {
                     wait(timeout);
                 }
+                catch (InterruptedException e) {
+                    Logger.warn(e, getName() +" was interrupted while waiting for completion.");
+                }   
+                bailOnError();
             }
-            catch (InterruptedException e) {
-                Logger.warn(e, getName() +" was interrupted while waiting for completion.");
+            long dt = System.currentTimeMillis() - t0;
+            if (dt > 1) {
+                Logger.trace("{} waited {}ms to drain command queue.", getName(), dt);
             }
-            bailOnError();
-        }
-        long dt = System.currentTimeMillis() - t0;
-        if (dt > 1) {
-            Logger.trace("{} waited {}ms to drain command queue.", getName(), dt);
         }
     }
 
