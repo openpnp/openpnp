@@ -26,7 +26,6 @@ import org.simpleframework.xml.Element;
 import javax.swing.*;
 
 import java.time.Duration;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -280,8 +279,8 @@ public class PhotonFeeder extends ReferenceFeeder {
             // Use expectedTimeToFeed to bound how long we will wait,
             // but use polling to check the status of the feed.
             Duration expectedFeedDuration = Duration.ofMillis(moveFeedForwardResponse.expectedTimeToFeed);
-            Instant endTime = Instant.now().plus(expectedFeedDuration.multipliedBy(3));
-            for (int j = 0; j <= photonProperties.getFeederCommunicationMaxRetry() || Instant.now().isBefore(endTime); j++) {
+            long endTimeNanos = System.nanoTime() + expectedFeedDuration.toNanos() * 3;
+            for (int j = 0; j <= photonProperties.getFeederCommunicationMaxRetry() || System.nanoTime() <= endTimeNanos; j++) {
                 Thread.sleep(50); // MAGIC: this feels like a good number, there is no particular reason it is this way.
 
                 MoveFeedStatus moveFeedStatus = new MoveFeedStatus(slotAddress);
