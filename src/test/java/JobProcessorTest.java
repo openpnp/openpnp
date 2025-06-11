@@ -61,7 +61,7 @@ public class JobProcessorTest {
         assertEquals(3, tipChanges());
         assertEquals(1.6, utilisation(), 0.01);
         assertEquals(60, cycleCount(), 1);
-        assertEquals(1.16, averagePlanningCost(), 0.01);
+        assertEquals(1.15, averagePlanningCost(), 0.01);
         assertEquals(20, partChanges(), 5);
     }
 
@@ -78,7 +78,7 @@ public class JobProcessorTest {
         assertEquals(3, tipChanges());
         assertEquals(1.6, utilisation(), 0.01);
         assertEquals(60, cycleCount(), 1);
-        assertEquals(1.16, averagePlanningCost(), 0.01); // Efficiency unchanged
+        assertEquals(1.15, averagePlanningCost(), 0.01); // Efficiency unchanged
         assertEquals(20, partChanges(), 5);
     }
 
@@ -96,7 +96,7 @@ public class JobProcessorTest {
         assertEquals(3, tipChanges());
         assertEquals(1.6, utilisation(), 0.01);
         assertEquals(60, cycleCount(), 1);
-        assertEquals(1.59, averagePlanningCost(), 0.01); // Efficiency somewhat worse
+        assertEquals(1.65, averagePlanningCost(), 0.01); // Efficiency somewhat worse
         assertEquals(8, partChanges()); // This is optimal
     }
 
@@ -152,7 +152,7 @@ public class JobProcessorTest {
         assertEquals(3, tipChanges());
         assertEquals(2.0, utilisation()); // Full utilisation has been achieved
         assertEquals(48, cycleCount()); // There are 96 placements on the board, so 48 trips with both nozzles utilised
-        assertEquals(1.45, averagePlanningCost(), 0.01); // Efficiency is marginally worse
+        assertEquals(1.48, averagePlanningCost(), 0.01); // Efficiency is marginally worse
         assertEquals(34, partChanges(), 5);
     }
 
@@ -170,8 +170,8 @@ public class JobProcessorTest {
         assertEquals(3, tipChanges());
         assertEquals(1.65, utilisation(), 0.01);
         assertEquals(57, cycleCount(), 1);
-        assertEquals(1.14, averagePlanningCost(), 0.01); // Efficiency is great
-        assertEquals(21, partChanges());
+        assertEquals(1.12, averagePlanningCost(), 0.01); // Efficiency is great
+        assertEquals(20, partChanges());
         checkThatWeNeverLoadTheSamePartOnBothNozzles();
     }
 
@@ -197,10 +197,31 @@ public class JobProcessorTest {
         checkRanks();
         assertEquals(3, tipChanges());
         assertEquals(1.92, utilisation(), 0.01); // as optimal as reasonably expected here
-        assertEquals(49, cycleCount(), 1);
-        assertEquals(1.46, averagePlanningCost(), 0.01); // Efficiency marginally worse
-        assertEquals(35, partChanges());
+        assertEquals(51, cycleCount(), 1);
+        assertEquals(1.47, averagePlanningCost(), 0.01); // Efficiency marginally worse
+        assertEquals(32, partChanges());
         checkThatWeNeverLoadTheSamePartOnBothNozzles();
+    }
+
+    @Test
+    public void testAllOnePart() throws Exception {
+        // This is a test where all the placements are the same part.
+        // This can be used to monitor that placement TSM route is working as expected
+        setup("testAllOnePart");
+        Part part = Configuration.get().getPart("R0201-1K");
+        for (BoardLocation boardLocation : job.getBoardLocations()) {
+            for (Placement placement : boardLocation.getBoard().getPlacements()) {
+                placement.setPart(part);
+            }
+        }
+        run();
+        saveCsv();
+        saveSvg();
+        checkRanks();
+        assertEquals(2, tipChanges());
+        assertEquals(2.0, utilisation(), 0.01);
+        assertEquals(48, cycleCount(), 1);
+        assertEquals(1.40, averagePlanningCost(), 0.01);
     }
 
     @Test
@@ -221,7 +242,7 @@ public class JobProcessorTest {
         assertEquals(4, tipChanges());
         assertEquals(1.84, utilisation(), 0.01);
         assertEquals(52, cycleCount(), 1);
-        assertEquals(1.42, averagePlanningCost(), 0.01);
+        assertEquals(1.39, averagePlanningCost(), 0.01);
         assertEquals(31, partChanges(), 3);
     }
 
@@ -242,8 +263,8 @@ public class JobProcessorTest {
         assertEquals(4, tipChanges());
         assertEquals(1.77, utilisation(), 0.01);
         assertEquals(54, cycleCount(), 1);
-        assertEquals(1.51, averagePlanningCost(), 0.01);
-        assertEquals(35, partChanges(), 3);
+        assertEquals(1.46, averagePlanningCost(), 0.01);
+        assertEquals(37, partChanges(), 3);
     }
 
     @Test
@@ -297,7 +318,7 @@ public class JobProcessorTest {
         // Planning cost is only fractionally worse. This is indicative
         // of the weak ording working ok, and allowing efficient planning.
         assertEquals(1.15, averagePlanningCost(), 0.01);
-        assertEquals(25, partChanges(), 3);
+        assertEquals(19, partChanges(), 3);
     }
 
     @Test
@@ -318,7 +339,7 @@ public class JobProcessorTest {
         assertEquals(5, tipChanges());
         assertEquals(1.65, utilisation(), 0.01);
         assertEquals(58, cycleCount(), 1);
-        assertEquals(1.41, averagePlanningCost(), 0.01);
+        assertEquals(1.43, averagePlanningCost(), 0.01);
         assertEquals(31, partChanges(), 3);
     }
 
@@ -438,8 +459,10 @@ public class JobProcessorTest {
         StringBuilder svg2 = new StringBuilder();
         svg1.append("<title>Job Planner "+testName+"</title>\n");
         double minX=0,minY=0,maxX=0,maxY=0;
+        int row = 0;
         for(PlannerStepResults result: results) {
             Location prevLocation = null;
+            row += 1;
             for(PlannedPlacement p : result.getPlannedPlacements() ) {
                 Location locationNozzle = Utils2D.calculateBoardPlacementLocation(
                     p.jobPlacement.getBoardLocation(),
@@ -448,11 +471,14 @@ public class JobProcessorTest {
                 String color = p.nozzle.getId().equals("N1")?"red":"black"; // first nozzle is red
                 svg2.append("<circle cx=\""+locationHead.getX()+"\" cy=\""+locationHead.getY()+"\" r=\"1\" style=\"stroke:"+color+";fill-opacity:0;\"/>\r\n");
                 svg1.append("<line x1=\""+locationHead.getX()+"\" y1=\""+locationHead.getY()+"\" x2=\""+
-                            locationNozzle.getX()+"\" y2=\""+locationNozzle.getY()+"\" style=\"stroke:lightgrey\"/>");
+                            locationNozzle.getX()+"\" y2=\""+locationNozzle.getY()+"\" style=\"stroke:lightgrey\"/>\r\n");
                 if(prevLocation!=null) {
                     svg1.append("<line x1=\""+prevLocation.getX()+"\" y1=\""+prevLocation.getY()+"\" x2=\""+
-                               locationHead.getX()+"\" y2=\""+locationHead.getY()+"\" style=\"stroke:darkgrey;\"/>");
+                               locationHead.getX()+"\" y2=\""+locationHead.getY()+"\" style=\"stroke:darkgrey;\"/>\r\n");
 
+                }
+                if(p.planningCost==null) {
+                    svg2.append("<text style=\"font-size:4;\" x=\""+(locationHead.getX()+1)+"\" y=\""+locationHead.getY()+"\" r=\"1\" >"+row+"</text>\r\n");
                 }
                 minX = Math.min(minX,locationHead.getX());
                 minY = Math.min(minY,locationHead.getY());

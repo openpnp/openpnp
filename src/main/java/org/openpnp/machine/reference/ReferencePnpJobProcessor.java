@@ -150,8 +150,9 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
     // This remembers the location of the first feeder in the first TSM plan of a cycle. It is used
     // as the start location of the TSM run on a subsequent cycle to improve consistency.
-    protected Location previousPlanStartLocation;
-    
+    protected Location previousPickPlanStartLocation;
+    protected Location previousPlacePlanStartLocation;
+
     long startTime;
     int totalPartsPlaced;
     
@@ -229,7 +230,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             alignLocator = new AlignLocator();
             placeLocator = new PlaceLocator();
 
-            previousPlanStartLocation = new Location(LengthUnit.Millimeters);
+            previousPlacePlanStartLocation = previousPickPlanStartLocation = new Location(LengthUnit.Millimeters);
             
             checkSetupErrors();
             
@@ -765,8 +766,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             return new ReturnListAndLocation(output, firstFeederLocation);
         }
         private List<JobPlacement> planJobPlacementsByPickLocation(List<JobPlacement> input) {
-            ReturnListAndLocation data = planJobPlacementsByPickLocation(input, previousPlanStartLocation);
-            previousPlanStartLocation = data.getLocation();
+            ReturnListAndLocation data = planJobPlacementsByPickLocation(input, previousPickPlanStartLocation);
+            previousPickPlanStartLocation = data.getLocation();
             return data.getJobPlacements();
         }
         
@@ -881,8 +882,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             return output;
         }
         private List<JobPlacement> planJobPlacementsByPickPlaceLocation(List<JobPlacement> input) {
-            ReturnListAndLocation d = planJobPlacementsByPickPlaceLocation(input, previousPlanStartLocation);
-            previousPlanStartLocation = d.getLocation();
+            ReturnListAndLocation d = planJobPlacementsByPickPlaceLocation(input, previousPickPlanStartLocation);
+            previousPickPlanStartLocation = d.getLocation();
             return d.getJobPlacements();
         }
 
@@ -895,8 +896,9 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
          */
         private List<JobPlacement> optimizePlaceLocations(List<JobPlacement> input) {
             List<JobPlacement> output = new ArrayList<>();
-            Location startLocation = null;
+            Location startLocation = previousPlacePlanStartLocation;
             
+            boolean first = true;
             while (!input.isEmpty()) {
                 // get all placements with the same (first) feeder index
                 final int feederIndex = input.get(0).getFeederIndex();
@@ -906,14 +908,14 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
                 // remove all placements now in tmp from input
                 input.removeAll(tmp);
-                
+
                 // optimize the path between place location of all placements in tmp
                 TravellingSalesman<JobPlacement> tsm = new TravellingSalesman<>(
                         tmp, 
                         new TravellingSalesman.Locator<JobPlacement>() { 
                             @Override
                             public Location getLocation(JobPlacement locatable) {
-                                return locatable.getPlacement().getLocation();
+                                return Utils2D.calculateBoardPlacementLocation(locatable.getBoardLocation(),locatable.getPlacement().getLocation());
                             }
                         }, 
                         startLocation,
@@ -921,12 +923,20 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 
                 // Solve it using the default heuristics.
                 tsm.solve();
-                
+
                 // add the optimized list of jobPlacements to the output list
                 output.addAll(tsm.getTravel());
+
+
+                if(first) {
+                    JobPlacement locatable = output.get(0);
+                    previousPlacePlanStartLocation = Utils2D.calculateBoardPlacementLocation(locatable.getBoardLocation(),locatable.getPlacement().getLocation());
+                    first = false;
+                }
                 
-                // update startLocation to the end location of the last placement
-                startLocation = output.get(output.size() -1).getPlacement().getLocation();
+                // update startLocation to the first placement
+                JobPlacement locatable = output.get(0);
+                startLocation = Utils2D.calculateBoardPlacementLocation(locatable.getBoardLocation(),locatable.getPlacement().getLocation());
             }
             
             return output;
@@ -1066,7 +1076,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             // The second argument is the end location of the optimization. It is here
             // used as start location for the next group.
             // FIXME: would it be a good idea to use the current head location as start location for the optimization?
-            ReturnListAndLocation data = new ReturnListAndLocation(null, previousPlanStartLocation);
+            ReturnListAndLocation data = new ReturnListAndLocation(null, previousPickPlanStartLocation);
             String traceMessage = "Selected nozzle tips:";
             boolean first = true;
             for (JobPlacementNozzleTip jobPlacementNozzleTip : perNozzleTipJobPlacements) {
@@ -1075,7 +1085,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
                 if(first) {
                     first = false;
-                    previousPlanStartLocation = data.getLocation();
+                    previousPickPlanStartLocation = data.getLocation();
                 }
                 
                 // and add the result to the output list
