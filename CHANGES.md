@@ -14,6 +14,7 @@ a complete change list, only those that may directly interest or affect users.
 * Many translation improvements. [PR 1658](https://github.com/openpnp/openpnp/pull/1658) [PR 1704](https://github.com/openpnp/openpnp/pull/1704) [PR 1803](https://github.com/openpnp/openpnp/pull/1803)
 * Change camera view zoom behaviour from linear to log. [PR 1766](https://github.com/openpnp/openpnp/pull/1766)
 * Added "Skip Next Feed" and "Disable Feed" feeder options. This provides limited recycle support to some feeders that previously had none. [PR 1716](https://github.com/openpnp/openpnp/pull/1716) [PR 1787](https://github.com/openpnp/openpnp/pull/1787)
+* Speed up Photon feeder by avoiding unnecessary delays between feed and pick by changing polling strategy. [PR 1844](https://github.com/openpnp/openpnp/pull/1844)
 * Changes relating to the job processor and placement optimisation:
   * Use axis accelation and feedrate parameters to estimate travel time when optimising pick and place locations, and travelling salesman routing. [PR 1813](https://github.com/openpnp/openpnp/pull/1813)
   * Additional placement sorting options making the order of placements predictable even for panels of identical boards. [PR 1658](https://github.com/openpnp/openpnp/pull/1658)
