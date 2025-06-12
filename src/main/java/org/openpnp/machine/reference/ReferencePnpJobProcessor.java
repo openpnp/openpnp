@@ -2706,8 +2706,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             JobPlacement bestPlacement = null;
             Double planningCost = null;
             if (strategy != Strategy.FullyAsPlanned
-                && plannerState.plannedPlacements != null && !plannerState.plannedPlacements.isEmpty()
-                && compatibleJobPlacements.size() > 1) {
+                && plannerState.plannedPlacements != null && !plannerState.plannedPlacements.isEmpty()) {
                 Location averagePickLocation  = calcCenterLocation(plannerState.plannedPlacements, pickLocator);
                 Location averagePlaceLocation = calcCenterLocation(plannerState.plannedPlacements, placeLocator);
                 
