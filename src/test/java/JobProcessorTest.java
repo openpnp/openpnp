@@ -456,29 +456,31 @@ public class JobProcessorTest {
 
     private String asSvg() throws Exception {
         StringBuilder svg1 = new StringBuilder();
-        StringBuilder svg2 = new StringBuilder();
         svg1.append("<title>Job Planner "+testName+"</title>\n");
         double minX=0,minY=0,maxX=0,maxY=0;
         int row = 0;
         for(PlannerStepResults result: results) {
             Location prevLocation = null;
             row += 1;
+            svg1.append("<g>\n");
             for(PlannedPlacement p : result.getPlannedPlacements() ) {
                 Location locationNozzle = Utils2D.calculateBoardPlacementLocation(
                     p.jobPlacement.getBoardLocation(),
                     p.jobPlacement.getPlacement().getLocation());
                 Location locationHead = p.nozzle.toHeadLocation(locationNozzle, LocationOption.Quiet);
                 String color = p.nozzle.getId().equals("N1")?"red":"black"; // first nozzle is red
-                svg2.append("<circle cx=\""+locationHead.getX()+"\" cy=\""+locationHead.getY()+"\" r=\"1\" style=\"stroke:"+color+";fill-opacity:0;\"/>\r\n");
+                String packageName = p.jobPlacement.getPlacement().getPart().getPackage().getId();
+                String w = packageName.equals("R0805")?"1.5":"1"; // larger circle for the larger part with differnt tip compatibilty
+                svg1.append("<circle cx=\""+locationNozzle.getX()+"\" cy=\""+locationNozzle.getY()+"\" r=\"1\" style=\"stroke:"+color+";fill-opacity:0;stroke-width:"+w+"\"/>\r\n");
                 svg1.append("<line x1=\""+locationHead.getX()+"\" y1=\""+locationHead.getY()+"\" x2=\""+
-                            locationNozzle.getX()+"\" y2=\""+locationNozzle.getY()+"\" style=\"stroke:lightgrey\"/>\r\n");
+                            locationNozzle.getX()+"\" y2=\""+locationNozzle.getY()+"\" style=\"stroke:darkgrey;stroke-width:0.2;\"/>\r\n");
                 if(prevLocation!=null) {
                     svg1.append("<line x1=\""+prevLocation.getX()+"\" y1=\""+prevLocation.getY()+"\" x2=\""+
-                               locationHead.getX()+"\" y2=\""+locationHead.getY()+"\" style=\"stroke:darkgrey;\"/>\r\n");
+                               locationHead.getX()+"\" y2=\""+locationHead.getY()+"\" style=\"stroke:black;stroke-width:0.2;\"/>\r\n");
 
                 }
                 if(p.planningCost==null) {
-                    svg2.append("<text style=\"font-size:4;\" x=\""+(locationHead.getX()+1)+"\" y=\""+locationHead.getY()+"\" r=\"1\" >"+row+"</text>\r\n");
+                    svg1.append("<text style=\"font-size:4;\" x=\""+(locationNozzle.getX()+1)+"\" y=\""+locationNozzle.getY()+"\" r=\"1\" >"+row+"</text>\r\n");
                 }
                 minX = Math.min(minX,locationHead.getX());
                 minY = Math.min(minY,locationHead.getY());
@@ -486,20 +488,21 @@ public class JobProcessorTest {
                 maxY = Math.max(maxY,locationHead.getY());
                 prevLocation = locationHead;
             }
+            svg1.append("</g>\n");
         }
         double margin = 10;
         minX -= margin;
         minY -= margin;
         maxX += margin;
         maxY += margin;
-        svg2.append("</svg>\n");
+        svg1.append("</svg>\n");
         String header = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
                    "<svg xmlns=\"http://www.w3.org/2000/svg\"\n" +
                    "  xmlns:xlink=\"http://www.w3.org/1999/xlink\"\n" +
                    "  version=\"1.1\" baseProfile=\"full\"\n" +
                    "  width=\"100%\" height=\"100%\"\n"+
                    "  viewBox=\""+minX+" "+minY+" "+(maxX-minX)+" "+(maxY-minY)+"\">\r\n";
-        return header + svg1.toString() + svg2.toString();
+        return header + svg1.toString();
     }
 
     private void dumpResults() {
