@@ -480,7 +480,7 @@ public class JobProcessorTest {
 
                 }
                 if(p.planningCost==null) {
-                    svg1.append("<text style=\"font-size:4;\" x=\""+(locationNozzle.getX()+1)+"\" y=\""+locationNozzle.getY()+"\" r=\"1\" >"+row+"</text>\r\n");
+                    svg1.append("<text font-size=\"4\" x=\""+(locationNozzle.getX()+1)+"\" y=\""+locationNozzle.getY()+"\" r=\"1\" >"+row+"</text>\r\n");
                 }
                 minX = Math.min(minX,locationHead.getX());
                 minY = Math.min(minY,locationHead.getY());
