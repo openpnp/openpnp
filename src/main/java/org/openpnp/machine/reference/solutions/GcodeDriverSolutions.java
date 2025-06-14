@@ -79,7 +79,8 @@ public class GcodeDriverSolutions implements Solutions.Subject {
         RepRapFirmware,
         TinyG,
         Marlin,
-        Grbl;
+        Grbl,
+        GrblHAL;
 
         boolean isSmoothie() {
             return this == Smoothieware || this == SmoothiewareGrblSyntax || this == SmoothiewareChmt;
@@ -98,7 +99,7 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                 return FlowControl.XonXoff;
             }
             // Default to typical driver setting.
-            return (this == TinyG || this == Grbl || this == SmoothiewareChmt) ? FlowControl.Off : FlowControl.RtsCts;
+            return (this == TinyG || this == Grbl || this == SmoothiewareChmt || this == GrblHAL) ? FlowControl.Off : FlowControl.RtsCts;
         }
     }
 
@@ -202,7 +203,7 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                         "Firmware was not detected ("+
                                 (machine.isEnabled() ? 
                                         (gcodeDriver.isSpeakingGcode() ? "failure, check log" : "controller may not speak Gcode") 
-                                        : "machine is disabled")+"). Only if the firmware is know, can Issues & Solutions generate suggested G-code for your machine configuration.", 
+                                        : "machine is disabled")+"). Only if the firmware is known, can Issues & Solutions generate suggested G-code for your machine configuration.",
                                 "Retry the detection by connecting to the controller or assume a generic controller.", 
                                 Severity.Fundamental,
                         "https://www.reprap.org/wiki/G-code#M115:_Get_Firmware_Version_and_Capabilities") {
@@ -358,6 +359,27 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                 }
                 else if (gcodeDriver.getFirmwareProperty("FIRMWARE_NAME", "").contains("Grbl")) {
                     firmware = FirmwareType.Grbl;
+                }
+                else if (gcodeDriver.getFirmwareProperty("FIRMWARE_NAME", "").contains("grblHAL")) {
+                    firmware = FirmwareType.GrblHAL;
+                    // enable backlash escaped characters to send ctrl-c etc.
+                    if(!gcodeDriver.isBackslashEscapedCharactersEnabled()) {
+
+                        solutions.add(new Solutions.Issue(
+                                gcodeDriver,
+                                "Backlash escaped characters needed for Grbl dialects.",
+                                "Enable backlash escaped characters to support \\u0000 notation in commands."
+                                        + "This is needed to send ctrl-c or ctrl-x to the controller firmware.",
+                                Severity.Warning,
+                                "https://github.com/gnea/grbl/blob/master/doc/markdown/commands.md#ascii-realtime-command-descriptions") {
+
+                            @Override
+                            public void setState(Solutions.State state) throws Exception {
+                                gcodeDriver.setBackslashEscapedCharactersEnabled((state == Solutions.State.Solved));
+                                super.setState(state);
+                            }
+                        });
+                    }
                 }
                 else if (gcodeDriver.getFirmwareProperty("FIRMWARE_NAME", "").contains("GcodeServer")) {
                     firmware = FirmwareType.Generic;
@@ -857,12 +879,15 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                     if (dialect == FirmwareType.TinyG) {
                         commandBuilt = "^tinyg .* err:.*";
                     }
+                    else if (dialect == FirmwareType.GrblHAL) {
+                        commandBuilt = "^(error|<ALARM|[MSG).*";
+                    }
                     else {
                         //commandBuilt = "^!!*";
                     }
                     break;
                 case HOME_COMMAND:
-                    if (dialect == FirmwareType.SmoothiewareGrblSyntax || dialect == FirmwareType.Grbl) {
+                    if (dialect == FirmwareType.SmoothiewareGrblSyntax || dialect == FirmwareType.Grbl || dialect == FirmwareType.GrblHAL) {
                         commandBuilt = "$H ; Home all axes";
                     }
                     else if (dialect == FirmwareType.TinyG) {
@@ -1046,6 +1071,37 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                         commandBuilt = "";
                     }
                     break;
+                case ACTUATE_BOOLEAN_COMMAND:
+                    if (dialect == FirmwareType.GrblHAL)
+                    {
+                        commandBuilt = "M42 P{Index} S{True:1}{False:0} ; Set or reset boolean actuator";
+                    }
+                    else
+                    {
+                        commandBuilt = "";
+                    }
+                    break;
+                case ACTUATOR_READ_COMMAND:
+                    if (dialect == FirmwareType.GrblHAL)
+                    {
+                        commandBuilt = "M143 P{Index} ; Read boolean actuator, replace P with E for analog read";
+                    }
+                    else
+                    {
+                        commandBuilt = "";
+                    }
+                    break;
+                case ACTUATOR_READ_REGEX:
+                    if (dialect == FirmwareType.GrblHAL)
+                    {
+                        commandBuilt = "^(A|D).:(?<Value>-?\\d+).*";
+                    }
+                    else
+                    {
+                        commandBuilt = "";
+                    }
+                    break;
+
             }
             suggestGcodeCommand(gcodeDriver, null, solutions, commandType, commandBuilt, commandModified,
                     disallowHeadMountables, rationale);
