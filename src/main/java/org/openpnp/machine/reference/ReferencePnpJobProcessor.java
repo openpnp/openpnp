@@ -587,14 +587,14 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
             long t = System.currentTimeMillis();
 
-            Logger.info("plannedJobPlacements {}",plannedJobPlacements);
+            Logger.debug("plannedJobPlacements {}",plannedJobPlacements);
 
             // Perform a stable sort using rank. This pulls the lowest rank placements to the front of the
             // list without affecting job processor ordering within ranks.
             plannedJobPlacements.sort(Comparator.comparing(JobPlacement::getRank));
             List<PlannedPlacement> plannedPlacements = planner.plan(head, plannedJobPlacements, jobPlacementsAndNozzleTips.getNozzleTips());
             long duration = System.currentTimeMillis() - t;
-            Logger.info("Planner complete in {}ms: {} open, {}", duration, numberOfOpenPendingJobPlacements, plannedPlacements);
+            Logger.debug("Planner complete in {}ms: {} open, {}", duration, numberOfOpenPendingJobPlacements, plannedPlacements);
 
             Configuration.get().getBus().post(new PnpJobPlanner.PlannerStepResults(plannedPlacements,duration)); // for the unit test monitoring
 
@@ -603,7 +603,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             }
 
             for (PlannedPlacement plannedPlacement : plannedPlacements) {
-                Logger.info("Placement {} has rank {}", plannedPlacement, plannedPlacement.jobPlacement.getRank());
+                Logger.debug("Placement {} has rank {}", plannedPlacement, plannedPlacement.jobPlacement.getRank());
                 plannedPlacement.jobPlacement.setStatus(Status.Processing);
             }
             
@@ -810,7 +810,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 return startLocation;
             }
 
-            Logger.info("startLocation {}",startLocation);
+            Logger.debug("startLocation {}",startLocation);
 
             // route pick locations of all feeders through travelling salesman
             TravellingSalesman<Feeder> tsm = new TravellingSalesman<>(
@@ -829,7 +829,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             
             // get the optimized list of feeders
             feeders = tsm.getTravel();
-            Logger.info("feeders {}",feeders.stream().map(feeder -> { return feeder.getName(); }).collect(Collectors.toList()));
+            Logger.debug("feeders {}",feeders.stream().map(feeder -> { return feeder.getName(); }).collect(Collectors.toList()));
             
             // feed feeder locations back into jobPlacements as feederIndex
             for (JobPlacement p : local) {
@@ -844,7 +844,6 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 }
             }
             
-            // was return getPickLocation(feeders.get(feeders.size() -1));
             return getPickLocation(feeders.get(0));
         }
 
@@ -1063,11 +1062,11 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 // We do not track enough information to optimise multi-nozzle scenarios, but we have this heuristic to minimise the chance of this occurring.
                 // Inflexible nozzle tips are run first, and the flexible nozzle tips (i.e. those that can handle parts which can also be handled
                 // by other tips) are kept for the end of the job.
-                Logger.info("perNozzlePlacementOptions {}",perNozzlePlacementOptions);
+                Logger.trace("perNozzlePlacementOptions {}",perNozzlePlacementOptions);
                 perNozzleTipJobPlacements.sort(Comparator.comparing( (JobPlacementNozzleTip j) -> perNozzlePlacementOptions.getOrDefault(j.getNozzleTip(),0))
                                                         .thenComparing(Comparator.comparing(JobPlacementNozzleTip::size).reversed())
                                                         .thenComparing(j -> j.getNozzleTip().getName()));
-                Logger.info("perNozzleTipJobPlacements {}",perNozzleTipJobPlacements);
+                Logger.trace("perNozzleTipJobPlacements {}",perNozzleTipJobPlacements);
             }
 
             // optimize each nozzle tip group using PickPlaceLocation
@@ -1095,7 +1094,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 traceMessage += " " + jobPlacementNozzleTip.getNozzleTip().getName() + " (" + data.getJobPlacements().size() + ")";
             }
             
-            Logger.info(traceMessage);
+            Logger.trace(traceMessage);
             
             return new ReturnJobPlacementsAndNozzleTips(output, plannedNozzleTips);
         }
@@ -1938,7 +1937,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     protected List<JobPlacement> getOpenPendingJobPlacements() {
         int currentRank = getCurrentRank();
         int blockedRank = currentRank+10;
-        Logger.info("Current rank is {}. Blocked up to rank {}",currentRank,blockedRank);
+        Logger.debug("Current rank is {}. Blocked up to rank {}",currentRank,blockedRank);
         return this.jobPlacements.stream().filter((jobPlacement) -> {
             return jobPlacement.getStatus() == Status.Pending && jobPlacement.getRank()<blockedRank;
         }).collect(Collectors.toList());
@@ -2589,7 +2588,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                         plannerStateAlt.addPlannedPlacement(planWithoutNozzleTipChange(plannerState.plannedPlacements.get(0).nozzle,plannerStateAlt));
                         if(plannerStateAlt.plannedPlacements.get(1).planningCost != null &&
                            plannerStateAlt.plannedPlacements.get(1).planningCost<plannerState.plannedPlacements.get(1).planningCost) {
-                            Logger.info("Alternate plan accepted {} better than {}",plannerStateAlt.plannedPlacements, plannerState.plannedPlacements);
+                            Logger.debug("Alternate plan accepted {} better than {}",plannerStateAlt.plannedPlacements, plannerState.plannedPlacements);
                             plannerState = plannerStateAlt;
                         }
                     }
@@ -2619,7 +2618,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
              * performed in the order of nozzle name. This is not really necessary but some users
              * prefer it that way and it does no harm
              */
-            Logger.info("Planner planned {}",plannerState.plannedPlacements);
+            Logger.debug("Planner planned {}",plannerState.plannedPlacements);
             return sort(plannerState.plannedPlacements);
         }
         
@@ -2733,14 +2732,14 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                         }
                     }
                 }
-                Logger.info("Optimised: {} rank {} from {}",bestPlacement,bestPlacement.getRank(),compatibleJobPlacements.size());
+                Logger.debug("Optimised: {} rank {} from {}",bestPlacement,bestPlacement.getRank(),compatibleJobPlacements.size());
             }
             // if bestPlacement is still null, use the first
             if (bestPlacement == null) {
                 // no further optimization possible or requested, just choose the most preferred placement on the list
                 bestPlacement = compatibleJobPlacements.get(0);
                 planningCost = null;
-                Logger.info("No optimisation possible: {} rank {}",bestPlacement,bestPlacement.getRank());
+                Logger.debug("No optimisation possible: {} rank {}",bestPlacement,bestPlacement.getRank());
             }
             
             return new PlannedPlacement(nozzle, nozzleTip, bestPlacement, planningCost);
