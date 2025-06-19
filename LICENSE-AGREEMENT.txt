@@ -1,0 +1,35 @@
+Contributor License Statement for OpenPnP
+
+The following contributors hereby assign or donate their contributions
+to the OpenPnP project, as defined below, under terms that allow OpenPnP
+and its maintainers to use, modify, sublicense, and relicense the
+contributions without further permission.
+
+Contributors agree to:
+- Assign all copyright and related rights in their contributions to
+the OpenPnP project and its maintainers.
+- Allow the OpenPnP maintainers to relicense their contributions under
+any future license.
+- Waive any requirement for further approval for use, modification,
+distribution, or relicensing of their contributions.
+
+Definitions:
+- "Contribution" means any source code, documentation, or other original
+works submitted to the OpenPnP project, whether through commits, pull
+requests, or other communication methods.
+
+Eligibility and Addition to this List:
+- A contributor may only be listed below if they have made or submitted
+verifiable contributions to the OpenPnP project.
+- Contributors may add themselves by submitting a pull request that
+includes their name, thereby signaling agreement with the terms above.
+- Alternatively, contributors may express their agreement through other
+verifiable channels (e.g., project mailing list, forum post, or email).
+- In such cases, a project maintainer may add the contributor to this
+list on their behalf, provided a record of the contributor’s
+agreement is retained.
+
+Signatories:
+
+- [Your Real Name or GitHub Handle] ([Date])
+- https://github.com/prusk June 19, 2025
