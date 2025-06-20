@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 <pandaplacer.ca@gmail.com>
+ * Created 2024
  * based on the ReferencePushPullFeeder
  * Copyright (C) 2020 <mark@makr.zone>
  * based on the ReferenceLeverFeeder
