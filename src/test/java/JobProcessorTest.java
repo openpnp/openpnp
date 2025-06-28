@@ -83,24 +83,6 @@ public class JobProcessorTest {
     }
 
     @Test
-    public void testFeederFocus() throws Exception {
-        // The Feeder Focus option restricts the planner to select parts from the same
-        // feeder as the first on its preference list. This causes it to empty one feeder
-        // before moving on to the next. This increases planning cost,
-        // because the planner has fewer options that it can consider.
-        setup("testFeederFocus");
-        jobProcessor.planner.setFeederStrategy(PnpJobPlanner.FeederStrategy.FeederFocus);
-        run();
-        saveCsv();
-        checkRanks();
-        assertEquals(3, tipChanges());
-        assertEquals(1.6, utilisation(), 0.01);
-        assertEquals(60, cycleCount(), 1);
-        assertEquals(1.65, averagePlanningCost(), 0.01); // Efficiency somewhat worse
-        assertEquals(8, partChanges()); // This is optimal
-    }
-
-    @Test
     public void testBoardPart() throws Exception {
         // 'Board:Part' sequence is a 'legacy' job order option
         setup("testBoardPart");
@@ -156,25 +138,6 @@ public class JobProcessorTest {
         assertEquals(34, partChanges(), 5);
     }
 
-    @Test
-    public void testDifferentFeeders() throws Exception {
-        // The Feeder Focus option restricts the planner to select parts from the same
-        // feeder as the first on its preference list. This causes it to empty one feeder
-        // before moving on to the next. This increases planning cost,
-        // because the planner has fewer options that it can consider.
-        setup("testDifferentFeeders");
-        jobProcessor.planner.setFeederStrategy(PnpJobPlanner.FeederStrategy.DifferentFeeders);
-        run();
-        saveCsv();
-        checkRanks();
-        assertEquals(3, tipChanges());
-        assertEquals(1.65, utilisation(), 0.01);
-        assertEquals(57, cycleCount(), 1);
-        assertEquals(1.12, averagePlanningCost(), 0.01); // Efficiency is great
-        assertEquals(20, partChanges());
-        checkThatWeNeverLoadTheSamePartOnBothNozzles();
-    }
-
     private void checkThatWeNeverLoadTheSamePartOnBothNozzles() {
         for(PlannerStepResults result: results) {
             if(result.getPlannedPlacements().size()==2)
@@ -183,24 +146,6 @@ public class JobProcessorTest {
                                 result.getPlannedPlacements().get(1).jobPlacement.getPlacement().getPart().getId());
             }
         }
-    }
-
-    @Test
-    public void testDifferentFeedersFlexibility() throws Exception {
-        // Another test for "Different Feeders", using the NozzleTipsByFlexibility to keep all the nozzles
-        // busy until the end of the job
-        setup("testDifferentFeedersFlexibility");
-        jobProcessor.setJobOrder(ReferencePnpJobProcessor.JobOrderHint.NozzleTipsByFlexibility);
-        jobProcessor.planner.setFeederStrategy(PnpJobPlanner.FeederStrategy.DifferentFeeders);
-        run();
-        saveCsv();
-        checkRanks();
-        assertEquals(3, tipChanges());
-        assertEquals(1.92, utilisation(), 0.01); // as optimal as reasonably expected here
-        assertEquals(51, cycleCount(), 1);
-        assertEquals(1.48, averagePlanningCost(), 0.01); // Efficiency marginally worse
-        assertEquals(32, partChanges());
-        checkThatWeNeverLoadTheSamePartOnBothNozzles();
     }
 
     @Test

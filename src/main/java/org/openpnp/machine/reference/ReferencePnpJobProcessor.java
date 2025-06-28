@@ -2381,11 +2381,6 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         }
         public void restart() {
         }
-        public FeederStrategy getFeederStrategy() {
-            return FeederStrategy.AnyFeeder;
-        }
-        public void setFeederStrategy(FeederStrategy feederStrategy) {
-        }
 
         @Override
         public List<PlannedPlacement> plan(Head head, List<JobPlacement> jobPlacements, List<NozzleTip> nozzleTips) {
@@ -2494,9 +2489,6 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         @Attribute(required = false)
         protected Strategy strategy = Strategy.Minimize;
 
-        @Attribute(required = false)
-        protected FeederStrategy feederStrategy = FeederStrategy.AnyFeeder;
-
         private boolean restart;
         
         @Override
@@ -2507,13 +2499,6 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         @Override
         public void setStrategy(Strategy strategy) {
             this.strategy = strategy;
-        }
-
-        public FeederStrategy getFeederStrategy() {
-            return feederStrategy;
-        }
-        public void setFeederStrategy(FeederStrategy feederStrategy) {
-            this.feederStrategy = feederStrategy;
         }
 
         @Override
@@ -2653,53 +2638,6 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 return null;
             }
             
-            // An option to only consider placements that use the same feeder as the first placement on the plan.
-            if (feederStrategy == FeederStrategy.FeederFocus) {
-                Machine machine = Configuration.get().getMachine();
-                Feeder referenceFeeder = findFeederWithoutException(machine, compatibleJobPlacements.get(0).getPlacement().getPart());
-
-                // if the first/reference placement has no feeder, return just that placement to avoid any unwonted optimization
-                if (referenceFeeder == null) {
-                    compatibleJobPlacements.subList(1, compatibleJobPlacements.size()).clear();
-                }
-                else {
-                    // now filter compatible job placements for same feeder as reference
-                    compatibleJobPlacements = compatibleJobPlacements
-                            .stream()
-                            .filter(jobPlacement -> {
-                                Feeder feeder = findFeederWithoutException(machine, jobPlacement.getPlacement().getPart());
-                                return feeder != null && feeder.equals(referenceFeeder);
-                            })
-                            .collect(Collectors.toList());
-                }
-            }
-
-            // An option to exclude feeders that have already been selected for a different nozzle
-            if (feederStrategy == FeederStrategy.DifferentFeeders) {
-                // Find all the parts already selected for picking
-                List <Part> busyParts = plannerState.plannedPlacements
-                    .stream()
-                    .map(plannedPlacement -> {
-                        return plannedPlacement.jobPlacement.getPlacement().getPart();
-                    })
-                    .collect(Collectors.toList());
-                // Exclude placements using the same part.
-                // NB this is not quite right. If there are multiple feeders for one part
-                // then the "DifferentFeeders" strategy should still allow us to pick the
-                // same part from different feeders. But we dont have great support for
-                // having multiple feeders yet.
-                compatibleJobPlacements = compatibleJobPlacements
-                    .stream()
-                    .filter(jobPlacement -> {
-                        return !busyParts.contains(jobPlacement.getPlacement().getPart());
-                    })
-                    .collect(Collectors.toList());
-
-                if(compatibleJobPlacements.isEmpty()) {
-                    return null;
-                }
-            }
-
             // if strategy is not FullyAsPlanned (no optimization at all) and if other placements
             // have been planned, sort compatible placements by distance to pick and place location
             JobPlacement bestPlacement = null;

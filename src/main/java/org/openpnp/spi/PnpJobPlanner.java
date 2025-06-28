@@ -57,17 +57,6 @@ public interface PnpJobPlanner {
         }
     }
 
-    public enum FeederStrategy {
-        AnyFeeder,          // Consider all feeders for most efficient movement
-        FeederFocus,        // Prefer to stick with one feeder where possible
-        DifferentFeeders;   // Each nozzle must pick from a different feeder
-
-        @Override
-        public String toString() {
-            return Translations.getString("MachineSetup.JobProcessors.ReferencePnpJobProcessor.FeederStrategy." + this.name());
-        }
-    }
-
     /**
      * Call restart() to signal that a new job run will start next. That allows to
      * support a first-run strategies (Strategy.StartAsPlanned).
@@ -75,8 +64,6 @@ public interface PnpJobPlanner {
     public void restart();
     public Strategy getStrategy();
     public void setStrategy(Strategy strategy);
-    public FeederStrategy getFeederStrategy();
-    public void setFeederStrategy(FeederStrategy feederStrategy);
     public List<PlannedPlacement> plan(Head head, List<JobPlacement> jobPlacements, List<NozzleTip> nozzleTips);
     public List<PlannedPlacement> sort(List<PlannedPlacement> plannedPlacements);
 }
