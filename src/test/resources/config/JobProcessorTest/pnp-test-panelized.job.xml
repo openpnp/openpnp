@@ -4,16 +4,16 @@
       <placements/>
       <children>
          <object class="org.openpnp.model.BoardLocation" side="Bottom" id="Brd7" file-name="pnp-test.board.xml" check-fiducials="false" locally-enabled="true">
-            <location units="Millimeters" x="183.95466039866614" y="146.59700013532986" z="0.0" rotation="-140.606916294328"/>
+            <location units="Millimeters" x="183.95466039866614" y="146.59700013532986" z="-1.0" rotation="-140.606916294328"/>
          </object>
          <object class="org.openpnp.model.BoardLocation" side="Top" id="Brd8" file-name="pnp-test.board.xml" check-fiducials="false" locally-enabled="true">
-            <location units="Millimeters" x="38.02044332572783" y="100.91206331241432" z="0.0" rotation="76.64603235413277"/>
+            <location units="Millimeters" x="38.02044332572783" y="100.91206331241432" z="-1.0" rotation="76.64603235413277"/>
          </object>
          <object class="org.openpnp.model.PanelLocation" side="Top" id="Pnl1" file-name="pnp-test.panel.xml" check-fiducials="false" locally-enabled="true">
-            <location units="Millimeters" x="221.18853904774994" y="5.256374131065933" z="0.0" rotation="8.705368220034943"/>
+            <location units="Millimeters" x="221.18853904774994" y="5.256374131065933" z="-1.0" rotation="8.705368220034943"/>
          </object>
          <object class="org.openpnp.model.PanelLocation" side="Bottom" id="Pnl2" file-name="pnp-test.panel.xml" check-fiducials="false" locally-enabled="true">
-            <location units="Millimeters" x="200.6083407696778" y="107.34685739054952" z="0.0" rotation="-23.913184410750965"/>
+            <location units="Millimeters" x="200.6083407696778" y="107.34685739054952" z="-1.0" rotation="-23.913184410750965"/>
          </object>
       </children>
       <pseudo-placement-ids/>
