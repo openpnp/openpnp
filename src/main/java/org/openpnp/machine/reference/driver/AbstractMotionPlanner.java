@@ -292,12 +292,18 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
             
             // now execute the delay on all effected drivers
             for (Driver driver : drivers) {
-                delayNotExecuted |= driver.delay(milliseconds);
+                if (!driver.delay(milliseconds)) {
+                    driver.waitForCompletion(null, CompletionType.WaitForStillstand); // see issue #1867
+                    delayNotExecuted = true;
+                }
             }
         }
         else {
             for (Driver driver : machine.getDrivers()) {
-                delayNotExecuted |= driver.delay(milliseconds);
+                if (!driver.delay(milliseconds)) {
+                    driver.waitForCompletion(null, CompletionType.WaitForStillstand); // see issue #1867
+                    delayNotExecuted = true;
+                }
             }
         }
         
