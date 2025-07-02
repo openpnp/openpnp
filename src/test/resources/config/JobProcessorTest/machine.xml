@@ -48,28 +48,28 @@
       </heads>
       <feeders>
          <feeder class="org.openpnp.machine.reference.feeder.ReferenceAutoFeeder" version="1.1" id="f0201-1k" name="f0201-1k" enabled="true" part-id="R0201-1K" feed-retry-count="3" pick-retry-count="0" feed-options="Normal" actuator-value="0.0" post-pick-actuator-value="0.0" move-before-feed="false" recycle-support="false">
-            <location units="Millimeters" x="100.0" y="0.0" z="0.0" rotation="0.0"/>
+            <location units="Millimeters" x="100.0" y="0.0" z="-10.0" rotation="0.0"/>
          </feeder>
          <feeder class="org.openpnp.machine.reference.feeder.ReferenceAutoFeeder" version="1.1" id="f0402-1k" name="f0402-1k" enabled="true" part-id="R0402-1K" feed-retry-count="3" pick-retry-count="0" feed-options="Normal" actuator-value="0.0" post-pick-actuator-value="0.0" move-before-feed="false" recycle-support="false">
-            <location units="Millimeters" x="115.0" y="0.0" z="0.0" rotation="0.0"/>
+            <location units="Millimeters" x="115.0" y="0.0" z="-10.0" rotation="0.0"/>
          </feeder>
          <feeder class="org.openpnp.machine.reference.feeder.ReferenceAutoFeeder" version="1.1" id="f0603-1k" name="f0603-1k" enabled="true" part-id="R0603-1K" feed-retry-count="3" pick-retry-count="0" feed-options="Normal" actuator-value="0.0" post-pick-actuator-value="0.0" move-before-feed="false" recycle-support="false">
-            <location units="Millimeters" x="130.0" y="0.0" z="0.0" rotation="0.0"/>
+            <location units="Millimeters" x="130.0" y="0.0" z="-10.0" rotation="0.0"/>
          </feeder>
          <feeder class="org.openpnp.machine.reference.feeder.ReferenceAutoFeeder" version="1.1" id="f0805-1k" name="f0805-1k" enabled="true" part-id="R0805-1K" feed-retry-count="3" pick-retry-count="0" feed-options="Normal" actuator-value="0.0" post-pick-actuator-value="0.0" move-before-feed="false" recycle-support="false">
-            <location units="Millimeters" x="145.0" y="0.0" z="0.0" rotation="0.0"/>
+            <location units="Millimeters" x="145.0" y="0.0" z="-10.0" rotation="0.0"/>
          </feeder>
          <feeder class="org.openpnp.machine.reference.feeder.ReferenceAutoFeeder" version="1.1" id="f0201-10k" name="f0201-10k" enabled="true" part-id="R0201-10K" feed-retry-count="3" pick-retry-count="0" feed-options="Normal" actuator-value="0.0" post-pick-actuator-value="0.0" move-before-feed="false" recycle-support="false">
-            <location units="Millimeters" x="160.0" y="0.0" z="0.0" rotation="0.0"/>
+            <location units="Millimeters" x="160.0" y="0.0" z="-10.0" rotation="0.0"/>
          </feeder>
          <feeder class="org.openpnp.machine.reference.feeder.ReferenceAutoFeeder" version="1.1" id="f0402-10k" name="f0402-10k" enabled="true" part-id="R0402-10K" feed-retry-count="3" pick-retry-count="0" feed-options="Normal" actuator-value="0.0" post-pick-actuator-value="0.0" move-before-feed="false" recycle-support="false">
-            <location units="Millimeters" x="175.0" y="0.0" z="0.0" rotation="0.0"/>
+            <location units="Millimeters" x="175.0" y="0.0" z="-10.0" rotation="0.0"/>
          </feeder>
          <feeder class="org.openpnp.machine.reference.feeder.ReferenceAutoFeeder" version="1.1" id="f0603-10k" name="f0603-10k" enabled="true" part-id="R0603-10K" feed-retry-count="3" pick-retry-count="0" feed-options="Normal" actuator-value="0.0" post-pick-actuator-value="0.0" move-before-feed="false" recycle-support="false">
-            <location units="Millimeters" x="190.0" y="0.0" z="0.0" rotation="0.0"/>
+            <location units="Millimeters" x="190.0" y="0.0" z="-10.0" rotation="0.0"/>
          </feeder>
          <feeder class="org.openpnp.machine.reference.feeder.ReferenceAutoFeeder" version="1.1" id="f0805-10k" name="f0805-10k" enabled="true" part-id="R0805-10K" feed-retry-count="3" pick-retry-count="0" feed-options="Normal" actuator-value="0.0" post-pick-actuator-value="0.0" move-before-feed="false" recycle-support="false">
-            <location units="Millimeters" x="205.0" y="0.0" z="0.0" rotation="0.0"/>
+            <location units="Millimeters" x="205.0" y="0.0" z="-10.0" rotation="0.0"/>
          </feeder>
       </feeders>
       <cameras>
@@ -113,5 +113,11 @@
    	  	<part-alignment class="org.openpnp.machine.reference.vision.ReferenceBottomVision" enabled="true" pre-rotate="false"/>
    	  </part-alignments>
    	  <driver class="org.openpnp.machine.reference.driver.NullDriver" feed-rate-mm-per-minute="20000.0"/>
+      <motion-planner class="org.openpnp.machine.reference.driver.ReferenceAdvancedMotionPlanner" maximum-plan-history="60.0" allow-continuous-motion="true" allow-uncoordinated="false" diagnostics-enabled="false" interpolation-retiming="true" show-approximation="true" to-mid-1-speed="1.0" to-mid-2-speed="1.0" to-end-speed="1.0" start-location-enabled="false" mid-1-location-enabled="false" mid-2-location-enabled="false" end-location-enabled="false" to-mid-1-safe-z="true" to-mid-2-safe-z="true" to-end-safe-z="true">
+         <start-location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
+         <mid-location-1 units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
+         <mid-location-2 units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
+         <end-location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
+      </motion-planner>
    </machine>
 </openpnp-machine>
