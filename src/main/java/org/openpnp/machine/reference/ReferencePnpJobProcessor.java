@@ -1233,6 +1233,22 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
              */
             JobProcessorException lastException = null;
             for (int partPickTry = 0; partPickTry < 1 + part.getPickRetryCount(); partPickTry++) {
+
+                if (nozzle.getPart() == null) {
+                    // We expect the nozzle to be empty before a pick.
+                } else {
+                    // Unexpected!
+                    if (nozzle.getPart() == part) {
+                        // The part on the nozzle matches the placement.
+                        // How did this happen? The operator must have manually picked the part for us.
+                        // We do not need to pick again.
+                        return this;
+                    } else {
+                        throw new JobProcessorException(part, nozzle, "Part mismatch with part on nozzle before pick. Found "+nozzle.getPart().getId()+" but expected the nozzle to be empty.");
+                    }
+                }
+
+
                 /**
                  * Find an available feeder. If one cannot be found this will throw. There's nothing
                  * else we can do with this part.
