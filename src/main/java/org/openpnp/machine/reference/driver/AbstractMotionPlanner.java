@@ -308,9 +308,8 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
 
         if(!delayExecutedInAllDrivers) {
             // time delay using OS
-            Logger.trace("delay sleep before");
+            Logger.trace("delay Thread.sleep");
             Thread.sleep(milliseconds);
-            Logger.trace("delay sleep after");
         }
     }
 
