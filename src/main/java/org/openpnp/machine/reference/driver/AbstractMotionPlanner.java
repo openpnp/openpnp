@@ -260,7 +260,6 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
 
     @Override
     public void delay(int milliseconds, HeadMountable... hms) throws Exception {
-        boolean delayNotExecuted = false;   // set to true if any driver requested to delay does not support delaying
         // Plan and execute any queued motion commands. 
         executeMotionPlan(CompletionType.CommandStillstand);
         ReferenceMachine machine = getMachine();
