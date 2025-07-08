@@ -260,7 +260,6 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
 
     @Override
     public void delay(int milliseconds, HeadMountable... hms) throws Exception {
-        boolean delayNotExecuted = false;   // set to true if any driver requested to delay does not support delaying
         // Plan and execute any queued motion commands. 
         executeMotionPlan(CompletionType.CommandStillstand);
         ReferenceMachine machine = getMachine();
@@ -289,21 +288,27 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
                     }
                 }
             }
-            
-            // now execute the delay on all effected drivers
-            for (Driver driver : drivers) {
-                delayNotExecuted |= driver.delay(milliseconds);
-            }
+            delayAllDrivers(drivers,milliseconds);
         }
         else {
-            for (Driver driver : machine.getDrivers()) {
-                delayNotExecuted |= driver.delay(milliseconds);
-            }
+            delayAllDrivers(machine.getDrivers(),milliseconds);
         }
-        
-        // if any driver was not able to execute the delay, fabllback using Thread.sleep()
-        if (delayNotExecuted) {
+    }
+
+    // Execute a delay on all drivers in the list.
+    // If any driver can not execute the delay then we fallback to using Thread.sleep()
+    private void delayAllDrivers(final List<Driver> drivers, int milliseconds) throws Exception
+    {
+        boolean delayExecutedInAllDrivers = true;   // set to false if any driver requested to delay does not support delaying
+
+        for (Driver driver : drivers) {
+            // delay() returns false if the delay was not executed
+            delayExecutedInAllDrivers &= driver.delay(milliseconds);
+        }
+
+        if(!delayExecutedInAllDrivers) {
             // time delay using OS
+            Logger.trace("delay Thread.sleep");
             Thread.sleep(milliseconds);
         }
     }
