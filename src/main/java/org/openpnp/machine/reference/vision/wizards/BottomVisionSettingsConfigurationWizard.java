@@ -15,10 +15,7 @@ import javax.swing.JTextField;
 import javax.swing.UIManager;
 import javax.swing.border.TitledBorder;
 
-import org.jdesktop.beansbinding.AutoBinding;
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
-import org.jdesktop.beansbinding.BeanProperty;
-import org.jdesktop.beansbinding.Bindings;
 import org.openpnp.Translations;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.ComponentDecorators;
@@ -338,9 +335,9 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
         panelAlign.add(testAlignmentAngle, "4, 2");
         testAlignmentAngle.setColumns(10);
 
-        JButton btnTestAlighment = new JButton(Translations.getString(
+        JButton btnTestAlignment = new JButton(Translations.getString(
                 "BottomVisionSettingsConfigurationWizard.PanelAlign.TestAlignmentButton.text")); //$NON-NLS-1$
-        panelAlign.add(btnTestAlighment, "6, 2");
+        panelAlign.add(btnTestAlignment, "6, 2");
 
         chckbxCenterAfterTest = new JCheckBox(Translations.getString(
                 "BottomVisionSettingsConfigurationWizard.PanelAlign.CenterAfterTestChkbox.text")); //$NON-NLS-1$
@@ -348,9 +345,9 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
         chckbxCenterAfterTest.setToolTipText(Translations.getString(
                 "BottomVisionSettingsConfigurationWizard.PanelAlign.CenterAfterTestChkbox.toolTipText")); //$NON-NLS-1$
         chckbxCenterAfterTest.setSelected(true);
-        btnTestAlighment.addActionListener((e) -> {
+        btnTestAlignment.addActionListener((e) -> {
+            applyAction.actionPerformed(null);
             UiUtils.submitUiMachineTask(() -> {
-                applyAction .actionPerformed(null);
                 testAlignment(chckbxCenterAfterTest.isSelected());
             });
         });
@@ -412,8 +409,8 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
         btnAutoVisionCenterOffset.setToolTipText(Translations.getString(
                 "BottomVisionSettingsConfigurationWizard.PanelDetectOffset.AutoVisionCenterOffsetButton.toolTipText")); //$NON-NLS-1$
         btnAutoVisionCenterOffset.addActionListener((e) -> {
+            applyAction.actionPerformed(null);
             UiUtils.submitUiMachineTask(() -> {
-                applyAction.actionPerformed(null);
                 determineVisionOffset();
             });
         });

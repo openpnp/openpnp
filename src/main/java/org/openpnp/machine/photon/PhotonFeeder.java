@@ -24,6 +24,8 @@ import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 
 import javax.swing.*;
+
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -273,11 +275,13 @@ public class PhotonFeeder extends ReferenceFeeder {
                 continue;  // We'll initialize it on a retry
             }
 
-            int timeToWaitMillis = moveFeedForwardResponse.expectedTimeToFeed;
-
-            for (int j = 0; j < 3; j++) {
-                //noinspection BusyWait
-                Thread.sleep(timeToWaitMillis);
+            // The feeder gives us expectedTimeToFeed, but it is way too conservative.
+            // Use expectedTimeToFeed to bound how long we will wait,
+            // but use polling to check the status of the feed.
+            Duration expectedFeedDuration = Duration.ofMillis(moveFeedForwardResponse.expectedTimeToFeed);
+            long endTimeNanos = System.nanoTime() + expectedFeedDuration.toNanos() * 3;
+            for (int j = 0; j <= photonProperties.getFeederCommunicationMaxRetry() || System.nanoTime() <= endTimeNanos; j++) {
+                Thread.sleep(50); // MAGIC: this feels like a good number, there is no particular reason it is this way.
 
                 MoveFeedStatus moveFeedStatus = new MoveFeedStatus(slotAddress);
                 MoveFeedStatus.Response moveFeedStatusResponse = moveFeedStatus.send(photonBus);

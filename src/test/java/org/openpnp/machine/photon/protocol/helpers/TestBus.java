@@ -197,5 +197,9 @@ public class TestBus implements PhotonBusInterface {
                 fail(builder.toString());
             }
         }
+
+        public Boolean hasMore() {
+            return currentVerificationIndex < calls.size();
+        }
     }
 }

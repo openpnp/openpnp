@@ -686,7 +686,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     public boolean delay(int milliseconds) throws Exception {
             String command = getCommand(null, CommandType.DELAY_COMMAND);
         if (command == null || command.isEmpty()) {
-            // return false to signal that delaying in driver is not supported
+            Logger.trace("delaying in gcode driver is not supported");
             return false;
         }
         else if (milliseconds > 0) {
@@ -697,6 +697,9 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
             // consider this delay a pending motion for subsequent WaitForCompletion to actually
             // wait which might otherwise be optimized away.
             motionPending = true;
+            Logger.trace("gcode delay sent");
+        } else {
+            Logger.trace("gcode delay not sent for zero duration");
         }
         
         return true;
