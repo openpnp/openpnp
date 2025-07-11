@@ -16,3 +16,5 @@ hs_err*
 .vscode/
 /src/main/resources/org/openpnp/translations.properties.bak
 .DS_Store
+nbactions.xml
+
