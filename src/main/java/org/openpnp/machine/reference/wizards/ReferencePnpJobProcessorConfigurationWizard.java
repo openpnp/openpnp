@@ -55,7 +55,7 @@ public class ReferencePnpJobProcessorConfigurationWizard extends AbstractConfigu
         contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
 
         JPanel panelGeneral = new JPanel();
-        panelGeneral.setBorder(new TitledBorder(null, "General", TitledBorder.LEADING,
+        panelGeneral.setBorder(new TitledBorder(null, Translations.getString("MachineSetup.JobProcessors.ReferencePnpJobProcessor.GeneralPanel.Border.title"), TitledBorder.LEADING, //$NON-NLS-1$
                 TitledBorder.TOP, null, null));
         contentPanel.add(panelGeneral);
         panelGeneral.setLayout(new FormLayout(new ColumnSpec[] {
