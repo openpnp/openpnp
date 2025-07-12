@@ -134,9 +134,9 @@ public class ReferenceAutoFeederConfigurationWizard extends AbstractReferenceFee
         ckBoxMoveBeforeFeed = new JCheckBox();
         panelActuator.add(ckBoxMoveBeforeFeed, "4, 8, left, default");
 
-        JLabel lblRecycleSupport = new JLabel("Recycle supported");
+        JLabel lblRecycleSupport = new JLabel(Translations.getString("ReferenceAutoFeederConfigurationWizard.ActuatorsPanel.RecycleSupportedChkbox.text")); //$NON-NLS-1$
         panelActuator.add(lblRecycleSupport, "2, 10, right, default");
-        lblRecycleSupport.setToolTipText("Support part recycle from part back to feeder");
+        lblRecycleSupport.setToolTipText(Translations.getString("ReferenceAutoFeederConfigurationWizard.ActuatorsPanel.RecycleSupportedChkbox.toolTipText")); //$NON-NLS-1$
 
         ckBoxRecycleSupport = new JCheckBox();
         panelActuator.add(ckBoxRecycleSupport, "4, 10, left, default");

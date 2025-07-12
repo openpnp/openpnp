@@ -133,13 +133,15 @@ public class ReferenceMachineConfigurationWizard extends AbstractConfigurationWi
         motionPlannerClass = new JComboBox(classNames);
         panelGeneral.add(motionPlannerClass, "4, 12, fill, default");
         
-        JLabel lblPoolScriptingEngines = new JLabel("Pool scripting engines?");
+        JLabel lblPoolScriptingEngines = new JLabel(Translations.getString(
+                "ReferenceMachineConfigurationWizard.PanelGeneral.PoolScriptingEnginesLabel.text")); //$NON-NLS-1$
         panelGeneral.add(lblPoolScriptingEngines, "2, 14, right, default");
 
         poolScriptingEngines = new JCheckBox("");
         panelGeneral.add(poolScriptingEngines, "4, 14");
 
-        JLabel lblAutoLoadMostRecentJob = new JLabel("Auto-load most recent job?");
+        JLabel lblAutoLoadMostRecentJob = new JLabel(Translations.getString(
+                "ReferenceMachineConfigurationWizard.PanelGeneral.AutoLoadMostRecentJobLabel.text")); //$NON-NLS-1$
         panelGeneral.add(lblAutoLoadMostRecentJob, "2, 16, right, default");
 
         autoLoadMostRecentJob = new JCheckBox("");
