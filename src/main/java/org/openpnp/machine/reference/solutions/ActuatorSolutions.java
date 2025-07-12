@@ -36,6 +36,7 @@ import org.openpnp.model.Solutions.Severity;
 import org.openpnp.model.Solutions.State;
 import org.openpnp.model.Solutions.Subject;
 import org.openpnp.spi.Actuator;
+import org.openpnp.spi.Driver;
 import org.openpnp.spi.Machine;
 import org.openpnp.util.TextUtils;
 import org.pmw.tinylog.Logger;
@@ -69,6 +70,10 @@ public class ActuatorSolutions implements Solutions.Subject {
                     "Create and assign a "+qualifier+" actuator as described in the Wiki.", 
                     Severity.Warning,
                     uri));
+        }
+        else if (checkFirmwareName(actuator, "grblHAL"))
+        {
+            // Skip this for grblHAL, use indexes and default command for actuators.
         }
         else {
             switch (actuator.getValueType()) {
@@ -171,6 +176,15 @@ public class ActuatorSolutions implements Solutions.Subject {
                 }
             }
         }
+    }
+
+    protected static boolean checkFirmwareName(Actuator actuator, String name)
+    {
+        if (actuator.getDriver() instanceof GcodeDriver ) {
+            GcodeDriver driver = (GcodeDriver) actuator.getDriver();
+            return driver.getFirmwareProperty("FIRMWARE_NAME", "").contains(name);
+        }
+        return false;
     }
 
     protected class ActuatorGcodeIssue extends Solutions.Issue {
