@@ -3,6 +3,7 @@ package org.openpnp.gui.components;
 import java.awt.Component;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
@@ -13,6 +14,8 @@ import java.util.List;
 import java.util.Vector;
 
 import javax.swing.InputMap;
+import javax.swing.JMenuItem;
+import javax.swing.JPopupMenu;
 import javax.swing.JTable;
 import javax.swing.KeyStroke;
 import javax.swing.ListSelectionModel;
@@ -27,7 +30,7 @@ import javax.swing.text.JTextComponent;
 
 /**
  * From http://tips4java.wordpress.com/2008/10/20/table-select-all-editor/
- * 
+ *
  * The RXTable provides some extensions to the default JTable
  *
  * 1) Select All editing - when a text related cell is placed in editing mode the text is selected.
@@ -41,6 +44,7 @@ public class AutoSelectTextTable extends JTable {
     private boolean isSelectAllForActionEvent = true;
     private boolean isSelectAllForKeyEvent = true;
     private MouseAdapter sortColumnCycler = null;
+    private JPopupMenu headerPopupMenu = null;
 
     //
     // Constructors
@@ -88,7 +92,7 @@ public class AutoSelectTextTable extends JTable {
      */
     public AutoSelectTextTable(TableModel dm, TableColumnModel cm, ListSelectionModel sm) {
         super(dm, cm, sm);
-        
+
         //Add a keystroke to de-select all rows of the table (in Windows this would be Ctrl-Shift-A)
         InputMap im = getInputMap(JTable.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
         //Should use getMenuShortcutKeyMaskEx here but it is not supported in Java 8
@@ -116,12 +120,12 @@ public class AutoSelectTextTable extends JTable {
      * row. In other words, the value of the cell at row 1, column 5 can be obtained with the
      * following code:
      * <p>
-     * 
+     *
      * <pre>
      * ((Vector) rowData.elementAt(1)).elementAt(5);
      * </pre>
      * <p>
-     * 
+     *
      * @param rowData the data for the new table
      * @param columnNames names of each column
      */
@@ -135,14 +139,14 @@ public class AutoSelectTextTable extends JTable {
      * array of rows, so the value of the cell at row 1, column 5 can be obtained with the following
      * code:
      * <p>
-     * 
+     *
      * <pre>
      *  rowData[1][5];
      * </pre>
      * <p>
      * All rows must be of the same length as <code>columnNames</code>.
      * <p>
-     * 
+     *
      * @param rowData the data for the new table
      * @param columnNames names of each column
      */
@@ -292,12 +296,185 @@ public class AutoSelectTextTable extends JTable {
                         RowSorter<?> sorter = getRowSorter();
                         sorter.setSortKeys(sortKeys);
                         this.lastSortKeys = sortKeys;
+                    } else if (e.getButton() == MouseEvent.BUTTON3) {
+                        // Right-click: show popup menu
+                        AutoSelectTextTable.this.showHeaderPopupMenu(e);
                     }
                 }
             };
         }
         getTableHeader().removeMouseListener(sortColumnCycler);
         getTableHeader().addMouseListener(sortColumnCycler);
+    }
+
+    /**
+     * Shows the header popup menu at the specified mouse event location.
+     * This creates a default popup menu with common table operations if none is set.
+     *
+     * @param e the mouse event that triggered the popup
+     */
+    private void showHeaderPopupMenu(MouseEvent e) {
+        if (headerPopupMenu == null) {
+            createDefaultHeaderPopupMenu();
+        }
+
+        if (headerPopupMenu != null) {
+            int column = getTableHeader().columnAtPoint(e.getPoint());
+            if (column >= 0) {
+                // Update menu items based on the clicked column if needed
+                updateHeaderPopupMenu(column);
+                headerPopupMenu.show(getTableHeader(), e.getX(), e.getY());
+            }
+        }
+    }
+
+    /**
+     * Creates a default header popup menu with common table operations.
+     */
+    private void createDefaultHeaderPopupMenu() {
+        headerPopupMenu = new JPopupMenu();
+
+        JMenuItem sortAscending = new JMenuItem("Sort Ascending");
+        sortAscending.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                sortColumnAtPopup(SortOrder.ASCENDING);
+            }
+        });
+        headerPopupMenu.add(sortAscending);
+
+        JMenuItem sortDescending = new JMenuItem("Sort Descending");
+        sortDescending.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                sortColumnAtPopup(SortOrder.DESCENDING);
+            }
+        });
+        headerPopupMenu.add(sortDescending);
+
+        JMenuItem clearSort = new JMenuItem("Clear Sort");
+        clearSort.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                sortColumnAtPopup(SortOrder.UNSORTED);
+            }
+        });
+        headerPopupMenu.add(clearSort);
+
+        headerPopupMenu.addSeparator();
+
+        JMenuItem autoResize = new JMenuItem("Auto Resize Column");
+        autoResize.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                autoResizeColumnAtPopup();
+            }
+        });
+        headerPopupMenu.add(autoResize);
+
+        JMenuItem autoResizeAll = new JMenuItem("Auto Resize All Columns");
+        autoResizeAll.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                autoResizeAllColumns();
+            }
+        });
+        headerPopupMenu.add(autoResizeAll);
+    }
+
+    private int lastPopupColumn = -1;
+
+    /**
+     * Updates the popup menu state based on the column that was right-clicked.
+     *
+     * @param column the column index in view coordinates
+     */
+    private void updateHeaderPopupMenu(int column) {
+        lastPopupColumn = column;
+    }
+
+    /**
+     * Sorts the column that was right-clicked when the popup was shown.
+     *
+     * @param sortOrder the sort order to apply
+     */
+    private void sortColumnAtPopup(SortOrder sortOrder) {
+        if (lastPopupColumn >= 0 && getRowSorter() != null) {
+            int modelColumn = convertColumnIndexToModel(lastPopupColumn);
+            List<SortKey> sortKeys = new ArrayList<>();
+            if (sortOrder != SortOrder.UNSORTED) {
+                sortKeys.add(new RowSorter.SortKey(modelColumn, sortOrder));
+            }
+            getRowSorter().setSortKeys(sortKeys);
+        }
+    }
+
+    /**
+     * Auto-resizes the column that was right-clicked when the popup was shown.
+     */
+    private void autoResizeColumnAtPopup() {
+        if (lastPopupColumn >= 0) {
+            autoResizeColumn(lastPopupColumn);
+        }
+    }
+
+    /**
+     * Auto-resizes a specific column to fit its content.
+     *
+     * @param columnIndex the column index in view coordinates
+     */
+    private void autoResizeColumn(int columnIndex) {
+        if (columnIndex < 0 || columnIndex >= getColumnCount()) {
+            return;
+        }
+
+        int maxWidth = 0;
+
+        // Check header width
+        Component headerRenderer = getTableHeader().getDefaultRenderer()
+            .getTableCellRendererComponent(this, getColumnModel().getColumn(columnIndex).getHeaderValue(),
+                false, false, 0, columnIndex);
+        maxWidth = Math.max(maxWidth, headerRenderer.getPreferredSize().width);
+
+        // Check cell widths
+        for (int row = 0; row < getRowCount(); row++) {
+            Component cellRenderer = getCellRenderer(row, columnIndex)
+                .getTableCellRendererComponent(this, getValueAt(row, columnIndex),
+                    false, false, row, columnIndex);
+            maxWidth = Math.max(maxWidth, cellRenderer.getPreferredSize().width);
+        }
+
+        // Add some padding
+        maxWidth += 10;
+
+        getColumnModel().getColumn(columnIndex).setPreferredWidth(maxWidth);
+    }
+
+    /**
+     * Auto-resizes all columns to fit their content.
+     */
+    private void autoResizeAllColumns() {
+        for (int i = 0; i < getColumnCount(); i++) {
+            autoResizeColumn(i);
+        }
+    }
+
+    /**
+     * Sets a custom popup menu for the table header.
+     *
+     * @param popupMenu the popup menu to use, or null to use the default menu
+     */
+    public void setHeaderPopupMenu(JPopupMenu popupMenu) {
+        this.headerPopupMenu = popupMenu;
+    }
+
+    /**
+     * Gets the current header popup menu.
+     *
+     * @return the header popup menu, or null if none is set
+     */
+    public JPopupMenu getHeaderPopupMenu() {
+        return headerPopupMenu;
     }
 
     //
