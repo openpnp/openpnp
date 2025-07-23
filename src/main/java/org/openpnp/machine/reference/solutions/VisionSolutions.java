@@ -44,6 +44,7 @@ import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.machine.reference.ReferenceNozzleTip;
 import org.openpnp.machine.reference.camera.AbstractSettlingCamera.SettleMethod;
+import org.openpnp.machine.reference.camera.ReferenceCamera.FocusSensingMethod;
 import org.openpnp.machine.reference.camera.AutoFocusProvider;
 import org.openpnp.machine.reference.camera.ReferenceCamera;
 import org.openpnp.machine.reference.camera.SimulatedUpCamera;
@@ -783,6 +784,7 @@ public class VisionSolutions implements Solutions.Subject {
                                 (result) -> {
                                     UiUtils.messageBoxOnException(() -> super.setState(state));
                                     // Persist this solved state.
+                                    camera.setFocusSensingMethod(autoFocus ? FocusSensingMethod.AutoFocus : FocusSensingMethod.None);
                                     solutions.setSolutionsIssueSolved(this, true);
                                 },
                                 (t) -> {
