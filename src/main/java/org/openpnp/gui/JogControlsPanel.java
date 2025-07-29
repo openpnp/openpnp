@@ -30,6 +30,7 @@ import java.beans.PropertyChangeListener;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
+import org.pmw.tinylog.Logger;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -145,11 +146,15 @@ public class JogControlsPanel extends JPanel {
     }
 
     public double getJogIncrement() {
+        int val = sliderIncrements.getValue();
+        if (MainFrame.get().getShiftDown()) {
+            val = Math.max(1, val - 2);   // finer movement by 2 levels
+        }
         if (configuration.getSystemUnits() == LengthUnit.Millimeters) {
-            return 0.01 * Math.pow(10, sliderIncrements.getValue() - 1);
+            return 0.01 * Math.pow(10, val - 1);
         }
         else if (configuration.getSystemUnits() == LengthUnit.Inches) {
-            return 0.001 * Math.pow(10, sliderIncrements.getValue() - 1);
+            return 0.001 * Math.pow(10, val - 1);
         }
         else {
             throw new Error(
@@ -162,6 +167,11 @@ public class JogControlsPanel extends JPanel {
     }
 
     private void jog(final int x, final int y, final int z, final int c) {
+        if(UiUtils.isModalDialogBoxOpen()) {
+            Logger.info("jog blocked while modal dialog is open");
+            return;
+        }
+
         UiUtils.submitUiMachineTask(() -> {
             HeadMountable tool = machineControlsPanel.getSelectedTool();
             jogTool(x, y, z, c, tool);
@@ -286,6 +296,7 @@ public class JogControlsPanel extends JPanel {
 
         JLabel lblDistance = new JLabel("<html>" + Translations.getString("JogControlsPanel.Label.Distance") + "<br>[" + configuration.getSystemUnits().getShortName() + "/deg]</html>"); //$NON-NLS-1$
         lblDistance.setFont(new Font("Lucida Grande", Font.PLAIN, 10)); //$NON-NLS-1$
+        lblDistance.setToolTipText(Translations.getString("JogControlsPanel.Label.Distance.toolTipText")); //$NON-NLS-1$
         panelControls.add(lblDistance, "18, 2, center, center"); //$NON-NLS-1$
 
         JLabel lblSpeed = new JLabel("<html>" + Translations.getString("JogControlsPanel.Label.Speed") + "<br>[%]</html>"); //$NON-NLS-1$
@@ -296,11 +307,21 @@ public class JogControlsPanel extends JPanel {
         panelControls.add(sliderIncrements, "18, 3, 1, 10"); //$NON-NLS-1$
         sliderIncrements.setOrientation(SwingConstants.VERTICAL);
         sliderIncrements.setMajorTickSpacing(1);
-        sliderIncrements.setValue(1);
+        sliderIncrements.setValue(configuration.getDistance());
         sliderIncrements.setSnapToTicks(true);
         sliderIncrements.setPaintLabels(true);
         sliderIncrements.setMinimum(1);
         sliderIncrements.setMaximum(5);
+        sliderIncrements.addChangeListener(new ChangeListener() {
+            int oldValue = configuration.getDistance();
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                if (sliderIncrements.getValue() != oldValue) {
+                    oldValue = sliderIncrements.getValue();
+                    configuration.setDistance(oldValue);
+                }
+            }
+        });
 
         JButton yPlusButton = new JButton(yPlusAction);
         yPlusButton.setHideActionText(true);

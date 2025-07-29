@@ -228,6 +228,9 @@ public class FiducialVisionSettingsConfigurationWizard extends AbstractConfigura
             }
 
             @Override
+            public Camera getCamera() throws Exception { return fiducialLocator.getVisionCamera(); }
+
+            @Override
             public void resetPipeline() throws Exception {
                 int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
                         "This will replace the Pipeline with the default. Are you sure??", null,
@@ -262,7 +265,7 @@ public class FiducialVisionSettingsConfigurationWizard extends AbstractConfigura
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("min(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
-                new ColumnSpec(ColumnSpec.FILL, Sizes.bounded(Sizes.DEFAULT, Sizes.constant("50dlu", true), Sizes.constant("70dlu", true)), 0),
+                new ColumnSpec(ColumnSpec.FILL, Sizes.bounded(Sizes.DEFAULT, Sizes.constant("50dlu", true), Sizes.constant("80dlu", true)), 0),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {

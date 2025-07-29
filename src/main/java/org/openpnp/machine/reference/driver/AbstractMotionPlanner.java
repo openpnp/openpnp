@@ -22,6 +22,9 @@
 package org.openpnp.machine.reference.driver;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -56,6 +59,7 @@ import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Locatable.LocationOption;
 import org.openpnp.spi.MotionPlanner;
 import org.openpnp.spi.PropertySheetHolder;
+import org.openpnp.spi.base.AbstractActuator;
 import org.openpnp.util.NanosecondTime;
 import org.openpnp.util.Utils2D;
 import org.pmw.tinylog.Logger;
@@ -91,6 +95,135 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
 
     private boolean homed = false; 
 
+    private SubordinateMotion subordinateMotion = new SubordinateMotion();
+    
+    /**
+     * This class provides support for subordinate motion handling. It queues motion 
+     * tagged as subordinate and merges it with other, non-subordinate, motion.
+     */
+    private class SubordinateMotion {
+        private AxesLocation queue = null;  // this is the queue where subordinate motion is queued
+        
+        /**
+         * queue subordinate motions
+         */
+        protected void queue(AxesLocation axesLocation) {
+            if (queue == null) {
+                queue = new AxesLocation();
+            }
+            
+            // merge all axis into the queue by letting the queued axis take precedence
+            int currentQueueSize = queue.getAxes().size();
+            queue = axesLocation.put(queue);
+            
+            // only generate a log message if a new axis as been queued
+            int newQueueSize = queue.getAxes().size();
+            if (newQueueSize > currentQueueSize) {
+                Logger.trace("Subordinate Motion: axesLocation " + axesLocation + " queued to " + queue);
+            }
+        }
+        
+        /**
+         * merge subordinate motion with given locations and empty the queue
+         */
+        protected AxesLocation merge(AxesLocation axesLocation) {
+            // if no motion has been queued, bypass the merge process
+            if (queue == null || queue.isEmpty()) {
+                return axesLocation;
+            }
+
+            // make sure, only safe motions are extended by queued subordination
+            // collect all axes that are ok to move
+            LinkedHashSet<ControllerAxis> okToMoveAxes;
+            try {
+                okToMoveAxes = getOkToMoveAxes(axesLocation);
+            }
+            catch (Exception e) {
+                // in case of exception, do not merge any subordinate
+                return axesLocation;
+            }
+
+            // loop over all queued axes
+            AxesLocation queuedLocationToMerge = new AxesLocation();
+            for (ControllerAxis a : queue.getControllerAxes()) {
+                // select the ones that are ok to move
+                if (okToMoveAxes.contains(a)) {
+                    // collect axis a to merge it later
+                    queuedLocationToMerge = queuedLocationToMerge.put(new AxesLocation(a, queue.getCoordinate(a)));
+                    // and remove it from the queue
+                    queue = queue.remove(a);
+                }
+            }
+            // TODO: it would be possible to add an "inverted rule": if all moving axes are Z axes only, no SafeZ validation needs to be done.
+            //       see https://github.com/openpnp/openpnp/pull/1654#issuecomment-2373535986
+
+            // short exit: if there is nothing to merge, leave here
+            if (queuedLocationToMerge.isEmpty()) {
+                return axesLocation;
+            }
+            
+            // merge filtered queued motion into the given AxesLocation letting the given one take precedence
+            AxesLocation mergedLocation = queuedLocationToMerge.put(axesLocation);
+
+            Logger.trace("Subordinate Motion: axesLocation " + axesLocation + " merged with " + queuedLocationToMerge + " to " + mergedLocation);
+            
+            // return the merge result
+            return mergedLocation;
+        }
+        
+        /**
+         * collect all axes that are ok to move (all head mountables of all heads are in SafeZ)
+         * @return
+         */
+        private LinkedHashSet<ControllerAxis> getOkToMoveAxes(AxesLocation targetLocation) throws Exception {
+            // list of axes that are ok/safe to move
+            LinkedHashSet<ControllerAxis> okToMoveAxes = new LinkedHashSet<>();
+            
+            // loop over all heads
+            for (Head h : machine.getHeads()) {
+                // collect per head axes
+                LinkedHashSet<ControllerAxis> okToMoveHeadAxes = new LinkedHashSet<>();
+                // loop over all its head mountables
+                for (HeadMountable hm : h.getHeadMountables()) {
+                    // take the raw axes location of the current hm location
+                    AxesLocation rawCurrentLocation = hm.toRaw(hm.toHeadLocation(hm.getLocation(), LocationOption.Quiet), LocationOption.Quiet);
+                    // get only controller axes (Note, we don't care if virtual axes are not safe)
+                    LinkedHashSet<ControllerAxis> headAxes = rawCurrentLocation.getControllerAxes();
+                    // optimistically add them to the ok to move head axes
+                    okToMoveHeadAxes.addAll(headAxes);
+                    // get us the current raw controller head location
+                    AxesLocation rawCurrentHeadLocation = new AxesLocation(headAxes, 
+                        (axis) -> (rawCurrentLocation.getLengthCoordinate(axis)));
+                    // get us the target raw controller head location
+                    AxesLocation rawTargetHeadLocation = new AxesLocation(headAxes, 
+                            (axis) -> (targetLocation.contains(axis) ? targetLocation.getLengthCoordinate(axis) : null));
+                    // check if the Z axes are safe, both in current and target location
+                    if (!(rawCurrentHeadLocation.byType(Type.Z).isInSafeZone()
+                           && rawTargetHeadLocation.byType(Type.Z).isInSafeZone())) {
+                        // uh oh, not in Safe Z, i.e. it is not safe to move any of the axes of this head
+                        // reset to zero (empty)
+                        okToMoveHeadAxes.clear();
+                        break;
+                    }
+                }
+                // add the head axes to the ok to move axes (this will be empty if they were not safe)
+                okToMoveAxes.addAll(okToMoveHeadAxes);
+            }
+            
+            return okToMoveAxes;
+        }
+        
+        /**
+         * drain the queue reporting a warning if it's not empty.
+         */
+        protected void drain() {
+            if (queue != null && !queue.isEmpty()) {
+                Logger.warn("Subordinate Motion queue not empty: " + queue + ", drained.");
+                queue = null;
+            }
+        }
+    }
+    
     @Override
     public synchronized void home() throws Exception {
         // Reset lastDirectionalBacklashOffset (we don't actually know it after homing, but it will be known after the first move).
@@ -126,6 +259,61 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
     }
 
     @Override
+    public void delay(int milliseconds, HeadMountable... hms) throws Exception {
+        // Plan and execute any queued motion commands. 
+        executeMotionPlan(CompletionType.CommandStillstand);
+        ReferenceMachine machine = getMachine();
+        // If the hm is given, we just delay for the drivers of that hm, otherwise we delay for all drivers,
+        // including those that do not have any axes attached.
+        if (hms != null) {
+            List<Driver> drivers = new ArrayList<Driver>();  // list of all drivers to delay on
+
+            // loop over all head mountables and collect all affected drivers
+            // only consider each driver once to avoid executing the delay multiple times
+            for (HeadMountable hm : hms) {
+                // 1. the driver for the actuator itself
+                if (hm instanceof AbstractActuator) {
+                    Driver driver = ((AbstractActuator)hm).getDriver();
+                    if (!drivers.contains(driver)) {
+                        drivers.add(driver);
+                    }
+                }
+                // 2. it's related axes drivers
+                AxesLocation mappedAxes = hm.getMappedAxes(machine);
+                if (!mappedAxes.isEmpty()) {
+                    for (Driver driver : mappedAxes.getAxesDrivers(machine)) {
+                        if (!drivers.contains(driver)) {
+                            drivers.add(driver);
+                        }
+                    }
+                }
+            }
+            delayAllDrivers(drivers,milliseconds);
+        }
+        else {
+            delayAllDrivers(machine.getDrivers(),milliseconds);
+        }
+    }
+
+    // Execute a delay on all drivers in the list.
+    // If any driver can not execute the delay then we fallback to using Thread.sleep()
+    private void delayAllDrivers(final List<Driver> drivers, int milliseconds) throws Exception
+    {
+        boolean delayExecutedInAllDrivers = true;   // set to false if any driver requested to delay does not support delaying
+
+        for (Driver driver : drivers) {
+            // delay() returns false if the delay was not executed
+            delayExecutedInAllDrivers &= driver.delay(milliseconds);
+        }
+
+        if(!delayExecutedInAllDrivers) {
+            // time delay using OS
+            Logger.trace("delay Thread.sleep");
+            Thread.sleep(milliseconds);
+        }
+    }
+
+    @Override
     public synchronized void setGlobalOffsets(AxesLocation axesLocation) throws Exception {
         // Make sure we're on the same page with the controller, but there is no need to  wait for it to physically complete.
         executeMotionPlan(CompletionType.CommandStillstand);
@@ -146,17 +334,44 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
 
     @Override
     public void moveTo(HeadMountable hm, AxesLocation axesLocation, double speed, MotionOption... options) throws Exception {
+        int optionFlags = Motion.optionFlags(options);
+
         if (speed <= 0) {
             throw new Exception("Speed must be greater than 0.");
         }
         else if (speed < getMinimumSpeed()) {
             speed = getMinimumSpeed();
         }
+
         // Handle soft limits and rotation axes limiting and wrap-around.
         axesLocation = limitAxesLocation(hm, axesLocation, false);
 
+        // If this is a subordinate motion, queue it now
+        AxesLocation subordinateMotionAxes = new AxesLocation();
+        if (Motion.MotionOption.SubordinateX.isSetIn(optionFlags)) {
+            subordinateMotionAxes = subordinateMotionAxes.put(axesLocation.byType(Type.X));
+        }
+        if (Motion.MotionOption.SubordinateY.isSetIn(optionFlags)) {
+            subordinateMotionAxes = subordinateMotionAxes.put(axesLocation.byType(Type.Y));
+        }
+        if (Motion.MotionOption.SubordinateZ.isSetIn(optionFlags)) {
+            subordinateMotionAxes = subordinateMotionAxes.put(axesLocation.byType(Type.Z));
+        }
+        if (Motion.MotionOption.SubordinateRotation.isSetIn(optionFlags)) {
+            subordinateMotionAxes = subordinateMotionAxes.put(axesLocation.byType(Type.Rotation));
+        }
+        // if any subordinate as been queued, return now, dropping any remaining axis
+        if (subordinateMotionAxes != null && !subordinateMotionAxes.isEmpty()) {
+            subordinateMotion.queue(subordinateMotionAxes);
+            return;
+        }
+        
+        // Merge motion with queued subordinate motion
+        axesLocation = subordinateMotion.merge(axesLocation);                
+        
         // Get current planned location of all the axes.
         AxesLocation currentLocation = new AxesLocation(getMachine()); 
+        
         // The new planned locations must include all the machine axes, so put the given axesLocation into the whole set.
         AxesLocation newLocation = 
                 currentLocation
@@ -164,7 +379,6 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
 
         if (!homed) {
             // Machine is unhomed, check if move is legal.
-            int optionFlags = Motion.optionFlags(options);
             AxesLocation segment = currentLocation.motionSegmentTo(newLocation);
             for (Driver driver : segment.getAxesDrivers(getMachine())) {
                 if (Motion.MotionOption.JogMotion.isSetIn(optionFlags)) {
@@ -272,6 +486,7 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
      */
     protected synchronized AxesLocation createBacklashCompensatedMotion(HeadMountable hm, double speed,
             AxesLocation currentLocation, AxesLocation newLocation, MotionOption... options) {
+
         // Adjust the current location to include any backlash compensation offset that was applied in the last move.
         AxesLocation backlashCompensatedCurrentLocation = currentLocation.add(lastDirectionalBacklashOffset);
         AxesLocation backlashCompensatedNewLocation = newLocation;
@@ -641,7 +856,7 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
      */
     public AxesLocation limitRotationAxis(HeadMountable hm, final AxesLocation axesLocation, ReferenceControllerAxis axis) throws Exception {
         AxesLocation limitedAxesLocation = axesLocation;
-        if (hm == null) {
+        if (!axis.isMovingHeadMountable(hm)) {
             hm = axis.getDefaultHeadMountable();
             if (hm == null) {
                 throw new Exception("Rotation axis "+axis.getName()+" cannot be limited when no head-mountable is mapped.");
@@ -702,6 +917,10 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
                         limitedAxesLocation.getCoordinate(axis)+" (transformed "+hm.getName()+" to "+location.getRotation()+"°)");
             }
         }
+        
+        // merge the new limited Axes Location with the input set, replacing only the axis to limit
+        limitedAxesLocation = axesLocation.put(new AxesLocation(axis, limitedAxesLocation.getCoordinate(axis)));
+        
         return limitedAxesLocation;
     }
 
@@ -758,6 +977,9 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
         // Now is high time to plan and execute the queued motion commands. 
         executeMotionPlan(completionType);
 
+        // detect if there are any pending subordinate motion and remove it
+        subordinateMotion.drain();
+        
         if (completionType.isEnforcingStillstand()) {
             // Wait for the drivers.
             waitForDriverCompletion(hm, completionType);

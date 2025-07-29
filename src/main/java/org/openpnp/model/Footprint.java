@@ -24,11 +24,12 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Path2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.geom.RoundRectangle2D;
+import java.awt.geom.Ellipse2D;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.openpnp.gui.importer.KicadModImporter;
-
+import org.python.antlr.base.boolop;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.ElementList;
 
@@ -127,6 +128,17 @@ public class Footprint extends AbstractModelObject{
 
     public void addPad(Pad pad) {
         pads.add(pad);
+    }
+
+    public void toggleMark(Pad pad) {
+        if (pad.getMark()) {
+            pad.setMark(false);
+        } else {
+            for (Pad pad2 : pads) {
+                pad2.setMark(false);
+            }
+            pad.setMark(true);
+        }
     }
 
     public double getBodyWidth() {
@@ -232,6 +244,9 @@ public class Footprint extends AbstractModelObject{
         @Attribute(required = false)
         private double rotation = 0;
 
+        @Attribute(required = false)
+        private boolean mark = false;
+
         /**
          * Roundness as a percentage of the lesser of width and height. 0 is square, 100 is round.
          */
@@ -294,28 +309,46 @@ public class Footprint extends AbstractModelObject{
             this.roundness = roundness;
         }
 
+        public boolean getMark() {
+            return mark;
+        }
+
+        public void setMark(boolean mark) {
+            this.mark = mark;
+        }
+
         public String toString() {
             return x+", "+y+" "+width+" x "+height+" "+rotation+"°";
         }
 
         public Shape getShape() {
             double r = Math.min(width, height)*roundness/100;
-            Shape shape;
+            Shape padShape;
             if (r < 0) {
-                // one-sided roundness.
+                // one-sided roundness. How r might be negative ?
                 java.awt.geom.Area area = new java.awt.geom.Area(new RoundRectangle2D.Double(-width / 2, -height / 2, width, height,
                         -r, -r));
                 area.add(new java.awt.geom.Area(new Rectangle2D.Double(0, -height / 2, width/2, height)));
-                shape = area;
+                padShape = area;
             }
             else {
-                shape = new RoundRectangle2D.Double(-width / 2, -height / 2, width, height,
+                padShape = new RoundRectangle2D.Double(-width / 2, -height / 2, width, height,
                     r, r);
             }
             AffineTransform tx = new AffineTransform();
             tx.translate(x, y);
             tx.rotate(Math.toRadians(rotation));
-            return tx.createTransformedShape(shape);
+            Path2D.Double result = (Path2D.Double) tx.createTransformedShape(padShape);
+            if (mark) {
+                /* simple mark in center of pad. It is XORed in vision compositing view so might overlap.
+                 * It would be not easy to compute where put mark outside as pads might be each other.
+                 */
+                r = Math.min(width, height) * 0.9;
+                r = Math.min(r, 1);  // limit max.size of mark
+                Shape markShape = new java.awt.geom.Ellipse2D.Double(x - r / 2, y - r / 2, r, r);
+                result.append(markShape, false);
+            }
+            return result;
         }
 
         /**

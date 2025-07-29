@@ -17,48 +17,43 @@
  * For more information about OpenPnP visit http://openpnp.org
  */
 
-package org.openpnp.gui;
+package org.openpnp.gui.wizards;
 
-import javax.swing.BoxLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
 
-import org.jdesktop.beansbinding.AutoBinding;
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
-import org.jdesktop.beansbinding.BeanProperty;
-import org.jdesktop.beansbinding.Bindings;
 import org.openpnp.Translations;
 import org.openpnp.gui.components.ComponentDecorators;
+import org.openpnp.gui.support.AbstractConfigurationWizard;
+import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.model.Part;
-
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
 
 @SuppressWarnings("serial")
-public class PartSettingsPanel extends JPanel {
+public class PartSettingsWizard extends AbstractConfigurationWizard {
     private final Part part;
     private JPanel pickConditionsPanel;
     private JLabel lblNewLabel;
-    private JTextField pickRetryCount;
+    private JTextField textFieldPickRetryCount;
 
-    public PartSettingsPanel(Part part) {
+    public PartSettingsWizard(Part part) {
+        super();
         this.part = part;
         createUi();
-        initDataBindings();
     }
     
     private void createUi() {
-        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-        
         pickConditionsPanel = new JPanel();
         pickConditionsPanel.setBorder(new TitledBorder(null, Translations.getString(
-                "PartSettingsPanel.pickConditionsPanel.Border.title"), //$NON-NLS-1$
+                "PartSettingsWizard.pickConditionsPanel.Border.title"), //$NON-NLS-1$
                 TitledBorder.LEADING, TitledBorder.TOP, null));
-        add(pickConditionsPanel);
+        contentPanel.add(pickConditionsPanel);
         pickConditionsPanel.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
@@ -69,20 +64,19 @@ public class PartSettingsPanel extends JPanel {
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
         lblNewLabel = new JLabel(Translations.getString(
-                "PartSettingsPanel.pickConditionsPanel.pickRetryCountLabel.text")); //$NON-NLS-1$
+                "PartSettingsWizard.pickConditionsPanel.pickRetryCountLabel.text")); //$NON-NLS-1$
         pickConditionsPanel.add(lblNewLabel, "2, 2, right, default");
         
-        pickRetryCount = new JTextField();
-        pickConditionsPanel.add(pickRetryCount, "4, 2, left, default");
-        pickRetryCount.setColumns(10);
+        textFieldPickRetryCount = new JTextField();
+        pickConditionsPanel.add(textFieldPickRetryCount, "4, 2, left, default");
+        textFieldPickRetryCount.setColumns(10);
     }
     
-    protected void initDataBindings() {
-        BeanProperty<Part, Integer> partBeanProperty = BeanProperty.create("pickRetryCount");
-        BeanProperty<JTextField, String> jTextFieldBeanProperty = BeanProperty.create("text");
-        AutoBinding<Part, Integer, JTextField, String> autoBinding = Bindings.createAutoBinding(UpdateStrategy.READ_WRITE, part, partBeanProperty, pickRetryCount, jTextFieldBeanProperty);
-        autoBinding.bind();
+    @Override
+    public void createBindings() {
+        IntegerConverter intConverter = new IntegerConverter();
+        bind(UpdateStrategy.READ_WRITE, part, "pickRetryCount", textFieldPickRetryCount, "text", intConverter); 
         
-        ComponentDecorators.decorateWithAutoSelect(pickRetryCount);
+        ComponentDecorators.decorateWithAutoSelect(textFieldPickRetryCount);
     }
 }

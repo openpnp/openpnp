@@ -179,6 +179,9 @@ public class GcodeDriverGcodes extends AbstractConfigurationWizard {
                 commandTextChanged();
             }
         });
+        
+        forceApplyResetButtonsVisible();
+
     }
 
     private HeadMountable getSelectedHeadMountable() {

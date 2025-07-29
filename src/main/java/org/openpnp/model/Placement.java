@@ -43,7 +43,7 @@ public class Placement extends Abstract2DLocatable<Placement> {
     }
     
     public enum ErrorHandling {
-        Alert, Defer
+        Default, Alert, Defer
     }
 
     /**
@@ -68,7 +68,7 @@ public class Placement extends Abstract2DLocatable<Placement> {
     private String comments;
     
     @Element(required = false)
-    private ErrorHandling errorHandling = ErrorHandling.Alert;
+    private ErrorHandling errorHandling = ErrorHandling.Default;
     
     @Attribute(required = false)
     private boolean enabled = true;
@@ -151,6 +151,20 @@ public class Placement extends Abstract2DLocatable<Placement> {
         Object oldValue = this.comments;
         this.comments = comments;
         firePropertyChange("comments", oldValue, comments);
+    }
+
+    public ErrorHandling getEffectiveErrorHandling(Job job) {
+        if(errorHandling==ErrorHandling.Default) {
+            switch(job.getErrorHandling()) {
+                case Defer:
+                    return ErrorHandling.Defer;
+                case Alert:
+                default:
+                    return ErrorHandling.Alert;
+            }
+        } else {
+            return errorHandling;
+        }
     }
     
     public ErrorHandling getErrorHandling() {

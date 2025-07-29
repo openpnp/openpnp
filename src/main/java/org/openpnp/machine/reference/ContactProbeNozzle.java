@@ -53,6 +53,7 @@ import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
 import org.openpnp.spi.base.AbstractActuator;
+import org.openpnp.spi.base.AbstractActuator.ActuatorCoordinationEnumType;
 import org.openpnp.spi.base.AbstractHead;
 import org.openpnp.util.Collect;
 import org.openpnp.util.MovableUtils;
@@ -92,7 +93,7 @@ public class ContactProbeNozzle extends ReferenceNozzle {
     private double contactProbeSpeed = 0.05;
 
     @Attribute(required=false)
-    private long sniffleDwellTime = 250;
+    private int sniffleDwellTime = 250;
 
     @Element(required = false)
     private Length contactProbeAdjustZ = new Length(0, LengthUnit.Millimeters);
@@ -440,7 +441,7 @@ public class ContactProbeNozzle extends ReferenceNozzle {
         return sniffleDwellTime;
     }
 
-    public void setSniffleDwellTime(long sniffleDwellTime) {
+    public void setSniffleDwellTime(int sniffleDwellTime) {
         this.sniffleDwellTime = sniffleDwellTime;
     }
 
@@ -543,7 +544,7 @@ public class ContactProbeNozzle extends ReferenceNozzle {
                 for (int i = 0; i < count; i++) {
                     probedLocation = probedLocation.subtract(probeIncrement);
                     moveTo(probedLocation);
-                    Thread.sleep(sniffleDwellTime);
+                    delay(sniffleDwellTime);
                     if (! isPartOff()) {
                         // We got contact.
                         probedLocation = probedLocation.add(new Location(contactProbeAdjustZ .getUnits(), 0, 0, contactProbeAdjustZ.getValue(), 0));
@@ -818,17 +819,19 @@ public class ContactProbeNozzle extends ReferenceNozzle {
                 }
                 else if (getContactProbeActuator() instanceof AbstractActuator) {
                     AbstractActuator contactProbeActuator = (AbstractActuator) getContactProbeActuator();
-                    if (!contactProbeActuator.isCoordinatedAfterActuate()) {
+                    if (contactProbeActuator.getCoordinatedAfterActuateEnum() != ActuatorCoordinationEnumType.WaitForUnconditionalCoordination) {
                         solutions.add(new Solutions.Issue(
                                 contactProbeActuator, 
-                                "Contact probe actuator needs machine coordination after actuation.", 
-                                "Enable After Actuation machine coordination.", 
+                                "Contact probe actuator needs unconditional machine coordination after actuation.", 
+                                "Set After Actuation machine coordination to WaitForUnconditionalCoordination.", 
                                 Severity.Error,
                                 "https://github.com/openpnp/openpnp/wiki/Motion-Planner#actuator-machine-coordination") {
 
                             @Override
                             public void setState(Solutions.State state) throws Exception {
-                                contactProbeActuator.setCoordinatedAfterActuate((state == Solutions.State.Solved));
+                                if (state == Solutions.State.Solved) {
+                                    contactProbeActuator.setCoordinatedAfterActuateEnum(ActuatorCoordinationEnumType.WaitForUnconditionalCoordination);
+                                }
                                 super.setState(state);
                             }
                         });

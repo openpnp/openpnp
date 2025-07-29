@@ -26,6 +26,9 @@ public class ScriptEngineKeyedPooledObjectFactory
         // be unreasonable for a factory class.
         ScriptEngine engine = manager.getEngineByName(engineName);
         elapsedTimeNs = System.nanoTime() - startTimeNs;
+        if(engine==null) {
+            throw new Exception("Failed to create "+engineName+" scripting engine");
+        }
         Logger.trace(engineName + "scripting engine created in " + elapsedTimeNs / 1E6
                 + " milliseconds");
         return engine;

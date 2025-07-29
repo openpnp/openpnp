@@ -17,7 +17,7 @@
  * For more information about OpenPnP visit http://openpnp.org
  */
 
-package org.openpnp.gui;
+package org.openpnp.gui.wizards;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
@@ -39,18 +39,18 @@ import javax.swing.ListSelectionModel;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.table.DefaultTableCellRenderer;
 
-import org.jdesktop.beansbinding.AutoBinding;
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
-import org.jdesktop.beansbinding.BeanProperty;
-import org.jdesktop.beansbinding.Bindings;
 import org.openpnp.Translations;
 import org.jdesktop.beansbinding.Converter;
+import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.components.CameraView;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.components.reticle.FootprintReticle;
 import org.openpnp.gui.components.reticle.Reticle;
+import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.Icons;
@@ -71,26 +71,27 @@ import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
 
 @SuppressWarnings("serial")
-public class PackageVisionPanel extends JPanel {
+public class PackageVisionWizard extends AbstractConfigurationWizard {
     private FootprintTableModel tableModel;
     private JTable table;
 
     final private Package pkg;
     final private Footprint footprint;
 
-    public PackageVisionPanel(Package pkg) {
+    public PackageVisionWizard(Package pkg) {
         this.pkg = pkg;
         this.footprint = pkg.getFootprint();
 
-        setLayout(new BorderLayout(0, 0));
         tableModel = new FootprintTableModel(footprint, pkg);
 
         deleteAction.setEnabled(false);
+        toggleMarkAction.setEnabled(false);
 
         JPanel propertiesPanel = new JPanel();
+        contentPanel.add(propertiesPanel);
         add(propertiesPanel, BorderLayout.NORTH);
         propertiesPanel.setBorder(
-                new TitledBorder(null, Translations.getString("PackageVisionPanel.SettingsPanel.Border.title"), //$NON-NLS-1$
+                new TitledBorder(null, Translations.getString("PackageVisionWizard.SettingsPanel.Border.title"), //$NON-NLS-1$
                         TitledBorder.LEADING, TitledBorder.TOP, null));
         propertiesPanel.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -117,13 +118,13 @@ public class PackageVisionPanel extends JPanel {
                         FormSpecs.RELATED_GAP_ROWSPEC,
                         FormSpecs.DEFAULT_ROWSPEC,}));
 
-        JLabel lblUnits = new JLabel(Translations.getString("PackageVisionPanel.SettingsPanel.UnitsLabel.text")); //$NON-NLS-1$
+        JLabel lblUnits = new JLabel(Translations.getString("PackageVisionWizard.SettingsPanel.UnitsLabel.text")); //$NON-NLS-1$
         propertiesPanel.add(lblUnits, "2, 2, right, default");
 
         unitsCombo = new JComboBox(LengthUnit.values());
         propertiesPanel.add(unitsCombo, "4, 2, left, default");
 
-        JLabel lblGenerate = new JLabel(Translations.getString("PackageVisionPanel.SettingsPanel.GenerateLabel.text")); //$NON-NLS-1$
+        JLabel lblGenerate = new JLabel(Translations.getString("PackageVisionWizard.SettingsPanel.GenerateLabel.text")); //$NON-NLS-1$
         propertiesPanel.add(lblGenerate, "8, 2, right, default");
 
         JPanel panelGenerate = new JPanel();
@@ -143,61 +144,61 @@ public class PackageVisionPanel extends JPanel {
         JButton generateKicad = new JButton(generateFromKicad);
         panelGenerate.add(generateKicad);
 
-        JLabel lblBodyWidth = new JLabel(Translations.getString("PackageVisionPanel.SettingsPanel.BodyWidthLabel.text")); //$NON-NLS-1$
+        JLabel lblBodyWidth = new JLabel(Translations.getString("PackageVisionWizard.SettingsPanel.BodyWidthLabel.text")); //$NON-NLS-1$
         propertiesPanel.add(lblBodyWidth, "2, 4, right, default");
 
         bodyWidthTf = new JTextField();
         propertiesPanel.add(bodyWidthTf, "4, 4, left, default");
         bodyWidthTf.setColumns(10);
 
-        JLabel lblDimension = new JLabel(Translations.getString("PackageVisionPanel.SettingsPanel.OutsideDimensionLabel.text")); //$NON-NLS-1$
-        lblDimension.setToolTipText(Translations.getString("PackageVisionPanel.SettingsPanel.OutsideDimensionLabel.toolTipText")); //$NON-NLS-1$
+        JLabel lblDimension = new JLabel(Translations.getString("PackageVisionWizard.SettingsPanel.OutsideDimensionLabel.text")); //$NON-NLS-1$
+        lblDimension.setToolTipText(Translations.getString("PackageVisionWizard.SettingsPanel.OutsideDimensionLabel.toolTipText")); //$NON-NLS-1$
         propertiesPanel.add(lblDimension, "8, 4, right, default");
 
         outerDimension = new JTextField();
         propertiesPanel.add(outerDimension, "10, 4, fill, default");
         outerDimension.setColumns(10);
 
-        JLabel lblInnerDim = new JLabel(Translations.getString("PackageVisionPanel.SettingsPanel.InsideDimensionLabel.text")); //$NON-NLS-1$
-        lblInnerDim.setToolTipText(Translations.getString("PackageVisionPanel.SettingsPanel.InsideDimensionLabel.toolTipText")); //$NON-NLS-1$
+        JLabel lblInnerDim = new JLabel(Translations.getString("PackageVisionWizard.SettingsPanel.InsideDimensionLabel.text")); //$NON-NLS-1$
+        lblInnerDim.setToolTipText(Translations.getString("PackageVisionWizard.SettingsPanel.InsideDimensionLabel.toolTipText")); //$NON-NLS-1$
         propertiesPanel.add(lblInnerDim, "12, 4, right, default");
 
         innerDimension = new JTextField();
         propertiesPanel.add(innerDimension, "14, 4, fill, default");
         innerDimension.setColumns(10);
 
-        JLabel lblBodyHeight = new JLabel(Translations.getString("PackageVisionPanel.SettingsPanel.BodyLengthLabel.text")); //$NON-NLS-1$
+        JLabel lblBodyHeight = new JLabel(Translations.getString("PackageVisionWizard.SettingsPanel.BodyLengthLabel.text")); //$NON-NLS-1$
         propertiesPanel.add(lblBodyHeight, "2, 6, right, default");
 
         bodyHeightTf = new JTextField();
         propertiesPanel.add(bodyHeightTf, "4, 6, left, default");
         bodyHeightTf.setColumns(10);
 
-        JLabel lblPadCount = new JLabel(Translations.getString("PackageVisionPanel.SettingsPanel.PadCountLabel.text")); //$NON-NLS-1$
-        lblPadCount.setToolTipText(Translations.getString("PackageVisionPanel.SettingsPanel.PadCountLabel.toolTipText")); //$NON-NLS-1$
+        JLabel lblPadCount = new JLabel(Translations.getString("PackageVisionWizard.SettingsPanel.PadCountLabel.text")); //$NON-NLS-1$
+        lblPadCount.setToolTipText(Translations.getString("PackageVisionWizard.SettingsPanel.PadCountLabel.toolTipText")); //$NON-NLS-1$
         propertiesPanel.add(lblPadCount, "8, 6, right, default");
 
         padCount = new JTextField();
         propertiesPanel.add(padCount, "10, 6, fill, default");
         padCount.setColumns(10);
 
-        JLabel lblPadPitch = new JLabel(Translations.getString("PackageVisionPanel.SettingsPanel.PadPitchLabel.text")); //$NON-NLS-1$
+        JLabel lblPadPitch = new JLabel(Translations.getString("PackageVisionWizard.SettingsPanel.PadPitchLabel.text")); //$NON-NLS-1$
         propertiesPanel.add(lblPadPitch, "12, 6, right, default");
 
         padPitch = new JTextField();
         propertiesPanel.add(padPitch, "14, 6, fill, default");
         padPitch.setColumns(10);
 
-        JLabel lblPadAcross = new JLabel(Translations.getString("PackageVisionPanel.SettingsPanel.PadAcrossLabel.text")); //$NON-NLS-1$
-        lblPadAcross.setToolTipText(Translations.getString("PackageVisionPanel.SettingsPanel.PadAcrossLabel.toolTipText")); //$NON-NLS-1$
+        JLabel lblPadAcross = new JLabel(Translations.getString("PackageVisionWizard.SettingsPanel.PadAcrossLabel.text")); //$NON-NLS-1$
+        lblPadAcross.setToolTipText(Translations.getString("PackageVisionWizard.SettingsPanel.PadAcrossLabel.toolTipText")); //$NON-NLS-1$
         propertiesPanel.add(lblPadAcross, "8, 8, right, default");
 
         padAcross = new JTextField();
         propertiesPanel.add(padAcross, "10, 8, fill, default");
         padAcross.setColumns(10);
 
-        JLabel lblRound = new JLabel("% Roundness");
-        lblRound.setToolTipText(Translations.getString("PackageVisionPanel.SettingsPanel.RoundnessLabel.toolTipText")); //$NON-NLS-1$
+        JLabel lblRound = new JLabel(Translations.getString("PackageVisionWizard.SettingsPanel.RoundnessLabel.text")); //$NON-NLS-1$
+        lblRound.setToolTipText(Translations.getString("PackageVisionWizard.SettingsPanel.RoundnessLabel.toolTipText")); //$NON-NLS-1$
         propertiesPanel.add(lblRound, "12, 8, right, default");
 
         padRoundness = new JTextField();
@@ -207,11 +208,15 @@ public class PackageVisionPanel extends JPanel {
         JPanel tablePanel = new JPanel();
         add(tablePanel, BorderLayout.CENTER);
         tablePanel.setBorder(new TitledBorder(null, Translations.getString(
-                "PackageVisionPanel.PadsPanel.Border.title"), TitledBorder.LEADING, TitledBorder.TOP, null, null)); //$NON-NLS-1$
+                "PackageVisionWizard.PadsPanel.Border.title"), TitledBorder.LEADING, TitledBorder.TOP, null, null)); //$NON-NLS-1$
 
         table = new AutoSelectTextTable(tableModel);
         table.setAutoCreateRowSorter(true);
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        table.getColumnModel().getColumn(1).setPreferredWidth(14);
+        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+        centerRenderer.setHorizontalAlignment(JLabel.CENTER);
+        table.getColumnModel().getColumn(1).setCellRenderer(centerRenderer);
         table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
             @Override
             public void valueChanged(ListSelectionEvent e) {
@@ -222,6 +227,7 @@ public class PackageVisionPanel extends JPanel {
                 Pad pad = getSelectedPad();
 
                 deleteAction.setEnabled(pad != null);
+                toggleMarkAction.setEnabled(pad != null);
             }
         });
         tablePanel.setLayout(new BorderLayout(0, 0));
@@ -236,39 +242,35 @@ public class PackageVisionPanel extends JPanel {
 
         toolBar.add(newAction);
         toolBar.add(deleteAction);
+        toolBar.add(toggleMarkAction);
 
         JScrollPane tableScrollPane = new JScrollPane(table);
         tableScrollPane.setPreferredSize(new Dimension(454, 100));
         tablePanel.add(tableScrollPane);
 
         showReticle();
-        initDataBindings();
-
-        ComponentDecorators.decorateWithAutoSelect(bodyWidthTf);
-        ComponentDecorators.decorateWithAutoSelect(bodyHeightTf);
-
-        ComponentDecorators.decorateWithAutoSelect(outerDimension);
-        ComponentDecorators.decorateWithAutoSelect(innerDimension);
-        ComponentDecorators.decorateWithAutoSelect(padCount);
-        ComponentDecorators.decorateWithAutoSelect(padPitch);
-        ComponentDecorators.decorateWithAutoSelect(padAcross);
-        ComponentDecorators.decorateWithAutoSelect(padRoundness);
     }
 
     private void showReticle() {
         try {
-            Camera camera = Configuration.get().getMachine().getDefaultHead().getDefaultCamera();
-            CameraView cameraView = MainFrame.get().getCameraViews().getCameraView(camera);
-            if (cameraView == null) {
-                return;
-            }
-            cameraView.removeReticle(PackageVisionPanel.class.getName());
-            Reticle reticle = new FootprintReticle(footprint);
-            cameraView.setReticle(PackageVisionPanel.class.getName(), reticle);
+            // Add the reticle to the top camera
+            showReticleCamera(Configuration.get().getMachine().getDefaultHead().getDefaultCamera());
+            // Add the reticle to the bottom camera
+            for (Camera camera : Configuration.get().getMachine().getCameras()) { showReticleCamera(camera); }
         }
         catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private void showReticleCamera(Camera camera) {
+        CameraView cameraView = MainFrame.get().getCameraViews().getCameraView(camera);
+        if (cameraView == null) {
+            return;
+        }
+        cameraView.removeReticle(PackageVisionWizard.class.getName());
+        Reticle reticle = new FootprintReticle(footprint);
+        cameraView.setReticle(PackageVisionWizard.class.getName(), reticle);
     }
 
     private Pad getSelectedPad() {
@@ -283,9 +285,9 @@ public class PackageVisionPanel extends JPanel {
     public final Action newAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.add);
-            putValue(NAME, Translations.getString("PackageVisionPanel.PadsPanel.Action.NewPad")); //$NON-NLS-1$
+            putValue(NAME, Translations.getString("PackageVisionWizard.PadsPanel.Action.NewPad")); //$NON-NLS-1$
             putValue(SHORT_DESCRIPTION, Translations.getString(
-                    "PackageVisionPanel.PadsPanel.Action.NewPad.Description")); //$NON-NLS-1$
+                    "PackageVisionWizard.PadsPanel.Action.NewPad.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -310,9 +312,9 @@ public class PackageVisionPanel extends JPanel {
     public final Action deleteAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.delete);
-            putValue(NAME, Translations.getString("PackageVisionPanel.PadsPanel.Action.DeletePad")); //$NON-NLS-1$
+            putValue(NAME, Translations.getString("PackageVisionWizard.PadsPanel.Action.DeletePad")); //$NON-NLS-1$
             putValue(SHORT_DESCRIPTION, Translations.getString(
-                    "PackageVisionPanel.PadsPanel.Action.DeletePad.Description")); //$NON-NLS-1$
+                    "PackageVisionWizard.PadsPanel.Action.DeletePad.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -329,6 +331,20 @@ public class PackageVisionPanel extends JPanel {
         }
     };
 
+    public final Action toggleMarkAction = new AbstractAction() {
+        {
+            putValue(SMALL_ICON, Icons.footprintToggle);
+            putValue(NAME, Translations.getString("PackageVisionWizard.PadsPanel.Action.ToggleMark")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString(
+                    "PackageVisionWizard.PadsPanel.Action.ToggleMark.Description")); //$NON-NLS-1$
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            footprint.toggleMark(getSelectedPad());
+            tableModel.fireTableDataChanged();
+        }
+    };
 
     public final Action generateDualAction = new AbstractAction() {
         {
@@ -409,62 +425,29 @@ public class PackageVisionPanel extends JPanel {
     private JTextField innerDimension;
     private JTextField padRoundness;
 
-    protected void initDataBindings() {
+    @Override
+    public void createBindings() {
         Converter doubleConverter = new DoubleConverter(Configuration.get().getLengthDisplayFormat());
         Converter intConverter = new IntegerConverter();
+        
+        bind(UpdateStrategy.READ_WRITE, footprint, "units", unitsCombo, "selectedItem");
+        bind(UpdateStrategy.READ_WRITE, footprint, "bodyWidth", bodyWidthTf, "text", doubleConverter);
+        bind(UpdateStrategy.READ_WRITE, footprint, "bodyHeight", bodyHeightTf, "text", doubleConverter);
+        bind(UpdateStrategy.READ_WRITE, footprint, "outerDimension", outerDimension, "text", doubleConverter);
+        bind(UpdateStrategy.READ_WRITE, footprint, "innerDimension", innerDimension, "text");
+        bind(UpdateStrategy.READ_WRITE, footprint, "padCount", padCount, "text", intConverter);
+        bind(UpdateStrategy.READ_WRITE, footprint, "padPitch", padPitch, "text", doubleConverter);
+        bind(UpdateStrategy.READ_WRITE, footprint, "padAcross", padAcross, "text", doubleConverter);
+        bind(UpdateStrategy.READ_WRITE, footprint, "padRoundness", padRoundness, "text", doubleConverter);
 
-        BeanProperty<Footprint, LengthUnit> footprintBeanProperty = BeanProperty.create("units");
-        BeanProperty<JComboBox, Object> jComboBoxBeanProperty = BeanProperty.create("selectedItem");
-        AutoBinding<Footprint, LengthUnit, JComboBox, Object> autoBinding = Bindings.createAutoBinding(UpdateStrategy.READ_WRITE, footprint, footprintBeanProperty, unitsCombo, jComboBoxBeanProperty);
-        autoBinding.bind();
-        //
-        BeanProperty<Footprint, Double> footprintBeanProperty_1 = BeanProperty.create("bodyWidth");
-        BeanProperty<JTextField, String> jTextFieldBeanProperty = BeanProperty.create("text");
-        AutoBinding<Footprint, Double, JTextField, String> autoBinding_1 = Bindings.createAutoBinding(UpdateStrategy.READ_WRITE, footprint, footprintBeanProperty_1, bodyWidthTf, jTextFieldBeanProperty);
-        autoBinding_1.setConverter(doubleConverter);
-        autoBinding_1.bind();
-        //
-        BeanProperty<Footprint, Double> footprintBeanProperty_2 = BeanProperty.create("bodyHeight");
-        BeanProperty<JTextField, String> jTextFieldBeanProperty_1 = BeanProperty.create("text");
-        AutoBinding<Footprint, Double, JTextField, String> autoBinding_2 = Bindings.createAutoBinding(UpdateStrategy.READ_WRITE, footprint, footprintBeanProperty_2, bodyHeightTf, jTextFieldBeanProperty_1);
-        autoBinding_2.setConverter(doubleConverter);
-        autoBinding_2.bind();
-        //
-        BeanProperty<Footprint, Double> footprintBeanProperty_3 = BeanProperty.create("outerDimension");
-        BeanProperty<JTextField, String> jTextFieldBeanProperty_2 = BeanProperty.create("text");
-        AutoBinding<Footprint, Double, JTextField, String> autoBinding_3 = Bindings.createAutoBinding(UpdateStrategy.READ_WRITE, footprint, footprintBeanProperty_3, outerDimension, jTextFieldBeanProperty_2);
-        autoBinding_3.setConverter(doubleConverter);
-        autoBinding_3.bind();
-        //
-        BeanProperty<Footprint, Double> footprintBeanProperty_4 = BeanProperty.create("innerDimension");
-        BeanProperty<JTextField, String> jTextFieldBeanProperty_3 = BeanProperty.create("text");
-        AutoBinding<Footprint, Double, JTextField, String> autoBinding_4 = Bindings.createAutoBinding(UpdateStrategy.READ_WRITE, footprint, footprintBeanProperty_4, innerDimension, jTextFieldBeanProperty_3);
-        autoBinding_4.setConverter(doubleConverter);
-        autoBinding_4.bind();
-        //
-        BeanProperty<Footprint, Integer> footprintBeanProperty_5 = BeanProperty.create("padCount");
-        BeanProperty<JTextField, String> jTextFieldBeanProperty_4 = BeanProperty.create("text");
-        AutoBinding<Footprint, Integer, JTextField, String> autoBinding_5 = Bindings.createAutoBinding(UpdateStrategy.READ_WRITE, footprint, footprintBeanProperty_5, padCount, jTextFieldBeanProperty_4);
-        autoBinding_5.setConverter(intConverter);
-        autoBinding_5.bind();
-        //
-        BeanProperty<Footprint, Double> footprintBeanProperty_6 = BeanProperty.create("padPitch");
-        BeanProperty<JTextField, String> jTextFieldBeanProperty_5 = BeanProperty.create("text");
-        AutoBinding<Footprint, Double, JTextField, String> autoBinding_6 = Bindings.createAutoBinding(UpdateStrategy.READ_WRITE, footprint, footprintBeanProperty_6, padPitch, jTextFieldBeanProperty_5);
-        autoBinding_6.setConverter(doubleConverter);
-        autoBinding_6.bind();
-        //
-        BeanProperty<Footprint, Double> footprintBeanProperty_7 = BeanProperty.create("padAcross");
-        BeanProperty<JTextField, String> jTextFieldBeanProperty_6 = BeanProperty.create("text");
-        AutoBinding<Footprint, Double, JTextField, String> autoBinding_7 = Bindings.createAutoBinding(UpdateStrategy.READ_WRITE, footprint, footprintBeanProperty_7, padAcross, jTextFieldBeanProperty_6);
-        autoBinding_7.setConverter(doubleConverter);
-        autoBinding_7.bind();
-        //
-        BeanProperty<Footprint, Double> footprintBeanProperty_8 = BeanProperty.create("padRoundness");
-        BeanProperty<JTextField, String> jTextFieldBeanProperty_7 = BeanProperty.create("text");
-        AutoBinding<Footprint, Double, JTextField, String> autoBinding_8 = Bindings.createAutoBinding(UpdateStrategy.READ_WRITE, footprint, footprintBeanProperty_8, padRoundness, jTextFieldBeanProperty_7);
-        autoBinding_8.setConverter(doubleConverter);
-        autoBinding_8.bind();
+        ComponentDecorators.decorateWithAutoSelect(bodyWidthTf);
+        ComponentDecorators.decorateWithAutoSelect(bodyHeightTf);
 
+        ComponentDecorators.decorateWithAutoSelect(outerDimension);
+        ComponentDecorators.decorateWithAutoSelect(innerDimension);
+        ComponentDecorators.decorateWithAutoSelect(padCount);
+        ComponentDecorators.decorateWithAutoSelect(padPitch);
+        ComponentDecorators.decorateWithAutoSelect(padAcross);
+        ComponentDecorators.decorateWithAutoSelect(padRoundness);
     }
 }

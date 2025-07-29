@@ -80,6 +80,13 @@ public class Job extends AbstractModelObject implements PropertyChangeListener {
     protected transient File file;
     protected transient boolean dirty;
     protected transient final PanelLocation rootPanelLocation;
+
+    public enum ErrorHandling {
+        Alert, Defer
+    }
+
+    @Element(required = false)
+    private ErrorHandling errorHandling = ErrorHandling.Alert;
     
     public Job() {
         rootPanelLocation = new PanelLocation(rootPanel);
@@ -170,6 +177,16 @@ public class Job extends AbstractModelObject implements PropertyChangeListener {
         Object oldValue = this.file;
         this.file = file;
         firePropertyChange("file", oldValue, file);
+    }
+
+    public ErrorHandling getErrorHandling() {
+        return errorHandling;
+    }
+
+    public void setErrorHandling(ErrorHandling errorHandling) {
+        Object oldValue = this.errorHandling;
+        this.errorHandling = errorHandling;
+        firePropertyChange("errorHandling", oldValue, errorHandling);
     }
 
     /**
@@ -486,4 +503,5 @@ public class Job extends AbstractModelObject implements PropertyChangeListener {
             setDirty(true);
         }
     }
+
 }

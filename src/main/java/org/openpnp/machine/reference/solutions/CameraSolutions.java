@@ -28,6 +28,7 @@ import java.util.function.Function;
 
 import javax.swing.SwingUtilities;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.CameraPanel;
 import org.openpnp.gui.components.CameraView;
@@ -70,6 +71,17 @@ public class CameraSolutions implements Solutions.Subject  {
 
     @Override
     public void findIssues(Solutions solutions) {
+        if (solutions.isTargeting(Milestone.Connect)) {
+            if (camera instanceof OpenPnpCaptureCamera
+                && ((OpenPnpCaptureCamera) camera).getDevice() == null) {
+                solutions.add(new Solutions.PlainIssue(
+                        camera, 
+                        Translations.getString("CameraSolutions.Connect.Issue"),  //$NON-NLS-1$
+                        Translations.getString("CameraSolutions.Connect.Solution"),  //$NON-NLS-1$
+                        Severity.Fundamental,
+                        "https://github.com/openpnp/openpnp/wiki/OpenPnpCaptureCamera")); //$NON-NLS-1$
+            }
+        }
         if (solutions.isTargeting(Milestone.Basics)) {
             ActuatorSolutions.findActuateIssues(solutions, camera, camera.getLightActuator(), "camera light",
                 "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Camera-Lighting");

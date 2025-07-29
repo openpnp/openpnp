@@ -117,7 +117,7 @@ public class ScriptFileWatcher {
         menu.addMenuListener(new MenuListener() {
             @Override
             public void menuSelected(MenuEvent e) {
-                btnClearPool.setEnabled(scripting.getScriptingEnginePoolObjectCount() > 0);
+                btnClearPool.setEnabled(scripting.enableClearScriptingEnginePool());
             }
 
             @Override

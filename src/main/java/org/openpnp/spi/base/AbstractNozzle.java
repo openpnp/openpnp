@@ -234,7 +234,7 @@ public abstract class AbstractNozzle extends AbstractHeadMountable implements No
         Object oldValue = this.rotationModeOffset;
         this.rotationModeOffset = rotationModeOffset;
         firePropertyChange("rotationModeOffset", oldValue, rotationModeOffset);
-        Logger.trace("Set rotation mode offset: "+(rotationModeOffset != null ? rotationModeOffset+"°." : "none."));
+        Logger.trace("Nozzle " + getName() + ": set rotation mode offset: "+(rotationModeOffset != null ? rotationModeOffset+"°." : "none."));
         // Note, we do not 
         //  fireMachineHeadActivity(head); 
         // as only the upcoming coordinate changes will really make sense and matter.

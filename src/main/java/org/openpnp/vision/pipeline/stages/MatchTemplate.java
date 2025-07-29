@@ -9,6 +9,8 @@ import java.util.List;
 import org.opencv.core.Core;
 import org.opencv.core.Core.MinMaxLocResult;
 import org.opencv.core.Mat;
+import org.openpnp.model.Length;
+import org.openpnp.model.Location;
 import org.opencv.imgproc.Imgproc;
 import org.openpnp.util.OpenCvUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
@@ -55,6 +57,16 @@ public class MatchTemplate extends CvStage {
     @Property(description = "Normalize results to maximum value.")
     private boolean normalize = true;
 
+    @Attribute(required = false)
+    @Property(description = "Maximum search distance (radius) from nominal center, in pixels.")
+    private int maxDistance = 10000; // a large number, so that it is the whole image by default for backwards compatibility
+
+    @Attribute(required = false)
+    @Property(description = "Property name as controlled by the vision operation using this pipeline.<br/>"
+            + "<ul><li><i>propertyName</i>.maxDistance</li><li><i>propertyName</i>.center</li></ul>"
+            + "If set, these will override the properties configured here.")
+    private String propertyName = "";
+
     public String getTemplateStageName() {
         return templateStageName;
     }
@@ -87,6 +99,22 @@ public class MatchTemplate extends CvStage {
         this.normalize = normalize;
     }
 
+    public int getMaxDistance() {
+        return maxDistance;
+    }
+
+    public void setMaxDistance(int maxDistance) {
+        this.maxDistance = maxDistance;
+    }
+
+    public String getPropertyName() {
+        return propertyName;
+    }
+
+    public void setPropertyName(String propertyName) {
+        this.propertyName = propertyName;
+    }
+
     @Override
     public Result process(CvPipeline pipeline) throws Exception {
         if (templateStageName == null || templateStageName.trim().isEmpty()) {
@@ -96,6 +124,17 @@ public class MatchTemplate extends CvStage {
         Mat mat = pipeline.getWorkingImage();
         Mat template = pipeline.getExpectedResult(templateStageName).image;
         Mat result = new Mat();
+
+        org.openpnp.model.Point center = new org.openpnp.model.Point(mat.cols()*0.5, mat.rows()*0.5);
+
+        if (!propertyName.isEmpty()) {
+            maxDistance = getPossiblePipelinePropertyOverride(maxDistance, pipeline,
+                    propertyName + ".maxDistance", Double.class, Integer.class, Length.class);
+
+            center = getPossiblePipelinePropertyOverride(center, pipeline,
+                    propertyName + ".center", org.openpnp.model.Point.class, org.opencv.core.Point.class,
+                    Location.class);
+        }
 
         Imgproc.matchTemplate(mat, template, result, Imgproc.TM_CCOEFF_NORMED);
 
@@ -110,9 +149,14 @@ public class MatchTemplate extends CvStage {
         for (Point point : OpenCvUtils.matMaxima(result, rangeMin, rangeMax)) {
             int x = point.x;
             int y = point.y;
-            TemplateMatch match = new TemplateMatch(x, y, template.cols(), template.rows(),
-                    result.get(y, x)[0] / (normalize? maxVal : 1.0));
-            matches.add(match);
+            double dx = x-center.x;
+            double dy = y-center.y;
+            double distance = Math.sqrt(dx*dx+dy*dy);
+            if (distance<maxDistance) {
+                TemplateMatch match = new TemplateMatch(x, y, template.cols(), template.rows(),
+                        result.get(y, x)[0] / (normalize? maxVal : 1.0));
+                matches.add(match);
+            }
         }
 
         Collections.sort(matches, new Comparator<TemplateMatch>() {

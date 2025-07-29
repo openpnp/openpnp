@@ -27,6 +27,8 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.Clipboard;
 import java.util.List;
 import java.util.Locale;
 import java.util.prefs.Preferences;
@@ -41,6 +43,8 @@ import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.border.TitledBorder;
+import javax.swing.JPopupMenu;
+import javax.swing.JMenuItem;
 
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.jdesktop.swingx.JXCollapsiblePane;
@@ -244,8 +248,9 @@ public class MachineControlsPanel extends JPanel {
                     }
                     if (part != null) {
                         // Subtract the part height for clearance.
+                        Length partHeight = part.getHeightForSafeZ();
                         hmLocation = hmLocation
-                                .subtract(new Location(part.getHeight().getUnits(), 0, 0, part.getHeight().getValue(), 0));
+                                .subtract(new Location(partHeight.getUnits(), 0, 0, partHeight.getValue(), 0));
                         subject += " holding "+part.getId();
                     }
                 }
@@ -284,9 +289,13 @@ public class MachineControlsPanel extends JPanel {
     }
 
     public void updateDros() {
+        MainFrame.get().getDroLabel().setText(getDroText());
+    }
+
+    public String getDroText() {
         Location l = getCurrentLocation();
         if (l == null) {
-            return;
+            return "";
         }
 
         if (markLocation != null) {
@@ -300,12 +309,11 @@ public class MachineControlsPanel extends JPanel {
         z = l.getZ();
         c = l.getRotation();
 
-        MainFrame.get().getDroLabel()
-                .setText(String.format("X:%-9s Y:%-9s Z:%-9s C:%-9s", //$NON-NLS-1$
-                        String.format(Locale.US, configuration.getLengthDisplayFormat(), x),
-                        String.format(Locale.US, configuration.getLengthDisplayFormat(), y),
-                        String.format(Locale.US, configuration.getLengthDisplayFormat(), z),
-                        String.format(Locale.US, configuration.getLengthDisplayFormat(), c)));
+        return String.format("X:%-9s Y:%-9s Z:%-9s C:%-9s", //$NON-NLS-1$
+                String.format(Locale.US, configuration.getLengthDisplayFormat(), x),
+                String.format(Locale.US, configuration.getLengthDisplayFormat(), y),
+                String.format(Locale.US, configuration.getLengthDisplayFormat(), z),
+                String.format(Locale.US, configuration.getLengthDisplayFormat(), c));
     }
 
     private void createUi() {
@@ -459,6 +467,18 @@ public class MachineControlsPanel extends JPanel {
         }
     };
 
+    public Action copyDroAction = new AbstractAction() {
+        {
+            putValue(NAME, Translations.getString("MachineControls.Action.Copy")); //$NON-NLS-1$
+        }
+        public void actionPerformed(ActionEvent arg0) {
+            StringSelection stringSelection = new StringSelection(getDroText());
+            Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+            clipboard.setContents(stringSelection, null);
+        }
+    };
+
+
     private void updateStartStopButton(boolean enabled) {
         startStopMachineAction.putValue(Action.NAME, enabled ? Translations.getString("MachineControls.Action.Stop") : Translations.getString("MachineControls.Action.Start")); //$NON-NLS-1$ //$NON-NLS-2$
         startStopMachineAction.putValue(Action.SMALL_ICON,
@@ -557,17 +577,23 @@ public class MachineControlsPanel extends JPanel {
             MainFrame.get().getDroLabel().addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseClicked(MouseEvent e) {
-                    SwingUtilities.invokeLater(() -> {
-                        if (markLocation == null) {
-                            markLocation = getCurrentLocation();
-                            MainFrame.get().getDroLabel().setBackground(droSavedColor);
-                        }
-                        else {
-                            markLocation = null;
-                            MainFrame.get().getDroLabel().setBackground(droNormalColor);
-                        }
-                        updateDros();
-                    });
+                    if(e.getButton()==MouseEvent.BUTTON3) {
+                        JPopupMenu menu = new JPopupMenu();
+                        menu.add(new JMenuItem(copyDroAction));
+                        menu.show(e.getComponent(), e.getX(), e.getY());
+                    } else {
+                        SwingUtilities.invokeLater(() -> {
+                            if (markLocation == null) {
+                                markLocation = getCurrentLocation();
+                                MainFrame.get().getDroLabel().setBackground(droSavedColor);
+                            }
+                            else {
+                                markLocation = null;
+                                MainFrame.get().getDroLabel().setBackground(droNormalColor);
+                            }
+                            updateDros();
+                        });
+                    }
                 }
             });
 

@@ -4,7 +4,9 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
+import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.openpnp.gui.MainFrame;
+import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.JBindings;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.machine.photon.PhotonFeeder;
@@ -18,12 +20,9 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-public class GlobalConfigConfigurationWizard extends JPanel {
+public class GlobalConfigConfigurationWizard extends AbstractConfigurationWizard {
 
     private final PhotonProperties photonProperties;
-
-    protected JPanel contentPanel;
-    private final JScrollPane scrollPane;
 
     private final FeederSearchProgressBar progressBarPanel;
     private final JButton searchButton;
@@ -36,16 +35,6 @@ public class GlobalConfigConfigurationWizard extends JPanel {
      */
     public GlobalConfigConfigurationWizard() {
         photonProperties = new PhotonProperties(Configuration.get().getMachine());
-
-        setLayout(new BorderLayout());
-
-        contentPanel = new JPanel();
-        contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
-
-        scrollPane = new JScrollPane(contentPanel);
-
-        scrollPane.setBorder(null);
-        add(scrollPane, BorderLayout.CENTER);
 
         JPanel searchPanel = new JPanel();
         searchPanel.setBorder(new TitledBorder(null, "Search", TitledBorder.LEADING, TitledBorder.TOP, null, null));
@@ -117,17 +106,11 @@ public class GlobalConfigConfigurationWizard extends JPanel {
             }
         });
         programFeederSlotsPanel.add(btnStartFeedSlotsWizard, "4, 4");
-
-        createBindings();
     }
 
+    @Override
     public void createBindings() {
-        JBindings.bind(photonProperties, "maxFeederAddress", maxFeederSpinner, "value");
-
-        maxFeederSpinner.addChangeListener(e -> {
-            int maxFeederAddress = (int) maxFeederSpinner.getValue();
-            photonProperties.setMaxFeederAddress(maxFeederAddress);
-        });
+        bind(UpdateStrategy.READ_WRITE, photonProperties, "maxFeederAddress", maxFeederSpinner, "value");
     }
 
     private final Action searchAction = new AbstractAction() {

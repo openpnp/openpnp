@@ -34,6 +34,7 @@ public class FootprintTableModel extends AbstractTableModel {
     private String[] columnNames =
             new String[] {
                     Translations.getString("FootPrintTableModel.ColumnName.Name"), //$NON-NLS-1$
+                    Translations.getString("FootPrintTableModel.ColumnName.Mark"), //$NON-NLS-1$
                     "X", "Y", //$NON-NLS-1$
                     Translations.getString("FootPrintTableModel.ColumnName.Width"), //$NON-NLS-1$
                     Translations.getString("FootPrintTableModel.ColumnName.Length"), //$NON-NLS-1$
@@ -42,7 +43,7 @@ public class FootprintTableModel extends AbstractTableModel {
     };
 
     private Class[] columnTypes =
-            new Class[] {String.class, LengthCellValue.class, LengthCellValue.class,
+            new Class[] {String.class, String.class, LengthCellValue.class, LengthCellValue.class,
                     LengthCellValue.class, LengthCellValue.class, String.class, String.class};
 
     final private Footprint footprint;
@@ -75,7 +76,7 @@ public class FootprintTableModel extends AbstractTableModel {
 
     @Override
     public boolean isCellEditable(int rowIndex, int columnIndex) {
-        return true;
+        return columnIndex != 1;
     }
 
     @Override
@@ -91,45 +92,28 @@ public class FootprintTableModel extends AbstractTableModel {
                 pad.setName((String) aValue);
             }
             else if (columnIndex == 1) {
-                LengthCellValue value = (LengthCellValue) aValue;
-                Length length = value.getLength();
-                if (length.getUnits() == null) {
-                    length.setUnits(footprint.getUnits());
-                }
-                length = length.convertToUnits(footprint.getUnits());
-                pad.setX(length.getValue());
+                pad.setMark((String) aValue != "");
             }
             else if (columnIndex == 2) {
                 LengthCellValue value = (LengthCellValue) aValue;
-                Length length = value.getLength();
-                if (length.getUnits() == null) {
-                    length.setUnits(footprint.getUnits());
-                }
-                length = length.convertToUnits(footprint.getUnits());
-                pad.setY(length.getValue());
+                pad.setX(lengthValueFromLengthCellValue(value));
             }
             else if (columnIndex == 3) {
                 LengthCellValue value = (LengthCellValue) aValue;
-                Length length = value.getLength();
-                if (length.getUnits() == null) {
-                    length.setUnits(footprint.getUnits());
-                }
-                length = length.convertToUnits(footprint.getUnits());
-                pad.setWidth(length.getValue());
+                pad.setY(lengthValueFromLengthCellValue(value));
             }
             else if (columnIndex == 4) {
                 LengthCellValue value = (LengthCellValue) aValue;
-                Length length = value.getLength();
-                if (length.getUnits() == null) {
-                    length.setUnits(footprint.getUnits());
-                }
-                length = length.convertToUnits(footprint.getUnits());
-                pad.setHeight(length.getValue());
+                pad.setWidth(lengthValueFromLengthCellValue(value));
             }
             else if (columnIndex == 5) {
-                pad.setRotation(Double.parseDouble(aValue.toString()));
+                LengthCellValue value = (LengthCellValue) aValue;
+                pad.setHeight(lengthValueFromLengthCellValue(value));
             }
             else if (columnIndex == 6) {
+                pad.setRotation(Double.parseDouble(aValue.toString()));
+            }
+            else if (columnIndex == 7) {
                 double val = Double.parseDouble(aValue.toString());
                 val = Math.max(val, -100);
                 val = Math.min(val, 100);
@@ -142,23 +126,36 @@ public class FootprintTableModel extends AbstractTableModel {
         }
     }
 
+    private double lengthValueFromLengthCellValue(LengthCellValue value) {
+        Length length = value.getLength();
+        length = length.changeUnitsIfUnspecified(footprint.getUnits());
+        length = length.convertToUnits(footprint.getUnits());
+        return length.getValue();
+    }
+
     public Object getValueAt(int row, int col) {
         Pad pad = footprint.getPads().get(row);
         switch (col) {
             case 0:
                 return pad.getName();
             case 1:
+                if (pad.getMark()) {
+                    return "O";
+                } else {
+                    return "";
+                }
+            case 2:            
                 return new LengthCellValue(new Length(pad.getX(), footprint.getUnits()), true);
-            case 2:
-                return new LengthCellValue(new Length(pad.getY(), footprint.getUnits()), true);
             case 3:
-                return new LengthCellValue(new Length(pad.getWidth(), footprint.getUnits()), true);
+                return new LengthCellValue(new Length(pad.getY(), footprint.getUnits()), true);
             case 4:
-                return new LengthCellValue(new Length(pad.getHeight(), footprint.getUnits()), true);
+                return new LengthCellValue(new Length(pad.getWidth(), footprint.getUnits()), true);
             case 5:
+                return new LengthCellValue(new Length(pad.getHeight(), footprint.getUnits()), true);
+            case 6:
                 return String.format(Locale.US, Configuration.get().getLengthDisplayFormat(),
                         pad.getRotation());
-            case 6:
+            case 7:
                 return String.format(Locale.US, Configuration.get().getLengthDisplayFormat(),
                         pad.getRoundness());
             default:

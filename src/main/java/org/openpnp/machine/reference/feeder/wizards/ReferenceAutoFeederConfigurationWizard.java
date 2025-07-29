@@ -32,6 +32,7 @@ import javax.swing.JTextField;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.ActuatorsComboBoxModel;
 import org.openpnp.gui.support.DoubleConverter;
@@ -56,6 +57,7 @@ public class ReferenceAutoFeederConfigurationWizard extends AbstractReferenceFee
     private JButton btnTestFeedActuator;
     private JButton btnTestPostPickActuator;
     private JCheckBox ckBoxMoveBeforeFeed;
+    private JCheckBox ckBoxRecycleSupport;
 
 
     public ReferenceAutoFeederConfigurationWizard(ReferenceAutoFeeder feeder) {
@@ -64,7 +66,7 @@ public class ReferenceAutoFeederConfigurationWizard extends AbstractReferenceFee
 
         JPanel panelActuator = new JPanel();
         panelActuator.setBorder(new TitledBorder(null,
-                "Actuators", TitledBorder.LEADING, TitledBorder.TOP, null));
+                Translations.getString("ReferenceAutoFeederConfigurationWizard.ActuatorsPanel.Border.title"), TitledBorder.LEADING, TitledBorder.TOP, null)); //$NON-NLS-1$
         contentPanel.add(panelActuator);
         panelActuator.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -85,15 +87,17 @@ public class ReferenceAutoFeederConfigurationWizard extends AbstractReferenceFee
                         FormSpecs.RELATED_GAP_ROWSPEC,
                         FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
                         FormSpecs.DEFAULT_ROWSPEC,}));
 
-        JLabel lblActuator = new JLabel("Actuator");
+        JLabel lblActuator = new JLabel(Translations.getString("ReferenceAutoFeederConfigurationWizard.ActuatorsPanel.ActuatorLabel.text")); //$NON-NLS-1$
         panelActuator.add(lblActuator, "4, 2, left, default");
 
-        JLabel lblActuatorValue = new JLabel("Actuator Value");
+        JLabel lblActuatorValue = new JLabel(Translations.getString("ReferenceAutoFeederConfigurationWizard.ActuatorsPanel.ActuatorValueLabel.text")); //$NON-NLS-1$
         panelActuator.add(lblActuatorValue, "6, 2, left, default");
 
-        JLabel lblFeed = new JLabel("Feed");
+        JLabel lblFeed = new JLabel(Translations.getString("ReferenceAutoFeederConfigurationWizard.ActuatorsPanel.FeedLabel.text")); //$NON-NLS-1$
         panelActuator.add(lblFeed, "2, 4, right, default");
 
         comboBoxFeedActuator = new JComboBox();
@@ -102,15 +106,13 @@ public class ReferenceAutoFeederConfigurationWizard extends AbstractReferenceFee
 
         actuatorValue = new JTextField();
         panelActuator.add(actuatorValue, "6, 4");
+        actuatorValue.setToolTipText("For Boolean: 1 = True, 0 = False");
         actuatorValue.setColumns(10);
-
-        JLabel lblForBoolean = new JLabel("For Boolean: 1 = True, 0 = False");
-        panelActuator.add(lblForBoolean, "8, 4");
 
         btnTestFeedActuator = new JButton(testFeedActuatorAction);
         panelActuator.add(btnTestFeedActuator, "10, 4");
 
-        JLabel lblPostPick = new JLabel("Post Pick");
+        JLabel lblPostPick = new JLabel(Translations.getString("ReferenceAutoFeederConfigurationWizard.ActuatorsPanel.PostPickLabel.text")); //$NON-NLS-1$
         panelActuator.add(lblPostPick, "2, 6, right, default");
 
         comboBoxPostPickActuator = new JComboBox();
@@ -118,21 +120,26 @@ public class ReferenceAutoFeederConfigurationWizard extends AbstractReferenceFee
         panelActuator.add(comboBoxPostPickActuator, "4, 6, fill, default");
 
         postPickActuatorValue = new JTextField();
+        postPickActuatorValue.setToolTipText(actuatorValue.getToolTipText());
         postPickActuatorValue.setColumns(10);
         panelActuator.add(postPickActuatorValue, "6, 6");
-
-        JLabel label = new JLabel("For Boolean: 1 = True, 0 = False");
-        panelActuator.add(label, "8, 6");
 
         btnTestPostPickActuator = new JButton(testPostPickActuatorAction);
         panelActuator.add(btnTestPostPickActuator, "10, 6");
 
-        JLabel lblMoveBeforeFeed = new JLabel("Move before feed");
+        JLabel lblMoveBeforeFeed = new JLabel(Translations.getString("ReferenceAutoFeederConfigurationWizard.ActuatorsPanel.MoveBeforeFeedChkbox.text")); //$NON-NLS-1$
         panelActuator.add(lblMoveBeforeFeed, "2, 8, right, default");
-        lblMoveBeforeFeed.setToolTipText("Move nozzle to pick location before actuating feed actuator");
+        lblMoveBeforeFeed.setToolTipText(Translations.getString("ReferenceAutoFeederConfigurationWizard.ActuatorsPanel.MoveBeforeFeedChkbox.toolTipText")); //$NON-NLS-1$
 
         ckBoxMoveBeforeFeed = new JCheckBox();
         panelActuator.add(ckBoxMoveBeforeFeed, "4, 8, left, default");
+
+        JLabel lblRecycleSupport = new JLabel("Recycle supported");
+        panelActuator.add(lblRecycleSupport, "2, 10, right, default");
+        lblRecycleSupport.setToolTipText("Support part recycle from part back to feeder");
+
+        ckBoxRecycleSupport = new JCheckBox();
+        panelActuator.add(ckBoxRecycleSupport, "4, 10, left, default");
     }
 
     @Override
@@ -149,12 +156,13 @@ public class ReferenceAutoFeederConfigurationWizard extends AbstractReferenceFee
         addWrappedBinding(feeder, "postPickActuatorValue", postPickActuatorValue, "text", doubleConverter);
 
         addWrappedBinding(feeder, "moveBeforeFeed", ckBoxMoveBeforeFeed, "selected");
+        addWrappedBinding(feeder, "recycleSupport", ckBoxRecycleSupport, "selected");
 
         ComponentDecorators.decorateWithAutoSelect(actuatorValue);
         ComponentDecorators.decorateWithAutoSelect(postPickActuatorValue);
     }
 
-    private Action testFeedActuatorAction = new AbstractAction("Test feed") {
+    private Action testFeedActuatorAction = new AbstractAction(Translations.getString("ReferenceAutoFeederConfigurationWizard.ActuatorsPanel.TestFeedButton.text")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
@@ -173,7 +181,7 @@ public class ReferenceAutoFeederConfigurationWizard extends AbstractReferenceFee
         }
     };
 
-    private Action testPostPickActuatorAction = new AbstractAction("Test post pick") {
+    private Action testPostPickActuatorAction = new AbstractAction(Translations.getString("ReferenceAutoFeederConfigurationWizard.ActuatorsPanel.TestPostPickButton.text")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {

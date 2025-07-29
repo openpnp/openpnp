@@ -138,6 +138,33 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
         return offsets;
     }
 
+    @Override
+    public Location getLocation(Part part, BoardLocation boardLocation,
+            Placement placement, Nozzle nozzle) throws Exception {
+        BottomVisionSettings bottomVisionSettings = getInheritedVisionSettings(part);
+
+        if (!isEnabled() || !bottomVisionSettings.isEnabled()) {
+            return null;
+        }
+
+        Camera camera = VisionUtils.getBottomVisionCamera();
+        double wantedAngle = 0.0;
+        if ((bottomVisionSettings.getPreRotateUsage() == PreRotateUsage.Default && preRotate)
+                || (bottomVisionSettings.getPreRotateUsage() == PreRotateUsage.AlwaysOn)) {
+
+            wantedAngle = placement.getLocation().getRotation();
+            if (boardLocation != null) {
+                wantedAngle = Utils2D.calculateBoardPlacementLocation(boardLocation, placement.getLocation())
+                        .getRotation();
+            }
+            wantedAngle = Utils2D.angleNorm(wantedAngle, 180.);
+        }
+        
+        Location wantedLocation = getCameraLocationAtPartHeight(part, camera, nozzle, wantedAngle);
+
+        return wantedLocation;
+    }
+    
     public Location getCameraLocationAtPartHeight(Part part, Camera camera, Nozzle nozzle, double angle) throws Exception {
         if (part == null) {
             // No part height accounted for.

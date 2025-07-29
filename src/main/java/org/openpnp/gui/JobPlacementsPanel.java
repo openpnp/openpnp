@@ -70,6 +70,7 @@ import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.support.ActionGroup;
 import org.openpnp.gui.support.CustomBooleanRenderer;
 import org.openpnp.gui.support.MonospacedFontTableCellRenderer;
+import org.openpnp.gui.support.MultisortTableHeaderCellRenderer;
 import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.IdentifiableListCellRenderer;
@@ -320,6 +321,7 @@ public class JobPlacementsPanel extends JPanel {
         popupMenu.add(setEnabledMenu);
 
         JMenu setErrorHandlingMenu = new JMenu(setErrorHandlingAction);
+        setErrorHandlingMenu.add(new SetErrorHandlingAction(ErrorHandling.Default));
         setErrorHandlingMenu.add(new SetErrorHandlingAction(ErrorHandling.Alert));
         setErrorHandlingMenu.add(new SetErrorHandlingAction(ErrorHandling.Defer));
         popupMenu.add(setErrorHandlingMenu);
@@ -768,9 +770,19 @@ public class JobPlacementsPanel extends JPanel {
 
         public SetTypeAction(Placement.Type type) {
             this.type = type;
-            putValue(NAME, type.toString());
+            String name;
+            if (type == Placement.Type.Fiducial) {
+                name = Translations.getString("Placement.Type.Fiducial"); //$NON-NLS-1$
+            }
+            else if (type == Placement.Type.Placement) {
+                name = Translations.getString("Placement.Type.Placement"); //$NON-NLS-1$
+            }
+            else {
+                name = type.toString();
+            }
+            putValue(NAME, name);
             putValue(SHORT_DESCRIPTION, Translations.getString("JobPlacementsPanel.SetType.MenuTip") //$NON-NLS-1$ 
-                    + " " + type.toString()); //$NON-NLS-1$
+                    + " " + name); //$NON-NLS-1$
         }
 
         @Override
@@ -847,11 +859,17 @@ public class JobPlacementsPanel extends JPanel {
         public SetErrorHandlingAction(Placement.ErrorHandling errorHandling) {
             this.errorHandling = errorHandling;
             String name;
-            if (errorHandling == Placement.ErrorHandling.Alert) {
+            switch(errorHandling) {
+            case Alert:
+            default:
                 name = Translations.getString("Placement.ErrorHandling.Alert"); //$NON-NLS-1$
-            }
-            else {
+                break;
+            case Defer:
                 name = Translations.getString("Placement.ErrorHandling.Defer"); //$NON-NLS-1$
+                break;
+            case Default:
+                name = Translations.getString("Placement.ErrorHandling.Default"); //$NON-NLS-1$
+                break;
             }
             putValue(NAME, name);
             putValue(SHORT_DESCRIPTION, Translations.getString("JobPlacementsPanel.SetErrorHandling.MenuTip") //$NON-NLS-1$
@@ -956,7 +974,17 @@ public class JobPlacementsPanel extends JPanel {
                 return;
             }
             Type type = (Type) value;
-            setText(type.name());
+            String name;
+            if (type == Placement.Type.Fiducial) {
+                name = Translations.getString("Placement.Type.Fiducial"); //$NON-NLS-1$
+            }
+            else if (type == Placement.Type.Placement) {
+                name = Translations.getString("Placement.Type.Placement"); //$NON-NLS-1$
+            }
+            else {
+                name = value.toString();
+            }
+            setText(name);
         }
 
         @Override

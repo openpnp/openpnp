@@ -33,6 +33,7 @@ import org.openpnp.model.FiducialVisionSettings;
 import org.openpnp.model.Length;
 import org.openpnp.model.Package;
 import org.openpnp.model.Part;
+import org.openpnp.util.Collect;
 
 @SuppressWarnings("serial")
 public class PartsTableModel extends AbstractObjectTableModel implements PropertyChangeListener {
@@ -40,6 +41,7 @@ public class PartsTableModel extends AbstractObjectTableModel implements Propert
             new String[] {Translations.getString("PartsTableModel.ColumnName.ID"), //$NON-NLS-1$
                     Translations.getString("PartsTableModel.ColumnName.Description"), //$NON-NLS-1$
                     Translations.getString("PartsTableModel.ColumnName.Height"), //$NON-NLS-1$
+                    Translations.getString("PartsTableModel.ColumnName.ThroughBoardDepth"), //$NON-NLS-1$
                     Translations.getString("PartsTableModel.ColumnName.Package"), //$NON-NLS-1$
                     Translations.getString("PartsTableModel.ColumnName.SpeedPercent"), //$NON-NLS-1$
                     Translations.getString("PartsTableModel.ColumnName.BottomVision"), //$NON-NLS-1$
@@ -47,7 +49,7 @@ public class PartsTableModel extends AbstractObjectTableModel implements Propert
                     Translations.getString("PartsTableModel.ColumnName.Placements"), //$NON-NLS-1$
                     Translations.getString("PartsTableModel.ColumnName.Feeders") //$NON-NLS-1$
     };
-    private Class[] columnTypes = new Class[] {String.class, String.class, LengthCellValue.class,
+    private Class[] columnTypes = new Class[] {String.class, String.class, LengthCellValue.class, LengthCellValue.class,
             Package.class, String.class, BottomVisionSettings.class, FiducialVisionSettings.class, Integer.class, Integer.class};
     private List<Part> parts;
     private PercentConverter percentConverter = new PercentConverter();
@@ -77,7 +79,7 @@ public class PartsTableModel extends AbstractObjectTableModel implements Propert
 
     @Override
     public boolean isCellEditable(int rowIndex, int columnIndex) {
-        return columnIndex >= 1 && columnIndex <= 6;
+        return columnIndex >= 1 && columnIndex <= 7;
     }
 
     @Override
@@ -102,26 +104,33 @@ public class PartsTableModel extends AbstractObjectTableModel implements Propert
                 value.setDisplayNativeUnits(true);
                 Length length = value.getLength();
                 Length oldLength = part.getHeight();
-                if (length.getUnits() == null) {
-                    if (oldLength != null) {
-                        length.setUnits(oldLength.getUnits());
-                    }
-                    if (length.getUnits() == null) {
-                        length.setUnits(Configuration.get().getSystemUnits());
-                    }
+                if (oldLength != null) {
+                    length = length.changeUnitsIfUnspecified(oldLength.getUnits());
                 }
+                length = length.changeUnitsIfUnspecified(Configuration.get().getSystemUnits());
                 part.setHeight(length);
             }
             else if (columnIndex == 3) {
-                part.setPackage((Package) aValue);
+                LengthCellValue value = (LengthCellValue) aValue;
+                value.setDisplayNativeUnits(true);
+                Length length = value.getLength();
+                Length oldDepth = part.getThroughBoardDepth();
+                if (oldDepth != null) {
+                    length = length.changeUnitsIfUnspecified(oldDepth.getUnits());
+                }
+                length = length.changeUnitsIfUnspecified(Configuration.get().getSystemUnits());
+                part.setThroughBoardDepth(length);
             }
             else if (columnIndex == 4) {
-                part.setSpeed(percentConverter.convertReverse(aValue.toString()));
+                part.setPackage((Package) aValue);
             }
             else if (columnIndex == 5) {
-                part.setBottomVisionSettings((BottomVisionSettings) aValue);
+                part.setSpeed(percentConverter.convertReverse(aValue.toString()));
             }
             else if (columnIndex == 6) {
+                part.setBottomVisionSettings((BottomVisionSettings) aValue);
+            }
+            else if (columnIndex == 7) {
                 part.setFiducialVisionSettings((FiducialVisionSettings) aValue);
             }
         }
@@ -140,16 +149,18 @@ public class PartsTableModel extends AbstractObjectTableModel implements Propert
             case 2:
                 return new LengthCellValue(part.getHeight(), true);
             case 3:
-                return part.getPackage();
+                return new LengthCellValue(part.getThroughBoardDepth(), true);
             case 4:
-                return percentConverter.convertForward(part.getSpeed());
+                return part.getPackage();
             case 5:
-                return part.getBottomVisionSettings();
+                return percentConverter.convertForward(part.getSpeed());
             case 6:
-                return part.getFiducialVisionSettings();
+                return part.getBottomVisionSettings();
             case 7:
-                return part.getPlacementCount();
+                return part.getFiducialVisionSettings();
             case 8:
+                return part.getPlacementCount();
+            case 9:
                 return part.getAssignedFeeders();
             default:
                 return null;
@@ -159,20 +170,71 @@ public class PartsTableModel extends AbstractObjectTableModel implements Propert
     @Override
     public void propertyChange(PropertyChangeEvent arg0) {
         if (arg0.getSource() instanceof Part) {
-            // Only single part data changed, but sort order might change, so still need fireTableDataChanged().
-            fireTableDataChanged();
+            //Only single part data changed, so notify the table as to which cell to update
+            int rowIdx = indexOf(arg0.getSource());
+            switch (arg0.getPropertyName()) {
+                case "id":
+                    fireTableCellUpdated(rowIdx, 0);
+                    break;
+                case "name":
+                    fireTableCellUpdated(rowIdx, 1);
+                    break;
+                case "height":
+                    fireTableCellUpdated(rowIdx, 2);
+                    break;
+                case "throughBoardDepth":
+                    fireTableCellUpdated(rowIdx, 3);
+                    break;
+                case "package":
+                    fireTableCellUpdated(rowIdx, 4);
+                    break;
+                case "speed":
+                    fireTableCellUpdated(rowIdx, 5);
+                    break;
+                case "bottomVisionSettings":
+                    fireTableCellUpdated(rowIdx, 6);
+                    break;
+                case "fiducialVisionSettings":
+                    fireTableCellUpdated(rowIdx, 7);
+                    break;
+                case "placementCount":
+                    fireTableCellUpdated(rowIdx, 8);
+                    break;
+                case "assignedFeeders":
+                    fireTableCellUpdated(rowIdx, 9);
+                    break;
+                default:
+                    //ok - property is not visible in the table so no need to update the table
+            }
         }
         else  {
-            // Parts list itself changes.
-            if (parts != null) { 
-                for (Part part : parts) {
+            // Parts list itself changed
+            List<Part> newParts = new ArrayList<>(Configuration.get().getParts());
+            
+            //Compute the indices of those parts to remove and those to add
+            List<int[]> indicesToRemove = new ArrayList<>();
+            List<int[]> indicesToAdd = new ArrayList<>();
+            Collect.computeInPlaceUpdateIndices(parts, newParts, indicesToRemove, indicesToAdd);
+
+            //Remove the unneeded parts in reverse order so as to not disturb indices of those 
+            //parts that are yet to be removed
+            for (int[] idxRange : indicesToRemove) {
+                for (int idx=idxRange[0]; idx>=idxRange[1]; idx--) {
+                    Part part = this.getRowObjectAt(idx);
                     part.removePropertyChangeListener(this);
+                    parts.remove(idx);
                 }
+                fireTableRowsDeleted(idxRange[1], idxRange[0]);
             }
-            parts = new ArrayList<>(Configuration.get().getParts());
-            fireTableDataChanged();
-            for (Part part : parts) {
-                part.addPropertyChangeListener(this);
+            
+            //Insert any needed parts into the table
+            for (int[] idxRange : indicesToAdd) {
+                for (int idx=idxRange[0]; idx<=idxRange[1]; idx++) {
+                    Part part = newParts.get(idx);
+                    part.addPropertyChangeListener(this);
+                    parts.add(idx, part);
+                }
+                this.fireTableRowsInserted(idxRange[0], idxRange[1]);
             }
         }
     }

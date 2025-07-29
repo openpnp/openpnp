@@ -282,6 +282,21 @@ public class VisionUtils {
     }
 
     /**
+     * Return the location where the alignment will take place
+     * 
+     * @param p
+     * @param part
+     * @param boardLocation
+     * @param placement
+     * @param nozzle
+     * @return
+     * @throws Exception
+     */
+    public static Location getPartAlignmentLocation(PartAlignment p, Part part, BoardLocation boardLocation, Placement placement, Nozzle nozzle) throws Exception {
+        return p.getLocation(part, boardLocation, placement, nozzle);
+    }
+
+    /**
      * Compute an RGB histogram over the provided image.
      * 
      * @param image

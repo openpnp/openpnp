@@ -17,7 +17,7 @@
  * For more information about OpenPnP visit http://openpnp.org
  */
 
-package org.openpnp.gui;
+package org.openpnp.gui.wizards;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,27 +28,24 @@ import javax.swing.JTable;
 import javax.swing.table.AbstractTableModel;
 
 import org.openpnp.Translations;
+import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.NozzleTip;
 import java.awt.BorderLayout;
 
 @SuppressWarnings("serial")
-public class PackageNozzleTipsPanel extends JPanel {
+public class PackageNozzleTipsWizard extends AbstractConfigurationWizard /*JPanel*/ {
     private final org.openpnp.model.Package pkg;
     private JTable table;
     private JScrollPane scrollPane;
 
-    public PackageNozzleTipsPanel(org.openpnp.model.Package pkg) {
+    public PackageNozzleTipsWizard(org.openpnp.model.Package pkg) {
         this.pkg = pkg;
         createUi();
     }
     private void createUi() {
-        setLayout(new BorderLayout(0, 0));
-        scrollPane = new JScrollPane();
-        add(scrollPane);
-        
         table = new JTable(new NozzleTipsTableModel());
-        scrollPane.setViewportView(table);
+        contentPanel.add(table);
     }
 
     public class NozzleTipsTableModel extends AbstractTableModel {
@@ -118,5 +115,10 @@ public class PackageNozzleTipsPanel extends JPanel {
                 }
             }
         }
+    }
+
+    @Override
+    public void createBindings() {
+        //Nothing to bind
     }
 }

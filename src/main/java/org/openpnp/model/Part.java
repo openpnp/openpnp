@@ -41,6 +41,11 @@ public class Part extends AbstractPartSettingsHolder {
     @Attribute
     private double height;
 
+    @Attribute(required = false)
+    private LengthUnit throughBoardDepthUnits = LengthUnit.Millimeters;
+    @Attribute(required = false)
+    private double throughBoardDepth;
+
     private Package packag;
 
     @Attribute
@@ -124,6 +129,28 @@ public class Part extends AbstractPartSettingsHolder {
         firePropertyChange("height", oldValue, getHeight());
     }
 
+    public Length getThroughBoardDepth() {
+        return new Length(throughBoardDepth, throughBoardDepthUnits);
+    }
+
+    public void setThroughBoardDepth(Length depth) {
+        Length oldValue = getThroughBoardDepth();
+        if (depth == null) {
+            this.throughBoardDepth = 0;
+            this.throughBoardDepthUnits = null;
+        }
+        else {
+            this.throughBoardDepth = depth.getValue();
+            this.throughBoardDepthUnits = depth.getUnits();
+        }
+        firePropertyChange("throughBoardDepth", oldValue, getThroughBoardDepth());
+    }
+
+    public Length getHeightForSafeZ() {
+        // The length that dangles under a nozzle when carried
+        return getHeight().add(getThroughBoardDepth());
+    }
+
     public Package getPackage() {
         return packag;
     }
@@ -139,8 +166,9 @@ public class Part extends AbstractPartSettingsHolder {
     }
 
     public void setPickRetryCount(int pickRetryCount) {
+        Object oldValue = this.pickRetryCount;
         this.pickRetryCount = pickRetryCount;
-        firePropertyChange("pickRetryCount", null, pickRetryCount);
+        firePropertyChange("pickRetryCount", oldValue, pickRetryCount);
     }
 
     @Override

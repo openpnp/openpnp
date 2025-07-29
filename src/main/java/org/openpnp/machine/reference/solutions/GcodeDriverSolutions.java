@@ -415,7 +415,7 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                 if (gcodeDriver instanceof GcodeAsyncDriver) {
                     boolean locationConfirmation = ((GcodeAsyncDriver)gcodeDriver).isReportedLocationConfirmation();
                     boolean confirmationFlowControl = ((GcodeAsyncDriver)gcodeDriver).isConfirmationFlowControl();
-                    boolean locationConfirmationRecommended = hasAxes;
+                    boolean locationConfirmationRecommended = hasAxes && firmware!=FirmwareType.Marlin;
                     if (locationConfirmationRecommended != locationConfirmation) {
                         solutions.add(new Solutions.Issue(
                                 gcodeDriver, 
@@ -424,7 +424,8 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                                                 ? "Location Confirmation recommended for extra features in homing, contact probing, etc."
                                                         : "Location Confirmation required when Confirmation Flow Control is off. "
                                                                 + "Supports extra features in homing, contact probing, etc.")
-                                                : "Location Confirmation usually not available when no axes present."),
+                                                : ( !hasAxes ? "Location Confirmation usually not available when no axes present."
+                                                             : "Marlin sends location-like responses to other commands so Location Confirmation is not reliable")),
                                 (locationConfirmationRecommended ? "Enable Location Confirmation" : "Disable Location Confirmation"),
                                 (confirmationFlowControl ? Severity.Suggestion : Severity.Error),
                                 "https://github.com/openpnp/openpnp/wiki/GcodeAsyncDriver#advanced-settings") {
@@ -440,7 +441,8 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                     boolean serialFlowControlOff = (gcodeDriver.getCommunicationsType() == CommunicationsType.serial 
                         && gcodeDriver.getSerial() != null 
                         && gcodeDriver.getSerial().getFlowControl() == FlowControl.Off) || firmware.getFlowControl(gcodeDriver) == FlowControl.Off;
-                    boolean confirmationFlowControlRecommended = serialFlowControlOff || ! hasAxes;
+                    boolean confirmationFlowControlRecommended = serialFlowControlOff || ! hasAxes ||
+                                                                 firmware==FirmwareType.Marlin; // Marlin require application-level flow control
                     if (confirmationFlowControlRecommended != confirmationFlowControl) {
                         solutions.add(new Solutions.Issue(
                                 gcodeDriver,
@@ -888,6 +890,9 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                     if (command != null && command.contains(commandBuilt)) {
                         commandBuilt = null;
                     }
+                    break;
+                case DELAY_COMMAND:
+                    commandBuilt = "{TimeMS:G4 P%d} ; Delay for given time in [ms]";
                     break;
                 case MOVE_TO_COMMAND:
                     if (hasAxes) {

@@ -36,6 +36,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.TreeMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -57,6 +58,7 @@ import org.openpnp.util.NanosecondTime;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
+import org.simpleframework.xml.ElementMap;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.convert.AnnotationStrategy;
@@ -78,6 +80,9 @@ public class Configuration extends AbstractModelObject {
 
     private static final String PREF_UNITS = "Configuration.units";
     private static final String PREF_UNITS_DEF = "Millimeters";
+
+    private static final String PREF_DISTANCE = "Configuration.distance";
+    private static final int PREF_DISTANCE_DEF = 2;
 
     private static final String PREF_TABLE_LINKS = "Configuration.tableLinks";
 
@@ -121,6 +126,7 @@ public class Configuration extends AbstractModelObject {
     private Preferences prefs;
     private Scripting scripting;
     private EventBus bus = new EventBus();
+    public TreeMap<String, String> scriptState = new TreeMap<>();
 
     public static boolean isInstanceInitialized() {
         return (instance != null);
@@ -196,6 +202,14 @@ public class Configuration extends AbstractModelObject {
 
     public void setSystemUnits(LengthUnit lengthUnit) {
         prefs.put(PREF_UNITS, lengthUnit.name());
+    }
+
+    public void setDistance(int distance) {
+        prefs.putInt(PREF_DISTANCE, distance);
+    }
+
+    public int getDistance() {
+        return prefs.getInt(PREF_DISTANCE, PREF_DISTANCE_DEF);
     }
 
     public TablesLinked getTablesLinked() {
@@ -508,6 +522,24 @@ public class Configuration extends AbstractModelObject {
             throw new Exception("Error while reading machine.xml (" + message + ")", e);
         }
 
+        try {
+            File file = new File(configurationDirectory, "script-state.xml");
+            if (overrideUserConfig || !file.exists()) {
+                Logger.info("No script-state.xml found in configuration directory, loading defaults.");
+                file = File.createTempFile("script-state", "xml");
+                FileUtils.copyURLToFile(ClassLoader.getSystemResource("config/script-state.xml"), file);
+                forceSave = true;
+            }
+            loadScriptState(file);
+        }
+        catch (Exception e) {
+            String message = e.getMessage();
+            if (e.getCause() != null && e.getCause().getMessage() != null) {
+                message = e.getCause().getMessage();
+            }
+            throw new Exception("Error while reading script-state.xml (" + message + ")", e);
+        }
+
         loaded = true;
 
         // Tell all listeners the configuration is loaded. Use a snapshot of the list in order to tolerate new
@@ -564,6 +596,12 @@ public class Configuration extends AbstractModelObject {
         }
         catch (Exception e) {
             throw new Exception("Error while saving vision-settings.xml (" + e.getMessage() + ")", e);
+        }
+        try {
+            saveScriptState(createBackedUpFile("script-state.xml", now));
+        }
+        catch (Exception e) {
+            throw new Exception("Error while saving script-state.xml (" + e.getMessage() + ")", e);
         }
     }
 
@@ -985,6 +1023,18 @@ public class Configuration extends AbstractModelObject {
     private void saveVisionSettings(File file) throws Exception {
         VisionSettingsConfigurationHolder holder = new VisionSettingsConfigurationHolder();
         holder.visionSettings = new ArrayList<>(visionSettings.values());
+        serializeObject(holder, file);
+    }
+
+    private void loadScriptState(File file) throws Exception {
+        Serializer serializer = createSerializer();
+        ScriptStateConfigurationHolder holder = serializer.read(ScriptStateConfigurationHolder.class, file);
+        scriptState = holder.scriptState;
+    }
+
+    private void saveScriptState(File file) throws Exception {
+        ScriptStateConfigurationHolder holder = new ScriptStateConfigurationHolder();
+        holder.scriptState = scriptState;
         serializeObject(holder, file);
     }
 
@@ -1537,6 +1587,12 @@ public class Configuration extends AbstractModelObject {
     public static class VisionSettingsConfigurationHolder {
         @ElementList(inline = true, entry = "visionSettings", required = false)
         public ArrayList<AbstractVisionSettings> visionSettings = new ArrayList<>();
+    }
+
+    @Root(name = "openpnp-script-state")
+    public static class ScriptStateConfigurationHolder {
+        @ElementMap(keyType = String.class,valueType = String.class,required = false, key="key", value="value", inline = true)
+        private TreeMap<String, String> scriptState = new TreeMap<>();
     }
 
 }

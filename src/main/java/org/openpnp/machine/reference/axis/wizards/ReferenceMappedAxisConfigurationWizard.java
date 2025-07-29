@@ -27,19 +27,14 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
 
-import org.jdesktop.beansbinding.AutoBinding;
-import org.jdesktop.beansbinding.BeanProperty;
-import org.jdesktop.beansbinding.Bindings;
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.AxesComboBoxModel;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.NamedConverter;
 import org.openpnp.machine.reference.axis.ReferenceMappedAxis;
-import org.openpnp.machine.reference.axis.ReferenceVirtualAxis;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Axis;
-import org.openpnp.spi.Axis.Type;
 import org.openpnp.spi.base.AbstractControllerAxis;
 import org.openpnp.spi.base.AbstractMachine;
 
@@ -134,7 +129,6 @@ public class ReferenceMappedAxisConfigurationWizard extends AbstractAxisConfigur
         mapOutput1 = new JTextField();
         panelTransformation.add(mapOutput1, "8, 8, fill, center");
         mapOutput1.setColumns(10);
-        initDataBindings();
     }
 
     @Override
@@ -143,6 +137,8 @@ public class ReferenceMappedAxisConfigurationWizard extends AbstractAxisConfigur
         AbstractMachine machine = (AbstractMachine) Configuration.get().getMachine();
         NamedConverter<Axis> axisConverter = new NamedConverter<>(machine.getAxes()); 
         LengthConverter lengthConverter = new LengthConverter();
+        
+        bind(UpdateStrategy.READ, type, "selectedItem", inputAxisModel, "axisType");
         
         addWrappedBinding(axis, "inputAxis", inputAxis, "selectedItem", axisConverter);
         addWrappedBinding(getAxis(), "mapInput0", mapInput0, "text", lengthConverter);
@@ -155,13 +151,4 @@ public class ReferenceMappedAxisConfigurationWizard extends AbstractAxisConfigur
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(mapInput1);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(mapOutput1);
     }
-
-    protected void initDataBindings() {
-        BeanProperty<JComboBox, Axis.Type> jComboBoxBeanProperty = BeanProperty.create("selectedItem");
-        BeanProperty<AxesComboBoxModel, Type> axesComboBoxModelBeanProperty = BeanProperty.create("axisType");
-        AutoBinding<JComboBox, Axis.Type, AxesComboBoxModel, Axis.Type> autoBinding = Bindings.createAutoBinding(UpdateStrategy.READ, type, jComboBoxBeanProperty, inputAxisModel, axesComboBoxModelBeanProperty);
-        autoBinding.bind();
-    }
-
-
 }

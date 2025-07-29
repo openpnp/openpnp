@@ -48,6 +48,7 @@ public class ReferencePnpJobProcessorConfigurationWizard extends AbstractConfigu
     private JTextField maxVisionRetriesTextField;
     private JCheckBox steppingToNextMotion;
     private JCheckBox optimizeMultipleNozzles;
+    private JCheckBox preRotateAllNozzles;
     
     public ReferencePnpJobProcessorConfigurationWizard(ReferencePnpJobProcessor jobProcessor) {
         this.jobProcessor = jobProcessor;
@@ -72,9 +73,14 @@ public class ReferencePnpJobProcessorConfigurationWizard extends AbstractConfigu
                         FormSpecs.RELATED_GAP_ROWSPEC,
                         FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
                         FormSpecs.DEFAULT_ROWSPEC,}));
 
+        // FIXME: this translation reference looks quite different to the one used below and shall be synchronized
+        // !! if this translation reference is changed, change the one in ReferencePnPJobProcessor line 89 as well to keep both synchronized.
         JLabel lblJobOrder = new JLabel(Translations.getString("MachineSetup.JobProcessors.ReferencePnpJobProcessor.Label.JobOrder")); //$NON-NLS-1$
+        lblJobOrder.setToolTipText(Translations.getString("MachineSetup.JobProcessors.ReferencePnpJobProcessor.Label.JobOrder.toolTipText")); //$NON-NLS-1$
         panelGeneral.add(lblJobOrder, "2, 2, right, default");
 
         comboBoxJobOrder = new JComboBox<JobOrderHint>(JobOrderHint.values());
@@ -107,6 +113,13 @@ public class ReferencePnpJobProcessorConfigurationWizard extends AbstractConfigu
 
         optimizeMultipleNozzles = new JCheckBox(); 
         panelGeneral.add(optimizeMultipleNozzles, "4, 10");
+
+        JLabel lblPreRotateAllNozzles = new JLabel(Translations.getString("ReferencePnpJobProcessorConfigurationWizard.lblPreRotateAllNozzles.text")); //$NON-NLS-1$
+        lblPreRotateAllNozzles.setToolTipText(Translations.getString("ReferencePnpJobProcessorConfigurationWizard.lblPreRotateAllNozzles.toolTipText")); //$NON-NLS-1$
+        panelGeneral.add(lblPreRotateAllNozzles, "2, 12, right, default");
+
+        preRotateAllNozzles = new JCheckBox(); 
+        panelGeneral.add(preRotateAllNozzles, "4, 12");
     }
 
     @Override
@@ -118,6 +131,7 @@ public class ReferencePnpJobProcessorConfigurationWizard extends AbstractConfigu
         addWrappedBinding(jobProcessor, "maxVisionRetries", maxVisionRetriesTextField, "text", intConverter);
         addWrappedBinding(jobProcessor, "steppingToNextMotion", steppingToNextMotion, "selected");
         addWrappedBinding(jobProcessor, "optimizeMultipleNozzles", optimizeMultipleNozzles, "selected");
+        addWrappedBinding(jobProcessor, "preRotateAllNozzles", preRotateAllNozzles, "selected");
         
         ComponentDecorators.decorateWithAutoSelect(maxVisionRetriesTextField);
     }

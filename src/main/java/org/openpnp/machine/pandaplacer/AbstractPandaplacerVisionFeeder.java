@@ -663,4 +663,9 @@ public abstract class AbstractPandaplacerVisionFeeder extends ReferenceFeeder {
         }
     }
 
+    @Override
+    public boolean supportsFeedOptions() {
+        return true;
+    }
+
 }

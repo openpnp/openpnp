@@ -60,6 +60,7 @@ import org.openpnp.model.Solutions.Severity;
 import org.openpnp.model.Solutions.State;
 import org.openpnp.model.Solutions.Subject;
 import org.openpnp.spi.Camera;
+import org.openpnp.spi.Camera.Looking;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Nozzle;
@@ -414,18 +415,22 @@ public class VisionSolutions implements Solutions.Subject {
 
         @Override
         public Solutions.Issue.Choice[] getChoices() {
-            return new Solutions.Issue.Choice[]{
-                new Solutions.Issue.Choice(true,  
-                                  "<html><h3>Use Auto-Focus</h3>" 
-                                + "<p>This is the recommended setting.</p>"
-                                + "</html>", 
-                                null), 
-                new Solutions.Issue.Choice(false,  
-                                  "<html><h3>Use nozzle Z location</h3>" 
-                                + "<p><span style=\"color:red;\">CAUTION:</span> This will invalidate part height auto detection using auto focus.</p>" 
-                                + "</html>", 
-                                null), 
-            };
+            if (camera.getLooking() == Looking.Up) {
+                return new Solutions.Issue.Choice[]{
+                    new Solutions.Issue.Choice(true,  
+                                      "<html><h3>Use Auto-Focus</h3>" 
+                                    + "<p>This is the recommended setting.</p>"
+                                    + "</html>", 
+                                    null), 
+                    new Solutions.Issue.Choice(false,  
+                                      "<html><h3>Use nozzle Z location</h3>" 
+                                    + "<p><span style=\"color:red;\">CAUTION:</span> This will invalidate part height auto detection using auto focus.</p>" 
+                                    + "</html>", 
+                                    null), 
+                };
+            } else {
+                return new Solutions.Issue.Choice[] {};
+            }
         }
     }
 
@@ -1193,7 +1198,7 @@ public class VisionSolutions implements Solutions.Subject {
 
             // Perform zero knowledge calibration motion pattern.
             double displacementAbsMm = zeroKnowledgeDisplacementMm;
-            Location unitsPerPixel = new Location(null);
+            Location unitsPerPixel = new Location();
             Length featureDiameter = null;
             for (int pass = 0; pass < 3; pass++) {
                 double displacementMm = displacementAbsMm;

@@ -63,6 +63,7 @@ import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.components.IssuePanel;
 import org.openpnp.gui.support.ActionGroup;
 import org.openpnp.gui.support.Icons;
+import org.openpnp.gui.support.MultisortTableHeaderCellRenderer;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Solutions;

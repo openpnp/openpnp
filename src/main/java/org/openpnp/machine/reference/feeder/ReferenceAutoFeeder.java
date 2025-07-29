@@ -59,6 +59,9 @@ public class ReferenceAutoFeeder extends ReferenceFeeder {
     @Attribute(required=false)
     protected boolean moveBeforeFeed;
 
+    @Attribute(required = false)
+    protected boolean recycleSupport = false;
+
     @Override
     public Location getPickLocation() throws Exception {
         return location;
@@ -85,6 +88,12 @@ public class ReferenceAutoFeeder extends ReferenceFeeder {
 
     @Override
     public void feed(Nozzle nozzle) throws Exception {
+        if (getFeedOptions() != FeedOptions.Normal) {
+            if (getFeedOptions() == FeedOptions.SkipNext) {
+                setFeedOptions(FeedOptions.Normal);
+            }
+            return;
+        }
         if (actuatorName == null || actuatorName.equals("")) {
             Logger.warn("No actuatorName specified for feeder {}.", getName());
             return;
@@ -118,7 +127,22 @@ public class ReferenceAutoFeeder extends ReferenceFeeder {
         // Note by using the Object generic method, the value will be properly interpreted according to actuator.valueType.
         actuator.actuate((Object)postPickActuatorValue);
     }
-    
+
+    @Override
+    public boolean canTakeBackPart() {
+        /* in case SkipNext is supposed part already ready at location so we cannot recycle part over it.
+           If feed is disabled then recycle is fully on user decision
+        */
+        return (recycleSupport && getFeedOptions() != FeedOptions.SkipNext);
+    }
+
+    @Override
+    public void takeBackPart(Nozzle nozzle) throws Exception {
+        super.takeBackPart(nozzle);
+        putPartBack(nozzle);
+        setFeedOptions(FeedOptions.SkipNext);
+    }
+
     public String getActuatorName() {
         return actuatorName;
     }
@@ -159,6 +183,14 @@ public class ReferenceAutoFeeder extends ReferenceFeeder {
 		this.moveBeforeFeed = moveBeforeFeed;
 	}
 
+    public boolean getRecycleSupport() {
+        return recycleSupport;
+    }
+
+    public void setRecycleSupport(boolean recycleSupport) {
+        this.recycleSupport = recycleSupport;
+    }
+
 	@Override
     public Wizard getConfigurationWizard() {
         return new ReferenceAutoFeederConfigurationWizard(this);
@@ -178,4 +210,10 @@ public class ReferenceAutoFeeder extends ReferenceFeeder {
     public Action[] getPropertySheetHolderActions() {
         return null;
     }
+
+    @Override
+    public boolean supportsFeedOptions() {
+        return true;
+    }
+
 }

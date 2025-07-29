@@ -169,16 +169,17 @@ public abstract class AbstractCoordinateAxis extends AbstractAxis implements Coo
      * Returns null if the axis is unused.
      */
     public HeadMountable getDefaultHeadMountable() {
-        for (Head head : Configuration.get().getMachine().getHeads()) {
+        Machine machine = Configuration.get().getMachine();
+        for (Head head : machine.getHeads()) {
             // Try cameras with preference.
             for (HeadMountable hm : head.getCameras()) {
-                if (hm.getMappedAxes(Configuration.get().getMachine()).contains(this)) {    
+                if (isMovingHeadMountable(hm)) {
                     return hm;
                 }
             }
             // Then the rest.
             for (HeadMountable hm : head.getHeadMountables()) {
-                if (hm.getMappedAxes(Configuration.get().getMachine()).contains(this)) {    
+                if (isMovingHeadMountable(hm)) {
                     return hm;
                 }
             }
@@ -186,4 +187,20 @@ public abstract class AbstractCoordinateAxis extends AbstractAxis implements Coo
         return null;
     }
 
+    /**
+     * @param hm HeadMountable
+     * @return true if this axis moves the given HeadMountable.
+     */
+    public boolean isMovingHeadMountable(HeadMountable hm) {
+        if (hm == null) {
+            return false;
+        }
+        try {
+            return hm.toRaw(hm.toHeadLocation(hm.getLocation(), LocationOption.Quiet))
+                    .contains(this);
+        }
+        catch (Exception e) {
+            return false;
+        }
+    }
 }

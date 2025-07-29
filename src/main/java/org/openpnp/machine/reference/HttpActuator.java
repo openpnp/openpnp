@@ -132,10 +132,7 @@ public class HttpActuator extends ReferenceActuator {
 
     @Override
     public String read() throws Exception {
-        if (isCoordinatedBeforeRead()) {
-            coordinateWithMachine(false);
-        }
-        
+        coordinateWithMachineBeforeRead();
         
         // getDriver().actuate(this, on);
         URL obj = null;
@@ -167,9 +164,7 @@ public class HttpActuator extends ReferenceActuator {
         }
         in.close();
 
-        if (isCoordinatedAfterActuate()) {
-            coordinateWithMachine(true);
-        }
+        coordinateWithMachineAfterActuate();
         getMachine().fireMachineHeadActivity(head);
 
         return response.toString();

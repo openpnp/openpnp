@@ -237,6 +237,12 @@ public class AxesLocation {
         return new AxesLocation((a, b) -> (b), this, other);
     }
 
+    public AxesLocation remove(Axis other) {
+        return new AxesLocation(this.getControllerAxes(), 
+                (axis) -> (axis.equals(other) ? 
+                        null : this.getLengthCoordinate(axis)));
+    }
+
     /**
      * Returns the dot product of this AxesLocation with the other, both treated as vectors.
      *   

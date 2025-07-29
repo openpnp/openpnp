@@ -14,13 +14,13 @@ import javax.swing.border.TitledBorder;
 
 import org.openpnp.Translations;
 import org.openpnp.gui.MainFrame;
-import org.openpnp.gui.VisionSettingsComboBoxModel;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.NamedListCellRenderer;
+import org.openpnp.gui.support.VisionSettingsComboBoxModel;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision;
 import org.openpnp.model.BottomVisionSettings;
 import org.openpnp.model.Configuration;

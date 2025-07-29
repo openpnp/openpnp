@@ -43,6 +43,9 @@ public class Icons {
     public static Icon step = getIcon("/icons/control-next.svg");
     public static Icon stop = getIcon("/icons/control-stop.svg");
 
+    public static Icon errorDefer = getIcon("/icons/error-defer.svg");
+    public static Icon errorAlert = getIcon("/icons/error-alert.svg");
+
     public static Icon twoPointLocate = getIcon("/icons/board-two-placement-locate.svg");
     public static Icon fiducialCheck = getIcon("/icons/board-fiducial-locate.svg");
     public static Icon autoPanelize = getIcon("/icons/panelize.svg");
@@ -123,6 +126,7 @@ public class Icons {
     public static Icon footprintQuad = getIcon("/icons/footprint-quad.svg");
     public static Icon footprintDual = getIcon("/icons/footprint-dual.svg");
     public static Icon footprintBga = getIcon("/icons/footprint-bga.svg");
+    public static Icon footprintToggle = getIcon("/icons/footprint-mark.svg");
     public static Icon kicad = getIcon("/icons/kicad-logo.svg");
 
     public static Icon getIcon(String resourceName, int width, int height) {

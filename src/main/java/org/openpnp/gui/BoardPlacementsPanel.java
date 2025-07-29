@@ -74,6 +74,7 @@ import org.openpnp.gui.importer.SolderPasteGerberImporter;
 import org.openpnp.gui.support.ActionGroup;
 import org.openpnp.gui.support.CustomBooleanRenderer;
 import org.openpnp.gui.support.MonospacedFontTableCellRenderer;
+import org.openpnp.gui.support.MultisortTableHeaderCellRenderer;
 import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.IdentifiableListCellRenderer;
@@ -304,6 +305,7 @@ public class BoardPlacementsPanel extends JPanel {
         popupMenu.add(setEnabledMenu);
 
         JMenu setErrorHandlingMenu = new JMenu(setErrorHandlingAction);
+        setErrorHandlingMenu.add(new SetErrorHandlingAction(ErrorHandling.Default));
         setErrorHandlingMenu.add(new SetErrorHandlingAction(ErrorHandling.Alert));
         setErrorHandlingMenu.add(new SetErrorHandlingAction(ErrorHandling.Defer));
         popupMenu.add(setErrorHandlingMenu);
@@ -602,6 +604,8 @@ public class BoardPlacementsPanel extends JPanel {
                 
                 importedBoard.dispose();
                 
+                tableModel.fireTableDataChanged();
+                
                 configuration.getBus()
                     .post(new DefinitionStructureChangedEvent(board, "placements", BoardPlacementsPanel.this)); //$NON-NLS-1$
             }
@@ -759,11 +763,17 @@ public class BoardPlacementsPanel extends JPanel {
         public SetErrorHandlingAction(Placement.ErrorHandling errorHandling) {
             this.errorHandling = errorHandling;
             String name;
-            if (errorHandling == Placement.ErrorHandling.Alert) {
+            switch(errorHandling) {
+            case Alert:
+            default:
                 name = Translations.getString("Placement.ErrorHandling.Alert"); //$NON-NLS-1$
-            }
-            else {
+                break;
+            case Defer:
                 name = Translations.getString("Placement.ErrorHandling.Defer"); //$NON-NLS-1$
+                break;
+            case Default:
+                name = Translations.getString("Placement.ErrorHandling.Default"); //$NON-NLS-1$
+                break;
             }
             putValue(NAME, name);
             putValue(SHORT_DESCRIPTION, Translations.getString("BoardsPanel.BoardPlacements.Action.SetErrorHandling.ToolTip") + //$NON-NLS-1$

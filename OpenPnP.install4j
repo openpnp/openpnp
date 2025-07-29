@@ -50,6 +50,7 @@
       <fileEntry mountPoint="22" file="SPONSORS.md" />
       <fileEntry mountPoint="22" file="LICENSE.txt" />
       <fileEntry mountPoint="22" file="OPENPNP_2_0.md" />
+      <fileEntry mountPoint="22" file="VERSION.txt" />
       <dirEntry mountPoint="22" file="samples" entryMode="subdir" subDirectory="samples" excludeSuffixes=".DS_Store">
         <exclude>
           <entry location=".DS_Store" />

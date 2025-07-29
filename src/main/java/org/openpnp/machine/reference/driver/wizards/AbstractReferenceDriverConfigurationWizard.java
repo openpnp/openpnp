@@ -14,10 +14,7 @@ import javax.swing.border.TitledBorder;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
 
-import org.jdesktop.beansbinding.AutoBinding;
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
-import org.jdesktop.beansbinding.BeanProperty;
-import org.jdesktop.beansbinding.Bindings;
 import org.openpnp.Translations;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
@@ -334,7 +331,6 @@ public class AbstractReferenceDriverConfigurationWizard extends AbstractConfigur
         portTextField = new JTextField(17);
         panelTcp.add(portTextField, "4, 4, fill, default");
         portTextField.setColumns(10);
-        initDataBindings();
     }
 
     private void setPanelEnabled(JPanel panel, Boolean isEnabled) {
@@ -366,6 +362,8 @@ public class AbstractReferenceDriverConfigurationWizard extends AbstractConfigur
     public void createBindings() {
         IntegerConverter integerConverter = new IntegerConverter();
 
+        bind(UpdateStrategy.READ, syncInitialLocation, "selected", allowUnhomedMotion, "enabled");
+        
         addWrappedBinding(driver, "name", driverName, "text");
         addWrappedBinding(driver, "syncInitialLocation", syncInitialLocation, "selected");
         addWrappedBinding(driver, "allowUnhomedMotion", allowUnhomedMotion, "selected");
@@ -415,11 +413,5 @@ public class AbstractReferenceDriverConfigurationWizard extends AbstractConfigur
             setPanelEnabled(panelSerial, false);
             setPanelEnabled(panelTcp, true);
         }
-    }
-    protected void initDataBindings() {
-        BeanProperty<JCheckBox, Boolean> jCheckBoxBeanProperty = BeanProperty.create("selected");
-        BeanProperty<JCheckBox, Boolean> jCheckBoxBeanProperty_1 = BeanProperty.create("enabled");
-        AutoBinding<JCheckBox, Boolean, JCheckBox, Boolean> autoBinding = Bindings.createAutoBinding(UpdateStrategy.READ, syncInitialLocation, jCheckBoxBeanProperty, allowUnhomedMotion, jCheckBoxBeanProperty_1);
-        autoBinding.bind();
     }
 }
