@@ -33,6 +33,10 @@ public interface PnpJobProcessor extends JobProcessor {
             return placement;
         }
 
+        public int getRank() {
+            return placement.getRank();
+        }
+
         public void setStatus(Status status) {
             Object oldValue = this.status;
             this.status = status;

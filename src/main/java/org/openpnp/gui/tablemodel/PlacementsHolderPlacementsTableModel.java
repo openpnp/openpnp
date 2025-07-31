@@ -66,6 +66,7 @@ public class PlacementsHolderPlacementsTableModel extends AbstractObjectTableMod
                     Translations.getString("PlacementsHolderPlacementsTableModel.ColumnName.Placed"), //$NON-NLS-1$
                     Translations.getString("PlacementsHolderPlacementsTableModel.ColumnName.Status"), //$NON-NLS-1$
                     Translations.getString("PlacementsHolderPlacementsTableModel.ColumnName.ErrorHandling"), //$NON-NLS-1$
+                    Translations.getString("PlacementsHolderPlacementsTableModel.ColumnName.Rank"), //$NON-NLS-1$
                     Translations.getString("PlacementsHolderPlacementsTableModel.ColumnName.Comments")}; //$NON-NLS-1$
 
     private String[] propertyNames = new String[] {
@@ -80,19 +81,20 @@ public class PlacementsHolderPlacementsTableModel extends AbstractObjectTableMod
             "placed", //$NON-NLS-1$
             "status", //$NON-NLS-1$
             "errorHandling", //$NON-NLS-1$
+            "rank", //$NON-NLS-1$
             "comments" //$NON-NLS-1$
     };
     
     @SuppressWarnings("rawtypes")
     private Class[] columnTypes = new Class[] {Boolean.class, PartCellValue.class, Part.class, 
             Side.class, LengthCellValue.class, LengthCellValue.class, RotationCellValue.class, 
-            Type.class, Boolean.class, Status.class, ErrorHandling.class, String.class};
+            Type.class, Boolean.class, Status.class, ErrorHandling.class, Integer.class, String.class};
     
     private int[] columnAlignments = new int[] {CENTER, LEFT, LEFT, CENTER, CENTER, CENTER, 
-            CENTER, CENTER, CENTER, CENTER, CENTER, LEFT};
+            CENTER, CENTER, CENTER, CENTER, CENTER, CENTER, LEFT};
 
     private int[] columnWidthTypes = new int[] {FIXED, FIXED, PROPORTIONAL, FIXED, FIXED, 
-            FIXED, FIXED, FIXED, FIXED, FIXED, FIXED, PROPORTIONAL};
+            FIXED, FIXED, FIXED, FIXED, FIXED, FIXED, FIXED, PROPORTIONAL};
     
     public enum Status {
         Ready,
@@ -335,6 +337,10 @@ public class PlacementsHolderPlacementsTableModel extends AbstractObjectTableMod
                 fireTableCellUpdated(rowIndex, columnIndex);
              }
             else if (columnIndex == 11) {
+                definition.setRank((Integer) aValue);
+                fireTableCellUpdated(rowIndex, columnIndex);
+            }
+            else if (columnIndex == 12) {
                 definition.setComments((String) aValue);
                 fireTableCellUpdated(rowIndex, columnIndex);
             }
@@ -408,6 +414,8 @@ public class PlacementsHolderPlacementsTableModel extends AbstractObjectTableMod
             case 10:
                 return placement.getErrorHandling();
             case 11:
+                return placement.getRank();
+            case 12:
                 return placement.getComments();
             default:
                 return null;
