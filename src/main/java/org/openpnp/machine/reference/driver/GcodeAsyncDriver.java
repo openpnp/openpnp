@@ -390,7 +390,7 @@ public class GcodeAsyncDriver extends GcodeDriver {
     }
 
     @Override
-    protected void drainCommandQueue(long timeout) throws InterruptedException {
+    protected void drainCommandQueue(long timeout) throws Exception {
         // Normal confirmation report wanted. We queue a null command to drain the queue and confirm 
         // the last real command. 
         confirmationComplete = false;
@@ -406,6 +406,7 @@ public class GcodeAsyncDriver extends GcodeDriver {
             catch (InterruptedException e) {
                 Logger.warn(e, getName() +" was interrupted while waiting for completion.");
             }
+            bailOnError();
         }
         long dt = System.currentTimeMillis() - t0;
         if (dt > 1) {
