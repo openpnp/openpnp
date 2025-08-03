@@ -40,7 +40,9 @@ import org.openpnp.util.Utils2D;
 import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.FluentCv;
 import org.openpnp.vision.pipeline.CvPipeline;
+import org.openpnp.vision.pipeline.CvStage;
 import org.openpnp.vision.pipeline.CvStage.Result;
+import org.openpnp.vision.pipeline.stages.DetectCircularSymmetry;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -917,11 +919,24 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
 
         return new Location(LengthUnit.Millimeters, 0, 0, 0, 0);
     }
-
+    
     private Location findCircle(ReferenceNozzle nozzle, Location measureLocation, boolean calibrateCamera) throws Exception {
         Camera camera = VisionUtils.getBottomVisionCamera();
         try (CvPipeline pipeline = getPreparedPipeline(camera, nozzle, measureLocation)) {
-            
+
+            int expectedPoints = -1; // Initialize with an invalid value
+
+            for (CvStage stage : pipeline.getStages()) {
+                if (stage instanceof DetectCircularSymmetry) {
+                    DetectCircularSymmetry dcs = (DetectCircularSymmetry) stage;
+                    expectedPoints = dcs.getMaxTargetCount();
+                    break; // Assuming only one DetectCircularSymmetry stage is relevant
+                }
+            }
+
+            // Run the pipeline and collect detected circles ---
+            // setup image capture (current image acquisition logic) ...
+            // Note: ensure 'image' variable is correctly populated before Vision.run()
             pipeline.process();
             List<Location> locations = new ArrayList<>();
 
@@ -937,30 +952,66 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
 
             // add all results from pipeline to a Location-list post processing
             // are there any results from the pipeline?
-            if (0==results.size()) {
+            if (results.isEmpty()) {
                 // Don't throw new Exception("No results from vision. Check pipeline.");      
                 // Instead the number of obtained fixes is evaluated later.
                 return null;
             }
+            
+            double sumX = 0;
+            double sumY = 0;
+            boolean seenCircles = false;
+            
             for (Object result : results) {
                 if ((result) instanceof Result.Circle) {
+                    // compute the centroid of circles
                     Result.Circle circle = ((Result.Circle) result);
-                    locations.add(VisionUtils.getPixelCenterOffsets(camera, circle.x, circle.y));
+                    Location cLoc = VisionUtils.getPixelCenterOffsets(camera, circle.x, circle.y);
+                    if (seenCircles)
+                    {
+                        sumX = (sumX + cLoc.getX()) / 2;
+                        sumY = (sumY + cLoc.getY()) / 2;
+                    } else {
+                        sumX = cLoc.getX();
+                        sumY = cLoc.getY();
+                    }
+                    seenCircles = true;
                 }
                 else if ((result) instanceof KeyPoint) {
                     KeyPoint keyPoint = ((KeyPoint) result);
                     locations.add(VisionUtils.getPixelCenterOffsets(camera, keyPoint.pt.x, keyPoint.pt.y));
+                    if (locations.size() > 1) {
+                        // sure which, if any, are the correct result so just discard them all and log an info message.
+                        Logger.info("[nozzleTipCalibration]Got more than one result from pipeline. For best performance tweak pipeline to return exactly one result only. Discarding all locations (since it is unknown which may be correct) from the following set: " + locations);
+                        return null;
+                    }                    
                 }
                 else if ((result) instanceof RotatedRect) {
                     RotatedRect rect = ((RotatedRect) result);
                     locations.add(VisionUtils.getPixelCenterOffsets(camera, rect.center.x, rect.center.y));
+                    if (locations.size() > 1) {
+                        // sure which, if any, are the correct result so just discard them all and log an info message.
+                        Logger.info("[nozzleTipCalibration]Got more than one result from pipeline. For best performance tweak pipeline to return exactly one result only. Discarding all locations (since it is unknown which may be correct) from the following set: " + locations);
+                        return null;
+                    }                    
                 }
                 else {
                     Logger.error("[nozzleTipCalibration] Unrecognized result " + result);
                     throw new Exception("Unrecognized result " + result);
                 }
             }
-
+            
+            // Return the calculated centroid as the single "nozzle tip" location for this rotation
+            if (seenCircles) // we add a single centroid location
+            {
+                locations.add(new Location(camera.getUnitsPerPixelAtZ().getUnits(), sumX, sumY, 0, 0));
+                if (expectedPoints > 1 && results.size() != expectedPoints) {
+                        // check how many circles we *should* have
+                        Logger.warn("[nozzleTipCalibration] " + nozzle.getNozzleTip().getId() + " pipeline stage 'DetectCircularSymmetry' 'maxTargetCount expecting " + expectedPoints + " but found '" + results.size());
+                        return null;
+                    }
+            }
+            
             // remove all results that are above threshold
             Iterator<Location> locationsIterator = locations.iterator();
             while (locationsIterator.hasNext()) {
@@ -980,7 +1031,6 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
                 // Instead the number of obtained fixes is evaluated later.
                 return null;
             } else if (locations.size() > 1) {
-                // Don't throw an exception here either. Since we've gotten more results than expected we can't be
                 // sure which, if any, are the correct result so just discard them all and log an info message.
                 Logger.info("[nozzleTipCalibration]Got more than one result from pipeline. For best performance tweak pipeline to return exactly one result only. Discarding all locations (since it is unknown which may be correct) from the following set: " + locations);
                 return null;
@@ -990,12 +1040,11 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
                 addBackgroundImage(camera, nozzle, pipeline.getLastCapturedImage(), locations.get(0));
             }
 
-            // finally return the location at index (0) which is either a) the only one or b) the one best matching the nozzle tip
             return locations.get(0);
         }
         finally {
             pipeline.setProperty("MaskCircle.center", null);
-        }
+        }            
     }
 
     private void addBackgroundImage(Camera camera, ReferenceNozzle nozzle, BufferedImage bufferedImage, Location location) {
