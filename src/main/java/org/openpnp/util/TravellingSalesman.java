@@ -82,7 +82,7 @@ public class TravellingSalesman<T> {
             travelCost = null;
         }
         this.travelCost = travelCost;
-        Logger.trace("Using " + this.travelCost != null ? "estimated travl cost" : "linear distance" + " as metric");
+        Logger.trace("Using " + (this.travelCost != null ? "estimated travel cost" : "linear distance") + " as metric");
     }
     public TravellingSalesman(List<T> travelInput, Locator<? super T> locator, Location startLocation, Location endLocation) {
         this(travelInput, locator, startLocation, endLocation, null);
