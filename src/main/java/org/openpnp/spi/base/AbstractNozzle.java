@@ -190,7 +190,7 @@ public abstract class AbstractNozzle extends AbstractHeadMountable implements No
                 newRotationModeOffset = placementLocation.getRotation();
                 break;
             case MinimalRotation:
-                newRotationModeOffset = Utils2D.angleNorm(getLocation().getRotation() - pickLocation.getRotation(), 180);
+                newRotationModeOffset = Utils2D.angleNorm(pickLocation.getRotation() - getLocation().getRotation(), 180);
                 break;
             case LimitedArticulation:
                 double [] rotationLimits = getRotationModeLimits();
