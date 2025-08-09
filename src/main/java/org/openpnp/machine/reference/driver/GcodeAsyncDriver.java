@@ -32,6 +32,7 @@ import org.openpnp.model.LengthUnit;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.MotionPlanner.CompletionType;
+import org.openpnp.Translations;
 import org.openpnp.util.Collect;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
@@ -416,7 +417,7 @@ public class GcodeAsyncDriver extends GcodeDriver {
     @Override
     public PropertySheet[] getPropertySheets() {
         return Collect.concat(super.getPropertySheets(), new PropertySheet[] { 
-                new PropertySheetWizardAdapter(new GcodeAsyncDriverSettings(this), "Advanced Settings")
+                new PropertySheetWizardAdapter(new GcodeAsyncDriverSettings(this), Translations.getString("GCodeAsyncDriver.AdvancedSettings.title")) //$NON-NLS-1$
         });
     }
 }

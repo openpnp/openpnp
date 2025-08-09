@@ -349,7 +349,7 @@ public class PackageVisionWizard extends AbstractConfigurationWizard {
     public final Action generateDualAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.footprintDual);
-            putValue(SHORT_DESCRIPTION, "Generate a Dual form factor package.");
+            putValue(SHORT_DESCRIPTION, Translations.getString("PackageVisionWizard.SettingsPanel.GenerateDualButton.toolTipText")); //$NON-NLS-1$
         }
 
         @Override
@@ -361,7 +361,7 @@ public class PackageVisionWizard extends AbstractConfigurationWizard {
     public final Action generateQuadAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.footprintQuad);
-            putValue(SHORT_DESCRIPTION, "Generate a square Quad form factor package.");
+            putValue(SHORT_DESCRIPTION, Translations.getString("PackageVisionWizard.SettingsPanel.GenerateQuadButton.toolTipText")); //$NON-NLS-1$
         }
 
         @Override
@@ -373,7 +373,7 @@ public class PackageVisionWizard extends AbstractConfigurationWizard {
     public final Action generateBgaAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.footprintBga);
-            putValue(SHORT_DESCRIPTION, "Generate a square BGA package.");
+            putValue(SHORT_DESCRIPTION, Translations.getString("PackageVisionWizard.SettingsPanel.GenerateBgaButton.toolTipText")); //$NON-NLS-1$
         }
 
         @Override
@@ -385,7 +385,7 @@ public class PackageVisionWizard extends AbstractConfigurationWizard {
     public final Action generateFromKicad = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.kicad);
-            putValue(SHORT_DESCRIPTION, "Import a footprint from KiCad module.");
+            putValue(SHORT_DESCRIPTION, Translations.getString("PackageVisionWizard.SettingsPanel.GenerateFromKicadButton.toolTipText")); //$NON-NLS-1$
         }
         @Override
         public void actionPerformed(ActionEvent arg0) {

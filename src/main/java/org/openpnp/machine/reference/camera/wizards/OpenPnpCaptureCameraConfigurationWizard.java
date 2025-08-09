@@ -44,6 +44,7 @@ import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.machine.reference.camera.OpenPnpCaptureCamera;
 import org.openpnp.model.Configuration;
+import org.openpnp.Translations;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 
@@ -168,8 +169,8 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
     private JButton btnReapplyToCamera;
     private final Action reapplyPropertiesToCameraAction = new AbstractAction() {
         {
-            putValue(NAME, "Reapply to Camera");
-            putValue(SHORT_DESCRIPTION, "Reapply the frozen properties to the camera.");
+            putValue(NAME, Translations.getString("OpenPnpCaptureCameraConfigurationWizard.PropertiesPanel.ReapplyToCameraButton.text")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("OpenPnpCaptureCameraConfigurationWizard.PropertiesPanel.ReapplyToCameraButton.toolTipText")); //$NON-NLS-1$
         }
         public void actionPerformed(ActionEvent e) {
             camera.reapplyProperties();
@@ -185,7 +186,9 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
     private void createUi() {
         
         panelGeneral = new JPanel();
-        panelGeneral.setBorder(new TitledBorder(null, "Device", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        panelGeneral.setBorder(new TitledBorder(null, 
+                   Translations.getString("OpenPnpCaptureCameraConfigurationWizard.DevicePanel.Border.title"), //$NON-NLS-1$
+                   TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panelGeneral);
         panelGeneral.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -202,20 +205,20 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
-                lblDevice = new JLabel("Device");
+                lblDevice = new JLabel(Translations.getString("OpenPnpCaptureCameraConfigurationWizard.DevicePanel.DeviceLabel.text")); //$NON-NLS-1$
                 panelGeneral.add(lblDevice, "2, 2, right, default");
                 
                         deviceCb = new JComboBox();
                         panelGeneral.add(deviceCb, "4, 2");
                         
-                                lblFormat = new JLabel("Format");
+                                lblFormat = new JLabel(Translations.getString("OpenPnpCaptureCameraConfigurationWizard.DevicePanel.FormatLabel.text")); //$NON-NLS-1$"
                                 panelGeneral.add(lblFormat, "2, 4, right, default");
                                 
                                         formatCb = new JComboBox();
                                         panelGeneral.add(formatCb, "4, 4");
                                                         
-                                                        lblCaptureFps = new JLabel("Capture FPS");
-                                                        lblCaptureFps.setToolTipText("<html>\r\n<p>The test captures frames as fast as possible and computes the average FPS obtained.</p>\r\n<p>Frames are copied from the camera buffer and converted to Java images, <br/>\r\nbut no additional processing is done (no lens calibration, no transforms etc.)</p>\r\n<p>For most accurate results, set Preview PFS to 0.</p>\r\n</html>");
+                                                        lblCaptureFps = new JLabel(Translations.getString("OpenPnpCaptureCameraConfigurationWizard.DevicePanel.CaptureFPSLabel.text")); //$NON-NLS-1$
+                                                        lblCaptureFps.setToolTipText(Translations.getString("OpenPnpCaptureCameraConfigurationWizard.DevicePanel.CaptureFPSLabel.toolTipText")); //$NON-NLS-1$
                                                         panelGeneral.add(lblCaptureFps, "2, 6, right, default");
                                                         
                                                         nativeFps = new JTextField();
@@ -223,7 +226,7 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
                                                         panelGeneral.add(nativeFps, "4, 6, fill, default");
                                                         nativeFps.setColumns(10);
                                                         
-                                                        btnTest = new JButton("Test");
+                                                        btnTest = new JButton(Translations.getString("OpenPnpCaptureCameraConfigurationWizard.DevicePanel.TestButton.text")); //$NON-NLS-1$
                                                         btnTest.addActionListener(new ActionListener() {
                                                             public void actionPerformed(ActionEvent e) {
                                                                 applyAction.actionPerformed(e); 
@@ -246,7 +249,9 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
                                 });
 
         panelProperties = new JPanel();
-        panelProperties.setBorder(new TitledBorder(null, "Properties", TitledBorder.LEADING, TitledBorder.TOP, null));
+        panelProperties.setBorder(new TitledBorder(null, 
+                      Translations.getString("OpenPnpCaptureCameraConfigurationWizard.PropertiesPanel.Border.title"), //$NON-NLS-1$
+                      TitledBorder.LEADING, TitledBorder.TOP, null));
         contentPanel.add(panelProperties);
         panelProperties.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -305,22 +310,22 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
 
-        lblAuto = new JLabel("Auto");
+        lblAuto = new JLabel(Translations.getString("OpenPnpCaptureCameraConfigurationWizard.PropertiesPanel.AutoLabel.text")); //$NON-NLS-1$
         panelProperties.add(lblAuto, "4, 2, center, default");
 
-        lblMin_1 = new JLabel("Min");
+        lblMin_1 = new JLabel(Translations.getString("OpenPnpCaptureCameraConfigurationWizard.PropertiesPanel.MinLabel.text")); //$NON-NLS-1$
         panelProperties.add(lblMin_1, "8, 2, center, default");
 
-        lblValue = new JLabel("Value");
+        lblValue = new JLabel(Translations.getString("OpenPnpCaptureCameraConfigurationWizard.PropertiesPanel.ValueLabel.text")); //$NON-NLS-1$
         panelProperties.add(lblValue, "12, 2, 3, 1, center, default");
 
-        lblMax = new JLabel("Max");
+        lblMax = new JLabel(Translations.getString("OpenPnpCaptureCameraConfigurationWizard.PropertiesPanel.MaxLabel.text")); //$NON-NLS-1$
         panelProperties.add(lblMax, "18, 2, center, default");
 
-        lblDefault = new JLabel("Default");
+        lblDefault = new JLabel(Translations.getString("OpenPnpCaptureCameraConfigurationWizard.PropertiesPanel.DefaultLabel.text")); //$NON-NLS-1$
         panelProperties.add(lblDefault, "22, 2");
 
-        brightness = new JLabel("Brightness");
+        brightness = new JLabel(Translations.getString("OpenPnpCaptureCameraConfigurationWizard.PropertiesPanel.BrightnessLabel.text")); //$NON-NLS-1$
         panelProperties.add(brightness, "2, 4, right, default");
 
         brightnessAuto = new JCheckBox("");
@@ -345,7 +350,7 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
         brightnessDefault = new JLabel("def");
         panelProperties.add(brightnessDefault, "22, 4");
         
-        backLightCompensation = new JLabel("Backlight Compensation");
+        backLightCompensation = new JLabel(Translations.getString("OpenPnpCaptureCameraConfigurationWizard.PropertiesPanel.BacklightCompensationLabel.text")); //$NON-NLS-1$
         panelProperties.add(backLightCompensation, "2, 6, right, default");
         
         backLightCompensationAuto = new JCheckBox("");
@@ -370,7 +375,7 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
         backLightCompensationDefault = new JLabel("def");
         panelProperties.add(backLightCompensationDefault, "22, 6");
 
-        contrast = new JLabel("Contrast");
+        contrast = new JLabel(Translations.getString("OpenPnpCaptureCameraConfigurationWizard.PropertiesPanel.ContrastLabel.text")); //$NON-NLS-1$
         panelProperties.add(contrast, "2, 8, right, default");
 
         contrastAuto = new JCheckBox("");
@@ -395,7 +400,7 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
         contrastDefault = new JLabel("def");
         panelProperties.add(contrastDefault, "22, 8");
 
-        exposure = new JLabel("Exposure");
+        exposure = new JLabel(Translations.getString("OpenPnpCaptureCameraConfigurationWizard.PropertiesPanel.ExposureLabel.text")); //$NON-NLS-1$
         panelProperties.add(exposure, "2, 10, right, default");
 
         exposureAuto = new JCheckBox("");
@@ -426,7 +431,7 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
         gainDefault = new JLabel("def");
         panelProperties.add(gainDefault, "22, 14");
 
-        gamma = new JLabel("Gamma");
+        gamma = new JLabel(Translations.getString("OpenPnpCaptureCameraConfigurationWizard.PropertiesPanel.GammaLabel.text")); //$NON-NLS-1$
         panelProperties.add(gamma, "2, 16, right, default");
 
         gammaAuto = new JCheckBox("");
@@ -451,7 +456,7 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
         gammaDefault = new JLabel("def");
         panelProperties.add(gammaDefault, "22, 16");
         
-        hue = new JLabel("Hue");
+        hue = new JLabel(Translations.getString("OpenPnpCaptureCameraConfigurationWizard.PropertiesPanel.HueLabel.text")); //$NON-NLS-1$
         panelProperties.add(hue, "2, 18, right, default");
         
         hueAuto = new JCheckBox("");
@@ -476,7 +481,7 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
         hueDefault = new JLabel("def");
         panelProperties.add(hueDefault, "22, 18");
         
-        powerLineFrequency = new JLabel("Power Line Freq.");
+        powerLineFrequency = new JLabel(Translations.getString("OpenPnpCaptureCameraConfigurationWizard.PropertiesPanel.PowerLineFreqLabel.text")); //$NON-NLS-1$
         panelProperties.add(powerLineFrequency, "2, 20, right, default");
         
         powerLineFrequencyAuto = new JCheckBox("");
@@ -501,7 +506,7 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
         powerLineFrequencyDefault = new JLabel("def");
         panelProperties.add(powerLineFrequencyDefault, "22, 20");
 
-        saturation = new JLabel("Saturation");
+        saturation = new JLabel(Translations.getString("OpenPnpCaptureCameraConfigurationWizard.PropertiesPanel.SaturationLabel.text")); //$NON-NLS-1$
         panelProperties.add(saturation, "2, 22, right, default");
 
         saturationAuto = new JCheckBox("");
@@ -526,7 +531,7 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
         saturationDefault = new JLabel("def");
         panelProperties.add(saturationDefault, "22, 22");
         
-        sharpness = new JLabel("Sharpness");
+        sharpness = new JLabel(Translations.getString("OpenPnpCaptureCameraConfigurationWizard.PropertiesPanel.SharpnessLabel.text")); //$NON-NLS-1$
         panelProperties.add(sharpness, "2, 24, right, default");
         
         sharpnessAuto = new JCheckBox("");
@@ -551,7 +556,7 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
         sharpnessDefault = new JLabel("def");
         panelProperties.add(sharpnessDefault, "22, 24");
 
-        whiteBalance = new JLabel("White Balance");
+        whiteBalance = new JLabel(Translations.getString("OpenPnpCaptureCameraConfigurationWizard.PropertiesPanel.WhiteBalanceLabel.text")); //$NON-NLS-1$
         panelProperties.add(whiteBalance, "2, 26, right, default");
 
         whiteBalanceAuto = new JCheckBox("");
@@ -573,7 +578,7 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
         whiteBalanceMax = new JLabel("max");
         panelProperties.add(whiteBalanceMax, "18, 26, center, default");
 
-        focus = new JLabel("Focus");
+        focus = new JLabel(Translations.getString("OpenPnpCaptureCameraConfigurationWizard.PropertiesPanel.FocusLabel.text")); //$NON-NLS-1$
         panelProperties.add(focus, "2, 12, right, default");
 
         focusAuto = new JCheckBox("");
@@ -598,7 +603,7 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
         whiteBalanceDefault = new JLabel("def");
         panelProperties.add(whiteBalanceDefault, "22, 26");
 
-        zoom = new JLabel("Zoom");
+        zoom = new JLabel(Translations.getString("OpenPnpCaptureCameraConfigurationWizard.PropertiesPanel.ZoomLabel.text")); //$NON-NLS-1$
         panelProperties.add(zoom, "2, 28, right, default");
 
         zoomAuto = new JCheckBox("");
@@ -620,7 +625,7 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
         zoomMax = new JLabel("max");
         panelProperties.add(zoomMax, "18, 28, center, default");
 
-        gain = new JLabel("Gain");
+        gain = new JLabel(Translations.getString("OpenPnpCaptureCameraConfigurationWizard.PropertiesPanel.GainLabel.text")); //$NON-NLS-1$
         panelProperties.add(gain, "2, 14, right, default");
 
         gainAuto = new JCheckBox("");
@@ -645,8 +650,8 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
         zoomDefault = new JLabel("def");
         panelProperties.add(zoomDefault, "22, 28");
         
-        lblFreezeProperties = new JLabel("Freeze Properties?");
-        lblFreezeProperties.setToolTipText("<html>\n<p>Freeze properties as applied, and reapply them to the camera<br/>\nwhenever reopened. Never query properties back from the camera.<p/>\n<p>Use this when properties are not properly persisted by the camera<p/>\ndriver, or when you use this camera in different configurations <p/>\nor apps.\n</html>");
+        lblFreezeProperties = new JLabel(Translations.getString("OpenPnpCaptureCameraConfigurationWizard.PropertiesPanel.FreezePropertiesLabel.text")); //$NON-NLS-1$
+        lblFreezeProperties.setToolTipText(Translations.getString("OpenPnpCaptureCameraConfigurationWizard.PropertiesPanel.FreezePropertiesLabel.toolTipText")); //$NON-NLS-1$
         panelProperties.add(lblFreezeProperties, "2, 32, right, default");
         
         freezeProperties = new JCheckBox("");
@@ -731,7 +736,7 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
 
     protected void testNativeFps() { 
         setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-        nativeFps.setText("Testing...");
+        nativeFps.setText(Translations.getString("OpenPnpCaptureCameraConfigurationWizard.DevicePanel.TestingLabel.text")); //$NON-NLS-1$
         SwingUtilities.invokeLater(() -> {
             UiUtils.messageBoxOnException(() -> {
                 try {

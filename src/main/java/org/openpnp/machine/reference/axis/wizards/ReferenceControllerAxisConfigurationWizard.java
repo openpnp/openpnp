@@ -315,11 +315,9 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
         letter.setColumns(10);
 
         lblInvertLinearrotational = new JLabel(Translations.getString(
-                "ReferenceControllerAxisConfigurationWizard.ControllerSettingsPanel.SwitchLinearRotationalLabel.text" //$NON-NLS-1$
-        ));
+                "ReferenceControllerAxisConfigurationWizard.ControllerSettingsPanel.SwitchLinearRotationalLabel.text")); //$NON-NLS-1$
         lblInvertLinearrotational.setToolTipText(Translations.getString(
-                "ReferenceControllerAxisConfigurationWizard.ControllerSettingsPanel.SwitchLinearRotationalLabel.toolTipText" //$NON-NLS-1$
-        ));
+                "ReferenceControllerAxisConfigurationWizard.ControllerSettingsPanel.SwitchLinearRotationalLabel.toolTipText")); //$NON-NLS-1$
         panelControllerSettings.add(lblInvertLinearrotational, "2, 6, right, default");
 
         invertLinearRotational = new JCheckBox("");

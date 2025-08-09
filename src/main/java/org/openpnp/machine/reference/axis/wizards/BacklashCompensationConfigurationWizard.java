@@ -191,7 +191,8 @@ public class BacklashCompensationConfigurationWizard extends AbstractConfigurati
         btnCalibrate = new JButton(backlashCalibrateAction);
         panelBacklashDiagnostics.add(btnCalibrate, "10, 1, 1, 3, left, default");
 
-        lblBacklashOffset = new JLabel("Backlash Offset");
+        lblBacklashOffset = new JLabel(Translations.getString(
+                "BacklashCompensationConfigurationWizard.BacklashDiagnosticsPanel.BacklashOffsetLabel.text")); //$NON-NLS-1$
         panelBacklashDiagnostics.add(lblBacklashOffset, "2, 4, right, default");
 
         backlashOffset = new JTextField();

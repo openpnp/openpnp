@@ -147,8 +147,10 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
         settingsPanel.add(connectWaitTimeTf, "4, 6, fill, default");
         connectWaitTimeTf.setColumns(10);
         
-        JLabel lblNewLabel = new JLabel("$-Command Wait Time [ms]");
-        lblNewLabel.setToolTipText("<html>\n<p>Whenever a command starts with a <strong>$ </strong> sign, add this wait time before<br/>\nsending the next command. The TinyG controller is known to require this<br/>\npause, so it can write settings to the EEPROM uninterrupted. </p>\n<br/>\n<p>Note: in an GcodeAsyncDriver without Confirmation Flow Control, <br/>\nthis is only guaranteed to work, if the $-commands are sent to an idle  <br/>\ncontroller. This is the case if $-commands are sent as the first thing in <br/>\nthe <strong>CONNECT_COMMAND</strong>.</p> \n</html>");
+        JLabel lblNewLabel = new JLabel(Translations.getString(
+                "GcodeDriverSettings.SettingsPanel.CommandWaitTimeLabel.text")); //$NON-NLS-1$
+        lblNewLabel.setToolTipText(Translations.getString(
+                "GcodeDriverSettings.SettingsPanel.CommandWaitTimeLabel.toolTipText")); //$NON-NLS-1$
         settingsPanel.add(lblNewLabel, "2, 8, right, default");
         
         dollarWaitTimeMilliseconds = new JTextField();
