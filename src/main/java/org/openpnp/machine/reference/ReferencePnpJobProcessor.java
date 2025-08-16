@@ -2244,7 +2244,13 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 location = feeder.getPickLocation();
             } catch (Exception e) {
                 // ignore exceptions
+                Logger.error("Suppressing error from findFeeder or getPickLocation for part "+part);
+                e.printStackTrace();
                 location = null;
+            }
+
+            if(location==null) {
+                Logger.error("error null pick location for part "+part);
             }
             
             return convertToHeadLocation(nozzle, location);
@@ -2277,8 +2283,14 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 }
                 catch (Exception e) {
                     // ignore exceptions
+                    Logger.error("Suppressing error from getPartAlignmentLocation for part "+part);
+                    e.printStackTrace();
                     location = null;
                 }
+            }
+
+            if(location==null) {
+                Logger.error("error null alignment location for part "+part);
             }
 
             return convertToHeadLocation(nozzle, location);
@@ -2309,6 +2321,10 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             // get the place location using the same method as the place step of the job planner
             Location location = getPlacementLocation(p);
         
+            if(location==null) {
+                Logger.error("error null placement location for "+p);
+            }
+
             // convert location to where the head will move to to place the part
             return convertToHeadLocation(nozzle, location);
         }
