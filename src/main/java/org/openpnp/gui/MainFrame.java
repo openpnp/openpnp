@@ -288,6 +288,11 @@ public class MainFrame extends JFrame {
         return isShiftDown;
     }
 
+    private boolean isCtrlDown;
+    public boolean getCtrlDown() {
+        return isCtrlDown;
+    }
+
     public MainFrame(Configuration configuration) {
         mainFrame = this;
         this.configuration = configuration;
@@ -685,10 +690,13 @@ public class MainFrame extends JFrame {
                 machineControlsPanel.getJogControlsPanel().setIncrement5Action);
 
         isShiftDown = false;
+        isCtrlDown = false;
+        
         KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(
             new KeyEventDispatcher() {
                 public boolean dispatchKeyEvent(KeyEvent e) {
                     isShiftDown = e.isShiftDown();
+                    isCtrlDown = e.isControlDown();
                     return false;
                 }
             });
