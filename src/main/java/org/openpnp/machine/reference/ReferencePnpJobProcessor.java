@@ -2741,23 +2741,6 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         }
 
         /**
-         * Variant of findFeeder() that consumes exceptions by returning NULL
-         * @param part
-         * @return
-         */
-        protected Feeder findFeederWithoutException(Machine machine, Part part) {
-            Feeder feeder;
-            try {
-                feeder = findFeeder(machine, part);
-            }
-            catch (Exception e) {
-                feeder = null;
-            }
-            
-            return feeder;
-        }
-        
-        /**
          * Try to find a planning solution that allows for a nozzle tip change. This is very
          * similar to planWithoutNozzleTipChange() except that it considers all available nozzle
          * tips on the machine that are compatible with both the nozzle and the placement, 
