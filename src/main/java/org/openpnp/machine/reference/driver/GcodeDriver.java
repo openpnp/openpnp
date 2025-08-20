@@ -1026,7 +1026,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         return motionPending;
     }
 
-    protected void drainCommandQueue(long timeout) throws InterruptedException {
+    protected void drainCommandQueue(long timeout) throws Exception {
         // This does nothing in the plain GcodeDriver. It will be overridden in the GcodeAsyncDriver.
     }
 
