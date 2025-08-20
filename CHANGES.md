@@ -5,8 +5,17 @@ a complete change list, only those that may directly interest or affect users.
 
 ## New Features
 
+* The [Rank](https://github.com/openpnp/openpnp/wiki/Rank) feature, supporting the "how do I make sure X is placed before Y?" requirement. [PR 1842](https://github.com/openpnp/openpnp/pull/1842)
+* Job planner improvements which improve throughput [PR 1857](https://github.com/openpnp/openpnp/pull/1857)
+* Speed up Photon feeder by moving while feeding. NB this is enabled by default. [PR 1843](https://github.com/openpnp/openpnp/pull/1843)
+* Many translation improvements. [PR 1871](https://github.com/openpnp/openpnp/pull/1871)
+* ReferenceStripFeeder default vision pipeline was outdated. It now works the same as all the other sprocket-hole vision pipelines. [PR 1841](https://github.com/openpnp/openpnp/pull/1841)
+
 ## Bug Fixes
 
+* Fix the nozzle rotation mode "Minimal Rotation" [PR 1883](https://github.com/openpnp/openpnp/pull/1883)
+* Fix bug where the job processor might pick up a part when there is already another part on the nozzle [PR 1870](https://github.com/openpnp/openpnp/pull/1870)
+* Fix possible lock up in GcodeAsyncDriver [PR 1856](https://github.com/openpnp/openpnp/pull/1856)
 
 # Version 2.3
 
@@ -56,7 +65,7 @@ a complete change list, only those that may directly interest or affect users.
 * Marlin-specific fixes for I&S configuring GcodeAsyncDriver. [PR 1790](https://github.com/openpnp/openpnp/pull/1790)
 
 
-# 2024 Q4
+# Version 2.2; 2024 Q4
 
 ## New Features
 
