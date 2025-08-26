@@ -176,12 +176,26 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         }
         catch (Exception e) {
             this.fireJobState(Configuration.get().getMachine().getSignalers(), AbstractJobProcessor.State.ERROR);
+            scriptJobError(e);
             throw e;
         }
         if (currentStep == null) {
             this.fireJobState(Configuration.get().getMachine().getSignalers(), AbstractJobProcessor.State.FINISHED);
         }
         return currentStep != null;
+    }
+
+    private void scriptJobError(Exception e1) throws JobProcessorException {
+        HashMap<String, Object> params = new HashMap<>();
+        params.put("job", job);
+        params.put("jobProcessor", this);
+        params.put("exception", e1);
+        try {
+            Configuration.get().getScripting().on("Job.Error", params);
+        }
+        catch (Exception e) {
+            throw new JobProcessorException(null, e);
+        }
     }
 
     public synchronized void abort() throws JobProcessorException {
@@ -350,7 +364,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 throw new JobProcessorException(null, e);
             }
         }
-        
+
         private void prepMachine() throws JobProcessorException {
             // Everything looks good, so prepare the machine.
             fireTextStatus("Preparing machine.");
