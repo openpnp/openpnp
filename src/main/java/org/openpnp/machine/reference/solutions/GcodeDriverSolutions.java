@@ -48,6 +48,7 @@ import org.openpnp.model.Solutions.Milestone;
 import org.openpnp.model.Solutions.Severity;
 import org.openpnp.model.Solutions.State;
 import org.openpnp.spi.Actuator;
+import org.openpnp.spi.Axis;
 import org.openpnp.spi.ControllerAxis;
 import org.openpnp.spi.Driver;
 import org.openpnp.spi.Driver.MotionControlType;
@@ -362,6 +363,45 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                 }
                 else if (gcodeDriver.getFirmwareProperty("FIRMWARE_NAME", "").contains("grblHAL")) {
                     firmware = FirmwareType.GrblHAL;
+                    
+                        // Suggest upgrade to GrblDriver for enhanced grblHAL support
+                        if (!(gcodeDriver instanceof org.openpnp.machine.grbl.driver.GrblDriver)) {
+                            solutions.add(new Solutions.Issue(
+                                    gcodeDriver, 
+                                    "grblHAL firmware detected! Enhanced GrblDriver available with advanced features.", 
+                                    "Upgrade to GrblDriver for automatic settings synchronization and grblHAL-specific features.", 
+                                    Severity.Suggestion,
+                                    "https://github.com/openpnp/openpnp/wiki/GrblDriver") {
+
+                                @Override
+                                public void setState(Solutions.State state) throws Exception {
+                                    if (state == Solutions.State.Solved) {
+                                        convertToGrblDriver(gcodeDriver);
+                                    }
+                                    else if (getState() == Solutions.State.Solved) {
+                                        // Place the old one back (from the captured gcodeDriver).
+                                        replaceDriver(gcodeDriver);
+                                    }
+                                    super.setState(state);
+                                }
+                                
+                                @Override
+                                public String getExtendedDescription() {
+                                    return "<html>" +
+                                            "<h3>Enhanced grblHAL Support</h3>" +
+                                            "<p>The GrblDriver provides:</p>" +
+                                            "<ul>" +
+                                            "<li>Automatic settings synchronization between OpenPnP and grblHAL controller</li>" +
+                                            "<li>Advanced homing configuration with multi-pass support</li>" +
+                                            "<li>Improved compatibility with grblHAL-specific features</li>" +
+                                            "<li>Bi-directional settings management</li>" +
+                                            "</ul>" +
+                                            "<p>Your current settings will be preserved during the upgrade.</p>" +
+                                            "</html>";
+                                }
+                            });
+                        }
+                    
                     // enable backlash escaped characters to send ctrl-c etc.
                     if(!gcodeDriver.isBackslashEscapedCharactersEnabled()) {
 
@@ -589,6 +629,55 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                                     gcodeDriver.setMotionControlType((state == Solutions.State.Solved) ? 
                                             newMotionControlType : oldMotionControlType);
                                     super.setState(state);
+                                }
+                            });
+                        }
+                    }
+                }
+
+                // Check for axis conversion opportunities when using GrblDriver
+                if (gcodeDriver instanceof org.openpnp.machine.grbl.driver.GrblDriver && 
+                    solutions.isTargeting(Milestone.Connect)) {
+                    
+                    // Find all axes that use this driver and could be converted to GrblControllerAxis
+                    for (ControllerAxis axis : new AxesLocation(machine).drivenBy(gcodeDriver).getControllerAxes()) {
+                        if (axis instanceof ReferenceControllerAxis && 
+                            !(axis instanceof org.openpnp.machine.grbl.axis.GrblControllerAxis)) {
+                            
+                            solutions.add(new Solutions.Issue(
+                                    axis,
+                                    "Axis '" + axis.getName() + "' can be upgraded to GrblControllerAxis for enhanced grblHAL synchronization.",
+                                    "Convert to GrblControllerAxis for automatic settings sync with grblHAL controller.",
+                                    Severity.Suggestion,
+                                    "https://github.com/openpnp/openpnp/wiki/GrblDriver") {
+
+                                @Override
+                                public void setState(Solutions.State state) throws Exception {
+                                    if (state == Solutions.State.Solved) {
+                                        convertSingleAxisToGrbl(axis, (org.openpnp.machine.grbl.driver.GrblDriver) gcodeDriver);
+                                    }
+                                    else if (getState() == Solutions.State.Solved) {
+                                        // Convert back to ReferenceControllerAxis
+                                        convertSingleAxisFromGrbl(axis, (org.openpnp.machine.grbl.driver.GrblDriver) gcodeDriver);
+                                    }
+                                    super.setState(state);
+                                }
+                                
+                                @Override
+                                public String getExtendedDescription() {
+                                    return "<html>" +
+                                            "<h3>Enhanced Axis Synchronization</h3>" +
+                                            "<p>Converting axis '" + axis.getName() + "' to GrblControllerAxis provides:</p>" +
+                                            "<ul>" +
+                                            "<li><b>Automatic synchronization</b> of steps/mm, feedrate, and acceleration settings</li>" +
+                                            "<li><b>Bi-directional sync</b> - changes made in OpenPnP sync to controller and vice versa</li>" +
+                                            "<li><b>Real-time updates</b> when settings change</li>" +
+                                            "<li><b>Consistency</b> between OpenPnP configuration and controller memory</li>" +
+                                            "</ul>" +
+                                            "<p><b>Note:</b> Only convert axes that are controlled by the grblHAL controller. " +
+                                            "Axes on other controllers should remain as ReferenceControllerAxis.</p>" +
+                                            "<p>Current axis driver: " + axis.getDriver().getName() + "</p>" +
+                                            "</html>";
                                 }
                             });
                         }
@@ -1278,6 +1367,172 @@ public class GcodeDriverSolutions implements Solutions.Subject {
         gcodeDriver.setCommunicationsType(CommunicationsType.tcp);
         gcodeDriver.setIpAddress("GcodeServer");
         replaceDriver(gcodeDriver);
+    }
+
+    /**
+     * Convert an existing GcodeDriver to a GrblDriver while keeping all settings and 
+     * Axis/Actuator assignments. 
+     * 
+     * @param gcodeDriver
+     * @throws Exception
+     */
+    public static void convertToGrblDriver(GcodeDriver gcodeDriver) throws Exception {
+        // Serialize the current driver
+        Serializer serOut = XmlSerialize.createSerializer();
+        StringWriter sw = new StringWriter();
+        serOut.write(gcodeDriver, sw);
+        String driverSerialized = sw.toString();
+        
+        // Replace class name
+        driverSerialized = driverSerialized.replace(
+                gcodeDriver.getClass().getCanonicalName(), 
+                "org.openpnp.machine.grbl.driver.GrblDriver");
+        
+        // De-serialize as GrblDriver
+        Serializer serIn = XmlSerialize.createSerializer();
+        StringReader sr = new StringReader(driverSerialized);
+        org.openpnp.machine.grbl.driver.GrblDriver grblDriver = 
+                serIn.read(org.openpnp.machine.grbl.driver.GrblDriver.class, sr);
+        
+        // Replace the driver
+        replaceDriver(grblDriver);
+        
+        // NOTE: Axis conversion suggestions will be handled in the next findIssues() call
+        // after the driver has been replaced, since we can't access the solutions object here
+    }
+
+    /**
+     * Convert a single ReferenceControllerAxis to GrblControllerAxis
+     * 
+     * @param axis The axis to convert
+     * @param grblDriver The grbl driver that should control this axis
+     * @throws Exception
+     */
+    private static void convertSingleAxisToGrbl(ControllerAxis axis, org.openpnp.machine.grbl.driver.GrblDriver grblDriver) throws Exception {
+        Machine machine = Configuration.get().getMachine();
+        
+        // Store important properties before removal
+        String axisId = axis.getId();
+        String axisName = axis.getName();
+        Driver originalDriver = axis.getDriver();
+        
+        // Store the axis position in the list to maintain order
+        List<Axis> allAxes = machine.getAxes();
+        int axisIndex = allAxes.indexOf(axis);
+        
+        // Serialize the current axis to preserve all settings
+        Serializer serOut = XmlSerialize.createSerializer();
+        StringWriter sw = new StringWriter();
+        serOut.write(axis, sw);
+        String axisSerialized = sw.toString();
+        
+        // Replace class name with GrblControllerAxis
+        axisSerialized = axisSerialized.replace(
+                "org.openpnp.machine.reference.axis.ReferenceControllerAxis",
+                "org.openpnp.machine.grbl.axis.GrblControllerAxis");
+        
+        // Also handle if it was already some other subclass
+        axisSerialized = axisSerialized.replace(
+                axis.getClass().getCanonicalName(),
+                "org.openpnp.machine.grbl.axis.GrblControllerAxis");
+        
+        // De-serialize as GrblControllerAxis
+        Serializer serIn = XmlSerialize.createSerializer();
+        StringReader sr = new StringReader(axisSerialized);
+        org.openpnp.machine.grbl.axis.GrblControllerAxis grblAxis = 
+                serIn.read(org.openpnp.machine.grbl.axis.GrblControllerAxis.class, sr);
+        
+        // Set driver explicitly 
+        grblAxis.setDriver(originalDriver);
+        
+        // Remove the old axis from the machine
+        machine.removeAxis(axis);
+        
+        // Add the new axis to the machine
+        machine.addAxis(grblAxis);
+        
+        // Restore the original position in the axis list using permutateAxis
+        if (axisIndex >= 0) {
+            List<Axis> newAxesList = machine.getAxes();
+            int currentIndex = newAxesList.indexOf(grblAxis);
+            
+            // Move axis to correct position
+            while (currentIndex > axisIndex) {
+                machine.permutateAxis(grblAxis, -1);
+                currentIndex--;
+            }
+            while (currentIndex < axisIndex) {
+                machine.permutateAxis(grblAxis, 1);
+                currentIndex++;
+            }
+        }
+        
+        Logger.info("Converted axis '{}' (ID: {}) to GrblControllerAxis with grblHAL synchronization (driver: {})", 
+                    axisName, axisId, originalDriver.getName());
+                    
+        // Note: Camera and other component axis references will need manual reconfiguration
+        // because most components don't have setter methods for axis references
+    }
+
+    /**
+     * Convert a GrblControllerAxis back to ReferenceControllerAxis
+     * 
+     * @param axis The axis to convert back
+     * @param grblDriver The grbl driver
+     * @throws Exception
+     */
+    private static void convertSingleAxisFromGrbl(ControllerAxis axis, org.openpnp.machine.grbl.driver.GrblDriver grblDriver) throws Exception {
+        Machine machine = Configuration.get().getMachine();
+        
+        // Store important properties
+        String axisName = axis.getName();
+        Driver originalDriver = axis.getDriver();
+        
+        // Store position
+        List<Axis> allAxes = machine.getAxes();
+        int axisIndex = allAxes.indexOf(axis);
+        
+        // Serialize the current axis
+        Serializer serOut = XmlSerialize.createSerializer();
+        StringWriter sw = new StringWriter();
+        serOut.write(axis, sw);
+        String axisSerialized = sw.toString();
+        
+        // Replace class name with ReferenceControllerAxis
+        axisSerialized = axisSerialized.replace(
+                "org.openpnp.machine.grbl.axis.GrblControllerAxis",
+                "org.openpnp.machine.reference.axis.ReferenceControllerAxis");
+        
+        // De-serialize as ReferenceControllerAxis
+        Serializer serIn = XmlSerialize.createSerializer();
+        StringReader sr = new StringReader(axisSerialized);
+        ReferenceControllerAxis refAxis = 
+                serIn.read(ReferenceControllerAxis.class, sr);
+        
+        // Set driver explicitly
+        refAxis.setDriver(originalDriver);
+        
+        // Remove old axis and add new axis
+        machine.removeAxis(axis);
+        machine.addAxis(refAxis);
+        
+        // Restore position
+        if (axisIndex >= 0) {
+            List<Axis> newAxesList = machine.getAxes();
+            int currentIndex = newAxesList.indexOf(refAxis);
+            
+            while (currentIndex > axisIndex) {
+                machine.permutateAxis(refAxis, -1);
+                currentIndex--;
+            }
+            while (currentIndex < axisIndex) {
+                machine.permutateAxis(refAxis, 1);
+                currentIndex++;
+            }
+        }
+        
+        Logger.info("Converted axis '{}' back to ReferenceControllerAxis (driver: {})", 
+                    axisName, originalDriver.getName());
     }
 
     /**
