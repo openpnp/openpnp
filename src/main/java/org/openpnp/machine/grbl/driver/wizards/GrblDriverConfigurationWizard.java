@@ -51,6 +51,12 @@ public class GrblDriverConfigurationWizard extends AbstractConfigurationWizard {
     // Limits settings
     private JCheckBox softLimitsCheckbox;
     private JCheckBox hardLimitsCheckbox;
+    private JCheckBox limitInvertXCheckbox;
+    private JCheckBox limitInvertYCheckbox;
+    private JCheckBox limitInvertZCheckbox;
+    private JCheckBox limitInvertACheckbox;
+    private JCheckBox limitInvertBCheckbox;
+    private JCheckBox limitInvertCCheckbox;
     private JSpinner xMaxTravelSpinner;
     private JSpinner yMaxTravelSpinner;
     private JSpinner zMaxTravelSpinner;
@@ -107,6 +113,12 @@ public class GrblDriverConfigurationWizard extends AbstractConfigurationWizard {
                 
                 addWrappedBinding(driver, "softLimitsEnabled", softLimitsCheckbox, "selected");
                 addWrappedBinding(driver, "hardLimitsEnabled", hardLimitsCheckbox, "selected");
+                addWrappedBinding(driver, "limitInvertX", limitInvertXCheckbox, "selected");
+                addWrappedBinding(driver, "limitInvertY", limitInvertYCheckbox, "selected");
+                addWrappedBinding(driver, "limitInvertZ", limitInvertZCheckbox, "selected");
+                addWrappedBinding(driver, "limitInvertA", limitInvertACheckbox, "selected");
+                addWrappedBinding(driver, "limitInvertB", limitInvertBCheckbox, "selected");
+                addWrappedBinding(driver, "limitInvertC", limitInvertCCheckbox, "selected");
                 addWrappedBinding(driver, "XMaxTravel", xMaxTravelSpinner, "value");
                 addWrappedBinding(driver, "YMaxTravel", yMaxTravelSpinner, "value");
                 addWrappedBinding(driver, "ZMaxTravel", zMaxTravelSpinner, "value");
@@ -210,6 +222,13 @@ public class GrblDriverConfigurationWizard extends AbstractConfigurationWizard {
         
         softLimitsCheckbox = new JCheckBox("Enable Soft Limits ($20)");
         hardLimitsCheckbox = new JCheckBox("Enable Hard Limits ($21)");
+
+        limitInvertXCheckbox = new JCheckBox("X");
+        limitInvertYCheckbox = new JCheckBox("Y");
+        limitInvertZCheckbox = new JCheckBox("Z");
+        limitInvertACheckbox = new JCheckBox("A");
+        limitInvertBCheckbox = new JCheckBox("B");
+        limitInvertCCheckbox = new JCheckBox("C");
         
         xMaxTravelSpinner = new JSpinner(new SpinnerNumberModel(200.0, 1.0, 10000.0, 1.0));
         yMaxTravelSpinner = new JSpinner(new SpinnerNumberModel(200.0, 1.0, 10000.0, 1.0));
@@ -355,6 +374,40 @@ public class GrblDriverConfigurationWizard extends AbstractConfigurationWizard {
         gbc.gridy = row++;
         panel.add(hardLimitsCheckbox, gbc);
         
+        // ADD LIMIT PIN INVERT SECTION HERE:
+        gbc.gridy = row++;
+        gbc.gridwidth = 1;
+        panel.add(new JLabel("Limit Pin Invert ($5):"), gbc);
+        
+        // Create a sub-panel for the checkboxes
+        JPanel invertPanel = new JPanel(new GridBagLayout());
+        GridBagConstraints invertGbc = new GridBagConstraints();
+        invertGbc.insets = new Insets(1, 2, 1, 2);
+        
+        invertGbc.gridx = 0;
+        invertGbc.gridy = 0;
+        invertPanel.add(limitInvertXCheckbox, invertGbc);
+        invertGbc.gridx = 1;
+        invertPanel.add(limitInvertYCheckbox, invertGbc);
+        invertGbc.gridx = 2;
+        invertPanel.add(limitInvertZCheckbox, invertGbc);
+        invertGbc.gridx = 3;
+        invertPanel.add(limitInvertACheckbox, invertGbc);
+        invertGbc.gridx = 4;
+        invertPanel.add(limitInvertBCheckbox, invertGbc);
+        invertGbc.gridx = 5;
+        invertPanel.add(limitInvertCCheckbox, invertGbc);
+        
+        gbc.gridx = 1;
+        gbc.gridwidth = 2;
+        panel.add(invertPanel, gbc);
+        
+        // Small explanation
+        gbc.gridy = row++;
+        gbc.gridx = 1;
+        gbc.gridwidth = 2;
+        panel.add(new JLabel("<html><small>Check to invert logic (use with NO switches)</small></html>"), gbc);
+        
         // Max travel settings
         gbc.gridwidth = 1;
         gbc.gridy = row++;
@@ -413,6 +466,12 @@ public class GrblDriverConfigurationWizard extends AbstractConfigurationWizard {
             
             softLimitsCheckbox.setEnabled(enabled);
             hardLimitsCheckbox.setEnabled(enabled);
+            limitInvertXCheckbox.setEnabled(enabled);
+            limitInvertYCheckbox.setEnabled(enabled);
+            limitInvertZCheckbox.setEnabled(enabled);
+            limitInvertACheckbox.setEnabled(enabled);
+            limitInvertBCheckbox.setEnabled(enabled);
+            limitInvertCCheckbox.setEnabled(enabled);
             xMaxTravelSpinner.setEnabled(enabled);
             yMaxTravelSpinner.setEnabled(enabled);
             zMaxTravelSpinner.setEnabled(enabled);
@@ -427,6 +486,7 @@ public class GrblDriverConfigurationWizard extends AbstractConfigurationWizard {
             Logger.info("Loading controller settings and syncing to driver properties...");
             
             // Read current values from controller
+            String limitPinInvertStr = settingsSync.getControllerSetting(5);
             String homingEnabledStr = settingsSync.getControllerSetting(22);
             String homingDirectionStr = settingsSync.getControllerSetting(23);
             String homingFeedRateStr = settingsSync.getControllerSetting(24);
@@ -531,6 +591,15 @@ public class GrblDriverConfigurationWizard extends AbstractConfigurationWizard {
                 driver.setHardLimitsEnabled("1".equals(hardLimitsStr));
             }
             
+            if (limitPinInvertStr != null) {
+                try {
+                    int limitInvertMask = Integer.parseInt(limitPinInvertStr);
+                    driver.setLimitPinInvertMask(limitInvertMask);
+                } catch (NumberFormatException e) {
+                    Logger.warn("Invalid limit pin invert value: {}", limitPinInvertStr);
+                }
+            }
+
             // Max travel
             if (xMaxTravelStr != null) {
                 try {
@@ -591,7 +660,8 @@ public class GrblDriverConfigurationWizard extends AbstractConfigurationWizard {
             // Limits
             settingsWritten += writeSettingIfChanged(20, driver.isSoftLimitsEnabled() ? "1" : "0", "softLimits");
             settingsWritten += writeSettingIfChanged(21, driver.isHardLimitsEnabled() ? "1" : "0", "hardLimits");
-            
+            settingsWritten += writeSettingIfChanged(5, String.valueOf(driver.getLimitPinInvertMask()), "limitPinInvert");
+
             // Max travel
             settingsWritten += writeSettingIfChanged(130, String.valueOf(driver.getXMaxTravel()), "xMaxTravel");
             settingsWritten += writeSettingIfChanged(131, String.valueOf(driver.getYMaxTravel()), "yMaxTravel");

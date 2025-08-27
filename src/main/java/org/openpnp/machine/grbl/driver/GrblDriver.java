@@ -52,6 +52,13 @@ public class GrblDriver extends GcodeDriver {
     private double xMaxTravel = 200.0;
     private double yMaxTravel = 200.0;
     private double zMaxTravel = 200.0;
+    private int limitPinInvertMask = 0;
+    private boolean limitInvertX = false;
+    private boolean limitInvertY = false;
+    private boolean limitInvertZ = false;
+    private boolean limitInvertA = false;
+    private boolean limitInvertB = false;
+    private boolean limitInvertC = false;
 
     @Override
     public synchronized void connect() throws Exception {
@@ -542,5 +549,111 @@ public class GrblDriver extends GcodeDriver {
         double oldValue = this.zMaxTravel;
         this.zMaxTravel = zMaxTravel;
         firePropertyChange("ZMaxTravel", oldValue, zMaxTravel);
+    }
+
+        // Limit pin invert mask ($5)
+    public int getLimitPinInvertMask() {
+        return limitPinInvertMask;
+    }
+    
+    public void setLimitPinInvertMask(int mask) {
+        int oldValue = this.limitPinInvertMask;
+        this.limitPinInvertMask = mask;
+        
+        // Update individual checkboxes from mask
+        setLimitInvertX((mask & 1) != 0);
+        setLimitInvertY((mask & 2) != 0);
+        setLimitInvertZ((mask & 4) != 0);
+        setLimitInvertA((mask & 8) != 0);
+        setLimitInvertB((mask & 16) != 0);
+        setLimitInvertC((mask & 32) != 0);
+        
+        firePropertyChange("limitPinInvertMask", oldValue, mask);
+    }
+    
+    // Individual limit invert getters/setters
+    public boolean isLimitInvertX() {
+        return limitInvertX;
+    }
+    
+    public void setLimitInvertX(boolean limitInvertX) {
+        boolean oldValue = this.limitInvertX;
+        this.limitInvertX = limitInvertX;
+        updateLimitInvertMask();
+        firePropertyChange("limitInvertX", oldValue, limitInvertX);
+    }
+    
+    public boolean isLimitInvertY() {
+        return limitInvertY;
+    }
+    
+    public void setLimitInvertY(boolean limitInvertY) {
+        boolean oldValue = this.limitInvertY;
+        this.limitInvertY = limitInvertY;
+        updateLimitInvertMask();
+        firePropertyChange("limitInvertY", oldValue, limitInvertY);
+    }
+    
+    public boolean isLimitInvertZ() {
+        return limitInvertZ;
+    }
+    
+    public void setLimitInvertZ(boolean limitInvertZ) {
+        boolean oldValue = this.limitInvertZ;
+        this.limitInvertZ = limitInvertZ;
+        updateLimitInvertMask();
+        firePropertyChange("limitInvertZ", oldValue, limitInvertZ);
+    }
+    
+    public boolean isLimitInvertA() {
+        return limitInvertA;
+    }
+    
+    public void setLimitInvertA(boolean limitInvertA) {
+        boolean oldValue = this.limitInvertA;
+        this.limitInvertA = limitInvertA;
+        updateLimitInvertMask();
+        firePropertyChange("limitInvertA", oldValue, limitInvertA);
+    }
+    
+    public boolean isLimitInvertB() {
+        return limitInvertB;
+    }
+    
+    public void setLimitInvertB(boolean limitInvertB) {
+        boolean oldValue = this.limitInvertB;
+        this.limitInvertB = limitInvertB;
+        updateLimitInvertMask();
+        firePropertyChange("limitInvertB", oldValue, limitInvertB);
+    }
+    
+    public boolean isLimitInvertC() {
+        return limitInvertC;
+    }
+    
+    public void setLimitInvertC(boolean limitInvertC) {
+        boolean oldValue = this.limitInvertC;
+        this.limitInvertC = limitInvertC;
+        updateLimitInvertMask();
+        firePropertyChange("limitInvertC", oldValue, limitInvertC);
+    }
+    
+    /**
+     * Update the limit invert mask from individual checkbox states
+     */
+    private void updateLimitInvertMask() {
+        int mask = 0;
+        if (limitInvertX) mask |= 1;
+        if (limitInvertY) mask |= 2;
+        if (limitInvertZ) mask |= 4;
+        if (limitInvertA) mask |= 8;
+        if (limitInvertB) mask |= 16;
+        if (limitInvertC) mask |= 32;
+        
+        if (mask != limitPinInvertMask) {
+            int oldValue = limitPinInvertMask;
+            limitPinInvertMask = mask;
+            firePropertyChange("limitPinInvertMask", oldValue, mask);
+        }
     }
 }
