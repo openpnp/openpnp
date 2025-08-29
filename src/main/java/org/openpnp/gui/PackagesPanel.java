@@ -29,6 +29,7 @@ import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.StringReader;
@@ -175,7 +176,14 @@ public class PackagesPanel extends JPanel implements WizardContainer {
 
         tabbedPane = new JTabbedPane(JTabbedPane.TOP);
 
-        table = new AutoSelectTextTable(tableModel);
+        table = new AutoSelectTextTable(tableModel) {
+            @Override
+            public String getToolTipText(MouseEvent evt) {
+                int column = convertColumnIndexToModel(columnAtPoint(evt.getPoint()));
+                if(column==2) { return Translations.getString("PackagesTableModel.Column.TapeSpecification.toolTip"); } //$NON-NLS-1$
+                return null;
+            }
+        };
         table.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 
         JComboBox<BottomVisionSettings> bottomVisionCombo = new JComboBox<>(
