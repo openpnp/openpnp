@@ -1,7 +1,10 @@
 package org.openpnp.machine.grbl.axis;
 
 import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
+import org.openpnp.gui.support.AbstractConfigurationWizard;
+import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.machine.grbl.driver.GrblDriver;
+import org.openpnp.machine.grbl.wizards.GrblControllerAxisConfigurationWizard;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.spi.Driver;
@@ -13,6 +16,12 @@ import org.pmw.tinylog.Logger;
  */
 public class GrblControllerAxis extends ReferenceControllerAxis {
     
+    // === STEP AND DIRECTION PIN INVERT SETTINGS ===
+    private boolean stepPinInvert = false;      // Per-axis step pin invert
+    private boolean dirPinInvert = false;       // Per-axis direction pin invert
+    private boolean stepEnableInvert = false;   // Per-axis step enable invert
+    private boolean gangedMotorInvert = false;   // Per-axis ganged motor invert
+
     @Override
     public void setResolution(double resolution) {
         double oldResolution = getResolution();
@@ -142,6 +151,9 @@ public class GrblControllerAxis extends ReferenceControllerAxis {
             
             // Sync acceleration from controller
             syncAccelerationFromController();
+
+            // Sync pin invert settings from controller
+            syncPinInvertsFromController();
             
         } catch (Exception e) {
             Logger.warn("Failed to sync from controller for axis {}: {}", getName(), e.getMessage());
@@ -223,6 +235,229 @@ public class GrblControllerAxis extends ReferenceControllerAxis {
         }
     }
     
+    // Step enable invert
+    public boolean isStepEnableInvert() {
+        return stepEnableInvert;
+    }
+    
+    public void setStepEnableInvert(boolean stepEnableInvert) {
+        boolean oldValue = this.stepEnableInvert;
+        this.stepEnableInvert = stepEnableInvert;
+        
+        // Sync to controller if changed and connected
+        if (oldValue != stepEnableInvert && isConnected()) {
+            syncStepEnableInvertToController();
+        }
+        
+        firePropertyChange("stepEnableInvert", oldValue, stepEnableInvert);
+    }
+    
+    /**
+     * Sync step enable invert setting to grbl controller ($4)
+     */
+    private void syncStepEnableInvertToController() {
+        try {
+            GrblDriver grblDriver = getGrblDriver();
+            if (grblDriver == null) {return;}
+            
+            // Update the driver's bitmask for $4
+            grblDriver.updateStepEnableInvertBit(getAxisOffset(), stepEnableInvert);
+            
+            Logger.info("Synced {}-axis step enable invert to controller: {}", getName(), stepEnableInvert);
+            
+        } catch (Exception e) {
+            Logger.warn("Failed to sync step enable invert to controller for axis {}: {}", getName(), e.getMessage());
+        }
+    }
+
+    // Step pin invert
+    public boolean isStepPinInvert() {
+        return stepPinInvert;
+    }
+    
+    public void setStepPinInvert(boolean stepPinInvert) {
+        boolean oldValue = this.stepPinInvert;
+        this.stepPinInvert = stepPinInvert;
+        
+        // Sync to controller if changed and connected
+        if (oldValue != stepPinInvert && isConnected()) {
+            syncStepPinInvertToController();
+        }
+        
+        firePropertyChange("stepPinInvert", oldValue, stepPinInvert);
+    }
+    
+    // Direction pin invert
+    public boolean isDirPinInvert() {
+        return dirPinInvert;
+    }
+    
+    public void setDirPinInvert(boolean dirPinInvert) {
+        boolean oldValue = this.dirPinInvert;
+        this.dirPinInvert = dirPinInvert;
+        
+        // Sync to controller if changed and connected
+        if (oldValue != dirPinInvert && isConnected()) {
+            syncDirPinInvertToController();
+        }
+        
+        firePropertyChange("dirPinInvert", oldValue, dirPinInvert);
+    }
+    
+    /**
+     * Sync step pin invert setting to grbl controller ($2)
+     */
+    private void syncStepPinInvertToController() {
+        try {
+            GrblDriver grblDriver = getGrblDriver();
+            if (grblDriver == null) {return;}
+            
+            // Update the driver's bitmask for $2
+            grblDriver.updateStepPinInvertBit(getAxisOffset(), stepPinInvert);
+            
+            Logger.info("Synced {}-axis step pin invert to controller: {}", getName(), stepPinInvert);
+            
+        } catch (Exception e) {
+            Logger.warn("Failed to sync step pin invert to controller for axis {}: {}", getName(), e.getMessage());
+        }
+    }
+    
+    /**
+     * Sync direction pin invert setting to grbl controller ($3)
+     */
+    private void syncDirPinInvertToController() {
+        try {
+            GrblDriver grblDriver = getGrblDriver();
+            if (grblDriver == null) {return;}
+            
+            // Update the driver's bitmask for $3
+            grblDriver.updateDirPinInvertBit(getAxisOffset(), dirPinInvert);
+            
+            Logger.info("Synced {}-axis dir pin invert to controller: {}", getName(), dirPinInvert);
+            
+        } catch (Exception e) {
+            Logger.warn("Failed to sync dir pin invert to controller for axis {}: {}", getName(), e.getMessage());
+        }
+    }
+    
+    /**
+     * Sync pin invert settings from controller to OpenPnP
+     */
+    private void syncPinInvertsFromController() {
+        try {
+            GrblDriver grblDriver = getGrblDriver();
+            if (grblDriver == null || grblDriver.getSettingsSync() == null) {
+                Logger.debug("Cannot sync pin inverts - no driver or settings sync available");
+                return;
+            }
+            
+            int axisOffset = getAxisOffset();
+            if (axisOffset == -1) {
+                Logger.debug("Cannot sync pin inverts - invalid axis offset for axis {}", getName());
+                return;
+            }
+            
+            Logger.info("Syncing pin invert settings from controller for {}-axis (letter={}, offset={})", 
+                    getName(), getLetter(), axisOffset);
+            
+            // Sync step pin invert from controller ($2)
+            String stepInvertStr = grblDriver.getSettingsSync().getControllerSetting(2);
+            if (stepInvertStr != null) {
+                try {
+                    int stepInvertMask = Integer.parseInt(stepInvertStr);
+                    boolean axisStepInvert = (stepInvertMask & (1 << axisOffset)) != 0;
+                    
+                    // Set directly to avoid triggering sync back to controller
+                    if (this.stepPinInvert != axisStepInvert) {
+                        this.stepPinInvert = axisStepInvert;
+                        firePropertyChange("stepPinInvert", !axisStepInvert, axisStepInvert);
+                        Logger.info("Synced {}-axis step pin invert from controller: {}", getName(), axisStepInvert);
+                    }
+                } catch (NumberFormatException e) {
+                    Logger.warn("Invalid step pin invert mask from controller: {}", stepInvertStr);
+                }
+            }
+            
+            // Sync dir pin invert from controller ($3)
+            String dirInvertStr = grblDriver.getSettingsSync().getControllerSetting(3);
+            if (dirInvertStr != null) {
+                try {
+                    int dirInvertMask = Integer.parseInt(dirInvertStr);
+                    boolean axisDirInvert = (dirInvertMask & (1 << axisOffset)) != 0;
+                    
+                    // Set directly to avoid triggering sync back to controller
+                    if (this.dirPinInvert != axisDirInvert) {
+                        this.dirPinInvert = axisDirInvert;
+                        firePropertyChange("dirPinInvert", !axisDirInvert, axisDirInvert);
+                        Logger.info("Synced {}-axis dir pin invert from controller: {}", getName(), axisDirInvert);
+                    }
+                } catch (NumberFormatException e) {
+                    Logger.warn("Invalid dir pin invert mask from controller: {}", dirInvertStr);
+                }
+            }
+            
+            // Sync step enable invert from controller ($4)
+            String stepEnableInvertStr = grblDriver.getSettingsSync().getControllerSetting(4);
+            if (stepEnableInvertStr != null) {
+                try {
+                    int stepEnableInvertMask = Integer.parseInt(stepEnableInvertStr);
+                    boolean axisStepEnableInvert = (stepEnableInvertMask & (1 << axisOffset)) != 0;
+                    
+                    // Set directly to avoid triggering sync back to controller
+                    if (this.stepEnableInvert != axisStepEnableInvert) {
+                        this.stepEnableInvert = axisStepEnableInvert;
+                        firePropertyChange("stepEnableInvert", !axisStepEnableInvert, axisStepEnableInvert);
+                        Logger.info("Synced {}-axis step enable invert from controller: {}", getName(), axisStepEnableInvert);
+                    }
+                } catch (NumberFormatException e) {
+                    Logger.warn("Invalid step enable invert mask from controller: {}", stepEnableInvertStr);
+                }
+            }
+
+            // Sync ganged motor invert from controller ($8) - only if supported
+            if (shouldShowGangedMotorSettings()) {
+                String gangedInvertStr = grblDriver.getSettingsSync().getControllerSetting(8);
+                if (gangedInvertStr != null) {
+                    try {
+                        int gangedInvertMask = Integer.parseInt(gangedInvertStr);
+                        boolean axisGangedInvert = (gangedInvertMask & (1 << axisOffset)) != 0;
+                        
+                        // Set directly to avoid triggering sync back to controller
+                        if (this.gangedMotorInvert != axisGangedInvert) {
+                            this.gangedMotorInvert = axisGangedInvert;
+                            firePropertyChange("gangedMotorInvert", !axisGangedInvert, axisGangedInvert);
+                            Logger.info("Synced {}-axis ganged motor invert from controller: {}", getName(), axisGangedInvert);
+                        }
+                    } catch (NumberFormatException e) {
+                        Logger.warn("Invalid ganged motor invert mask from controller: {}", gangedInvertStr);
+                    }
+                }
+            }
+            
+        } catch (Exception e) {
+            Logger.warn("Failed to sync pin inverts from controller for axis {}: {}", getName(), e.getMessage());
+        }
+    }
+
+    /**
+     * Sync ganged motor invert setting to grbl controller ($8)
+     */
+    private void syncGangedMotorInvertToController() {
+        try {
+            GrblDriver grblDriver = getGrblDriver();
+            if (grblDriver == null) {return;}
+            
+            // Update the driver's bitmask for $8
+            grblDriver.updateGangedMotorInvertBit(getAxisOffset(), gangedMotorInvert);
+            
+            Logger.info("Synced {}-axis ganged motor invert to controller: {}", getName(), gangedMotorInvert);
+            
+        } catch (Exception e) {
+            Logger.warn("Failed to sync ganged motor invert to controller for axis {}: {}", getName(), e.getMessage());
+        }
+    }
+    
+    
     /**
      * Get GrblDriver instance
      */
@@ -299,5 +534,75 @@ public class GrblControllerAxis extends ReferenceControllerAxis {
                 Logger.warn("Unknown axis name for grbl settings: {}", getName());
                 return -1;
         }
+    }
+
+    public boolean isGangedMotorInvert() {
+        return gangedMotorInvert;
+    }
+
+    public void setGangedMotorInvert(boolean gangedMotorInvert) {
+        boolean oldValue = this.gangedMotorInvert;
+        this.gangedMotorInvert = gangedMotorInvert;
+        
+        // Sync to controller if changed and connected
+        if (oldValue != gangedMotorInvert && isConnected()) {
+            syncGangedMotorInvertToController();
+        }
+        
+        firePropertyChange("gangedMotorInvert", oldValue, gangedMotorInvert);
+    }
+
+    @Override
+    public PropertySheet[] getPropertySheets() {
+        // Get parent's property sheets first
+        PropertySheet[] parentSheets = super.getPropertySheets();
+        
+        // Create our Grbl-specific sheet
+        PropertySheet grblSheet = new PropertySheetWizardAdapter(createConfigurationWizard(), "Grbl Settings");
+        
+        // Combine parent sheets with our new sheet
+        PropertySheet[] combinedSheets = new PropertySheet[parentSheets.length + 1];
+        System.arraycopy(parentSheets, 0, combinedSheets, 0, parentSheets.length);
+        combinedSheets[parentSheets.length] = grblSheet;
+        
+        return combinedSheets;
+    }
+    
+    /**
+     * Create configuration wizard for this axis
+     */
+    public AbstractConfigurationWizard createConfigurationWizard() {
+        return new GrblControllerAxisConfigurationWizard(this);
+    }
+
+    /**
+     * Check if this axis should show ganged motor settings
+     * Uses cached result from GrblSettingsSync
+     */
+    public boolean shouldShowGangedMotorSettings() {
+        // Check if this axis type commonly uses ganged motors
+        String axisLetter = getLetter();
+        if (axisLetter == null) {
+            return false;
+        }
+        
+        String letter = axisLetter.toUpperCase();
+        boolean isCommonGangedAxis = "Y".equals(letter) || "Z".equals(letter);
+        
+        if (!isCommonGangedAxis) {
+            return false;  // Only Y/Z axes typically have ganged motors
+        }
+        
+        // Check if controller supports ganged motors (from cached sync result)
+        GrblDriver grblDriver = getGrblDriver();
+        if (grblDriver == null || grblDriver.getSettingsSync() == null) {
+            Logger.debug("No driver or settings sync available for ganged motor check");
+            return false;
+        }
+        
+        boolean supported = grblDriver.getSettingsSync().isGangedMotorSupported();
+        Logger.debug("Ganged motor support for {}-axis: {}", letter, supported);
+        
+        return supported;
     }
 }

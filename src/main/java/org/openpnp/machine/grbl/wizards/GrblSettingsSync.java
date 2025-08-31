@@ -22,6 +22,7 @@ import org.pmw.tinylog.Logger;
 public class GrblSettingsSync {
     private final GcodeDriver driver;
     private Map<Integer, String> controllerSettings;
+    private boolean gangedMotorSupported = false;  // Cache $8 support status
     
     // Pattern for parsing grbl settings: $100=180.000
     private static final Pattern SETTING_PATTERN = Pattern.compile("\\$(\\d+)=([\\d\\.\\-]+)");
@@ -63,6 +64,9 @@ public class GrblSettingsSync {
             }
             
             controllerSettings = parseSettingsResponse(response);
+            
+            // Check for ganged motor support ($8)
+            checkGangedMotorSupport();
             
             Logger.info("Successfully read {} settings from controller", controllerSettings.size());
             
@@ -120,6 +124,29 @@ public class GrblSettingsSync {
         return settings;
     }
     
+    /**
+     * Check if controller supports ganged motors ($8 setting)
+     * Called after reading all settings from controller
+     */
+    private void checkGangedMotorSupport() {
+        gangedMotorSupported = controllerSettings.containsKey(8);
+        
+        if (gangedMotorSupported) {
+            String value = controllerSettings.get(8);
+            Logger.info("Ganged motor support detected: $8={}", value);
+        } else {
+            Logger.info("No ganged motor support detected (no $8 setting)");
+        }
+    }
+
+    /**
+     * Check if controller supports ganged motors
+     * @return true if $8 setting was found during last sync
+     */
+    public boolean isGangedMotorSupported() {
+        return gangedMotorSupported;
+    }
+
     /**
      * Get a setting value from cached controller settings
      */

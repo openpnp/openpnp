@@ -24,6 +24,10 @@ public class GrblDriverConfigurationWizard extends AbstractConfigurationWizard {
     private boolean isConnected;
     
     // === GRBL UI COMPONENTS ===
+
+    // Step timing settings
+    private JSpinner stepPulseSpinner;
+    private JSpinner stepIdleDelaySpinner;
     
     // Homing settings
     private JCheckBox homingEnableCheckbox;
@@ -91,6 +95,9 @@ public class GrblDriverConfigurationWizard extends AbstractConfigurationWizard {
         
         if (homingEnableCheckbox != null) {
             try {
+                addWrappedBinding(driver, "stepPulse", stepPulseSpinner, "value");
+                addWrappedBinding(driver, "stepIdleDelay", stepIdleDelaySpinner, "value");
+
                 addWrappedBinding(driver, "homingEnabled", homingEnableCheckbox, "selected");
                 addWrappedBinding(driver, "homingInvertX", homingInvertXCheckbox, "selected");
                 addWrappedBinding(driver, "homingInvertY", homingInvertYCheckbox, "selected");
@@ -173,20 +180,27 @@ public class GrblDriverConfigurationWizard extends AbstractConfigurationWizard {
         gbc.anchor = GridBagConstraints.NORTHWEST;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         
+        // Add Step Timing panel
+        JPanel stepTimingPanel = createStepTimingPanel();
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridwidth = 1;
+        grblMainPanel.add(stepTimingPanel, gbc);
+
         // Add Grbl Homing settings panel
         JPanel homingPanel = createGrblHomingPanel();
         gbc.gridx = 0;
-        gbc.gridy = 0;
+        gbc.gridy = 1;
         gbc.gridwidth = 1;
         grblMainPanel.add(homingPanel, gbc);
         
         // Add Grbl Limit settings panel  
         JPanel limitPanel = createGrblLimitPanel();
-        gbc.gridy = 1;
+        gbc.gridy = 2;
         grblMainPanel.add(limitPanel, gbc);
         
         // Add fill space at bottom
-        gbc.gridy = 2;
+        gbc.gridy = 3;
         gbc.weighty = 1.0;
         gbc.fill = GridBagConstraints.BOTH;
         grblMainPanel.add(new JPanel(), gbc);
@@ -200,6 +214,16 @@ public class GrblDriverConfigurationWizard extends AbstractConfigurationWizard {
      * Initialize all Grbl UI components
      */
     private void initializeGrblComponents() {
+
+        // Set same preferred width for both spinners
+        java.awt.Dimension spinnerSize = new java.awt.Dimension(80, 25);
+
+        // Step timing settings
+        stepPulseSpinner = new JSpinner(new SpinnerNumberModel(10, 1, 1000, 1));
+        stepPulseSpinner.setPreferredSize(spinnerSize);
+        stepIdleDelaySpinner = new JSpinner(new SpinnerNumberModel(25, 0, 255, 1));
+        stepIdleDelaySpinner.setPreferredSize(spinnerSize);
+
         homingEnableCheckbox = new JCheckBox("Enable Homing Cycle ($22)");
         homingInvertXCheckbox = new JCheckBox("Invert X-axis");
         homingInvertYCheckbox = new JCheckBox("Invert Y-axis");
@@ -233,6 +257,46 @@ public class GrblDriverConfigurationWizard extends AbstractConfigurationWizard {
         xMaxTravelSpinner = new JSpinner(new SpinnerNumberModel(200.0, 1.0, 10000.0, 1.0));
         yMaxTravelSpinner = new JSpinner(new SpinnerNumberModel(200.0, 1.0, 10000.0, 1.0));
         zMaxTravelSpinner = new JSpinner(new SpinnerNumberModel(200.0, 1.0, 10000.0, 1.0));
+    }
+
+    /**
+     * Create the step timing settings panel ($0-1)
+     */
+    private JPanel createStepTimingPanel() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBorder(new TitledBorder("Step Timing Settings"));
+        
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(2, 2, 2, 2);
+        gbc.anchor = GridBagConstraints.WEST;
+        
+        int row = 0;
+        
+        // Step pulse time ($0)
+        gbc.gridx = 0;
+        gbc.gridy = row;
+        gbc.gridwidth = 1;
+        panel.add(new JLabel("Step Pulse ($0):"), gbc);
+        gbc.gridx = 1;
+        panel.add(stepPulseSpinner, gbc);
+        gbc.gridx = 2;
+        panel.add(new JLabel("μs"), gbc);
+        gbc.gridx = 3;
+        panel.add(new JLabel("<html><small>(pulse width for step signal)</small></html>"), gbc);
+        
+        // Step idle delay ($1)
+        row++;
+        gbc.gridy = row;
+        gbc.gridx = 0;
+        panel.add(new JLabel("Step Idle Delay ($1):"), gbc);
+        gbc.gridx = 1;
+        panel.add(stepIdleDelaySpinner, gbc);
+        gbc.gridx = 2;
+        panel.add(new JLabel("ms"), gbc);
+        gbc.gridx = 3;
+        panel.add(new JLabel("<html><small>(delay before disabling steppers)</small></html>"), gbc);
+        
+        return panel;
     }
 
     /**
@@ -444,6 +508,9 @@ public class GrblDriverConfigurationWizard extends AbstractConfigurationWizard {
         boolean enabled = isConnected && settingsSync != null;
         
         if (homingEnableCheckbox != null) {
+            stepPulseSpinner.setEnabled(enabled);
+            stepIdleDelaySpinner.setEnabled(enabled);
+
             homingEnableCheckbox.setEnabled(enabled);
             homingInvertXCheckbox.setEnabled(enabled);
             homingInvertYCheckbox.setEnabled(enabled);
@@ -485,6 +552,11 @@ public class GrblDriverConfigurationWizard extends AbstractConfigurationWizard {
         try {
             Logger.info("Loading controller settings and syncing to driver properties...");
             
+            // Read step timing settings
+            String stepPulseStr = settingsSync.getControllerSetting(0);
+            String stepIdleDelayStr = settingsSync.getControllerSetting(1);
+        
+
             // Read current values from controller
             String limitPinInvertStr = settingsSync.getControllerSetting(5);
             String homingEnabledStr = settingsSync.getControllerSetting(22);
@@ -504,6 +576,25 @@ public class GrblDriverConfigurationWizard extends AbstractConfigurationWizard {
             String homingPass2Str = settingsSync.getControllerSetting(45);
             String homingPass3Str = settingsSync.getControllerSetting(46);
             
+            // Update step timing properties
+            if (stepPulseStr != null) {
+                try {
+                    int stepPulse = Integer.parseInt(stepPulseStr);
+                    driver.setStepPulse(stepPulse);
+                } catch (NumberFormatException e) {
+                    Logger.warn("Invalid step pulse value: {}", stepPulseStr);
+                }
+            }
+            
+            if (stepIdleDelayStr != null) {
+                try {
+                    int stepIdleDelay = Integer.parseInt(stepIdleDelayStr);
+                    driver.setStepIdleDelay(stepIdleDelay);
+                } catch (NumberFormatException e) {
+                    Logger.warn("Invalid step idle delay value: {}", stepIdleDelayStr);
+                }
+            }
+
             // Update driver properties
             if (homingEnabledStr != null) {
                 driver.setHomingEnabled("1".equals(homingEnabledStr));
@@ -644,6 +735,10 @@ public class GrblDriverConfigurationWizard extends AbstractConfigurationWizard {
             
             int settingsWritten = 0;
             
+            // Sync step timing settings FIRST
+            settingsWritten += writeSettingIfChanged(0, String.valueOf(driver.getStepPulse()), "stepPulse");
+            settingsWritten += writeSettingIfChanged(1, String.valueOf(driver.getStepIdleDelay()), "stepIdleDelay");
+
             // Sync all settings
             settingsWritten += writeSettingIfChanged(22, driver.isHomingEnabled() ? "1" : "0", "homingEnabled");
             settingsWritten += writeSettingIfChanged(23, String.valueOf(driver.getHomingDirectionMask()), "homingDirection");

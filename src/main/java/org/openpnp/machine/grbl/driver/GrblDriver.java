@@ -31,6 +31,13 @@ public class GrblDriver extends GcodeDriver {
     private GrblSettingsSync settingsSync;
     
     // === GRBL SETTINGS PROPERTIES (NO @Attribute - runtime only!) ===
+    private int stepPulse = 10;        // $0 - Step pulse time in microseconds (default 10)
+    private int stepIdleDelay = 25;    // $1 - Step idle delay in milliseconds (default 25)
+    private int stepPinInvertMask = 0;     // $2 - Step pin invert bitmask
+    private int dirPinInvertMask = 0;      // $3 - Direction pin invert bitmask  
+    private int stepEnableInvertMask = 0;     // $4 - Step enable invert bitmask
+    private int gangedMotorInvertMask = 0;     // $8 - Ganged motor invert bitmask
+    
     // Homing settings
     private boolean homingEnabled = false;
     private boolean homingInvertX = false;
@@ -225,6 +232,183 @@ public class GrblDriver extends GcodeDriver {
      */
     public boolean isConnected() {
         return connected;
+    }
+
+    // Step pulse ($0)
+    public int getStepPulse() {
+        return stepPulse;
+    }
+
+    public void setStepPulse(int stepPulse) {
+        int oldValue = this.stepPulse;
+        this.stepPulse = stepPulse;
+        firePropertyChange("stepPulse", oldValue, stepPulse);
+    }
+
+    // Step idle delay ($1)  
+    public int getStepIdleDelay() {
+        return stepIdleDelay;
+    }
+
+    public void setStepIdleDelay(int stepIdleDelay) {
+        int oldValue = this.stepIdleDelay;
+        this.stepIdleDelay = stepIdleDelay;
+        firePropertyChange("stepIdleDelay", oldValue, stepIdleDelay);
+    }
+
+    // === STEP PIN INVERT ($2) ===
+
+    public int getStepPinInvertMask() {
+        return stepPinInvertMask;
+    }
+
+    public void setStepPinInvertMask(int mask) {
+        int oldValue = this.stepPinInvertMask;
+        this.stepPinInvertMask = mask;
+        firePropertyChange("stepPinInvertMask", oldValue, mask);
+    }
+
+    // Helper methods for individual bits (for GUI convenience)
+    public boolean isStepInvertX() { return (stepPinInvertMask & 1) != 0; }
+    public boolean isStepInvertY() { return (stepPinInvertMask & 2) != 0; }
+    public boolean isStepInvertZ() { return (stepPinInvertMask & 4) != 0; }
+    public boolean isStepInvertA() { return (stepPinInvertMask & 8) != 0; }
+    public boolean isStepInvertB() { return (stepPinInvertMask & 16) != 0; }
+    public boolean isStepInvertC() { return (stepPinInvertMask & 32) != 0; }
+
+    public void setStepInvertX(boolean invert) { 
+        setStepPinInvertMask(invert ? (stepPinInvertMask | 1) : (stepPinInvertMask & ~1));
+    }
+    public void setStepInvertY(boolean invert) { 
+        setStepPinInvertMask(invert ? (stepPinInvertMask | 2) : (stepPinInvertMask & ~2));
+    }
+    public void setStepInvertZ(boolean invert) { 
+        setStepPinInvertMask(invert ? (stepPinInvertMask | 4) : (stepPinInvertMask & ~4));
+    }
+    public void setStepInvertA(boolean invert) { 
+        setStepPinInvertMask(invert ? (stepPinInvertMask | 8) : (stepPinInvertMask & ~8));
+    }
+    public void setStepInvertB(boolean invert) { 
+        setStepPinInvertMask(invert ? (stepPinInvertMask | 16) : (stepPinInvertMask & ~16));
+    }
+    public void setStepInvertC(boolean invert) { 
+        setStepPinInvertMask(invert ? (stepPinInvertMask | 32) : (stepPinInvertMask & ~32));
+    }
+
+    // === DIRECTION PIN INVERT ($3) ===
+
+    public int getDirPinInvertMask() {
+        return dirPinInvertMask;
+    }
+
+    public void setDirPinInvertMask(int mask) {
+        int oldValue = this.dirPinInvertMask;
+        this.dirPinInvertMask = mask;
+        firePropertyChange("dirPinInvertMask", oldValue, mask);
+    }
+
+    // Helper methods for individual bits
+    public boolean isDirInvertX() { return (dirPinInvertMask & 1) != 0; }
+    public boolean isDirInvertY() { return (dirPinInvertMask & 2) != 0; }
+    public boolean isDirInvertZ() { return (dirPinInvertMask & 4) != 0; }
+    public boolean isDirInvertA() { return (dirPinInvertMask & 8) != 0; }
+    public boolean isDirInvertB() { return (dirPinInvertMask & 16) != 0; }
+    public boolean isDirInvertC() { return (dirPinInvertMask & 32) != 0; }
+
+    public void setDirInvertX(boolean invert) { 
+        setDirPinInvertMask(invert ? (dirPinInvertMask | 1) : (dirPinInvertMask & ~1));
+    }
+    public void setDirInvertY(boolean invert) { 
+        setDirPinInvertMask(invert ? (dirPinInvertMask | 2) : (dirPinInvertMask & ~2));
+    }
+    public void setDirInvertZ(boolean invert) { 
+        setDirPinInvertMask(invert ? (dirPinInvertMask | 4) : (dirPinInvertMask & ~4));
+    }
+    public void setDirInvertA(boolean invert) { 
+        setDirPinInvertMask(invert ? (dirPinInvertMask | 8) : (dirPinInvertMask & ~8));
+    }
+    public void setDirInvertB(boolean invert) { 
+        setDirPinInvertMask(invert ? (dirPinInvertMask | 16) : (dirPinInvertMask & ~16));
+    }
+    public void setDirInvertC(boolean invert) { 
+        setDirPinInvertMask(invert ? (dirPinInvertMask | 32) : (dirPinInvertMask & ~32));
+    }   
+    
+    // === STEP ENABLE INVERT ($4) ===
+
+    public int getStepEnableInvertMask() {
+        return stepEnableInvertMask;
+    }
+
+    public void setStepEnableInvertMask(int mask) {
+        int oldValue = this.stepEnableInvertMask;
+        this.stepEnableInvertMask = mask;
+        firePropertyChange("stepEnableInvertMask", oldValue, mask);
+    }
+
+    // Helper methods for individual bits
+    public boolean isStepEnableInvertX() { return (stepEnableInvertMask & 1) != 0; }
+    public boolean isStepEnableInvertY() { return (stepEnableInvertMask & 2) != 0; }
+    public boolean isStepEnableInvertZ() { return (stepEnableInvertMask & 4) != 0; }
+    public boolean isStepEnableInvertA() { return (stepEnableInvertMask & 8) != 0; }
+    public boolean isStepEnableInvertB() { return (stepEnableInvertMask & 16) != 0; }
+    public boolean isStepEnableInvertC() { return (stepEnableInvertMask & 32) != 0; }
+    
+    public void setStepEnableInvertX(boolean invert) { 
+        setStepEnableInvertMask(invert ? (stepEnableInvertMask | 1) : (stepEnableInvertMask & ~1));
+    }
+    public void setStepEnableInvertY(boolean invert) { 
+        setStepEnableInvertMask(invert ? (stepEnableInvertMask | 2) : (stepEnableInvertMask & ~2));
+    }
+    public void setStepEnableInvertZ(boolean invert) { 
+        setStepEnableInvertMask(invert ? (stepEnableInvertMask | 4) : (stepEnableInvertMask & ~4));
+    }
+    public void setStepEnableInvertA(boolean invert) { 
+        setStepEnableInvertMask(invert ? (stepEnableInvertMask | 8) : (stepEnableInvertMask & ~8));
+    }
+    public void setStepEnableInvertB(boolean invert) { 
+        setStepEnableInvertMask(invert ? (stepEnableInvertMask | 16) : (stepEnableInvertMask & ~16));
+    }
+    public void setStepEnableInvertC(boolean invert) { 
+        setStepEnableInvertMask(invert ? (stepEnableInvertMask | 32) : (stepEnableInvertMask & ~32));
+    }
+
+    // === GANGED MOTOR INVERT ($8) ===
+    public int getGangedMotorInvertMask() {
+        return gangedMotorInvertMask;
+    }
+
+    public void setGangedMotorInvertMask(int mask) {
+        int oldValue = this.gangedMotorInvertMask;
+        this.gangedMotorInvertMask = mask;
+        firePropertyChange("gangedMotorInvertMask", oldValue, mask);
+    }
+
+    // Helper methods for individual bits
+    public boolean isGangedInvertX() { return (gangedMotorInvertMask & 1) != 0; }
+    public boolean isGangedInvertY() { return (gangedMotorInvertMask & 2) != 0; }
+    public boolean isGangedInvertZ() { return (gangedMotorInvertMask & 4) != 0; }
+    public boolean isGangedInvertA() { return (gangedMotorInvertMask & 8) != 0; }
+    public boolean isGangedInvertB() { return (gangedMotorInvertMask & 16) != 0; }
+    public boolean isGangedInvertC() { return (gangedMotorInvertMask & 32) != 0; }
+
+    public void setGangedInvertX(boolean invert) { 
+        setGangedMotorInvertMask(invert ? (gangedMotorInvertMask | 1) : (gangedMotorInvertMask & ~1));
+    }
+    public void setGangedInvertY(boolean invert) { 
+        setGangedMotorInvertMask(invert ? (gangedMotorInvertMask | 2) : (gangedMotorInvertMask & ~2));
+    }
+    public void setGangedInvertZ(boolean invert) { 
+        setGangedMotorInvertMask(invert ? (gangedMotorInvertMask | 4) : (gangedMotorInvertMask & ~4));
+    }
+    public void setGangedInvertA(boolean invert) { 
+        setGangedMotorInvertMask(invert ? (gangedMotorInvertMask | 8) : (gangedMotorInvertMask & ~8));
+    }
+    public void setGangedInvertB(boolean invert) { 
+        setGangedMotorInvertMask(invert ? (gangedMotorInvertMask | 16) : (gangedMotorInvertMask & ~16));
+    }
+    public void setGangedInvertC(boolean invert) { 
+        setGangedMotorInvertMask(invert ? (gangedMotorInvertMask | 32) : (gangedMotorInvertMask & ~32));
     }
 
     // Homing enabled
@@ -654,6 +838,152 @@ public class GrblDriver extends GcodeDriver {
             int oldValue = limitPinInvertMask;
             limitPinInvertMask = mask;
             firePropertyChange("limitPinInvertMask", oldValue, mask);
+        }
+    }
+
+    // === METHODS FOR GRBLCONTROLLERAXIS TO UPDATE BITMASKS ===
+    
+    /**
+     * Update a specific bit in the step pin invert mask ($2)
+     * Called by GrblControllerAxis when individual axis setting changes
+     */
+    public void updateStepPinInvertBit(int axisOffset, boolean invert) throws Exception {
+        if (axisOffset < 0 || axisOffset > 5) {
+            throw new Exception("Invalid axis offset: " + axisOffset);
+        }
+        
+        if (settingsSync == null) {
+            throw new Exception("Settings sync not available");
+        }
+        
+        // Read current mask from controller
+        String currentMaskStr = settingsSync.getControllerSetting(2);
+        int currentMask = (currentMaskStr != null) ? Integer.parseInt(currentMaskStr) : 0;
+        
+        // Update the specific bit
+        int bitMask = 1 << axisOffset;
+        int newMask;
+        if (invert) {
+            newMask = currentMask | bitMask;  // Set bit
+        } else {
+            newMask = currentMask & ~bitMask; // Clear bit
+        }
+        
+        // Write back to controller if changed
+        if (newMask != currentMask) {
+            settingsSync.writeSettingToController(2, String.valueOf(newMask));
+            Logger.info("Updated step pin invert mask $2 from {} to {}", currentMask, newMask);
+            
+            // Update our local copy
+            setStepPinInvertMask(newMask);
+        }
+    }
+    
+    /**
+     * Update a specific bit in the direction pin invert mask ($3)
+     * Called by GrblControllerAxis when individual axis setting changes
+     */
+    public void updateDirPinInvertBit(int axisOffset, boolean invert) throws Exception {
+        if (axisOffset < 0 || axisOffset > 5) {
+            throw new Exception("Invalid axis offset: " + axisOffset);
+        }
+        
+        if (settingsSync == null) {
+            throw new Exception("Settings sync not available");
+        }
+        
+        // Read current mask from controller
+        String currentMaskStr = settingsSync.getControllerSetting(3);
+        int currentMask = (currentMaskStr != null) ? Integer.parseInt(currentMaskStr) : 0;
+        
+        // Update the specific bit
+        int bitMask = 1 << axisOffset;
+        int newMask;
+        if (invert) {
+            newMask = currentMask | bitMask;  // Set bit
+        } else {
+            newMask = currentMask & ~bitMask; // Clear bit
+        }
+        
+        // Write back to controller if changed
+        if (newMask != currentMask) {
+            settingsSync.writeSettingToController(3, String.valueOf(newMask));
+            Logger.info("Updated dir pin invert mask $3 from {} to {}", currentMask, newMask);
+            
+            // Update our local copy
+            setDirPinInvertMask(newMask);
+        }
+    }
+
+    /**
+     * Update a specific bit in the step enable invert mask ($4)
+     * Called by GrblControllerAxis when individual axis setting changes
+     */
+    public void updateStepEnableInvertBit(int axisOffset, boolean invert) throws Exception {
+        if (axisOffset < 0 || axisOffset > 5) {
+            throw new Exception("Invalid axis offset: " + axisOffset);
+        }
+        
+        if (settingsSync == null) {
+            throw new Exception("Settings sync not available");
+        }
+        
+        // Read current mask from controller
+        String currentMaskStr = settingsSync.getControllerSetting(4);
+        int currentMask = (currentMaskStr != null) ? Integer.parseInt(currentMaskStr) : 0;
+        
+        // Update the specific bit
+        int bitMask = 1 << axisOffset;
+        int newMask;
+        if (invert) {
+            newMask = currentMask | bitMask;  // Set bit
+        } else {
+            newMask = currentMask & ~bitMask; // Clear bit
+        }
+        
+        // Write back to controller if changed
+        if (newMask != currentMask) {
+            settingsSync.writeSettingToController(4, String.valueOf(newMask));
+            Logger.info("Updated step enable invert mask $4 from {} to {}", currentMask, newMask);
+            
+            // Update our local copy
+            setStepEnableInvertMask(newMask);
+        }
+    }
+
+    /**
+     * Update a specific bit in the ganged motor invert mask ($8)
+     * Called by GrblControllerAxis when individual axis setting changes
+     */
+    public void updateGangedMotorInvertBit(int axisOffset, boolean invert) throws Exception {
+        if (axisOffset < 0 || axisOffset > 5) {
+            throw new Exception("Invalid axis offset: " + axisOffset);
+        }
+        
+        if (settingsSync == null) {
+            throw new Exception("Settings sync not available");
+        }
+        
+        // Read current mask from controller
+        String currentMaskStr = settingsSync.getControllerSetting(8);
+        int currentMask = (currentMaskStr != null) ? Integer.parseInt(currentMaskStr) : 0;
+        
+        // Update the specific bit
+        int bitMask = 1 << axisOffset;
+        int newMask;
+        if (invert) {
+            newMask = currentMask | bitMask;  // Set bit
+        } else {
+            newMask = currentMask & ~bitMask; // Clear bit
+        }
+        
+        // Write back to controller if changed
+        if (newMask != currentMask) {
+            settingsSync.writeSettingToController(8, String.valueOf(newMask));
+            Logger.info("Updated ganged motor invert mask $8 from {} to {}", currentMask, newMask);
+            
+            // Update our local copy
+            setGangedMotorInvertMask(newMask);
         }
     }
 }
