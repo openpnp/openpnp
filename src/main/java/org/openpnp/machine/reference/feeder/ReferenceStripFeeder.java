@@ -75,6 +75,7 @@ import org.simpleframework.xml.core.Persist;
  * hole to part lateral is tape width / 2 - 0.5mm
  */
 public class ReferenceStripFeeder extends ReferenceFeeder {
+    // This is not used
     public enum TapeType {
         WhitePaper("White Paper"),
         BlackPlastic("Black Plastic"),

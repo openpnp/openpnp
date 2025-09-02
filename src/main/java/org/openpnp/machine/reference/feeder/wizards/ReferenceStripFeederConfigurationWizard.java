@@ -63,7 +63,6 @@ import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.gui.support.PartsComboBoxModel;
 import org.openpnp.machine.reference.camera.BufferedImageCamera;
 import org.openpnp.machine.reference.feeder.ReferenceStripFeeder;
-import org.openpnp.machine.reference.feeder.ReferenceStripFeeder.TapeType;
 import org.openpnp.model.Board;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
@@ -120,8 +119,6 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
     private JLabel lblMaxFeedCount;
     private JButton btnMaxFeedCount;
     private JTextField textFieldMaxFeedCount;
-    private JLabel lblTapeType;
-    private JComboBox comboBoxTapeType;
     private JLabel lblRotationInTape;
     private JTextField textFieldLocationRotation;
     private JButton btnAutoSetup;
@@ -244,13 +241,6 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         btnAutoSetup = new JButton(autoSetup);
         panelTapeSettings.add(btnAutoSetup, "2, 2, 11, 1");
 
-        lblTapeType = new JLabel(Translations.getString(
-                "ReferenceStripFeederConfigurationWizard.TapeTypeLabel.text")); //$NON-NLS-1$
-        panelTapeSettings.add(lblTapeType, "2, 4, right, default");
-
-        comboBoxTapeType = new JComboBox(TapeType.values());
-        panelTapeSettings.add(comboBoxTapeType, "4, 4, fill, default");
-
         JLabel lblTapeWidth = new JLabel(Translations.getString(
                 "ReferenceStripFeederConfigurationWizard.TapeWidthLabel.text")); //$NON-NLS-1$
         panelTapeSettings.add(lblTapeWidth, "8, 4, right, default");
@@ -261,10 +251,10 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
 
         lblPartPitch = new JLabel(Translations.getString(
                 "ReferenceStripFeederConfigurationWizard.PartPitchLabel.text")); //$NON-NLS-1$
-        panelTapeSettings.add(lblPartPitch, "2, 6, right, default");
+        panelTapeSettings.add(lblPartPitch, "2, 4, right, default");
 
         textFieldPartPitch = new JTextField();
-        panelTapeSettings.add(textFieldPartPitch, "4, 6");
+        panelTapeSettings.add(textFieldPartPitch, "4, 4");
         textFieldPartPitch.setColumns(5);
 
         lblFeedCount = new JLabel(Translations.getString(
@@ -473,7 +463,6 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         addWrappedBinding(feeder, "part", comboBoxPart, "selectedItem");
         addWrappedBinding(feeder, "feedRetryCount", retryCountTf, "text", intConverter);
         addWrappedBinding(feeder, "pickRetryCount", pickRetryCount, "text", intConverter);
-        addWrappedBinding(feeder, "tapeType", comboBoxTapeType, "selectedItem");
 
         addWrappedBinding(feeder, "tapeWidth", textFieldTapeWidth, "text", lengthConverter);
         addWrappedBinding(feeder, "partPitch", textFieldPartPitch, "text", lengthConverter);
