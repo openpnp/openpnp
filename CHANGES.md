@@ -10,12 +10,18 @@ a complete change list, only those that may directly interest or affect users.
 * Speed up Photon feeder by moving while feeding. NB this is enabled by default. [PR 1843](https://github.com/openpnp/openpnp/pull/1843)
 * Many translation improvements. [PR 1871](https://github.com/openpnp/openpnp/pull/1871)
 * ReferenceStripFeeder default vision pipeline was outdated. It now works the same as all the other sprocket-hole vision pipelines. [PR 1841](https://github.com/openpnp/openpnp/pull/1841)
+* The "Discard" button now always performs the discard action, even if openpnp thinks the nozzle is already empty. [PR 1890](https://github.com/openpnp/openpnp/pull/1890)
+* Changes for scripting:
+    * A new "Job.Error" script. [PR 1889](https://github.com/openpnp/openpnp/pull/1889)
 
 ## Bug Fixes
 
 * Fix the nozzle rotation mode "Minimal Rotation" [PR 1883](https://github.com/openpnp/openpnp/pull/1883)
 * Fix bug where the job processor might pick up a part when there is already another part on the nozzle [PR 1870](https://github.com/openpnp/openpnp/pull/1870)
 * Fix possible lock up in GcodeAsyncDriver [PR 1856](https://github.com/openpnp/openpnp/pull/1856)
+* Fix [issue 1884](https://github.com/openpnp/openpnp/pull/1884) where a feeder that became disabled in the middle of a job might show an unhelpful error message `Cannot invoke "org.openpnp.model.Location.convertToUnits(org.openpnp.model.LengthUnit)" because "b" is null`. 
+[PR 1886](https://github.com/openpnp/openpnp/pull/1886)
+
 
 # Version 2.3
 
