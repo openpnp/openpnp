@@ -589,7 +589,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             ReturnJobPlacementsAndNozzleTips jobPlacementsAndNozzleTips;
 
             // sort/plan all pending job placements
-            List<JobPlacement> openPendingJobPlacements = getOpenPendingJobPlacements();
+            List<JobPlacement> openPendingJobPlacements = getOpenPendingWorkableJobPlacements();
             int numberOfOpenPendingJobPlacements = openPendingJobPlacements.size();
             jobPlacementsAndNozzleTips = planJobPlacements(openPendingJobPlacements);
             
@@ -1961,6 +1961,50 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         return placementLocation;
     }
 
+    // All the placements that we can consider placing right now,
+    // but filtered to remove that do not have a feeder, or have a feeder that can not report its location.
+    // Subsequent planning steps need a feeder location, and we need to discover any problems now.
+    protected List<JobPlacement> getOpenPendingWorkableJobPlacements() throws JobProcessorException {
+        Exception firstException = null;
+        Part firstExceptionPart = null;
+        // A cache as an optimisation; only check the feeder location once per part
+        HashMap<Part,Location> partPickLocations = new HashMap<Part,Location>();
+        List<JobPlacement> workablePlacements = new ArrayList<JobPlacement>();
+        for(JobPlacement jobPlacement: getOpenPendingJobPlacements()) {
+            final Placement placement = jobPlacement.getPlacement();
+            final Part part = placement.getPart();
+            Location location;
+            if(partPickLocations.containsKey(part)) {
+                location = partPickLocations.get(part);
+            } else {
+                try {
+                    final Feeder feeder = findFeeder(machine, part);
+                    location = feeder.getPickLocation();
+                    if(location == null) {
+                        throw new Exception("Feeder pick location must not be null");
+                    }
+                    partPickLocations.put(part,location);
+                } catch (Exception e) {
+                    if (firstException==null) {
+                        firstException = e;
+                        firstExceptionPart = part;
+                    }
+                    partPickLocations.put(part,null);
+                    location = null;
+                }
+            }
+            if(location!=null) {
+                jobPlacement.setPlannedPickLocation(location);
+                workablePlacements.add(jobPlacement);
+            }
+        }
+        if(workablePlacements.isEmpty() && firstException!=null) {
+            // What remains are only unworkable placements, so we have to raise an exception.
+            throw new JobProcessorException(firstExceptionPart,firstException);
+        }
+        return workablePlacements;
+    }
+
     // All the placements that we can consider placing right now.
     // This is all the pending placements, excluding high-rank placements that are blocked by incomplete lower-ranked placements.
     // We are allowed to process up to 9 ranks higher than the lowest incomplete rank. Ranks N+10 and higher are blocked.
@@ -2248,26 +2292,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     private class PickLocator extends Locator {
         public Location getLocation(JobPlacement jobPlacement, Nozzle nozzle) {
             Location location;
-            final Placement placement = jobPlacement.getPlacement();
-            final Part part = placement.getPart();
-
-            // try to get the location where the alignment will take place
-            try {
-                final Feeder feeder = findFeeder(machine, part);
-
-                location = feeder.getPickLocation();
-            } catch (Exception e) {
-                // ignore exceptions
-                Logger.error("Suppressing error from findFeeder or getPickLocation for part "+part);
-                e.printStackTrace();
-                location = null;
-            }
-
-            if(location==null) {
-                Logger.error("error null pick location for part "+part);
-            }
-            
-            return convertToHeadLocation(nozzle, location);
+            return convertToHeadLocation(nozzle, jobPlacement.getPlannedPickLocation());
         }
         
         public String toString() {
@@ -2729,23 +2754,6 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             return new PlannedPlacement(nozzle, nozzleTip, bestPlacement, planningCost);
         }
 
-        /**
-         * Variant of findFeeder() that consumes exceptions by returning NULL
-         * @param part
-         * @return
-         */
-        protected Feeder findFeederWithoutException(Machine machine, Part part) {
-            Feeder feeder;
-            try {
-                feeder = findFeeder(machine, part);
-            }
-            catch (Exception e) {
-                feeder = null;
-            }
-            
-            return feeder;
-        }
-        
         /**
          * Try to find a planning solution that allows for a nozzle tip change. This is very
          * similar to planWithoutNozzleTipChange() except that it considers all available nozzle
