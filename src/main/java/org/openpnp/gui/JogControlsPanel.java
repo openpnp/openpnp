@@ -643,7 +643,7 @@ public class JogControlsPanel extends JPanel {
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
                 Nozzle nozzle = machineControlsPanel.getSelectedNozzle();
-                Cycles.discard(nozzle);
+                Cycles.discardAlways(nozzle);
             });
         }
     };
