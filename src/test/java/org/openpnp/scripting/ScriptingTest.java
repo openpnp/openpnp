@@ -108,6 +108,9 @@ public class ScriptingTest {
         FileUtils.copyURLToFile(
                 ClassLoader.getSystemResource("config/ScriptingTest/Events/testFilename.XYZ.java"),
                 new File(scriptsDirectory, "Events/testFilename.XYZ.java"));
+        FileUtils.copyURLToFile(
+                ClassLoader.getSystemResource("config/ScriptingTest/Events/testFilenameButNotThis.java"),
+                new File(scriptsDirectory, "Events/testFilenameButNotThis.java"));
         scripting.on("testFilename", testGlobals);
         if (!testResults.get("other filenames").equals("first+xyz")) {
             throw new Exception("Script execution for other file names didn't return expected result");
