@@ -100,7 +100,7 @@ public class ScriptingTest {
         }
 
         // ==== Test 1b ====
-        // Check that it runs all the right script files. In this case two scripts for one event
+        // Check that it runs all the right script files, and in the right order. In this case two scripts for one event
         // ================
         FileUtils.copyURLToFile(
                 ClassLoader.getSystemResource("config/ScriptingTest/Events/testFilename.OtherTextCanBeHere.java"),
