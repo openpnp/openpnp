@@ -103,6 +103,9 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
     @Attribute(required = false)
     protected int maxVisionRetries = 3;
+
+    //@Attribute(required = false)
+    protected int maxPlacementRetries = 5;
     
     @Attribute(required = false)
     boolean steppingToNextMotion = true;
@@ -2063,6 +2066,14 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         this.maxVisionRetries = maxVisionRetries;
     }
 
+    public int getMaxPlacementRetries() {
+        return maxPlacementRetries;
+    }
+
+    public void setMaxPlacementRetries(int maxPlacementRetries) {
+        this.maxPlacementRetries = maxPlacementRetries;
+    }
+
     @Override
     public boolean isSteppingToNextMotion() {
         return steppingToNextMotion;
@@ -2424,7 +2435,12 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                         if (e.isInterrupting()) {
                             throw e;
                         }
-                        plannedPlacement.jobPlacement.setError(e);
+                        if (plannedPlacement.jobPlacement.getProcessingCount()<getMaxPlacementRetries()) {
+                            // we should have another attempt at this placement
+                            plannedPlacement.jobPlacement.setStatus(Status.Pending);
+                        } else {
+                            plannedPlacement.jobPlacement.setError(e);
+                        }
                         return this;
                     default:
                         throw new Error("Unhandled Error Handling case " + plannedPlacement.jobPlacement.getPlacement().getErrorHandling());

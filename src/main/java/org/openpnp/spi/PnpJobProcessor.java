@@ -21,10 +21,12 @@ public interface PnpJobProcessor extends JobProcessor {
         private Exception error;
         private int feederIndex;
         private Location plannedPickLocation;
+        private int processingCount;
 
         public JobPlacement(BoardLocation boardLocation, Placement placement) {
             this.boardLocation = boardLocation;
             this.placement = placement;
+            this.processingCount = 0;
         }
 
         public BoardLocation getBoardLocation() {
@@ -42,11 +44,19 @@ public interface PnpJobProcessor extends JobProcessor {
         public void setStatus(Status status) {
             Object oldValue = this.status;
             this.status = status;
+            if (status==Status.Processing) {
+                processingCount += 1;
+            }
             firePropertyChange("status", oldValue, status);
         }
 
         public Status getStatus() {
             return status;
+        }
+
+        // A count of the number of times this placement has been in "Processing" status.
+        public int getProcessingCount() {
+            return processingCount;
         }
 
         /**
