@@ -1448,7 +1448,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 nozzle.moveToPickLocation(feeder);
 
                 // Pick
-                nozzle.pick(part);
+                nozzle.pick(part,feeder);
 
                 // Retract
                 nozzle.moveToSafeZ();

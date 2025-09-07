@@ -28,6 +28,7 @@ import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
 import org.openpnp.spi.Axis.Type;
 import org.openpnp.spi.Camera.Looking;
+import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
@@ -277,8 +278,8 @@ public class ReferenceJobProcessorRetryTests {
         int pickCount = 0;
         
         @Override
-        public void pick(Part part) throws Exception {
-            super.pick(part);
+        public void pick(Part part,Feeder feeder) throws Exception {
+            super.pick(part,feeder);
             pickCount++;
         }
         

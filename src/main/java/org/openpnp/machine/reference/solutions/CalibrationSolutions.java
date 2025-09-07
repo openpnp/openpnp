@@ -1141,7 +1141,7 @@ public class CalibrationSolutions implements Solutions.Subject {
                 Location placementLocation = location.derive(null, null, null, angle + 180.0);
                 nozzle.prepareForPickAndPlaceArticulation(pickLocation, placementLocation);
                 nozzle.moveToPickLocation(feeder);
-                nozzle.pick(testPart);
+                nozzle.pick(testPart,null);
                 // Extra wait time.
                 Thread.sleep(extraVacuumDwellMs);
                 nozzle.moveToPlacementLocation(placementLocation, testPart);
