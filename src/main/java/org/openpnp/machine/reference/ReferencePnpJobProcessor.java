@@ -2328,10 +2328,6 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 }
             }
 
-            if(location==null) {
-                Logger.error("error null alignment location for part "+part);
-            }
-
             return convertToHeadLocation(nozzle, location);
         }
 
