@@ -176,6 +176,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 		panel_1.add(searchTextField);
 		searchTextField.setColumns(15);
         JComboBox<Type> feedOptionsComboBox = new JComboBox(ReferenceFeeder.FeedOptions.values());
+        JComboBox<Type> priorityComboBox = new JComboBox(ReferenceFeeder.Priority.values());
 
 		table = new AutoSelectTextTable(tableModel);
 		table.setDefaultRenderer(Boolean.class, new CustomBooleanRenderer() {
@@ -224,6 +225,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 			}
 		});
         table.setDefaultEditor(ReferenceFeeder.FeedOptions.class, new DefaultCellEditor(feedOptionsComboBox));
+        table.setDefaultEditor(ReferenceFeeder.Priority.class, new DefaultCellEditor(priorityComboBox));
 
         tableSorter = new TableRowSorter<>(tableModel);
         table.getColumnModel().moveColumn(1,  2);

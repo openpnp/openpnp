@@ -133,4 +133,18 @@ public interface Feeder extends Identifiable, Named, WizardConfigurable, Propert
      * @return
      */
     public int getPickRetryCount();
+
+    /**
+     * High Priority - use these parts up first
+     * Normal Priority - normal feeders
+     * Low Priority - backup parts
+     */
+
+    public enum Priority {
+        High,Normal,Low
+    }
+
+    public Priority getPriority();
+
+    public void setPriority(Priority priority);
 }

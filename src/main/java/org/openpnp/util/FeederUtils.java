@@ -1,6 +1,7 @@
 package org.openpnp.util;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.stream.Collectors;
 import org.pmw.tinylog.Logger;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Machine;
@@ -50,17 +51,27 @@ public class FeederUtils {
         return closestFeeder;
     }
 
-    // Find all enabled feeders for a Part.
+    // Find all enabled feeders for a Part, then filter by priority
     public static List<Feeder> findFeeders(Machine machine,Part part) throws Exception {
         ArrayList<Feeder> feeders = new ArrayList<Feeder>();
-
+        Feeder.Priority highestPriority = Feeder.Priority.Low;
         for (Feeder feeder : machine.getFeeders()) {
             if (feeder.getPart() == part && feeder.isEnabled()) {
                 feeders.add(feeder);
+                Feeder.Priority p = feeder.getPriority();
+                if (p.ordinal()<highestPriority.ordinal()) {  // NB enum ordinal values are larger for low priorities
+                    highestPriority = p;
+                }
+            }
+        }
+        ArrayList<Feeder> filteredFeeders = new ArrayList<Feeder>();
+        for (Feeder feeder : feeders) {
+            if (feeder.getPriority()==highestPriority) {
+                filteredFeeders.add(feeder);
             }
         }
 
-        return feeders;
+        return filteredFeeders;
     }
 
 }

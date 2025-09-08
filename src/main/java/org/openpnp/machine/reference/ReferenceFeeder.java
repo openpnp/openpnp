@@ -127,7 +127,6 @@ public abstract class ReferenceFeeder extends AbstractFeeder {
         }
     }
 
-
     // This vector of bits is a record of whether the outcome of the job processor using this feeder
     // was success or failure.
     private LinkedList<Boolean> jobFaults;
