@@ -920,4 +920,8 @@ public class FeedersPanel extends JPanel implements WizardContainer {
             }
         }
     }
+
+    public void refresh(Feeder f) {
+        tableModel.refresh(f);
+    }
 }

@@ -50,7 +50,9 @@ public class ReferencePnpJobProcessorConfigurationWizard extends AbstractConfigu
     private JCheckBox steppingToNextMotion;
     private JCheckBox optimizeMultipleNozzles;
     private JCheckBox preRotateAllNozzles;
-    
+    private JTextField feederFaultLimitTextField;
+    private JTextField feederFaultWindowSizeTextField;
+
     public ReferencePnpJobProcessorConfigurationWizard(ReferencePnpJobProcessor jobProcessor) {
         this.jobProcessor = jobProcessor;
         contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
@@ -65,6 +67,10 @@ public class ReferencePnpJobProcessorConfigurationWizard extends AbstractConfigu
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
                 new RowSpec[] {
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC,
                         FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC,
@@ -133,6 +139,22 @@ public class ReferencePnpJobProcessorConfigurationWizard extends AbstractConfigu
 
         preRotateAllNozzles = new JCheckBox(); 
         panelGeneral.add(preRotateAllNozzles, "4, 14");
+
+        JLabel lblFeederFaultLimit = new JLabel(Translations.getString("MachineSetup.JobProcessors.ReferencePnpJobProcessor.Label.FeederFaultLimit")); //$NON-NLS-1$
+        lblFeederFaultLimit.setToolTipText(Translations.getString("MachineSetup.JobProcessors.ReferencePnpJobProcessor.Label.FeederFaultLimit.toolTipText")); //$NON-NLS-1$
+        panelGeneral.add(lblFeederFaultLimit, "2, 16, right, default");
+
+        feederFaultLimitTextField = new JTextField();
+        panelGeneral.add(feederFaultLimitTextField, "4, 16");
+        feederFaultLimitTextField.setColumns(10);
+
+        JLabel lblFeederFaultWindowSize = new JLabel(Translations.getString("MachineSetup.JobProcessors.ReferencePnpJobProcessor.Label.FeederFaultWindowSize")); //$NON-NLS-1$
+        lblFeederFaultWindowSize.setToolTipText(Translations.getString("MachineSetup.JobProcessors.ReferencePnpJobProcessor.Label.FeederFaultWindowSize.toolTipText")); //$NON-NLS-1$
+        panelGeneral.add(lblFeederFaultWindowSize, "2, 18, right, default");
+
+        feederFaultWindowSizeTextField = new JTextField();
+        panelGeneral.add(feederFaultWindowSizeTextField, "4, 18");
+        feederFaultWindowSizeTextField.setColumns(10);
     }
 
     @Override
@@ -146,7 +168,9 @@ public class ReferencePnpJobProcessorConfigurationWizard extends AbstractConfigu
         addWrappedBinding(jobProcessor, "steppingToNextMotion", steppingToNextMotion, "selected");
         addWrappedBinding(jobProcessor, "optimizeMultipleNozzles", optimizeMultipleNozzles, "selected");
         addWrappedBinding(jobProcessor, "preRotateAllNozzles", preRotateAllNozzles, "selected");
-        
+        addWrappedBinding(jobProcessor, "feederFaultLimit", feederFaultLimitTextField, "text", intConverter);
+        addWrappedBinding(jobProcessor, "feederFaultWindowSize", feederFaultWindowSizeTextField, "text", intConverter);
+
         ComponentDecorators.decorateWithAutoSelect(maxVisionRetriesTextField);
     }
 }

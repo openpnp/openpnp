@@ -38,6 +38,7 @@ import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.vision.AbstractPartAlignment;
 import org.openpnp.machine.reference.wizards.ReferencePnpJobProcessorConfigurationWizard;
+import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Job;
@@ -106,7 +107,13 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
     //@Attribute(required = false)
     protected int maxPlacementRetries = 5;
-    
+
+    //@Attribute(required = false)
+    protected int feederFaultLimit = 3;
+
+    //@Attribute(required = false)
+    protected int feederFaultWindowSize = 6;
+
     @Attribute(required = false)
     boolean steppingToNextMotion = true;
 
@@ -1398,6 +1405,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                     lastException = e;
                 }
             }
+            Logger.info("{} disabled due to feed error {}",feeder,lastException);
             feeder.setEnabled(false);
             throw new JobProcessorException(feeder, lastException);
         }
@@ -1662,10 +1670,16 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
             checkPartOn(nozzle, part);
             
+            Feeder partsFeeder = nozzle.getPartsFeeder();
+
             place(nozzle, part, placement, placementLocation);
             
             checkPartOff(nozzle, part);
             
+            if (partsFeeder instanceof ReferenceFeeder) {
+                ((ReferenceFeeder)partsFeeder).recordJobSuccess(getFeederFaultWindowSize());
+            }
+
             // Mark the placement as finished
             jobPlacement.setStatus(Status.Complete);
             
@@ -2074,6 +2088,22 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         this.maxPlacementRetries = maxPlacementRetries;
     }
 
+    public int getFeederFaultLimit() {
+        return feederFaultLimit;
+    }
+
+    public void setFeederFaultLimit(int feederFaultLimit) {
+        this.feederFaultLimit = feederFaultLimit;
+    }
+
+    public int getFeederFaultWindowSize() {
+        return feederFaultWindowSize;
+    }
+
+    public void setFeederFaultWindowSize(int feederFaultWindowSize) {
+        this.feederFaultWindowSize = feederFaultWindowSize;
+    }
+
     @Override
     public boolean isSteppingToNextMotion() {
         return steppingToNextMotion;
@@ -2435,8 +2465,15 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                         if (e.isInterrupting()) {
                             throw e;
                         }
-                        if (plannedPlacement.jobPlacement.getProcessingCount()<getMaxPlacementRetries()) {
-                            // we should have another attempt at this placement
+                        ReferenceFeeder feeder = getFeederFromException(e);
+                        if (feeder!=null) {
+                            feeder.recordJobFault(getFeederFaultLimit(),getFeederFaultWindowSize(),e);
+                            scriptFeederFault(feeder,e);
+                        }
+                        if (feeder!=null && plannedPlacement.jobPlacement.getProcessingCount()<getMaxPlacementRetries()) {
+                            // We should have another attempt at this placement.
+                            // This can be quite a large number of retries because the feeder will
+                            // get disabled before we waste too many parts.
                             plannedPlacement.jobPlacement.setStatus(Status.Pending);
                         } else {
                             plannedPlacement.jobPlacement.setError(e);
@@ -2447,6 +2484,43 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 }
             }
         }
+    }
+
+    private void scriptFeederFault(Feeder feeder,Exception e1) throws JobProcessorException {
+        try {
+            HashMap<String, Object> params = new HashMap<>();
+            params.put("feeder", feeder);
+            params.put("exception", e1);
+            Configuration.get().getScripting().on("Feeder.Fault", params);
+        }
+        catch (Exception e) {
+            throw new JobProcessorException(null, e);
+        }
+    }
+
+    // Find the feeder which was responsible for the problem. Either directly,
+    // or indirectly because it provided a part which later caused the problem.
+    ReferenceFeeder getFeederFromException(JobProcessorException e) {
+        if(e.getSource() instanceof ReferenceFeeder) {
+            return (ReferenceFeeder)e.getSource();
+        }
+        if(e.getSecondarySource() instanceof ReferenceFeeder) {
+            return (ReferenceFeeder)e.getSecondarySource();
+        }
+        Nozzle nozzle;
+        if(e.getSource() instanceof Nozzle) {
+             nozzle = (Nozzle)e.getSource();
+             if (nozzle.getPartsFeeder() instanceof ReferenceFeeder) {
+                return (ReferenceFeeder)nozzle.getPartsFeeder();
+             }
+        }
+        if(e.getSecondarySource() instanceof Nozzle) {
+             nozzle = (Nozzle)e.getSecondarySource();
+             if (nozzle.getPartsFeeder() instanceof ReferenceFeeder) {
+                return (ReferenceFeeder)nozzle.getPartsFeeder();
+             }
+        }
+        return null;
     }
     
     /**

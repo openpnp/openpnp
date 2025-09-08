@@ -1,8 +1,11 @@
 package org.openpnp.machine.reference;
 
 import java.util.List;
+import java.util.LinkedList;
+import javax.swing.SwingUtilities;
 
 import org.openpnp.Translations;
+import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Feeder;
@@ -10,6 +13,9 @@ import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.base.AbstractFeeder;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
+import org.openpnp.gui.MainFrame;
+import org.openpnp.gui.FeedersPanel;
+import org.pmw.tinylog.Logger;
 
 public abstract class ReferenceFeeder extends AbstractFeeder {
     @Element
@@ -121,4 +127,82 @@ public abstract class ReferenceFeeder extends AbstractFeeder {
         }
     }
 
+
+    // This vector of bits is a record of whether the outcome of the job processor using this feeder
+    // was success or failure.
+    private LinkedList<Boolean> jobFaults;
+
+    public void recordJobSuccess(int windowSize) {
+        addJobFault(false,windowSize);
+        updateView();
+    }
+
+    public void recordJobFault(int faultLimit,int windowSize,Exception e) {
+        addJobFault(true,windowSize);
+        //
+        long faultCount = jobFaults.stream().filter(f->f).count();
+        if(faultCount>0) {
+            Logger.info("{} faults {} {}",this,summariseJobFaults(),e);
+        }
+        if(isEnabled() && faultCount>=faultLimit) {
+            Logger.info("{} disabled due to fault limit",this);
+            setEnabled(false);
+        }
+        updateView();
+    }
+
+    private void addJobFault(boolean fault,int windowSize) {
+        if (jobFaults == null) {
+            jobFaults = new LinkedList<Boolean>();
+        }
+        jobFaults.addFirst(fault);
+        if (windowSize<1) {
+            windowSize = 1;
+        }
+        while(jobFaults.size()>windowSize) {
+            jobFaults.removeLast();
+        }
+    }
+
+    public String summariseJobFaults() {
+        String r = "";
+        boolean anyFaultsFound = false;
+        if (jobFaults != null) {
+            for (boolean f : jobFaults) {
+                if (f) {
+                    anyFaultsFound = true;
+                    r += "X";
+                } else {
+                    r += "-";
+                }
+            }
+        }
+        if (anyFaultsFound) {
+            return r;
+        } else {
+            return "";
+        }
+    }
+
+    @Override
+    public void setEnabled(boolean enabled) {
+        super.setEnabled(enabled);
+        if(enabled) {
+            // enabling a feeder clears all faults
+            jobFaults = null;
+        }
+        updateView();
+    }
+
+    private void updateView() {
+        SwingUtilities.invokeLater(() -> {
+            MainFrame mainFrame = MainFrame.get();
+            if (mainFrame!=null) {
+                FeedersPanel panel = mainFrame.getFeedersTab();
+                if (panel!=null) {
+                    panel.refresh(this);
+                }
+            }
+        });
+    }
 }
