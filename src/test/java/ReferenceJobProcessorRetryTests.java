@@ -194,12 +194,95 @@ public class ReferenceJobProcessorRetryTests {
         assertEquals(2, f2.feedCount, "F2 Feed count should be 2.");
         assertEquals(0, f3.feedCount, "F3 Feed count should be 0.");
     }
-    
 
+    // This test uses the Defer placement error handling strategy
+    // to allow the job to get fully placed, even with a nozzle that
+    // fails to pick a few times.
+    @Test
+    public void testPlacementRetry() throws Exception {
+        Configuration.initialize();
+        Machine machine = new MachineBuilder()
+                .head("H1")
+                .nozzleTip("NT1")
+                .nozzle("N1", "NT1")
+                .topCamera("TOP")
+                .bottomCamera("BOTTOM")
+                .build();
+        Job job = new JobBuilder()
+                .board("B1", 10, 10, 10, -10)
+                .packag("R0402", "NT1")
+                .part("R0402-1k", "R0402")
+                .feeder("F1", "R0402-1k", 100, 20, -5, 0)
+                .placement("R1", "R0402-1k", 10, 10, 0)
+                .placement("R2", "R0402-1k", 20, 20, 0)
+                .build();
+        job.setErrorHandling(Job.ErrorHandling.Defer);
+
+        TestFeeder f1 = (TestFeeder) machine.getFeederByName("F1");
+        f1.setPartCount(20);
+
+        TestNozzle n1 = (TestNozzle) machine.getHeadByName("H1").getNozzleByName("N1");
+        n1.pickSuccessRatio = 0.6;
+
+        runJob(machine, job);
+
+        assertEquals(4, f1.feedCount); // both placements need 2 feeds
+        assertEquals("-X-X", f1.summariseJobFaults());
+        int activePlacements = job.getActivePlacements(job.getRootPanelLocation());
+        assertEquals(0, activePlacements); // nothing remains unplaced
+    }
     
-    
-    
-    
+    // This test uses the Defer placement error handling strategy
+    // to allow the job to get fully placed, even with a nozzle that
+    // mostly fails to pick. We pick one part from a feeder but then get
+    // enough faults to cause that feeder to get disabled, and
+    // we carry on with a different feeder. Feeders have a priority.
+    @Test
+    public void testPlacementRetryDisablesOneFeeder() throws Exception {
+        Configuration.initialize();
+        Machine machine = new MachineBuilder()
+                .head("H1")
+                .nozzleTip("NT1")
+                .nozzle("N1", "NT1")
+                .topCamera("TOP")
+                .bottomCamera("BOTTOM")
+                .build();
+        Job job = new JobBuilder()
+                .board("B1", 10, 10, 10, -10)
+                .packag("R0402", "NT1")
+                .part("R0402-1k", "R0402")
+                .feeder("F1", "R0402-1k", 100, 20, -5, 0)
+                .feeder("F2", "R0402-1k", 110, 20, -5, 0)
+                .feeder("F3", "R0402-1k", 120, 20, -5, 0)
+                .placement("R1", "R0402-1k", 10, 10, 0)
+                .placement("R2", "R0402-1k", 20, 20, 0)
+                .build();
+        job.setErrorHandling(Job.ErrorHandling.Defer);
+
+        TestFeeder f1 = (TestFeeder) machine.getFeederByName("F1");
+        f1.setPartCount(20);
+        f1.setPriority(Feeder.Priority.High);
+        TestFeeder f2 = (TestFeeder) machine.getFeederByName("F2");
+        f2.setPartCount(20);
+        TestFeeder f3 = (TestFeeder) machine.getFeederByName("F3");
+        f3.setPartCount(20);
+        f3.setPriority(Feeder.Priority.Low);
+
+        TestNozzle n1 = (TestNozzle) machine.getHeadByName("H1").getNozzleByName("N1");
+        n1.pickSuccessRatio = 0.35;
+
+        runJob(machine, job);
+
+        assertFalse(f1.isEnabled()); // f1 gets itself disabled
+        assertEquals("X-XX", f1.summariseJobFaults());
+        assertTrue(f2.isEnabled()); // f2 remains enabled but with a fault
+        assertEquals("-X", f2.summariseJobFaults());
+        assertTrue(f3.isEnabled()); // f3 was never used because it is low priority
+        assertEquals("", f3.summariseJobFaults());
+        int activePlacements = job.getActivePlacements(job.getRootPanelLocation());
+        assertEquals(0, activePlacements); // nothing remains unplaced
+    }
+
     static void runJob(Machine machine, Job job) throws Exception {
         machine.setEnabled(true);
         machine.home();
@@ -212,6 +295,7 @@ public class ReferenceJobProcessorRetryTests {
             };
         }
         catch (Exception e) {
+            System.out.format("Exception %s\n", e);
         }
     }
         
@@ -276,11 +360,21 @@ public class ReferenceJobProcessorRetryTests {
     
     public static class TestNozzle extends ReferenceNozzle {
         int pickCount = 0;
-        
+
+        public double pickSuccessRatio = 1.0;
+        public double pickSuccessAccumulator = 0.0;
+
         @Override
         public void pick(Part part,Feeder feeder) throws Exception {
-            super.pick(part,feeder);
             pickCount++;
+
+            pickSuccessAccumulator += pickSuccessRatio;
+            if (pickSuccessAccumulator>=1.0) {
+                pickSuccessAccumulator -= 1.0;
+                super.pick(part,feeder);
+            } else {
+                throw new Exception("Refusing to pick");
+            }
         }
         
         public int getPickCount() {
