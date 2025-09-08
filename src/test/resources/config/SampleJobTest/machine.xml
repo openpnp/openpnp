@@ -197,8 +197,8 @@
          </feeder>
          <feeder class="org.openpnp.machine.reference.feeder.ReferenceStripFeeder" id="F1" name="Lower Strips - 1" enabled="true" part-id="R0805-1K" retry-count="3" pick-retry-count="3" tape-type="WhitePaper" vision-enabled="true" feed-count="0">
             <location units="Millimeters" x="0.0" y="0.0" z="-10.0" rotation="0.0"/>
-            <reference-hole-location units="Millimeters" x="157.344" y="40.291" z="-10.0" rotation="0.0"/>
-            <last-hole-location units="Millimeters" x="157.34" y="36.323" z="-10.0" rotation="0.0"/>
+            <reference-hole-location units="Millimeters" x="147.344" y="40.291" z="-10.0" rotation="0.0"/>
+            <last-hole-location units="Millimeters" x="147.34" y="36.323" z="-10.0" rotation="0.0"/>
             <part-pitch value="4.0" units="Millimeters"/>
             <tape-width value="8.0" units="Millimeters"/>
             <pipeline>
