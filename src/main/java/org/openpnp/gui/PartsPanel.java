@@ -89,6 +89,7 @@ import org.openpnp.spi.Feeder;
 import org.openpnp.spi.FiducialLocator;
 import org.openpnp.spi.PartAlignment;
 import org.openpnp.util.UiUtils;
+import org.openpnp.util.FeederUtils;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Serializer;
 
@@ -371,13 +372,7 @@ public class PartsPanel extends JPanel implements WizardContainer {
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
                 Part part = getSelectedPart();
-                Feeder feeder = null;
-                // find a feeder to feed
-                for (Feeder f : Configuration.get().getMachine().getFeeders()) {
-                    if (f.getPart() == part && f.isEnabled()) {
-                        feeder = f;
-                    }
-                }
+                Feeder feeder = FeederUtils.findFeeder(Configuration.get().getMachine(),part,null,null);
                 if (feeder == null) {
                     throw new Exception("No valid feeder found for " + part.getId());
                 }

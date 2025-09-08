@@ -1,12 +1,15 @@
 package org.openpnp.spi.base;
 
+import org.pmw.tinylog.Logger;
 import org.openpnp.model.Part;
+import org.openpnp.model.Location;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PnpJobProcessor;
 import org.openpnp.util.Cycles;
+import org.openpnp.util.FeederUtils;
 
 public abstract class AbstractPnpJobProcessor extends AbstractJobProcessor
         implements PnpJobProcessor {
@@ -40,13 +43,20 @@ public abstract class AbstractPnpJobProcessor extends AbstractJobProcessor
      * @return
      * @throws Exception If no Feeder is found that is both enabled and is serving the Part.
      */
-    public static Feeder findFeeder(Machine machine, Part part) throws JobProcessorException {
-        for (Feeder feeder : machine.getFeeders()) {
-            if (feeder.getPart() == part && feeder.isEnabled()) {
-                return feeder;
-            }
+    public static Feeder findFeeder(Machine machine,Part part,Feeder preference,Location datum) throws JobProcessorException {
+        Feeder feeder = null;
+
+        try {
+            feeder = FeederUtils.findFeeder(machine,part,preference,datum);
+        } catch (Exception e) {
+            throw new JobProcessorException(null, e);
         }
-        throw new JobProcessorException(part, "No compatible, enabled feeder found for part " + part.getId());
+
+        if(feeder==null) {
+            throw new JobProcessorException(part, "No compatible, enabled feeder found for part " + part.getId());
+        }
+
+        return feeder;
     }
 
 }

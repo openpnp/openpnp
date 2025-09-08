@@ -21,6 +21,7 @@ public interface PnpJobProcessor extends JobProcessor {
         private Exception error;
         private int feederIndex;
         private Location plannedPickLocation;
+        private Feeder plannedFeeder;
         private int processingCount;
 
         public JobPlacement(BoardLocation boardLocation, Placement placement) {
@@ -93,9 +94,17 @@ public interface PnpJobProcessor extends JobProcessor {
         public int getFeederIndex() {
             return feederIndex;
         }
-        
+
         public void setFeederIndex(int index) {
             this.feederIndex = index;
+        }
+
+        public Feeder getPlannedFeeder() {
+            return plannedFeeder;
+        }
+
+        public void setPlannedFeeder(Feeder plannedFeeder) {
+            this.plannedFeeder = plannedFeeder;
         }
 
         public Location getPlannedPickLocation() {

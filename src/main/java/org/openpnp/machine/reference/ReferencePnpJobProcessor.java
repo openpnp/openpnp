@@ -70,6 +70,7 @@ import org.openpnp.util.TravellingSalesman;
 import org.openpnp.util.UiUtils;
 import org.openpnp.util.Utils2D;
 import org.openpnp.util.VisionUtils;
+import org.openpnp.util.FeederUtils;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -331,7 +332,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             validatePartNozzleTip(head, part);
 
             // Make sure there is at least one compatible and enabled feeder available
-            findFeeder(machine, part);
+            findFeeder(machine, part, null, null);
         }
         
         private void validatePartNozzleTip(Head head, Part part) throws JobProcessorException {
@@ -819,7 +820,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             for (JobPlacement p : local) {
                 // get feeder and add it to the list
                 try {
-                    final Feeder feeder = findFeeder(machine, p.getPlacement().getPart());
+                    final Feeder feeder = findFeeder(machine,p.getPlacement().getPart(),null,previousPickPlanStartLocation);
                     if (!feeders.contains(feeder)) {
                         feeders.add(feeder);
                     }
@@ -1236,6 +1237,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             // In order for the pick-prerotation to return the correct rotation, the 
             // nozzle rotation mode has to be applied. If not, the pickLocation may
             // return the wrong angle.
+            Location otherFeederLocation = previousPickPlanStartLocation;
             for (PlannedPlacement p : plannedPlacements) {
                 JobPlacement jobPlacement = p.jobPlacement;
                 Placement placement = jobPlacement.getPlacement();
@@ -1243,14 +1245,16 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 Nozzle nozzle = p.nozzle;
                 Location pickLocation;
 
-                Feeder feeder = findFeeder(machine, part);
-                
+                Feeder feeder = findFeeder(machine,part,null,null);
+                jobPlacement.setPlannedFeeder(feeder);
+
                 try {
                     pickLocation = feeder.getPickLocation();
                 }
                 catch (Exception e) {
                     throw new JobProcessorException(feeder, e);
                 }
+                otherFeederLocation = pickLocation;
                 
                 Location placementLocation = Utils2D.calculateBoardPlacementLocation(jobPlacement.getBoardLocation(), placement.getLocation());
                 
@@ -1312,12 +1316,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                     }
                 }
 
-
-                /**
-                 * Find an available feeder. If one cannot be found this will throw. There's nothing
-                 * else we can do with this part.
-                 */
-                final Feeder feeder = findFeeder(machine, part);
+                final Feeder feeder = findFeeder(machine,part,jobPlacement.getPlannedFeeder(),null);
                 
                 /**
                  * Run the placement starting script. An error here will throw. That's the user's
@@ -1453,7 +1452,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
                 // Prepare the Nozzle for pick-to-place articulation.
                 Location placementLocation = Utils2D.calculateBoardPlacementLocation(jobPlacement.getBoardLocation(), jobPlacement.getPlacement().getLocation());
-                nozzle.prepareForPickAndPlaceArticulation(feeder.getPickLocation(), placementLocation);
+                Location pickLocation = feeder.getPickLocation();
+                nozzle.prepareForPickAndPlaceArticulation(pickLocation, placementLocation);
 
                 // Move to pick location.
                 nozzle.moveToPickLocation(feeder);
@@ -1995,7 +1995,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 location = partPickLocations.get(part);
             } else {
                 try {
-                    final Feeder feeder = findFeeder(machine, part);
+                    final Feeder feeder = findFeeder(machine,part,null,null);
                     location = feeder.getPickLocation();
                     if(location == null) {
                         throw new Exception("Feeder pick location must not be null");
