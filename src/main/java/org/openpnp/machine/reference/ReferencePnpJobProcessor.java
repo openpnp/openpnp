@@ -106,13 +106,13 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     @Attribute(required = false)
     protected int maxVisionRetries = 3;
 
-    //@Attribute(required = false)
+    @Attribute(required = false)
     protected int maxPlacementRetries = 5;
 
-    //@Attribute(required = false)
+    @Attribute(required = false)
     protected int feederFaultLimit = 3;
 
-    //@Attribute(required = false)
+    @Attribute(required = false)
     protected int feederFaultWindowSize = 6;
 
     @Attribute(required = false)
