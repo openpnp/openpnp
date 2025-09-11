@@ -264,6 +264,16 @@ public class PhotonFeeder extends ReferenceFeeder {
 
     @Override
     public void feed(Nozzle nozzle) throws Exception {
+        switch (getFeedOptions()) {
+        case Normal:
+            break;
+        case SkipNext:
+            setFeedOptions(FeedOptions.Normal);
+            return;
+        case Disable:
+            return;
+        }
+
         for (int i = 0; i <= photonProperties.getFeederCommunicationMaxRetry(); i++) {
             findSlotAddressIfNeeded();
             initializeIfNeeded();
@@ -565,5 +575,22 @@ public class PhotonFeeder extends ReferenceFeeder {
         for (PhotonFeeder feeder : feedersToAdd) {
             Configuration.get().getMachine().addFeeder(feeder);
         }
+    }
+
+    @Override
+    public boolean canTakeBackPart() {
+        return getFeedOptions() == FeedOptions.Normal;
+    }
+
+    @Override
+    public void takeBackPart(Nozzle nozzle) throws Exception {
+        super.takeBackPart(nozzle);
+        putPartBack(nozzle);
+        setFeedOptions(FeedOptions.SkipNext);
+    }
+
+    @Override
+    public boolean supportsFeedOptions() {
+        return true;
     }
 }
