@@ -704,7 +704,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 
         // Go to the pick location and pick.
         nozzle.moveToPickLocation(feeder);
-        nozzle.pick(feeder.getPart());
+        nozzle.pick(feeder.getPart(),feeder);
         nozzle.moveToSafeZ();
 
         // After the pick. 
