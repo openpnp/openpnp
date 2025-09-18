@@ -99,6 +99,23 @@ public class ScriptingTest {
             throw new Exception("Engines in the pool even if pooling is disabled");
         }
 
+        // ==== Test 1b ====
+        // Check that it runs all the right script files, and in the right order. In this case two scripts for one event
+        // ================
+        FileUtils.copyURLToFile(
+                ClassLoader.getSystemResource("config/ScriptingTest/Events/testFilename.OtherTextCanBeHere.java"),
+                new File(scriptsDirectory, "Events/testFilename.OtherTextCanBeHere.java"));
+        FileUtils.copyURLToFile(
+                ClassLoader.getSystemResource("config/ScriptingTest/Events/testFilename.XYZ.java"),
+                new File(scriptsDirectory, "Events/testFilename.XYZ.java"));
+        FileUtils.copyURLToFile(
+                ClassLoader.getSystemResource("config/ScriptingTest/Events/testFilenameButNotThis.java"),
+                new File(scriptsDirectory, "Events/testFilenameButNotThis.java"));
+        scripting.on("testFilename", testGlobals);
+        if (!testResults.get("other filenames").equals("first+xyz")) {
+            throw new Exception("Script execution for other file names didn't return expected result");
+        }
+
         // ==== Test 2 ====
         // Check if engines are returned to the pool correctly even when the script throws an
         // exception
