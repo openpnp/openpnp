@@ -271,7 +271,14 @@ public class PackagesPanel extends JPanel implements WizardContainer {
         List<Package> selections = new ArrayList<>();
         for (int selectedRow : table.getSelectedRows()) {
             selectedRow = table.convertRowIndexToModel(selectedRow);
-            selections.add(tableModel.getRowObjectAt(selectedRow));
+            try {
+                selections.add(tableModel.getRowObjectAt(selectedRow));
+            }
+            catch (IndexOutOfBoundsException e) {
+                // sometimes this happens when deleting a row, if the gui state
+                // updates after the model state
+                Logger.warn("package selection index {} out of bounds", selectedRow);
+            }
         }
         return selections;
     }

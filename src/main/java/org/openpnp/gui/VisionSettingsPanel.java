@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.prefs.Preferences;
 import java.util.stream.Collectors;
+import org.pmw.tinylog.Logger;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -186,7 +187,14 @@ public class VisionSettingsPanel extends JPanel implements WizardContainer {
         List<AbstractVisionSettings> selections = new ArrayList<>();
         for (int selectedRow : table.getSelectedRows()) {
             selectedRow = table.convertRowIndexToModel(selectedRow);
-            selections.add(tableModel.getRowObjectAt(selectedRow));
+            try {
+                selections.add(tableModel.getRowObjectAt(selectedRow));
+            }
+            catch (IndexOutOfBoundsException e) {
+                // sometimes this happens when deleting a row, if the gui state
+                // updates after the model state
+                Logger.warn("vision settings selection index {} out of bounds", selectedRow);
+            }
         }
         return selections;
     }
