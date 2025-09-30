@@ -63,6 +63,7 @@ import org.openpnp.spi.PnpJobPlanner.PlannedPlacement;
 import org.openpnp.spi.PnpJobProcessor.JobPlacement.Status;
 import org.openpnp.spi.base.AbstractJobProcessor;
 import org.openpnp.spi.base.AbstractPnpJobProcessor;
+import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.TravelCost;
 import org.openpnp.util.TravellingSalesman;
@@ -1839,7 +1840,15 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             catch (Exception e) {
                 throw new JobProcessorException(head, e);
             }
-            
+
+
+            try {// Wait until those actions are complete
+                machine.getMotionPlanner().waitForCompletion(null,CompletionType.WaitForStillstand);
+            }
+            catch (Exception e) {
+                throw new JobProcessorException(head, e);
+            }
+
             return null;
         }
     }
