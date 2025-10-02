@@ -424,15 +424,20 @@ public class PackagesPanel extends JPanel implements WizardContainer {
                 return;
             }
             try {
-                Serializer ser = Configuration.createSerializer();
-                Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-                String s = (String) clipboard.getData(DataFlavor.stringFlavor);
-                StringReader r = new StringReader(s);
-                Package pkg = ser.read(Package.class, s);
-                pkg.setId(id);
-                Configuration.get().addPackage(pkg);
-                tableModel.fireTableDataChanged();
-                Helpers.selectObjectTableRow(table, pkg);
+                try {
+                    Configuration.get().lockListeners();
+                    Serializer ser = Configuration.createSerializer();
+                    Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+                    String s = (String) clipboard.getData(DataFlavor.stringFlavor);
+                    StringReader r = new StringReader(s);
+                    Package pkg = ser.read(Package.class, s);
+                    pkg.setId(id);
+                    Configuration.get().addPackage(pkg);
+                    tableModel.fireTableDataChanged();
+                    Helpers.selectObjectTableRow(table, pkg);
+                } finally {
+                    Configuration.get().unlockListeners();
+                }
             }
             catch (Exception e) {
                 MessageBoxes.errorBox(getTopLevelAncestor(), "Paste Failed", e);
