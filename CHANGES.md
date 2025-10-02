@@ -7,12 +7,15 @@ a complete change list, only those that may directly interest or affect users.
 
 * The [Rank](https://github.com/openpnp/openpnp/wiki/Rank) feature, supporting the "how do I make sure X is placed before Y?" requirement. [PR 1842](https://github.com/openpnp/openpnp/pull/1842)
 * Job planner improvements which improve throughput [PR 1857](https://github.com/openpnp/openpnp/pull/1857)
-* Speed up Photon feeder by moving while feeding. NB this is enabled by default. [PR 1843](https://github.com/openpnp/openpnp/pull/1843)
+* Changes for Photon feeder:
+    * Speed up feeding by moving while feeding. NB this is enabled by default. [PR 1843](https://github.com/openpnp/openpnp/pull/1843) [PR 1903](https://github.com/openpnp/openpnp/pull/1903)
+    * Added "Skip Next Feed" and "Disable Feed" feeder options and Recycle support [PR 1900](https://github.com/openpnp/openpnp/pull/1900)
 * Many translation improvements. [PR 1871](https://github.com/openpnp/openpnp/pull/1871)
 * ReferenceStripFeeder default vision pipeline was outdated. It now works the same as all the other sprocket-hole vision pipelines. [PR 1841](https://github.com/openpnp/openpnp/pull/1841)
 * The "Discard" button now always performs the discard action, even if openpnp thinks the nozzle is already empty. [PR 1890](https://github.com/openpnp/openpnp/pull/1890)
 * Changes for scripting:
     * A new "Job.Error" script. [PR 1889](https://github.com/openpnp/openpnp/pull/1889)
+    * Previously script events were run if the filename matches 'EventName.py'. Change this to also run 'EventName.YourTextInHere.py' etc [PR 1895](https://github.com/openpnp/openpnp/pull/1895)
 
 ## Bug Fixes
 
@@ -21,6 +24,9 @@ a complete change list, only those that may directly interest or affect users.
 * Fix possible lock up in GcodeAsyncDriver [PR 1856](https://github.com/openpnp/openpnp/pull/1856)
 * Fix [issue 1884](https://github.com/openpnp/openpnp/pull/1884) where a feeder that became disabled in the middle of a job might show an unhelpful error message `Cannot invoke "org.openpnp.model.Location.convertToUnits(org.openpnp.model.LengthUnit)" because "b" is null`. 
 [PR 1886](https://github.com/openpnp/openpnp/pull/1886)
+* Fix copy/paste of a Part not copying the Package setting, or vision pipeline choices. [PR1907](https://github.com/openpnp/openpnp/pull/1907)
+* Fix an error message when deleting a Part [PR1906](https://github.com/openpnp/openpnp/pull/1906)
+* Fix the last placement in a job having a longer than expected dwell time. [PR1905](https://github.com/openpnp/openpnp/pull/1905)
 
 
 # Version 2.3
