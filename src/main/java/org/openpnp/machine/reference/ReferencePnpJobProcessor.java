@@ -103,9 +103,13 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     @Attribute(required = false)
     protected JobOrderHint jobOrder = JobOrderHint.NozzleTips;
 
+    // This name is misleading. This is the number of *attempts* at vision, not the number of retries.
+    // The default 3 attempts is one initial try plus two retries.
     @Attribute(required = false)
     protected int maxVisionRetries = 3;
 
+    // This name is misleading. This is the number of *attempts* not the number of retries.
+    // The default 5 *attempts* is one initial try plus four retries.
     @Attribute(required = false)
     protected int maxPlacementRetries = 5;
 
@@ -1572,7 +1576,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             final Part part = placement.getPart();
 
             Exception lastException = null;
-            for (int i = 0; i < ReferencePnpJobProcessor.this.getMaxVisionRetries(); i++) {
+            for (int i = 0; i < Math.max(1,ReferencePnpJobProcessor.this.getMaxVisionRetries()); i++) {
                 fireTextStatus("Aligning %s for %s using nozzle %s.", part.getId(), placement.getId(), nozzle.getName());
                 try {
                     plannedPlacement.alignmentOffsets = VisionUtils.findPartAlignmentOffsets(
