@@ -65,6 +65,7 @@ public class PartSettingsWizard extends AbstractConfigurationWizard {
         
         lblNewLabel = new JLabel(Translations.getString(
                 "PartSettingsWizard.pickConditionsPanel.pickRetryCountLabel.text")); //$NON-NLS-1$
+        lblNewLabel.setToolTipText(Translations.getString("PartSettingsWizard.pickConditionsPanel.pickRetryCountLabel.toolTipText")); //$NON-NLS-1$
         pickConditionsPanel.add(lblNewLabel, "2, 2, right, default");
         
         textFieldPickRetryCount = new JTextField();

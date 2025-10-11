@@ -96,6 +96,7 @@ public interface Nozzle
      * positioned the nozzle over the part to be picked and lowered it to the correct height. Some
      * implementations may choose to do further work in pick(), such as firing air cylinders,
      * monitoring pressure sensors, probing for contact etc.
+     * The specified feeder is the source of the part, used for tracking
      * 
      * @throws Exception
      */
