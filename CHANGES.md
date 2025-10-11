@@ -13,8 +13,13 @@ a complete change list, only those that may directly interest or affect users.
 * Many translation improvements. [PR 1871](https://github.com/openpnp/openpnp/pull/1871)
 * ReferenceStripFeeder default vision pipeline was outdated. It now works the same as all the other sprocket-hole vision pipelines. [PR 1841](https://github.com/openpnp/openpnp/pull/1841)
 * The "Discard" button now always performs the discard action, even if openpnp thinks the nozzle is already empty. [PR 1890](https://github.com/openpnp/openpnp/pull/1890)
+* Retries of the full pick/vision/place cycle for parts that fail vision check, or have some other problem during that cycle. [PR 1898](https://github.com/openpnp/openpnp/pull/1898)
+* Each feeder records a tally of whether its parts led to successful placements, or have problems such as failing the vision check. The default configuration is for a feeder to get disabled if it fails 3 out of 6 placements. This tally is shown in a new column on the Feeders page. [PR 1898](https://github.com/openpnp/openpnp/pull/1898)
+* Feeders have a new Priority field (Low/Normal/High). It picks from the highest priority if there are multiple feeders enabled for one part. This is for using up the tail end of an old tape, and having the machine automatically swap over to the new tape when empty. [PR 1898](https://github.com/openpnp/openpnp/pull/1898)
+* If there are multiple feeders (for one part) at the same priority it will now use the closest. [PR 1898](https://github.com/openpnp/openpnp/pull/1898)
 * Changes for scripting:
     * A new "Job.Error" script. [PR 1889](https://github.com/openpnp/openpnp/pull/1889)
+    * A new "Feeder.Fault" script. [PR 1898](https://github.com/openpnp/openpnp/pull/1898)
     * Previously script events were run if the filename matches 'EventName.py'. Change this to also run 'EventName.YourTextInHere.py' etc [PR 1895](https://github.com/openpnp/openpnp/pull/1895)
 
 ## Bug Fixes
