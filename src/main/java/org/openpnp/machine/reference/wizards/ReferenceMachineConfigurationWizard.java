@@ -33,10 +33,22 @@ public class ReferenceMachineConfigurationWizard extends AbstractConfigurationWi
     private final ReferenceMachine machine;
     private JCheckBox checkBoxHomeAfterEnabled;
     private String motionPlannerClassName;
-    private JTextField discardXTf;
-    private JTextField discardYTf;
-    private JTextField discardZTf;
-    private JTextField discardCTf;
+    private JTextField discard1XTf;
+    private JTextField discard1YTf;
+    private JTextField discard1ZTf;
+    private JTextField discard1CTf;
+    private JTextField discard2XTf;
+    private JTextField discard2YTf;
+    private JTextField discard2ZTf;
+    private JTextField discard2CTf;
+    private JTextField discard3XTf;
+    private JTextField discard3YTf;
+    private JTextField discard3ZTf;
+    private JTextField discard3CTf;
+    private JTextField discard4XTf;
+    private JTextField discard4YTf;
+    private JTextField discard4ZTf;
+    private JTextField discard4CTf;
     private JTextField defaultBoardXTf;
     private JTextField defaultBoardYTf;
     private JTextField defaultBoardZTf;
@@ -169,6 +181,12 @@ public class ReferenceMachineConfigurationWizard extends AbstractConfigurationWi
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
                 JLabel lblX = new JLabel("X");
@@ -188,53 +206,130 @@ public class ReferenceMachineConfigurationWizard extends AbstractConfigurationWi
         panelLocations.add(lblRotation, "10, 2");
         lblRotation.setHorizontalAlignment(SwingConstants.CENTER);
         
-                JLabel lblDiscardPoint = new JLabel(Translations.getString(
+        // discard location 1 (default)
+        JLabel lblDiscardPoint = new JLabel(Translations.getString(
                         "ReferenceMachineConfigurationWizard.PanelLocations.DiscardLocationLabel.text")); //$NON-NLS-1$
         panelLocations.add(lblDiscardPoint, "2, 4");
         
-                discardXTf = new JTextField();
-        panelLocations.add(discardXTf, "4, 4");
-        discardXTf.setColumns(5);
+        discard1XTf = new JTextField();
+        panelLocations.add(discard1XTf, "4, 4");
+        discard1XTf.setColumns(5);
         
-                discardYTf = new JTextField();
-        panelLocations.add(discardYTf, "6, 4");
-        discardYTf.setColumns(5);
+        discard1YTf = new JTextField();
+        panelLocations.add(discard1YTf, "6, 4");
+        discard1YTf.setColumns(5);
         
-                discardZTf = new JTextField();
-        panelLocations.add(discardZTf, "8, 4");
-        discardZTf.setColumns(5);
+        discard1ZTf = new JTextField();
+        panelLocations.add(discard1ZTf, "8, 4");
+        discard1ZTf.setColumns(5);
         
-                discardCTf = new JTextField();
-        panelLocations.add(discardCTf, "10, 4");
-        discardCTf.setColumns(5);
+        discard1CTf = new JTextField();
+        panelLocations.add(discard1CTf, "10, 4");
+        discard1CTf.setColumns(5);
         
-                LocationButtonsPanel discardLocationButtonsPanel =
-                        new LocationButtonsPanel(discardXTf, discardYTf, discardZTf, discardCTf);
+        LocationButtonsPanel discardLocationButtonsPanel =
+                        new LocationButtonsPanel(discard1XTf, discard1YTf, discard1ZTf, discard1CTf);
         panelLocations.add(discardLocationButtonsPanel, "12, 4");
 
+        // discard location 2
+        lblDiscardPoint = new JLabel(Translations.getString(
+                        "ReferenceMachineConfigurationWizard.PanelLocations.DiscardLocationLabel2.text")); //$NON-NLS-1$
+        panelLocations.add(lblDiscardPoint, "2, 6");
+        
+        discard2XTf = new JTextField();
+        panelLocations.add(discard2XTf, "4, 6");
+        discard2XTf.setColumns(5);
+        
+        discard2YTf = new JTextField();
+        panelLocations.add(discard2YTf, "6, 6");
+        discard2YTf.setColumns(5);
+        
+        discard2ZTf = new JTextField();
+        panelLocations.add(discard2ZTf, "8, 6");
+        discard2ZTf.setColumns(5);
+        
+        discard2CTf = new JTextField();
+        panelLocations.add(discard2CTf, "10, 6");
+        discard2CTf.setColumns(5);
+        
+        discardLocationButtonsPanel =
+                        new LocationButtonsPanel(discard2XTf, discard2YTf, discard2ZTf, discard2CTf);
+        panelLocations.add(discardLocationButtonsPanel, "12, 6");
+
+        // discard location 3
+        lblDiscardPoint = new JLabel(Translations.getString(
+                        "ReferenceMachineConfigurationWizard.PanelLocations.DiscardLocationLabel3.text")); //$NON-NLS-1$
+        panelLocations.add(lblDiscardPoint, "2, 8");
+        
+        discard3XTf = new JTextField();
+        panelLocations.add(discard3XTf, "4, 8");
+        discard3XTf.setColumns(5);
+        
+        discard3YTf = new JTextField();
+        panelLocations.add(discard3YTf, "6, 8");
+        discard3YTf.setColumns(5);
+        
+        discard3ZTf = new JTextField();
+        panelLocations.add(discard3ZTf, "8, 8");
+        discard3ZTf.setColumns(5);
+        
+        discard3CTf = new JTextField();
+        panelLocations.add(discard3CTf, "10, 8");
+        discard3CTf.setColumns(5);
+        
+        discardLocationButtonsPanel =
+                        new LocationButtonsPanel(discard3XTf, discard3YTf, discard3ZTf, discard3CTf);
+        panelLocations.add(discardLocationButtonsPanel, "12, 8");
+
+        // discard location 4
+        lblDiscardPoint = new JLabel(Translations.getString(
+                        "ReferenceMachineConfigurationWizard.PanelLocations.DiscardLocationLabel4.text")); //$NON-NLS-1$
+        panelLocations.add(lblDiscardPoint, "2, 10");
+        
+        discard4XTf = new JTextField();
+        panelLocations.add(discard4XTf, "4, 10");
+        discard4XTf.setColumns(5);
+        
+        discard4YTf = new JTextField();
+        panelLocations.add(discard4YTf, "6, 10");
+        discard4YTf.setColumns(5);
+        
+        discard4ZTf = new JTextField();
+        panelLocations.add(discard4ZTf, "8, 10");
+        discard4ZTf.setColumns(5);
+        
+        discard4CTf = new JTextField();
+        panelLocations.add(discard4CTf, "10, 10");
+        discard4CTf.setColumns(5);
+        
+        discardLocationButtonsPanel =
+                        new LocationButtonsPanel(discard4XTf, discard4YTf, discard4ZTf, discard4CTf);
+        panelLocations.add(discardLocationButtonsPanel, "12, 10");
+
+        // default board location
 		        JLabel lblDefaultBoardPoint = new JLabel(Translations.getString(
 		                "ReferenceMachineConfigurationWizard.PanelLocations.DefaultBoardLocationLabel.text")); //$NON-NLS-1$
-		panelLocations.add(lblDefaultBoardPoint, "2, 6");
+		panelLocations.add(lblDefaultBoardPoint, "2, 12");
 		
 		        defaultBoardXTf = new JTextField();
-		panelLocations.add(defaultBoardXTf, "4, 6");
+		panelLocations.add(defaultBoardXTf, "4, 12");
 		defaultBoardXTf.setColumns(5);
 		
 		        defaultBoardYTf = new JTextField();
-		panelLocations.add(defaultBoardYTf, "6, 6");
+		panelLocations.add(defaultBoardYTf, "6, 12");
 		defaultBoardYTf.setColumns(5);
 		
 		        defaultBoardZTf = new JTextField();
-		panelLocations.add(defaultBoardZTf, "8, 6");
+		panelLocations.add(defaultBoardZTf, "8, 12");
 		defaultBoardZTf.setColumns(5);
 		
 		        defaultBoardCTf = new JTextField();
-		panelLocations.add(defaultBoardCTf, "10, 6");
+		panelLocations.add(defaultBoardCTf, "10, 12");
 		defaultBoardCTf.setColumns(5);
 		
 		        LocationButtonsPanel defaultBoardLocationButtonsPanel =
 		                new LocationButtonsPanel(defaultBoardXTf, defaultBoardYTf, defaultBoardZTf, defaultBoardCTf);
-		panelLocations.add(defaultBoardLocationButtonsPanel, "12, 6");
+		panelLocations.add(defaultBoardLocationButtonsPanel, "12, 12");
     }
 
     @Override
@@ -249,24 +344,66 @@ public class ReferenceMachineConfigurationWizard extends AbstractConfigurationWi
         addWrappedBinding(machine, "safeZPark", safeZPark, "selected");
         addWrappedBinding(machine, "unsafeZRoamingDistance", unsafeZRoamingDistance, "text", lengthConverter);
 
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(unsafeZRoamingDistance);
+
         motionPlannerClassName = machine.getMotionPlanner().getClass().getSimpleName();
         addWrappedBinding(this, "motionPlannerClassName", motionPlannerClass, "selectedItem");
 
         addWrappedBinding(machine, "poolScriptingEngines", poolScriptingEngines, "selected");
         addWrappedBinding(machine, "autoLoadMostRecentJob", autoLoadMostRecentJob, "selected");
 
-        MutableLocationProxy discardLocation = new MutableLocationProxy();
-        bind(UpdateStrategy.READ_WRITE, machine, "discardLocation", discardLocation, "location");
-        addWrappedBinding(discardLocation, "lengthX", discardXTf, "text", lengthConverter);
-        addWrappedBinding(discardLocation, "lengthY", discardYTf, "text", lengthConverter);
-        addWrappedBinding(discardLocation, "lengthZ", discardZTf, "text", lengthConverter);
-        addWrappedBinding(discardLocation, "rotation", discardCTf, "text", doubleConverter);
+        // discard location 1 (default)
+        MutableLocationProxy discardLocation1 = new MutableLocationProxy();
+        // blind first/default discard location to "discardLocation" which is available in old versions
+        bind(UpdateStrategy.READ_WRITE, machine, "discardLocation", discardLocation1, "location");
+        addWrappedBinding(discardLocation1, "lengthX", discard1XTf, "text", lengthConverter);
+        addWrappedBinding(discardLocation1, "lengthY", discard1YTf, "text", lengthConverter);
+        addWrappedBinding(discardLocation1, "lengthZ", discard1ZTf, "text", lengthConverter);
+        addWrappedBinding(discardLocation1, "rotation", discard1CTf, "text", doubleConverter);
 
-        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(unsafeZRoamingDistance);
-        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(discardXTf);
-        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(discardYTf);
-        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(discardZTf);
-        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(discardCTf);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(discard1XTf);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(discard1YTf);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(discard1ZTf);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(discard1CTf);
+
+        // discard location 2
+        MutableLocationProxy discardLocation2 = new MutableLocationProxy();
+        bind(UpdateStrategy.READ_WRITE, machine, "discardLocation2", discardLocation2, "location");
+        addWrappedBinding(discardLocation2, "lengthX", discard2XTf, "text", lengthConverter);
+        addWrappedBinding(discardLocation2, "lengthY", discard2YTf, "text", lengthConverter);
+        addWrappedBinding(discardLocation2, "lengthZ", discard2ZTf, "text", lengthConverter);
+        addWrappedBinding(discardLocation2, "rotation", discard2CTf, "text", doubleConverter);
+
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(discard2XTf);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(discard2YTf);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(discard2ZTf);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(discard2CTf);
+
+        // discard location 3
+        MutableLocationProxy discardLocation3 = new MutableLocationProxy();
+        bind(UpdateStrategy.READ_WRITE, machine, "discardLocation3", discardLocation3, "location");
+        addWrappedBinding(discardLocation3, "lengthX", discard3XTf, "text", lengthConverter);
+        addWrappedBinding(discardLocation3, "lengthY", discard3YTf, "text", lengthConverter);
+        addWrappedBinding(discardLocation3, "lengthZ", discard3ZTf, "text", lengthConverter);
+        addWrappedBinding(discardLocation3, "rotation", discard3CTf, "text", doubleConverter);
+
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(discard3XTf);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(discard3YTf);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(discard3ZTf);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(discard3CTf);
+
+        // discard location 4
+        MutableLocationProxy discardLocation4 = new MutableLocationProxy();
+        bind(UpdateStrategy.READ_WRITE, machine, "discardLocation3", discardLocation4, "location");
+        addWrappedBinding(discardLocation4, "lengthX", discard4XTf, "text", lengthConverter);
+        addWrappedBinding(discardLocation4, "lengthY", discard4YTf, "text", lengthConverter);
+        addWrappedBinding(discardLocation4, "lengthZ", discard4ZTf, "text", lengthConverter);
+        addWrappedBinding(discardLocation4, "rotation", discard4CTf, "text", doubleConverter);
+
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(discard4XTf);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(discard4YTf);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(discard4ZTf);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(discard4CTf);
 
         MutableLocationProxy defaultBoardLocation = new MutableLocationProxy();
         bind(UpdateStrategy.READ_WRITE, machine, "defaultBoardLocation", defaultBoardLocation, "location");
@@ -275,7 +412,6 @@ public class ReferenceMachineConfigurationWizard extends AbstractConfigurationWi
         addWrappedBinding(defaultBoardLocation, "lengthZ", defaultBoardZTf, "text", lengthConverter);
         addWrappedBinding(defaultBoardLocation, "rotation", defaultBoardCTf, "text", doubleConverter);
 
-        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(unsafeZRoamingDistance);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(defaultBoardXTf);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(defaultBoardYTf);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(defaultBoardZTf);

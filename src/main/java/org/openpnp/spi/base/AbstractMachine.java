@@ -82,8 +82,18 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
     @ElementList(required = false)
     protected IdentifiableList<Driver> drivers = new IdentifiableList<>();
 
+    // keep this "discardLocatin" (without 1) to be compatible old configurations with just a single discard location
     @Element(required = false)
-    protected Location discardLocation = new Location(LengthUnit.Millimeters);
+    protected Location discardLocation  = new Location(LengthUnit.Millimeters);
+
+    @Element(required = false)
+    protected Location discardLocation2 = new Location(LengthUnit.Millimeters);
+
+    @Element(required = false)
+    protected Location discardLocation3 = new Location(LengthUnit.Millimeters);
+
+    @Element(required = false)
+    protected Location discardLocation4 = new Location(LengthUnit.Millimeters);
 
     @Element(required = false)
     protected Location defaultBoardLocation = new Location(LengthUnit.Millimeters);
@@ -733,6 +743,30 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
 
     public void setDiscardLocation(Location discardLocation) {
         this.discardLocation = discardLocation;
+    }
+
+    public Location getDiscardLocation2() {
+        return discardLocation2;
+    }
+
+    public void setDiscardLocation2(Location discardLocation) {
+        this.discardLocation2 = discardLocation;
+    }
+
+    public Location getDiscardLocation3() {
+        return discardLocation3;
+    }
+
+    public void setDiscardLocation3(Location discardLocation) {
+        this.discardLocation3 = discardLocation;
+    }
+
+    public Location getDiscardLocation4() {
+        return discardLocation4;
+    }
+
+    public void setDiscardLocation4(Location discardLocation) {
+        this.discardLocation4 = discardLocation;
     }
 
     public Location getDefaultBoardLocation() {
