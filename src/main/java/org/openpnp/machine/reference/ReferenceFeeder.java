@@ -143,7 +143,7 @@ public abstract class ReferenceFeeder extends AbstractFeeder {
         if(faultCount>0) {
             Logger.info("{} faults {} {}",this,summariseJobFaults(),e);
         }
-        if(isEnabled() && faultCount>=faultLimit) {
+        if(isEnabled() && faultCount>=faultLimit && faultLimit>0) {
             Logger.info("{} disabled due to fault limit",this);
             setEnabled(false);
         }
