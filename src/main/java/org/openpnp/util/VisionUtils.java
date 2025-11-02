@@ -26,6 +26,7 @@ import org.openpnp.model.Placement;
 import org.openpnp.model.Point;
 import org.openpnp.model.Footprint.Pad;
 import org.openpnp.spi.Camera;
+import org.openpnp.spi.Feeder;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PartAlignment;
@@ -278,6 +279,17 @@ public class VisionUtils {
         finally {
             globals.put("offsets", offsets);
             Configuration.get().getScripting().on("Vision.PartAlignment.After", globals);
+
+            Feeder f = nozzle.getPartsFeeder();
+            if (f != null && offsets != null) {
+                Location realError = offsets.getLocation();
+                if (offsets.getPreRotated()) {
+                    realError = realError.rotateXy(
+                        -Utils2D.calculateBoardPlacementLocation(boardLocation, placement.getLocation()).getRotation()
+                    );
+                }
+                f.bottomVisionResultCallback(realError);
+            }
         }
     }
 

@@ -24,6 +24,7 @@ import org.openpnp.model.Location;
 import org.openpnp.model.Named;
 import org.openpnp.model.Part;
 import org.openpnp.model.Solutions;
+import org.openpnp.spi.PartAlignment.PartAlignmentOffset;
 
 
 
@@ -147,4 +148,7 @@ public interface Feeder extends Identifiable, Named, WizardConfigurable, Propert
     public Priority getPriority();
 
     public void setPriority(Priority priority);
+
+    // bottomVisionResultCallback is called after vision and gives part pick error offset in the main reference frame.
+    public void bottomVisionResultCallback(Location partAlignement);
 }

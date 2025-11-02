@@ -8,9 +8,11 @@ import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Nozzle;
+import org.openpnp.spi.PartAlignment.PartAlignmentOffset;
 import org.simpleframework.xml.Attribute;
 
 public abstract class AbstractFeeder extends AbstractModelObject implements Feeder {
@@ -181,4 +183,5 @@ public abstract class AbstractFeeder extends AbstractModelObject implements Feed
     @Attribute(required=false)
     protected Priority priority = Priority.Normal;
 
+    public void bottomVisionResultCallback(Location partAlignement) {}
 }
