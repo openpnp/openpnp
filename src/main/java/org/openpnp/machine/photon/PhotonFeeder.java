@@ -61,6 +61,7 @@ public class PhotonFeeder extends ReferenceFeeder {
 
     final private double correctionLimit = 5.0; // millimeters
     private Location pickCorrectionOffset = new Location(LengthUnit.Millimeters);
+    private int visionsSinceLastFeed = 0;
 
     private static PhotonBusInterface photonBus;
 
@@ -351,6 +352,8 @@ public class PhotonFeeder extends ReferenceFeeder {
         case Disable:
             return;
         }
+
+        visionsSinceLastFeed = 0;
 
         // To solve long term drift. Nudge the part pitch sent to the feeder if the correction offset is big enough.
         Location nudgeOffset = new Location(LengthUnit.Millimeters);
@@ -665,9 +668,14 @@ public class PhotonFeeder extends ReferenceFeeder {
             Logger.error("{}: Could not get pick location without error for bottom vision callback: {}", getSlotAddress(), e);
             return;
         }
+
         // Add half of the error to the running total to avoid over-correction
         Location before = pickCorrectionOffset;
-        pickCorrectionOffset = pickCorrectionOffset.add(offset.rotateXy(pickLocation.getRotation()).multiply(0.5));
+
+        double factor = 1 / (double)(2 << visionsSinceLastFeed); // Start at 0.5 then have each new vision half.
+        visionsSinceLastFeed++;
+
+        pickCorrectionOffset = pickCorrectionOffset.add(offset.rotateXy(pickLocation.getRotation()).multiply(factor));
         Logger.debug("{}: bottom vision reports pick error of: {}; old pick correction: {} new {}", getSlotAddress(), offset, before, pickCorrectionOffset);
 
         double distance = pickCorrectionOffset.convertToUnits(LengthUnit.Millimeters).getLinearDistanceTo(0, 0);
