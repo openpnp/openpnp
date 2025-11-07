@@ -13,6 +13,7 @@ import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.machine.reference.ReferenceNozzleTip;
 import org.openpnp.machine.reference.ReferenceNozzleTip.VacuumMeasurementMethod;
+import org.openpnp.machine.reference.ReferencePnpJobProcessor;
 import org.openpnp.machine.reference.axis.ReferenceVirtualAxis;
 import org.openpnp.machine.reference.camera.ImageCamera;
 import org.openpnp.machine.reference.camera.SimulatedUpCamera;
@@ -281,6 +282,47 @@ public class ReferenceJobProcessorRetryTests {
         assertEquals("", f3.summariseJobFaults());
         int activePlacements = job.getActivePlacements(job.getRootPanelLocation());
         assertEquals(0, activePlacements); // nothing remains unplaced
+    }
+
+    // This test uses the Defer placement error handling strategy
+    // but configures a feeder to never disable itself.
+    // It has 5 attempts at each placement then stops.
+    @Test
+    public void testPlacementRetryNeverDisablesAnyFeeder() throws Exception {
+        Configuration.initialize();
+        Machine machine = new MachineBuilder()
+                .head("H1")
+                .nozzleTip("NT1")
+                .nozzle("N1", "NT1")
+                .topCamera("TOP")
+                .bottomCamera("BOTTOM")
+                .build();
+        Job job = new JobBuilder()
+                .board("B1", 10, 10, 10, -10)
+                .packag("R0402", "NT1")
+                .part("R0402-1k", "R0402")
+                .feeder("F1", "R0402-1k", 100, 20, -5, 0)
+                .placement("R1", "R0402-1k", 10, 10, 0)
+                .placement("R2", "R0402-1k", 20, 20, 0)
+                .build();
+        job.setErrorHandling(Job.ErrorHandling.Defer);
+
+        TestFeeder f1 = (TestFeeder) machine.getFeederByName("F1");
+        f1.setPartCount(50); // the feeder has lots of parts
+
+        TestNozzle n1 = (TestNozzle) machine.getHeadByName("H1").getNozzleByName("N1");
+        n1.pickSuccessRatio = 0.0; // the feeder never works
+
+        PnpJobProcessor jobProcessor = machine.getPnpJobProcessor();
+        ((ReferencePnpJobProcessor)jobProcessor).setFeederFaultLimit(0); // Setting a fault limit of 0 disables fault checking
+
+        runJob(machine, job);
+
+        assertTrue(f1.isEnabled()); // f1 is still enabled
+        assertEquals("XXXXXX", f1.summariseJobFaults()); // It still tracks the faults, and here reports that 6 out of 6 feeds were bad
+        int activePlacements = job.getActivePlacements(job.getRootPanelLocation());
+        assertEquals(2, activePlacements); // nothing was placed
+        assertEquals(10, f1.feedCount); // each placement is attempted 5 times. There are 2 placements, so 10 feeds total.
     }
 
     static void runJob(Machine machine, Job job) throws Exception {
