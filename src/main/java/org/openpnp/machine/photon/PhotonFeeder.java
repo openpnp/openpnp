@@ -262,18 +262,7 @@ public class PhotonFeeder extends ReferenceFeeder {
         return actuator;
     }
 
-    @Override
-    public void feed(Nozzle nozzle) throws Exception {
-        switch (getFeedOptions()) {
-        case Normal:
-            break;
-        case SkipNext:
-            setFeedOptions(FeedOptions.Normal);
-            return;
-        case Disable:
-            return;
-        }
-
+    private void feed(Nozzle nozzle, int distance_mm) throws Exception {
         for (int i = 0; i <= photonProperties.getFeederCommunicationMaxRetry(); i++) {
             findSlotAddressIfNeeded();
             initializeIfNeeded();
@@ -284,7 +273,7 @@ public class PhotonFeeder extends ReferenceFeeder {
 
             verifyFeederLocationIsFullyConfigured();
 
-            MoveFeedForward moveFeedForward = new MoveFeedForward(slotAddress, partPitch * 10);
+            MoveFeedForward moveFeedForward = new MoveFeedForward(slotAddress, distance_mm * 10);
             MoveFeedForward.Response moveFeedForwardResponse = moveFeedForward.send(photonBus);
 
             if (moveFeedForwardResponse == null) {
@@ -327,6 +316,25 @@ public class PhotonFeeder extends ReferenceFeeder {
         }
 
         throw new FeedFailureException("Failed to feed for an unknown reason. Is the feeder inserted?");
+    }
+
+    @Override
+    public void feed(Nozzle nozzle) throws Exception {
+        switch (getFeedOptions()) {
+        case Normal:
+            break;
+        case SkipNext:
+            setFeedOptions(FeedOptions.Normal);
+            return;
+        case Disable:
+            return;
+        }
+
+        feed(nozzle, partPitch);
+    }
+
+    public void feedOneMm() throws Exception {
+        feed(null, 1);
     }
 
     @Override

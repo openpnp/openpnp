@@ -138,6 +138,9 @@ public class FeederConfigurationWizard extends AbstractConfigurationWizard {
 		
 		JButton feedButton = new JButton(feedAction);
 		partPanel.add(feedButton, "6, 4"); //$NON-NLS-1$
+
+		JButton feedOneMmButton = new JButton(feedOneMmAction);
+		partPanel.add(feedOneMmButton, "8, 4"); //$NON-NLS-1$
 		
 		JLabel feedRetryLabel = new JLabel(Translations.getString("FeederConfigurationWizard.PartPanel.feedRetryLabel.text")); //$NON-NLS-1$
 		partPanel.add(feedRetryLabel, "2, 6, right, default"); //$NON-NLS-1$
@@ -278,6 +281,7 @@ public class FeederConfigurationWizard extends AbstractConfigurationWizard {
 		addWrappedBinding(feeder, "pickRetryCount", pickRetryCountTf, "text", intConverter); //$NON-NLS-1$ //$NON-NLS-2$
 
 		bind(UpdateStrategy.READ, slotProxy, "enabled", feedAction, "enabled"); //$NON-NLS-1$ //$NON-NLS-2$
+		bind(UpdateStrategy.READ, slotProxy, "enabled", feedOneMmAction, "enabled"); //$NON-NLS-1$ //$NON-NLS-2$
 
 		bind(UpdateStrategy.READ, slotProxy, "enabled", xSlotTf, "enabled"); //$NON-NLS-1$ //$NON-NLS-2$
 		bind(UpdateStrategy.READ, slotProxy, "enabled", ySlotTf, "enabled"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -321,6 +325,15 @@ public class FeederConfigurationWizard extends AbstractConfigurationWizard {
 		public void actionPerformed(ActionEvent e) {
 			UiUtils.submitUiMachineTask(() -> {
 				feeder.feed(null); // TODO This probably shouldn't be null
+			});
+		}
+	};
+
+	private final Action feedOneMmAction = new AbstractAction(Translations.getString("FeederConfigurationWizard.FeedOneMmAction.Name")) { //$NON-NLS-1$
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			UiUtils.submitUiMachineTask(() -> {
+				feeder.feedOneMm();
 			});
 		}
 	};
