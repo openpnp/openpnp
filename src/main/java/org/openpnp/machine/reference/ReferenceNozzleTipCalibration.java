@@ -29,6 +29,7 @@ import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Point;
 import org.openpnp.spi.Camera;
+import org.openpnp.spi.CameraBatchOperation;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
@@ -676,6 +677,21 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
         if (nozzle.getPart()!= null) {
             throw new Exception("Cannot calibrate nozzle tip with part on nozzle "+nozzle.getName()+".");
         }
+        CameraBatchOperation cbo = Configuration.get().getMachine().getCameraBatchOperation();
+        if(cbo!=null) {
+            cbo.startBatchOperation("nozzle");
+        }
+        try {
+            calibrateInBatch(nozzle,homing,calibrateCamera);
+        }
+        finally {
+            if(cbo!=null) {
+                cbo.endBatchOperation("nozzle");
+            }
+        }
+    }
+
+    private void calibrateInBatch(ReferenceNozzle nozzle, boolean homing, boolean calibrateCamera) throws Exception {
         // Make sure to set start and end rotation to the limits.
         double [] rotationModeLimits = nozzle.getRotationModeLimits();
         angleStart = rotationModeLimits[0];

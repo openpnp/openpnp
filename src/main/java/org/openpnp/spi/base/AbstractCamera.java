@@ -15,8 +15,10 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.spi.Machine;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
+import org.openpnp.spi.CameraBatchOperation;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.VisionProvider;
@@ -579,6 +581,15 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
     @Override
     public void actuateLightAfterCapture() throws Exception {
         if (isAfterCaptureLightOff()) {
+
+            Machine machine = Configuration.get().getMachine();
+            CameraBatchOperation cbo = machine.getCameraBatchOperation();
+            if (cbo!=null && cbo.registerWithBatchOperation(this)) {
+                // We are in the middle of a batch operation taking many captures.
+                // This method will get called again when the batch is complete.
+                return;
+            }
+
             Actuator lightActuator = getLightActuator();
             if (lightActuator != null) {
                 AbstractActuator.assertOnOffDefined(lightActuator);

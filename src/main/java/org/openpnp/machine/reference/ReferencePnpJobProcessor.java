@@ -50,6 +50,7 @@ import org.openpnp.model.PanelLocation;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
 import org.openpnp.model.PlacementsHolderLocation;
+import org.openpnp.spi.CameraBatchOperation;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.FiducialLocator;
 import org.openpnp.spi.Head;
@@ -169,6 +170,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     protected Location previousPickPlanStartLocation;
     protected Location previousPlacePlanStartLocation;
 
+    private boolean cameraBatchOperationStarted;
+
     long startTime;
     int totalPartsPlaced;
     
@@ -215,6 +218,19 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     }
 
     public synchronized void abort() throws JobProcessorException {
+        try {
+            if(cameraBatchOperationStarted)
+            {
+                cameraBatchOperationStarted = false;
+                machine.getCameraBatchOperation().endBatchOperation("job abort");
+            }
+        }
+        catch (Exception e) {
+            // We swallow the error here because if we can't turn the light off there's not really much
+            // we can do. We have to do the rest of the cleanup and end the job.
+            Logger.error(e);
+        }
+
         try {
             new Cleanup().step();
         }
@@ -1546,9 +1562,30 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         @Override
         public Step stepImpl(PlannedPlacement plannedPlacement) throws JobProcessorException {
             if (plannedPlacement == null) {
+
+                if(cameraBatchOperationStarted)
+                {
+                    cameraBatchOperationStarted = false;
+                    try {
+                        machine.getCameraBatchOperation().endBatchOperation("align step");
+                    }
+                    catch (Exception e) {
+                        throw new JobProcessorException(machine, "Error turning lights off after vision.");
+                    }
+                }
+
                 return new OptimizeNozzlesForPlace(plannedPlacements);
             }
-            
+
+            if(!cameraBatchOperationStarted) {
+                CameraBatchOperation cbo = machine.getCameraBatchOperation();
+                if(cbo!=null)
+                {
+                    cbo.startBatchOperation("align step");
+                    cameraBatchOperationStarted = true;
+                }
+            }
+
             final Nozzle nozzle = plannedPlacement.nozzle;
             final JobPlacement jobPlacement = plannedPlacement.jobPlacement;
             final Placement placement = jobPlacement.getPlacement();
