@@ -287,5 +287,17 @@ public class VisionUtilsTest {
         public Length getRoamingRadius() {
             return new Length(10, LengthUnit.Millimeters);
         }
+
+        private boolean displacementActive = false;
+
+        @Override
+        public void setDisplacementActive(boolean active) {
+            this.displacementActive = active;
+        }
+
+        @Override
+        public boolean isDisplacementActive() {
+            return this.displacementActive;
+        }
     }
 }

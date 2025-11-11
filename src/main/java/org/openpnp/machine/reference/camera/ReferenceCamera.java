@@ -190,11 +190,22 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
 
     private Actuator lightActuator;
 
+    protected boolean displacementActive = false;
+
     public enum FocusSensingMethod {
         None,
         AutoFocus
     }
 
+    @Override
+    public void setDisplacementActive(boolean displacementActive) {
+        this.displacementActive = displacementActive;
+    }
+
+    @Override
+    public boolean isDisplacementActive() {
+        return displacementActive;
+    }
     public ReferenceCamera() {
         super();
         Configuration.get().addListener(new ConfigurationListener.Adapter() {

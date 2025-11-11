@@ -160,6 +160,12 @@ public class ReferenceMachine extends AbstractMachine {
     private boolean autoLoadMostRecentJob = false;
 
     @Element(required = false)
+    private boolean displacementEnabled = false;
+
+    @Element(required = false)
+    private double balanceLevel = 0.0;
+
+    @Element(required = false)
     private Solutions solutions = new Solutions();
 
     @Deprecated // now in the Solutions object.
@@ -355,7 +361,27 @@ public class ReferenceMachine extends AbstractMachine {
     public void setAutoLoadMostRecentJob(boolean autoLoadMostRecentJob) {
         this.autoLoadMostRecentJob = autoLoadMostRecentJob;
     }
-    
+
+    public boolean isDisplacementEnabled() {
+        return displacementEnabled;
+    }
+
+    public void setDisplacementEnabled(boolean displacementEnabled) {
+        this.displacementEnabled = displacementEnabled;
+    }
+
+    /** Sets and gets the balance level for the nozzles.
+     * Balance level is used as a unified target Z for bottom vision focusing and part height probing
+     * when multi bottom vision cameras are used on a head.
+     */
+    public double getBalanceLevel() {
+        return this.balanceLevel;
+    }
+    public void setBalanceLevel(double level) {
+        this.balanceLevel = level;
+    }
+
+
     @Override
     public Wizard getConfigurationWizard() {
         return new ReferenceMachineConfigurationWizard(this);
