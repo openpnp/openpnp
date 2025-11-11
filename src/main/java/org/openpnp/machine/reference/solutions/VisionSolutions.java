@@ -1198,7 +1198,7 @@ public class VisionSolutions implements Solutions.Subject {
 
             // Perform zero knowledge calibration motion pattern.
             double displacementAbsMm = zeroKnowledgeDisplacementMm;
-            Location unitsPerPixel = new Location(null);
+            Location unitsPerPixel = new Location();
             Length featureDiameter = null;
             for (int pass = 0; pass < 3; pass++) {
                 double displacementMm = displacementAbsMm;

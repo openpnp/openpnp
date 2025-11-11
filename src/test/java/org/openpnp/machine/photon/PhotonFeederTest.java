@@ -10,6 +10,7 @@ import org.openpnp.machine.photon.exceptions.UnconfiguredSlotException;
 import org.openpnp.machine.photon.protocol.commands.*;
 import org.openpnp.machine.photon.protocol.helpers.ResponsesHelper;
 import org.openpnp.machine.photon.protocol.helpers.TestBus;
+import org.openpnp.machine.photon.protocol.helpers.TestBus.ContinuedVerification;
 import org.openpnp.machine.photon.sheets.FeederPropertySheet;
 import org.openpnp.machine.photon.sheets.GlobalConfigPropertySheet;
 import org.openpnp.machine.reference.ReferenceActuator;
@@ -594,6 +595,7 @@ public class PhotonFeederTest {
         feeder.setPartPitch(2);
         feeder.setOffset(feederOffset);
         feeder.setSlotAddress(feederAddress);
+        feeder.setMoveWhileFeeding(false);
         setSlotLocation(feederAddress, baseLocation);
 
         bus.when(new InitializeFeeder(feederAddress, hardwareId))
@@ -616,6 +618,7 @@ public class PhotonFeederTest {
         feeder.setPartPitch(2);
         feeder.setOffset(feederOffset);
         feeder.setSlotAddress(feederAddress);
+        feeder.setMoveWhileFeeding(false);
         setSlotLocation(feederAddress, baseLocation);
 
         bus.when(new InitializeFeeder(feederAddress, hardwareId))
@@ -750,6 +753,7 @@ public class PhotonFeederTest {
         feeder.setPartPitch(2);
         feeder.setOffset(feederOffset);
         feeder.setSlotAddress(feederAddress);
+        feeder.setMoveWhileFeeding(false);
         setSlotLocation(feederAddress, baseLocation);
 
         bus.when(new InitializeFeeder(feederAddress, hardwareId))
@@ -782,11 +786,12 @@ public class PhotonFeederTest {
     }
 
     @Test
-    public void feedWillCheckTheStatusUpToThreeTimesBeforeFailing() throws Exception {
+    public void feedWillCheckTheStatusAtLeastThreeTimesBeforeFailing() throws Exception {
         feeder.setHardwareId(hardwareId);
         feeder.setPartPitch(2);
         feeder.setOffset(feederOffset);
         feeder.setSlotAddress(feederAddress);
+        feeder.setMoveWhileFeeding(false);
         setSlotLocation(feederAddress, baseLocation);
 
         InitializeFeeder initializeFeeder = new InitializeFeeder(feederAddress, hardwareId);
@@ -802,12 +807,14 @@ public class PhotonFeederTest {
 
         assertThrows(FeedFailureException.class, () -> feeder.feed(mockedNozzle));
 
-        bus.verify(initializeFeeder)
-                .then(moveFeedForward)
-                .then(moveFeedStatus)
-                .then(moveFeedStatus)
-                .then(moveFeedStatus)
-                .nothingElseSent();
+        ContinuedVerification verif = bus.verify(initializeFeeder).then(moveFeedForward);
+        int count = 0;
+        while (verif.hasMore()) {
+            bus.verify(moveFeedStatus);
+            count++;
+        }
+        assertTrue(count >= 3, "Expected at least 3 calls to MoveFeedStatus, got " + count);
+        verif.nothingElseSent();
     }
 
     @Test
@@ -816,6 +823,7 @@ public class PhotonFeederTest {
         feeder.setPartPitch(2);
         feeder.setOffset(feederOffset);
         feeder.setSlotAddress(feederAddress);
+        feeder.setMoveWhileFeeding(false);
         setSlotLocation(feederAddress, baseLocation);
 
         InitializeFeeder initializeFeeder = new InitializeFeeder(feederAddress, hardwareId);
@@ -842,6 +850,7 @@ public class PhotonFeederTest {
 
         // Feeder A -> Slot 1
         PhotonFeeder feederA = new PhotonFeeder();
+        feederA.setMoveWhileFeeding(false);
         String hardwareIdA = "445566778899AABBCCDDEEFF";
         feederA.setHardwareId(hardwareIdA);
         feederA.setOffset(feederOffset);
@@ -851,6 +860,7 @@ public class PhotonFeederTest {
 
         // Feeder B -> Slot 2
         PhotonFeeder feederB = new PhotonFeeder();
+        feederB.setMoveWhileFeeding(false);
         String hardwareIdB = "FFEEDDCCBBAA998877665544";
         feederB.setHardwareId(hardwareIdB);
         feederB.setOffset(feederOffset);

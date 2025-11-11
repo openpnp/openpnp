@@ -179,11 +179,12 @@ public class FiducialVisionSettingsConfigurationWizard extends AbstractConfigura
             btnGeneralizeSettings.setText(Translations.getString(
                     "FiducialVisionSettingsConfigurationWizard.GeneralPanel.GeneralizeSettingsButton.GeneralizeFor.text" //$NON-NLS-1$
             ) + " " +settingsHolder.getShortName()); //$NON-NLS-1$
-            btnGeneralizeSettings.setToolTipText("<html>Generalize these Fiducial Vision Settings for all the "
-                    + subjects
-                    + " with the "+ settingsHolder.getClass().getSimpleName()+" "+settingsHolder.getShortName()+".<br/>"
-                    + "This will unassign any special Fiducial Vision Settings on "+subjects+" and delete those<br/>"
-                    + "Fiducial Vision Settings that are no longer used elsewhere.</html>");
+            btnGeneralizeSettings.setToolTipText(String.format(
+                    Translations.getString("FiducialVisionSettingsConfigurationWizard.GeneralPanel.GeneralizeSettingsButton.GeneralizeFor.toolTipText"), //$NON-NLS-1$
+                    subjects,
+                    settingsHolder.getClass().getSimpleName(),
+                    settingsHolder.getShortName(),
+                    subjects));
         }
 
         JButton resetButton = new JButton(Translations.getString(
@@ -228,6 +229,9 @@ public class FiducialVisionSettingsConfigurationWizard extends AbstractConfigura
             }
 
             @Override
+            public Camera getCamera() throws Exception { return fiducialLocator.getVisionCamera(); }
+
+            @Override
             public void resetPipeline() throws Exception {
                 int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
                         "This will replace the Pipeline with the default. Are you sure??", null,
@@ -253,7 +257,9 @@ public class FiducialVisionSettingsConfigurationWizard extends AbstractConfigura
 
         JPanel panelAlign = new JPanel();
         contentPanel.add(panelAlign);
-        panelAlign.setBorder(new TitledBorder(new LineBorder(new Color(184, 207, 229)), "Fiducial Locator", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(51, 51, 51)));
+        panelAlign.setBorder(new TitledBorder(new LineBorder(new Color(184, 207, 229)), 
+                Translations.getString("FiducialVisionSettingsConfigurationWizard.FiducialLocatorPanel.Border.title"), //$NON-NLS-1$ 
+                TitledBorder.LEADING, TitledBorder.TOP, null, new Color(51, 51, 51)));
         panelAlign.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("right:max(70dlu;default)"),
@@ -262,7 +268,7 @@ public class FiducialVisionSettingsConfigurationWizard extends AbstractConfigura
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("min(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
-                new ColumnSpec(ColumnSpec.FILL, Sizes.bounded(Sizes.DEFAULT, Sizes.constant("50dlu", true), Sizes.constant("70dlu", true)), 0),
+                new ColumnSpec(ColumnSpec.FILL, Sizes.bounded(Sizes.DEFAULT, Sizes.constant("50dlu", true), Sizes.constant("80dlu", true)), 0),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {

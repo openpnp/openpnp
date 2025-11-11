@@ -63,7 +63,6 @@ import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.gui.support.PartsComboBoxModel;
 import org.openpnp.machine.reference.camera.BufferedImageCamera;
 import org.openpnp.machine.reference.feeder.ReferenceStripFeeder;
-import org.openpnp.machine.reference.feeder.ReferenceStripFeeder.TapeType;
 import org.openpnp.model.Board;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
@@ -120,8 +119,6 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
     private JLabel lblMaxFeedCount;
     private JButton btnMaxFeedCount;
     private JTextField textFieldMaxFeedCount;
-    private JLabel lblTapeType;
-    private JComboBox comboBoxTapeType;
     private JLabel lblRotationInTape;
     private JTextField textFieldLocationRotation;
     private JButton btnAutoSetup;
@@ -136,6 +133,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
     private JTextField parallaxDiameter;
     private JLabel lblParallaxAngle;
     private JTextField parallaxAngle;
+    private JComboBox comboBoxFeedOptions;
 
     private boolean logDebugInfo = false;
     private Location firstPartLocation;
@@ -196,12 +194,13 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         
         lblRotationInTape = new JLabel(Translations.getString(
                 "ReferenceStripFeederConfigurationWizard.RotationInTapeLabel.text")); //$NON-NLS-1$
-        lblRotationInTape.setToolTipText("<html>\n<p>The <strong>Rotation in Tape</strong> setting must be interpreted relative to the tape's orientation, <br/>\nregardless of how the feeder/tape is oriented on the machine. </p>\n<ol>\n<li>\n<p>Look at the <strong>neutral</strong> upright orientation of the part package/footprint <br/>\nas drawn inside your E-CAD <strong>library</strong>.</p>\n</li>\n<li>\n<p>Note how pin 1, polarity, cathode etc. are oriented.  <br/>\nThis is your 0° for the part.</p>\n</li>\n<li>\n<p>Look at the tape so that the sprocket holes are at the top. <br/>\nThis is your 0° tape orientation (per EIA-481 industry standard).</p>\n</li>\n<li>\n<p>Determine how the part is rotated inside the tape pocket, <em>relative</em> from  <br/>\nits upright orientation in (1).  Positive rotation goes counter-clockwise.<br/>\nThis is your <strong>Rotation in Tape</strong>.</p>\n</li>\n</ol>\n</html>");
+        lblRotationInTape.setToolTipText(Translations.getString(
+                "ReferenceStripFeederConfigurationWizard.RotationInTapeLabel.toolTipText")); //$NON-NLS-1$
         panelPart.add(lblRotationInTape, "2, 4, left, default");
 
         textFieldLocationRotation = new JTextField();
         panelPart.add(textFieldLocationRotation, "4, 4, fill, default");
-        textFieldLocationRotation.setColumns(4);
+        textFieldLocationRotation.setColumns(10);
 
         lblRetryCount = new JLabel(Translations.getString(
                 "ReferenceStripFeederConfigurationWizard.FeedRetryCountLabel.text")); //$NON-NLS-1$
@@ -242,13 +241,6 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         btnAutoSetup = new JButton(autoSetup);
         panelTapeSettings.add(btnAutoSetup, "2, 2, 11, 1");
 
-        lblTapeType = new JLabel(Translations.getString(
-                "ReferenceStripFeederConfigurationWizard.TapeTypeLabel.text")); //$NON-NLS-1$
-        panelTapeSettings.add(lblTapeType, "2, 4, right, default");
-
-        comboBoxTapeType = new JComboBox(TapeType.values());
-        panelTapeSettings.add(comboBoxTapeType, "4, 4, fill, default");
-
         JLabel lblTapeWidth = new JLabel(Translations.getString(
                 "ReferenceStripFeederConfigurationWizard.TapeWidthLabel.text")); //$NON-NLS-1$
         panelTapeSettings.add(lblTapeWidth, "8, 4, right, default");
@@ -259,10 +251,10 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
 
         lblPartPitch = new JLabel(Translations.getString(
                 "ReferenceStripFeederConfigurationWizard.PartPitchLabel.text")); //$NON-NLS-1$
-        panelTapeSettings.add(lblPartPitch, "2, 6, right, default");
+        panelTapeSettings.add(lblPartPitch, "2, 4, right, default");
 
         textFieldPartPitch = new JTextField();
-        panelTapeSettings.add(textFieldPartPitch, "4, 6");
+        panelTapeSettings.add(textFieldPartPitch, "4, 4");
         textFieldPartPitch.setColumns(5);
 
         lblFeedCount = new JLabel(Translations.getString(
@@ -362,14 +354,12 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         });
         panelVision.add(btnClearVisionCache, "6, 4");
 
-        lblExtrapolationDistance = new JLabel(Translations.getString(
-                "ReferenceStripFeederConfigurationWizard.PanelVision.ExtrapolationDistanceLabel.text")); //$NON-NLS-1$
+        lblExtrapolationDistance = new JLabel(Translations.getString("ReferenceStripFeederConfigurationWizard.PanelVision.ExtrapolationDistanceLabel.text")); //$NON-NLS-1$
+        lblExtrapolationDistance.setToolTipText(Translations.getString("ReferenceStripFeederConfigurationWizard.PanelVision.ExtrapolationDistanceLabel.toolTipText")); //$NON-NLS-1$        
         panelVision.add(lblExtrapolationDistance, "2, 6, right, default");
 
         textFieldExtrapolationDistance = new JTextField();
-        textFieldExtrapolationDistance.setToolTipText(Translations.getString(
-                "ReferenceStripFeederConfigurationWizard.PanelVision.ExtrapolationDistanceLabel.toolTipText")); //$NON-NLS-1$
-        panelVision.add(textFieldExtrapolationDistance, "4, 6");
+        panelVision.add(textFieldExtrapolationDistance, "4, 6, fill, default");
         textFieldExtrapolationDistance.setColumns(5);
 
         lblParallaxDiameter = new JLabel(Translations.getString("ReferenceStripFeederConfigurationWizard.PanelVision.lblParallaxDiameter.text")); //$NON-NLS-1$
@@ -473,7 +463,6 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         addWrappedBinding(feeder, "part", comboBoxPart, "selectedItem");
         addWrappedBinding(feeder, "feedRetryCount", retryCountTf, "text", intConverter);
         addWrappedBinding(feeder, "pickRetryCount", pickRetryCount, "text", intConverter);
-        addWrappedBinding(feeder, "tapeType", comboBoxTapeType, "selectedItem");
 
         addWrappedBinding(feeder, "tapeWidth", textFieldTapeWidth, "text", lengthConverter);
         addWrappedBinding(feeder, "partPitch", textFieldPartPitch, "text", lengthConverter);
@@ -482,6 +471,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         addWrappedBinding(feeder, "extrapolationDistance", textFieldExtrapolationDistance, "text", lengthConverter);
         addWrappedBinding(feeder, "parallaxDiameter", parallaxDiameter, "text", lengthConverter);
         addWrappedBinding(feeder, "parallaxAngle", parallaxAngle, "text", doubleConverter);
+        addWrappedBinding(feeder, "feedOptions", comboBoxFeedOptions, "selectedItem");
 
         MutableLocationProxy feedStartLocation = new MutableLocationProxy();
         bind(UpdateStrategy.READ_WRITE, feeder, "referenceHoleLocation", feedStartLocation,

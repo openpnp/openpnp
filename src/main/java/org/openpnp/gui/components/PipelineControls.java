@@ -164,6 +164,8 @@ public abstract class PipelineControls extends JPanel {
      */
     public abstract void configurePipeline(CvPipeline pipeline, Map<String, Object> pipelineParameterAssignments, boolean edit) throws Exception;
 
+    public abstract Camera getCamera() throws Exception;
+
     /**
      * Override this method to reset the pipeline to the default.
      * 
@@ -433,8 +435,10 @@ public abstract class PipelineControls extends JPanel {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             try {
+                CvPipeline pipeline = getPipeline();
+                pipeline.setProperty("camera",getCamera());
                 StringSelection stringSelection =
-                        new StringSelection(getPipeline().toXmlString());
+                        new StringSelection(pipeline.toXmlString());
                 Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
                 clipboard.setContents(stringSelection, null);
             }

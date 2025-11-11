@@ -48,12 +48,14 @@ public abstract class AbstractConfigurationWizard extends JPanel implements Wiza
     private JButton btnReset;
     protected JPanel contentPanel;
     private JScrollPane scrollPane;
-
+    private JPanel panelActions;
+    
+    private List<AutoBinding> autoBindings = new ArrayList<>();
     private List<WrappedBinding> wrappedBindings = new ArrayList<>();
     private ApplyResetBindingListener listener;
     
     protected String id;
-    
+    private boolean forceApplyResetButtonsVisible = false;
 
     public AbstractConfigurationWizard() {
         setLayout(new BorderLayout());
@@ -66,7 +68,7 @@ public abstract class AbstractConfigurationWizard extends JPanel implements Wiza
         scrollPane.setBorder(null);
         add(scrollPane, BorderLayout.CENTER);
 
-        JPanel panelActions = new JPanel();
+        panelActions = new JPanel();
         panelActions.setLayout(new FlowLayout(FlowLayout.RIGHT));
         add(panelActions, BorderLayout.SOUTH);
 
@@ -91,6 +93,16 @@ public abstract class AbstractConfigurationWizard extends JPanel implements Wiza
     protected void notifyChange() {
         applyAction.setEnabled(true);
         resetAction.setEnabled(true);
+    }
+    
+    /**
+     * This method is provided for wizards that do not use wrapped bindings but still want to use 
+     * the Apply and Reset buttons to save and/or reset the changes. Normally the buttons are only
+     * displayed by wizards that use wrapped bindings. Calling this method forces the buttons to be
+     * displayed.
+     */
+    protected void forceApplyResetButtonsVisible() {
+        forceApplyResetButtonsVisible = true;
     }
 
     /**
@@ -122,6 +134,20 @@ public abstract class AbstractConfigurationWizard extends JPanel implements Wiza
         applyAction.setEnabled(false);
         resetAction.setEnabled(false);
     }
+    
+    /**
+     * Override this method if the wizard needs to do any additional cleanup like removing property
+     * change listeners that may have been added during the wizard's construction. Be sure to also
+     * call super.dispose() if this method is overridden.
+     */
+    public void dispose() {
+        for (WrappedBinding wb : wrappedBindings) {
+            wb.dispose();
+        }
+        for (AutoBinding ab : autoBindings) {
+            ab.unbind();
+        }
+    }
 
     public WrappedBinding addWrappedBinding(Object source, String sourceProperty,
             Object target, String targetProperty, Converter converter) {
@@ -137,12 +163,16 @@ public abstract class AbstractConfigurationWizard extends JPanel implements Wiza
 
     public AutoBinding bind(UpdateStrategy updateStrategy, Object source, String sourceProperty,
             Object target, String targetProperty) {
-        return BeanUtils.bind(updateStrategy, source, sourceProperty, target, targetProperty);
+        AutoBinding autoBinding = BeanUtils.bind(updateStrategy, source, sourceProperty, target, targetProperty);
+        autoBindings.add(autoBinding);
+        return autoBinding;
     }
 
     public AutoBinding bind(UpdateStrategy updateStrategy, Object source, String sourceProperty,
             Object target, String targetProperty, Converter converter) {
-        return BeanUtils.bind(updateStrategy, source, sourceProperty, target, targetProperty, converter);
+        AutoBinding autoBinding = BeanUtils.bind(updateStrategy, source, sourceProperty, target, targetProperty, converter);
+        autoBindings.add(autoBinding);
+        return autoBinding;
     }
 
     public WrappedBinding addWrappedBinding(WrappedBinding binding) {
@@ -159,6 +189,11 @@ public abstract class AbstractConfigurationWizard extends JPanel implements Wiza
                     .setUnitIncrement(Configuration.get().getVerticalScrollUnitIncrement());
             listener = new ApplyResetBindingListener(applyAction, resetAction);
             createBindings();
+            if (wrappedBindings.isEmpty() && !forceApplyResetButtonsVisible) {
+                //Since we don't have any wrapped bindings, there is no need to show the panel with
+                //the reset and apply buttons unless the forceApplyResetButtonsVisible flag is set
+                panelActions.setVisible(false);
+            }
             loadFromModel();
         }
     }

@@ -20,6 +20,7 @@
 package org.openpnp.gui;
 
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.Frame;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
@@ -28,6 +29,7 @@ import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.StringReader;
@@ -62,15 +64,22 @@ import javax.swing.table.TableRowSorter;
 import org.openpnp.Translations;
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.components.CameraView;
+import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.ActionGroup;
 import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.MessageBoxes;
+import org.openpnp.gui.support.MultisortTableHeaderCellRenderer;
 import org.openpnp.gui.support.NamedListCellRenderer;
 import org.openpnp.gui.support.NamedTableCellRenderer;
+import org.openpnp.gui.support.VisionSettingsComboBoxModel;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.gui.tablemodel.PackagesTableModel;
+import org.openpnp.gui.wizards.PackageCompositingWizard;
+import org.openpnp.gui.wizards.PackageNozzleTipsWizard;
+import org.openpnp.gui.wizards.PackageSettingsWizard;
+import org.openpnp.gui.wizards.PackageVisionWizard;
 import org.openpnp.model.AbstractVisionSettings;
 import org.openpnp.model.BottomVisionSettings;
 import org.openpnp.model.Configuration;
@@ -167,7 +176,14 @@ public class PackagesPanel extends JPanel implements WizardContainer {
 
         tabbedPane = new JTabbedPane(JTabbedPane.TOP);
 
-        table = new AutoSelectTextTable(tableModel);
+        table = new AutoSelectTextTable(tableModel) {
+            @Override
+            public String getToolTipText(MouseEvent evt) {
+                int column = convertColumnIndexToModel(columnAtPoint(evt.getPoint()));
+                if(column==2) { return Translations.getString("PackagesTableModel.Column.TapeSpecification.toolTip"); } //$NON-NLS-1$
+                return null;
+            }
+        };
         table.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 
         JComboBox<BottomVisionSettings> bottomVisionCombo = new JComboBox<>(
@@ -235,7 +251,7 @@ public class PackagesPanel extends JPanel implements WizardContainer {
                     if (cameraView == null) {
                         return;
                     }
-                    cameraView.removeReticle(PackageVisionPanel.class.getName());
+                    cameraView.removeReticle(PackageVisionWizard.class.getName());
                 }
                 catch (Exception e1) {
                 }
@@ -255,7 +271,14 @@ public class PackagesPanel extends JPanel implements WizardContainer {
         List<Package> selections = new ArrayList<>();
         for (int selectedRow : table.getSelectedRows()) {
             selectedRow = table.convertRowIndexToModel(selectedRow);
-            selections.add(tableModel.getRowObjectAt(selectedRow));
+            try {
+                selections.add(tableModel.getRowObjectAt(selectedRow));
+            }
+            catch (IndexOutOfBoundsException e) {
+                // sometimes this happens when deleting a row, if the gui state
+                // updates after the model state
+                Logger.warn("package selection index {} out of bounds", selectedRow);
+            }
         }
         return selections;
     }
@@ -401,15 +424,20 @@ public class PackagesPanel extends JPanel implements WizardContainer {
                 return;
             }
             try {
-                Serializer ser = Configuration.createSerializer();
-                Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-                String s = (String) clipboard.getData(DataFlavor.stringFlavor);
-                StringReader r = new StringReader(s);
-                Package pkg = ser.read(Package.class, s);
-                pkg.setId(id);
-                Configuration.get().addPackage(pkg);
-                tableModel.fireTableDataChanged();
-                Helpers.selectObjectTableRow(table, pkg);
+                try {
+                    Configuration.get().lockListeners();
+                    Serializer ser = Configuration.createSerializer();
+                    Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+                    String s = (String) clipboard.getData(DataFlavor.stringFlavor);
+                    StringReader r = new StringReader(s);
+                    Package pkg = ser.read(Package.class, s);
+                    pkg.setId(id);
+                    Configuration.get().addPackage(pkg);
+                    tableModel.fireTableDataChanged();
+                    Helpers.selectObjectTableRow(table, pkg);
+                } finally {
+                    Configuration.get().unlockListeners();
+                }
             }
             catch (Exception e) {
                 MessageBoxes.errorBox(getTopLevelAncestor(), "Paste Failed", e);
@@ -444,36 +472,51 @@ public class PackagesPanel extends JPanel implements WizardContainer {
         if (tabbedPane.getTabCount() > 0) {
             selectedTab = tabbedPane.getSelectedIndex();
         }
+        
+        for (Component comp : tabbedPane.getComponents()) {
+            if (comp instanceof AbstractConfigurationWizard) {
+                ((AbstractConfigurationWizard) comp).dispose();
+            }
+        }
         tabbedPane.removeAll();
+        
         if (selectedPackage != null) {
+            PackageNozzleTipsWizard packageNozzleTipsWizard = new PackageNozzleTipsWizard(selectedPackage);
+            packageNozzleTipsWizard.setWizardContainer(PackagesPanel.this);
             tabbedPane.add(Translations.getString("PackagesPanel.NozzleTipsTab.title"), //$NON-NLS-1$
-                    new PackageNozzleTipsPanel(selectedPackage));
+                    packageNozzleTipsWizard);
+            
+            PackageSettingsWizard packageSettingsPanel = new PackageSettingsWizard(selectedPackage);
+            packageSettingsPanel.setWizardContainer(PackagesPanel.this);
             tabbedPane.add(Translations.getString("PackagesPanel.SettingsTab.title"), //$NON-NLS-1$
-                    new JScrollPane(new PackageSettingsPanel(selectedPackage)));
+                    packageSettingsPanel);
+            
+            PackageVisionWizard packageVisionPanel = new PackageVisionWizard(selectedPackage);
+            packageVisionPanel.setWizardContainer(PackagesPanel.this);
             tabbedPane.add(Translations.getString("PackagesPanel.VisionTab.title"), //$NON-NLS-1$
-                    new JScrollPane(new PackageVisionPanel(selectedPackage)));
+                    packageVisionPanel);
+            
+            PackageCompositingWizard packageCompositingPanel = new PackageCompositingWizard(selectedPackage);
+            packageCompositingPanel.setWizardContainer(PackagesPanel.this);
             tabbedPane.add(Translations.getString("PackagesPanel.VisionCompositingTab.title"), //$NON-NLS-1$
-                    new JScrollPane(new PackageCompositingPanel(selectedPackage)));
+                    packageCompositingPanel);
+            
             Machine machine = Configuration.get().getMachine();
             for (PartAlignment partAlignment : machine.getPartAlignments()) {
                 Wizard wizard = partAlignment.getPartConfigurationWizard(selectedPackage);
                 if (wizard != null) {
-                    JPanel panel = new JPanel();
-                    panel.setLayout(new BorderLayout());
-                    panel.add(wizard.getWizardPanel());
-                    tabbedPane.add(wizard.getWizardName(), new JScrollPane(panel));
+                    tabbedPane.add(wizard.getWizardName(), (JPanel) wizard);
                     wizard.setWizardContainer(PackagesPanel.this);
                 }
             }
+            
             FiducialLocator fiducialLocator = machine.getFiducialLocator();
             Wizard wizard = fiducialLocator.getPartConfigurationWizard(selectedPackage);
             if (wizard != null) {
-                JPanel panel = new JPanel();
-                panel.setLayout(new BorderLayout());
-                panel.add(wizard.getWizardPanel());
-                tabbedPane.add(wizard.getWizardName(), new JScrollPane(panel));
+                tabbedPane.add(wizard.getWizardName(), (JPanel) wizard);
                 wizard.setWizardContainer(PackagesPanel.this);
             }
+            
             if (selectedTab != -1 
                     && tabbedPane.getTabCount() > selectedTab) {
                 tabbedPane.setSelectedIndex(selectedTab);

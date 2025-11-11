@@ -3,6 +3,8 @@ package org.openpnp.util;
 import java.awt.Component;
 import java.awt.Desktop;
 import java.awt.Toolkit;
+import java.awt.Dialog;
+import java.awt.Window;
 import java.awt.datatransfer.StringSelection;
 import java.net.URI;
 import java.util.concurrent.Callable;
@@ -366,5 +368,14 @@ public class UiUtils {
                 }
             }
         });
+    }
+
+    public static boolean isModalDialogBoxOpen() {
+        for( Window w : Window.getWindows() ) {
+            if( w.isShowing() && w instanceof Dialog && ((Dialog)w).isModal() ) {
+                return true;
+            }
+        }
+        return false;
     }
 }

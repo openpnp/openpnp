@@ -70,6 +70,7 @@ public abstract class AbstractReferenceFeederConfigurationWizard
     private JTextField feedRetryCount;
     private JLabel lblPickRetryCount;
     private JTextField pickRetryCount;
+    private PartsComboBoxModel partsComboBoxModel;
 
     /**
      * @wbp.parser.constructor
@@ -105,7 +106,8 @@ public abstract class AbstractReferenceFeederConfigurationWizard
         comboBoxPart = new JComboBox();
         comboBoxPart.setMaximumRowCount(20);
         try {
-            comboBoxPart.setModel(new PartsComboBoxModel());
+            partsComboBoxModel = new PartsComboBoxModel();
+            comboBoxPart.setModel(partsComboBoxModel);
         }
         catch (Throwable t) {
             // Swallow this error. This happens during parsing in
@@ -214,5 +216,13 @@ public abstract class AbstractReferenceFeederConfigurationWizard
 
         ComponentDecorators.decorateWithAutoSelect(feedRetryCount);
         ComponentDecorators.decorateWithAutoSelect(pickRetryCount);
+    }
+    
+    @Override
+    public void dispose() {
+        super.dispose();
+        if (partsComboBoxModel != null) {
+            partsComboBoxModel.dispose();
+        }
     }
 }

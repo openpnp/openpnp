@@ -54,12 +54,12 @@ import javax.swing.table.TableColumnModel;
 
 import org.openpnp.Translations;
 import org.openpnp.gui.MainFrame;
-import org.openpnp.gui.MultisortTableHeaderCellRenderer;
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.IdentifiableTableCellRenderer;
 import org.openpnp.gui.support.LengthCellValue;
 import org.openpnp.gui.support.MonospacedFontTableCellRenderer;
+import org.openpnp.gui.support.MultisortTableHeaderCellRenderer;
 import org.openpnp.gui.support.RotationCellValue;
 import org.openpnp.gui.support.TableUtils;
 import org.openpnp.gui.tablemodel.PlacementsHolderPlacementsTableModel;

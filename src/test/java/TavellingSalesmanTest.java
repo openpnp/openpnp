@@ -23,10 +23,21 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.Test;
+import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.model.Length;
 import org.openpnp.util.TravellingSalesman;
+import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
+import org.openpnp.machine.reference.solutions.HeadSolutions;
+import org.openpnp.spi.HeadMountable;
+import org.openpnp.spi.Machine;
+import org.openpnp.spi.CoordinateAxis;
+import org.pmw.tinylog.Logger;
+
+import com.google.common.io.Files;
 
 public class TavellingSalesmanTest {
     /**
@@ -41,8 +52,49 @@ public class TavellingSalesmanTest {
      * 
      * @throws Exception
      */
+    // Slow acceleration
     @Test
-    public void testTravellingSalesman() throws Exception {
+    public void testTravellingSalesmanA() throws Exception {
+        test("A",new Length(500, LengthUnit.Millimeters), new Length(500, LengthUnit.Millimeters), new double [] { 2870, 5230, 11360 });
+    }
+    // Fast acceleration on X
+    @Test
+    public void testTravellingSalesmanB() throws Exception {
+        test("B",new Length(3000, LengthUnit.Millimeters), new Length(500, LengthUnit.Millimeters), new double [] { 2940, 5550, 15300 });
+    }
+    // Fast acceleration on X and Y
+    @Test
+    public void testTravellingSalesmanC() throws Exception {
+        test("C",new Length(3000, LengthUnit.Millimeters), new Length(3000, LengthUnit.Millimeters), new double [] { 2870, 5000, 11500 });
+    }
+
+    public void test(String name,Length xacceleration, Length yacceleration, double targets[]) throws Exception {
+        File workingDirectory = Files.createTempDir();
+        workingDirectory = new File(workingDirectory, ".openpnp");
+        System.out.println("Configuration directory: " + workingDirectory);
+
+        // Copy the required configuration files over to the new configuration
+        // directory.
+        FileUtils.copyURLToFile(ClassLoader.getSystemResource("config/BasicJobTest/machine.xml"),
+                new File(workingDirectory, "machine.xml"));
+        FileUtils.copyURLToFile(ClassLoader.getSystemResource("config/BasicJobTest/packages.xml"),
+                new File(workingDirectory, "packages.xml"));
+        FileUtils.copyURLToFile(ClassLoader.getSystemResource("config/BasicJobTest/parts.xml"),
+                new File(workingDirectory, "parts.xml"));
+
+        Configuration.initialize(workingDirectory);
+        Configuration.get().load();
+
+        // configure the machine with the right acceleration for this test
+        Machine machine = Configuration.get().getMachine();
+        HeadMountable hm = machine.getDefaultHead().getDefaultCamera();
+        CoordinateAxis rawAxisX = HeadSolutions.getRawAxis(machine, hm.getAxisX());
+        CoordinateAxis rawAxisY = HeadSolutions.getRawAxis(machine, hm.getAxisY());
+        ReferenceControllerAxis referenceControllerAxisX = (ReferenceControllerAxis)rawAxisX;
+        ReferenceControllerAxis referenceControllerAxisY = (ReferenceControllerAxis)rawAxisY;
+        referenceControllerAxisX.setAccelerationPerSecond2(xacceleration);
+        referenceControllerAxisY.setAccelerationPerSecond2(yacceleration);
+
         for (int t = 2, scale = 100; scale > 0; t--, scale /= 10) {
             // make this test repeatable, by seeding the random generator.
             Random rnd = new java.util.Random(42);
@@ -59,6 +111,7 @@ public class TavellingSalesmanTest {
             for (int i = 0; i < 2*scale; i++) {
                 list.add(new Location(LengthUnit.Millimeters, rnd.nextDouble()*1000.0, Math.floor(rnd.nextDouble()*2.0)*500.0+rnd.nextDouble()*20.0, rnd.nextDouble()*10.0, 0.0));
             }
+
             // create the solver
             TravellingSalesman<Location> tsm = new TravellingSalesman<>(
                     list, 
@@ -75,10 +128,18 @@ public class TavellingSalesmanTest {
                         (t == 0 ? new Location(LengthUnit.Millimeters, 1000.0, 500.0, 0.0, 0.0) : 
                             null)));
             // now solve the bugger
-            double bestDistance = tsm.solve();
+            double leastCost = tsm.solve();
+            //
+            // The TSM has been working with the default TravelCost, which models acceleration etc,
+            // and bestDistance is actually best **time**. But now to verify that route we remove
+            // the TravelCost object, and calculate the actual linear **distance** covered by the
+            // selected route.
+            tsm.setTravelCost(null);
+            double linearDistance = tsm.getTravellingDistance();
+            //
             // for the unit test, roughly check expected solution distance   
-            double target = new double [] { 3000.0, 5100.0, 12000.0 } [t];
-            System.out.println("TavellingSalesmanTest.testTravellingSalesman() solved "+list.size()+" locations, distance: "+Math.round(bestDistance)+"mm, target: "+target+"mm, time: "+tsm.getSolverDuration()+"ms");
+            double target = targets[t];
+            System.out.println("TavellingSalesmanTest.testTravellingSalesman() test "+name+t+" solved "+list.size()+" locations, cost: "+leastCost+"sec, distance: "+linearDistance+" mm, target: "+target+"mm, time: "+tsm.getSolverDuration()+"ms");
             // save the solution, so we can have a look
             File file = File.createTempFile("travelling-salesman", ".svg");
             try (PrintWriter out = new PrintWriter(file.getAbsolutePath())) {
@@ -86,8 +147,12 @@ public class TavellingSalesmanTest {
                 System.out.println(file.toURI());
             } 
             // unit test target
-            if (bestDistance > target) {
-                throw new Exception("org.openpnp.util.TravellingSalesman.solve("+list.size()+") bestDistance "+bestDistance+" is greater than " + target);
+            // The solver was driven by total cost, which only has little relation to linear distance.
+            // Therefore a tight limit to upper and lower bound is needed to detect any deviations.
+            // This especially triggers if the eg. the seeding of the simulatedAnealing processes is
+            // changed.
+            if (linearDistance > target*1.01 || linearDistance < target*0.99) {
+                throw new Exception("org.openpnp.util.TravellingSalesman.solve("+list.size()+") bestDistance "+linearDistance+" is quite different to " + target);
             }
         }
     }

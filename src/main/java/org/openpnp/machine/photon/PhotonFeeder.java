@@ -19,11 +19,14 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 import org.openpnp.model.Solutions;
 import org.openpnp.spi.*;
+import org.openpnp.util.MovableUtils;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 
 import javax.swing.*;
+
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -47,6 +50,9 @@ public class PhotonFeeder extends ReferenceFeeder {
     private Location offset;
 
     private static PhotonBusInterface photonBus;
+
+    @Attribute(required = false)
+    protected boolean moveWhileFeeding = true;
 
     public PhotonFeeder() {
         Configuration.get().addListener(new ConfigurationListener.Adapter() {
@@ -114,6 +120,14 @@ public class PhotonFeeder extends ReferenceFeeder {
 
     public Location getOffset() {
         return offset;
+    }
+
+    public boolean getMoveWhileFeeding() {
+        return moveWhileFeeding;
+    }
+
+    public void setMoveWhileFeeding(boolean moveWhileFeeding) {
+        this.moveWhileFeeding = moveWhileFeeding;
     }
 
     @Override
@@ -248,8 +262,7 @@ public class PhotonFeeder extends ReferenceFeeder {
         return actuator;
     }
 
-    @Override
-    public void feed(Nozzle nozzle) throws Exception {
+    private void feed(Nozzle nozzle, int distance_mm) throws Exception {
         for (int i = 0; i <= photonProperties.getFeederCommunicationMaxRetry(); i++) {
             findSlotAddressIfNeeded();
             initializeIfNeeded();
@@ -260,7 +273,7 @@ public class PhotonFeeder extends ReferenceFeeder {
 
             verifyFeederLocationIsFullyConfigured();
 
-            MoveFeedForward moveFeedForward = new MoveFeedForward(slotAddress, partPitch * 10);
+            MoveFeedForward moveFeedForward = new MoveFeedForward(slotAddress, distance_mm * 10);
             MoveFeedForward.Response moveFeedForwardResponse = moveFeedForward.send(photonBus);
 
             if (moveFeedForwardResponse == null) {
@@ -273,11 +286,17 @@ public class PhotonFeeder extends ReferenceFeeder {
                 continue;  // We'll initialize it on a retry
             }
 
-            int timeToWaitMillis = moveFeedForwardResponse.expectedTimeToFeed;
+            // The feeder gives us expectedTimeToFeed, but it is way too conservative.
+            // Use expectedTimeToFeed to bound how long we will wait,
+            // but use polling to check the status of the feed.
+            Duration expectedFeedDuration = Duration.ofMillis(moveFeedForwardResponse.expectedTimeToFeed);
+            long endTimeNanos = System.nanoTime() + expectedFeedDuration.toNanos() * 3;
+            for (int j = 0; j <= photonProperties.getFeederCommunicationMaxRetry() || System.nanoTime() <= endTimeNanos; j++) {
+                Thread.sleep(50); // MAGIC: this feels like a good number, there is no particular reason it is this way.
 
-            for (int j = 0; j < 3; j++) {
-                //noinspection BusyWait
-                Thread.sleep(timeToWaitMillis);
+                if (j == 0 && nozzle != null && Configuration.get().getMachine().isHomed() && getMoveWhileFeeding()) {
+                    MovableUtils.moveToLocationAtSafeZ(nozzle, getPickLocation().derive(null, null, Double.NaN, null));
+                }
 
                 MoveFeedStatus moveFeedStatus = new MoveFeedStatus(slotAddress);
                 MoveFeedStatus.Response moveFeedStatusResponse = moveFeedStatus.send(photonBus);
@@ -297,6 +316,25 @@ public class PhotonFeeder extends ReferenceFeeder {
         }
 
         throw new FeedFailureException("Failed to feed for an unknown reason. Is the feeder inserted?");
+    }
+
+    @Override
+    public void feed(Nozzle nozzle) throws Exception {
+        switch (getFeedOptions()) {
+        case Normal:
+            break;
+        case SkipNext:
+            setFeedOptions(FeedOptions.Normal);
+            return;
+        case Disable:
+            return;
+        }
+
+        feed(nozzle, partPitch);
+    }
+
+    public void feedOneMm() throws Exception {
+        feed(null, 1);
     }
 
     @Override
@@ -545,5 +583,22 @@ public class PhotonFeeder extends ReferenceFeeder {
         for (PhotonFeeder feeder : feedersToAdd) {
             Configuration.get().getMachine().addFeeder(feeder);
         }
+    }
+
+    @Override
+    public boolean canTakeBackPart() {
+        return getFeedOptions() == FeedOptions.Normal;
+    }
+
+    @Override
+    public void takeBackPart(Nozzle nozzle) throws Exception {
+        super.takeBackPart(nozzle);
+        putPartBack(nozzle);
+        setFeedOptions(FeedOptions.SkipNext);
+    }
+
+    @Override
+    public boolean supportsFeedOptions() {
+        return true;
     }
 }

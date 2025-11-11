@@ -20,6 +20,7 @@
 package org.openpnp.gui;
 
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.Frame;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
@@ -32,6 +33,7 @@ import java.beans.PropertyChangeListener;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.prefs.Preferences;
 import java.util.regex.PatternSyntaxException;
@@ -61,18 +63,22 @@ import javax.swing.table.TableRowSorter;
 
 import org.openpnp.Translations;
 import org.openpnp.gui.components.AutoSelectTextTable;
+import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.ActionGroup;
 import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.IdentifiableListCellRenderer;
 import org.openpnp.gui.support.IdentifiableTableCellRenderer;
 import org.openpnp.gui.support.MessageBoxes;
+import org.openpnp.gui.support.MultisortTableHeaderCellRenderer;
 import org.openpnp.gui.support.NamedListCellRenderer;
 import org.openpnp.gui.support.NamedTableCellRenderer;
 import org.openpnp.gui.support.PackagesComboBoxModel;
+import org.openpnp.gui.support.VisionSettingsComboBoxModel;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.gui.tablemodel.PartsTableModel;
+import org.openpnp.gui.wizards.PartSettingsWizard;
 import org.openpnp.model.AbstractVisionSettings;
 import org.openpnp.model.BottomVisionSettings;
 import org.openpnp.model.Configuration;
@@ -83,6 +89,7 @@ import org.openpnp.spi.Feeder;
 import org.openpnp.spi.FiducialLocator;
 import org.openpnp.spi.PartAlignment;
 import org.openpnp.util.UiUtils;
+import org.openpnp.util.FeederUtils;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Serializer;
 
@@ -105,6 +112,8 @@ public class PartsPanel extends JPanel implements WizardContainer {
     private ActionGroup multiSelectionActionGroup;
     private JTabbedPane tabbedPane;
     private Part selectedPart;
+    private int priorRowIndex = -1;
+    private HashMap<Class, Integer> lastSelectedTabIndex = new HashMap<>();
 
     public PartsPanel(Configuration configuration, Frame frame) {
         this.configuration = configuration;
@@ -175,7 +184,7 @@ public class PartsPanel extends JPanel implements WizardContainer {
         table = new AutoSelectTextTable(tableModel) {
             @Override
             public String getToolTipText(MouseEvent evt) {
-                int column = columnAtPoint(evt.getPoint());
+                int column = convertColumnIndexToModel(columnAtPoint(evt.getPoint()));
                 if(column==2) { return Translations.getString("PartsTableModel.Column.Height.toolTip"); } //$NON-NLS-1$
                 if(column==3) { return Translations.getString("PartsTableModel.Column.ThroughBoardDepth.toolTip"); } //$NON-NLS-1$
                 return null;
@@ -229,21 +238,24 @@ public class PartsPanel extends JPanel implements WizardContainer {
                 if (e.getValueIsAdjusting()) {
                     return;
                 }
+                if (table.getSelectedRow() != priorRowIndex) {
+                    priorRowIndex = table.getSelectedRow();
 
-                firePartSelectionChanged();
+                    updateWizards();
+                }
             }
         });
-
+        
         Configuration.get().addPropertyChangeListener("visionSettings", new PropertyChangeListener() {
             @Override
             public void propertyChange(PropertyChangeEvent evt) {
                 // Handle vision settings changes like selection changes, as the inherited settings might change. 
-                firePartSelectionChanged();
+                updateWizards();
             }
         });
 
         tableModel.addTableModelListener(e -> {
-            if (selectedPart != null) { 
+            if (selectedPart != null && getSelectedPart() != selectedPart) { 
                 // Reselect previously selected settings.
                 Helpers.selectObjectTableRow(table, selectedPart);
             }
@@ -262,7 +274,14 @@ public class PartsPanel extends JPanel implements WizardContainer {
         List<Part> selections = new ArrayList<>();
         for (int selectedRow : table.getSelectedRows()) {
             selectedRow = table.convertRowIndexToModel(selectedRow);
-            selections.add(tableModel.getRowObjectAt(selectedRow));
+            try {
+                selections.add(tableModel.getRowObjectAt(selectedRow));
+            }
+            catch (IndexOutOfBoundsException e) {
+                // sometimes this happens when deleting a row, if the gui state
+                // updates after the model state
+                Logger.warn("part selection index {} out of bounds", selectedRow);
+            }
         }
         return selections;
     }
@@ -360,13 +379,7 @@ public class PartsPanel extends JPanel implements WizardContainer {
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
                 Part part = getSelectedPart();
-                Feeder feeder = null;
-                // find a feeder to feed
-                for (Feeder f : Configuration.get().getMachine().getFeeders()) {
-                    if (f.getPart() == part && f.isEnabled()) {
-                        feeder = f;
-                    }
-                }
+                Feeder feeder = FeederUtils.findFeeder(Configuration.get().getMachine(),part,null,null);
                 if (feeder == null) {
                     throw new Exception("No valid feeder found for " + part.getId());
                 }
@@ -428,15 +441,20 @@ public class PartsPanel extends JPanel implements WizardContainer {
                 return;
             }
             try {
-                Serializer ser = Configuration.createSerializer();
-                Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-                String s = (String) clipboard.getData(DataFlavor.stringFlavor);
-                StringReader r = new StringReader(s);
-                Part part = ser.read(Part.class, s);
-                part.setId(id);
-                Configuration.get().addPart(part);
-                tableModel.fireTableDataChanged();
-                Helpers.selectLastTableRow(table);
+                try {
+                    Configuration.get().lockListeners();
+                    Serializer ser = Configuration.createSerializer();
+                    Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+                    String s = (String) clipboard.getData(DataFlavor.stringFlavor);
+                    StringReader r = new StringReader(s);
+                    Part part = ser.read(Part.class, s);
+                    part.setId(id);
+                    Configuration.get().addPart(part);
+                    tableModel.fireTableDataChanged();
+                    Helpers.selectLastTableRow(table);
+                } finally {
+                    Configuration.get().unlockListeners();
+                }
             }
             catch (Exception e) {
                 MessageBoxes.errorBox(getTopLevelAncestor(), "Paste Failed", e);
@@ -444,8 +462,9 @@ public class PartsPanel extends JPanel implements WizardContainer {
         }
     };
     private int selectedTab;
+    private String priorPartId;
 
-    public void firePartSelectionChanged() {
+    public void updateWizards() {
         List<Part> selections = getSelections();
 
         if (selections.size() > 1) {
@@ -458,39 +477,40 @@ public class PartsPanel extends JPanel implements WizardContainer {
         }
 
         Part selectedPart = getSelectedPart();
-        if (selectedPart != null) {
-            this.selectedPart = selectedPart;
-        }
-
+        
         if (tabbedPane.getTabCount() > 0) {
             selectedTab = tabbedPane.getSelectedIndex();
+        }
+        
+        for (Component comp : tabbedPane.getComponents()) {
+            if (comp instanceof AbstractConfigurationWizard) {
+                ((AbstractConfigurationWizard) comp).dispose();
+            }
         }
         tabbedPane.removeAll();
 
         if (selectedPart != null) {
+            priorPartId = selectedPart.getId();
+            this.selectedPart = selectedPart;
+            Wizard wizard = new PartSettingsWizard(selectedPart);
+            wizard.setWizardContainer(PartsPanel.this);
             tabbedPane.add(Translations.getString("PartsPanel.SettingsTab.title"), //$NON-NLS-1$
-                    new JScrollPane(new PartSettingsPanel(selectedPart)));
+                    (JPanel) wizard);
 
             for (PartAlignment partAlignment : Configuration.get().getMachine().getPartAlignments()) {
-                Wizard wizard = partAlignment.getPartConfigurationWizard(selectedPart);
+                wizard = partAlignment.getPartConfigurationWizard(selectedPart);
                 if (wizard != null) {
-                    JPanel panel = new JPanel();
-                    panel.setLayout(new BorderLayout());
-                    panel.add(wizard.getWizardPanel());
-                    tabbedPane.add(wizard.getWizardName(), new JScrollPane(panel));
                     wizard.setWizardContainer(PartsPanel.this);
+                    tabbedPane.addTab(wizard.getWizardName(), (JPanel) wizard);
                 }
             }
             
             FiducialLocator fiducialLocator =
                     Configuration.get().getMachine().getFiducialLocator();
-            Wizard wizard = fiducialLocator.getPartConfigurationWizard(selectedPart);
+            wizard = fiducialLocator.getPartConfigurationWizard(selectedPart);
             if (wizard != null) {
-                JPanel panel = new JPanel();
-                panel.setLayout(new BorderLayout());
-                panel.add(wizard.getWizardPanel());
-                tabbedPane.add(wizard.getWizardName(), new JScrollPane(panel));
                 wizard.setWizardContainer(PartsPanel.this);
+                tabbedPane.add(wizard.getWizardName(), (JPanel) wizard);
             }
             MainFrame mainFrame = MainFrame.get();
             if (mainFrame.getTabs().getSelectedComponent() == mainFrame.getPartsTab() 
@@ -499,15 +519,13 @@ public class PartsPanel extends JPanel implements WizardContainer {
                 mainFrame.getFeedersTab().selectFeederForPart(selectedPart);
                 mainFrame.getVisionSettingsTab().selectVisionSettingsInTable(selectedPart);
             }
+            
+            if (selectedTab >= 0 && selectedTab < tabbedPane.getTabCount()) {
+                tabbedPane.setSelectedIndex(selectedTab);
+            }
         }
-
-        if (selectedTab >= 0 && selectedTab < tabbedPane.getTabCount()) {
-            tabbedPane.setSelectedIndex(selectedTab);
-        }
-
         revalidate();
         repaint();
-
     }
 
     public void selectPartInTableAndUpdateLinks(Part part) {

@@ -43,6 +43,9 @@ public class Icons {
     public static Icon step = getIcon("/icons/control-next.svg");
     public static Icon stop = getIcon("/icons/control-stop.svg");
 
+    public static Icon errorDefer = getIcon("/icons/error-defer.svg");
+    public static Icon errorAlert = getIcon("/icons/error-alert.svg");
+
     public static Icon twoPointLocate = getIcon("/icons/board-two-placement-locate.svg");
     public static Icon fiducialCheck = getIcon("/icons/board-fiducial-locate.svg");
     public static Icon autoPanelize = getIcon("/icons/panelize.svg");

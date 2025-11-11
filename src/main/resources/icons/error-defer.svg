@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="24px"
+   height="24px"
+   viewBox="0 0 24 24"
+   version="1.1"
+   id="svg1"
+   sodipodi:docname="error-defer.svg"
+   inkscape:version="1.3.2 (1:1.3.2+202404261509+091e20ef0f)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="77.916667"
+     inkscape:cx="12.006417"
+     inkscape:cy="12"
+     inkscape:window-width="3840"
+     inkscape:window-height="2120"
+     inkscape:window-x="3840"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg1" />
+  <!-- Generator: Sketch 3.2.2 (9983) - http://www.bohemiancoding.com/sketch -->
+  <title
+     id="title1">control-stop</title>
+  <desc
+     id="desc1">Created with Sketch.</desc>
+  <defs
+     id="defs1" />
+  <path
+     d="m 12,19.89605 a 2,2 0 0 0 2,-2 h -4 a 2,2 0 0 0 2,2 m 0,-14.0820001 -0.797,0.161 A 4,4 0 0 0 8,9.8960499 C 8,10.52405 7.866,12.09305 7.541,13.63805 c -0.16,0.767 -0.376,1.566 -0.663,2.258 h 10.244 c -0.287,-0.692 -0.502,-1.49 -0.663,-2.258 C 16.134,12.09305 16,10.52405 16,9.8960499 a 4,4 0 0 0 -3.203,-3.92 z M 18.22,15.89605 c 0.223,0.447 0.481,0.801 0.78,1 H 5 c 0.299,-0.199 0.557,-0.553 0.78,-1 0.9,-1.8 1.22,-5.12 1.22,-6.0000001 0,-2.42 1.72,-4.44 4.005,-4.901 a 1,1 0 1 1 1.99,0 5,5 0 0 1 4.005,4.901 c 0,0.8800001 0.32,4.2000001 1.22,6.0000001"
+     id="path1-6" />
+  <path
+     d="m 9.1487782,8.7752339 a 0.5,0.5 0 0 0 0,0.708 l 2.1449998,2.1460001 -2.1469998,2.146 a 0.50027817,0.50027817 0 0 0 0.707,0.708 l 2.1469998,-2.147 2.146,2.147 a 0.50027817,0.50027817 0 0 0 0.707,-0.708 l -2.145,-2.146 2.146,-2.1460001 a 0.50027817,0.50027817 0 0 0 -0.707,-0.708 l -2.146,2.1470001 -2.1469998,-2.1470001 a 0.5,0.5 0 0 0 -0.707,0 z"
+     id="path1" />
+</svg>

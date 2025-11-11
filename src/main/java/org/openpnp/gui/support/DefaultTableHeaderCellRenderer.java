@@ -4,7 +4,7 @@
  *
  * Open licence code.
  */
-package org.openpnp.gui;
+package org.openpnp.gui.support;
 
 import java.awt.Component;
 import java.util.List;

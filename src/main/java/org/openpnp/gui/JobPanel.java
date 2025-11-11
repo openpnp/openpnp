@@ -83,6 +83,7 @@ import org.openpnp.gui.support.ActionGroup;
 import org.openpnp.gui.support.CustomBooleanRenderer;
 import org.openpnp.gui.support.MonospacedFontTableCellRenderer;
 import org.openpnp.gui.support.MonospacedFontWithAffineStatusTableCellRenderer;
+import org.openpnp.gui.support.MultisortTableHeaderCellRenderer;
 import org.openpnp.gui.support.CustomPlacementsHolderRenderer;
 import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.Icons;
@@ -383,6 +384,10 @@ public class JobPanel extends JPanel {
         JButton btnStopJob = new JButton(stopJobAction);
         btnStopJob.setHideActionText(true);
         toolBarBoards.add(btnStopJob);
+        toolBarBoards.addSeparator();
+        JButton btnDeferErrors = new JButton(deferErrorsAction);
+        btnDeferErrors.setHideActionText(true);
+        toolBarBoards.add(btnDeferErrors);
         toolBarBoards.addSeparator();
         JButton btnAddBoard = new JButton(addBoardAction);
         btnAddBoard.setHideActionText(true);
@@ -795,6 +800,16 @@ public class JobPanel extends JPanel {
             stepJobAction.setEnabled(false);
         }
 
+        if(job.getErrorHandling()==Job.ErrorHandling.Defer) {
+            deferErrorsAction.putValue(AbstractAction.SMALL_ICON, Icons.errorDefer);
+            deferErrorsAction.putValue(AbstractAction.NAME, Translations.getString("JobPanel.Action.Job.ErrorDefer")); //$NON-NLS-1$
+            deferErrorsAction.putValue(AbstractAction.SHORT_DESCRIPTION, Translations.getString("JobPanel.Action.Job.ErrorDefer.Description")); //$NON-NLS-1$
+        } else {
+            deferErrorsAction.putValue(AbstractAction.SMALL_ICON, Icons.errorAlert);
+            deferErrorsAction.putValue(AbstractAction.NAME, Translations.getString("JobPanel.Action.Job.ErrorAlert")); //$NON-NLS-1$
+            deferErrorsAction.putValue(AbstractAction.SHORT_DESCRIPTION, Translations.getString("JobPanel.Action.Job.ErrorAlert.Description")); //$NON-NLS-1$
+        }
+
         // We allow the above to run first so that all state is represented
         // correctly even if the machine is disabled.
         if (!configuration.getMachine().isEnabled()) {
@@ -1129,6 +1144,20 @@ public class JobPanel extends JPanel {
                 setState(State.Stopping);
                 jobAbort();
             });
+        }
+    };
+
+    public final Action deferErrorsAction = new AbstractAction() {
+        {
+            putValue(SMALL_ICON, Icons.errorDefer);
+            putValue(NAME, Translations.getString("JobPanel.Action.Job.Defer")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("JobPanel.Action.Job.Defer.Description")); //$NON-NLS-1$
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            job.setErrorHandling(job.getErrorHandling()==Job.ErrorHandling.Defer ? Job.ErrorHandling.Alert : Job.ErrorHandling.Defer );
+            updateJobActions();
         }
     };
     

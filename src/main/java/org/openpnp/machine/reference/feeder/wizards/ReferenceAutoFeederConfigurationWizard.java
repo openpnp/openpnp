@@ -57,6 +57,7 @@ public class ReferenceAutoFeederConfigurationWizard extends AbstractReferenceFee
     private JButton btnTestFeedActuator;
     private JButton btnTestPostPickActuator;
     private JCheckBox ckBoxMoveBeforeFeed;
+    private JCheckBox ckBoxRecycleSupport;
 
 
     public ReferenceAutoFeederConfigurationWizard(ReferenceAutoFeeder feeder) {
@@ -86,6 +87,8 @@ public class ReferenceAutoFeederConfigurationWizard extends AbstractReferenceFee
                         FormSpecs.RELATED_GAP_ROWSPEC,
                         FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
                         FormSpecs.DEFAULT_ROWSPEC,}));
 
         JLabel lblActuator = new JLabel(Translations.getString("ReferenceAutoFeederConfigurationWizard.ActuatorsPanel.ActuatorLabel.text")); //$NON-NLS-1$
@@ -103,10 +106,8 @@ public class ReferenceAutoFeederConfigurationWizard extends AbstractReferenceFee
 
         actuatorValue = new JTextField();
         panelActuator.add(actuatorValue, "6, 4");
+        actuatorValue.setToolTipText("For Boolean: 1 = True, 0 = False");
         actuatorValue.setColumns(10);
-
-        JLabel lblForBoolean = new JLabel("For Boolean: 1 = True, 0 = False");
-        panelActuator.add(lblForBoolean, "8, 4");
 
         btnTestFeedActuator = new JButton(testFeedActuatorAction);
         panelActuator.add(btnTestFeedActuator, "10, 4");
@@ -119,11 +120,9 @@ public class ReferenceAutoFeederConfigurationWizard extends AbstractReferenceFee
         panelActuator.add(comboBoxPostPickActuator, "4, 6, fill, default");
 
         postPickActuatorValue = new JTextField();
+        postPickActuatorValue.setToolTipText(actuatorValue.getToolTipText());
         postPickActuatorValue.setColumns(10);
         panelActuator.add(postPickActuatorValue, "6, 6");
-
-        JLabel label = new JLabel("For Boolean: 1 = True, 0 = False");
-        panelActuator.add(label, "8, 6");
 
         btnTestPostPickActuator = new JButton(testPostPickActuatorAction);
         panelActuator.add(btnTestPostPickActuator, "10, 6");
@@ -134,6 +133,13 @@ public class ReferenceAutoFeederConfigurationWizard extends AbstractReferenceFee
 
         ckBoxMoveBeforeFeed = new JCheckBox();
         panelActuator.add(ckBoxMoveBeforeFeed, "4, 8, left, default");
+
+        JLabel lblRecycleSupport = new JLabel(Translations.getString("ReferenceAutoFeederConfigurationWizard.ActuatorsPanel.RecycleSupportedChkbox.text")); //$NON-NLS-1$
+        panelActuator.add(lblRecycleSupport, "2, 10, right, default");
+        lblRecycleSupport.setToolTipText(Translations.getString("ReferenceAutoFeederConfigurationWizard.ActuatorsPanel.RecycleSupportedChkbox.toolTipText")); //$NON-NLS-1$
+
+        ckBoxRecycleSupport = new JCheckBox();
+        panelActuator.add(ckBoxRecycleSupport, "4, 10, left, default");
     }
 
     @Override
@@ -150,6 +156,7 @@ public class ReferenceAutoFeederConfigurationWizard extends AbstractReferenceFee
         addWrappedBinding(feeder, "postPickActuatorValue", postPickActuatorValue, "text", doubleConverter);
 
         addWrappedBinding(feeder, "moveBeforeFeed", ckBoxMoveBeforeFeed, "selected");
+        addWrappedBinding(feeder, "recycleSupport", ckBoxRecycleSupport, "selected");
 
         ComponentDecorators.decorateWithAutoSelect(actuatorValue);
         ComponentDecorators.decorateWithAutoSelect(postPickActuatorValue);

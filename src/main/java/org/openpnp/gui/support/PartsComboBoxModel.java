@@ -23,32 +23,71 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
 
 import javax.swing.DefaultComboBoxModel;
 
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Part;
+import org.openpnp.util.Collect;
 
 @SuppressWarnings("serial")
 public class PartsComboBoxModel extends DefaultComboBoxModel implements PropertyChangeListener {
     private IdentifiableComparator<Part> comparator = new IdentifiableComparator<>();
-
+    private List<Part> partsList;
+    
     public PartsComboBoxModel() {
         addAllElements();
         Configuration.get().addPropertyChangeListener("parts", this);
     }
 
+    /**
+     * Call this method when done to cleanup 
+     */
+    public void dispose() {
+        Configuration.get().removePropertyChangeListener("parts", this);
+    }
+    
+    @SuppressWarnings("unchecked")
     private void addAllElements() {
-        ArrayList<Part> parts = new ArrayList<>(Configuration.get().getParts());
-        Collections.sort(parts, comparator);
-        for (Part part : parts) {
+        partsList = new ArrayList<>(Configuration.get().getParts());
+        Collections.sort(partsList, comparator);
+        for (Part part : partsList) {
             addElement(part);
         }
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
-        removeAllElements();
-        addAllElements();
+        //Create a sorted list of parts that the parts combo box should have
+        HashMap<String, Part> newParts = (HashMap<String, Part>) evt.getNewValue();
+        List<Part> parts = new ArrayList<Part>(newParts.values());
+        Collections.sort(parts, comparator);
+        
+        //Compute the indices to remove and those to add to modify the current list
+        List<int[]> indicesToRemove = new ArrayList<>();
+        List<int[]> indicesToAdd = new ArrayList<>();
+        Collect.computeInPlaceUpdateIndices(partsList, parts, indicesToRemove, indicesToAdd);
+        
+        //Remove any parts from the existing combo box that are not in the new list of parts. The
+        //current combo box selection will not change as long as it is not one of the parts being
+        //removed.
+        for (int[] range : indicesToRemove) {
+            for (int idx=range[0]; idx>=range[1]; idx--) { //Reverse order indexing!
+                removeElementAt(idx);
+            }
+        }
+        
+        //Insert the new parts into the existing combo box at their correct positions
+        for (int[] range : indicesToAdd) {
+            for (int idx=range[0]; idx<=range[1]; idx++) {
+                insertElementAt(parts.get(idx), idx);
+            }
+        }
+        
+        //Save the new parts list for the next time around
+        partsList = parts;
     }
 }

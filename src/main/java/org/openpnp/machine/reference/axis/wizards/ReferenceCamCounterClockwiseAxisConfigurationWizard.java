@@ -29,10 +29,7 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
 
-import org.jdesktop.beansbinding.AutoBinding;
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
-import org.jdesktop.beansbinding.BeanProperty;
-import org.jdesktop.beansbinding.Bindings;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.AxesComboBoxModel;
 import org.openpnp.gui.support.DoubleConverter;
@@ -42,7 +39,6 @@ import org.openpnp.gui.support.NamedConverter;
 import org.openpnp.machine.reference.axis.ReferenceCamCounterClockwiseAxis;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Axis;
-import org.openpnp.spi.Axis.Type;
 import org.openpnp.spi.base.AbstractControllerAxis;
 import org.openpnp.spi.base.AbstractMachine;
 
@@ -143,7 +139,7 @@ public class ReferenceCamCounterClockwiseAxisConfigurationWizard extends Abstrac
         camWheelGap.setColumns(10);
         lbIllustration = new JLabel(Icons.camAxisTransform);
         panelTransformation.add(lbIllustration, "2, 12, 5, 1");
-        initDataBindings();
+
         ReferenceCamCounterClockwiseAxis camAxis = (ReferenceCamCounterClockwiseAxis)axis;
         boolean showDeprecated = (camAxis.getCamWheelRadius().getValue() != 0 || camAxis.getCamWheelGap().getValue() != 0);
         lblDeprecated2.setVisible(showDeprecated);
@@ -162,6 +158,8 @@ public class ReferenceCamCounterClockwiseAxisConfigurationWizard extends Abstrac
         DoubleConverter doubleConverter = new DoubleConverter(Configuration.get().getLengthDisplayFormat());
         NamedConverter<Axis> axisConverter = new NamedConverter<>(machine.getAxes()); 
         
+        bind(UpdateStrategy.READ, type, "selectedItem", inputAxisModel, "axisType");
+        
         addWrappedBinding(axis, "inputAxis", inputAxis, "selectedItem", axisConverter);
         addWrappedBinding(axis, "camRadius", camRadius, "text", lengthConverter);
         addWrappedBinding(axis, "camArmsAngle", camArmsAngle, "text", doubleConverter);
@@ -172,12 +170,5 @@ public class ReferenceCamCounterClockwiseAxisConfigurationWizard extends Abstrac
         ComponentDecorators.decorateWithAutoSelect(camArmsAngle);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(camWheelRadius);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(camWheelGap);
-    }
-
-    protected void initDataBindings() {
-        BeanProperty<JComboBox, Axis.Type> jComboBoxBeanProperty = BeanProperty.create("selectedItem");
-        BeanProperty<AxesComboBoxModel, Type> axesComboBoxModelBeanProperty = BeanProperty.create("axisType");
-        AutoBinding<JComboBox, Axis.Type, AxesComboBoxModel, Axis.Type> autoBinding = Bindings.createAutoBinding(UpdateStrategy.READ, type, jComboBoxBeanProperty, inputAxisModel, axesComboBoxModelBeanProperty);
-        autoBinding.bind();
     }
 }

@@ -24,8 +24,6 @@ package org.openpnp.machine.reference.feeder.wizards;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.util.List;
 
 import javax.swing.AbstractAction;
@@ -39,12 +37,12 @@ import javax.swing.JEditorPane;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.JTextPane;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.border.TitledBorder;
-
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.openpnp.events.FeederSelectedEvent;
 import org.openpnp.gui.MainFrame;
@@ -86,14 +84,11 @@ extends AbstractReferenceFeederConfigurationWizard {
         super(feeder, false);
         this.feeder = feeder;
 
-        JPanel panelFields = new JPanel();
-        panelFields.setLayout(new BoxLayout(panelFields, BoxLayout.Y_AXIS));
-
         panelLocations = new JPanel();
         panelLocations.setBorder(new TitledBorder(null, "Locations", TitledBorder.LEADING,
                 TitledBorder.TOP, null, null));
 
-        panelFields.add(panelLocations);
+        contentPanel.add(panelLocations);
         panelLocations.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
@@ -212,7 +207,7 @@ extends AbstractReferenceFeederConfigurationWizard {
                 TitledBorder.TOP, null, null));
 
         panelTape = new JPanel();
-        panelFields.add(panelTape);
+        contentPanel.add(panelTape);
         panelTape.setBorder(new TitledBorder(null, "Tape Settings", TitledBorder.LEADING, TitledBorder.TOP, null));
         panelTape.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -297,7 +292,7 @@ extends AbstractReferenceFeederConfigurationWizard {
         panelVision = new JPanel();
         panelVision.setBorder(new TitledBorder(null, "Vision", TitledBorder.LEADING,
                 TitledBorder.TOP, null, null));
-        panelFields.add(panelVision);
+        contentPanel.add(panelVision);
         panelVision.setLayout(new BoxLayout(panelVision, BoxLayout.Y_AXIS));
 
         panelVisionEnabled = new JPanel();
@@ -443,11 +438,9 @@ extends AbstractReferenceFeederConfigurationWizard {
         btnResetPipeline = new JButton(resetPipelineAction);
         panelVisionEnabled.add(btnResetPipeline, "12, 16, 3, 1");
 
-        contentPanel.add(panelFields);
-
         panelCloning = new JPanel();
         panelCloning.setBorder(new TitledBorder(null, "Clone Settings", TitledBorder.LEADING, TitledBorder.TOP, null, null));
-        panelFields.add(panelCloning);
+        contentPanel.add(panelCloning);
         panelCloning.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
@@ -479,16 +472,14 @@ extends AbstractReferenceFeederConfigurationWizard {
 
         checkBoxUsedAsTemplate = new JCheckBox("");
         checkBoxUsedAsTemplate.setToolTipText("<html>Use this feeder as a template for cloning settings to other feeders. <br/>\r\nThe templates are matched by tape & reel specification or package of the parts <br/>\r\nloaded in feeders. <br/>\r\nWhen no template matches formally, the feeder \nwith the greatest similarities <br/>\r\nis taken (feed pitch, tape width, proximity, etc.).</html>");
-        checkBoxUsedAsTemplate.addPropertyChangeListener(new PropertyChangeListener() {
-            public void propertyChange(PropertyChangeEvent evt) {
-                // by setting anything, we fire a property change
+        checkBoxUsedAsTemplate.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
                 if (btnSmartClone != null) {
                     btnSmartClone.setAction(checkBoxUsedAsTemplate.isSelected() ? feederCloneToAllAction: feederCloneFromTemplate);
                 }
-                // need to "apply" this immediately
-                feeder.setUsedAsTemplate(checkBoxUsedAsTemplate.isSelected());
-            }
-        });
+            }});
         panelCloning.add(checkBoxUsedAsTemplate, "4, 2");
 
         lblCloneLocationSettings = new JLabel("Clone Location Settings?");
@@ -507,13 +498,14 @@ extends AbstractReferenceFeederConfigurationWizard {
         panelCloning.add(lblTemplate, "2, 4, right, default");
 
         textPaneCloneTemplateStatus = new JTextPane();
-        textPaneCloneTemplateStatus.setMaximumSize(new Dimension(400, 2147483647));
         textPaneCloneTemplateStatus.setText("&nbsp;");
         textPaneCloneTemplateStatus.setBackground(UIManager.getColor("control"));
         textPaneCloneTemplateStatus.setContentType("text/html");
         textPaneCloneTemplateStatus.setEditable(false);
         textPaneCloneTemplateStatus.putClientProperty(JEditorPane.HONOR_DISPLAY_PROPERTIES, true);
-        panelCloning.add(textPaneCloneTemplateStatus, "4, 4, 1, 5, default, top");
+        JScrollPane textScrollPane = new JScrollPane(textPaneCloneTemplateStatus);
+        textScrollPane.setPreferredSize(new Dimension(400, 70));
+        panelCloning.add(textScrollPane, "4, 4, 1, 5, default, top");
 
         lblCloneTapeSetting = new JLabel("Clone Tape Setting?");
         lblCloneTapeSetting.setToolTipText("Clone the Tape Settings. ");
@@ -541,7 +533,6 @@ extends AbstractReferenceFeederConfigurationWizard {
         checkBoxClonePushPullSettings.setToolTipText("Clone the Push-Pull Motion Settings.");
         checkBoxClonePushPullSettings.setSelected(true);
         panelCloning.add(checkBoxClonePushPullSettings, "10, 8");
-        initDataBindings();
     }
 
     @Override
@@ -588,7 +579,7 @@ extends AbstractReferenceFeederConfigurationWizard {
         addWrappedBinding(feeder, "feedMultiplier", textFieldFeedMultiplier, "text", longConverter);
         addWrappedBinding(feeder, "feedCount", textFieldFeedCount, "text", longConverter);
 
-        addWrappedBinding(feeder, "usedAsTemplate", checkBoxUsedAsTemplate, "selected");
+        bind(UpdateStrategy.READ_WRITE, feeder, "usedAsTemplate", checkBoxUsedAsTemplate, "selected");
 
         addWrappedBinding(feeder, "calibrationTrigger", comboBoxCalibrationTrigger, "selectedItem");
 
@@ -712,9 +703,7 @@ extends AbstractReferenceFeederConfigurationWizard {
             UiUtils.messageBoxOnException(() -> {
                 // we apply this because it is OpenPNP custom to do so 
                 applyAction.actionPerformed(e);
-                // round the feed count up to the next multiple of the parts per feed operation
-                feeder.setFeedCount(((feeder.getFeedCount()-1)/feeder.getPartsPerFeedCycle()+1)*feeder.getPartsPerFeedCycle());
-                feeder.resetCalibration();
+                feeder.discardParts();
             });
         }
     };
@@ -950,9 +939,6 @@ extends AbstractReferenceFeederConfigurationWizard {
         CvPipelineEditor editor = new CvPipelineEditor(pipeline);
         JDialog dialog = new CvPipelineEditorDialog(MainFrame.get(), feeder.getName() + " Pipeline", editor);
         dialog.setVisible(true);
-    }
-
-    protected void initDataBindings() {
     }
 
     private JLabel lblPartPitch;

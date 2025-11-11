@@ -372,6 +372,13 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                     getName()));
         }
 
+        if (getFeedOptions() != FeedOptions.Normal) {
+            if (getFeedOptions() == FeedOptions.SkipNext) {
+                setFeedOptions(FeedOptions.Normal);
+            }
+            return;
+        }
+
         if (getFeedCount() % getPartsPerFeedCycle() == 0) {
             // Modulo of feed count is zero - no more parts there to pick, must feed 
 
@@ -492,6 +499,12 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         setFeedCount(getFeedCount()+1);
     }
 
+    public void discardParts() {
+        // round the feed count up to the next multiple of the parts per feed operation
+        setFeedCount(((getFeedCount()-1)/getPartsPerFeedCycle()+1)*getPartsPerFeedCycle());
+        resetCalibration();
+    }
+
     public void ensureCameraZ(Camera camera, boolean setZ) throws Exception {
         if (camera.isUnitsPerPixelAtZCalibrated()
                 && !getLocation().getLengthZ().isInitialized()) {
@@ -516,6 +529,23 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
             }
             performVisionOperations(camera, pipeline, false, false, true, ocrAction, ocrStop, null);
         }
+    }
+
+    @Override
+    public boolean canTakeBackPart() {
+        return getFeedOptions() != FeedOptions.SkipNext;
+    }
+
+    @Override
+    public void takeBackPart(Nozzle nozzle) throws Exception {
+        super.takeBackPart(nozzle);
+        putPartBack(nozzle);
+        setFeedOptions(FeedOptions.SkipNext);
+    }
+
+    @Override
+    public boolean supportsFeedOptions() {
+        return true;
     }
 
     @Override
@@ -1486,10 +1516,13 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                     if (n++ > 0) {
                         status += ",<br/>";
                     }
+                    else {
+                        status += "<br/>";
+                    }
                     status += targetFeeder.getName()+" "+targetFeeder.getPart().getId();
                 }
             }
-            status += n == 0 ? "none." : " (Count: "+n+")";
+            status += n == 0 ? "none." : "<br/>(Count: "+n+")";
         }
         else {
             ReferencePushPullFeeder templateFeeder = getTemplateFeeder(null);

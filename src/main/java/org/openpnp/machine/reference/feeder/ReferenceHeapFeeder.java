@@ -353,7 +353,7 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
             lastFeedDepth = stirParts(nozzle, vacuumLevel);
         } 
             
-        nozzle.pick(getPart()); // so the nozzle knows what it is carring. introduces some additional delay
+        nozzle.pick(getPart(),null); // so the nozzle knows what it is carring. introduces some additional delay
         // but rewrite of pick/place without calling nozzle doesn't seem worth, slow anyway
         nozzle.moveToSafeZ();
         moveFromHeap(nozzle); // safe way away from the other heaps
@@ -527,13 +527,7 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
 
     @Override
     public void takeBackPart(Nozzle nozzle) throws Exception {
-        // first check if we can and want to take back this part (should be always be checked before calling, but to be sure)
-        if (nozzle.getPart() == null) {
-            throw new UnsupportedOperationException("No part loaded that could be taken back.");
-        }
-        if (!nozzle.getPart().equals(getPart())) {
-            throw new UnsupportedOperationException("Feeder: " + getName() + " - Can not take back " + nozzle.getPart().getName() + " this feeder only supports " + getPart().getName());
-        }
+        super.takeBackPart(nozzle);
 
         // ok, now move the part back to the heap
         moveToHeap(nozzle);
@@ -840,7 +834,7 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
             // Move to pick location.
             MovableUtils.moveToLocationAtSafeZ(nozzle, location);
             // Pick
-            nozzle.pick(part);
+            nozzle.pick(part,null);
             // Retract
             nozzle.moveToSafeZ();
         }

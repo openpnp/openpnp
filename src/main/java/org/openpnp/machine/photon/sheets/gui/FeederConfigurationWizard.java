@@ -6,6 +6,7 @@ import java.awt.event.ActionEvent;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -53,6 +54,8 @@ public class FeederConfigurationWizard extends AbstractConfigurationWizard {
 	private final JTextField zOffsetTf;
 	private final JTextField rotOffsetTf;
 	private final LocationButtonsPanel offsetLocationPanel;
+	private final JLabel moveWhileFeedingLabel;
+	private final JCheckBox moveWhileFeedingCheckBox;
 	private final LocationButtonsPanel slotLocationPanel;
 
 	/**
@@ -135,6 +138,9 @@ public class FeederConfigurationWizard extends AbstractConfigurationWizard {
 		
 		JButton feedButton = new JButton(feedAction);
 		partPanel.add(feedButton, "6, 4"); //$NON-NLS-1$
+
+		JButton feedOneMmButton = new JButton(feedOneMmAction);
+		partPanel.add(feedOneMmButton, "8, 4"); //$NON-NLS-1$
 		
 		JLabel feedRetryLabel = new JLabel(Translations.getString("FeederConfigurationWizard.PartPanel.feedRetryLabel.text")); //$NON-NLS-1$
 		partPanel.add(feedRetryLabel, "2, 6, right, default"); //$NON-NLS-1$
@@ -168,6 +174,8 @@ public class FeederConfigurationWizard extends AbstractConfigurationWizard {
 				FormSpecs.DEFAULT_COLSPEC,
 				FormSpecs.RELATED_GAP_COLSPEC,},
 			new RowSpec[] {
+				FormSpecs.RELATED_GAP_ROWSPEC,
+				FormSpecs.DEFAULT_ROWSPEC,
 				FormSpecs.RELATED_GAP_ROWSPEC,
 				FormSpecs.DEFAULT_ROWSPEC,
 				FormSpecs.RELATED_GAP_ROWSPEC,
@@ -231,8 +239,24 @@ public class FeederConfigurationWizard extends AbstractConfigurationWizard {
 
 		offsetLocationPanel = new LocationButtonsPanel(xOffsetTf, yOffsetTf, zOffsetTf, rotOffsetTf);
 		locationPanel.add(offsetLocationPanel, "12, 6, left, top"); //$NON-NLS-1$
+
+		moveWhileFeedingLabel = new JLabel(Translations.getString("FeederConfigurationWizard.LocationPanel.moveWhileFeedingLabel.text"));
+		locationPanel.add(moveWhileFeedingLabel, "2, 8, right, default"); //$NON-NLS-1$
+		moveWhileFeedingLabel.setToolTipText(Translations.getString("FeederConfigurationWizard.LocationPanel.moveWhileFeedingLabel.toolTipText"));
+
+		moveWhileFeedingCheckBox = new JCheckBox();
+		locationPanel.add(moveWhileFeedingCheckBox, "4, 8, left, default"); //$NON-NLS-1$
+		moveWhileFeedingCheckBox.setToolTipText(Translations.getString("FeederConfigurationWizard.LocationPanel.moveWhileFeedingLabel.toolTipText"));
 	}
 
+	AutoBinding<PhotonFeeder, Object, SlotProxy, Object> binding;
+	
+	@Override
+	public void dispose() {
+	    super.dispose();
+	    binding.unbind();
+	}
+	
 	@Override
 	public void createBindings() {
 		LengthConverter lengthConverter = new LengthConverter();
@@ -241,7 +265,7 @@ public class FeederConfigurationWizard extends AbstractConfigurationWizard {
 				new DoubleConverter(Configuration.get().getLengthDisplayFormat());
 
 		SlotProxy slotProxy = new SlotProxy();
-		AutoBinding<PhotonFeeder, Object, SlotProxy, Object> binding = Bindings.createAutoBinding(UpdateStrategy.READ,
+		binding = Bindings.createAutoBinding(UpdateStrategy.READ,
 				feeder, BeanProperty.create("slot"), //$NON-NLS-1$
 				slotProxy, BeanProperty.create("slot")); //$NON-NLS-1$
 		binding.setSourceNullValue(null);
@@ -257,6 +281,7 @@ public class FeederConfigurationWizard extends AbstractConfigurationWizard {
 		addWrappedBinding(feeder, "pickRetryCount", pickRetryCountTf, "text", intConverter); //$NON-NLS-1$ //$NON-NLS-2$
 
 		bind(UpdateStrategy.READ, slotProxy, "enabled", feedAction, "enabled"); //$NON-NLS-1$ //$NON-NLS-2$
+		bind(UpdateStrategy.READ, slotProxy, "enabled", feedOneMmAction, "enabled"); //$NON-NLS-1$ //$NON-NLS-2$
 
 		bind(UpdateStrategy.READ, slotProxy, "enabled", xSlotTf, "enabled"); //$NON-NLS-1$ //$NON-NLS-2$
 		bind(UpdateStrategy.READ, slotProxy, "enabled", ySlotTf, "enabled"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -284,6 +309,8 @@ public class FeederConfigurationWizard extends AbstractConfigurationWizard {
 		bind(AutoBinding.UpdateStrategy.READ_WRITE, offsets, "lengthY", yOffsetTf, "text", lengthConverter); //$NON-NLS-1$ //$NON-NLS-2$
 		bind(AutoBinding.UpdateStrategy.READ_WRITE, offsets, "lengthZ", zOffsetTf, "text", lengthConverter); //$NON-NLS-1$ //$NON-NLS-2$
 		bind(AutoBinding.UpdateStrategy.READ_WRITE, offsets, "rotation", rotOffsetTf, "text", doubleConverter); //$NON-NLS-1$ //$NON-NLS-2$
+
+		addWrappedBinding(feeder, "moveWhileFeeding", moveWhileFeedingCheckBox, "selected"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	private final Action findSlotAddressAction = new AbstractAction(Translations.getString("FeederConfigurationWizard.FindSlotAddressAction.Name")) { //$NON-NLS-1$
@@ -298,6 +325,15 @@ public class FeederConfigurationWizard extends AbstractConfigurationWizard {
 		public void actionPerformed(ActionEvent e) {
 			UiUtils.submitUiMachineTask(() -> {
 				feeder.feed(null); // TODO This probably shouldn't be null
+			});
+		}
+	};
+
+	private final Action feedOneMmAction = new AbstractAction(Translations.getString("FeederConfigurationWizard.FeedOneMmAction.Name")) { //$NON-NLS-1$
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			UiUtils.submitUiMachineTask(() -> {
+				feeder.feedOneMm();
 			});
 		}
 	};

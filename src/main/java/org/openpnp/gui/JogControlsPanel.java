@@ -30,6 +30,7 @@ import java.beans.PropertyChangeListener;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
+import org.pmw.tinylog.Logger;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -66,6 +67,7 @@ import org.openpnp.util.BeanUtils;
 import org.openpnp.util.Cycles;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
+import org.openpnp.util.FeederUtils;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
@@ -166,6 +168,11 @@ public class JogControlsPanel extends JPanel {
     }
 
     private void jog(final int x, final int y, final int z, final int c) {
+        if(UiUtils.isModalDialogBoxOpen()) {
+            Logger.info("jog blocked while modal dialog is open");
+            return;
+        }
+
         UiUtils.submitUiMachineTask(() -> {
             HeadMountable tool = machineControlsPanel.getSelectedTool();
             jogTool(x, y, z, c, tool);
@@ -637,7 +644,7 @@ public class JogControlsPanel extends JPanel {
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
                 Nozzle nozzle = machineControlsPanel.getSelectedNozzle();
-                Cycles.discard(nozzle);
+                Cycles.discardAlways(nozzle);
             });
         }
     };
@@ -655,20 +662,16 @@ public class JogControlsPanel extends JPanel {
                     throw new Exception("No Part on the current nozzle!");
                 }
                 
-                // go through the feeders
-                for (Feeder feeder : Configuration.get().getMachine().getFeeders()) {
-                    if (part.equals(feeder.getPart()) && feeder.isEnabled() && feeder.canTakeBackPart()) {
-                        Map<String, Object> globals = new HashMap<>();
-                        globals.put("nozzle", nozzle);
-                        globals.put("feeder", feeder);
-                        globals.put("part", part);
+                Feeder feeder = FeederUtils.findFeeder(Configuration.get().getMachine(),part,nozzle.getPartsFeeder(),null);
+                if(feeder!=null) {
+                    Map<String, Object> globals = new HashMap<>();
+                    globals.put("nozzle", nozzle);
+                    globals.put("feeder", feeder);
+                    globals.put("part", part);
 
-                        Configuration.get().getScripting().on("Feeder.BeforeTakeBack", globals);
-                        feeder.takeBackPart(nozzle);
-                        Configuration.get().getScripting().on("Feeder.AfterTakeBack", globals);
-                        
-                        break;
-                    }
+                    Configuration.get().getScripting().on("Feeder.BeforeTakeBack", globals);
+                    feeder.takeBackPart(nozzle);
+                    Configuration.get().getScripting().on("Feeder.AfterTakeBack", globals);
                 }
             });
         }

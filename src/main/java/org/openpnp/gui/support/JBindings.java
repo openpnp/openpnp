@@ -20,7 +20,6 @@
 package org.openpnp.gui.support;
 
 import java.awt.Color;
-
 import javax.swing.JComponent;
 
 import org.jdesktop.beansbinding.AbstractBindingListener;
@@ -73,9 +72,13 @@ public class JBindings {
     public static class WrappedBinding<SS, SV, TS, TV> {
         private SS source;
         private BeanProperty<SS, SV> sourceProperty;
+        private TS target;
         private Wrapper<SV> wrapper;
         private AutoBinding wrappedBinding;
-
+        private AutoBinding<SS, SV, Wrapper<SV>, SV> binding;
+        private BindingListener[] listeners;
+        private JComponentBackgroundUpdater componentBackgroundUpdater;
+        
         public final void addBindingListener(BindingListener listener) {
             wrappedBinding.addBindingListener(listener);
         }
@@ -85,6 +88,8 @@ public class JBindings {
                 BindingListener... listeners) {
             this.source = source;
             this.sourceProperty = BeanProperty.create(sourcePropertyName);
+            this.target = target;
+            this.listeners = listeners;
             this.wrapper = new Wrapper<>(sourceProperty.getValue(source));
             BeanProperty<Wrapper<SV>, SV> wrapperProperty = BeanProperty.create("value");
             BeanProperty<TS, TV> targetProperty = BeanProperty.create(targetPropertyName);
@@ -94,7 +99,8 @@ public class JBindings {
                 wrappedBinding.setConverter(converter);
             }
             if (target instanceof JComponent) {
-                wrappedBinding.addBindingListener(new JComponentBackgroundUpdater((JComponent) target));
+                componentBackgroundUpdater = new JComponentBackgroundUpdater((JComponent) target);
+                wrappedBinding.addBindingListener(componentBackgroundUpdater);
             }
             if (listeners != null) {
                 for (BindingListener listener : listeners) {
@@ -102,9 +108,25 @@ public class JBindings {
                 }
             }
             wrappedBinding.bind();
-            AutoBinding<SS, SV, Wrapper<SV>, SV> binding = Bindings.createAutoBinding(
+            binding = Bindings.createAutoBinding(
                     UpdateStrategy.READ, source, sourceProperty, wrapper, wrapperProperty);
             binding.bind();
+        }
+        
+        /**
+         * Removes all the bindings and BindingListeners associated with this WrappedBinding
+         */
+        public void dispose() {
+            binding.unbind();
+            wrappedBinding.unbind();
+            if (listeners != null) {
+                for (BindingListener listener : listeners) {
+                    wrappedBinding.removeBindingListener(listener);
+                }
+            }
+            if (target instanceof JComponent) {
+                wrappedBinding.removeBindingListener(componentBackgroundUpdater);
+            }
         }
 
         public void save() {
