@@ -758,7 +758,7 @@ public class ContactProbeNozzle extends ReferenceNozzle {
             // Uses Alignment, so it also needs a vision based method.
             Camera camera;
             try {
-                camera = VisionUtils.getBottomVisionCamera();
+                camera = VisionUtils.getBottomVisionCamera(nozzleTip.getNozzleWhereLoaded());
                 return (camera.getFocusProvider() != null);
             }
             catch (Exception e) {

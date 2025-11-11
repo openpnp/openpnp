@@ -174,7 +174,7 @@ public class VisionCompositing extends AbstractModelObject{
 
     public Camera getCamera() {
         try {
-            return VisionUtils.getBottomVisionCamera();
+            return VisionUtils.getBottomVisionCamera(null);
         }
         catch (Exception e) {
         }

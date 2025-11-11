@@ -867,7 +867,7 @@ public class Solutions extends AbstractTableModel {
             try {
                 for (Camera camera : new Camera[] {
                         getMachine().getDefaultHead().getDefaultCamera(), 
-                        VisionUtils.getBottomVisionCamera() }) {
+                        VisionUtils.getBottomVisionCamera(null) }) {
                     if (camera.getUnitsPerPixel().getX() == 0 || camera.getUnitsPerPixel().getY() == 0) {
                         targetMilestone = Milestone.Vision;
                     }

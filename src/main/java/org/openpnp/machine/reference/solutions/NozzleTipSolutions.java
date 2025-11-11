@@ -124,7 +124,6 @@ public class NozzleTipSolutions implements Solutions.Subject  {
                 if (nt instanceof ReferenceNozzleTip && !((ReferenceNozzleTip) nt).isUnloadedNozzleTipStandin()) {
                     ReferenceNozzleTip nozzleTip = (ReferenceNozzleTip) nt;
                     try {
-                        Camera camera = VisionUtils.getBottomVisionCamera();
                         Nozzle defaultNozzle = nozzleTip.getNozzleWhereLoaded();
                         if (defaultNozzle == null) {
                             for (Head head : machine.getHeads()) {
@@ -145,6 +144,7 @@ public class NozzleTipSolutions implements Solutions.Subject  {
                                     "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration_Nozzle-Setup#nozzle-to-nozzle-tip-compatibility"));
                         }
                         else {
+                            Camera camera = VisionUtils.getBottomVisionCamera(defaultNozzle);
                             perNozzleTip(solutions, nozzleTip, camera, defaultNozzle);
                         }
                     }
