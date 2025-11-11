@@ -35,7 +35,6 @@ import org.openpnp.model.VisionCompositing;
 import org.openpnp.model.VisionCompositing.Composite;
 import org.openpnp.model.VisionCompositing.Shot;
 import org.openpnp.spi.*;
-import org.openpnp.spi.Camera.SettleOption;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.Utils2D;
@@ -43,7 +42,6 @@ import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvPipeline.PipelineShot;
 import org.openpnp.vision.pipeline.CvStage.Result;
-import org.openpnp.vision.pipeline.stages.ImageCapture;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -584,7 +582,9 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                             double rotationDifference = Math.abs(currentLocation.getRotation() - shotLocation.getRotation());
                             double zDifference = Math.abs(currentLocation.getZ() - shotLocation.getZ());
 
-                            if ( distance < 0.5 && (rotationDifference < 0.1 || rotationDifference == 360) && zDifference < 0.1) {
+                            if ( distance < 0.5
+                                    && (rotationDifference < 0.1 || rotationDifference == 360)
+                                    && zDifference < 0.1) {
                                 Logger.debug("Skipped moveTo because distance ({}) < 0.5mm, rotation difference ({}) < 0.1 degree, and Z difference ({}) < 0.1mm", distance, rotationDifference, zDifference);
                                 double xOffset = shotLocation.getX() - currentLocation.getX();
                                 double yOffset = shotLocation.getY() - currentLocation.getY();

@@ -299,5 +299,21 @@ public class VisionUtilsTest {
         public boolean isDisplacementActive() {
             return this.displacementActive;
         }
+        private double xShotDisplacement = 0;
+        private double yShotDisplacement = 0;
+        @Override
+        public void setDisplacements(double xDisplacement, double yDisplacement) {
+            this.xShotDisplacement = xDisplacement;
+            this.yShotDisplacement = yDisplacement;
+        }
+        @Override
+        public double getXDisplacement() {
+            return xShotDisplacement;
+        }
+        @Override
+        public double getYDisplacement() {
+            return yShotDisplacement;
+        }
+
     }
 }

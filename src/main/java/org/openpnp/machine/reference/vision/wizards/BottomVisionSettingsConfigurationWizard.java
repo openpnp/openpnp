@@ -277,7 +277,7 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
             }
 
             @Override
-            public Camera getCamera() throws Exception { return VisionUtils.getBottomVisionCamera(); }
+            public Camera getCamera() throws Exception { return VisionUtils.getBottomVisionCamera(null); }
 
             @Override
             public void resetPipeline() throws Exception {
