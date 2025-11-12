@@ -339,6 +339,9 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
     public FiducialLocator getFiducialLocator();
 
     public Location getDiscardLocation();
+    public Location getDiscardLocation2();
+    public Location getDiscardLocation3();
+    public Location getDiscardLocation4();
 
     public Location getDefaultBoardLocation();
 

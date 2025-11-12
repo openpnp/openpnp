@@ -20,8 +20,10 @@
 package org.openpnp.model;
 
 import org.openpnp.ConfigurationListener;
+import org.openpnp.Translations;
 import org.openpnp.machine.reference.vision.AbstractPartSettingsHolder;
 import org.openpnp.spi.Feeder;
+import org.openpnp.spi.Machine;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.core.Persist;
 
@@ -57,6 +59,24 @@ public class Part extends AbstractPartSettingsHolder {
     @Attribute(required = false)
     private int pickRetryCount = 0;
 
+    // provide an enum type to handle discard bin selection
+    public enum PartDiscardBin {
+        DiscardBin1,
+        DiscardBin2,
+        DiscardBin3,
+        DiscardBin4;
+
+        // provide a dedicated toSting() method (with translation) to convert the enum values into
+        // user friendly strings for the UI
+        @Override
+        public String toString() {
+            return Translations.getString("PartSettingsWizard.pickConditionsPanel.partDiscardBin." + this.name());
+        }
+    };
+    
+    @Attribute(required = false)
+    private PartDiscardBin discardBin = PartDiscardBin.DiscardBin1;
+    
     @SuppressWarnings("unused")
     private Part() {
         this(null);
@@ -211,5 +231,29 @@ public class Part extends AbstractPartSettingsHolder {
     public void setAssignedFeeders(int assignedFeeders) {
         // Pseudo-setter just used to fire the property change (no matter what is passed).
         firePropertyChange("assignedFeeders", null, getAssignedFeeders());
+    }
+    
+    public PartDiscardBin getDiscardBin() {
+        return discardBin;
+    }
+    
+    public void setDiscardBin(PartDiscardBin discardBin) {
+        this.discardBin = discardBin;
+    }
+    
+    public Location getDiscardLocation() {
+        final Machine machine = Configuration.get().getMachine();
+        switch (discardBin) {
+        case DiscardBin1:
+            return machine.getDiscardLocation();
+        case DiscardBin2:
+            return machine.getDiscardLocation2();
+        case DiscardBin3:
+            return machine.getDiscardLocation3();
+        case DiscardBin4:
+            return machine.getDiscardLocation4();
+        }
+        
+        return null;
     }
 }

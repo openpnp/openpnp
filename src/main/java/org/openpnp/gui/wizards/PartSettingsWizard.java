@@ -19,6 +19,7 @@
 
 package org.openpnp.gui.wizards;
 
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
@@ -30,6 +31,8 @@ import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.model.Part;
+import org.openpnp.model.Part.PartDiscardBin;
+
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
@@ -41,42 +44,48 @@ public class PartSettingsWizard extends AbstractConfigurationWizard {
     private JPanel pickConditionsPanel;
     private JLabel lblNewLabel;
     private JTextField textFieldPickRetryCount;
+    private JComboBox<PartDiscardBin> comboBoxPartDiscardBin;
 
     public PartSettingsWizard(Part part) {
         super();
         this.part = part;
         createUi();
     }
-    
+
     private void createUi() {
         pickConditionsPanel = new JPanel();
-        pickConditionsPanel.setBorder(new TitledBorder(null, Translations.getString(
-                "PartSettingsWizard.pickConditionsPanel.Border.title"), //$NON-NLS-1$
-                TitledBorder.LEADING, TitledBorder.TOP, null));
+        pickConditionsPanel.setBorder(
+                new TitledBorder(null, Translations.getString("PartSettingsWizard.pickConditionsPanel.Border.title"), //$NON-NLS-1$
+                        TitledBorder.LEADING, TitledBorder.TOP, null));
         contentPanel.add(pickConditionsPanel);
-        pickConditionsPanel.setLayout(new FormLayout(new ColumnSpec[] {
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
-                FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("default:grow"),},
-            new RowSpec[] {
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,}));
-        
-        lblNewLabel = new JLabel(Translations.getString(
-                "PartSettingsWizard.pickConditionsPanel.pickRetryCountLabel.text")); //$NON-NLS-1$
+        pickConditionsPanel.setLayout(new FormLayout(
+                new ColumnSpec[] { FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC, },
+                new RowSpec[] { FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC, }));
+
+        lblNewLabel = new JLabel(
+                Translations.getString("PartSettingsWizard.pickConditionsPanel.pickRetryCountLabel.text")); //$NON-NLS-1$
         pickConditionsPanel.add(lblNewLabel, "2, 2, right, default");
-        
+
         textFieldPickRetryCount = new JTextField();
         pickConditionsPanel.add(textFieldPickRetryCount, "4, 2, left, default");
         textFieldPickRetryCount.setColumns(10);
+
+        JLabel lblPartDiscardBin = new JLabel(
+                Translations.getString("PartSettingsWizard.pickConditionsPanel.partDiscardBin.text")); //$NON-NLS-1$
+        pickConditionsPanel.add(lblPartDiscardBin, "2, 4, right, default");
+
+        comboBoxPartDiscardBin = new JComboBox<PartDiscardBin>(PartDiscardBin.values());
+        pickConditionsPanel.add(comboBoxPartDiscardBin, "4, 4");
     }
-    
+
     @Override
     public void createBindings() {
         IntegerConverter intConverter = new IntegerConverter();
-        bind(UpdateStrategy.READ_WRITE, part, "pickRetryCount", textFieldPickRetryCount, "text", intConverter); 
-        
+        bind(UpdateStrategy.READ_WRITE, part, "pickRetryCount", textFieldPickRetryCount, "text", intConverter);
+        bind(UpdateStrategy.READ_WRITE, part, "discardBin", comboBoxPartDiscardBin, "selectedItem");
+
         ComponentDecorators.decorateWithAutoSelect(textFieldPickRetryCount);
     }
 }
