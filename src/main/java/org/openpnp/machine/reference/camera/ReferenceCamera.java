@@ -190,7 +190,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
 
     private Actuator lightActuator;
 
-    protected boolean displacementActive = false;
+    private boolean displacementActive = false;
 
     public enum FocusSensingMethod {
         None,

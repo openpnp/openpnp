@@ -404,7 +404,9 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
     public boolean isAutoLoadMostRecentJob();
 
     public boolean isDisplacementEnabled();
-    public double getBalanceLevel();
-    public void setBalanceLevel(double level);
-
+    public Length getBalanceLevel();
+    public void setBalanceLevel(Length level);
+    public Length getDisplacementMaxDistance();
+    public Length getDisplacementMaxZDiff();
+    public double getDisplacementMaxRotation();
 }

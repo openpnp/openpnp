@@ -34,7 +34,11 @@ import org.openpnp.model.Placement;
 import org.openpnp.model.VisionCompositing;
 import org.openpnp.model.VisionCompositing.Composite;
 import org.openpnp.model.VisionCompositing.Shot;
-import org.openpnp.spi.*;
+import org.openpnp.spi.NozzleTip;
+import org.openpnp.spi.Nozzle;
+import org.openpnp.spi.PartAlignment;
+import org.openpnp.spi.PropertySheetHolder;
+import org.openpnp.spi.Camera;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.Utils2D;
@@ -558,9 +562,9 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
             if (displacementIsEnabled) {
                  // Adjust 'shot Z' to nozzle balance level
                 if (nozzle != null) {
-                    double balance = Configuration.get().getMachine().getBalanceLevel();
+                    double balance = Configuration.get().getMachine().getBalanceLevel().getValue();
                     shotLocationTemp = shotLocationTemp.derive(null, null, balance, null);
-                    Logger.debug("Setting shotLocation Z to nozzle balance level: {} -> {}", balance, shotLocationTemp.getUnits());
+                    Logger.debug("Setting shotLocation Z to nozzle balance level: {}{}", balance, shotLocationTemp.getUnits());
                 }
             }
             final Location shotLocation = shotLocationTemp;
@@ -568,6 +572,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
             pipeline.new PipelineShot() {
                 @Override
                 public void apply() throws Exception {
+                    camera.setDisplacementActive(false);
                     if (nozzle.getLocation().getLinearLengthTo(camera.getLocation(nozzle))
                             .compareTo(camera.getRoamingRadius()
                                     .add(nozzleTip.getMaxPickTolerance())) > 0) {
@@ -582,24 +587,19 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                             double rotationDifference = Math.abs(currentLocation.getRotation() - shotLocation.getRotation());
                             double zDifference = Math.abs(currentLocation.getZ() - shotLocation.getZ());
 
-                            if ( distance < 0.5
-                                    && (rotationDifference < 0.1 || rotationDifference == 360)
-                                    && zDifference < 0.1) {
+                            if ( distance < Configuration.get().getMachine().getDisplacementMaxDistance().getValue()
+                                    && (rotationDifference < Configuration.get().getMachine().getDisplacementMaxRotation() || rotationDifference == 360)
+                                    && zDifference < Configuration.get().getMachine().getDisplacementMaxZDiff().getValue()) {
                                 Logger.debug("Skipped moveTo because distance ({}) < 0.5mm, rotation difference ({}) < 0.1 degree, and Z difference ({}) < 0.1mm", distance, rotationDifference, zDifference);
                                 double xOffset = shotLocation.getX() - currentLocation.getX();
                                 double yOffset = shotLocation.getY() - currentLocation.getY();
                                 camera.setDisplacements(xOffset, yOffset);
                                 camera.setDisplacementActive(true);
                                 Logger.debug("Saved offsets - X Offset: {}, Y Offset: {}", xOffset, yOffset);
-                            }
-                            else {
-                                camera.setDisplacementActive(false);
+                            } else {
+                                nozzle.moveTo(shotLocation);
                             }
                         } else {
-                            camera.setDisplacementActive(false);
-                        }
-
-                        if (!camera.isDisplacementActive()) {
                             nozzle.moveTo(shotLocation);
                         }
                     }

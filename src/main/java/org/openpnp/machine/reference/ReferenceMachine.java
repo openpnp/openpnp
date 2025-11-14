@@ -163,7 +163,17 @@ public class ReferenceMachine extends AbstractMachine {
     private boolean displacementEnabled = false;
 
     @Element(required = false)
-    private double balanceLevel = 0.0;
+    private Length balanceLevel = new Length( 0.0, LengthUnit.Millimeters);
+
+    @Element(required = false)
+    private Length displacementMaxDistance = new Length( 0.5, LengthUnit.Millimeters);
+
+    @Element(required = false)
+    private Length displacementMaxZDiff = new Length( 0.1, LengthUnit.Millimeters);
+
+    @Element(required = false)
+    private double displacementMaxRotation = 0.01;
+
 
     @Element(required = false)
     private Solutions solutions = new Solutions();
@@ -374,12 +384,22 @@ public class ReferenceMachine extends AbstractMachine {
      * Balance level is used as a unified target Z for bottom vision focusing and part height probing
      * when multi bottom vision cameras are used on a head.
      */
-    public double getBalanceLevel() {
+    public Length getBalanceLevel() {
         return this.balanceLevel;
     }
-    public void setBalanceLevel(double level) {
+    public void setBalanceLevel(Length level) {
         this.balanceLevel = level;
     }
+    public Length getDisplacementMaxDistance() {
+        return this.displacementMaxDistance;
+    }
+    public Length getDisplacementMaxZDiff() {
+        return this.displacementMaxZDiff;
+    }
+    public double getDisplacementMaxRotation() {
+        return this.displacementMaxRotation;
+    }
+
 
 
     @Override

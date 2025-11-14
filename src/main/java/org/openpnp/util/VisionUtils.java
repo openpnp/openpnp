@@ -3,8 +3,11 @@ package org.openpnp.util;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.util.*;
-
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Comparator;
+import java.util.Collections;
 import org.apache.commons.io.IOUtils;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision;
 import org.openpnp.machine.reference.vision.ReferenceFiducialLocator;
