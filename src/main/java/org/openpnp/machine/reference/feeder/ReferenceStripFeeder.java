@@ -307,7 +307,7 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
 
         // Throw an exception when the feeder runs out of parts
         if ((maxFeedCount > 0) && (feedCount > maxFeedCount)) {
-			throw new Exception("Tried to feed part: " + part.getId() + "  Feeder " + name + " empty.");
+			throw new FeederEmptyException("Tried to feed part: " + part.getId() + "  Feeder " + name + " empty.");
 		}
 
         if (feedCount!=1 && visionLocationReference == null) {
@@ -342,13 +342,13 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
         // and look for the hole
         Location actualLocation = findClosestHole(camera, expectedLocation);
         if (actualLocation == null) {
-            throw new Exception("Unable to locate reference hole. End of strip?");
+            throw new FeederEmptyException("Unable to locate reference hole. End of strip?");
         }
         // make sure it's not too far away
         Length distance = actualLocation.getLinearLengthTo(expectedLocation)
                 .convertToUnits(LengthUnit.Millimeters);
         if (distance.getValue() > 2) {
-            throw new Exception("Unable to locate reference hole. End of strip?");
+            throw new FeederEmptyException("Unable to locate reference hole. End of strip?");
         }
 
         if (visionFeedCount==1) {
@@ -500,7 +500,7 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
             // Grab the results
             List<CvStage.Result.Circle> results = pipeline.getExpectedResult(VisionUtils.PIPELINE_RESULTS_NAME)
                     .getExpectedListModel(CvStage.Result.Circle.class, 
-                            new Exception("Feeder " + getName() + ": No tape holes found."));            
+                            new FeederEmptyException("Feeder " + getName() + ": No tape holes found."));
 
             // Find the closest result
             results.sort((a, b) -> {

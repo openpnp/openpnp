@@ -147,4 +147,11 @@ public interface Feeder extends Identifiable, Named, WizardConfigurable, Propert
     public Priority getPriority();
 
     public void setPriority(Priority priority);
+
+
+    public static class FeederEmptyException extends Exception {
+        public FeederEmptyException(String s) {
+            super(s);
+        }
+    }
 }
