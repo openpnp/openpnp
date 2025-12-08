@@ -26,7 +26,7 @@ public class ReferenceCameraBatchOperation implements CameraBatchOperation {
     }
 
     // End the batch operation, and get any cameras used in this operation to turn off their lights.
-    public void endBatchOperation(String name) throws Exception {
+    public synchronized void endBatchOperation(String name) throws Exception {
         Logger.info("End level {} {}",nestingLevel,name);
 
         nestingLevel -= 1;
@@ -46,7 +46,7 @@ public class ReferenceCameraBatchOperation implements CameraBatchOperation {
         }
     }
 
-    public boolean registerWithBatchOperation(Camera c) {
+    public synchronized boolean registerWithBatchOperation(Camera c) {
         if (cameras==null) {
             // There is no batch in progress
             return false;
