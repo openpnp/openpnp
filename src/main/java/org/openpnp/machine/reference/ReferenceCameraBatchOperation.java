@@ -22,12 +22,12 @@ public class ReferenceCameraBatchOperation implements CameraBatchOperation {
             cameras = new ArrayList<Camera>();
         }
         nestingLevel += 1;
-        Logger.info("Start level {} {}",nestingLevel,name);
+        Logger.trace("Start level {} {}",nestingLevel,name);
     }
 
     // End the batch operation, and get any cameras used in this operation to turn off their lights.
     public synchronized void endBatchOperation(String name) throws Exception {
-        Logger.info("End level {} {}",nestingLevel,name);
+        Logger.trace("End level {} {}",nestingLevel,name);
 
         nestingLevel -= 1;
 
@@ -35,7 +35,7 @@ public class ReferenceCameraBatchOperation implements CameraBatchOperation {
             List<Camera> camerasFormerlyInUse = cameras;
             cameras = null;
             for (Camera c: camerasFormerlyInUse) {
-                Logger.info("Processing camera {}",c);
+                Logger.trace("Processing camera {}",c);
                 c.actuateLightAfterCapture();
             }
         }
@@ -53,7 +53,7 @@ public class ReferenceCameraBatchOperation implements CameraBatchOperation {
         }
 
         if (!cameras.contains(c)) {
-            Logger.info("Registering camera {}",c);
+            Logger.trace("Registering camera {}",c);
             cameras.add(c);
         }
 
