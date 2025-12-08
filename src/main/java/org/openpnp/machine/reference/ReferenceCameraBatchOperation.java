@@ -18,7 +18,7 @@ public class ReferenceCameraBatchOperation implements CameraBatchOperation {
 
     // Start a batch
     public void startBatchOperation(String name) {
-        if(cameras==null) {
+        if (cameras==null) {
             cameras = new ArrayList<Camera>();
         }
         nestingLevel += 1;
@@ -31,10 +31,10 @@ public class ReferenceCameraBatchOperation implements CameraBatchOperation {
 
         nestingLevel -= 1;
 
-        if(nestingLevel==0) {
+        if (nestingLevel==0) {
             List<Camera> camerasFormerlyInUse = cameras;
             cameras = null;
-            for(Camera c: camerasFormerlyInUse) {
+            for (Camera c: camerasFormerlyInUse) {
                 Logger.info("Processing camera {}",c);
                 c.actuateLightAfterCapture();
             }
@@ -47,12 +47,12 @@ public class ReferenceCameraBatchOperation implements CameraBatchOperation {
     }
 
     public boolean registerWithBatchOperation(Camera c) {
-        if(cameras==null) {
+        if (cameras==null) {
             // There is no batch in progress
             return false;
         }
 
-        if(!cameras.contains(c)) {
+        if (!cameras.contains(c)) {
             Logger.info("Registering camera {}",c);
             cameras.add(c);
         }

@@ -219,8 +219,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
     public synchronized void abort() throws JobProcessorException {
         try {
-            if(cameraBatchOperationStarted)
-            {
+            if (cameraBatchOperationStarted) {
                 cameraBatchOperationStarted = false;
                 machine.getCameraBatchOperation().endBatchOperation("job abort");
             }
@@ -1579,7 +1578,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
             if(!cameraBatchOperationStarted) {
                 CameraBatchOperation cbo = machine.getCameraBatchOperation();
-                if(cbo!=null)
+                if (cbo!=null)
                 {
                     cbo.startBatchOperation("align step");
                     cameraBatchOperationStarted = true;

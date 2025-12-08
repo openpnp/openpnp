@@ -678,14 +678,14 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
             throw new Exception("Cannot calibrate nozzle tip with part on nozzle "+nozzle.getName()+".");
         }
         CameraBatchOperation cbo = Configuration.get().getMachine().getCameraBatchOperation();
-        if(cbo!=null) {
+        if (cbo!=null) {
             cbo.startBatchOperation("nozzle");
         }
         try {
             calibrateInBatch(nozzle,homing,calibrateCamera);
         }
         finally {
-            if(cbo!=null) {
+            if (cbo!=null) {
                 cbo.endBatchOperation("nozzle");
             }
         }

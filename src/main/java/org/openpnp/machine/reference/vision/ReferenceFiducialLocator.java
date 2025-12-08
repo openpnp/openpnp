@@ -128,7 +128,7 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
      */
     public Location locateAllPlacementsHolder(List<PlacementsHolderLocation<?>> allPlacementsHolderLocation, Location endLocation) throws Exception {
         CameraBatchOperation cbo = Configuration.get().getMachine().getCameraBatchOperation();
-        if(cbo!=null) {
+        if (cbo!=null) {
             cbo.startBatchOperation("fid");
         }
         try {

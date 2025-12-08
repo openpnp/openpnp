@@ -273,7 +273,7 @@ public class VisionUtils {
 
         PartAlignmentOffset offsets = null;
         CameraBatchOperation cbo = Configuration.get().getMachine().getCameraBatchOperation();
-        if(cbo!=null) {
+        if (cbo!=null) {
             cbo.startBatchOperation("visionutils");
         }
         try {
@@ -281,7 +281,7 @@ public class VisionUtils {
             return offsets;
         }
         finally {
-            if(cbo!=null) {
+            if (cbo!=null) {
                 cbo.endBatchOperation("visionutils");
             }
             globals.put("offsets", offsets);
