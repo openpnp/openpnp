@@ -2739,12 +2739,19 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                     nozzleCount += 1;
                     if (nozzleCount==2 && plannerState.plannedPlacements.size()==2 && plannerState.plannedPlacements.get(1).planningCost!=null) {
                         PlannerState plannerStateAlt = new PlannerState(jobPlacements,head.getNozzles(),nozzleTips);
-                        plannerStateAlt.addPlannedPlacement(planWithoutNozzleTipChange(plannerState.plannedPlacements.get(1).nozzle,plannerStateAlt));
-                        plannerStateAlt.addPlannedPlacement(planWithoutNozzleTipChange(plannerState.plannedPlacements.get(0).nozzle,plannerStateAlt));
-                        if(plannerStateAlt.plannedPlacements.get(1).planningCost != null &&
-                           plannerStateAlt.plannedPlacements.get(1).planningCost<plannerState.plannedPlacements.get(1).planningCost) {
-                            Logger.debug("Alternate plan accepted {} better than {}",plannerStateAlt.plannedPlacements, plannerState.plannedPlacements);
-                            plannerState = plannerStateAlt;
+                        PlannedPlacement pp;
+                        pp = planWithoutNozzleTipChange(plannerState.plannedPlacements.get(1).nozzle,plannerStateAlt);
+                        if (pp != null) {
+                            plannerStateAlt.addPlannedPlacement(pp);
+                            pp = planWithoutNozzleTipChange(plannerState.plannedPlacements.get(0).nozzle,plannerStateAlt);
+                            if (pp != null) {
+                                plannerStateAlt.addPlannedPlacement(pp);
+                                if(plannerStateAlt.plannedPlacements.get(1).planningCost != null &&
+                                plannerStateAlt.plannedPlacements.get(1).planningCost<plannerState.plannedPlacements.get(1).planningCost) {
+                                    Logger.debug("Alternate plan accepted {} better than {}",plannerStateAlt.plannedPlacements, plannerState.plannedPlacements);
+                                    plannerState = plannerStateAlt;
+                                }
+                            }
                         }
                     }
                 }
