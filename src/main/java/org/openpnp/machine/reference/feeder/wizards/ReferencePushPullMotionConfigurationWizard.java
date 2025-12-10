@@ -140,6 +140,16 @@ extends AbstractConfigurationWizard {
     private JCheckBox calibrateMotionX;
     private JLabel lblCalibrate;
     private JCheckBox calibrateMotionY;
+    private JLabel lblDelay0;
+    private JLabel lblDelay1;
+    private JLabel lblDelay2;
+    private JLabel lblDelay3;
+    private JLabel lblDelay4;
+    private JTextField textFieldDelay0;
+    private JTextField textFieldDelay1;
+    private JTextField textFieldDelay2;
+    private JTextField textFieldDelay3;
+    private JTextField textFieldDelay4;
 
     public ReferencePushPullMotionConfigurationWizard(ReferencePushPullFeeder feeder) {
         super();
@@ -330,6 +340,13 @@ extends AbstractConfigurationWizard {
         panelPushPull.add(textFieldFeedPull0, "16, 14, 3, 1");
         textFieldFeedPull0.setColumns(10);
 
+        lblDelay0 = new JLabel("Delay");
+        panelPushPull.add(lblDelay0, "4, 14, right, default");
+
+        textFieldDelay0 = new JTextField();
+        panelPushPull.add(textFieldDelay0, "6, 14, left, default");
+        textFieldDelay0.setColumns(4);
+
         lblFeedMid1Location = new JLabel("Mid 1 Location");
         panelPushPull.add(lblFeedMid1Location, "2, 16, right, default");
 
@@ -380,6 +397,13 @@ extends AbstractConfigurationWizard {
         textFieldFeedPull1.setColumns(10);
         panelPushPull.add(textFieldFeedPull1, "16, 18, 3, 1");
 
+        lblDelay1 = new JLabel("Delay");
+        panelPushPull.add(lblDelay1, "4, 18, right, default");
+
+        textFieldDelay1 = new JTextField();
+        panelPushPull.add(textFieldDelay1, "6, 18, left, default");
+        textFieldDelay1.setColumns(4);
+
         lblFeedMid2Location = new JLabel("Mid 2 Location");
         panelPushPull.add(lblFeedMid2Location, "2, 20, right, default");
 
@@ -429,6 +453,13 @@ extends AbstractConfigurationWizard {
         textFieldFeedPull2 = new JTextField();
         textFieldFeedPull2.setColumns(10);
         panelPushPull.add(textFieldFeedPull2, "16, 22, 3, 1");
+
+        lblDelay2 = new JLabel("Delay");
+        panelPushPull.add(lblDelay2, "4, 22, right, default");
+
+        textFieldDelay2 = new JTextField();
+        panelPushPull.add(textFieldDelay2, "6, 22, left, default");
+        textFieldDelay2.setColumns(4);
 
         lblFeedMid3Location = new JLabel("Mid 3 Location");
         panelPushPull.add(lblFeedMid3Location, "2, 24, right, default");
@@ -481,6 +512,13 @@ extends AbstractConfigurationWizard {
         textFieldFeedPull3.setColumns(10);
         panelPushPull.add(textFieldFeedPull3, "16, 26, 3, 1");
 
+        lblDelay3 = new JLabel("Delay");
+        panelPushPull.add(lblDelay3, "4, 26, right, default");
+
+        textFieldDelay3 = new JTextField();
+        panelPushPull.add(textFieldDelay3, "6, 26, left, default");
+        textFieldDelay3.setColumns(4);
+
         JLabel lblFeedEndLocation = new JLabel("End Location");
         panelPushPull.add(lblFeedEndLocation, "2, 28, right, default");
 
@@ -515,6 +553,13 @@ extends AbstractConfigurationWizard {
         locationButtonsPanelFeedEnd.setShowPositionToolNoSafeZ(true);
         locationButtonsPanelFeedEnd.setBaseLocationVectorial(true);
         panelPushPull.add(locationButtonsPanelFeedEnd, "20, 28, fill, default");
+
+        lblDelay4 = new JLabel("Delay");
+        panelPushPull.add(lblDelay4, "4, 30, right, default");
+
+        textFieldDelay4 = new JTextField();
+        panelPushPull.add(textFieldDelay4, "6, 30, left, default");
+        textFieldDelay4.setColumns(4);
 
         btnRotationReset = new JButton(actionRotationReset);
         panelPushPull.add(btnRotationReset, "10, 30, left, default");
