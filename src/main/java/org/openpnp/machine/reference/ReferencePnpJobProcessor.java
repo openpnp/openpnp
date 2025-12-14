@@ -51,6 +51,7 @@ import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
 import org.openpnp.model.PlacementsHolderLocation;
 import org.openpnp.spi.Feeder;
+import org.openpnp.spi.Feeder;
 import org.openpnp.spi.FiducialLocator;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
@@ -1305,7 +1306,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
              * that will get thrown. 
              */
             JobProcessorException lastException = null;
-            for (int partPickTry = 0; partPickTry < 1 + part.getPickRetryCount(); partPickTry++) {
+            int tryLimit = 1 + part.getPickRetryCount();
+            for (int partPickTry = 0; partPickTry < tryLimit; partPickTry++) {
 
                 if (nozzle.getPart() == null) {
                     // We expect the nozzle to be empty before a pick.
@@ -1352,6 +1354,18 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 try {
                     feed(feeder, nozzle);
                 }
+                catch (Feeder.FeederEmptyException e) {
+                    if (tryLimit==1) {
+                        // We are configured to not allow any retries of failed feeds, but
+                        // the FeederEmptyException is different because this is an expected
+                        // condition, not an error, so we allow one "retry".
+                        // The feed method will have disabled the feeder that just raised
+                        // the exception, so the next attempt can swap to a different feeder.
+                        tryLimit = 2;
+                    }
+                    lastException = new JobProcessorException(feeder,e);
+                    continue;
+                }
                 catch (JobProcessorException jpe) {
                     lastException = jpe;
                     continue;
@@ -1388,7 +1402,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             throw lastException;
         }
         
-        private void feed(Feeder feeder, Nozzle nozzle) throws JobProcessorException {
+        private void feed(Feeder feeder, Nozzle nozzle) throws JobProcessorException, Feeder.FeederEmptyException {
             Exception lastException = null;
 
             Map<String, Object> globals = new HashMap<>();
@@ -1404,6 +1418,12 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                     feeder.feed(nozzle);
                     Configuration.get().getScripting().on("Feeder.AfterFeed", globals);
                     return;
+                }
+                catch (Feeder.FeederEmptyException e) {
+                    // This exception gets handled in the outer retry loop
+                    Logger.info("{} disabled due to being empty {}",feeder,e);
+                    feeder.setEnabled(false);
+                    throw e;
                 }
                 catch (Exception e) {
                     lastException = e;

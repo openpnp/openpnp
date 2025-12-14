@@ -196,6 +196,59 @@ public class ReferenceJobProcessorRetryTests {
         assertEquals(0, f3.feedCount, "F3 Feed count should be 0.");
     }
 
+
+    // There are three feeders with one part each, and two placements on the board
+    // The first feeder shows two feeds; one which filled the first placement,
+    // and the second which reported that the feeder was empty when handling
+    // the second placement. The job processor fails over to the second feeder,
+    // which shows one feed.
+    @Test
+    public void testPartFailover() throws Exception {
+        Configuration.initialize();
+        Machine machine = new MachineBuilder()
+                .head("H1")
+                .nozzleTip("NT1")
+                .nozzle("N1", "NT1")
+                .topCamera("TOP")
+                .bottomCamera("BOTTOM")
+                .build();
+        Job job = new JobBuilder()
+                .board("B1", 10, 10, 10, -10)
+                .packag("R0402", "NT1")
+                .part("R0402-1k", "R0402")
+                .feeder("F1", "R0402-1k", 100, 20, -5, 0)
+                .feeder("F2", "R0402-1k", 110, 20, -5, 0)
+                .feeder("F3", "R0402-1k", 120, 20, -5, 0)
+                .feeder("F4", "R0402-1k", 130, 20, -5, 0)
+                .feeder("F5", "R0402-1k", 140, 20, -5, 0)
+                .placement("R1", "R0402-1k", 10, 10, 0)
+                .placement("R2", "R0402-1k", 20, 10, 0)
+                .build();
+
+        Part r04021k = Configuration.get().getPart("R0402-1k");
+
+        TestFeeder f1 = (TestFeeder) machine.getFeederByName("F1");
+        f1.setPartCount(1);
+        f1.setFeedRetryCount(0);
+        f1.setReportExplicitEmpty(true);
+
+        TestFeeder f2 = (TestFeeder) machine.getFeederByName("F2");
+        f2.setPartCount(1);
+        f2.setFeedRetryCount(0);
+        f2.setReportExplicitEmpty(true);
+
+        TestFeeder f3 = (TestFeeder) machine.getFeederByName("F3");
+        f3.setPartCount(1);
+        f3.setFeedRetryCount(0);
+        f3.setReportExplicitEmpty(true);
+
+        runJob(machine, job);
+
+        assertEquals(2, f1.feedCount, "F1 Feed count should be 2.");
+        assertEquals(1, f2.feedCount, "F2 Feed count should be 1.");
+        assertEquals(0, f3.feedCount, "F3 Feed count should be 0.");
+    }
+
     // This test uses the Defer placement error handling strategy
     // to allow the job to get fully placed, even with a nozzle that
     // fails to pick a few times.
@@ -344,11 +397,16 @@ public class ReferenceJobProcessorRetryTests {
     public static class TestFeeder extends ReferenceFeeder {
         int feedCount = 0;
         int partCount = 0;
+        boolean reportExplicitEmpty = false;
         
         public void setPartCount(int partCount) {
             this.partCount = partCount;
         }
-        
+
+        public void setReportExplicitEmpty(boolean reportExplicitEmpty) {
+            this.reportExplicitEmpty = reportExplicitEmpty;
+        }
+
         @Override
         public Location getPickLocation() throws Exception {
             return new Location(LengthUnit.Millimeters);
@@ -358,7 +416,11 @@ public class ReferenceJobProcessorRetryTests {
         public void feed(Nozzle nozzle) throws Exception {
             System.out.format("feed(%s) -> %s %s\n", nozzle.getName(), getName(), getPart().getId());
             if (++feedCount > partCount) {
-                throw new Exception("No parts.");
+                if(reportExplicitEmpty) {
+                    throw new FeederEmptyException("No parts.");
+                } else {
+                    throw new Exception("No parts.");
+                }
             }
         }
 

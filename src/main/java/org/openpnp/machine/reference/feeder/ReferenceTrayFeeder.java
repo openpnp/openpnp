@@ -89,7 +89,7 @@ public class ReferenceTrayFeeder extends ReferenceFeeder {
         Logger.debug("{}.feed({})", getName(), nozzle);
 
         if (feedCount >= (trayCountX * trayCountY)) {
-            throw new Exception("Feeder: " + getName() + " (" + getPart().getId() + ") - tray empty.");
+            throw new FeederEmptyException("Feeder: " + getName() + " (" + getPart().getId() + ") - tray empty.");
         }
 
         if (getFeedOptions() == FeedOptions.Normal || getFeedCount() == 0) {

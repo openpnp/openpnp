@@ -140,7 +140,7 @@ public class ReferenceRotatedTrayFeeder extends ReferenceFeeder {
         Logger.debug("{}.feed({})", getName(), nozzle);
 
         if (feedCount >= (trayCountCols * trayCountRows)) {
-            throw new Exception(this.getName() + " (" + this.partId + ") is empty.");
+            throw new FeederEmptyException(this.getName() + " (" + this.partId + ") is empty.");
         }
 
         setFeedCount(getFeedCount() + 1);
