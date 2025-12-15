@@ -283,7 +283,6 @@ public class MainFrame extends JFrame {
     private ScriptFileWatcher scriptFileWatcher;
     private JMenuItem mnEditRemoveBoard;
     private JMenu mnEditAddBoard;
-    private JMenuItem mnCaptureToolLocation;
 
     private boolean isShiftDown;
 
@@ -386,8 +385,6 @@ public class MainFrame extends JFrame {
         mnEditRemoveBoard = new JMenuItem(jobPanel.removeBoardAction);
         mnEdit.add(mnEditRemoveBoard);
         mnEdit.addSeparator();
-        mnCaptureToolLocation = new JMenuItem(jobPanel.captureToolBoardLocationAction);
-        mnEdit.add(mnCaptureToolLocation);
 
         // View
         //////////////////////////////////////////////////////////////////////
@@ -494,13 +491,6 @@ public class MainFrame extends JFrame {
         mnCommands.setMnemonic(KeyEvent.VK_M);
         menuBar.add(mnCommands);
         mnCommands.addSeparator();
-
-        mnCommands.add(new JMenuItem(new AbstractAction("Scan Board...") {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                new BoardScannerDialog().setVisible(true);
-            }
-        }));
 
         // Scripts
         /////////////////////////////////////////////////////////////////////
@@ -958,17 +948,12 @@ public class MainFrame extends JFrame {
             } else {
                 mnEditRemoveBoard.getAction().setEnabled(false);
             }
-            if (jobPanel.getSelections().size() == 1
-                    && jobPanel.getJob().getRootPanelLocation().getChildren().containsAll(jobPanel.getSelections())) {
-                mnCaptureToolLocation.setEnabled(true);
-            } else {
-                mnCaptureToolLocation.setEnabled(false);
-            }
+
         } else if (selectedTab == panelsPanel) {
             mnImport.setEnabled(false);
             mnEditAddBoard.setEnabled(false);
             mnEditRemoveBoard.setEnabled(false);
-            mnCaptureToolLocation.setEnabled(false);
+
         } else if (selectedTab == boardsPanel) {
             if (boardsPanel.getSelections().size() == 1) {
                 mnImport.setEnabled(true);
@@ -977,12 +962,12 @@ public class MainFrame extends JFrame {
             }
             mnEditAddBoard.setEnabled(false);
             mnEditRemoveBoard.setEnabled(false);
-            mnCaptureToolLocation.setEnabled(false);
+
         } else {
             mnImport.setEnabled(false);
             mnEditAddBoard.setEnabled(false);
             mnEditRemoveBoard.setEnabled(false);
-            mnCaptureToolLocation.setEnabled(false);
+
         }
     }
 

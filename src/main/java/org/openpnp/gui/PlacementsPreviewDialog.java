@@ -171,8 +171,13 @@ public class PlacementsPreviewDialog extends JDialog {
 
         // Overlap
         double overlap = 0.1;
-        double stepX = fovW * (1.0 - overlap);
-        double stepY = fovH * (1.0 - overlap);
+
+        // Rotation scaling to ensure coverage
+        double rad = Math.toRadians(boardLocation.getLocation().getRotation());
+        double scaleFactor = 1.0 / (Math.abs(Math.cos(rad)) + Math.abs(Math.sin(rad)));
+
+        double stepX = fovW * scaleFactor * (1.0 - overlap);
+        double stepY = fovH * scaleFactor * (1.0 - overlap);
 
         int cols = (int) Math.ceil((boardW + 2 * margin) / stepX);
         int rows = (int) Math.ceil((boardH + 2 * margin) / stepY);

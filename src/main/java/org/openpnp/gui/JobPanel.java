@@ -555,6 +555,20 @@ public class JobPanel extends JPanel {
                         }
 
                         popupMenu.add(previewMenu);
+
+                        popupMenu.addSeparator();
+
+                        // Capture Board
+                        JMenu captureMenu = new JMenu("Capture Board");
+                        for (Camera camera : cameras) {
+                            captureMenu.add(new AbstractAction(camera.getName()) {
+                                @Override
+                                public void actionPerformed(ActionEvent e) {
+                                    new BoardScannerDialog(bl, camera).setVisible(true);
+                                }
+                            });
+                        }
+                        popupMenu.add(captureMenu);
                     }
                 }
             }
