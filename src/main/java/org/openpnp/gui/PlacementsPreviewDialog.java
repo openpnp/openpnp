@@ -416,7 +416,10 @@ public class PlacementsPreviewDialog extends JDialog {
         statusLabel.setText("Done.");
         progressBar.setVisible(false);
         contentPanel.removeAll();
-        contentPanel.add(new JLabel(new ImageIcon(image)), BorderLayout.CENTER);
+        JLabel label = new JLabel(new ImageIcon(image));
+        javax.swing.JScrollPane scrollPane = new javax.swing.JScrollPane(label);
+        org.openpnp.util.UiUtils.enableDragPanning(scrollPane);
+        contentPanel.add(scrollPane, BorderLayout.CENTER);
 
         JButton btnSave = new JButton("Save Image...");
         btnSave.addActionListener(e -> {

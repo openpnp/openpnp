@@ -27,7 +27,8 @@ import com.google.common.util.concurrent.FutureCallback;
 
 public class UiUtils {
     /**
-     * Functional interface for a Runnable that can throw an Exception but returns no value. Splits
+     * Functional interface for a Runnable that can throw an Exception but returns
+     * no value. Splits
      * the difference between Runnable and Callable.
      */
     public interface Thrunnable {
@@ -35,30 +36,32 @@ public class UiUtils {
     }
 
     /**
-     * This extends the exception class by allowing to specify a task to be executed once the user has agreed.
+     * This extends the exception class by allowing to specify a task to be executed
+     * once the user has agreed.
      */
     public static class ExceptionWithContinuation extends Exception {
         private static final long serialVersionUID = 1L;
-    
+
         protected Thrunnable continuation = null;
-        
+
         public ExceptionWithContinuation(Throwable cause, Thrunnable continuation) {
             super(cause.getMessage(), cause);
             this.continuation = continuation;
         }
-        
+
         public ExceptionWithContinuation(String message, Thrunnable continuation) {
             super(message, null);
             this.continuation = continuation;
         }
-        
+
         public Thrunnable getContinuation() {
             return continuation;
         }
     }
 
     /**
-     * Shortcut for submitMachineTask(Callable) which uses a Thrunnable instead. This allows for
+     * Shortcut for submitMachineTask(Callable) which uses a Thrunnable instead.
+     * This allows for
      * simple tasks that may throw an Exception but return nothing.
      * 
      * @param thrunnable
@@ -72,9 +75,12 @@ public class UiUtils {
     }
 
     /**
-     * Wrapper for submitMachineTask(Callable, Consumer, Consumer) which ignores the return value in
-     * onSuccess and shows a MessageBox when an Exception is thrown. Handy for simple tasks that
-     * don't care about the return value but want to notify the user in case of failure. Ideal for
+     * Wrapper for submitMachineTask(Callable, Consumer, Consumer) which ignores the
+     * return value in
+     * onSuccess and shows a MessageBox when an Exception is thrown. Handy for
+     * simple tasks that
+     * don't care about the return value but want to notify the user in case of
+     * failure. Ideal for
      * running Machine tasks from ActionListeners.
      * 
      * @param callable
@@ -82,35 +88,36 @@ public class UiUtils {
      */
     public static <T> Future<T> submitUiMachineTask(final Callable<T> callable) {
         return submitUiMachineTask(callable, (result) -> {
-        } , (t) -> {
+        }, (t) -> {
             showError(t);
         });
     }
 
     /**
-     * Show an error using a message box, if the GUI is present, otherwise just log the error.
+     * Show an error using a message box, if the GUI is present, otherwise just log
+     * the error.
+     * 
      * @param parent
      * @param title
      * @param t
      */
     public static void showError(Component parent, String title, Throwable t) {
-        
+
         // Go through all causes, creating a combined continuation
         Thrunnable combinedContinuation = null;
         for (Throwable cause = t; cause != null; cause = cause.getCause()) {
             if (cause instanceof ExceptionWithContinuation) {
-                Thrunnable continuation = ((ExceptionWithContinuation)cause).getContinuation();
+                Thrunnable continuation = ((ExceptionWithContinuation) cause).getContinuation();
                 if (continuation != null) {
                     if (combinedContinuation == null) {
                         combinedContinuation = continuation; // just take the first one
                     } else {
                         final Thrunnable outerCombinedContinuation = combinedContinuation;
-                        combinedContinuation = (() -> { 
+                        combinedContinuation = (() -> {
                             // combine the two
                             try {
                                 continuation.thrun(); // inner first
-                            }
-                            catch (ExceptionWithContinuation e) {
+                            } catch (ExceptionWithContinuation e) {
                                 throw new ExceptionWithContinuation(e, () -> {
                                     outerCombinedContinuation.thrun(); // requeue outer, in case of exception
                                 });
@@ -130,22 +137,23 @@ public class UiUtils {
             if (haveContinuations && execContinuations) {
                 submitUiMachineTask(combinedContinuation);
             }
-        }
-        else {
+        } else {
             Logger.error(t);
         }
     }
 
     /**
-     * Show an error using a message box. This version provides the simplified interface where the
+     * Show an error using a message box. This version provides the simplified
+     * interface where the
      * title is fixed to "Error" and the parent is the main frame.
      */
     public static void showError(Throwable t) {
         showError(MainFrame.get(), "Error", t);
     }
-    
+
     /**
-     * Functional version of Machine.submit which guarantees that the the onSuccess and onFailure
+     * Functional version of Machine.submit which guarantees that the the onSuccess
+     * and onFailure
      * handlers will be run on the Swing event thread.
      * 
      * @param callable
@@ -159,8 +167,10 @@ public class UiUtils {
     }
 
     /**
-     * Functional version of Machine.submit which guarantees that the the onSuccess and onFailure
-     * handlers will be run on the Swing event thread. Includes the ignoreEnabled argument.
+     * Functional version of Machine.submit which guarantees that the the onSuccess
+     * and onFailure
+     * handlers will be run on the Swing event thread. Includes the ignoreEnabled
+     * argument.
      * 
      * @param callable
      * @param onSuccess
@@ -175,8 +185,7 @@ public class UiUtils {
             public void onSuccess(T result) {
                 try {
                     SwingUtilities.invokeLater(() -> onSuccess.accept(result));
-                }
-                catch (Exception e) {
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
@@ -185,8 +194,7 @@ public class UiUtils {
             public void onFailure(Throwable t) {
                 try {
                     SwingUtilities.invokeLater(() -> onFailure.accept(t));
-                }
-                catch (Exception e) {
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
@@ -194,8 +202,10 @@ public class UiUtils {
     }
 
     /**
-     * Functional wrapper for actions that may throw an Exception. Presents an error box to the user
-     * with the Exception contents if one is thrown. Basically saves like 5 lines of boilerplate in
+     * Functional wrapper for actions that may throw an Exception. Presents an error
+     * box to the user
+     * with the Exception contents if one is thrown. Basically saves like 5 lines of
+     * boilerplate in
      * actions.
      * 
      * @param thrunnable
@@ -203,15 +213,16 @@ public class UiUtils {
     public static void messageBoxOnException(Thrunnable thrunnable) {
         try {
             thrunnable.thrun();
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             showError(e);
         }
     }
 
     /**
-     * Functional wrapper for actions that may throw an Exception. Presents an error box to the user
-     * with the Exception contents if one is thrown. The action is performed later on the GUI thread.
+     * Functional wrapper for actions that may throw an Exception. Presents an error
+     * box to the user
+     * with the Exception contents if one is thrown. The action is performed later
+     * on the GUI thread.
      * 
      * @param thrunnable
      */
@@ -220,22 +231,26 @@ public class UiUtils {
     }
 
     /**
-     * Some UI actions require the machine to move to a certain location as a prerequisite (e.g. editing a pipeline). 
-     * For some actions this might be unexpected for the user. This wrapper asks the user to confirm the move, if not 
-     * already at the location. 
-     * It also handles a disabled machine and lets the user proceed, if this is an option.
+     * Some UI actions require the machine to move to a certain location as a
+     * prerequisite (e.g. editing a pipeline).
+     * For some actions this might be unexpected for the user. This wrapper asks the
+     * user to confirm the move, if not
+     * already at the location.
+     * It also handles a disabled machine and lets the user proceed, if this is an
+     * option.
      * It then moves to the location at safe Z, and executes the action thrunnable.
-     * The wrapper also handles all the proper GUI/machine task dispatching and shows message boxes on Exceptions.
+     * The wrapper also handles all the proper GUI/machine task dispatching and
+     * shows message boxes on Exceptions.
      * 
-     * @param parentComponent 
+     * @param parentComponent
      * @param moveBeforeActionDescription
      * @param movable
      * @param location
      * @param allowWithoutMove
      * @param actionThrunnable
      */
-    public static void confirmMoveToLocationAndAct(Component parentComponent, 
-            String moveBeforeActionDescription, HeadMountable movable, 
+    public static void confirmMoveToLocationAndAct(Component parentComponent,
+            String moveBeforeActionDescription, HeadMountable movable,
             Location location, boolean allowWithoutMove,
             final Thrunnable actionThrunnable) {
 
@@ -243,8 +258,7 @@ public class UiUtils {
             if (movable == null || location == null || location.equals(movable.getLocation())) {
                 // Already there, just act.
                 actionThrunnable.thrun();
-            }
-            else  {
+            } else {
                 confirmMoveToLocationAndAct(parentComponent, moveBeforeActionDescription, allowWithoutMove,
                         () -> {
                             MovableUtils.moveToLocationAtSafeZ(movable, location);
@@ -256,34 +270,31 @@ public class UiUtils {
         });
     }
 
-    public static void confirmMoveToLocationAndAct(Component parentComponent, 
+    public static void confirmMoveToLocationAndAct(Component parentComponent,
             String moveBeforeActionDescription, boolean allowWithoutMove,
             final Thrunnable motionThrunnable,
             final Thrunnable actionThrunnable) {
-    
+
         messageBoxOnException(() -> {
             if (moveBeforeActionDescription == null) {
                 // No motion given.
                 actionThrunnable.thrun();
-            }
-            else if (Configuration.get().getMachine().isEnabled()) {
+            } else if (Configuration.get().getMachine().isEnabled()) {
                 // We need to move there, ask the user to confirm.
                 int result;
                 if (allowWithoutMove) {
                     if (moveBeforeActionDescription != null) {
                         result = JOptionPane.showConfirmDialog(parentComponent,
-                                "Do you want to "+moveBeforeActionDescription+"?\n",
+                                "Do you want to " + moveBeforeActionDescription + "?\n",
                                 null, JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
-                    }
-                    else {
+                    } else {
                         result = JOptionPane.NO_OPTION;
                     }
-                }
-                else {
+                } else {
                     result = JOptionPane.showConfirmDialog(parentComponent,
-                            "About to "+moveBeforeActionDescription+".\n"
-                                    +"Do you want to proceed?",
-                                    null, JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+                            "About to " + moveBeforeActionDescription + ".\n"
+                                    + "Do you want to proceed?",
+                            null, JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
                 }
                 if (result == JOptionPane.YES_OPTION) {
                     // Move wanted.
@@ -291,24 +302,21 @@ public class UiUtils {
                         motionThrunnable.thrun();
                         UiUtils.messageBoxOnExceptionLater(actionThrunnable);
                     });
-                }
-                else if (result == JOptionPane.NO_OPTION && allowWithoutMove) {
+                } else if (result == JOptionPane.NO_OPTION && allowWithoutMove) {
                     // No move wanted.
                     actionThrunnable.thrun();
                 }
-            }
-            else {
+            } else {
                 // We can't move but should.
                 if (!allowWithoutMove) {
-                    // Just say we can't. 
-                    throw new Exception("Machine not enabled, unable to "+moveBeforeActionDescription+".");
-                }
-                else {
-                    // Ask the user if it is OK to proceed without moving. 
+                    // Just say we can't.
+                    throw new Exception("Machine not enabled, unable to " + moveBeforeActionDescription + ".");
+                } else {
+                    // Ask the user if it is OK to proceed without moving.
                     int result = JOptionPane.showConfirmDialog(parentComponent,
-                            "Machine not enabled, unable to "+moveBeforeActionDescription+".\n"
-                                    +"Do you want to proceed anyway?",
-                                    null, JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+                            "Machine not enabled, unable to " + moveBeforeActionDescription + ".\n"
+                                    + "Do you want to proceed anyway?",
+                            null, JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
                     if (result == JOptionPane.YES_OPTION) {
                         actionThrunnable.thrun();
                     }
@@ -324,58 +332,107 @@ public class UiUtils {
      */
     public static void browseUri(String uri) {
         UiUtils.messageBoxOnException(() -> {
-            Logger.trace("Browse to "+uri);
+            Logger.trace("Browse to " + uri);
             try {
                 // First try the official desktop method.
                 if (Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
                     Desktop.getDesktop().browse(new URI(uri));
-                }
-                else {
-                    // No luck, try a more direct & hacky method. 
+                } else {
+                    // No luck, try a more direct & hacky method.
                     // Adapted from Teocci's https://stackoverflow.com/a/51758886 CC BY-SA 4.0
                     Runtime rt = Runtime.getRuntime();
                     if (SystemUtils.IS_OS_WINDOWS) {
                         rt.exec("rundll32 url.dll,FileProtocolHandler " + uri).waitFor();
-                    } 
-                    else if (SystemUtils.IS_OS_MAC) {
-                        String[] cmd = {"open", uri};
+                    } else if (SystemUtils.IS_OS_MAC) {
+                        String[] cmd = { "open", uri };
                         rt.exec(cmd).waitFor();
-                    } 
-                    else {
+                    } else {
                         // Default to Unix flavor.
                         // See https://portland.freedesktop.org/doc/xdg-open.html
-                        String[] cmd = {"xdg-open", uri};
+                        String[] cmd = { "xdg-open", uri };
                         rt.exec(cmd).waitFor();
                     }
                 }
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 try {
                     // Still no luck, at least copy the uri to the clipboard.
                     Toolkit.getDefaultToolkit().getSystemClipboard()
-                    .setContents(new StringSelection(uri), null);
+                            .setContents(new StringSelection(uri), null);
                     // And tell the user.
-                    MessageBoxes.infoBox("Open Web Browser", 
+                    MessageBoxes.infoBox("Open Web Browser",
                             "<html>"
                                     + "<p>This platform does not support direct web browsing.</p><br/>"
                                     + "<p>However, the URI was copied to the clipboard, please paste into your favorite browser's address line.</p><br/>"
-                                    + "<p><a href=\""+uri+"\">"+uri+"</a></p>"
+                                    + "<p><a href=\"" + uri + "\">" + uri + "</a></p>"
                                     + "</html>");
-                }
-                catch (Exception e1) {
+                } catch (Exception e1) {
                     // Even that failed, nothing left but to lament.
-                    throw new Exception("No system support for URI browsing found. See the log. "+uri, e1);
+                    throw new Exception("No system support for URI browsing found. See the log. " + uri, e1);
                 }
             }
         });
     }
 
     public static boolean isModalDialogBoxOpen() {
-        for( Window w : Window.getWindows() ) {
-            if( w.isShowing() && w instanceof Dialog && ((Dialog)w).isModal() ) {
+        for (Window w : Window.getWindows()) {
+            if (w.isShowing() && w instanceof Dialog && ((Dialog) w).isModal()) {
                 return true;
             }
         }
         return false;
+    }
+
+    /**
+     * Adds mouse listeners to the JScrollPane's viewport view to enable
+     * drag-to-scroll functionality.
+     * The cursor is changed to a hand cursor when dragging.
+     * 
+     * @param scrollPane
+     */
+    public static void enableDragPanning(javax.swing.JScrollPane scrollPane) {
+        if (scrollPane == null) {
+            return;
+        }
+
+        java.awt.Component view = scrollPane.getViewport().getView();
+        if (view == null) {
+            return;
+        }
+
+        javax.swing.event.MouseInputAdapter adapter = new javax.swing.event.MouseInputAdapter() {
+            private java.awt.Point origin;
+
+            @Override
+            public void mousePressed(java.awt.event.MouseEvent e) {
+                origin = new java.awt.Point(e.getPoint());
+                view.setCursor(java.awt.Cursor.getPredefinedCursor(java.awt.Cursor.MOVE_CURSOR));
+            }
+
+            @Override
+            public void mouseReleased(java.awt.event.MouseEvent e) {
+                view.setCursor(java.awt.Cursor.getDefaultCursor());
+            }
+
+            @Override
+            public void mouseDragged(java.awt.event.MouseEvent e) {
+                if (origin != null) {
+                    javax.swing.JViewport viewPort = (javax.swing.JViewport) SwingUtilities
+                            .getAncestorOfClass(javax.swing.JViewport.class, view);
+                    if (viewPort != null) {
+                        int deltaX = origin.x - e.getX();
+                        int deltaY = origin.y - e.getY();
+
+                        java.awt.Rectangle view = viewPort.getViewRect();
+                        view.x += deltaX;
+                        view.y += deltaY;
+
+                        viewPort.scrollRectToVisible(view);
+                    }
+                }
+            }
+        };
+
+        view.addMouseListener(adapter);
+        view.addMouseMotionListener(adapter);
     }
 }

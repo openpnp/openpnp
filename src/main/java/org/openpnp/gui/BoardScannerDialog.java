@@ -199,7 +199,10 @@ public class BoardScannerDialog extends JDialog {
         statusLabel.setText("Done.");
         progressBar.setVisible(false);
         contentPanel.removeAll();
-        contentPanel.add(new JLabel(new ImageIcon(result)), BorderLayout.CENTER);
+        JLabel label = new JLabel(new ImageIcon(result));
+        javax.swing.JScrollPane scrollPane = new javax.swing.JScrollPane(label);
+        org.openpnp.util.UiUtils.enableDragPanning(scrollPane);
+        contentPanel.add(scrollPane, BorderLayout.CENTER);
 
         // Add save button at the bottom
         add(btnSave, BorderLayout.SOUTH);
