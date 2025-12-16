@@ -27,6 +27,8 @@ import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
+import org.openpnp.model.Configuration;
+import org.openpnp.spi.Actuator;
 import org.openpnp.util.MovableUtils;
 
 public class BoardScannerDialog extends JDialog {
@@ -158,34 +160,64 @@ public class BoardScannerDialog extends JDialog {
 
                 // Scan Grid in Local Coordinates
                 double startLocalX = -margin + (fovW / 2);
+
                 double startLocalY = -margin + (fovH / 2);
 
-                g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+                Actuator light = camera.getLightActuator();
+                boolean lightWasOn = false;
+                if (light != null) {
+                    final Actuator lightFinal = light;
+                    // Check if the light is already on to restore state later
+                    Boolean actuated = light.isActuated();
+                    if (actuated == null || !actuated) {
+                        Configuration.get().getMachine().executeIfEnabled(() -> {
+                            lightFinal.actuate(true);
+                            return null;
+                        });
+                        Thread.sleep(250);
+                        lightWasOn = false;
+                    } else {
+                        lightWasOn = true;
+                    }
+                }
 
-                for (int r = 0; r < rows; r++) {
-                    for (int c = 0; c < cols; c++) {
-                        double lx = startLocalX + c * stepX;
-                        double ly = startLocalY + r * stepY;
+                try {
+                    g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
 
-                        Point2D.Double lPt = new Point2D.Double(lx, ly);
-                        Point2D.Double mPt = new Point2D.Double();
-                        boardLocation.getLocalToGlobalTransform().transform(lPt, mPt);
+                    for (int r = 0; r < rows; r++) {
+                        for (int c = 0; c < cols; c++) {
+                            double lx = startLocalX + c * stepX;
+                            double ly = startLocalY + r * stepY;
 
-                        Location target = new Location(boardLocation.getLocation().getUnits(), mPt.x, mPt.y, zVal, 0);
+                            Point2D.Double lPt = new Point2D.Double(lx, ly);
+                            Point2D.Double mPt = new Point2D.Double();
+                            boardLocation.getLocalToGlobalTransform().transform(lPt, mPt);
 
-                        MovableUtils.moveToLocationAtSafeZ(camera, target);
-                        BufferedImage shot = camera.settleAndCapture();
+                            Location target = new Location(boardLocation.getLocation().getUnits(), mPt.x, mPt.y, zVal,
+                                    0);
 
-                        AffineTransform shotToWorld = new AffineTransform();
-                        shotToWorld.setTransform(worldToCanvas);
-                        shotToWorld.translate(mPt.x, mPt.y);
-                        shotToWorld.scale(uppX, -uppY);
-                        shotToWorld.translate(-shot.getWidth() / 2.0, -shot.getHeight() / 2.0);
+                            MovableUtils.moveToLocationAtSafeZ(camera, target);
+                            BufferedImage shot = camera.settleAndCapture();
 
-                        g2.drawImage(shot, shotToWorld, null);
+                            AffineTransform shotToWorld = new AffineTransform();
+                            shotToWorld.setTransform(worldToCanvas);
+                            shotToWorld.translate(mPt.x, mPt.y);
+                            shotToWorld.scale(uppX, -uppY);
+                            shotToWorld.translate(-shot.getWidth() / 2.0, -shot.getHeight() / 2.0);
 
-                        shotCount++;
-                        setProgress(100 * shotCount / totalShots);
+                            g2.drawImage(shot, shotToWorld, null);
+
+                            shotCount++;
+                            setProgress(100 * shotCount / totalShots);
+                        }
+                    }
+                } finally {
+                    if (light != null && !lightWasOn) {
+                        final Actuator lightFinal = light;
+                        Configuration.get().getMachine().executeIfEnabled(() -> {
+                            lightFinal.actuate(false);
+                            return null;
+                        });
                     }
                 }
                 g2.dispose();

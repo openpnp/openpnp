@@ -94,6 +94,7 @@ import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
 import org.openpnp.model.Placement.Type;
 import org.openpnp.spi.Camera;
+import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.JobProcessor.JobProcessorException;
 import org.openpnp.spi.Nozzle;
@@ -988,7 +989,27 @@ public class FeedersPanel extends JPanel implements WizardContainer {
             MovableUtils.moveToLocationAtSafeZ(camera, pickLocation);
             MovableUtils.fireTargetedUserAction(camera);
 
-            BufferedImage rawImage = camera.settleAndCapture();
+            Actuator light = camera.getLightActuator();
+            boolean lightWasOn = false;
+            if (light != null) {
+                Boolean actuated = light.isActuated();
+                if (actuated == null || !actuated) {
+                    light.actuate(true);
+                    Thread.sleep(250);
+                    lightWasOn = false;
+                } else {
+                    lightWasOn = true;
+                }
+            }
+
+            BufferedImage rawImage = null;
+            try {
+                rawImage = camera.settleAndCapture();
+            } finally {
+                if (light != null && !lightWasOn) {
+                    light.actuate(false);
+                }
+            }
 
             // Apply rotation
             double rotation = pickLocation.getRotation();
