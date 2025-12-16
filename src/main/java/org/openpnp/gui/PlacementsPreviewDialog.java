@@ -219,24 +219,17 @@ public class PlacementsPreviewDialog extends JDialog {
         Actuator light = camera.getLightActuator();
         boolean lightWasOn = false;
         if (light != null) {
-            Logger.debug("Light actuator found: " + light.getName());
             // Actuator must be controlled from a machine task
             lightWasOn = Configuration.get().getMachine().submit(() -> {
                 Boolean actuated = light.isActuated();
-                Logger.debug("Light actuated state: " + actuated);
                 if (actuated == null || !actuated) {
-                    Logger.debug("Turning light on...");
                     light.actuate(true);
-                    Logger.debug("Sleeping for light settle...");
                     Thread.sleep(250);
                     return false;
                 } else {
-                    Logger.debug("Light already on.");
                     return true;
                 }
             }).get();
-        } else {
-            Logger.debug("No light actuator found for camera " + camera.getName());
         }
 
         try {

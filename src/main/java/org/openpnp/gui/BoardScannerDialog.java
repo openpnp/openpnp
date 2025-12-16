@@ -276,14 +276,4 @@ public class BoardScannerDialog extends JDialog {
             }
         }
     }
-
-    // Fallback constructor if referenced elsewhere in MainFrame (removed later, but
-    // keeps generic signature valid for now locally)
-    public BoardScannerDialog() {
-        this(null, null); // Will throw NPE if used, but we are removing usages.
-        // Or better, just delete the component entirely if I am sure.
-        // But to be safe against partial compilation I'll just leave this as 'broken'
-        // or simple throw.
-        throw new UnsupportedOperationException("Manual Board Scanner is deprecated. Use Context Menu.");
-    }
 }
