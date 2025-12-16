@@ -419,6 +419,15 @@ public class PlacementsPreviewDialog extends JDialog {
         JLabel label = new JLabel(new ImageIcon(image));
         javax.swing.JScrollPane scrollPane = new javax.swing.JScrollPane(label);
         org.openpnp.util.UiUtils.enableDragPanning(scrollPane);
+
+        // Limit size to 75% of screen or image size, whichever is smaller
+        java.awt.Dimension screenSize = java.awt.Toolkit.getDefaultToolkit().getScreenSize();
+        int maxWidth = (int) (screenSize.width * 0.75);
+        int maxHeight = (int) (screenSize.height * 0.75);
+        scrollPane.setPreferredSize(new java.awt.Dimension(
+                Math.min(image.getWidth(), maxWidth),
+                Math.min(image.getHeight(), maxHeight)));
+
         contentPanel.add(scrollPane, BorderLayout.CENTER);
 
         JButton btnSave = new JButton("Save Image...");
