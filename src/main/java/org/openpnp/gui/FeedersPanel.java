@@ -75,26 +75,26 @@ import org.openpnp.gui.components.ClassSelectionDialog;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.ActionGroup;
 import org.openpnp.gui.support.CustomBooleanRenderer;
+import org.openpnp.gui.support.FeederUtils;
 import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.Icons;
+import org.openpnp.gui.support.ImageCaptureUtils;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.gui.tablemodel.FeedersTableModel;
+import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.machine.reference.vision.AbstractPartAlignment;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision;
-import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Configuration.TablesLinked;
 import org.openpnp.model.Job;
-import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
 import org.openpnp.model.Placement.Type;
 import org.openpnp.spi.Camera;
-import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.JobProcessor.JobProcessorException;
 import org.openpnp.spi.Nozzle;
@@ -603,12 +603,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
     }
 
     protected Location preliminaryPickLocation(Feeder feeder, Nozzle nozzle) throws Exception {
-        Location pickLocation = feeder.getPickLocation();
-        if (feeder.isPartHeightAbovePickLocation()) {
-            Length partHeight = nozzle.getSafePartHeight(feeder.getPart());
-            pickLocation = pickLocation.add(new Location(partHeight.getUnits(), 0, 0, partHeight.getValue(), 0));
-        }
-        return pickLocation;
+        return FeederUtils.preliminaryPickLocation(feeder, nozzle);
     }
 
     public Action newFeederAction = new AbstractAction() {
@@ -989,94 +984,16 @@ public class FeedersPanel extends JPanel implements WizardContainer {
             MovableUtils.moveToLocationAtSafeZ(camera, pickLocation);
             MovableUtils.fireTargetedUserAction(camera);
 
-            Actuator light = camera.getLightActuator();
-            boolean lightWasOn = false;
-            if (light != null) {
-                Boolean actuated = light.isActuated();
-                if (actuated == null || !actuated) {
-                    light.actuate(true);
-                    Thread.sleep(250);
-                    lightWasOn = false;
-                } else {
-                    lightWasOn = true;
-                }
-            }
-
-            BufferedImage rawImage = null;
+            BufferedImage displayImage;
             try {
-                rawImage = camera.settleAndCapture();
-            } finally {
-                if (light != null && !lightWasOn) {
-                    light.actuate(false);
-                }
-            }
-
-            // Apply rotation
-            double rotation = pickLocation.getRotation();
-            BufferedImage rotatedImage;
-            if (rotation != 0) {
-                // Rotate the image
-                int w = rawImage.getWidth();
-                int h = rawImage.getHeight();
-                int type = rawImage.getType() == 0 ? BufferedImage.TYPE_INT_ARGB : rawImage.getType();
-                rotatedImage = new BufferedImage(w, h, type);
-                java.awt.Graphics2D g2 = rotatedImage.createGraphics();
-                g2.setRenderingHint(java.awt.RenderingHints.KEY_INTERPOLATION,
-                        java.awt.RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-                g2.setRenderingHint(java.awt.RenderingHints.KEY_RENDERING,
-                        java.awt.RenderingHints.VALUE_RENDER_QUALITY);
-                g2.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING,
-                        java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
-
-                java.awt.geom.AffineTransform xform = new java.awt.geom.AffineTransform();
-                xform.rotate(Math.toRadians(rotation), w / 2.0, h / 2.0);
-                g2.drawRenderedImage(rawImage, xform);
-                g2.dispose();
-            } else {
-                rotatedImage = rawImage;
-            }
-
-            // Crop to package dimensions if available
-            BufferedImage finalImage = rotatedImage;
-            try {
-                Part part = feeder.getPart();
-                if (part != null && part.getPackage() != null && part.getPackage().getFootprint() != null) {
-                    org.openpnp.model.Footprint footprint = part.getPackage().getFootprint();
-                    double bodyWidth = footprint.getBodyWidth();
-                    double bodyHeight = footprint.getBodyHeight();
-
-                    if (bodyWidth > 0 && bodyHeight > 0) {
-                        Location unitsPerPixel = camera.getUnitsPerPixel();
-                        double upp = Math.abs(unitsPerPixel.getX()); // Assuming square pixels or using X for simplicity
-
-                        // Convert to pixels
-                        int targetW = (int) Math.ceil(bodyWidth / upp);
-                        int targetH = (int) Math.ceil(bodyHeight / upp);
-
-                        // Add margin (e.g. 20% or 1mm, user said "small margin")
-                        // Let's do 20%
-                        targetW = (int) (targetW * 1.2);
-                        targetH = (int) (targetH * 1.2);
-
-                        // Ensure we don't crop larger than the image
-                        targetW = Math.min(targetW, rotatedImage.getWidth());
-                        targetH = Math.min(targetH, rotatedImage.getHeight());
-
-                        // Center crop
-                        int x = (rotatedImage.getWidth() - targetW) / 2;
-                        int y = (rotatedImage.getHeight() - targetH) / 2;
-
-                        if (x >= 0 && y >= 0) {
-                            finalImage = rotatedImage.getSubimage(x, y, targetW, targetH);
-                        }
-                    }
-                }
+                // Use ImageCaptureUtils
+                BufferedImage rawImage = ImageCaptureUtils.settleAndCaptureWithLight(camera);
+                BufferedImage rotatedImage = ImageCaptureUtils.rotateImage(rawImage, pickLocation.getRotation());
+                displayImage = ImageCaptureUtils.cropImageToPart(rotatedImage, feeder.getPart(), camera);
             } catch (Exception e) {
-                // Ignore cropping errors
+                UiUtils.showError(e);
+                return;
             }
-
-            // Final check for effective final for lambda
-            BufferedImage displayImage = finalImage;
 
             SwingUtilities.invokeLater(() -> {
                 JDialog dialog = new JDialog(MainFrame.get(), "Feeder Image: " + feeder.getName(), false);

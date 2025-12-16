@@ -33,13 +33,10 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
-import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
-import org.pmw.tinylog.Logger;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.util.MovableUtils;
-import org.openpnp.util.UiUtils;
 
 public class PlacementsPreviewDialog extends JDialog {
     public enum PreviewMode {
@@ -149,132 +146,7 @@ public class PlacementsPreviewDialog extends JDialog {
 
     // --- Board Scanning Logic ---
     private BufferedImage scanBoard(Consumer<Integer> progressCallback) throws Exception {
-        Location boardDims = boardLocation.getBoard().getDimensions();
-        double boardW = boardDims.getX();
-        double boardH = boardDims.getY();
-
-        if (boardW <= 0) {
-            boardW = 100;
-        }
-        if (boardH <= 0) {
-            boardH = 100;
-        }
-
-        double margin = 5.0; // 5mm margin
-
-        Location unitsPerPixel = camera.getUnitsPerPixel();
-        double uppX = Math.abs(unitsPerPixel.getX());
-        double uppY = Math.abs(unitsPerPixel.getY());
-        double canvasUpp = uppX;
-
-        // Field of View
-        double fovW = camera.getWidth() * uppX;
-        double fovH = camera.getHeight() * uppY;
-
-        // Overlap
-        double overlap = 0.1;
-
-        // Rotation scaling to ensure coverage
-        double rad = Math.toRadians(boardLocation.getLocation().getRotation());
-        double scaleFactor = 1.0 / (Math.abs(Math.cos(rad)) + Math.abs(Math.sin(rad)));
-
-        double stepX = fovW * scaleFactor * (1.0 - overlap);
-        double stepY = fovH * scaleFactor * (1.0 - overlap);
-
-        int cols = (int) Math.ceil((boardW + 2 * margin) / stepX);
-        int rows = (int) Math.ceil((boardH + 2 * margin) / stepY);
-        int totalShots = cols * rows;
-
-        // Canvas Size
-        int canvasW = (int) Math.ceil((boardW + 2 * margin) / canvasUpp);
-        int canvasH = (int) Math.ceil((boardH + 2 * margin) / canvasUpp);
-
-        BufferedImage combined = new BufferedImage(canvasW, canvasH, BufferedImage.TYPE_INT_ARGB);
-        Graphics2D g2 = combined.createGraphics();
-        g2.setColor(Color.BLACK);
-        g2.fillRect(0, 0, canvasW, canvasH);
-
-        // Transform Setup: Machine -> World -> Local -> Canvas
-        AffineTransform worldToLocal = boardLocation.getLocalToGlobalTransform().createInverse();
-
-        // Local -> Canvas
-        AffineTransform localToCanvas = new AffineTransform();
-        localToCanvas.translate(margin / canvasUpp, margin / canvasUpp);
-        localToCanvas.scale(1.0 / canvasUpp, -1.0 / canvasUpp);
-        localToCanvas.translate(0, -boardH);
-
-        AffineTransform worldToCanvas = new AffineTransform(localToCanvas);
-        worldToCanvas.concatenate(worldToLocal);
-
-        double zVal = boardLocation.getLocation().getZ();
-
-        int shotCount = 0;
-
-        // Grid Scan in Local Coordinates
-        double startLocalX = -margin + (fovW / 2);
-        double startLocalY = -margin + (fovH / 2);
-
-        g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-
-        Actuator light = camera.getLightActuator();
-        boolean lightWasOn = false;
-        if (light != null) {
-            // Actuator must be controlled from a machine task
-            lightWasOn = Configuration.get().getMachine().submit(() -> {
-                Boolean actuated = light.isActuated();
-                if (actuated == null || !actuated) {
-                    light.actuate(true);
-                    Thread.sleep(250);
-                    return false;
-                } else {
-                    return true;
-                }
-            }).get();
-        }
-
-        try {
-            for (int r = 0; r < rows; r++) {
-                for (int c = 0; c < cols; c++) {
-                    double lx = startLocalX + c * stepX;
-                    double ly = startLocalY + r * stepY;
-
-                    // Convert Local to Machine
-                    Point2D.Double lPt = new Point2D.Double(lx, ly);
-                    Point2D.Double mPt = new Point2D.Double();
-                    boardLocation.getLocalToGlobalTransform().transform(lPt, mPt);
-
-                    Location target = new Location(boardLocation.getLocation().getUnits(), mPt.x, mPt.y, zVal, 0);
-
-                    MovableUtils.moveToLocationAtSafeZ(camera, target);
-                    BufferedImage shot = camera.settleAndCapture();
-
-                    // Draw Shot
-                    AffineTransform shotToWorld = new AffineTransform();
-                    shotToWorld.setTransform(worldToCanvas);
-                    shotToWorld.translate(mPt.x, mPt.y);
-                    shotToWorld.scale(uppX, -uppY);
-                    shotToWorld.translate(-shot.getWidth() / 2.0, -shot.getHeight() / 2.0);
-
-                    g2.drawImage(shot, shotToWorld, null);
-
-                    shotCount++;
-                    if (progressCallback != null) {
-                        progressCallback.accept(100 * shotCount / totalShots);
-                    }
-                }
-            }
-        } finally {
-            if (light != null && !lightWasOn) {
-                // Actuator must be controlled from a machine task
-                Configuration.get().getMachine().submit(() -> {
-                    light.actuate(false);
-                    return null;
-                }).get();
-            }
-        }
-        g2.dispose();
-
-        return combined;
+        return org.openpnp.gui.support.BoardScanner.scanBoard(boardLocation, camera, progressCallback);
     }
 
     private BufferedImage capturePartImage(Part part) throws Exception {
@@ -288,65 +160,11 @@ public class PlacementsPreviewDialog extends JDialog {
 
             MovableUtils.moveToLocationAtSafeZ(camera, pickLoc);
 
-            // Manual Light Control
-            Actuator light = camera.getLightActuator();
-            boolean lightWasOn = false;
-            if (light != null) {
-                Boolean actuated = light.isActuated();
-                if (actuated == null || !actuated) {
-                    light.actuate(true);
-                    Thread.sleep(250);
-                    lightWasOn = false;
-                } else {
-                    lightWasOn = true;
-                }
-            }
+            BufferedImage raw = org.openpnp.gui.support.ImageCaptureUtils.settleAndCaptureWithLight(camera);
 
-            BufferedImage raw = null;
-            try {
-                raw = camera.settleAndCapture();
-            } finally {
-                if (light != null && !lightWasOn) {
-                    light.actuate(false);
-                }
-            }
+            BufferedImage rotated = org.openpnp.gui.support.ImageCaptureUtils.rotateImage(raw, pickLoc.getRotation());
 
-            // Rotate
-            double rotation = pickLoc.getRotation();
-            BufferedImage rotated = raw;
-            if (rotation != 0) {
-                int w = raw.getWidth();
-                int h = raw.getHeight();
-                rotated = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
-                Graphics2D g2 = rotated.createGraphics();
-                g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-                AffineTransform xform = new AffineTransform();
-                xform.rotate(Math.toRadians(rotation), w / 2.0, h / 2.0);
-                g2.drawRenderedImage(raw, xform);
-                g2.dispose();
-            }
-
-            // Crop
-            BufferedImage finalImg = rotated;
-            if (part.getPackage() != null && part.getPackage().getFootprint() != null) {
-                double bw = part.getPackage().getFootprint().getBodyWidth();
-                double bh = part.getPackage().getFootprint().getBodyHeight();
-                if (bw > 0 && bh > 0) {
-                    double upp = Math.abs(camera.getUnitsPerPixel().getX());
-                    int tw = (int) (bw / upp * 1.2);
-                    int th = (int) (bh / upp * 1.2);
-                    tw = Math.min(tw, rotated.getWidth());
-                    th = Math.min(th, rotated.getHeight());
-                    int cx = (rotated.getWidth() - tw) / 2;
-                    int cy = (rotated.getHeight() - th) / 2;
-                    if (cx >= 0 && cy >= 0) {
-                        finalImg = rotated.getSubimage(cx, cy, tw, th);
-                    }
-                }
-            }
-            return finalImg;
+            return org.openpnp.gui.support.ImageCaptureUtils.cropImageToPart(rotated, part, camera);
         }).get();
     }
 
@@ -360,13 +178,9 @@ public class PlacementsPreviewDialog extends JDialog {
     }
 
     // Copied from FeedersPanel/Utils
+    // Copied from FeedersPanel/Utils
     private Location preliminaryPickLocation(Feeder feeder, Nozzle nozzle) throws Exception {
-        Location pickLocation = feeder.getPickLocation();
-        if (nozzle != null && feeder.isPartHeightAbovePickLocation()) {
-            org.openpnp.model.Length partHeight = nozzle.getSafePartHeight(feeder.getPart());
-            pickLocation = pickLocation.add(new Location(partHeight.getUnits(), 0, 0, partHeight.getValue(), 0));
-        }
-        return pickLocation;
+        return org.openpnp.gui.support.FeederUtils.preliminaryPickLocation(feeder, nozzle);
     }
 
     private BufferedImage composite(BufferedImage boardImg, Map<Part, BufferedImage> partImages) {
