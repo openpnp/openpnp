@@ -3,12 +3,11 @@ package org.openpnp.util;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
+import java.util.Comparator;
+import java.util.Collections;
 import org.apache.commons.io.IOUtils;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision;
 import org.openpnp.machine.reference.vision.ReferenceFiducialLocator;
@@ -37,6 +36,7 @@ import com.google.zxing.MultiFormatReader;
 import com.google.zxing.Result;
 import com.google.zxing.client.j2se.BufferedImageLuminanceSource;
 import com.google.zxing.common.HybridBinarizer;
+import org.pmw.tinylog.Logger;
 
 public class VisionUtils {
     final public static String PIPELINE_RESULTS_NAME = "results";
@@ -146,10 +146,46 @@ public class VisionUtils {
         });
         return locations;
     }
-    
-    public static Camera getBottomVisionCamera() throws Exception {
+
+    public static Integer findFirstNumber(String str) {
+        int number = 0;
+        boolean numberStart = false;
+
+        for (char character : str.toCharArray()) {
+            if (Character.isDigit(character)) {
+                number = number * 10 + Character.getNumericValue(character);
+                numberStart = true;
+            } else if (numberStart) {
+                break;
+            }
+        }
+        return numberStart ? number : -1;
+    }
+
+
+    public static Camera getBottomVisionCamera(Nozzle nozzle) throws Exception {
+        if (nozzle != null) {
+            // We have a nozzle, see if camera is selected. If not, fall through and get first up looking.
+            int nozzleNumber = findFirstNumber(nozzle.getName());
+            if (nozzleNumber != -1 ) {
+                for (Camera camera : Configuration.get().getMachine().getCameras()) {
+                    if ( camera.getLooking() == Camera.Looking.Up )
+                    {
+                        if ( nozzleNumber == findFirstNumber(camera.getName()))
+                        {
+                            Logger.trace("Nozzle " + nozzle.getName() + ": returning camera " + camera.getName());
+                            return camera;
+                        }
+                    }
+                }
+
+                Logger.trace("Nozzle " + nozzle.getName() + ": did not find any associated camera");
+            }
+        }
+
         for (Camera camera : Configuration.get().getMachine().getCameras()) {
             if (camera.getLooking() == Camera.Looking.Up) {
+                Logger.trace("Returning default (first) camera " + camera.getName());
                 return camera;
             }
         }

@@ -428,7 +428,7 @@ public class ReferenceBottomVisionOffsetTest {
                 {new Location(LengthUnit.Millimeters, 10.0, 10.0, 0.0, 180.0), error}
         };
         
-        SimulatedUpCamera camera = (SimulatedUpCamera) VisionUtils.getBottomVisionCamera();
+        SimulatedUpCamera camera = (SimulatedUpCamera) VisionUtils.getBottomVisionCamera(nozzle);
         camera.setErrorOffsets(error);
         
         machine.setEnabled(true);
@@ -482,7 +482,7 @@ public class ReferenceBottomVisionOffsetTest {
                 {new Location(LengthUnit.Millimeters, 10.0, 10.0, 0.0, 180.0), error.rotateXy(-error.getRotation() + 180)}
         };
         
-        SimulatedUpCamera camera = (SimulatedUpCamera) VisionUtils.getBottomVisionCamera();
+        SimulatedUpCamera camera = (SimulatedUpCamera) VisionUtils.getBottomVisionCamera(nozzle);
         camera.setErrorOffsets(error);
 
         machine.setEnabled(true);

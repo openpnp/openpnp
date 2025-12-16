@@ -42,7 +42,7 @@ public class ReferenceBottomVisionTest {
 
         Machine machine = Configuration.get().getMachine();
         Nozzle nozzle = machine.getDefaultHead().getDefaultNozzle();
-        SimulatedUpCamera camera = (SimulatedUpCamera) VisionUtils.getBottomVisionCamera();
+        SimulatedUpCamera camera = (SimulatedUpCamera) VisionUtils.getBottomVisionCamera(nozzle);
         Part part = Configuration.get().getPart("R0805-1K"); 
         ReferenceBottomVision bottomVision = ReferenceBottomVision.getDefault();
 

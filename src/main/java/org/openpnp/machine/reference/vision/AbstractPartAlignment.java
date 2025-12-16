@@ -92,7 +92,7 @@ public abstract class AbstractPartAlignment extends AbstractPartSettingsHolder i
             return null;
         }
         try {
-            visionSettings.getPipeline().setProperty("camera", VisionUtils.getBottomVisionCamera());
+            visionSettings.getPipeline().setProperty("camera", VisionUtils.getBottomVisionCamera(null));
         }
         catch (Exception e) {
         }

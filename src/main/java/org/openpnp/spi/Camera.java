@@ -254,4 +254,17 @@ public interface Camera extends HeadMountable, WizardConfigurable,
      * physical camera "pit" must allow for some extra wiggle space, on to of this nominal radius.   
      */
     public Length getRoamingRadius();
+
+    /**
+     * Returns true if displacement has been done instead of actual head move and should be considered when
+     * analyzing captured images.
+     * @return
+     */
+    public boolean isDisplacementActive();
+    public void setDisplacementActive(boolean displacementActive);
+
+    public void setDisplacements(double xDisplacement, double yDisplacement);
+    public double getXDisplacement();
+    public double getYDisplacement();
+
 }

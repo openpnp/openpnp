@@ -95,11 +95,17 @@ public class ImageCapture extends CvStage {
         if (camera == null) {
             throw new Exception("No Camera set on pipeline.");
         }
+
+        // If displacement is active, no need for settling..
+        SettleOption effectiveSettleOption = camera.isDisplacementActive()
+                ? SettleOption.Skip
+                : this.settleOption;
+
         try {
             // Light, settle and capture the image. Keep the lights on for possible averaging.
             camera.actuateLightBeforeCapture((defaultLight ? null : getLight()));
             try {
-                BufferedImage bufferedImage = camera.settleAndCapture(settleOption); 
+                BufferedImage bufferedImage = camera.settleAndCapture(effectiveSettleOption);
                 // Remember the last captured image. This specifically records the native camera image, 
                 // i.e. it does not apply averaging (we want an unaltered raw image for analysis purposes).
                 pipeline.setLastCapturedImage(bufferedImage);

@@ -277,7 +277,7 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
             }
 
             @Override
-            public Camera getCamera() throws Exception { return VisionUtils.getBottomVisionCamera(); }
+            public Camera getCamera() throws Exception { return VisionUtils.getBottomVisionCamera(null); }
 
             @Override
             public void resetPipeline() throws Exception {
@@ -503,8 +503,8 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
 
     private void pipelineConfiguration(CvPipeline pipeline, Map<String, Object> pipelineParameterAssignments, boolean edit) 
             throws Exception {
-        Camera camera = VisionUtils.getBottomVisionCamera();
         Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
+        Camera camera = VisionUtils.getBottomVisionCamera(nozzle);
         // Nominal position of the part over camera center
         double angle = new DoubleConverter(Configuration.get().getLengthDisplayFormat())
                 .convertReverse(testAlignmentAngle.getText());
@@ -572,7 +572,7 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
     public void alignAndCenter(ReferenceBottomVision bottomVision, Nozzle nozzle, double angle, boolean centerAfterTest)
             throws Exception {
         // perform the alignment
-        Camera camera = VisionUtils.getBottomVisionCamera();
+        Camera camera = VisionUtils.getBottomVisionCamera(nozzle);
         Placement dummy = new Placement("Dummy");
         dummy.setLocation(new Location(LengthUnit.Millimeters, 0, 0, 0, angle));
         Double rotationBefore = nozzle.getRotationModeOffset();

@@ -267,7 +267,6 @@ public class VisionSolutions implements Solutions.Subject {
             ReferenceNozzle defaultNozzle = null;
             ReferenceHead defaultHead = null;
             try {
-                defaultCamera = VisionUtils.getBottomVisionCamera();
                 Head head = machine.getDefaultHead();
                 if (head instanceof ReferenceHead) {
                     defaultHead = (ReferenceHead) head;
@@ -275,6 +274,7 @@ public class VisionSolutions implements Solutions.Subject {
                 if (head.getDefaultNozzle() instanceof ReferenceNozzle) {
                     defaultNozzle = (ReferenceNozzle) head.getDefaultNozzle();
                 }
+                defaultCamera = VisionUtils.getBottomVisionCamera(defaultNozzle);
             }
             catch (Exception e1) {
             }

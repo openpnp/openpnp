@@ -164,9 +164,9 @@ public class CalibrationSolutions implements Solutions.Subject {
             Camera defaultCamera = null;
             Nozzle defaultNozzle = null;
             try {
-                defaultCamera = VisionUtils.getBottomVisionCamera();
                 Head head = machine.getDefaultHead();
                 defaultNozzle = head.getDefaultNozzle();
+                defaultCamera = VisionUtils.getBottomVisionCamera(defaultNozzle);
             }
             catch (Exception e1) {
             }

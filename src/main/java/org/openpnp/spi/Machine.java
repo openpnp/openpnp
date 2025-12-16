@@ -402,4 +402,11 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
      * @return True if automatic loading of most recent job at start has been enabled.
      */
     public boolean isAutoLoadMostRecentJob();
+
+    public boolean isDisplacementEnabled();
+    public Length getBalanceLevel();
+    public void setBalanceLevel(Length level);
+    public Length getDisplacementMaxDistance();
+    public Length getDisplacementMaxZDiff();
+    public double getDisplacementMaxRotation();
 }

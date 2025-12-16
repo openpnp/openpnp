@@ -529,7 +529,7 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
                 HeadMountable nozzle = getUiCalibrationNozzle(nozzleTip);
-                Camera camera = VisionUtils.getBottomVisionCamera();
+                Camera camera = VisionUtils.getBottomVisionCamera(nozzleTip.getNozzleWhereLoaded());
                 ReferenceNozzleTipCalibration calibration = nozzleTip.getCalibration();
                 Location location = calibration.getCalibrationLocation(camera, nozzle);
                 MovableUtils.moveToLocationAtSafeZ(nozzle, location);
@@ -636,10 +636,10 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
     }
 
     private void editCalibrationPipeline() throws Exception {
-        Camera camera = VisionUtils.getBottomVisionCamera();
         ReferenceNozzleTipCalibration calibration = nozzleTip.getCalibration();
         // Use the current Nozzle location as the nominal detection location, this allows testing off-center detection.
         ReferenceNozzle nozzle = getUiCalibrationNozzle(nozzleTip);
+        Camera camera = VisionUtils.getBottomVisionCamera(nozzle);
         Location location = nozzle.getLocation();
         Location distance = location.subtract(camera.getLocation());
         if (Math.abs(distance.getLengthX().divide(camera.getUnitsPerPixelAtZ().getLengthX())) >= camera.getWidth()/2
@@ -752,7 +752,7 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(minimumDetailSize);
 
         try {
-            Camera camera = VisionUtils.getBottomVisionCamera();
+            Camera camera = VisionUtils.getBottomVisionCamera(nozzleTip.getNozzleWhereLoaded());
             if (camera instanceof ReferenceCamera) {
                 if (((ReferenceCamera) camera).getAdvancedCalibration().isOverridingOldTransformsAndDistortionCorrectionSettings()) {
                     btnCalibrateCamera.setVisible(false);
@@ -779,7 +779,7 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
                     return;
                 }
             }
-            Camera camera = VisionUtils.getBottomVisionCamera();
+            Camera camera = VisionUtils.getBottomVisionCamera(nozzleTip.getNozzleWhereLoaded());
             camera.ensureCameraVisible();
             CameraView cameraView = MainFrame.get().getCameraViews().getCameraView(camera);
             String [] texts = new String[n];

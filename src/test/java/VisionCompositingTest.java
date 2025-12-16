@@ -76,7 +76,7 @@ public class VisionCompositingTest {
     public void testPackageSolutions() throws Exception {
         Machine machine = Configuration.get().getMachine();
         Nozzle nozzle = machine.getDefaultHead().getDefaultNozzle();
-        SimulatedUpCamera camera = (SimulatedUpCamera) VisionUtils.getBottomVisionCamera();
+        SimulatedUpCamera camera = (SimulatedUpCamera) VisionUtils.getBottomVisionCamera(nozzle);
         camera.setRoamingRadius(new Length(30, LengthUnit.Millimeters));
         ReferenceBottomVision bottomVision = ReferenceBottomVision.getDefault();
         NullDriver driver = (NullDriver) ((ReferenceMachine) machine).getDefaultDriver();

@@ -113,6 +113,10 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
 
     private boolean headSet = false;
 
+    private boolean displacementActive = false;
+    private double xShotDisplacement = 0.0;
+    private double yShotDisplacement = 0.0;
+
 
     public AbstractCamera() {
         this.id = Configuration.createId("CAM");
@@ -397,6 +401,46 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
         this.roamingRadius = roamingRadius;
         firePropertyChange("roamingRadius", oldValue, roamingRadius);
     }
+
+    public boolean isDisplacementActive() {
+        return displacementActive;
+    }
+
+    public void setDisplacementActive(boolean displacementActive) {
+        this.displacementActive = displacementActive;
+    }
+
+    /**
+     * Sets the X and Y offsets of the camera shot, relative to the nozzle.
+     * This is saved, when we did not move the nozzle exactly to the camera center on
+     * machines with multiple bottom vision cameras.
+     * @param xDisplacement The X offset to save.
+     * @param yDisplacement The Y offset to save.
+     */
+    public void setDisplacements(double xDisplacement, double yDisplacement) {
+        this.xShotDisplacement = xDisplacement;
+        this.yShotDisplacement = yDisplacement;
+    }
+
+    /**
+     * Gets the X Displacement for the nozzle picture.
+     *
+     * @return The saved X Displacement.
+     */
+    public double getXDisplacement() {
+        return xShotDisplacement;
+    }
+
+    /**
+     * Gets the Y offset for the nozzle picture.
+     *
+     * @return The saved Y Displacement.
+     */
+    public double getYDisplacement() {
+        return yShotDisplacement;
+    }
+
+
 
     /**
      * Estimates the Z height of an object based upon the observed units per pixel for the

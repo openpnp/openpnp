@@ -34,11 +34,11 @@ import org.openpnp.model.Placement;
 import org.openpnp.model.VisionCompositing;
 import org.openpnp.model.VisionCompositing.Composite;
 import org.openpnp.model.VisionCompositing.Shot;
-import org.openpnp.spi.Camera;
-import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
+import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PartAlignment;
 import org.openpnp.spi.PropertySheetHolder;
+import org.openpnp.spi.Camera;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.Utils2D;
@@ -118,7 +118,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
             throw new Exception("Part mismatch with part on nozzle.");
         }
 
-        Camera camera = VisionUtils.getBottomVisionCamera();
+        Camera camera = VisionUtils.getBottomVisionCamera(nozzle);
         PartAlignmentOffset offsets;
         if ((bottomVisionSettings.getPreRotateUsage() == PreRotateUsage.Default && preRotate)
                 || (bottomVisionSettings.getPreRotateUsage() == PreRotateUsage.AlwaysOn)) {
@@ -147,7 +147,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
             return null;
         }
 
-        Camera camera = VisionUtils.getBottomVisionCamera();
+        Camera camera = VisionUtils.getBottomVisionCamera(nozzle);
         double wantedAngle = 0.0;
         if ((bottomVisionSettings.getPreRotateUsage() == PreRotateUsage.Default && preRotate)
                 || (bottomVisionSettings.getPreRotateUsage() == PreRotateUsage.AlwaysOn)) {
@@ -238,6 +238,12 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                 rect = processPipelineAndGetResult(pipeline, camera, part, nozzle,
                         wantedLocation, nozzleLocation, bottomVisionSettings);
 
+                // If displacement is active, we need to adjust x and y offsets to match the displacement.
+                if( camera.isDisplacementActive() ) {
+                    Location displacement = nozzleLocation.derive(camera.getXDisplacement(), camera.getYDisplacement(),null,null);
+                    nozzleLocation = nozzleLocation.subtract(displacement);
+                    Logger.debug("Bottom vision displacement active, adjusting nozzle location by {}, new nozzleLocation {}", displacement, nozzleLocation);
+                }
                 Logger.debug("Bottom vision part {} result rect {}", part.getId(), rect);
 
                 // Create the offsets object. This is the physical distance from
@@ -550,11 +556,23 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
             pipeline.addProperties(pipelineParameterAssignments);
 
             // Get the shot location, but adjusted by the adjustedNozzleLocation.
-            Location shotLocation = composite.getShotLocation(shot)
-                    .addWithRotation(adjustedNozzleLocation.subtractWithRotation(wantedLocation)); 
+            Location shotLocationTemp = composite.getShotLocation(shot)
+                    .addWithRotation(adjustedNozzleLocation.subtractWithRotation(wantedLocation));
+            boolean displacementIsEnabled = Configuration.get().getMachine().isDisplacementEnabled();
+            if (displacementIsEnabled) {
+                 // Adjust 'shot Z' to nozzle balance level
+                if (nozzle != null) {
+                    double balance = Configuration.get().getMachine().getBalanceLevel().getValue();
+                    shotLocationTemp = shotLocationTemp.derive(null, null, balance, null);
+                    Logger.debug("Setting shotLocation Z to nozzle balance level: {}{}", balance, shotLocationTemp.getUnits());
+                }
+            }
+            final Location shotLocation = shotLocationTemp;
+
             pipeline.new PipelineShot() {
                 @Override
                 public void apply() throws Exception {
+                    camera.setDisplacementActive(false);
                     if (nozzle.getLocation().getLinearLengthTo(camera.getLocation(nozzle))
                             .compareTo(camera.getRoamingRadius()
                                     .add(nozzleTip.getMaxPickTolerance())) > 0) {
@@ -562,7 +580,28 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                         MovableUtils.moveToLocationAtSafeZ(nozzle, shotLocation);
                     }
                     else {
-                        nozzle.moveTo(shotLocation);
+                        if ( displacementIsEnabled ) {
+                            Location currentLocation = nozzle.getLocation();
+                            Logger.debug("Nozzle current location: {}, Target shot location: {}", currentLocation, shotLocation);
+                            double distance = currentLocation.getLinearLengthTo(shotLocation).getValue();
+                            double rotationDifference = Math.abs(currentLocation.getRotation() - shotLocation.getRotation());
+                            double zDifference = Math.abs(currentLocation.getZ() - shotLocation.getZ());
+
+                            if ( distance < Configuration.get().getMachine().getDisplacementMaxDistance().getValue()
+                                    && (rotationDifference < Configuration.get().getMachine().getDisplacementMaxRotation() || rotationDifference == 360)
+                                    && zDifference < Configuration.get().getMachine().getDisplacementMaxZDiff().getValue()) {
+                                Logger.debug("Skipped moveTo because distance ({}) < 0.5mm, rotation difference ({}) < 0.1 degree, and Z difference ({}) < 0.1mm", distance, rotationDifference, zDifference);
+                                double xOffset = shotLocation.getX() - currentLocation.getX();
+                                double yOffset = shotLocation.getY() - currentLocation.getY();
+                                camera.setDisplacements(xOffset, yOffset);
+                                camera.setDisplacementActive(true);
+                                Logger.debug("Saved offsets - X Offset: {}, Y Offset: {}", xOffset, yOffset);
+                            } else {
+                                nozzle.moveTo(shotLocation);
+                            }
+                        } else {
+                            nozzle.moveTo(shotLocation);
+                        }
                     }
                     super.apply();
                 }

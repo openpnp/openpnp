@@ -174,7 +174,7 @@ public class SampleJobTest {
                 ((ReferenceControllerAxis) axis).setJerkPerSecond3(new Length(0, LengthUnit.Millimeters));
             }
         }
-        SimulatedUpCamera camera = (SimulatedUpCamera) VisionUtils.getBottomVisionCamera();
+        SimulatedUpCamera camera = (SimulatedUpCamera) VisionUtils.getBottomVisionCamera(null);
         camera.setSettleMethod(AbstractSettlingCamera.SettleMethod.FixedTime);
         camera.setSettleTimeMs(0);
         for (Nozzle nozzle : machine.getDefaultHead().getNozzles()) {
