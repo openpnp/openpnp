@@ -27,6 +27,9 @@ import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.FlowLayout;
 import java.awt.Font;
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
+import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -321,6 +324,21 @@ public class MainFrame extends JFrame {
                 prefs.getInt(PREF_WINDOW_Y, PREF_WINDOW_Y_DEF),
                 prefs.getInt(PREF_WINDOW_WIDTH, PREF_WINDOW_WIDTH_DEF),
                 prefs.getInt(PREF_WINDOW_HEIGHT, PREF_WINDOW_HEIGHT_DEF));
+
+        // Ensure the window is within the bounds of a screen.
+        Rectangle windowBounds = getBounds();
+        boolean isWithinScreen = false;
+        for (GraphicsDevice gd : GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices()) {
+            Rectangle screenBounds = gd.getDefaultConfiguration().getBounds();
+            if (windowBounds.intersects(screenBounds)) {
+                isWithinScreen = true;
+                break;
+            }
+        }
+        if (!isWithinScreen) {
+        	// If the window is not within any screen, reset it to the default position.
+            setBounds(PREF_WINDOW_X_DEF, PREF_WINDOW_Y_DEF, PREF_WINDOW_WIDTH_DEF, PREF_WINDOW_HEIGHT_DEF);
+        }
         jobPanel = new JobPanel(configuration, this);
         panelsPanel = new PanelsPanel(configuration, this);
         boardsPanel = new BoardsPanel(configuration, this);
