@@ -382,16 +382,21 @@ public class PhotonFeeder extends ReferenceFeeder {
         }
 
         StringBuilder result = new StringBuilder();
-        result.append(name);
-        result.append(" (Slot: ");
+        result.append("Slot: ");
 
         if (slotAddress == null) {
             result.append("None");
         } else {
+            if (slotAddress < 10) {
+                // zero pad such that ordering by name orders by slot
+                result.append("0");
+            }
             result.append(slotAddress);
         }
 
-        result.append(")");
+        result.append("; ");
+
+        result.append(name);
 
         return result.toString();
     }
