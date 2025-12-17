@@ -56,10 +56,15 @@ public class BoardScanner {
 
         // Rotation scaling to ensure coverage
         double rad = Math.toRadians(boardLocation.getLocation().getRotation());
-        double scaleFactor = 1.0 / (Math.abs(Math.cos(rad)) + Math.abs(Math.sin(rad)));
+        double cos = Math.abs(Math.cos(rad));
+        double sin = Math.abs(Math.sin(rad));
 
-        double stepX = fovW * scaleFactor * (1.0 - overlap);
-        double stepY = fovH * scaleFactor * (1.0 - overlap);
+        // Project FOV limits onto the rotated axes.
+        double limitW = fovW * (1.0 - overlap);
+        double limitH = fovH * (1.0 - overlap);
+
+        double stepX = Math.min(limitW / Math.max(cos, 1e-9), limitH / Math.max(sin, 1e-9));
+        double stepY = Math.min(limitW / Math.max(sin, 1e-9), limitH / Math.max(cos, 1e-9));
 
         int cols = (int) Math.ceil((boardW + 2 * margin) / stepX);
         int rows = (int) Math.ceil((boardH + 2 * margin) / stepY);
