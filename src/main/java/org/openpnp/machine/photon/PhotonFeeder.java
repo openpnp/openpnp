@@ -1,5 +1,11 @@
 package org.openpnp.machine.photon;
 
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.swing.Action;
+
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.photon.exceptions.FeedFailureException;
@@ -9,7 +15,13 @@ import org.openpnp.machine.photon.exceptions.UnconfiguredSlotException;
 import org.openpnp.machine.photon.protocol.ErrorTypes;
 import org.openpnp.machine.photon.protocol.PhotonBus;
 import org.openpnp.machine.photon.protocol.PhotonBusInterface;
-import org.openpnp.machine.photon.protocol.commands.*;
+import org.openpnp.machine.photon.protocol.commands.GetFeederAddress;
+import org.openpnp.machine.photon.protocol.commands.GetFeederId;
+import org.openpnp.machine.photon.protocol.commands.IdentifyFeeder;
+import org.openpnp.machine.photon.protocol.commands.InitializeFeeder;
+import org.openpnp.machine.photon.protocol.commands.MoveFeedForward;
+import org.openpnp.machine.photon.protocol.commands.MoveFeedStatus;
+import org.openpnp.machine.photon.protocol.commands.VendorOptions;
 import org.openpnp.machine.photon.sheets.FeederPropertySheet;
 import org.openpnp.machine.photon.sheets.GlobalConfigPropertySheet;
 import org.openpnp.machine.reference.ReferenceActuator;
@@ -18,19 +30,16 @@ import org.openpnp.machine.reference.driver.GcodeDriver;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 import org.openpnp.model.Solutions;
-import org.openpnp.spi.*;
+import org.openpnp.spi.Actuator;
+import org.openpnp.spi.Driver;
+import org.openpnp.spi.Feeder;
+import org.openpnp.spi.Machine;
+import org.openpnp.spi.Nozzle;
+import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.util.MovableUtils;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
-
-import javax.swing.*;
-
-import java.time.Duration;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class PhotonFeeder extends ReferenceFeeder {
     public static final String ACTUATOR_DATA_NAME = "PhotonFeederData";
@@ -467,30 +476,39 @@ public class PhotonFeeder extends ReferenceFeeder {
         }
 
         StringBuilder result = new StringBuilder();
-        result.append(name);
-        result.append(" (Slot: ");
+        result.append("Slot: ");
 
         if (slotAddress == null) {
             result.append("None");
         } else {
-            result.append(slotAddress);
+            result.append(formatSlot(slotAddress));
         }
 
-        result.append(")");
+        result.append("; ");
+
+        result.append(name);
 
         return result.toString();
     }
 
+    public String formatSlot(int slot) {
+        int maxFeederAddress = photonProperties.getMaxFeederAddress();
+        if (maxFeederAddress >= 0) {
+            if (maxFeederAddress < 10) {
+                return String.format("%01d", slot);
+            }
+            if (maxFeederAddress < 100) {
+                return String.format("%02d", slot);
+            }
+        }
+        return String.format("%03d", slot);
+    }
+
     @Override
     public void setName(String name) {
-        Matcher matcher = Pattern.compile("(\\(Slot: [\\w+]+\\))").matcher(name);
-        while (matcher.find()) {
-            name = name.replace(matcher.group(), "");
-        }
-
-        name = name.trim();
-
-        super.setName(name);
+        // match both the old and new patterns for slot in the name
+        // keep the behavior functional across updates
+        super.setName(name.replaceFirst("(^Slot: \\w+; | \\(Slot: \\w+\\)$)", "").trim());
     }
 
     /**
