@@ -273,9 +273,7 @@ public class PartsPanel extends JPanel implements WizardContainer {
         List<Part> selections = new ArrayList<>();
         for (int selectedRow : table.getSelectedRows()) {
             selectedRow = table.convertRowIndexToModel(selectedRow);
-            if (selectedRow >= 0 && selectedRow < tableModel.getRowCount()) {
-                selections.add(tableModel.getRowObjectAt(selectedRow));
-            }
+            selections.add(tableModel.getRowObjectAt(selectedRow));
         }
         return selections;
     }
@@ -508,7 +506,7 @@ public class PartsPanel extends JPanel implements WizardContainer {
                 tabbedPane.add(wizard.getWizardName(), (JPanel) wizard);
             }
             MainFrame mainFrame = MainFrame.get();
-            if (mainFrame != null && mainFrame.getTabs().getSelectedComponent() == mainFrame.getPartsTab() 
+            if (mainFrame.getTabs().getSelectedComponent() == mainFrame.getPartsTab() 
                     && Configuration.get().getTablesLinked() == TablesLinked.Linked) {
                 mainFrame.getPackagesTab().selectPackageInTable(selectedPart.getPackage());
                 mainFrame.getFeedersTab().selectFeederForPart(selectedPart);
@@ -529,14 +527,12 @@ public class PartsPanel extends JPanel implements WizardContainer {
         if(Configuration.get().getTablesLinked() == TablesLinked.Linked)
         {
             MainFrame mainFrame = MainFrame.get();
-            if (mainFrame != null) {
-                mainFrame.getPartsTab().selectPartInTable(part);
-                if (part != null) {
-                    mainFrame.getPackagesTab().selectPackageInTable(part.getPackage());
-                }
-                mainFrame.getFeedersTab().selectFeederForPart(part);
-                mainFrame.getVisionSettingsTab().selectVisionSettingsInTable(part);
+            mainFrame.getPartsTab().selectPartInTable(part);
+            if (part != null) {
+                mainFrame.getPackagesTab().selectPackageInTable(part.getPackage());
             }
+            mainFrame.getFeedersTab().selectFeederForPart(part);
+            mainFrame.getVisionSettingsTab().selectVisionSettingsInTable(part);
         }
     }
 
