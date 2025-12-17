@@ -5,14 +5,17 @@ import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.util.function.Consumer;
 
+import org.openpnp.model.Board;
 import org.openpnp.model.BoardLocation;
+import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
+import org.openpnp.model.Placement;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
-import org.openpnp.model.Configuration;
 import org.openpnp.util.MovableUtils;
 
 public class BoardScanner {
@@ -29,12 +32,15 @@ public class BoardScanner {
      */
     public static BufferedImage scanBoard(BoardLocation boardLocation, Camera camera,
             Consumer<Integer> progressCallback) throws Exception {
-        Location boardDims = boardLocation.getBoard().getDimensions();
-        double boardW = boardDims.getX();
-        double boardH = boardDims.getY();
+        Rectangle2D.Double bounds = getBoardBounds(boardLocation.getBoard());
+        double minX = bounds.x;
+        double minY = bounds.y;
+        double boardW = bounds.width;
+        double boardH = bounds.height;
+        double maxY = minY + boardH;
 
         if (boardW <= 0) {
-            boardW = 100;
+            boardW = 100; // Should not happen with getBoardBounds logic for empty boards, but safety
         }
         if (boardH <= 0) {
             boardH = 100;
@@ -83,10 +89,11 @@ public class BoardScanner {
         AffineTransform worldToLocal = boardLocation.getLocalToGlobalTransform().createInverse();
 
         // Local -> Canvas
+        // Local -> Canvas
         AffineTransform localToCanvas = new AffineTransform();
         localToCanvas.translate(margin / canvasUpp, margin / canvasUpp);
         localToCanvas.scale(1.0 / canvasUpp, -1.0 / canvasUpp);
-        localToCanvas.translate(0, -boardH);
+        localToCanvas.translate(-minX, -maxY);
 
         AffineTransform worldToCanvas = new AffineTransform(localToCanvas);
         worldToCanvas.concatenate(worldToLocal);
@@ -96,8 +103,9 @@ public class BoardScanner {
         int shotCount = 0;
 
         // Grid Scan in Local Coordinates
-        double startLocalX = -margin + (fovW / 2);
-        double startLocalY = -margin + (fovH / 2);
+        // Grid Scan in Local Coordinates
+        double startLocalX = minX - margin + (fovW / 2);
+        double startLocalY = minY - margin + (fovH / 2);
 
         g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
 
@@ -160,5 +168,43 @@ public class BoardScanner {
         g2.dispose();
 
         return combined;
+    }
+
+    public static Rectangle2D.Double getBoardBounds(Board board) {
+        if (board.getPlacements().isEmpty()) {
+            Location boardDims = board.getDimensions();
+            double boardW = boardDims.getX();
+            double boardH = boardDims.getY();
+
+            if (boardW <= 0) {
+                boardW = 100;
+            }
+            if (boardH <= 0) {
+                boardH = 100;
+            }
+            return new Rectangle2D.Double(0, 0, boardW, boardH);
+        }
+
+        double minX = Double.MAX_VALUE;
+        double minY = Double.MAX_VALUE;
+        double maxX = -Double.MAX_VALUE;
+        double maxY = -Double.MAX_VALUE;
+
+        for (Placement p : board.getPlacements()) {
+            Location loc = p.getLocation();
+            if (loc.getX() < minX) {
+                minX = loc.getX();
+            }
+            if (loc.getX() > maxX) {
+                maxX = loc.getX();
+            }
+            if (loc.getY() < minY) {
+                minY = loc.getY();
+            }
+            if (loc.getY() > maxY) {
+                maxY = loc.getY();
+            }
+        }
+        return new Rectangle2D.Double(minX, minY, maxX - minX, maxY - minY);
     }
 }

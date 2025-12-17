@@ -9,6 +9,7 @@ import java.awt.RenderingHints;
 import java.awt.Shape;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.HashMap;
@@ -191,10 +192,12 @@ public class PlacementsPreviewDialog extends JDialog {
         g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-        double boardH = boardLocation.getBoard().getDimensions().getY();
-        if (boardH <= 0) {
-            boardH = 100;
-        }
+        Rectangle2D.Double bounds = org.openpnp.gui.support.BoardScanner.getBoardBounds(boardLocation.getBoard());
+        double minX = bounds.x;
+        double minY = bounds.y;
+        double boardH = bounds.height;
+        double maxY = minY + boardH;
+
         double margin = 5.0;
         double upp = Math.abs(camera.getUnitsPerPixel().getX());
 
@@ -202,7 +205,7 @@ public class PlacementsPreviewDialog extends JDialog {
         AffineTransform localToCanvas = new AffineTransform();
         localToCanvas.translate(margin / upp, margin / upp);
         localToCanvas.scale(1.0 / upp, -1.0 / upp);
-        localToCanvas.translate(0, -boardH);
+        localToCanvas.translate(-minX, -maxY);
 
         for (Placement p : boardLocation.getBoard().getPlacements()) {
             BufferedImage partImg = partImages.get(p.getPart());
@@ -241,10 +244,12 @@ public class PlacementsPreviewDialog extends JDialog {
         g2.setColor(Color.YELLOW);
         g2.setStroke(new BasicStroke(2.0f));
 
-        double boardH = boardLocation.getBoard().getDimensions().getY();
-        if (boardH <= 0) {
-            boardH = 100;
-        }
+        Rectangle2D.Double bounds = org.openpnp.gui.support.BoardScanner.getBoardBounds(boardLocation.getBoard());
+        double minX = bounds.x;
+        double minY = bounds.y;
+        double boardH = bounds.height;
+        double maxY = minY + boardH;
+
         double margin = 5.0;
         double upp = Math.abs(camera.getUnitsPerPixel().getX());
 
@@ -252,7 +257,7 @@ public class PlacementsPreviewDialog extends JDialog {
         AffineTransform localToCanvas = new AffineTransform();
         localToCanvas.translate(margin / upp, margin / upp);
         localToCanvas.scale(1.0 / upp, -1.0 / upp);
-        localToCanvas.translate(0, -boardH);
+        localToCanvas.translate(-minX, -maxY);
 
         for (Placement p : boardLocation.getBoard().getPlacements()) {
             if (p.getType() != Placement.Type.Placement) {
