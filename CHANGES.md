@@ -8,7 +8,7 @@ a complete change list, only those that may directly interest or affect users.
 * The [Rank](https://github.com/openpnp/openpnp/wiki/Rank) feature, supporting the "how do I make sure X is placed before Y?" requirement. [PR 1842](https://github.com/openpnp/openpnp/pull/1842)
 * Job planner improvements which improve throughput [PR 1857](https://github.com/openpnp/openpnp/pull/1857)
 * Changes for Photon feeder:
-    * Speed up feeding by moving while feeding. NB this is enabled by default. [PR 1843](https://github.com/openpnp/openpnp/pull/1843) [PR 1903](https://github.com/openpnp/openpnp/pull/1903)
+    * Speed up feeding by moving while feeding. NB this is enabled by default. [PR 1843](https://github.com/openpnp/openpnp/pull/1843) [PR 1903](https://github.com/openpnp/openpnp/pull/1903) [PR 1929](https://github.com/openpnp/openpnp/pull/1929)
     * Added "Skip Next Feed" and "Disable Feed" feeder options and Recycle support [PR 1900](https://github.com/openpnp/openpnp/pull/1900)
     * Added "Feed 1mm" button [PR 1913](https://github.com/openpnp/openpnp/pull/1913)
 * Many translation improvements. [PR 1871](https://github.com/openpnp/openpnp/pull/1871)
@@ -18,6 +18,7 @@ a complete change list, only those that may directly interest or affect users.
 * Each feeder records a tally of whether its parts led to successful placements, or have problems such as failing the vision check. The default configuration is for a feeder to get disabled if it fails 3 out of 6 placements. This tally is shown in a new column on the Feeders page. [PR 1898](https://github.com/openpnp/openpnp/pull/1898)
 * Feeders have a new Priority field (Low/Normal/High). It picks from the highest priority if there are multiple feeders enabled for one part. This is for using up the tail end of an old tape, and having the machine automatically swap over to the new tape when empty. [PR 1898](https://github.com/openpnp/openpnp/pull/1898) [PR 1922](https://github.com/openpnp/openpnp/pull/1922)
 * If there are multiple feeders (for one part) at the same priority it will now use the closest. [PR 1898](https://github.com/openpnp/openpnp/pull/1898)
+* If camera lighting is configured to be turned off after a capture, openpnp will now keep the light on for the duration of a batch of captures, for example during part alignment, or board fiducial scan. [PR 1915](https://github.com/openpnp/openpnp/pull/1915)
 * Changes for scripting:
     * A new "Job.Error" script. [PR 1889](https://github.com/openpnp/openpnp/pull/1889)
     * A new "Feeder.Fault" script. [PR 1898](https://github.com/openpnp/openpnp/pull/1898)
@@ -34,7 +35,8 @@ a complete change list, only those that may directly interest or affect users.
 * Fix an error message when deleting a Part [PR1906](https://github.com/openpnp/openpnp/pull/1906)
 * Fix the last placement in a job having a longer than expected dwell time. [PR1905](https://github.com/openpnp/openpnp/pull/1905)
 * Fix some vision pipeline stages that could be used to mask 100% of the image which were previously leaving a stray unmasked pixel. [PR1910](https://github.com/openpnp/openpnp/pull/1910)
-
+* Fix bugs handling tray feeders configured with fewer than 1 row or column. [PR1926](https://github.com/openpnp/openpnp/pull/1926)
+* On launch, check if the window is off screen and, if it is, move it to the system default position. [PR1931](https://github.com/openpnp/openpnp/pull/1931)
 
 # Version 2.3
 
