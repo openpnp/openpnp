@@ -346,6 +346,7 @@ extends AbstractConfigurationWizard {
         textFieldDelay0 = new JTextField();
         panelPushPull.add(textFieldDelay0, "6, 14, left, default");
         textFieldDelay0.setColumns(4);
+        textFieldDelay0.setToolTipText("The delay (in milliseconds) after reaching this location");
 
         lblFeedMid1Location = new JLabel("Mid 1 Location");
         panelPushPull.add(lblFeedMid1Location, "2, 16, right, default");
@@ -403,6 +404,7 @@ extends AbstractConfigurationWizard {
         textFieldDelay1 = new JTextField();
         panelPushPull.add(textFieldDelay1, "6, 18, left, default");
         textFieldDelay1.setColumns(4);
+        textFieldDelay1.setToolTipText("The delay (in milliseconds) after reaching this location");
 
         lblFeedMid2Location = new JLabel("Mid 2 Location");
         panelPushPull.add(lblFeedMid2Location, "2, 20, right, default");
@@ -460,6 +462,7 @@ extends AbstractConfigurationWizard {
         textFieldDelay2 = new JTextField();
         panelPushPull.add(textFieldDelay2, "6, 22, left, default");
         textFieldDelay2.setColumns(4);
+        textFieldDelay2.setToolTipText("The delay (in milliseconds) after reaching this location");
 
         lblFeedMid3Location = new JLabel("Mid 3 Location");
         panelPushPull.add(lblFeedMid3Location, "2, 24, right, default");
@@ -518,6 +521,7 @@ extends AbstractConfigurationWizard {
         textFieldDelay3 = new JTextField();
         panelPushPull.add(textFieldDelay3, "6, 26, left, default");
         textFieldDelay3.setColumns(4);
+        textFieldDelay3.setToolTipText("The delay (in milliseconds) after reaching this location");
 
         JLabel lblFeedEndLocation = new JLabel("End Location");
         panelPushPull.add(lblFeedEndLocation, "2, 28, right, default");
@@ -560,6 +564,7 @@ extends AbstractConfigurationWizard {
         textFieldDelay4 = new JTextField();
         panelPushPull.add(textFieldDelay4, "6, 30, left, default");
         textFieldDelay4.setColumns(4);
+        textFieldDelay4.setToolTipText("The delay (in milliseconds) after reaching this location");
 
         btnRotationReset = new JButton(actionRotationReset);
         panelPushPull.add(btnRotationReset, "10, 30, left, default");
@@ -607,6 +612,12 @@ extends AbstractConfigurationWizard {
         addWrappedBinding(feeder, "feedSpeedPull2", textFieldFeedPull2, "text", doubleConverter);
         addWrappedBinding(feeder, "feedSpeedPull1", textFieldFeedPull1, "text", doubleConverter);
         addWrappedBinding(feeder, "feedSpeedPull0", textFieldFeedPull0, "text", doubleConverter);
+
+        addWrappedBinding(feeder, "delay0", textFieldDelay0, "text", intConverter);
+        addWrappedBinding(feeder, "delay1", textFieldDelay1, "text", intConverter);
+        addWrappedBinding(feeder, "delay2", textFieldDelay2, "text", intConverter);
+        addWrappedBinding(feeder, "delay3", textFieldDelay3, "text", intConverter);
+        addWrappedBinding(feeder, "delay4", textFieldDelay4, "text", intConverter);
 
         addWrappedBinding(feeder, "includedPush1", chckbxPush1, "selected");
         addWrappedBinding(feeder, "includedPush2", chckbxPush2, "selected");
