@@ -41,6 +41,7 @@ import org.openpnp.machine.neoden4.Neoden4SwitcherCamera;
 import org.openpnp.machine.pandaplacer.BambooFeederAutoVision;
 import org.openpnp.machine.photon.PhotonFeeder;
 import org.openpnp.machine.rapidplacer.RapidFeeder;
+import org.openpnp.machine.reference.ReferenceCameraBatchOperation;
 import org.openpnp.machine.reference.actuator.ThermistorToLinearSensorActuator;
 import org.openpnp.machine.reference.axis.ReferenceCamClockwiseAxis;
 import org.openpnp.machine.reference.axis.ReferenceCamCounterClockwiseAxis;
@@ -101,6 +102,7 @@ import org.openpnp.model.Solutions.Milestone;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.Camera;
+import org.openpnp.spi.CameraBatchOperation;
 import org.openpnp.spi.Driver;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.FiducialLocator;
@@ -722,4 +724,10 @@ public class ReferenceMachine extends AbstractMachine {
         }
         super.findIssues(solutions);
     }
+
+    CameraBatchOperation cameraBatchOperation = new ReferenceCameraBatchOperation();
+    public CameraBatchOperation getCameraBatchOperation() {
+        return cameraBatchOperation;
+    }
+
 }

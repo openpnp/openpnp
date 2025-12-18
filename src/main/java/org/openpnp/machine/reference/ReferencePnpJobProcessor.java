@@ -50,6 +50,7 @@ import org.openpnp.model.PanelLocation;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
 import org.openpnp.model.PlacementsHolderLocation;
+import org.openpnp.spi.CameraBatchOperation;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.FiducialLocator;
@@ -170,6 +171,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     protected Location previousPickPlanStartLocation;
     protected Location previousPlacePlanStartLocation;
 
+    private boolean cameraBatchOperationStarted;
+
     long startTime;
     int totalPartsPlaced;
     
@@ -216,6 +219,18 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     }
 
     public synchronized void abort() throws JobProcessorException {
+        try {
+            if (cameraBatchOperationStarted) {
+                cameraBatchOperationStarted = false;
+                machine.getCameraBatchOperation().endBatchOperation("job abort");
+            }
+        }
+        catch (Exception e) {
+            // We swallow the error here because if we can't turn the light off there's not really much
+            // we can do. We have to do the rest of the cleanup and end the job.
+            Logger.error(e);
+        }
+
         try {
             new Cleanup().step();
         }
@@ -1551,6 +1566,33 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             
             prerotateAllNozzles(alignLocator);
             
+            return new StartCameraBatchOperation(plannedPlacements);
+        }
+    }
+
+    /**
+     * Start a camera batch operation.
+     * Should any lights get turned on during an alignment, they remain on for the subsequent alignments.
+     */
+    protected class StartCameraBatchOperation implements Step {
+        protected List<PlannedPlacement> plannedPlacements;
+
+        protected StartCameraBatchOperation(List<PlannedPlacement> plannedPlacements) {
+            this.plannedPlacements = plannedPlacements;
+        }
+
+        public Step step() throws JobProcessorException {
+            if (cameraBatchOperationStarted) {
+                // unexpected!
+            } else {
+                CameraBatchOperation cbo = machine.getCameraBatchOperation();
+                if (cbo!=null)
+                {
+                    cbo.startBatchOperation("align step");
+                    cameraBatchOperationStarted = true;
+                }
+            }
+
             return new Align(plannedPlacements);
         }
     }
@@ -1566,9 +1608,9 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         @Override
         public Step stepImpl(PlannedPlacement plannedPlacement) throws JobProcessorException {
             if (plannedPlacement == null) {
-                return new OptimizeNozzlesForPlace(plannedPlacements);
+                return new EndCameraBatchOperation(plannedPlacements);
             }
-            
+
             final Nozzle nozzle = plannedPlacement.nozzle;
             final JobPlacement jobPlacement = plannedPlacement.jobPlacement;
             final Placement placement = jobPlacement.getPlacement();
@@ -1630,6 +1672,32 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             catch (Exception e) {
                 throw new JobProcessorException(nozzle, e);
             }
+        }
+    }
+
+    /**
+     * End a camera batch operation.
+     * Turn of fall the light used during alignment.
+     */
+    protected class EndCameraBatchOperation implements Step {
+        protected List<PlannedPlacement> plannedPlacements;
+
+        protected EndCameraBatchOperation(List<PlannedPlacement> plannedPlacements) {
+            this.plannedPlacements = plannedPlacements;
+        }
+
+        public Step step() throws JobProcessorException {
+            if (cameraBatchOperationStarted) {
+                cameraBatchOperationStarted = false;
+                try {
+                    machine.getCameraBatchOperation().endBatchOperation("align step");
+                }
+                catch (Exception e) {
+                    throw new JobProcessorException(machine, "Error in EndCameraBatchOperation");
+                }
+            }
+
+            return new OptimizeNozzlesForPlace(plannedPlacements);
         }
     }
 
@@ -2450,7 +2518,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         protected PlannedPlacementStep(List<PlannedPlacement> plannedPlacements) {
             this.plannedPlacements = plannedPlacements;
         }
-        
+
         /**
          * Process the step for the given planned placement. The method should perform everything
          * that needs to be done with that planned placement before returning. If there is an
