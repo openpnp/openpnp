@@ -31,6 +31,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Job;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
@@ -98,8 +99,13 @@ public class PlacementsPreviewDialog extends JDialog {
                 int total = placements.size();
                 int current = 0;
 
+                Job job = MainFrame.get().getJobTab().getJob();
+
                 for (Placement p : placements) {
                     if (p.getType() != Placement.Type.Placement) {
+                        continue;
+                    }
+                    if (!job.retrieveEnabledState(boardLocation, p)) {
                         continue;
                     }
                     Part part = p.getPart();
@@ -207,7 +213,11 @@ public class PlacementsPreviewDialog extends JDialog {
         localToCanvas.scale(1.0 / upp, -1.0 / upp);
         localToCanvas.translate(-minX, -maxY);
 
+        Job job = MainFrame.get().getJobTab().getJob();
         for (Placement p : boardLocation.getBoard().getPlacements()) {
+            if (!job.retrieveEnabledState(boardLocation, p)) {
+                continue;
+            }
             BufferedImage partImg = partImages.get(p.getPart());
             if (partImg == null) {
                 continue;
@@ -259,8 +269,12 @@ public class PlacementsPreviewDialog extends JDialog {
         localToCanvas.scale(1.0 / upp, -1.0 / upp);
         localToCanvas.translate(-minX, -maxY);
 
+        Job job = MainFrame.get().getJobTab().getJob();
         for (Placement p : boardLocation.getBoard().getPlacements()) {
             if (p.getType() != Placement.Type.Placement) {
+                continue;
+            }
+            if (!job.retrieveEnabledState(boardLocation, p)) {
                 continue;
             }
             Part part = p.getPart();
