@@ -574,11 +574,16 @@ public class MainFrame extends JFrame {
             @Override
             protected void dispatchEvent(AWTEvent event) {
                 if (event instanceof KeyEvent) {
-                    KeyStroke ks = KeyStroke.getKeyStrokeForEvent((KeyEvent) event);
-                    Action action = hotkeyActionMap.get(ks);
-                    if (action != null && action.isEnabled()) {
-                        action.actionPerformed(null);
-                        return;
+                    // Skip hotkey processing if a text input component has focus.
+                    // This prevents accidental machine motion when editing text
+                    // (e.g., using Ctrl+Shift+Arrow to select words).
+                    if (!UiUtils.isTextInputFocused()) {
+                        KeyStroke ks = KeyStroke.getKeyStrokeForEvent((KeyEvent) event);
+                        Action action = hotkeyActionMap.get(ks);
+                        if (action != null && action.isEnabled()) {
+                            action.actionPerformed(null);
+                            return;
+                        }
                     }
                 }
                 super.dispatchEvent(event);
