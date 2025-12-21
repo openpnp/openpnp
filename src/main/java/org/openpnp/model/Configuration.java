@@ -41,6 +41,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.prefs.Preferences;
 
 import javax.swing.JOptionPane;
@@ -118,6 +119,7 @@ public class Configuration extends AbstractModelObject {
     private LinkedHashMap<String, Part> parts = new LinkedHashMap<>();
     private LinkedHashMap<String, AbstractVisionSettings> visionSettings = new LinkedHashMap<>();
     private Machine machine;
+    private UUID machineUuid;
     private LinkedHashMap<File, Panel> panels = new LinkedHashMap<>();
     private LinkedHashMap<File, Board> boards = new LinkedHashMap<>();
     private boolean loaded;
@@ -570,6 +572,23 @@ public class Configuration extends AbstractModelObject {
             throw new Exception("Error while reading script-state.xml (" + message + ")", e);
         }
 
+        try {
+            File file = new File(configurationDirectory, "machine.uuid.xml");
+            if (!file.exists()) {
+                Logger.info("No machine.uuid.xml found in configuration directory, generating it.");
+                machineUuid = UUID.randomUUID();
+                saveMachineUuid(file);
+            }
+            loadMachineUuid(file);
+        }
+        catch (Exception e) {
+            String message = e.getMessage();
+            if (e.getCause() != null && e.getCause().getMessage() != null) {
+                message = e.getCause().getMessage();
+            }
+            throw new Exception("Error while reading machine.uuid.xml (" + message + ")", e);
+        }
+
         loaded = true;
 
         // Tell all listeners the configuration is loaded. Use a snapshot of the list in order to tolerate new
@@ -751,6 +770,10 @@ public class Configuration extends AbstractModelObject {
         return machine;
     }
 
+    public UUID getMachineUuid() {
+        return machineUuid;
+    }
+    
     /**
      * Adds the specified Panel definition to the configuration
      * @param panel - the Panel definition to be added
@@ -1065,6 +1088,28 @@ public class Configuration extends AbstractModelObject {
     private void saveScriptState(File file) throws Exception {
         ScriptStateConfigurationHolder holder = new ScriptStateConfigurationHolder();
         holder.scriptState = scriptState;
+        serializeObject(holder, file);
+    }
+
+    private void loadMachineUuid(File file) throws Exception {
+        Serializer serializer = createSerializer();
+        // If the file is short, run without a uuid. This is the fallback for time where no uuid
+        // was defined. The minimum length is given by a file where the uuid string has been
+        // entirely removed. If the uuid string itself if malformed, a different exception will
+        // be thrown.
+        if (file.length() > 64) {
+            MachineUuidConfigurationHolder holder =
+                    serializer.read(MachineUuidConfigurationHolder.class, file);
+            machineUuid = UUID.fromString(holder.uuid);
+        }
+        else {
+            machineUuid = null;
+        }
+    }
+
+    private void saveMachineUuid(File file) throws Exception {
+        MachineUuidConfigurationHolder holder = new MachineUuidConfigurationHolder();
+        holder.uuid = new String(machineUuid.toString());
         serializeObject(holder, file);
     }
 
@@ -1625,4 +1670,12 @@ public class Configuration extends AbstractModelObject {
         private TreeMap<String, String> scriptState = new TreeMap<>();
     }
 
+    /**
+     * Used to provide a fixed root for the machine uuid when serializing.
+     */
+    @Root(name = "openpnp-machine-uuid")
+    public static class MachineUuidConfigurationHolder {
+        @Element(required = false)
+        public String uuid;
+    }
 }
