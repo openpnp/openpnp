@@ -686,8 +686,12 @@ public class FeedersPanel extends JPanel implements WizardContainer {
      * @throws JobProcessorException
      */
     public static void pickFeeder(Feeder feeder) throws Exception, JobProcessorException {
+        Nozzle nozzle = getCompatibleNozzleAndTip(feeder, true);
+        if (nozzle.getPart() != null) {
+            throw new Exception("Nozzle "+nozzle.getName()+" has loaded part.");
+        }
         // Do the feed an get the nozzle for the pick.
-        Nozzle nozzle = feedFeeder(feeder);
+        nozzle = feedFeeder(feeder);
 
         // Perform the vacuum check, if enabled.
         if (nozzle.isPartOffEnabled(Nozzle.PartOffStep.BeforePick)) {
