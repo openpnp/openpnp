@@ -80,9 +80,9 @@ public class ReferenceTrayFeeder extends ReferenceFeeder {
         }
 
         // Multiply the offsets by the X/Y part indexes to get the total offsets
+        // Rotate according to the rotation part of the offset
         // and then add the pickLocation to offset the final value.
-        // and then add them to the location to get the final pickLocation.
-        return location.add(offsets.multiply(partX, partY, 0.0, 0.0));
+        return location.addWithRotation(offsets.multiply(partX, partY, 0.0, 0.0).rotateXy(offsets.getRotation()));
     }
 
     public void feed(Nozzle nozzle) throws Exception {
