@@ -57,44 +57,50 @@ public class ParallaxPartHeightProvider implements FocusProvider {
         camera.settleAndCapture(); 
         BufferedImage templateImage = camera.capture();
         
-        // 2. Create template from center
-        Mat templateMat = OpenCvUtils.toMat(templateImage);
-        Mat template = cropCenter(templateMat, featureSize);
-        
-        if (showDiagnostics) {
-            CameraView cameraView = MainFrame.get().getCameraViews().getCameraView(camera);
-            if (cameraView != null) {
-                cameraView.showFilteredImage(OpenCvUtils.toBufferedImage(template), "Parallax Template", 1000);
+        try {
+            // 2. Create template from center
+            Mat templateMat = OpenCvUtils.toMat(templateImage);
+            Mat template = cropCenter(templateMat, featureSize);
+            
+            if (showDiagnostics) {
+                CameraView cameraView = MainFrame.get().getCameraViews().getCameraView(camera);
+                if (cameraView != null) {
+                    cameraView.showFilteredImage(OpenCvUtils.toBufferedImage(template), "Parallax Template", 1000);
+                }
             }
+    
+            // 3. Move camera by shiftDistance in X
+            Location shift = new Location(LengthUnit.Millimeters, shiftDistance.getValue(), 0, 0, 0);
+            shift = shift.convertToUnits(startLocation.getUnits());
+            Location shiftLocation = startLocation.add(shift);
+            
+            movable.moveTo(shiftLocation);
+            
+            // Settle
+            Thread.sleep(settleTimeMs);
+            
+            // 4. Capture search image
+            BufferedImage searchImage = camera.capture();
+            Mat searchMat = OpenCvUtils.toMat(searchImage);
+    
+            // 5. Find feature using Template Matching
+            Point matchLoc = matchTemplate(searchMat, template);
+            
+            // Center of the search image
+            Point center = new Point(searchMat.cols() / 2.0, searchMat.rows() / 2.0);
+            
+            // The matchLoc is the top-left of the template. Get center of match.
+            Point matchCenter = new Point(matchLoc.x + template.cols() / 2.0, matchLoc.y + template.rows() / 2.0);
+            
+            double dxPx = matchCenter.x - center.x;
+            
+            Location unitsPerPixel = camera.getUnitsPerPixel(); 
+            return Math.abs(dxPx * unitsPerPixel.getX());
         }
-
-        // 3. Move camera by shiftDistance in X
-        Location shift = new Location(LengthUnit.Millimeters, shiftDistance.getValue(), 0, 0, 0);
-        shift = shift.convertToUnits(startLocation.getUnits());
-        Location shiftLocation = startLocation.add(shift);
-        
-        movable.moveTo(shiftLocation);
-        
-        // Settle
-        Thread.sleep(settleTimeMs);
-        
-        // 4. Capture search image
-        BufferedImage searchImage = camera.capture();
-        Mat searchMat = OpenCvUtils.toMat(searchImage);
-
-        // 5. Find feature using Template Matching
-        Point matchLoc = matchTemplate(searchMat, template);
-        
-        // Center of the search image
-        Point center = new Point(searchMat.cols() / 2.0, searchMat.rows() / 2.0);
-        
-        // The matchLoc is the top-left of the template. Get center of match.
-        Point matchCenter = new Point(matchLoc.x + template.cols() / 2.0, matchLoc.y + template.rows() / 2.0);
-        
-        double dxPx = matchCenter.x - center.x;
-        
-        Location unitsPerPixel = camera.getUnitsPerPixel(); 
-        return Math.abs(dxPx * unitsPerPixel.getX()); 
+        finally {
+            // Move back to start
+            movable.moveTo(startLocation);
+        } 
     }
 
     @Override
