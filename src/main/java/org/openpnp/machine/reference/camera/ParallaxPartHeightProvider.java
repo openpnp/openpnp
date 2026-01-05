@@ -30,6 +30,9 @@ public class ParallaxPartHeightProvider implements FocusProvider {
     private int featureSize = 64;
 
     @Attribute(required = false)
+    private int framesToAverage = 1;
+
+    @Attribute(required = false)
     private double focalPointZ = 0.0;
     
     @Attribute(required = false)
@@ -51,11 +54,10 @@ public class ParallaxPartHeightProvider implements FocusProvider {
     public double measureParallaxShift(Camera camera, HeadMountable movable, Location startLocation) throws Exception {
          // 1. Capture image at start location
         movable.moveTo(startLocation);
-        BufferedImage templateImage = camera.settleAndCapture();
+        Mat templateMat = captureAndAverage(camera, framesToAverage);
         
         try {
             // 2. Create template from center
-            Mat templateMat = OpenCvUtils.toMat(templateImage);
             Mat template = cropCenter(templateMat, featureSize);
             
             if (showDiagnostics) {
@@ -73,8 +75,7 @@ public class ParallaxPartHeightProvider implements FocusProvider {
             movable.moveTo(shiftLocation);
             
             // 4. Capture search image
-            BufferedImage searchImage = camera.settleAndCapture();
-            Mat searchMat = OpenCvUtils.toMat(searchImage);
+            Mat searchMat = captureAndAverage(camera, framesToAverage);
     
             // 5. Find feature using Template Matching
             Point matchLoc = matchTemplate(searchMat, template);
@@ -143,7 +144,7 @@ public class ParallaxPartHeightProvider implements FocusProvider {
         return new Mat(img, new org.opencv.core.Rect(x, y, size, size));
     }
     
-    // Helper match template
+    // Helper match template with sub-pixel refinement
     private Point matchTemplate(Mat img, Mat templ) {
         int result_cols = img.cols() - templ.cols() + 1;
         int result_rows = img.rows() - templ.rows() + 1;
@@ -152,8 +153,44 @@ public class ParallaxPartHeightProvider implements FocusProvider {
         Imgproc.matchTemplate(img, templ, result, Imgproc.TM_CCOEFF_NORMED);
         MinMaxLocResult mmr = Core.minMaxLoc(result);
         
+        Point refined = subPixelRefine(result, mmr.maxLoc);
+        
         result.release();
-        return mmr.maxLoc;
+        return refined;
+    }
+    
+    private Point subPixelRefine(Mat result, Point maxLoc) {
+        int x = (int) maxLoc.x;
+        int y = (int) maxLoc.y;
+        
+        // Check bounds (need 1 pixel border)
+        if (x < 1 || x >= result.cols() - 1 || y < 1 || y >= result.rows() - 1) {
+            return maxLoc;
+        }
+        
+        // Extract 3x3 window around peak
+        // y0 is left/top, y1 is center (max), y2 is right/bottom
+        
+        // Refine X (horizontal)
+        float v_x_minus = (float) result.get(y, x - 1)[0];
+        float v_x_center = (float) result.get(y, x)[0];
+        float v_x_plus = (float) result.get(y, x + 1)[0];
+        
+        double deltaX = (v_x_minus - v_x_plus) / (2.0 * (v_x_minus - 2.0 * v_x_center + v_x_plus));
+        
+        // Refine Y (vertical)
+        float v_y_minus = (float) result.get(y - 1, x)[0];
+        float v_y_center = (float) result.get(y, x)[0];
+        float v_y_plus = (float) result.get(y + 1, x)[0];
+        
+        double deltaY = (v_y_minus - v_y_plus) / (2.0 * (v_y_minus - 2.0 * v_y_center + v_y_plus));
+        
+        // Sanity check deltas (should be within +/- 0.5)
+        if (Math.abs(deltaX) > 0.6 || Math.abs(deltaY) > 0.6) {
+             return maxLoc;
+        }
+        
+        return new Point(maxLoc.x + deltaX, maxLoc.y + deltaY);
     }
 
     @Override
@@ -175,5 +212,45 @@ public class ParallaxPartHeightProvider implements FocusProvider {
 
     public void setFeatureSize(int featureSize) {
         this.featureSize = featureSize;
+    }
+
+    public int getFramesToAverage() {
+        return framesToAverage;
+    }
+
+    public void setFramesToAverage(int framesToAverage) {
+        this.framesToAverage = framesToAverage;
+    }
+    
+    // Helper to capture and average frames
+    private Mat captureAndAverage(Camera camera, int count) throws Exception {
+        // First frame with settle
+        BufferedImage img0 = camera.settleAndCapture();
+        Mat m0 = OpenCvUtils.toMat(img0);
+        
+        if (count <= 1) {
+            return m0;
+        }
+
+        Mat accumulator = new Mat();
+        m0.convertTo(accumulator, CvType.CV_32FC3);
+        m0.release();
+        
+        // Subsequent frames (burst)
+        for (int i = 1; i < count; i++) {
+            BufferedImage img = camera.capture();
+            Mat m = OpenCvUtils.toMat(img);
+            Mat floatMat = new Mat();
+            m.convertTo(floatMat, CvType.CV_32FC3);
+            
+            Core.add(accumulator, floatMat, accumulator);
+            floatMat.release();
+            m.release();
+        }
+        
+        Mat result = new Mat();
+        accumulator.convertTo(result, CvType.CV_8UC3, 1.0 / count);
+        accumulator.release();
+        return result;
     }
 }

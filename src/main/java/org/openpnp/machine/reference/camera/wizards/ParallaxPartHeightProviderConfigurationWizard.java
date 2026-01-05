@@ -89,7 +89,13 @@ public class ParallaxPartHeightProviderConfigurationWizard extends AbstractConfi
         panelGeneral.add(featureSize, "4, 4, fill, default");
         featureSize.setColumns(10);
 
+        lblFramesToAverage = new JLabel("Frames to Average");
+        lblFramesToAverage.setToolTipText("Number of frames to average to reduce noise.");
+        panelGeneral.add(lblFramesToAverage, "2, 6, right, default");
 
+        framesToAverage = new JTextField();
+        panelGeneral.add(framesToAverage, "4, 6, fill, default");
+        framesToAverage.setColumns(10);
 
         lblFocalPointZ = new JLabel("Focal Point Z");
         lblFocalPointZ.setToolTipText("The Z coordinate of the camera's perspective center.");
@@ -179,12 +185,14 @@ public class ParallaxPartHeightProviderConfigurationWizard extends AbstractConfi
 
         addWrappedBinding(provider, "shiftDistance", shiftDistance, "text", lengthConverter);
         addWrappedBinding(provider, "featureSize", featureSize, "text", intConverter);
+        addWrappedBinding(provider, "framesToAverage", framesToAverage, "text", intConverter);
 
         addWrappedBinding(provider, "focalPointZ", focalPointZ, "text", doubleConverter);
         addWrappedBinding(provider, "showDiagnostics", showDiagnostics, "selected");
 
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(shiftDistance);
         ComponentDecorators.decorateWithAutoSelect(featureSize);
+        ComponentDecorators.decorateWithAutoSelect(framesToAverage);
 
         ComponentDecorators.decorateWithAutoSelect(focalPointZ);
         ComponentDecorators.decorateWithLengthConversion(txtBlockHeight);
@@ -299,6 +307,8 @@ public class ParallaxPartHeightProviderConfigurationWizard extends AbstractConfi
     private JTextField shiftDistance;
     private JLabel lblFeatureSize;
     private JTextField featureSize;
+    private JLabel lblFramesToAverage;
+    private JTextField framesToAverage;
 
     private JLabel lblFocalPointZ;
     private JTextField focalPointZ;
