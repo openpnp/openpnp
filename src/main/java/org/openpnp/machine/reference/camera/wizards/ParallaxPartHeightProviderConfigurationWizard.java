@@ -89,13 +89,7 @@ public class ParallaxPartHeightProviderConfigurationWizard extends AbstractConfi
         panelGeneral.add(featureSize, "4, 4, fill, default");
         featureSize.setColumns(10);
 
-        lblSettleTime = new JLabel("Settle Time (ms)");
-        lblSettleTime.setToolTipText("Time to wait after moving before capturing.");
-        panelGeneral.add(lblSettleTime, "2, 6, right, default");
 
-        settleTimeMs = new JTextField();
-        panelGeneral.add(settleTimeMs, "4, 6, fill, default");
-        settleTimeMs.setColumns(10);
 
         lblFocalPointZ = new JLabel("Focal Point Z");
         lblFocalPointZ.setToolTipText("The Z coordinate of the camera's perspective center.");
@@ -185,13 +179,13 @@ public class ParallaxPartHeightProviderConfigurationWizard extends AbstractConfi
 
         addWrappedBinding(provider, "shiftDistance", shiftDistance, "text", lengthConverter);
         addWrappedBinding(provider, "featureSize", featureSize, "text", intConverter);
-        addWrappedBinding(provider, "settleTimeMs", settleTimeMs, "text", intConverter);
+
         addWrappedBinding(provider, "focalPointZ", focalPointZ, "text", doubleConverter);
         addWrappedBinding(provider, "showDiagnostics", showDiagnostics, "selected");
 
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(shiftDistance);
         ComponentDecorators.decorateWithAutoSelect(featureSize);
-        ComponentDecorators.decorateWithAutoSelect(settleTimeMs);
+
         ComponentDecorators.decorateWithAutoSelect(focalPointZ);
         ComponentDecorators.decorateWithLengthConversion(txtBlockHeight);
         ComponentDecorators.decorateWithLengthConversion(txtLowZ);
@@ -305,8 +299,7 @@ public class ParallaxPartHeightProviderConfigurationWizard extends AbstractConfi
     private JTextField shiftDistance;
     private JLabel lblFeatureSize;
     private JTextField featureSize;
-    private JLabel lblSettleTime;
-    private JTextField settleTimeMs;
+
     private JLabel lblFocalPointZ;
     private JTextField focalPointZ;
     private JLabel lblShowDiagnostics;

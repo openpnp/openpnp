@@ -30,9 +30,6 @@ public class ParallaxPartHeightProvider implements FocusProvider {
     private int featureSize = 64;
 
     @Attribute(required = false)
-    private int settleTimeMs = 250;
-
-    @Attribute(required = false)
     private double focalPointZ = 0.0;
     
     @Attribute(required = false)
@@ -54,8 +51,7 @@ public class ParallaxPartHeightProvider implements FocusProvider {
     public double measureParallaxShift(Camera camera, HeadMountable movable, Location startLocation) throws Exception {
          // 1. Capture image at start location
         movable.moveTo(startLocation);
-        camera.settleAndCapture(); 
-        BufferedImage templateImage = camera.capture();
+        BufferedImage templateImage = camera.settleAndCapture();
         
         try {
             // 2. Create template from center
@@ -76,11 +72,8 @@ public class ParallaxPartHeightProvider implements FocusProvider {
             
             movable.moveTo(shiftLocation);
             
-            // Settle
-            Thread.sleep(settleTimeMs);
-            
             // 4. Capture search image
-            BufferedImage searchImage = camera.capture();
+            BufferedImage searchImage = camera.settleAndCapture();
             Mat searchMat = OpenCvUtils.toMat(searchImage);
     
             // 5. Find feature using Template Matching
@@ -102,6 +95,23 @@ public class ParallaxPartHeightProvider implements FocusProvider {
             movable.moveTo(startLocation);
         } 
     }
+
+    public double getFocalPointZ() {
+        return focalPointZ;
+    }
+
+    public void setFocalPointZ(double focalPointZ) {
+        this.focalPointZ = focalPointZ;
+    }
+
+    public boolean isShowDiagnostics() {
+        return showDiagnostics;
+    }
+
+    public void setShowDiagnostics(boolean showDiagnostics) {
+        this.showDiagnostics = showDiagnostics;
+    }
+
 
     @Override
     public Location autoFocus(Camera camera, HeadMountable movable, Length subjectMaxSize, Location location0,
@@ -165,29 +175,5 @@ public class ParallaxPartHeightProvider implements FocusProvider {
 
     public void setFeatureSize(int featureSize) {
         this.featureSize = featureSize;
-    }
-
-    public int getSettleTimeMs() {
-        return settleTimeMs;
-    }
-
-    public void setSettleTimeMs(int settleTimeMs) {
-        this.settleTimeMs = settleTimeMs;
-    }
-
-    public double getFocalPointZ() {
-        return focalPointZ;
-    }
-
-    public void setFocalPointZ(double focalPointZ) {
-        this.focalPointZ = focalPointZ;
-    }
-
-    public boolean isShowDiagnostics() {
-        return showDiagnostics;
-    }
-
-    public void setShowDiagnostics(boolean showDiagnostics) {
-        this.showDiagnostics = showDiagnostics;
     }
 }
