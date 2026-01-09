@@ -20,6 +20,7 @@ a complete change list, only those that may directly interest or affect users.
 * If there are multiple feeders (for one part) at the same priority it will now use the closest. [PR 1898](https://github.com/openpnp/openpnp/pull/1898)
 * If camera lighting is configured to be turned off after a capture, openpnp will now keep the light on for the duration of a batch of captures, for example during part alignment, or board fiducial scan. [PR 1915](https://github.com/openpnp/openpnp/pull/1915)
 * Some keyboard shortcuts used to move the machine are also commonly used for text editing. Prevent accidental movement by block the machine movement action if a text edit field is focussed. [PR1928](https://github.com/openpnp/openpnp/pull/1928)
+* ReferencePushPullFeeder - an optional delay at each step of the movement [PR 1934](https://github.com/openpnp/openpnp/pull/1934)
 * Changes for scripting:
     * A new "Job.Error" script. [PR 1889](https://github.com/openpnp/openpnp/pull/1889)
     * A new "Feeder.Fault" script. [PR 1898](https://github.com/openpnp/openpnp/pull/1898)
