@@ -32,6 +32,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
+import javax.swing.SwingUtilities;
 
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.CameraView.RenderingQuality;
@@ -42,8 +43,11 @@ import org.openpnp.gui.components.reticle.GridReticle;
 import org.openpnp.gui.components.reticle.Reticle;
 import org.openpnp.gui.components.reticle.RulerReticle;
 import org.openpnp.gui.processes.EstimateObjectZCoordinateProcess;
+import org.openpnp.machine.reference.camera.ParallaxPartHeightProvider;
+import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.spi.FocusProvider;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
@@ -63,7 +67,9 @@ public class CameraViewPopupMenu extends JPopupMenu {
 
         // For cameras that have been calibrated at two different heights, add menu options to reset
         // the viewing plane and for estimating an object's height
-        if (cameraView.isViewingPlaneChangable()) {
+        // ALSO: Fallback for ParallaxPartHeightProvider
+        boolean isParallaxAvailable = cameraView.getCamera().getFocusProvider() instanceof ParallaxPartHeightProvider;
+        if (cameraView.isViewingPlaneChangable() || (isParallaxAvailable && !cameraView.getCamera().isUnitsPerPixelAtZCalibrated())) {
             JMenuItem mntmEstimateZCoordinate = new JMenuItem("Estimate Z Coordinate of Object");
             mntmEstimateZCoordinate.addActionListener(estimateZCoordinateAction);
             add(mntmEstimateZCoordinate);
@@ -617,7 +623,25 @@ public class CameraViewPopupMenu extends JPopupMenu {
         @Override
         public void actionPerformed(ActionEvent e) {
             UiUtils.messageBoxOnException(() -> {
-                new EstimateObjectZCoordinateProcess(MainFrame.get(), cameraView);
+                if (cameraView.getCamera().isUnitsPerPixelAtZCalibrated()) {
+                    new EstimateObjectZCoordinateProcess(MainFrame.get(), cameraView);
+                }
+                else if (cameraView.getCamera().getFocusProvider() instanceof ParallaxPartHeightProvider) {
+                     UiUtils.submitUiMachineTask(() -> {
+                         try {
+                             FocusProvider provider = cameraView.getCamera().getFocusProvider();
+                             Location loc = provider.autoFocus(cameraView.getCamera(), (org.openpnp.spi.HeadMountable)cameraView.getCamera(), 
+                                     new Length(10, LengthUnit.Millimeters), cameraView.getCamera().getLocation(), cameraView.getCamera().getLocation());
+                             
+                             SwingUtilities.invokeLater(() -> {
+                                 org.openpnp.gui.support.MessageBoxes.infoBox("Result", "Estimated Height: " + loc.getZ());
+                             });
+                         }
+                         catch (Exception ex) {
+                             org.openpnp.gui.support.MessageBoxes.errorBox(MainFrame.get(), "Error", ex);
+                         }
+                     });
+                }
             });
         }
     };

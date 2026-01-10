@@ -192,7 +192,8 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
 
     public enum FocusSensingMethod {
         None,
-        AutoFocus
+        AutoFocus,
+        Parallax
     }
 
     public ReferenceCamera() {
@@ -552,8 +553,16 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
 
     public void setFocusSensingMethod(FocusSensingMethod partHeightVisionMethod) {
         this.focusSensingMethod = partHeightVisionMethod;
-        // if we ever expand the methods this would be the point where another method's focusProvider
-        // would be instantiated.
+        if (focusSensingMethod == FocusSensingMethod.AutoFocus) {
+            if (!(focusProvider instanceof AutoFocusProvider)) {
+                focusProvider = new AutoFocusProvider();
+            }
+        }
+        else if (focusSensingMethod == FocusSensingMethod.Parallax) {
+            if (!(focusProvider instanceof ParallaxPartHeightProvider)) {
+                focusProvider = new ParallaxPartHeightProvider();
+            }
+        }
     }
 
     @Override

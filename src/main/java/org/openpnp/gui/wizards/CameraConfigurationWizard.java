@@ -500,8 +500,8 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
         cameraPrimaryZ.setVisible(cameraZ);
         cameraSecondaryZ.setVisible(cameraZ);
 
-        lblFocusSensing.setVisible(camera.getHead() == null);
-        focusSensingMethod.setVisible(camera.getHead() == null);
+        lblFocusSensing.setVisible(true);
+        focusSensingMethod.setVisible(true);
     };
 
     public boolean isOverriddenClassicTransforms() {
