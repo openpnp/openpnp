@@ -42,6 +42,7 @@ import org.openpnp.model.PlacementsHolder;
 import org.openpnp.model.PlacementsHolderLocation;
 import org.openpnp.model.Point;
 import org.openpnp.spi.Camera;
+import org.openpnp.spi.CameraBatchOperation;
 import org.openpnp.spi.FiducialLocator;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.util.IdentifiableList;
@@ -126,7 +127,20 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
      * @return compensated board location of last PlacementsHolderLocation processed (in list)
      */
     public Location locateAllPlacementsHolder(List<PlacementsHolderLocation<?>> allPlacementsHolderLocation, Location endLocation) throws Exception {
-
+        CameraBatchOperation cbo = Configuration.get().getMachine().getCameraBatchOperation();
+        if (cbo!=null) {
+            cbo.startBatchOperation("fid");
+        }
+        try {
+            return locateAllPlacementsHolderInBatch(allPlacementsHolderLocation,endLocation);
+        }
+        finally {
+            if(cbo!=null) {
+                cbo.endBatchOperation("fid");
+            }
+        }
+    }
+    public Location locateAllPlacementsHolderInBatch(List<PlacementsHolderLocation<?>> allPlacementsHolderLocation, Location endLocation) throws Exception {
         // collect all placementsHolderLocations with their fiducials into new classes grouping
         // required data to process the following steps in an optimized order
         List<PlacementsHolderLocationWithFiducials> allPlacementsHolderLocationWithFiducials = new ArrayList<PlacementsHolderLocationWithFiducials>();

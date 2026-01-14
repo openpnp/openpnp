@@ -2,6 +2,7 @@ package org.openpnp.util;
 
 import java.awt.Component;
 import java.awt.Desktop;
+import java.awt.KeyboardFocusManager;
 import java.awt.Toolkit;
 import java.awt.Dialog;
 import java.awt.Window;
@@ -12,7 +13,9 @@ import java.util.concurrent.Future;
 import java.util.function.Consumer;
 
 import javax.swing.JOptionPane;
+import javax.swing.JSpinner;
 import javax.swing.SwingUtilities;
+import javax.swing.text.JTextComponent;
 
 import org.apache.commons.lang3.SystemUtils;
 import org.openpnp.gui.MainFrame;
@@ -434,5 +437,37 @@ public class UiUtils {
 
         view.addMouseListener(adapter);
         view.addMouseMotionListener(adapter);
+    }
+
+    /**
+     * Check if the currently focused component is a text input component.
+     * This is used to prevent global hotkeys (like jog commands) from being
+     * triggered when the user is editing text.
+     *
+     * @return true if a text input component has focus
+     */
+    public static boolean isTextInputFocused() {
+        Component focusOwner = KeyboardFocusManager.getCurrentKeyboardFocusManager()
+                .getFocusOwner();
+        if (focusOwner == null) {
+            return false;
+        }
+        // Check for text components (JTextField, JTextArea, JEditorPane, etc.)
+        if (focusOwner instanceof JTextComponent) {
+            return true;
+        }
+        // Check for spinner editors which contain text fields
+        if (focusOwner instanceof JSpinner.DefaultEditor) {
+            return true;
+        }
+        // Check if focused component is inside a JSpinner
+        Component parent = focusOwner.getParent();
+        while (parent != null) {
+            if (parent instanceof JSpinner) {
+                return true;
+            }
+            parent = parent.getParent();
+        }
+        return false;
     }
 }

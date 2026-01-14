@@ -402,4 +402,6 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
      * @return True if automatic loading of most recent job at start has been enabled.
      */
     public boolean isAutoLoadMostRecentJob();
+
+    public CameraBatchOperation getCameraBatchOperation();
 }

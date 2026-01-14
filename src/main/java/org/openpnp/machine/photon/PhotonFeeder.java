@@ -295,7 +295,7 @@ public class PhotonFeeder extends ReferenceFeeder {
                 Thread.sleep(50); // MAGIC: this feels like a good number, there is no particular reason it is this way.
 
                 if (j == 0 && nozzle != null && Configuration.get().getMachine().isHomed() && getMoveWhileFeeding()) {
-                    MovableUtils.moveToLocationAtSafeZ(nozzle, getPickLocation().derive(null, null, Double.NaN, null));
+                    MovableUtils.moveToLocationAtSafeZ(nozzle, getPickLocation().deriveLengths(null, null, nozzle.getEffectiveSafeZ(), null));
                 }
 
                 MoveFeedStatus moveFeedStatus = new MoveFeedStatus(slotAddress);
