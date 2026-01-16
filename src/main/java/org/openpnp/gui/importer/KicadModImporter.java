@@ -170,6 +170,40 @@ public class KicadModImporter {
             String line = reader.readLine();
             while (line != null) {
                 if (line.trim().startsWith("(pad ")) {
+                    int parentheses_cnt = 0;
+                    int pos = 0;
+                    do {
+                        boolean quoted = false;
+                        while (pos < line.length()) {
+                            switch (line.charAt(pos)) {
+                                case '(':
+                                    if (!quoted) {
+                                        parentheses_cnt++;
+                                    }
+                                    break;
+                                case ')':
+                                    if (!quoted) {
+                                        parentheses_cnt--;
+                                    }
+                                    break;
+                                case '"':
+                                    quoted = !quoted;
+                                    break;
+                            }
+                            pos++;
+                        }
+                        if (parentheses_cnt > 0) {
+                            String line2 = reader.readLine();
+                            if (line2 == null) {
+                                break;
+                            }
+                            line2 = line2.trim();
+                            if (line2 != "") {
+                                line += " " + line2;
+                            }
+                        }
+                    } while (parentheses_cnt > 0);
+
                     KicadPad kipad = new KicadPad(line.trim());
                     if (kipad.getType().equals("smd") && kipad.isTopCu()) {
                         Pad pad = new Pad();
