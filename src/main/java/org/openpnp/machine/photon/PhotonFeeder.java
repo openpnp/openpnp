@@ -62,9 +62,9 @@ public class PhotonFeeder extends ReferenceFeeder {
     final private double correctionLimit = 5.0; // millimeters
     final private double correctionGain = 0.5; // portion of error to correct each bottom vision
 
-    private Location pickCorrectionOffset = new Location(LengthUnit.Millimeters);
+    private Location pickCorrectionIntegral = new Location(LengthUnit.Millimeters);
 
-    private Location pickCorrectionOffsetAccumulatorSinceLastFeed = new Location(LengthUnit.Millimeters);
+    private Location pickCorrectionAveragingAccumulatorSinceLastFeed = new Location(LengthUnit.Millimeters);
     private int visionsSinceLastFeed = 0;
 
     private static PhotonBusInterface photonBus;
@@ -103,7 +103,7 @@ public class PhotonFeeder extends ReferenceFeeder {
     }
 
     private Location getPickCorrectionOffset() throws Exception {
-        return pickCorrectionOffset;
+        return pickCorrectionIntegral;
     }
 
     private Location getPickLocationWithoutError() throws Exception {
@@ -364,7 +364,7 @@ public class PhotonFeeder extends ReferenceFeeder {
         int partPitchNudgeTicks = 0;
         final double feedTickMm = 0.1;
 
-        double yPlaneErrorMm = pickCorrectionOffset.getLengthY().convertToUnits(LengthUnit.Millimeters).getValue();
+        double yPlaneErrorMm = pickCorrectionIntegral.getLengthY().convertToUnits(LengthUnit.Millimeters).getValue();
 
         if (yPlaneErrorMm <= -feedTickMm || feedTickMm <= yPlaneErrorMm) {
             // far enough to nudge the part pitch
@@ -377,13 +377,13 @@ public class PhotonFeeder extends ReferenceFeeder {
             Logger.debug("{}: Nudging tape by {} ticks", getSlotAddress(), partPitchNudgeTicks);
         }
 
-        pickCorrectionOffset = pickCorrectionOffset.add(nudgeOffset);
+        pickCorrectionIntegral = pickCorrectionIntegral.add(nudgeOffset);
 
         try {
             feed(nozzle, getPartPitch() * 10 + partPitchNudgeTicks);
         } catch (Exception e) {
             // Didn't feed, revert correction offset.
-            pickCorrectionOffset = pickCorrectionOffset.subtract(nudgeOffset);
+            pickCorrectionIntegral = pickCorrectionIntegral.subtract(nudgeOffset);
             throw e;
         }
     }
@@ -682,29 +682,29 @@ public class PhotonFeeder extends ReferenceFeeder {
         }
 
         visionsSinceLastFeed++;
-        pickCorrectionOffsetAccumulatorSinceLastFeed = pickCorrectionOffsetAccumulatorSinceLastFeed.add(offset.rotateXy(pickLocation.getRotation()));
+        pickCorrectionAveragingAccumulatorSinceLastFeed = pickCorrectionAveragingAccumulatorSinceLastFeed.add(offset.rotateXy(pickLocation.getRotation()));
     }
 
     private void emptyPickCorrectionAccumulatorIntoCorrection() {
         if (visionsSinceLastFeed <= 0)
             return;
 
-        Location averageOffset = pickCorrectionOffsetAccumulatorSinceLastFeed.multiply(1.0 / (double)visionsSinceLastFeed);
-        pickCorrectionOffset = pickCorrectionOffset.add(averageOffset.multiply(correctionGain));
+        Location averageOffset = pickCorrectionAveragingAccumulatorSinceLastFeed.multiply(1.0 / (double)visionsSinceLastFeed);
+        pickCorrectionIntegral = pickCorrectionIntegral.add(averageOffset.multiply(correctionGain));
 
         visionsSinceLastFeed = 0;
-        pickCorrectionOffsetAccumulatorSinceLastFeed = new Location(pickCorrectionOffsetAccumulatorSinceLastFeed.getUnits());
+        pickCorrectionAveragingAccumulatorSinceLastFeed = new Location(pickCorrectionAveragingAccumulatorSinceLastFeed.getUnits());
 
-        double distance = pickCorrectionOffset.convertToUnits(LengthUnit.Millimeters).getLinearDistanceTo(0, 0);
+        double distance = pickCorrectionIntegral.convertToUnits(LengthUnit.Millimeters).getLinearDistanceTo(0, 0);
         if (distance > correctionLimit) {
             // Avoid physical damage, saturate it back to limit.
-            pickCorrectionOffset = pickCorrectionOffset.multiply(correctionLimit / distance);
+            pickCorrectionIntegral = pickCorrectionIntegral.multiply(correctionLimit / distance);
         }
     }
 
     public void resetPickCorrection() {
-        pickCorrectionOffset = new Location(LengthUnit.Millimeters);
+        pickCorrectionIntegral = new Location(LengthUnit.Millimeters);
         visionsSinceLastFeed = 0;
-        pickCorrectionOffsetAccumulatorSinceLastFeed = new Location(LengthUnit.Millimeters);
+        pickCorrectionAveragingAccumulatorSinceLastFeed = new Location(LengthUnit.Millimeters);
     }
 }
