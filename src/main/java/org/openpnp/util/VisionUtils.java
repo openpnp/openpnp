@@ -289,7 +289,7 @@ public class VisionUtils {
             Configuration.get().getScripting().on("Vision.PartAlignment.After", globals);
 
             Feeder f = nozzle.getPartsFeeder();
-            if (f != null && offsets != null) {
+            if (f != null && offsets != null && boardLocation != null && placement != null) {
                 Location realError = offsets.getLocation();
                 if (offsets.getPreRotated()) {
                     realError = realError.rotateXy(
