@@ -60,7 +60,11 @@ public class PhotonFeeder extends ReferenceFeeder {
     private Location offset;
 
     final private double correctionLimit = 5.0; // millimeters
+    final private double correctionGain = 0.5; // portion of error to correct each bottom vision
+
     private Location pickCorrectionOffset = new Location(LengthUnit.Millimeters);
+
+    private Location pickCorrectionOffsetAccumulatorSinceLastFeed = new Location(LengthUnit.Millimeters);
     private int visionsSinceLastFeed = 0;
 
     private static PhotonBusInterface photonBus;
@@ -137,7 +141,7 @@ public class PhotonFeeder extends ReferenceFeeder {
     public void setOffset(Location offsets) {
         Object oldValue = this.offset;
         this.offset = offsets;
-        pickCorrectionOffset = new Location(LengthUnit.Millimeters);
+        resetPickCorrection();
         firePropertyChange("offsets", oldValue, offsets);
     }
 
@@ -353,7 +357,7 @@ public class PhotonFeeder extends ReferenceFeeder {
             return;
         }
 
-        visionsSinceLastFeed = 0;
+        emptyPickCorrectionAccumulatorIntoCorrection();
 
         // To solve long term drift. Nudge the part pitch sent to the feeder if the correction offset is big enough.
         Location nudgeOffset = new Location(LengthUnit.Millimeters);
@@ -386,7 +390,7 @@ public class PhotonFeeder extends ReferenceFeeder {
 
     public void feedOneMm() throws Exception {
         feed(null, 10);
-        pickCorrectionOffset = new Location(LengthUnit.Millimeters);
+        resetPickCorrection();
     }
 
     @Override
@@ -495,7 +499,7 @@ public class PhotonFeeder extends ReferenceFeeder {
 
         this.slotAddress = slotAddress;
 
-        pickCorrectionOffset = new Location(LengthUnit.Millimeters);
+        resetPickCorrection();
 
         firePropertyChange("slotAddress", oldValue, slotAddress);
         firePropertyChange("slot", oldSlot, getSlot());
@@ -514,7 +518,7 @@ public class PhotonFeeder extends ReferenceFeeder {
             name = hardwareId;
         }
 
-        pickCorrectionOffset = new Location(LengthUnit.Millimeters);
+        resetPickCorrection();
 
         firePropertyChange("hardwareId", oldValue, hardwareId);
     }
@@ -535,7 +539,7 @@ public class PhotonFeeder extends ReferenceFeeder {
 
     public void setPartPitch(int partPitch) {
         this.partPitch = partPitch;
-        pickCorrectionOffset = new Location(LengthUnit.Millimeters);
+        resetPickCorrection();
     }
 
     public int getPartPitch() {
@@ -669,19 +673,30 @@ public class PhotonFeeder extends ReferenceFeeder {
             return;
         }
 
-        // Add half of the error to the running total to avoid over-correction
-        Location before = pickCorrectionOffset;
-
-        double factor = 1 / (double)(2 << visionsSinceLastFeed); // Start at 0.5 then have each new vision half.
         visionsSinceLastFeed++;
+        pickCorrectionOffsetAccumulatorSinceLastFeed = pickCorrectionOffsetAccumulatorSinceLastFeed.add(offset.rotateXy(pickLocation.getRotation()));
+    }
 
-        pickCorrectionOffset = pickCorrectionOffset.add(offset.rotateXy(pickLocation.getRotation()).multiply(factor));
-        Logger.debug("{}: bottom vision reports pick error of: {}; old pick correction: {} new {}", getSlotAddress(), offset, before, pickCorrectionOffset);
+    private void emptyPickCorrectionAccumulatorIntoCorrection() {
+        if (visionsSinceLastFeed <= 0)
+            return;
+
+        Location averageOffset = pickCorrectionOffsetAccumulatorSinceLastFeed.multiply(1.0 / (double)visionsSinceLastFeed);
+        pickCorrectionOffset = pickCorrectionOffset.add(averageOffset.multiply(correctionGain));
+
+        visionsSinceLastFeed = 0;
+        pickCorrectionOffsetAccumulatorSinceLastFeed = new Location(pickCorrectionOffsetAccumulatorSinceLastFeed.getUnits());
 
         double distance = pickCorrectionOffset.convertToUnits(LengthUnit.Millimeters).getLinearDistanceTo(0, 0);
         if (distance > correctionLimit) {
             // Avoid physical damage, saturate it back to limit.
             pickCorrectionOffset = pickCorrectionOffset.multiply(correctionLimit / distance);
         }
+    }
+
+    public void resetPickCorrection() {
+        pickCorrectionOffset = new Location(LengthUnit.Millimeters);
+        visionsSinceLastFeed = 0;
+        pickCorrectionOffsetAccumulatorSinceLastFeed = new Location(LengthUnit.Millimeters);
     }
 }
