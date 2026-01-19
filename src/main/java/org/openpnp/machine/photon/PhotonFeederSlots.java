@@ -30,7 +30,7 @@ public class PhotonFeederSlots {
         @Element(required = false)
         private Location location;
 
-        private Slot() {}
+        private PhotonFeeder feeder;
 
         public Slot(int address) {
             this.address = address;
@@ -55,6 +55,17 @@ public class PhotonFeederSlots {
 
         public void setLocation(Location location) {
             this.location = location;
+            if (feeder != null) {
+                feeder.resetPickCorrection();
+            }
+        }
+
+        public PhotonFeeder getFeeder() {
+            return feeder;
+        }
+
+        public void setFeeder(PhotonFeeder feeder) {
+            this.feeder = feeder;
         }
     }
 }

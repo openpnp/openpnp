@@ -499,6 +499,14 @@ public class PhotonFeeder extends ReferenceFeeder {
 
         this.slotAddress = slotAddress;
 
+        if (oldSlot.getFeeder() == this) {
+            oldSlot.setFeeder(null);
+        }
+
+        if (getSlot() != null) {
+            getSlot().setFeeder(this);
+        }
+
         resetPickCorrection();
 
         firePropertyChange("slotAddress", oldValue, slotAddress);
