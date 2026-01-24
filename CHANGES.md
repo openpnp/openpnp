@@ -12,7 +12,7 @@ a complete change list, only those that may directly interest or affect users.
     * Added "Skip Next Feed" and "Disable Feed" feeder options and Recycle support [PR 1900](https://github.com/openpnp/openpnp/pull/1900)
     * Added "Feed 1mm" button [PR 1913](https://github.com/openpnp/openpnp/pull/1913)
 * Many translation improvements. [PR 1871](https://github.com/openpnp/openpnp/pull/1871)
-* ReferenceStripFeeder default vision pipeline was outdated. It now works the same as all the other sprocket-hole vision pipelines. [PR 1841](https://github.com/openpnp/openpnp/pull/1841)
+* Update the outdated ReferenceStripFeeder default vision pipeline. It now works the same as all the other sprocket-hole vision pipelines. [PR 1841](https://github.com/openpnp/openpnp/pull/1841)
 * The "Discard" button now always performs the discard action, even if openpnp thinks the nozzle is already empty. [PR 1890](https://github.com/openpnp/openpnp/pull/1890)
 * Retries of the full pick/vision/place cycle for parts that fail vision check, or have some other problem during that cycle. [PR 1898](https://github.com/openpnp/openpnp/pull/1898)
 * Each feeder records a tally of whether its parts led to successful placements, or have problems such as failing the vision check. The default configuration is for a feeder to get disabled if it fails 3 out of 6 placements. This tally is shown in a new column on the Feeders page. [PR 1898](https://github.com/openpnp/openpnp/pull/1898)
