@@ -63,6 +63,8 @@ import javax.swing.SwingUtilities;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.event.PopupMenuEvent;
+import javax.swing.event.PopupMenuListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.TableModel;
@@ -123,7 +125,7 @@ import org.openpnp.util.UiUtils;
 import org.pmw.tinylog.Logger;
 import com.google.common.eventbus.Subscribe;
 
-@SuppressWarnings("serial")  //$NON-NLS-1$
+@SuppressWarnings("serial") //$NON-NLS-1$
 public class JobPanel extends JPanel {
     enum State {
         Stopped,
@@ -132,7 +134,7 @@ public class JobPanel extends JPanel {
         Pausing,
         Stopping
     }
-    
+
     final private Configuration configuration;
     final private MainFrame mainFrame;
 
@@ -149,7 +151,7 @@ public class JobPanel extends JPanel {
     private JSplitPane splitPane;
 
     private PlacementsHolderLocationViewerDialog jobViewer;
-    
+
     private ActionGroup singleSelectionActionGroup;
     private ActionGroup multiSelectionActionGroup;
     private ActionGroup singleTopLevelSelectionActionGroup;
@@ -166,40 +168,40 @@ public class JobPanel extends JPanel {
     private Job job;
 
     private JobProcessor jobProcessor;
-    
+
     private State state = State.Stopped;
-    
+
     public JobPanel(Configuration configuration, MainFrame frame) {
         this.configuration = configuration;
         this.mainFrame = frame;
 
-        singleSelectionActionGroup =
-                new ActionGroup(captureToolBoardLocationAction, moveCameraToBoardLocationAction,
-                        moveCameraToBoardLocationNextAction, moveToolToBoardLocationAction,
-                        twoPointLocateBoardLocationAction, fiducialCheckAction,
-                        setEnabledAction, setCheckFidsAction, setSideAction);
+        singleSelectionActionGroup = new ActionGroup(captureToolBoardLocationAction, moveCameraToBoardLocationAction,
+                moveCameraToBoardLocationNextAction, moveToolToBoardLocationAction,
+                twoPointLocateBoardLocationAction, fiducialCheckAction,
+                setEnabledAction, setCheckFidsAction, setSideAction);
         singleSelectionActionGroup.setEnabled(false);
-        
-        multiSelectionActionGroup = new ActionGroup(captureToolBoardLocationAction, setEnabledAction, 
+
+        multiSelectionActionGroup = new ActionGroup(captureToolBoardLocationAction, setEnabledAction,
                 setCheckFidsAction, setSideAction);
         multiSelectionActionGroup.setEnabled(false);
-        
-        singleTopLevelSelectionActionGroup = new ActionGroup(captureToolBoardLocationAction, removeBoardAction, captureCameraBoardLocationAction,
+
+        singleTopLevelSelectionActionGroup = new ActionGroup(captureToolBoardLocationAction, removeBoardAction,
+                captureCameraBoardLocationAction,
                 moveCameraToBoardLocationAction,
                 moveCameraToBoardLocationNextAction, moveToolToBoardLocationAction,
                 twoPointLocateBoardLocationAction, fiducialCheckAction,
                 setEnabledAction, setCheckFidsAction, setSideAction);
         singleTopLevelSelectionActionGroup.setEnabled(false);
-        
-        multiTopLevelSelectionActionGroup = new ActionGroup(captureToolBoardLocationAction, removeBoardAction, setEnabledAction, 
+
+        multiTopLevelSelectionActionGroup = new ActionGroup(captureToolBoardLocationAction, removeBoardAction,
+                setEnabledAction,
                 setCheckFidsAction, setSideAction);
         multiTopLevelSelectionActionGroup.setEnabled(false);
-        
+
         jobTableModel = new PlacementsHolderLocationsTableModel(configuration);
 
-
         // Suppress because adding the type specifiers breaks WindowBuilder.
-        @SuppressWarnings({"unchecked", "rawtypes"})  //$NON-NLS-1$  //$NON-NLS-2$
+        @SuppressWarnings({ "unchecked", "rawtypes" }) //$NON-NLS-1$ //$NON-NLS-2$
         JComboBox sidesComboBox = new JComboBox(Side.values());
 
         jobTable = new AutoSelectTextTable(jobTableModel) {
@@ -213,18 +215,15 @@ public class JobPanel extends JPanel {
                 if (row >= 0) {
                     if (col == 0) {
                         row = jobTable.convertRowIndexToModel(row);
-                        PlacementsHolderLocation<?> placementsHolderLocation =
-                                job.getBoardAndPanelLocations().get(row);
+                        PlacementsHolderLocation<?> placementsHolderLocation = job.getBoardAndPanelLocations().get(row);
                         return placementsHolderLocation.getUniqueId();
-                    }
-                    else if (col == 1) {
+                    } else if (col == 1) {
                         row = jobTable.convertRowIndexToModel(row);
-                        PlacementsHolderLocation<?> placementsHolderLocation =
-                                job.getBoardAndPanelLocations().get(row);
+                        PlacementsHolderLocation<?> placementsHolderLocation = job.getBoardAndPanelLocations().get(row);
                         if (placementsHolderLocation != null) {
                             return placementsHolderLocation.getPlacementsHolder()
-                                                .getFile()
-                                                .toString();
+                                    .getFile()
+                                    .toString();
                         }
                     }
                 }
@@ -233,15 +232,17 @@ public class JobPanel extends JPanel {
             }
         };
 
-        //Filter out the first row because it is the job's root panel which is just a holder 
-        //for all the real boards and panels of the job
+        // Filter out the first row because it is the job's root panel which is just a
+        // holder
+        // for all the real boards and panels of the job
         RowFilter<Object, Object> notFirstRow = new RowFilter<Object, Object>() {
             public boolean include(Entry<? extends Object, ? extends Object> entry) {
                 return (Integer) entry.getIdentifier() != 0;
-            }};
+            }
+        };
         jobTable.setAutoCreateRowSorter(true);
         ((TableRowSorter<? extends TableModel>) jobTable.getRowSorter()).setRowFilter(notFirstRow);
-        
+
         jobTable.getTableHeader().setDefaultRenderer(new MultisortTableHeaderCellRenderer());
         jobTable.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         jobTable.setDefaultEditor(Side.class, new DefaultCellEditor(sidesComboBox));
@@ -252,11 +253,11 @@ public class JobPanel extends JPanel {
         jobTable.getColumnModel().getColumn(2).setCellRenderer(new MonospacedFontTableCellRenderer());
         jobTable.getColumnModel().getColumn(3).setCellRenderer(new MonospacedFontTableCellRenderer());
         jobTable.setAutoResizeMode(JTable.AUTO_RESIZE_NEXT_COLUMN);
-        
+
         TableUtils.setColumnAlignment(jobTableModel, jobTable);
-        
-        TableUtils.installColumnWidthSavers(jobTable, prefs, "JobPanel.jobTable.columnWidth");  //$NON-NLS-1$
-        
+
+        TableUtils.installColumnWidthSavers(jobTable, prefs, "JobPanel.jobTable.columnWidth"); //$NON-NLS-1$
+
         jobTable.getModel().addTableModelListener(new TableModelListener() {
             @Override
             public void tableChanged(TableModelEvent e) {
@@ -265,7 +266,7 @@ public class JobPanel extends JPanel {
                 });
             }
         });
-        
+
         jobTable.getSelectionModel()
                 .addListSelectionListener(new ListSelectionListener() {
                     @Override
@@ -273,10 +274,10 @@ public class JobPanel extends JPanel {
                         if (e.getValueIsAdjusting()) {
                             return;
                         }
-                        
-                        boolean updateLinkedTables = mainFrame.getTabs().getSelectedComponent() == mainFrame.getJobTab() 
+
+                        boolean updateLinkedTables = mainFrame.getTabs().getSelectedComponent() == mainFrame.getJobTab()
                                 && Configuration.get().getTablesLinked() == TablesLinked.Linked;
-                        
+
                         List<PlacementsHolderLocation<?>> selections = getSelections();
                         if (selections.size() == 0) {
                             singleSelectionActionGroup.setEnabled(false);
@@ -286,19 +287,17 @@ public class JobPanel extends JPanel {
                             jobPlacementsPanel.setBoardOrPanelLocation(null);
                             if (updateLinkedTables) {
                                 Configuration.get().getBus()
-                                    .post(new PlacementsHolderLocationSelectedEvent(null, JobPanel.this));
+                                        .post(new PlacementsHolderLocationSelectedEvent(null, JobPanel.this));
                                 Configuration.get().getBus()
-                                    .post(new PlacementSelectedEvent(null, null, JobPanel.this));
+                                        .post(new PlacementSelectedEvent(null, null, JobPanel.this));
                             }
-                        }
-                        else if (selections.size() == 1) {
+                        } else if (selections.size() == 1) {
                             multiSelectionActionGroup.setEnabled(false);
                             multiTopLevelSelectionActionGroup.setEnabled(false);
                             if (selections.get(0).getParent() == job.getRootPanelLocation()) {
                                 singleSelectionActionGroup.setEnabled(false);
                                 singleTopLevelSelectionActionGroup.setEnabled(true);
-                            }
-                            else {
+                            } else {
                                 singleTopLevelSelectionActionGroup.setEnabled(false);
                                 singleSelectionActionGroup.setEnabled(true);
                             }
@@ -306,17 +305,16 @@ public class JobPanel extends JPanel {
                             if (updateLinkedTables) {
                                 if (selections.get(0).getParent() != job.getRootPanelLocation()) {
                                     Configuration.get().getBus()
-                                    .post(new PlacementsHolderLocationSelectedEvent(
-                                            selections.get(0).getParent().getDefinition(), JobPanel.this));
+                                            .post(new PlacementsHolderLocationSelectedEvent(
+                                                    selections.get(0).getParent().getDefinition(), JobPanel.this));
                                 }
                                 Configuration.get().getBus()
-                                    .post(new PlacementsHolderLocationSelectedEvent(
-                                            selections.get(0).getDefinition(), JobPanel.this));
+                                        .post(new PlacementsHolderLocationSelectedEvent(
+                                                selections.get(0).getDefinition(), JobPanel.this));
                                 Configuration.get().getBus()
-                                    .post(new PlacementSelectedEvent(null, selections.get(0), JobPanel.this));
+                                        .post(new PlacementSelectedEvent(null, selections.get(0), JobPanel.this));
                             }
-                        }
-                        else {
+                        } else {
                             singleSelectionActionGroup.setEnabled(false);
                             singleTopLevelSelectionActionGroup.setEnabled(false);
                             multiSelectionActionGroup.setEnabled(false);
@@ -338,14 +336,15 @@ public class JobPanel extends JPanel {
                             jobPlacementsPanel.setBoardOrPanelLocation(null);
                             if (updateLinkedTables) {
                                 Configuration.get().getBus()
-                                    .post(new PlacementsHolderLocationSelectedEvent(null, JobPanel.this));
+                                        .post(new PlacementsHolderLocationSelectedEvent(null, JobPanel.this));
                                 Configuration.get().getBus()
-                                    .post(new PlacementSelectedEvent(null, null, JobPanel.this));
+                                        .post(new PlacementSelectedEvent(null, null, JobPanel.this));
                             }
                         }
                         MainFrame.get().updateMenuState(JobPanel.this);
                         if (jobViewer != null) {
-                            jobViewer.setPlacementsHolder(job.getRootPanelLocation().getPlacementsHolder(), getSelections());
+                            jobViewer.setPlacementsHolder(job.getRootPanelLocation().getPlacementsHolder(),
+                                    getSelections());
                         }
                     }
                 });
@@ -407,22 +406,21 @@ public class JobPanel extends JPanel {
         JButton btnRemoveBoard = new JButton(removeBoardAction);
         btnRemoveBoard.setHideActionText(true);
         toolBarBoards.add(btnRemoveBoard);
-        
+
         toolBarBoards.addSeparator();
-        
+
         JButton btnPositionCameraBoardLocation = new JButton(moveCameraToBoardLocationAction);
         btnPositionCameraBoardLocation.setHideActionText(true);
         toolBarBoards.add(btnPositionCameraBoardLocation);
 
-        JButton btnPositionCameraBoardLocationNext =
-                new JButton(moveCameraToBoardLocationNextAction);
+        JButton btnPositionCameraBoardLocationNext = new JButton(moveCameraToBoardLocationNextAction);
         btnPositionCameraBoardLocationNext.setHideActionText(true);
         toolBarBoards.add(btnPositionCameraBoardLocationNext);
-        
+
         JButton btnPositionToolBoardLocation = new JButton(moveToolToBoardLocationAction);
         btnPositionToolBoardLocation.setHideActionText(true);
         toolBarBoards.add(btnPositionToolBoardLocation);
-        
+
         toolBarBoards.addSeparator();
 
         JButton btnCaptureCameraBoardLocation = new JButton(captureCameraBoardLocationAction);
@@ -433,7 +431,6 @@ public class JobPanel extends JPanel {
         btnCaptureToolBoardLocation.setHideActionText(true);
         toolBarBoards.add(btnCaptureToolBoardLocation);
 
-        
         toolBarBoards.addSeparator();
 
         JButton btnTwoPointBoardLocation = new JButton(twoPointLocateBoardLocationAction);
@@ -443,9 +440,9 @@ public class JobPanel extends JPanel {
         JButton btnFiducialCheck = new JButton(fiducialCheckAction);
         toolBarBoards.add(btnFiducialCheck);
         btnFiducialCheck.setHideActionText(true);
-        
+
         toolBarBoards.addSeparator();
-        
+
         JButton btnViewer = new JButton(viewerAction);
         btnViewer.setHideActionText(true);
         toolBarBoards.add(btnViewer);
@@ -456,7 +453,7 @@ public class JobPanel extends JPanel {
 
         jobPlacementsPanel = new JobPlacementsPanel(this);
         splitPane.setRightComponent(jobPlacementsPanel);
-        
+
         add(splitPane);
 
         mnOpenRecent = new JMenu(Translations.getString("JobPanel.Action.Job.RecentJobs")); //$NON-NLS-1$
@@ -505,16 +502,96 @@ public class JobPanel extends JPanel {
         setCheckFidsMenu.add(new SetCheckFidsAction(false));
         popupMenu.add(setCheckFidsMenu);
 
+        popupMenu.add(setCheckFidsMenu);
+
+        popupMenu.addPopupMenuListener(new PopupMenuListener() {
+            @Override
+            public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
+                // Remove any previously added dynamic items (simplistic approach: remove all
+                // and rebuild,
+                // but here we only have static items added in constructor.
+                // Let's assume we append. But if we append every time, it duplicates.
+                // So we should rebuild the menu every time.
+                popupMenu.removeAll();
+                popupMenu.add(setSideMenu);
+                popupMenu.add(setEnabledMenu);
+                popupMenu.add(setCheckFidsMenu);
+
+                PlacementsHolderLocation<?> sel = getSelection();
+                if (sel instanceof BoardLocation) {
+                    BoardLocation bl = (BoardLocation) sel;
+                    List<Camera> cameras = new ArrayList<>();
+                    for (Camera c : Configuration.get().getMachine().getAllCameras()) {
+                        if (c.getLooking() == Camera.Looking.Down) {
+                            cameras.add(c);
+                        }
+                    }
+                    if (cameras.size() > 0) {
+                        popupMenu.addSeparator();
+                        JMenu previewMenu = new JMenu("Preview Placements");
+
+                        // Photo Mode
+                        for (Camera camera : cameras) {
+                            previewMenu.add(new AbstractAction(camera.getName() + " (Photo)") {
+                                @Override
+                                public void actionPerformed(ActionEvent e) {
+                                    new PlacementsPreviewDialog(bl, camera, PlacementsPreviewDialog.PreviewMode.PHOTO)
+                                            .setVisible(true);
+                                }
+                            });
+                        }
+
+                        previewMenu.addSeparator();
+
+                        // Outline Mode
+                        for (Camera camera : cameras) {
+                            previewMenu.add(new AbstractAction(camera.getName() + " (Outline)") {
+                                @Override
+                                public void actionPerformed(ActionEvent e) {
+                                    new PlacementsPreviewDialog(bl, camera, PlacementsPreviewDialog.PreviewMode.OUTLINE)
+                                            .setVisible(true);
+                                }
+                            });
+                        }
+
+                        popupMenu.add(previewMenu);
+
+                        popupMenu.addSeparator();
+
+                        // Capture Board
+                        JMenu captureMenu = new JMenu("Capture Board");
+                        for (Camera camera : cameras) {
+                            captureMenu.add(new AbstractAction(camera.getName()) {
+                                @Override
+                                public void actionPerformed(ActionEvent e) {
+                                    new BoardScannerDialog(bl, camera).setVisible(true);
+                                }
+                            });
+                        }
+                        popupMenu.add(captureMenu);
+                    }
+                }
+            }
+
+            @Override
+            public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {
+            }
+
+            @Override
+            public void popupMenuCanceled(PopupMenuEvent e) {
+            }
+        });
+
         jobTable.setComponentPopupMenu(popupMenu);
 
         Configuration.get().getBus().register(this);
     }
-    
+
     void setState(State newState) {
         this.state = newState;
         updateJobActions();
     }
-    
+
     public JTable getPlacementsHolderLocationsTable() {
         return jobTable;
     }
@@ -532,9 +609,9 @@ public class JobPanel extends JPanel {
     @Subscribe
     public void panelStructureChanged(DefinitionStructureChangedEvent event) {
         for (PanelLocation panelLocation : job.getPanelLocations()) {
-            if (event.source != this && panelLocation.getPanel() != null && 
-                    event.definition == panelLocation.getPanel().getDefinition() && 
-                    event.changedName.contentEquals("children")) {  //$NON-NLS-1$
+            if (event.source != this && panelLocation.getPanel() != null &&
+                    event.definition == panelLocation.getPanel().getDefinition() &&
+                    event.changedName.contentEquals("children")) { //$NON-NLS-1$
                 PanelLocation.setParentsOfAllDescendants(job.getRootPanelLocation());
                 SwingUtilities.invokeLater(() -> {
                     refresh();
@@ -542,7 +619,7 @@ public class JobPanel extends JPanel {
                 break;
             }
         }
-        job.getRootPanelLocation().dump("");  //$NON-NLS-1$
+        job.getRootPanelLocation().dump(""); //$NON-NLS-1$
     }
 
     public void selectPlacementsHolderLocation(PlacementsHolderLocation<?> placementsHolderLocation) {
@@ -665,7 +742,8 @@ public class JobPanel extends JPanel {
     }
 
     /**
-     * Checks if there are any modifications that need to be saved. Prompts the user if there are.
+     * Checks if there are any modifications that need to be saved. Prompts the user
+     * if there are.
      * Returns true if it's okay to exit.
      * 
      * @return
@@ -684,11 +762,11 @@ public class JobPanel extends JPanel {
                     Translations.getString("JobPanel.CheckForModifications.Dialog.Question") + "\n" //$NON-NLS-1$ //$NON-NLS-2$
                             + Translations.getString("JobPanel.CheckForModifications.Dialog.Message"), //$NON-NLS-1$
                     Translations.getString("JobPanel.CheckForModifications.Dialog.Title") //$NON-NLS-1$
-                    + " - " + name, JOptionPane.YES_NO_CANCEL_OPTION); //$NON-NLS-1$ //$NON-NLS-2$
+                            + " - " + name, //$NON-NLS-1$
+                    JOptionPane.YES_NO_CANCEL_OPTION); // $NON-NLS-2$
             if (result == JOptionPane.YES_OPTION) {
                 return saveJob();
-            }
-            else if (result == JOptionPane.CANCEL_OPTION) {
+            } else if (result == JOptionPane.CANCEL_OPTION) {
                 return false;
             }
         }
@@ -698,17 +776,15 @@ public class JobPanel extends JPanel {
     private boolean saveJob() {
         if (getJob().getFile() == null) {
             return saveJobAs();
-        }
-        else {
+        } else {
             try {
                 File file = getJob().getFile();
                 configuration.saveJob(getJob(), file);
                 addRecentJob(file);
                 return true;
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 e.printStackTrace();
-                MessageBoxes.errorBox(mainFrame, 
+                MessageBoxes.errorBox(mainFrame,
                         Translations.getString("JobPanel.SaveJob.Error.ErrorBox.Title"), e.toString()); //$NON-NLS-1$
                 return false;
             }
@@ -716,7 +792,7 @@ public class JobPanel extends JPanel {
     }
 
     private boolean saveJobAs() {
-        FileDialog fileDialog = new FileDialog(mainFrame, 
+        FileDialog fileDialog = new FileDialog(mainFrame,
                 Translations.getString("JobPanel.SaveJobAs.FileDialog.Title"), FileDialog.SAVE); //$NON-NLS-1$
         fileDialog.setFilenameFilter(new FilenameFilter() {
             @Override
@@ -738,7 +814,7 @@ public class JobPanel extends JPanel {
             if (file.exists()) {
                 int ret = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
                         file.getName() + Translations.getString("JobPanel.SaveJobAs.ConfirmDialog.Title"), //$NON-NLS-1$
-                        Translations.getString("JobPanel.SaveJobAs.ConfirmDialog.Question"),  //$NON-NLS-1$
+                        Translations.getString("JobPanel.SaveJobAs.ConfirmDialog.Question"), //$NON-NLS-1$
                         JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
                 if (ret != JOptionPane.YES_OPTION) {
                     return false;
@@ -747,9 +823,8 @@ public class JobPanel extends JPanel {
             configuration.saveJob(getJob(), file);
             addRecentJob(file);
             return true;
-        }
-        catch (Exception e) {
-            MessageBoxes.errorBox(mainFrame, 
+        } catch (Exception e) {
+            MessageBoxes.errorBox(mainFrame,
                     Translations.getString("JobPanel.SaveJobAs.ErrorBox.Title"), e.getMessage()); //$NON-NLS-1$
             return false;
         }
@@ -768,8 +843,7 @@ public class JobPanel extends JPanel {
                     Translations.getString("JobPanel.Action.Job.Start.Description")); //$NON-NLS-1$
             stopJobAction.setEnabled(false);
             stepJobAction.setEnabled(true);
-        }
-        else if (state == State.Running) {
+        } else if (state == State.Running) {
             startPauseResumeJobAction.setEnabled(true);
             startPauseResumeJobAction.putValue(AbstractAction.NAME,
                     Translations.getString("JobPanel.Action.Job.Pause")); //$NON-NLS-1$
@@ -778,8 +852,7 @@ public class JobPanel extends JPanel {
                     Translations.getString("JobPanel.Action.Job.Pause.Description")); //$NON-NLS-1$
             stopJobAction.setEnabled(true);
             stepJobAction.setEnabled(false);
-        }
-        else if (state == State.Paused) {
+        } else if (state == State.Paused) {
             startPauseResumeJobAction.setEnabled(true);
             startPauseResumeJobAction.putValue(AbstractAction.NAME,
                     Translations.getString("JobPanel.Action.Job.Resume")); //$NON-NLS-1$
@@ -788,26 +861,26 @@ public class JobPanel extends JPanel {
                     Translations.getString("JobPanel.Action.Job.Resume.Description")); //$NON-NLS-1$
             stopJobAction.setEnabled(true);
             stepJobAction.setEnabled(true);
-        }
-        else if (state == State.Pausing) {
+        } else if (state == State.Pausing) {
             startPauseResumeJobAction.setEnabled(false);
             stopJobAction.setEnabled(false);
             stepJobAction.setEnabled(false);
-        }
-        else if (state == State.Stopping) {
+        } else if (state == State.Stopping) {
             startPauseResumeJobAction.setEnabled(false);
             stopJobAction.setEnabled(false);
             stepJobAction.setEnabled(false);
         }
 
-        if(job.getErrorHandling()==Job.ErrorHandling.Defer) {
+        if (job.getErrorHandling() == Job.ErrorHandling.Defer) {
             deferErrorsAction.putValue(AbstractAction.SMALL_ICON, Icons.errorDefer);
             deferErrorsAction.putValue(AbstractAction.NAME, Translations.getString("JobPanel.Action.Job.ErrorDefer")); //$NON-NLS-1$
-            deferErrorsAction.putValue(AbstractAction.SHORT_DESCRIPTION, Translations.getString("JobPanel.Action.Job.ErrorDefer.Description")); //$NON-NLS-1$
+            deferErrorsAction.putValue(AbstractAction.SHORT_DESCRIPTION,
+                    Translations.getString("JobPanel.Action.Job.ErrorDefer.Description")); //$NON-NLS-1$
         } else {
             deferErrorsAction.putValue(AbstractAction.SMALL_ICON, Icons.errorAlert);
             deferErrorsAction.putValue(AbstractAction.NAME, Translations.getString("JobPanel.Action.Job.ErrorAlert")); //$NON-NLS-1$
-            deferErrorsAction.putValue(AbstractAction.SHORT_DESCRIPTION, Translations.getString("JobPanel.Action.Job.ErrorAlert.Description")); //$NON-NLS-1$
+            deferErrorsAction.putValue(AbstractAction.SHORT_DESCRIPTION,
+                    Translations.getString("JobPanel.Action.Job.ErrorAlert.Description")); //$NON-NLS-1$
         }
 
         // We allow the above to run first so that all state is represented
@@ -827,11 +900,11 @@ public class JobPanel extends JPanel {
             jobViewer.setTitle(title);
         }
     }
-    
+
     private boolean checkJobStopped() {
         if (state != State.Stopped) {
-            MessageBoxes.errorBox(this, 
-                    Translations.getString("JobPanel.CheckJobStopped.Error.ErrorBox.Title"),  //$NON-NLS-1$
+            MessageBoxes.errorBox(this,
+                    Translations.getString("JobPanel.CheckJobStopped.Error.ErrorBox.Title"), //$NON-NLS-1$
                     Translations.getString("JobPanel.CheckJobStopped.Error.ErrorBox.Message")); //$NON-NLS-1$
             return false;
         }
@@ -867,10 +940,9 @@ public class JobPanel extends JPanel {
                 }
                 File file = new File(new File(fileDialog.getDirectory()), fileDialog.getFile());
                 loadJobExec(file);
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 e.printStackTrace();
-                MessageBoxes.errorBox(mainFrame, 
+                MessageBoxes.errorBox(mainFrame,
                         Translations.getString("JobPanel.Action.Job.Open.ErrorBox.Title"), e.getMessage()); //$NON-NLS-1$
             }
         }
@@ -920,7 +992,8 @@ public class JobPanel extends JPanel {
     };
 
     /**
-     * Initialize the job processor and start the run thread. The run thread will run one step and
+     * Initialize the job processor and start the run thread. The run thread will
+     * run one step and
      * then either loop if the state is Running or exit if the state is Stepping.
      * 
      * @throws Exception
@@ -930,7 +1003,8 @@ public class JobPanel extends JPanel {
         if (isAllPlaced()) {
             int ret = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
                     Translations.getString("JobPanel.JobStart.ResetPlacements.ConfirmDialog.Question"), //$NON-NLS-1$
-                    Translations.getString("JobPanel.JobStart.ResetPlacements.ConfirmDIalog.Title"), JOptionPane.YES_NO_OPTION, //$NON-NLS-1$
+                    Translations.getString("JobPanel.JobStart.ResetPlacements.ConfirmDIalog.Title"), //$NON-NLS-1$
+                    JOptionPane.YES_NO_OPTION,
                     JOptionPane.WARNING_MESSAGE);
             if (ret == JOptionPane.YES_OPTION) {
                 job.removeAllPlacedStatus();
@@ -940,29 +1014,27 @@ public class JobPanel extends JPanel {
         jobProcessor.initialize(job);
         jobRun();
     }
-    
+
     public void jobRun() {
         UiUtils.submitUiMachineTask(() -> {
             // For optional motion stepping, remember the past move.
             MotionPlanner motionPlanner = Configuration.get().getMachine().getMotionPlanner();
             Motion pastMotion = motionPlanner.getLastMotion();
             do {
-                do { 
+                do {
                     if (!jobProcessor.next()) {
                         setState(State.Stopped);
                         break;
-                    }
-                    else if (state == State.Pausing) {
+                    } else if (state == State.Pausing) {
                         // We're pausing, but check if we need motion before we can pause for real.
                         Motion lastMotion = motionPlanner.getLastMotion();
-                        if (! (jobProcessor.isSteppingToNextMotion() && lastMotion == pastMotion)) {
+                        if (!(jobProcessor.isSteppingToNextMotion() && lastMotion == pastMotion)) {
                             break;
                         }
                     }
-                }
-                while (state == State.Pausing);
+                } while (state == State.Pausing);
             } while (state == State.Running);
-            
+
             if (state == State.Pausing) {
                 setState(State.Paused);
             }
@@ -972,47 +1044,49 @@ public class JobPanel extends JPanel {
 
         }, (t) -> {
             /**
-             * TODO It would be nice to give the user the ability to single click suppress errors
-             * on the currently processing placement, but that requires knowledge of the currently
-             * processing placement. With the current model where JobProcessor is available for
-             * both dispense and PnP this is not possible. Once dispense is removed we can include
+             * TODO It would be nice to give the user the ability to single click suppress
+             * errors
+             * on the currently processing placement, but that requires knowledge of the
+             * currently
+             * processing placement. With the current model where JobProcessor is available
+             * for
+             * both dispense and PnP this is not possible. Once dispense is removed we can
+             * include
              * the current placement in the thrown error and add this feature.
              */
             if (t instanceof JobProcessorException) {
-                JobProcessorException jpe = (JobProcessorException)t;
-                selectJobProcessorExceptionSource(jpe.getSecondarySource(),false);
-                selectJobProcessorExceptionSource(jpe.getSource(),true);
+                JobProcessorException jpe = (JobProcessorException) t;
+                selectJobProcessorExceptionSource(jpe.getSecondarySource(), false);
+                selectJobProcessorExceptionSource(jpe.getSource(), true);
             }
-            
-            // update the state before showing the error to allow exceptions with continuations to change it
+
+            // update the state before showing the error to allow exceptions with
+            // continuations to change it
             if (state == State.Running || state == State.Pausing) {
                 setState(State.Paused);
-            }
-            else if (state == State.Stopping) {
+            } else if (state == State.Stopping) {
                 setState(State.Stopped);
             }
-            
+
             // call showError() to support exceptions with continuation
             UiUtils.showError(getTopLevelAncestor(), Translations.getString("JobPanel.JobRun.Error.ErrorBox.Title"), t); //$NON-NLS-1$
         });
     }
 
-    private void selectJobProcessorExceptionSource(Object source,boolean primary) {
+    private void selectJobProcessorExceptionSource(Object source, boolean primary) {
         // decode the source of the exception and try to select as much as possible
-        if (source==null)
-        {
-        }
-        else if (source instanceof BoardLocation) {
-            BoardLocation b = (BoardLocation)source;
+        if (source == null) {
+        } else if (source instanceof BoardLocation) {
+            BoardLocation b = (BoardLocation) source;
             Logger.debug("Exception source is board location: {}", b);
             // select the board
             Helpers.selectObjectTableRow(jobTable, b);
-            if(primary) {
+            if (primary) {
                 // focus the job tab
                 MainFrame.get().getTabs().setSelectedComponent(MainFrame.get().getJobTab());
             }
         } else if (source instanceof Placement) {
-            Placement p = (Placement)source;
+            Placement p = (Placement) source;
             Logger.debug("Exception source is placement: {}", p);
 
             // select the board this placement belongs to
@@ -1025,30 +1099,30 @@ public class JobPanel extends JPanel {
 
             // select the placement itself
             Helpers.selectObjectTableRow(jobPlacementsPanel.getTable(), p);
-            if(primary) {
+            if (primary) {
                 // focus the job tab
                 MainFrame.get().getTabs().setSelectedComponent(MainFrame.get().getJobTab());
             }
         } else if (source instanceof Part) {
-            Part p = (Part)source;
+            Part p = (Part) source;
             Logger.debug("Exception source is part: {}", p);
             // select part in parts tab
             MainFrame.get().getPartsTab().selectPartInTableAndUpdateLinks(p);
-            if(primary) {
+            if (primary) {
                 // focus the parts tab
                 MainFrame.get().getTabs().setSelectedComponent(MainFrame.get().getPartsTab());
             }
         } else if (source instanceof Feeder) {
-            Feeder f = (Feeder)source;
+            Feeder f = (Feeder) source;
             Logger.debug("Exception source is feeder: {}", f);
             // select the feeder in the feeders tab
             MainFrame.get().getFeedersTab().selectFeederInTable(f);
-            if(primary) {
+            if (primary) {
                 // focus the feeder tab
                 MainFrame.get().getTabs().setSelectedComponent(MainFrame.get().getFeedersTab());
             }
         } else if (source instanceof Nozzle) {
-            Nozzle n = (Nozzle)source;
+            Nozzle n = (Nozzle) source;
             Logger.debug("Exception source is nozzle: {}", n);
             // select the nozzle and part in the table
             MainFrame.get().getMachineControls().setSelectedTool(n);
@@ -1062,15 +1136,15 @@ public class JobPanel extends JPanel {
         UiUtils.submitUiMachineTask(() -> {
             try {
                 jobProcessor.abort();
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 e.printStackTrace();
             }
             setState(State.Stopped);
         });
     }
-    
-    // resume a job that's currently in state Paused - used to continue after a manual nozzle tip change from within the JobProcessor
+
+    // resume a job that's currently in state Paused - used to continue after a
+    // manual nozzle tip change from within the JobProcessor
     public void jobResume() {
         if (state == State.Paused) {
             setState(State.Running);
@@ -1079,7 +1153,7 @@ public class JobPanel extends JPanel {
             Logger.debug("Can't resume, job not in Paused state.");
         }
     }
-    
+
     public final Action startPauseResumeJobAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.start);
@@ -1093,16 +1167,14 @@ public class JobPanel extends JPanel {
                 if (state == State.Stopped) {
                     setState(State.Running);
                     jobStart();
-                }
-                else if (state == State.Paused) {
+                } else if (state == State.Paused) {
                     setState(State.Running);
                     jobRun();
                 }
                 // If we're running and the user hits pause we pause.
                 else if (state == State.Running) {
                     setState(State.Pausing);
-                }
-                else {
+                } else {
                     throw new Exception("Don't know how to change from state " + state); //$NON-NLS-1$
                 }
             });
@@ -1122,8 +1194,7 @@ public class JobPanel extends JPanel {
                 if (state == State.Stopped) {
                     setState(State.Pausing);
                     jobStart();
-                }
-                else if (state == State.Paused) {
+                } else if (state == State.Paused) {
                     setState(State.Pausing);
                     jobRun();
                 }
@@ -1156,11 +1227,12 @@ public class JobPanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            job.setErrorHandling(job.getErrorHandling()==Job.ErrorHandling.Defer ? Job.ErrorHandling.Alert : Job.ErrorHandling.Defer );
+            job.setErrorHandling(job.getErrorHandling() == Job.ErrorHandling.Defer ? Job.ErrorHandling.Alert
+                    : Job.ErrorHandling.Defer);
             updateJobActions();
         }
     };
-    
+
     public final Action resetAllPlacedAction = new AbstractAction() {
         {
             putValue(NAME, Translations.getString("JobPanel.Action.Job.ResetAllPlaced")); //$NON-NLS-1$
@@ -1183,7 +1255,8 @@ public class JobPanel extends JPanel {
         }
 
         @Override
-        public void actionPerformed(ActionEvent arg0) {}
+        public void actionPerformed(ActionEvent arg0) {
+        }
     };
 
     public final Action addNewBoardAction = new AbstractAction() {
@@ -1195,7 +1268,7 @@ public class JobPanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            FileDialog fileDialog = new FileDialog(mainFrame, 
+            FileDialog fileDialog = new FileDialog(mainFrame,
                     Translations.getString("JobPanel.Action.Job.SaveNewBoardAs.FileDialog.Title"), FileDialog.SAVE); //$NON-NLS-1$
             fileDialog.setFilenameFilter(new FilenameFilter() {
                 @Override
@@ -1216,10 +1289,9 @@ public class JobPanel extends JPanel {
                 File file = new File(new File(fileDialog.getDirectory()), filename);
 
                 addBoard(file);
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 e.printStackTrace();
-                MessageBoxes.errorBox(mainFrame, 
+                MessageBoxes.errorBox(mainFrame,
                         Translations.getString("JobPanel.Action.Job.AddNewBoard.Error.ErrorBox.Title"), e.getMessage()); //$NON-NLS-1$
             }
         }
@@ -1228,14 +1300,15 @@ public class JobPanel extends JPanel {
     public final Action addExistingBoardAction = new AbstractAction() {
         {
             putValue(NAME, Translations.getString("JobPanel.Action.Job.AddBoard.ExistingBoard")); //$NON-NLS-1$
-            putValue(SHORT_DESCRIPTION, Translations.getString("JobPanel.Action.Job.AddBoard.ExistingBoard.Description")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION,
+                    Translations.getString("JobPanel.Action.Job.AddBoard.ExistingBoard.Description")); //$NON-NLS-1$
             putValue(MNEMONIC_KEY, KeyEvent.VK_E);
         }
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
             ExistingBoardOrPanelDialog existingBoardDialog = new ExistingBoardOrPanelDialog(
-                    Configuration.get(), Board.class, 
+                    Configuration.get(), Board.class,
                     Translations.getString("JobPanel.Action.Job.AddBoard.ExistingBoard.Dialog.Title")); //$NON-NLS-1$
             existingBoardDialog.setVisible(true);
             File file = existingBoardDialog.getFile();
@@ -1245,11 +1318,10 @@ public class JobPanel extends JPanel {
             }
             try {
                 addBoard(file);
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 e.printStackTrace();
-                MessageBoxes.errorBox(mainFrame, 
-                        Translations.getString("JobPanel.Action.Job.AddBoard.ExistingBoard.Error.ErrorBox.Title"),  //$NON-NLS-1$
+                MessageBoxes.errorBox(mainFrame,
+                        Translations.getString("JobPanel.Action.Job.AddBoard.ExistingBoard.Error.ErrorBox.Title"), //$NON-NLS-1$
                         e.getMessage());
             }
         }
@@ -1259,17 +1331,18 @@ public class JobPanel extends JPanel {
         Board board = new Board(configuration.getBoard(file));
         BoardLocation boardLocation = new BoardLocation(board);
         boardLocation.setLocation(Configuration.get().getMachine().getDefaultBoardLocation());
-        
+
         Configuration.get().resolveBoard(job, boardLocation);
-        
+
         job.addBoardOrPanelLocation(boardLocation);
         job.getRootPanelLocation().dump(""); //$NON-NLS-1$
         // TODO: Move to a list property listener.
         jobTableModel.fireTableDataChanged();
-        Configuration.get().getBus().post(new PlacementsHolderLocationChangedEvent(boardLocation, "all", null, null, this));
+        Configuration.get().getBus()
+                .post(new PlacementsHolderLocationChangedEvent(boardLocation, "all", null, null, this));
         Helpers.selectObjectTableRow(jobTable, boardLocation);
     }
-    
+
     public final Action addNewPanelAction = new AbstractAction() {
         {
             putValue(NAME, Translations.getString("JobPanel.Action.Job.AddBoard.NewPanel")); //$NON-NLS-1$
@@ -1279,7 +1352,7 @@ public class JobPanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            FileDialog fileDialog = new FileDialog(mainFrame, 
+            FileDialog fileDialog = new FileDialog(mainFrame,
                     Translations.getString("JobPanel.Action.Job.AddBoard.NewPanel.FileDialog.Title"), FileDialog.SAVE); //$NON-NLS-1$
             fileDialog.setFilenameFilter(new FilenameFilter() {
                 @Override
@@ -1300,10 +1373,9 @@ public class JobPanel extends JPanel {
                 File file = new File(new File(fileDialog.getDirectory()), filename);
 
                 addPanel(file);
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 e.printStackTrace();
-                MessageBoxes.errorBox(mainFrame, 
+                MessageBoxes.errorBox(mainFrame,
                         Translations.getString("JobPanel.Action.Job.AddBoard.NewPanel.Error.ErrorBox.Title"), //$NON-NLS-1$
                         e.getMessage());
             }
@@ -1313,14 +1385,15 @@ public class JobPanel extends JPanel {
     public final Action addExistingPanelAction = new AbstractAction() {
         {
             putValue(NAME, Translations.getString("JobPanel.Action.Job.AddBoard.ExistingPanel")); //$NON-NLS-1$
-            putValue(SHORT_DESCRIPTION, Translations.getString("JobPanel.Action.Job.AddBoard.ExistingPanel.Description")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION,
+                    Translations.getString("JobPanel.Action.Job.AddBoard.ExistingPanel.Description")); //$NON-NLS-1$
             putValue(MNEMONIC_KEY, KeyEvent.VK_E);
         }
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
             ExistingBoardOrPanelDialog existingPanelDialog = new ExistingBoardOrPanelDialog(
-                    Configuration.get(), Panel.class, 
+                    Configuration.get(), Panel.class,
                     Translations.getString("JobPanel.Action.Job.AddBoard.ExitingPanel.Dialog.Title")); //$NON-NLS-1$
             existingPanelDialog.setVisible(true);
             File file = existingPanelDialog.getFile();
@@ -1330,11 +1403,10 @@ public class JobPanel extends JPanel {
             }
             try {
                 addPanel(file);
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 e.printStackTrace();
-                MessageBoxes.errorBox(mainFrame, 
-                        Translations.getString("JobPanel.Action.Job.AddBoard.ExistingPanel.Error.ErrorBox.Title"),  //$NON-NLS-1$
+                MessageBoxes.errorBox(mainFrame,
+                        Translations.getString("JobPanel.Action.Job.AddBoard.ExistingPanel.Error.ErrorBox.Title"), //$NON-NLS-1$
                         e.getMessage());
             }
         }
@@ -1344,17 +1416,18 @@ public class JobPanel extends JPanel {
         Panel panel = new Panel(configuration.getPanel(file));
         PanelLocation panelLocation = new PanelLocation(panel);
         panelLocation.setLocation(Configuration.get().getMachine().getDefaultBoardLocation());
-        
+
         Configuration.get().resolvePanel(job, panelLocation);
-        
+
         job.addBoardOrPanelLocation(panelLocation);
         job.getRootPanelLocation().dump(""); //$NON-NLS-1$
         // TODO: Move to a list property listener.
         jobTableModel.fireTableDataChanged();
-        Configuration.get().getBus().post(new PlacementsHolderLocationChangedEvent(panelLocation, "all", null, null, this));
+        Configuration.get().getBus()
+                .post(new PlacementsHolderLocationChangedEvent(panelLocation, "all", null, null, this));
         Helpers.selectObjectTableRow(jobTable, panelLocation);
     }
-    
+
     public final Action removeBoardAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.delete);
@@ -1369,14 +1442,15 @@ public class JobPanel extends JPanel {
                 job.removeBoardOrPanelLocation(selection);
             }
             jobTableModel.fireTableDataChanged();
-            Configuration.get().getBus().post(new DefinitionStructureChangedEvent(job.getRootPanelLocation().getPanel(), "children", this));
+            Configuration.get().getBus()
+                    .post(new DefinitionStructureChangedEvent(job.getRootPanelLocation().getPanel(), "children", this));
         }
     };
 
     public final Action captureCameraBoardLocationAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.captureCamera);
-            putValue(NAME,Translations.getString("JobPanel.Action.Job.Board.CaptureCameraLocation")); //$NON-NLS-1$
+            putValue(NAME, Translations.getString("JobPanel.Action.Job.Board.CaptureCameraLocation")); //$NON-NLS-1$
             putValue(SHORT_DESCRIPTION,
                     Translations.getString("JobPanel.Action.Job.Board.CaptureCameraLocation.Description")); //$NON-NLS-1$
         }
@@ -1386,7 +1460,8 @@ public class JobPanel extends JPanel {
             UiUtils.messageBoxOnException(() -> {
                 PlacementsHolderLocation<?> selectedLocation = getSelection();
                 if (selectedLocation.getParent() != job.getRootPanelLocation()) {
-                    throw new Exception(Translations.getString("JobPanel.Action.Job.Board.CaptureCameraLocation.Exception.Message")); //$NON-NLS-1$
+                    throw new Exception(Translations
+                            .getString("JobPanel.Action.Job.Board.CaptureCameraLocation.Exception.Message")); //$NON-NLS-1$
                 }
                 HeadMountable tool = MainFrame.get().getMachineControls().getSelectedTool();
                 Camera camera = tool.getHead().getDefaultCamera();
@@ -1401,7 +1476,8 @@ public class JobPanel extends JPanel {
         {
             putValue(SMALL_ICON, Icons.captureTool);
             putValue(NAME, Translations.getString("JobPanel.Action.Job.Board.CaptureToolLocation")); //$NON-NLS-1$
-            putValue(SHORT_DESCRIPTION, Translations.getString("JobPanel.Action.Job.Board.CaptureToolLocation.Description")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION,
+                    Translations.getString("JobPanel.Action.Job.Board.CaptureToolLocation.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -1409,7 +1485,8 @@ public class JobPanel extends JPanel {
             UiUtils.messageBoxOnException(() -> {
                 List<PlacementsHolderLocation<?>> selections = getSelections();
                 if (selections.size() == 1 && selections.get(0).getParent() != job.getRootPanelLocation()) {
-                    throw new Exception(Translations.getString("JobPanel.Action.Job.Board.CaptureToolLocation.Exception.Message")); //$NON-NLS-1$
+                    throw new Exception(
+                            Translations.getString("JobPanel.Action.Job.Board.CaptureToolLocation.Exception.Message")); //$NON-NLS-1$
                 }
                 Length toolZ = MainFrame.get().getMachineControls().getSelectedTool().getLocation().getLengthZ();
                 for (PlacementsHolderLocation<?> selection : selections) {
@@ -1423,62 +1500,64 @@ public class JobPanel extends JPanel {
     };
 
     public final Action moveCameraToBoardLocationAction = new AbstractAction() {
-                {
-                    putValue(SMALL_ICON, Icons.centerCamera);
-                    putValue(NAME, Translations.getString("JobPanel.Action.Job.Camera.PositionAtBoardLocation")); //$NON-NLS-1$
-                    putValue(SHORT_DESCRIPTION, Translations.getString("JobPanel.Action.Job.Camera.PositionAtBoardLocation.Description")); //$NON-NLS-1$
-                }
+        {
+            putValue(SMALL_ICON, Icons.centerCamera);
+            putValue(NAME, Translations.getString("JobPanel.Action.Job.Camera.PositionAtBoardLocation")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION,
+                    Translations.getString("JobPanel.Action.Job.Camera.PositionAtBoardLocation.Description")); //$NON-NLS-1$
+        }
 
-                @Override
-                public void actionPerformed(ActionEvent arg0) {
-                    UiUtils.submitUiMachineTask(() -> {
-                        HeadMountable tool = MainFrame.get().getMachineControls().getSelectedTool();
-                        Camera camera = tool.getHead().getDefaultCamera();
-                        Location location = getSelection().getGlobalLocation();
-                        MovableUtils.moveToLocationAtSafeZ(camera, location);
-                        MovableUtils.fireTargetedUserAction(camera);
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            UiUtils.submitUiMachineTask(() -> {
+                HeadMountable tool = MainFrame.get().getMachineControls().getSelectedTool();
+                Camera camera = tool.getHead().getDefaultCamera();
+                Location location = getSelection().getGlobalLocation();
+                MovableUtils.moveToLocationAtSafeZ(camera, location);
+                MovableUtils.fireTargetedUserAction(camera);
 
-                        Map<String, Object> globals = new HashMap<>();
-                        globals.put("camera", camera); //$NON-NLS-1$
-                        Configuration.get().getScripting().on("Camera.AfterPosition", globals); //$NON-NLS-1$
-                    });
-                }
-            };
+                Map<String, Object> globals = new HashMap<>();
+                globals.put("camera", camera); //$NON-NLS-1$
+                Configuration.get().getScripting().on("Camera.AfterPosition", globals); //$NON-NLS-1$
+            });
+        }
+    };
     public final Action moveCameraToBoardLocationNextAction = new AbstractAction() {
-                {
-                    putValue(SMALL_ICON, Icons.centerCameraMoveNext);
-                    putValue(NAME, Translations.getString("JobPanel.Action.Job.Camera.PositionAtNextBoardLocation")); //$NON-NLS-1$
-                    putValue(SHORT_DESCRIPTION,
-                            Translations.getString("JobPanel.Action.Job.Camera.PositionAtNextBoardLocation.Description")); //$NON-NLS-1$
-                }
+        {
+            putValue(SMALL_ICON, Icons.centerCameraMoveNext);
+            putValue(NAME, Translations.getString("JobPanel.Action.Job.Camera.PositionAtNextBoardLocation")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION,
+                    Translations.getString("JobPanel.Action.Job.Camera.PositionAtNextBoardLocation.Description")); //$NON-NLS-1$
+        }
 
-                @Override
-                public void actionPerformed(ActionEvent arg0) {
-                    UiUtils.submitUiMachineTask(() -> {
-                        // Need to keep current focus owner so that the space bar can be
-                        // used after the initial click. Otherwise, button focus is lost
-                        // when table is updated
-                    	Component comp = MainFrame.get().getFocusOwner();
-                    	Helpers.selectNextTableRow(jobTable);
-                    	comp.requestFocus();
-                        HeadMountable tool = MainFrame.get().getMachineControls().getSelectedTool();
-                        Camera camera = tool.getHead().getDefaultCamera();
-                        Location location = getSelection().getGlobalLocation();
-                        MovableUtils.moveToLocationAtSafeZ(camera, location);
-                        MovableUtils.fireTargetedUserAction(camera);
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            UiUtils.submitUiMachineTask(() -> {
+                // Need to keep current focus owner so that the space bar can be
+                // used after the initial click. Otherwise, button focus is lost
+                // when table is updated
+                Component comp = MainFrame.get().getFocusOwner();
+                Helpers.selectNextTableRow(jobTable);
+                comp.requestFocus();
+                HeadMountable tool = MainFrame.get().getMachineControls().getSelectedTool();
+                Camera camera = tool.getHead().getDefaultCamera();
+                Location location = getSelection().getGlobalLocation();
+                MovableUtils.moveToLocationAtSafeZ(camera, location);
+                MovableUtils.fireTargetedUserAction(camera);
 
-                        Map<String, Object> globals = new HashMap<>();
-                        globals.put("camera", camera); //$NON-NLS-1$
-                        Configuration.get().getScripting().on("Camera.AfterPosition", globals); //$NON-NLS-1$
-                    });
-                }
-            };
+                Map<String, Object> globals = new HashMap<>();
+                globals.put("camera", camera); //$NON-NLS-1$
+                Configuration.get().getScripting().on("Camera.AfterPosition", globals); //$NON-NLS-1$
+            });
+        }
+    };
 
     public final Action moveToolToBoardLocationAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.centerTool);
             putValue(NAME, Translations.getString("JobPanel.Action.Job.Tool.PositionAtBoardLocation")); //$NON-NLS-1$
-            putValue(SHORT_DESCRIPTION, Translations.getString("JobPanel.Action.Job.Tool.PositionAtBoardLocation.Description")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION,
+                    Translations.getString("JobPanel.Action.Job.Tool.PositionAtBoardLocation.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -1522,11 +1601,13 @@ public class JobPanel extends JPanel {
                 PlacementsHolderLocation<?> placementsHolderLocation = getSelection();
                 Location location = Configuration.get().getMachine().getFiducialLocator()
                         .locatePlacementsHolder(placementsHolderLocation);
-                
+
                 /**
-                 * Update the board/panel's location to the one returned from the fiducial check. We
-                 * have to store and restore the placement transform because setting the location
-                 * clears it.  Note that we only update the location if the board/panel is
+                 * Update the board/panel's location to the one returned from the fiducial
+                 * check. We
+                 * have to store and restore the placement transform because setting the
+                 * location
+                 * clears it. Note that we only update the location if the board/panel is
                  * not a part of another panel.
                  */
                 if (placementsHolderLocation.getParent() == job.getRootPanelLocation()) {
@@ -1535,7 +1616,7 @@ public class JobPanel extends JPanel {
                     placementsHolderLocation.setLocalToGlobalTransform(tx);
                 }
                 refreshSelectedRow();
-                
+
                 /**
                  * Move the camera to the calculated position.
                  */
@@ -1543,7 +1624,7 @@ public class JobPanel extends JPanel {
                 Camera camera = tool.getHead().getDefaultCamera();
                 MovableUtils.moveToLocationAtSafeZ(camera, location);
                 MovableUtils.fireTargetedUserAction(camera);
-                
+
                 Helpers.selectObjectTableRow(jobTable, placementsHolderLocation);
             });
         }
@@ -1558,7 +1639,7 @@ public class JobPanel extends JPanel {
         }
 
         @Override
-        public void actionPerformed(ActionEvent arg0) {            
+        public void actionPerformed(ActionEvent arg0) {
             if (jobViewer == null) {
                 jobViewer = new PlacementsHolderLocationViewerDialog(job.getRootPanelLocation(), true, getSelections());
                 jobViewer.addWindowListener(new WindowAdapter() {
@@ -1567,8 +1648,7 @@ public class JobPanel extends JPanel {
                         jobViewer = null;
                     }
                 });
-            }
-            else {
+            } else {
                 jobViewer.setPlacementsHolder(job.getRootPanelLocation().getPlacementsHolder(), getSelections());
                 jobViewer.setExtendedState(Frame.NORMAL);
             }
@@ -1585,7 +1665,8 @@ public class JobPanel extends JPanel {
         }
 
         @Override
-        public void actionPerformed(ActionEvent arg0) {}
+        public void actionPerformed(ActionEvent arg0) {
+        }
     };
 
     class SetEnabledAction extends AbstractAction {
@@ -1593,11 +1674,10 @@ public class JobPanel extends JPanel {
 
         public SetEnabledAction(Boolean value) {
             this.value = value;
-            String name = value ? 
-                    Translations.getString("General.Enabled") :  //$NON-NLS-1$
+            String name = value ? Translations.getString("General.Enabled") : //$NON-NLS-1$
                     Translations.getString("General.Disabled"); //$NON-NLS-1$
             putValue(NAME, name);
-            putValue(SHORT_DESCRIPTION, 
+            putValue(SHORT_DESCRIPTION,
                     Translations.getString("JobPanel.Action.Job.Board.SetEnabled.MenuTip") + " " + name); //$NON-NLS-1$ //$NON-NLS-2$
         }
 
@@ -1607,7 +1687,7 @@ public class JobPanel extends JPanel {
             for (PlacementsHolderLocation<?> bl : selections) {
                 if (bl.isParentBranchEnabled()) {
                     bl.setLocallyEnabled(value);
-                    jobTableModel.fireTableCellDecendantsUpdated(bl, 
+                    jobTableModel.fireTableCellDecendantsUpdated(bl,
                             Translations.getString("PlacementsHolderLocationsTableModel.ColumnName.Enabled")); //$NON-NLS-1$
                 }
             }
@@ -1622,7 +1702,8 @@ public class JobPanel extends JPanel {
         }
 
         @Override
-        public void actionPerformed(ActionEvent arg0) {}
+        public void actionPerformed(ActionEvent arg0) {
+        }
     };
 
     class SetCheckFidsAction extends AbstractAction {
@@ -1630,11 +1711,11 @@ public class JobPanel extends JPanel {
 
         public SetCheckFidsAction(Boolean value) {
             this.value = value;
-            String name = value ?
-                    Translations.getString("JobPanel.Action.Job.Board.SetCheckFids.Check") : //$NON-NLS-1$
+            String name = value ? Translations.getString("JobPanel.Action.Job.Board.SetCheckFids.Check") : //$NON-NLS-1$
                     Translations.getString("JobPanel.Action.Job.Board.SetCheckFids.NoCheck"); //$NON-NLS-1$
             putValue(NAME, name);
-            putValue(SHORT_DESCRIPTION, Translations.getString("JobPanel.Action.Job.Board.SetCheckFids.MenuTip") + " " + name); //$NON-NLS-1$ //$NON-NLS-2$
+            putValue(SHORT_DESCRIPTION,
+                    Translations.getString("JobPanel.Action.Job.Board.SetCheckFids.MenuTip") + " " + name); //$NON-NLS-1$ //$NON-NLS-2$
         }
 
         @Override
@@ -1648,16 +1729,17 @@ public class JobPanel extends JPanel {
             Helpers.selectObjectTableRows(jobTable, selections);
         }
     };
-    
+
     public final Action setSideAction = new AbstractAction() {
         {
             putValue(NAME, Translations.getString("JobPanel.Action.Job.Board.SetSide")); //$NON-NLS-1$
-            putValue(SHORT_DESCRIPTION, 
+            putValue(SHORT_DESCRIPTION,
                     Translations.getString("JobPanel.Action.Job.Board.SetSide.Description")); //$NON-NLS-1$
         }
 
         @Override
-        public void actionPerformed(ActionEvent arg0) {}
+        public void actionPerformed(ActionEvent arg0) {
+        }
     };
 
     class SetSideAction extends AbstractAction {
@@ -1668,12 +1750,11 @@ public class JobPanel extends JPanel {
             String name;
             if (side == Side.Top) {
                 name = Translations.getString("JobPanel.Action.Job.Board.SetSide.Top"); //$NON-NLS-1$
-            }
-            else {
+            } else {
                 name = Translations.getString("JobPanel.Action.Job.Board.SetSide.Bottom"); //$NON-NLS-1$
             }
             putValue(NAME, name);
-            putValue(SHORT_DESCRIPTION, 
+            putValue(SHORT_DESCRIPTION,
                     Translations.getString("JobPanel.Action.Job.Board.SetSide.MenuTip") + " " + name); //$NON-NLS-1$ //$NON-NLS-2$
         }
 
@@ -1691,14 +1772,14 @@ public class JobPanel extends JPanel {
                         }
                         bl.setLocalToParentTransform(null);
                     }
-                    jobTableModel.fireTableCellDecendantsUpdated(bl, TableModelEvent.ALL_COLUMNS );
+                    jobTableModel.fireTableCellDecendantsUpdated(bl, TableModelEvent.ALL_COLUMNS);
                 }
             }
             jobPlacementsPanel.refresh();
             Helpers.selectObjectTableRows(jobTable, selections);
         }
     };
-    
+
     public class OpenRecentJobAction extends AbstractAction {
         private final File file;
 
@@ -1717,10 +1798,9 @@ public class JobPanel extends JPanel {
             }
             try {
                 loadJobExec(file);
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 e.printStackTrace();
-                MessageBoxes.errorBox(mainFrame, 
+                MessageBoxes.errorBox(mainFrame,
                         Translations.getString("JobPanel.Action.Job.RecentJobs.ErrorBox.Title"), e.getMessage()); //$NON-NLS-1$
             }
         }
@@ -1752,41 +1832,42 @@ public class JobPanel extends JPanel {
         }
     };
 
-    private final PropertyChangeListener titlePropertyChangeListener =
-            new PropertyChangeListener() {
-                @Override
-                public void propertyChange(PropertyChangeEvent evt) {
-                    updateTitle();
-                }
-            };
+    private final PropertyChangeListener titlePropertyChangeListener = new PropertyChangeListener() {
+        @Override
+        public void propertyChange(PropertyChangeEvent evt) {
+            updateTitle();
+        }
+    };
 
     private final TextStatusListener textStatusListener = text -> {
         MainFrame.get().setStatus(text);
-        // Repainting here refreshes the tables, which contain status that needs to be updated.
-        // Would be better to have property notifiers but this is going to have to do for now.
+        // Repainting here refreshes the tables, which contain status that needs to be
+        // updated.
+        // Would be better to have property notifiers but this is going to have to do
+        // for now.
         repaint();
     };
-    
+
     boolean isAllPlaced() {
-    	for (BoardLocation boardLocation : job.getBoardLocations()) {
-    	    if (!boardLocation.isEnabled()) {
-    	        continue;
-    	    }
-        	for (Placement placement : boardLocation.getBoard().getPlacements()) {
+        for (BoardLocation boardLocation : job.getBoardLocations()) {
+            if (!boardLocation.isEnabled()) {
+                continue;
+            }
+            for (Placement placement : boardLocation.getBoard().getPlacements()) {
                 if (placement.getType() != Type.Placement) {
                     continue;
                 }
                 if (!placement.isEnabled()) {
                     continue;
                 }
-        	    if (placement.getSide() != boardLocation.getGlobalSide()) {
-        	        continue;
-        	    }
+                if (placement.getSide() != boardLocation.getGlobalSide()) {
+                    continue;
+                }
                 if (!job.retrievePlacedStatus(boardLocation, placement.getId())) {
                     return false;
                 }
-        	}
-    	}
-    	return true;
+            }
+        }
+        return true;
     }
 }
