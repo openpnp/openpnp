@@ -387,11 +387,15 @@ public class ReferenceNozzle extends AbstractNozzle implements HeadMountable {
 
     @Override
     public void moveToPlacementLocation(Location placementLocation, Part part) throws Exception {
-        // The default ReferenceNozzle implementation just moves to the placementLocation + partHeight at safe Z.
+        // placementOffset shifts the placement location below the board Z
+        Length placementOffset = getMachine().getPlacementOffset();
+        placementLocation = placementLocation.add(new Location(placementOffset.getUnits(), 0, 0, placementOffset.getValue(), 0));
+        //
         if (part != null) {
             placementLocation = placementLocation
                     .add(new Location(part.getHeight().getUnits(), 0, 0, part.getHeight().getValue(), 0));
         }
+        //
         MovableUtils.moveToLocationAtSafeZ(this, placementLocation);
     }
 
