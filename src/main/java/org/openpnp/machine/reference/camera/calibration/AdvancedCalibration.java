@@ -1473,4 +1473,79 @@ public class AdvancedCalibration extends LensCalibrationParams {
         camera.clearCalibrationCache();
         camera.captureTransformed();
     }
+    
+    /**
+     * Enables 3D calibration on the camera and sets the Units Per Pixel values from the  
+     * advanced calibration data. This should be called after successful advanced calibration
+     * completion to automatically configure the basic 3D calibration settings.
+     * 
+     * @param camera - the ReferenceCamera to configure
+     */
+    public void enable3DCalibration(ReferenceCamera camera) {
+        if (savedTestPattern3dPointsList == null || savedTestPattern3dPointsList.length < 2) {
+            // Need at least 2 Z heights for 3D calibration
+            Logger.debug("Advanced calibration does not have data at multiple Z heights, skipping 3D calibration auto-enable");
+            return;
+        }
+        
+        // Get the Z coordinates from the first and last test patterns
+        // These represent the measurements at different Z heights
+        double z1 = savedTestPattern3dPointsList[0][0][2]; // Primary Z (first calibration point)
+        double z2 = savedTestPattern3dPointsList[savedTestPattern3dPointsList.length - 1][0][2]; // Secondary Z (last calibration point)
+        
+        if (Math.abs(z1 - z2) < 0.1) {
+            // Z heights are too similar, not suitable for 3D calibration
+            Logger.debug("Advanced calibration Z heights are too similar ({} vs {}), skipping 3D calibration auto-enable", z1, z2);
+            return;
+        }
+        
+        if (virtualCameraMatrix == null) {
+            Logger.debug("Virtual camera matrix not available, skipping 3D calibration auto-enable");
+            return;
+        }
+        
+        // Use the virtual camera matrix focal lengths (which account for distortion and rectification)
+        // The virtual camera represents the corrected view after undistortion/rectification
+        double virtualFx = virtualCameraMatrix.get(0, 0)[0];
+        double virtualFy = virtualCameraMatrix.get(1, 1)[0];
+        
+        Length z1Length = new Length(z1, LengthUnit.Millimeters);
+        Length z2Length = new Length(z2, LengthUnit.Millimeters);
+        
+        // Get camera Z coordinate at time of each measurement
+        // For down-looking cameras, this is typically the same as the camera location
+        Location cameraPhysicalLocation = camera.getCameraPhysicalLocation();
+        Length cameraPrimaryZ = cameraPhysicalLocation.getLengthZ();
+        Length cameraSecondaryZ = cameraPrimaryZ; // Both measurements use the same camera position
+        
+        // Calculate Units Per Pixel using the exact same formula as advanced calibration
+        // Use getDistanceToCameraAtZ which accounts for camera tilt/orientation
+        double cameraToPrimaryPlane = getDistanceToCameraAtZ(z1Length).convertToUnits(LengthUnit.Millimeters).getValue();
+        double cameraToSecondaryPlane = getDistanceToCameraAtZ(z2Length).convertToUnits(LengthUnit.Millimeters).getValue();
+        
+        double uppPrimaryX = cameraToPrimaryPlane / virtualFx;
+        double uppPrimaryY = cameraToPrimaryPlane / virtualFy;
+        double uppSecondaryX = cameraToSecondaryPlane / virtualFx;
+        double uppSecondaryY = cameraToSecondaryPlane / virtualFy;
+        
+        // Set the Units Per Pixel values on the camera
+        Location primaryUPP = new Location(LengthUnit.Millimeters, uppPrimaryX, uppPrimaryY, z1, 0);
+        Location secondaryUPP = new Location(LengthUnit.Millimeters, uppSecondaryX, uppSecondaryY, z2, 0);
+        
+        camera.setUnitsPerPixelPrimary(primaryUPP);
+        camera.setUnitsPerPixelSecondary(secondaryUPP);
+        camera.setCameraPrimaryZ(cameraPrimaryZ);
+        camera.setCameraSecondaryZ(cameraSecondaryZ);
+        
+        // Set default working plane Z to the primary Z (typically the PCB surface)
+        if (camera.getDefaultZ() == null) {
+            camera.setDefaultZ(z1Length);
+        }
+        
+        // Enable 3D calibration
+        camera.setEnableUnitsPerPixel3D(true);
+        
+        Logger.info("Auto-enabled 3D calibration on camera {} with primary UPP: {}, secondary UPP: {}", 
+                camera.getName(), primaryUPP, secondaryUPP);
+    }
 }

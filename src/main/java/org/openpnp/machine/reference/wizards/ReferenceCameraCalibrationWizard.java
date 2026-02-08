@@ -1026,6 +1026,9 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
                                             testPattern3dPointsList, testPatternImagePointsList, 
                                             size, mirrored, apparentMotionDirection);
                                     
+                                    // Auto-enable 3D calibration now that we have calibration data
+                                    advCal.enable3DCalibration(referenceCamera);
+                                    
                                     postCalibrationProcessing();
                                 }
                                 catch (Exception e) {
@@ -1065,6 +1068,9 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
                         referenceCamera.getAdvancedCalibration().processRawCalibrationData(
                                 new Size(advCal.getRawCroppedImageWidth(), advCal.getRawCroppedImageHeight()));
                     
+                        // Auto-enable 3D calibration now that we have calibration data  
+                        advCal.enable3DCalibration(referenceCamera);
+                        
                         postCalibrationProcessing();
                     }
                     catch (Exception ex) {
