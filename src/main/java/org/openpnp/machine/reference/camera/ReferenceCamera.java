@@ -649,6 +649,57 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
         return super.getUnitsPerPixel(viewingPlaneZ);
     }
 
+    @Override
+    public Length estimateZCoordinateOfObject(Location observedUnitsPerPixel) throws Exception {
+        if (advancedCalibration.isOverridingOldTransformsAndDistortionCorrectionSettings() &&
+                advancedCalibration.isValid()) {
+            
+            LengthUnit units = observedUnitsPerPixel.getUnits();
+            double uppX = Math.abs(observedUnitsPerPixel.getX());
+            double uppY = Math.abs(observedUnitsPerPixel.getY());
+
+            if (!Double.isFinite(uppX) && !Double.isFinite(uppY)) {
+                throw new Exception("Apparent change in position or apparent size of object feature " +
+                        "is too small to estimate object Z coordinate.");
+            }
+
+            if (uppX == 0 && uppY == 0) {
+                throw new Exception("Actual change in camera position or actual feature size too " +
+                        "small to estimate object Z coordinate.");
+            }
+
+            // Compute the ratio of where the measurement falls between the two cal points using
+            // whichever measurement is larger for better accuracy
+            double upp;
+            if (!Double.isFinite(uppY) || (uppX > uppY)) {
+                upp = uppX;
+            } else {
+                upp = uppY;
+            }
+
+            double upp_mm = new Length(upp, units).convertToUnits(LengthUnit.Millimeters).getValue();
+            double focalLengthPixels = advancedCalibration.getVirtualCameraMatrix().get(0, 0)[0];
+            
+            // distance = upp * focal (inverse of: upp = distance / focal)
+            double distance_mm = upp_mm * focalLengthPixels;
+            
+            // uz component of the unit camera Z axis vector
+            double zVector = advancedCalibration.getUnitVectorPhyCamZInMachRefFrame().get(2, 0)[0];
+            
+            // The physical camera Z as stored by AdvancedCalibration (must match what getDistanceToCameraAtZ uses)
+            double camPhyZ_mm = advancedCalibration.getVectorFromMachToPhyCamInMachRefFrame().get(2, 0)[0];
+            
+            // Invert: getDistanceToCameraAtZ computes distance = |cameraToZPlane / uz|
+            // where cameraToZPlane = z - camPhyZ
+            // So: z = distance * uz + camPhyZ (signed inversion)
+            double estimatedZ_mm = distance_mm * zVector + camPhyZ_mm;
+            
+            return new Length(estimatedZ_mm, LengthUnit.Millimeters).convertToUnits(units);
+        }
+
+        return super.estimateZCoordinateOfObject(observedUnitsPerPixel);
+    }
+
     private synchronized Mat advancedUndistort(Mat mat) {
         if (!advancedCalibration.isEnabled()) {
             return mat;
