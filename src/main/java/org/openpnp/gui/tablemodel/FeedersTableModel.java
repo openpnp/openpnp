@@ -37,6 +37,8 @@ public class FeedersTableModel extends AbstractObjectTableModel {
             Translations.getString("FeedersTableModel.ColumnName.Name"), //$NON-NLS-1$
             Translations.getString("FeedersTableModel.ColumnName.Type"), //$NON-NLS-1$
             Translations.getString("FeedersTableModel.ColumnName.Part"), //$NON-NLS-1$
+            Translations.getString("FeedersTableModel.ColumnName.Priority"), //$NON-NLS-1$
+            Translations.getString("FeedersTableModel.ColumnName.Faults"), //$NON-NLS-1$
             Translations.getString("FeedersTableModel.ColumnName.Enabled"), //$NON-NLS-1$
             Translations.getString("FeedersTableModel.ColumnName.FeedOptions") //$NON-NLS-1$
     };
@@ -67,6 +69,13 @@ public class FeedersTableModel extends AbstractObjectTableModel {
         fireTableDataChanged();
     }
 
+    public void refresh(Feeder f) {
+        int row = feeders.indexOf(f);
+        if(row>=0) {
+            fireTableRowsUpdated(row, row);
+        }
+    }
+
     @Override
     public String getColumnName(int column) {
         return columnNames[column];
@@ -92,8 +101,12 @@ public class FeedersTableModel extends AbstractObjectTableModel {
 
     @Override
     public boolean isCellEditable(int rowIndex, int columnIndex) {
-        boolean result = columnIndex == 0 || columnIndex == 3;
-        if (!result && columnIndex == 4)  {
+        boolean result = columnIndex == 0 || columnIndex == 5;
+        if (!result && columnIndex == 3)  {
+            Feeder feeder = feeders.get(rowIndex);
+            result = feeder instanceof ReferenceFeeder;
+        }
+        if (!result && columnIndex == 6)  {
             Feeder feeder = feeders.get(rowIndex);
             result = feeder instanceof ReferenceFeeder && ((ReferenceFeeder)feeder).supportsFeedOptions();
         }
@@ -108,9 +121,12 @@ public class FeedersTableModel extends AbstractObjectTableModel {
                 feeder.setName((String) aValue);
             }
             else if (columnIndex == 3) {
+                feeder.setPriority((Feeder.Priority) aValue);
+            }
+            else if (columnIndex == 5) {
                 feeder.setEnabled((Boolean) aValue);
             }
-            else if (columnIndex == 4) {
+            else if (columnIndex == 6) {
                 ((ReferenceFeeder)feeder).setFeedOptions((ReferenceFeeder.FeedOptions) aValue);
             }
         }
@@ -122,9 +138,12 @@ public class FeedersTableModel extends AbstractObjectTableModel {
     @Override
     public Class<?> getColumnClass(int columnIndex) {
         if (columnIndex == 3) {
+            return Feeder.Priority.class;
+        }
+        else if (columnIndex == 5) {
             return Boolean.class;
         }
-        else if (columnIndex == 4) {
+        else if (columnIndex == 6) {
             return ReferenceFeeder.FeedOptions.class;
         }
         return super.getColumnClass(columnIndex);
@@ -144,14 +163,25 @@ public class FeedersTableModel extends AbstractObjectTableModel {
                 return part.getId();
             }
             case 3:
-                return feeders.get(row).isEnabled();
-            case 4:
+                return feeders.get(row).getPriority();
+            case 4: {
                 Feeder feeder = feeders.get(row);
-                if (feeders.get(row) instanceof ReferenceFeeder) {
+                if (feeder instanceof ReferenceFeeder) {
+                    return ((ReferenceFeeder)feeder).summariseJobFaults();
+                } else {
+                    return null;
+                }
+            }
+            case 5:
+                return feeders.get(row).isEnabled();
+            case 6: {
+                Feeder feeder = feeders.get(row);
+                if (feeder instanceof ReferenceFeeder) {
                     return ((ReferenceFeeder)feeder).getFeedOptions();
                 } else {
                     return null;
                 }
+            }
             default:
                 return null;
         }

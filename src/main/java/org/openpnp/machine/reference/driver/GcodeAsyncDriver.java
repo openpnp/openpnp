@@ -32,6 +32,7 @@ import org.openpnp.model.LengthUnit;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.MotionPlanner.CompletionType;
+import org.openpnp.Translations;
 import org.openpnp.util.Collect;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
@@ -390,7 +391,7 @@ public class GcodeAsyncDriver extends GcodeDriver {
     }
 
     @Override
-    protected void drainCommandQueue(long timeout) throws InterruptedException {
+    protected void drainCommandQueue(long timeout) throws Exception {
         // Normal confirmation report wanted. We queue a null command to drain the queue and confirm 
         // the last real command. 
         confirmationComplete = false;
@@ -406,6 +407,7 @@ public class GcodeAsyncDriver extends GcodeDriver {
             catch (InterruptedException e) {
                 Logger.warn(e, getName() +" was interrupted while waiting for completion.");
             }
+            bailOnError();
         }
         long dt = System.currentTimeMillis() - t0;
         if (dt > 1) {
@@ -416,7 +418,7 @@ public class GcodeAsyncDriver extends GcodeDriver {
     @Override
     public PropertySheet[] getPropertySheets() {
         return Collect.concat(super.getPropertySheets(), new PropertySheet[] { 
-                new PropertySheetWizardAdapter(new GcodeAsyncDriverSettings(this), "Advanced Settings")
+                new PropertySheetWizardAdapter(new GcodeAsyncDriverSettings(this), Translations.getString("GCodeAsyncDriver.AdvancedSettings.title")) //$NON-NLS-1$
         });
     }
 }

@@ -89,6 +89,7 @@ import org.openpnp.spi.Feeder;
 import org.openpnp.spi.FiducialLocator;
 import org.openpnp.spi.PartAlignment;
 import org.openpnp.util.UiUtils;
+import org.openpnp.util.FeederUtils;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Serializer;
 
@@ -273,7 +274,14 @@ public class PartsPanel extends JPanel implements WizardContainer {
         List<Part> selections = new ArrayList<>();
         for (int selectedRow : table.getSelectedRows()) {
             selectedRow = table.convertRowIndexToModel(selectedRow);
-            selections.add(tableModel.getRowObjectAt(selectedRow));
+            try {
+                selections.add(tableModel.getRowObjectAt(selectedRow));
+            }
+            catch (IndexOutOfBoundsException e) {
+                // sometimes this happens when deleting a row, if the gui state
+                // updates after the model state
+                Logger.warn("part selection index {} out of bounds", selectedRow);
+            }
         }
         return selections;
     }
@@ -371,13 +379,7 @@ public class PartsPanel extends JPanel implements WizardContainer {
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
                 Part part = getSelectedPart();
-                Feeder feeder = null;
-                // find a feeder to feed
-                for (Feeder f : Configuration.get().getMachine().getFeeders()) {
-                    if (f.getPart() == part && f.isEnabled()) {
-                        feeder = f;
-                    }
-                }
+                Feeder feeder = FeederUtils.findFeeder(Configuration.get().getMachine(),part,null,null);
                 if (feeder == null) {
                     throw new Exception("No valid feeder found for " + part.getId());
                 }
@@ -439,15 +441,20 @@ public class PartsPanel extends JPanel implements WizardContainer {
                 return;
             }
             try {
-                Serializer ser = Configuration.createSerializer();
-                Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-                String s = (String) clipboard.getData(DataFlavor.stringFlavor);
-                StringReader r = new StringReader(s);
-                Part part = ser.read(Part.class, s);
-                part.setId(id);
-                Configuration.get().addPart(part);
-                tableModel.fireTableDataChanged();
-                Helpers.selectLastTableRow(table);
+                try {
+                    Configuration.get().lockListeners();
+                    Serializer ser = Configuration.createSerializer();
+                    Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+                    String s = (String) clipboard.getData(DataFlavor.stringFlavor);
+                    StringReader r = new StringReader(s);
+                    Part part = ser.read(Part.class, s);
+                    part.setId(id);
+                    Configuration.get().addPart(part);
+                    tableModel.fireTableDataChanged();
+                    Helpers.selectLastTableRow(table);
+                } finally {
+                    Configuration.get().unlockListeners();
+                }
             }
             catch (Exception e) {
                 MessageBoxes.errorBox(getTopLevelAncestor(), "Paste Failed", e);

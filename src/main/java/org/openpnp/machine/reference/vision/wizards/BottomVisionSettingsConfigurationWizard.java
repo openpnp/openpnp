@@ -134,14 +134,8 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
         else if (settingsHolder != null) {
             btnSpecializeSetting.setText(Translations.getString(
                     "BottomVisionSettingsConfigurationWizard.SpecializeSettingsButton.OptimizeText")); //$NON-NLS-1$
-            btnSpecializeSetting.setToolTipText("<html>Optimize the Bottom Vision Settings and their assignments:<br/>"
-                    + "<ul>"
-                    + "<li>Consolidate duplicate settings.</li>"
-                    + "<li>Remove unused settings.</li>"
-                    + "<li>Configure the most common Part settings as inherited Package settings.</li>"
-                    + "<li>Remove assignments where the same settings would be inherited anyway.</li>"
-                    + "</ul>"
-                    + "</html>");
+            btnSpecializeSetting.setToolTipText(Translations.getString(
+                    "BottomVisionSettingsConfigurationWizard.SpecializeSettingsButton.OptimizeText.toolTipText")); //$NON-NLS-1$
         }
         else {
             btnSpecializeSetting.setEnabled(false);
@@ -202,11 +196,13 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
             btnGeneralizeSettings.setText(Translations.getString(
                     "BottomVisionSettingsConfigurationWizard.GeneralizeButton.GeneralizeFor.text") //$NON-NLS-1$
                     + settingsHolder.getShortName());
-            btnGeneralizeSettings.setToolTipText("<html>Generalize these Bottom Vision Settings for all the "
-                    + subjects
-                    + " with the "+ settingsHolder.getClass().getSimpleName()+" "+settingsHolder.getShortName()+".<br/>"
-                    + "This will unassign any special Bottom Vision Settings on "+subjects+" and delete those<br/>"
-                    + "Bottom Vision Settings that are no longer used elsewhere.</html>");
+            btnGeneralizeSettings.setToolTipText(String.format(
+                    Translations.getString("BottomVisionSettingsConfigurationWizard.GeneralizeButton.GeneralizeFor.toolTipText"), //$NON-NLS-1$
+            		subjects,
+            		settingsHolder.getClass().getSimpleName(),
+            		settingsHolder.getShortName(),
+            		subjects));
+                
         }
 
         JButton resetButton = new JButton(Translations.getString(

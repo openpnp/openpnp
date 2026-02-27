@@ -167,4 +167,18 @@ public abstract class AbstractFeeder extends AbstractModelObject implements Feed
     public void takeBackPart(Nozzle nozzle) throws Exception {
         throw new UnsupportedOperationException("Not supported on this Feeder");
     }
+
+    public Priority getPriority() {
+        return priority;
+    }
+
+    public void setPriority(Priority priority) {
+        Object oldValue = this.priority;
+        this.priority = priority;
+        firePropertyChange("priority", oldValue, priority);
+    }
+
+    @Attribute(required=false)
+    protected Priority priority = Priority.Normal;
+
 }

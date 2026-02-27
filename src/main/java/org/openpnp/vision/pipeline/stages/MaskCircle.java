@@ -71,8 +71,10 @@ public class MaskCircle extends CvStage {
         center = getPossiblePipelinePropertyOverride(center, pipeline, propertyName+".center", 
                 Point.class, org.openpnp.model.Point.class, Location.class);
 
-        Imgproc.circle(mask, center,  Math.abs(diameter) / 2, 
-                new Scalar(255, 255, 255), -1);
+        if(diameter!=0) {
+            Imgproc.circle(mask, center,  Math.abs(diameter) / 2,
+                    new Scalar(255, 255, 255), -1);
+        }
         if (diameter < 0) {
             Core.bitwise_not(mask,mask);
         }

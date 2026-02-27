@@ -66,6 +66,17 @@ public class Cycles {
             return;
         }
 
+        discardAlways(nozzle);
+    }
+
+    /**
+     * Discard the Part on the given Nozzle. Perform the discard action whether there is a part on the nozzle or not.
+     * The Nozzle is returned to Safe Z at the end of the operation.
+     *
+     * @param nozzle
+     * @throws Exception
+     */
+    public static void discardAlways(Nozzle nozzle) throws Exception {
         Map<String, Object> globals = new HashMap<>();
         globals.put("nozzle", nozzle);
         Configuration.get().getScripting().on("Job.BeforeDiscard", globals);

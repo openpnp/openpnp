@@ -57,7 +57,7 @@ public class ReferenceBottomVisionTest {
         machine.setEnabled(true);
         machine.home();
         machine.execute(() -> {
-            nozzle.pick(part);
+            nozzle.pick(part,null);
             PartAlignmentOffset offset = bottomVision.findOffsets(part, null, null, nozzle);
             Location offsets = offset.getLocation();
             assertMaxDelta(offsets.getX(), error.getX(), maxError.getX());

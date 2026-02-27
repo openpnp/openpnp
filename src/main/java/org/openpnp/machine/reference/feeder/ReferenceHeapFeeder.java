@@ -353,7 +353,7 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
             lastFeedDepth = stirParts(nozzle, vacuumLevel);
         } 
             
-        nozzle.pick(getPart()); // so the nozzle knows what it is carring. introduces some additional delay
+        nozzle.pick(getPart(),null); // so the nozzle knows what it is carring. introduces some additional delay
         // but rewrite of pick/place without calling nozzle doesn't seem worth, slow anyway
         nozzle.moveToSafeZ();
         moveFromHeap(nozzle); // safe way away from the other heaps
@@ -834,7 +834,7 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
             // Move to pick location.
             MovableUtils.moveToLocationAtSafeZ(nozzle, location);
             // Pick
-            nozzle.pick(part);
+            nozzle.pick(part,null);
             // Retract
             nozzle.moveToSafeZ();
         }

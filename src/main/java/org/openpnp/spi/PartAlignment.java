@@ -40,7 +40,7 @@ public interface PartAlignment extends PartSettingsHolder, Named, Solutions.Subj
         }
 
         public String toString() {
-            return "offset ( location: " + location.toString() + " pre-rotated" + Boolean.toString(preRotated) + ")";
+            return "offset ( location: " + location.toString() + " pre-rotated " + Boolean.toString(preRotated) + ")";
         }
     }
 

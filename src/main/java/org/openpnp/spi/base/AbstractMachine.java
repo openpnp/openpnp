@@ -37,6 +37,7 @@ import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.openpnp.spi.NozzleTip;
 import org.openpnp.spi.PartAlignment;
 import org.openpnp.spi.Signaler;
+import org.openpnp.spi.CameraBatchOperation;
 import org.openpnp.util.IdentifiableList;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
@@ -825,5 +826,9 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
         for (Feeder feeder : getFeeders()) {
             feeder.findIssues(solutions);
         }
+    }
+
+    public CameraBatchOperation getCameraBatchOperation() {
+        return null;
     }
 }

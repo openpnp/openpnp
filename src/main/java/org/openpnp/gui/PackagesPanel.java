@@ -29,6 +29,7 @@ import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.StringReader;
@@ -175,7 +176,14 @@ public class PackagesPanel extends JPanel implements WizardContainer {
 
         tabbedPane = new JTabbedPane(JTabbedPane.TOP);
 
-        table = new AutoSelectTextTable(tableModel);
+        table = new AutoSelectTextTable(tableModel) {
+            @Override
+            public String getToolTipText(MouseEvent evt) {
+                int column = convertColumnIndexToModel(columnAtPoint(evt.getPoint()));
+                if(column==2) { return Translations.getString("PackagesTableModel.Column.TapeSpecification.toolTip"); } //$NON-NLS-1$
+                return null;
+            }
+        };
         table.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 
         JComboBox<BottomVisionSettings> bottomVisionCombo = new JComboBox<>(
@@ -263,7 +271,14 @@ public class PackagesPanel extends JPanel implements WizardContainer {
         List<Package> selections = new ArrayList<>();
         for (int selectedRow : table.getSelectedRows()) {
             selectedRow = table.convertRowIndexToModel(selectedRow);
-            selections.add(tableModel.getRowObjectAt(selectedRow));
+            try {
+                selections.add(tableModel.getRowObjectAt(selectedRow));
+            }
+            catch (IndexOutOfBoundsException e) {
+                // sometimes this happens when deleting a row, if the gui state
+                // updates after the model state
+                Logger.warn("package selection index {} out of bounds", selectedRow);
+            }
         }
         return selections;
     }
@@ -409,15 +424,20 @@ public class PackagesPanel extends JPanel implements WizardContainer {
                 return;
             }
             try {
-                Serializer ser = Configuration.createSerializer();
-                Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-                String s = (String) clipboard.getData(DataFlavor.stringFlavor);
-                StringReader r = new StringReader(s);
-                Package pkg = ser.read(Package.class, s);
-                pkg.setId(id);
-                Configuration.get().addPackage(pkg);
-                tableModel.fireTableDataChanged();
-                Helpers.selectObjectTableRow(table, pkg);
+                try {
+                    Configuration.get().lockListeners();
+                    Serializer ser = Configuration.createSerializer();
+                    Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+                    String s = (String) clipboard.getData(DataFlavor.stringFlavor);
+                    StringReader r = new StringReader(s);
+                    Package pkg = ser.read(Package.class, s);
+                    pkg.setId(id);
+                    Configuration.get().addPackage(pkg);
+                    tableModel.fireTableDataChanged();
+                    Helpers.selectObjectTableRow(table, pkg);
+                } finally {
+                    Configuration.get().unlockListeners();
+                }
             }
             catch (Exception e) {
                 MessageBoxes.errorBox(getTopLevelAncestor(), "Paste Failed", e);

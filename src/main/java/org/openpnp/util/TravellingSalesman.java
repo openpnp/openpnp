@@ -67,7 +67,9 @@ public class TravellingSalesman<T> {
         this.travel = new ArrayList<>();
         this.travelSize = travelInput.size();
         for (int i = 0; i < this.travelSize; i++) {
-            this.travel.add(new TravelLocation(i, this.locator.getLocation(travelInput.get(i))));
+            Location location = this.locator.getLocation(travelInput.get(i));
+            // location must not be null
+            this.travel.add(new TravelLocation(i, location));
         }
         // register start/end Locations
         this.startLocation = startLocation != null ? new TravelLocation(-1, startLocation) : null;
@@ -82,13 +84,15 @@ public class TravellingSalesman<T> {
             travelCost = null;
         }
         this.travelCost = travelCost;
-        Logger.trace("Using " + this.travelCost != null ? "estimated travl cost" : "linear distance" + " as metric");
+        Logger.trace("Using " + (this.travelCost != null ? "estimated travel cost" : "linear distance") + " as metric");
     }
     public TravellingSalesman(List<T> travelInput, Locator<? super T> locator, Location startLocation, Location endLocation) {
         this(travelInput, locator, startLocation, endLocation, null);
     }
     
     public interface Locator<T> {
+        // The TSM requires that the return value is not null, but other subsystems use the
+        // same interface and do permit the location to be null.
         public Location getLocation(T locatable);
     }
 

@@ -122,6 +122,8 @@ public class Configuration extends AbstractModelObject {
     private LinkedHashMap<File, Board> boards = new LinkedHashMap<>();
     private boolean loaded;
     private Set<ConfigurationListener> listeners = Collections.synchronizedSet(new HashSet<>());
+    private boolean listenersLocked;
+    private List<ConfigurationListener> pendingListeners = new ArrayList<ConfigurationListener>();
     private File configurationDirectory;
     private Preferences prefs;
     private Scripting scripting;
@@ -393,6 +395,34 @@ public class Configuration extends AbstractModelObject {
     public void addListener(ConfigurationListener listener) {
         listeners.add(listener);
         if (loaded) {
+            // Call the configurationLoaded method if the configuration has
+            // already been loaded when the listener is added
+            if(!listenersLocked) {
+                // Call these methods immediately
+                try {
+                    listener.configurationLoaded(this);
+                    listener.configurationComplete(this);
+                }
+                catch (Exception e) {
+                    // TODO: Need to find a way to raise this to the GUI
+                    throw new Error(e);
+                }
+            }
+            else {
+                // Listeners are locked; we are making a batch change. Dont call them yet
+                pendingListeners.add(listener);
+            }
+        }
+    }
+
+    public void lockListeners() {
+        listenersLocked = true;
+    }
+
+    public void unlockListeners() {
+        listenersLocked = false;
+        while (!pendingListeners.isEmpty()) {
+            ConfigurationListener listener = pendingListeners.remove(0);
             try {
                 listener.configurationLoaded(this);
                 listener.configurationComplete(this);

@@ -101,7 +101,7 @@ public class ReferenceBottomVisionOffsetTest {
         Location maxError = new Location(LengthUnit.Millimeters, 0.1, 0.1, 0, 0.07);
         for (Location[] testPair: testData) {
             machine.execute(() -> {
-                nozzle.pick(part);
+                nozzle.pick(part,null);
                 Placement placement = new Placement("Dummy");
                 placement.setLocation(testPair[0]);
                 PartAlignmentOffset offset = bottomVision.findOffsets(part, boardLocation, placement, nozzle);
@@ -147,7 +147,7 @@ public class ReferenceBottomVisionOffsetTest {
         Location maxError = new Location(LengthUnit.Millimeters, 0.1, 0.1, 0, 0.07);
         for (Location[] testPair: testData) {
             machine.execute(() -> {
-                nozzle.pick(part);
+                nozzle.pick(part,null);
                 Placement placement = new Placement("Dummy");
                 placement.setLocation(testPair[0]);
                 PartAlignmentOffset offset = bottomVision.findOffsets(part, boardLocation, placement, nozzle);
@@ -194,7 +194,7 @@ public class ReferenceBottomVisionOffsetTest {
         Location maxError = new Location(LengthUnit.Millimeters, 0.1, 0.1, 0, 0.07);
         for (Location[] testPair: testData) {
             machine.execute(() -> {
-                nozzle.pick(part);
+                nozzle.pick(part,null);
                 Placement placement = new Placement("Dummy");
                 placement.setLocation(testPair[0]);
                 PartAlignmentOffset offset = bottomVision.findOffsets(part, boardLocation, placement, nozzle);
@@ -243,7 +243,7 @@ public class ReferenceBottomVisionOffsetTest {
         Location maxError = new Location(LengthUnit.Millimeters, 0.1, 0.1, 0, 0.07);
         for (Location[] testPair: testData) {
             machine.execute(() -> {
-                nozzle.pick(part);
+                nozzle.pick(part,null);
                 Placement placement = new Placement("Dummy");
                 placement.setLocation(testPair[0]);
                 PartAlignmentOffset offset = bottomVision.findOffsets(part, boardLocation, placement, nozzle);
@@ -291,7 +291,7 @@ public class ReferenceBottomVisionOffsetTest {
         Location maxError = new Location(LengthUnit.Millimeters, 0.1, 0.1, 0, 0.07);
         for (Location[] testPair: testData) {
             machine.execute(() -> {
-                nozzle.pick(part);
+                nozzle.pick(part,null);
                 Placement placement = new Placement("Dummy");
                 placement.setLocation(testPair[0]);
                 PartAlignmentOffset offset = bottomVision.findOffsets(part, boardLocation, placement, nozzle);
@@ -338,7 +338,7 @@ public class ReferenceBottomVisionOffsetTest {
         Location maxError = new Location(LengthUnit.Millimeters, 0.1, 0.1, 0, 0.07);
         for (Location[] testPair: testData) {
             machine.execute(() -> {
-                nozzle.pick(part);
+                nozzle.pick(part,null);
                 Placement placement = new Placement("Dummy");
                 placement.setLocation(testPair[0]);
                 PartAlignmentOffset offset = bottomVision.findOffsets(part, boardLocation, placement, nozzle);
@@ -385,7 +385,7 @@ public class ReferenceBottomVisionOffsetTest {
         Location maxError = new Location(LengthUnit.Millimeters, 0.1, 0.1, 0, 0.07);
         for (Location[] testPair: testData) {
             machine.execute(() -> {
-                nozzle.pick(part);
+                nozzle.pick(part,null);
                 Placement placement = new Placement("Dummy");
                 placement.setLocation(testPair[0]);
                 PartAlignmentOffset offset = bottomVision.findOffsets(part, boardLocation, placement, nozzle);
@@ -436,7 +436,7 @@ public class ReferenceBottomVisionOffsetTest {
         Location maxError = new Location(LengthUnit.Millimeters, 0.1, 0.1, 0, 0.07);
         for (Location[] testPair: testData) {
             machine.execute(() -> {
-                nozzle.pick(part);
+                nozzle.pick(part,null);
                 Placement placement = new Placement("Dummy");
                 placement.setLocation(testPair[0]);
                 PartAlignmentOffset offset = bottomVision.findOffsets(part, boardLocation, placement, nozzle);
@@ -490,7 +490,7 @@ public class ReferenceBottomVisionOffsetTest {
         Location maxError = new Location(LengthUnit.Millimeters, 0.1, 0.1, 0, 0.07);
         for (Location[] testPair: testData) {
             machine.execute(() -> {
-                nozzle.pick(part);
+                nozzle.pick(part,null);
                 Placement placement = new Placement("Dummy");
                 placement.setLocation(testPair[0]);
                 PartAlignmentOffset offset = bottomVision.findOffsets(part, boardLocation, placement, nozzle);

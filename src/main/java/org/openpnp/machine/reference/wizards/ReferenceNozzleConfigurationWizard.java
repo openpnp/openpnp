@@ -228,7 +228,8 @@ public class ReferenceNozzleConfigurationWizard extends AbstractConfigurationWiz
                 
                 lblDynamicSafeZ = new JLabel(Translations.getString(
                         "ReferenceNozzleConfigurationWizard.SafeZPanel.DynamicSafeZLabel.text")); //$NON-NLS-1$
-                lblDynamicSafeZ.setToolTipText("<html>\r\nWhen moving to Safe Z, account for the part height on the nozzle i.e. lift the nozzle higher with a taller part.<br/>\r\nThis allows you to use a lower Safe Z which might improve the machine speed. \r\n</html>");
+                lblDynamicSafeZ.setToolTipText(Translations.getString(
+                        "ReferenceNozzleConfigurationWizard.SafeZPanel.DynamicSafeZLabel.toolTipText")); //$NON-NLS-1$"
                 lblDynamicSafeZ.setHorizontalAlignment(SwingConstants.TRAILING);
                 panelSafeZ.add(lblDynamicSafeZ, "1, 2");
                 

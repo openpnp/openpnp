@@ -256,7 +256,8 @@ public class CameraVisionConfigurationWizard extends AbstractConfigurationWizard
         });
         panelVision.add(settleDiagnostics, "10, 12");
 
-        lblSettleGraph = new JLabel("<html>\r\n<body style=\"text-align:right\">\r\n<p>\r\nDifference <span style=\"color:#FF0000\">&mdash;&mdash;</span>\r\n</p>\r\n<p>\r\nThreshold <span style=\"color:#00BB00\">&mdash;&mdash;</span>\r\n</p>\r\n<p>\r\nCapture <span style=\"color:#005BD9\">&mdash;&mdash;</span>\r\n</p>\r\n</body>\r\n</html>");
+        lblSettleGraph = new JLabel(Translations.getString(
+                "CameraVisionConfigurationWizard.VisionPanel.SettleGraphLabel.text")); //$NON-NLS-1$
         panelVision.add(lblSettleGraph, "2, 14, right, default");
 
         settleGraph = new SimpleGraphView();
@@ -391,8 +392,8 @@ public class CameraVisionConfigurationWizard extends AbstractConfigurationWizard
 
     private Action settleTestLeftAction = new AbstractAction("", Icons.arrowRight) {
         {
-            putValue(Action.SHORT_DESCRIPTION,
-                    "Makes a move to the left and back, then settles the Camera. Uses the Jog increment distance.");
+            putValue(Action.SHORT_DESCRIPTION,Translations.getString(
+                    "CameraVisionConfigurationWizard.Action.SettleTestLeftAction.Description")); //$NON-NLS-1$
         }
         @Override
         public void actionPerformed(ActionEvent e) {
@@ -401,8 +402,8 @@ public class CameraVisionConfigurationWizard extends AbstractConfigurationWizard
     };
     private Action settleTestRightAction = new AbstractAction("", Icons.arrowLeft) {
         {
-            putValue(Action.SHORT_DESCRIPTION,
-                    "Makes a move to the right and back, then settles the Camera. Uses the Jog increment distance.");
+            putValue(Action.SHORT_DESCRIPTION,Translations.getString(
+                    "CameraVisionConfigurationWizard.Action.SettleTestRightAction.Description")); //$NON-NLS-1$
         }
         @Override
         public void actionPerformed(ActionEvent e) {
@@ -411,8 +412,8 @@ public class CameraVisionConfigurationWizard extends AbstractConfigurationWizard
     };
     private Action settleTestRearAction = new AbstractAction("", Icons.arrowDown) {
         {
-            putValue(Action.SHORT_DESCRIPTION,
-                    "Makes a move to the rear and back, then settles the Camera. Uses the Jog increment distance.");
+            putValue(Action.SHORT_DESCRIPTION,Translations.getString(
+                    "CameraVisionConfigurationWizard.Action.SettleTestRearAction.Description")); //$NON-NLS-1$
         }
         @Override
         public void actionPerformed(ActionEvent e) {
@@ -421,8 +422,8 @@ public class CameraVisionConfigurationWizard extends AbstractConfigurationWizard
     };
     private Action settleTestFrontAction = new AbstractAction("", Icons.arrowUp) {
         {
-            putValue(Action.SHORT_DESCRIPTION,
-                    "Makes a move to the front and back, then settles the Camera. Uses the Jog increment distance.");
+            putValue(Action.SHORT_DESCRIPTION,Translations.getString(
+                    "CameraVisionConfigurationWizard.Action.SettleTestFrontAction.Description")); //$NON-NLS-1$
         }
         @Override
         public void actionPerformed(ActionEvent e) {
@@ -431,8 +432,8 @@ public class CameraVisionConfigurationWizard extends AbstractConfigurationWizard
     };
     private Action settleTestRotateAction = new AbstractAction("", Icons.rotateCounterclockwise) {
         {
-            putValue(Action.SHORT_DESCRIPTION,
-                    "Makes a rotation and back, then settles the Camera. Uses the Jog increment.");
+            putValue(Action.SHORT_DESCRIPTION,Translations.getString(
+                    "CameraVisionConfigurationWizard.Action.SettleTestRotateAction.Description")); //$NON-NLS-1$
         }
         @Override
         public void actionPerformed(ActionEvent e) {
@@ -441,8 +442,8 @@ public class CameraVisionConfigurationWizard extends AbstractConfigurationWizard
     };
     private Action settleTestUpAction = new AbstractAction("", Icons.centerTool) {
         {
-            putValue(Action.SHORT_DESCRIPTION,
-                    "Moves the nozzle to the camera at Safe Z (or just to Safe Z and back), then settles the camera.");
+            putValue(Action.SHORT_DESCRIPTION,Translations.getString(
+                    "CameraVisionConfigurationWizard.Action.SettleTestUpAction.Description")); //$NON-NLS-1$
         }
         @Override 
         public void actionPerformed(ActionEvent e) {
@@ -474,8 +475,8 @@ public class CameraVisionConfigurationWizard extends AbstractConfigurationWizard
     };
     private Action settleTestAction = new AbstractAction("", Icons.captureCamera) {
         {
-            putValue(Action.SHORT_DESCRIPTION,
-                    "Test-Settle the Camera with no motion.");
+            putValue(Action.SHORT_DESCRIPTION,Translations.getString(
+                    "CameraVisionConfigurationWizard.Action.SettleTestAction.Description")); //$NON-NLS-1$
         }
         @Override
         public void actionPerformed(ActionEvent e) {

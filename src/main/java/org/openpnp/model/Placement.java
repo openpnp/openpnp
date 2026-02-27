@@ -73,6 +73,11 @@ public class Placement extends Abstract2DLocatable<Placement> {
     @Attribute(required = false)
     private boolean enabled = true;
 
+    static final public int defaultRank=0;
+
+    @Attribute(required = false)
+    private int rank=defaultRank;
+
     @SuppressWarnings("unused")
     private Placement() {
         super(new Location(LengthUnit.Millimeters));
@@ -88,6 +93,7 @@ public class Placement extends Abstract2DLocatable<Placement> {
         this.side = placement.side;
         this.type = placement.type;
         this.version = placement.version;
+        this.rank = placement.rank;
     }
     
     public Placement(String id) {
@@ -187,9 +193,19 @@ public class Placement extends Abstract2DLocatable<Placement> {
         firePropertyChange("enabled", oldValue, enabled);
     }
 
+    public int getRank() {
+        return rank;
+    }
+
+    public void setRank(int r) {
+        int oldvalue = rank;
+        rank = r;
+        firePropertyChange("rank", oldvalue, rank);
+    }
+
     @Override
     public String toString() {
-        return String.format("Placement %s @%08x defined by @%08x, location=%s, side=%s, part=%s, type=%s", id, 
-                this.hashCode(), definition.hashCode(), getLocation(), side, part, type);
+        return String.format("Placement %s @%08x defined by @%08x, location=%s, side=%s, part=%s, type=%s, rank=%s", id,
+                this.hashCode(), definition.hashCode(), getLocation(), side, part, type, rank);
     }
 }

@@ -349,7 +349,7 @@ public class ReferenceNozzle extends AbstractNozzle implements HeadMountable {
     }
 
     @Override
-    public void pick(Part part) throws Exception {
+    public void pick(Part part,Feeder feeder) throws Exception {
         Logger.debug("{}.pick()", getName());
         if (part == null) {
             throw new Exception("Can't pick null part");
@@ -364,6 +364,7 @@ public class ReferenceNozzle extends AbstractNozzle implements HeadMountable {
         Configuration.get().getScripting().on("Nozzle.BeforePick", globals);
 
         setPart(part);
+        setPartsFeeder(feeder);
 
         // if the method needs it, store one measurement up front
         storeBeforePickVacuumLevel();
@@ -428,6 +429,7 @@ public class ReferenceNozzle extends AbstractNozzle implements HeadMountable {
         establishPlaceVacuumLevel(this.getPlaceDwellMilliseconds() + nozzleTip.getPlaceDwellMilliseconds());
 
         setPart(null);
+        setPartsFeeder(null);
         getMachine().fireMachineHeadActivity(head);
 
         Configuration.get().getScripting().on("Nozzle.AfterPlace", globals);

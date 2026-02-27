@@ -26,6 +26,7 @@ import org.openpnp.model.Placement;
 import org.openpnp.model.Point;
 import org.openpnp.model.Footprint.Pad;
 import org.openpnp.spi.Camera;
+import org.openpnp.spi.CameraBatchOperation;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PartAlignment;
@@ -271,11 +272,18 @@ public class VisionUtils {
         Configuration.get().getScripting().on("Vision.PartAlignment.Before", globals);
 
         PartAlignmentOffset offsets = null;
+        CameraBatchOperation cbo = Configuration.get().getMachine().getCameraBatchOperation();
+        if (cbo!=null) {
+            cbo.startBatchOperation("visionutils");
+        }
         try {
             offsets = p.findOffsets(part, boardLocation, placement, nozzle);
             return offsets;
         }
         finally {
+            if (cbo!=null) {
+                cbo.endBatchOperation("visionutils");
+            }
             globals.put("offsets", offsets);
             Configuration.get().getScripting().on("Vision.PartAlignment.After", globals);
         }

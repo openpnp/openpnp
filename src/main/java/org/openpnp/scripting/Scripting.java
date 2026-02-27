@@ -3,6 +3,8 @@ package org.openpnp.scripting;
 import java.io.File;
 import java.io.FileReader;
 import java.time.Duration;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -242,12 +244,18 @@ public class Scripting {
             return;
         }
         Boolean foundEventScript = false;
-        for (File script : FileUtils.listFiles(eventsDirectory, getExtensions(), false)) {
+        ArrayList<File> sortedFiles = new ArrayList<File>(FileUtils.listFiles(eventsDirectory, getExtensions(), false));
+        Collections.sort(sortedFiles, new Comparator<File>() {
+            @Override
+            public int compare(File a, File b) {
+                return a.getName().compareTo(b.getName());
+            }});
+        for (File script : sortedFiles) {
             if (!script.isFile()) {
                 continue;
             }
-            if (FilenameUtils.getBaseName(script.getName())
-                             .equals(event)) {
+            String baseName = FilenameUtils.getBaseName(script.getName());
+            if (baseName.equals(event) || baseName.startsWith(event+".")) {
                 Logger.trace("Scripting.on found " + script.getName());
                 foundEventScript = true;
                 execute(script, globals);

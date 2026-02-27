@@ -111,7 +111,7 @@ public class VisionCompositingTest {
                         maxError = new Location(LengthUnit.Millimeters, 0.05, 0.05, 0, 0.07);
                     }
                     camera.setErrorOffsets(error);
-                    nozzle.pick(part);
+                    nozzle.pick(part,null);
                     Placement placement = new Placement("Dummy");
                     placement.setLocation(Location.origin);
                     PartAlignmentOffset offset = bottomVision.findOffsets(part, null, placement, nozzle);
