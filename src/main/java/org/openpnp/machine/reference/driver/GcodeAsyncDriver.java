@@ -381,9 +381,20 @@ public class GcodeAsyncDriver extends GcodeDriver {
             if (reportedLocationConfirmation) {
                 // Then make sure we get a uniquely recognizable confirmation. 
                 // Confirmation is signaled with a position report.
+
+                // NOTICE: This routine `reportedLocationConfirmation` CANNOT be used for Marlin firmware. 
+                // Marlin may report its position before the motion actually completes, 
+                // prematurely terminating the wait and causing synchronization issues.
                 getReportedLocation(timeout);
             }
             else {
+                // For Marlin firmware, we MUST re-verify the reported position. 
+                // This works around Marlin's unexpected position reports (e.g., after G92) that can cause synchronization issues.
+                if (getFirmwareProperty("FIRMWARE_NAME", "").contains("Marlin")) {
+                    Logger.trace("{} re-verifying position for Marlin firmware.", getName());
+                    getReportedLocation(timeout);
+                }
+
                 drainCommandQueue(timeout);
             }
             Logger.trace("{} confirmation complete.", getName());
