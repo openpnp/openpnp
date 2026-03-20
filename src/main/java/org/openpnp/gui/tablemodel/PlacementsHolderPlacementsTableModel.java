@@ -90,8 +90,9 @@ public class PlacementsHolderPlacementsTableModel extends AbstractObjectTableMod
             Side.class, LengthCellValue.class, LengthCellValue.class, RotationCellValue.class, 
             Type.class, Boolean.class, Status.class, ErrorHandling.class, Integer.class, String.class};
     
-    private int[] columnAlignments = new int[] {CENTER, LEFT, LEFT, CENTER, CENTER, CENTER, 
-            CENTER, CENTER, CENTER, CENTER, CENTER, CENTER, LEFT};
+    private int[] columnAlignments = new int[] {CENTER, LEFT, LEFT, CENTER,
+            RIGHT, RIGHT, RIGHT,
+            CENTER, CENTER, CENTER, CENTER, CENTER, LEFT};
 
     private int[] columnWidthTypes = new int[] {FIXED, FIXED, PROPORTIONAL, FIXED, FIXED, 
             FIXED, FIXED, FIXED, FIXED, FIXED, FIXED, FIXED, PROPORTIONAL};
@@ -396,11 +397,11 @@ public class PlacementsHolderPlacementsTableModel extends AbstractObjectTableMod
             case 3:
                 return side;
             case 4:
-                return new LengthCellValue(loc.getLengthX(), true, true);
+                return new LengthCellValue(loc.getLengthX(), true, false);
             case 5:
-                return new LengthCellValue(loc.getLengthY(), true, true);
+                return new LengthCellValue(loc.getLengthY(), true, false);
             case 6:
-                return new RotationCellValue(loc.getRotation(), true, true);
+                return new RotationCellValue(loc.getRotation(), true, false);
             case 7:
                 return placement.getType();
             case 8:

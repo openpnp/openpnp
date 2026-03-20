@@ -75,8 +75,8 @@ public class PlacementsHolderLocationsTableModel extends AbstractObjectTableMode
             LengthCellValue.class, Side.class, LengthCellValue.class, LengthCellValue.class,
             LengthCellValue.class, RotationCellValue.class, Boolean.class, Boolean.class};
 
-    private int[] columnAlignments = new int[] {LEFT, LEFT, CENTER, CENTER, CENTER, CENTER, 
-            CENTER, CENTER, CENTER, CENTER, CENTER};
+    private int[] columnAlignments = new int[] {LEFT, LEFT, RIGHT, RIGHT, CENTER, RIGHT,
+            RIGHT, RIGHT, RIGHT, CENTER, CENTER};
     
     private int[] columnWidthTypes = new int[] {FIXED, PROPORTIONAL, FIXED, FIXED, FIXED, 
             FIXED, FIXED, FIXED, FIXED, FIXED, FIXED};
@@ -384,19 +384,19 @@ public class PlacementsHolderLocationsTableModel extends AbstractObjectTableMode
             case 1:
                 return placementsHolderLocation.getPlacementsHolder().getName();
             case 2:
-                return new LengthCellValue(dim.getLengthX(), true, true);
+                return new LengthCellValue(dim.getLengthX(), true, false);
             case 3:
-                return new LengthCellValue(dim.getLengthY(), true, true);
+                return new LengthCellValue(dim.getLengthY(), true, false);
             case 4:
                 return placementsHolderLocation.getGlobalSide();
             case 5:
-                return new LengthCellValue(loc.getLengthX(), true, true);
+                return new LengthCellValue(loc.getLengthX(), true, false);
             case 6:
-                return new LengthCellValue(loc.getLengthY(), true, true);
+                return new LengthCellValue(loc.getLengthY(), true, false);
             case 7:
-                return new LengthCellValue(loc.getLengthZ(), true, true);
+                return new LengthCellValue(loc.getLengthZ(), true, false);
             case 8:
-                return new RotationCellValue(loc.getRotation(), true, true);
+                return new RotationCellValue(loc.getRotation(), true, false);
             case 9:
                 return placementsHolderLocation.isEnabled();
             case 10:
