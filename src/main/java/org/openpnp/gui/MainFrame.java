@@ -282,6 +282,7 @@ public class MainFrame extends JFrame {
     private ActionListener instructionsProceedActionListener;
 
     private ScriptFileWatcher scriptFileWatcher;
+    private GamepadJogController gamepadJogController;
     private JMenuItem mnEditRemoveBoard;
     private JMenu mnEditAddBoard;
     private JMenuItem mnCaptureToolLocation;
@@ -706,6 +707,9 @@ public class MainFrame extends JFrame {
                 machineControlsPanel.getJogControlsPanel().setIncrement4Action);
         hotkeyActionMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_F5, KeyEvent.CTRL_DOWN_MASK | KeyEvent.SHIFT_DOWN_MASK),
                 machineControlsPanel.getJogControlsPanel().setIncrement5Action);
+
+        gamepadJogController = new GamepadJogController(this, machineControlsPanel.getJogControlsPanel());
+        gamepadJogController.start();
 
         isShiftDown = false;
         KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(
@@ -1140,6 +1144,9 @@ public class MainFrame extends JFrame {
         }
         catch (Exception e) {
             e.printStackTrace();
+        }
+        if (gamepadJogController != null) {
+            gamepadJogController.stop();
         }
         Logger.info("Shutdown complete, exiting."); //$NON-NLS-1$
         System.exit(0);
