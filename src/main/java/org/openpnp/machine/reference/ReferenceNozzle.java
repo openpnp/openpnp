@@ -124,9 +124,6 @@ public class ReferenceNozzle extends AbstractNozzle implements HeadMountable {
 
     protected ReferenceNozzleTip nozzleTip;
 
-    // Transient field: when non-empty, these LocationOptions are forwarded
-    // through moveTo() into toHeadLocation() to suppress coordinate transforms
-    // (e.g., runout compensation) during tool changer movements.
     private transient LocationOption[] additionalMoveOptions = new LocationOption[0];
 
     public ReferenceNozzle() {
