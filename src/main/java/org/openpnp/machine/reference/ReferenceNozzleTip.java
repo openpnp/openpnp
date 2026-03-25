@@ -160,6 +160,9 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     private boolean zCalibrationFailHoming = true;
 
     @Attribute(required = false)
+    private boolean useRunoutCalibrationForUnload = true;
+
+    @Attribute(required = false)
     private boolean templateNozzleTip = false;
 
     @Attribute(required = false)
@@ -675,6 +678,16 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         Object oldValue = this.zCalibrationFailHoming;
         this.zCalibrationFailHoming = zCalibrationFailHoming;
         firePropertyChange("zCalibrationFailHoming", oldValue, zCalibrationFailHoming);
+    }
+
+    public boolean isUseRunoutCalibrationForUnload() {
+        return useRunoutCalibrationForUnload;
+    }
+
+    public void setUseRunoutCalibrationForUnload(boolean useRunoutCalibrationForUnload) {
+        Object oldValue = this.useRunoutCalibrationForUnload;
+        this.useRunoutCalibrationForUnload = useRunoutCalibrationForUnload;
+        firePropertyChange("useRunoutCalibrationForUnload", oldValue, useRunoutCalibrationForUnload);
     }
 
     public boolean isTemplateNozzleTip() {

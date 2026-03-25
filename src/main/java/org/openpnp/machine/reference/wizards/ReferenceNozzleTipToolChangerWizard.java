@@ -116,6 +116,8 @@ public class ReferenceNozzleTipToolChangerWizard extends AbstractConfigurationWi
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
 
 
@@ -330,6 +332,15 @@ public class ReferenceNozzleTipToolChangerWizard extends AbstractConfigurationWi
         
                 zCalibrationFailHoming = new JCheckBox("");
                 panelChanger.add(zCalibrationFailHoming, "4, 20");
+
+                lblUseRunoutCalibrationForUnload = new JLabel(Translations.getString(
+                        "ReferenceNozzleTipToolChangerWizard.ChangerPanel.UseRunoutCalibrationForUnloadLabel.text")); //$NON-NLS-1$
+                lblUseRunoutCalibrationForUnload.setToolTipText(Translations.getString(
+                        "ReferenceNozzleTipToolChangerWizard.ChangerPanel.UseRunoutCalibrationForUnloadLabel.toolTipText")); //$NON-NLS-1$
+                panelChanger.add(lblUseRunoutCalibrationForUnload, "2, 22, right, default");
+
+                useRunoutCalibrationForUnload = new JCheckBox("");
+                panelChanger.add(useRunoutCalibrationForUnload, "4, 22");
         
         panelVision = new JPanel();
         panelVision.setBorder(new TitledBorder(null, Translations.getString(
@@ -783,6 +794,7 @@ public class ReferenceNozzleTipToolChangerWizard extends AbstractConfigurationWi
         addWrappedBinding(nozzleTip, "calibrationOffsetZ", calibrationOffsetZ, "text",
                 lengthConverter);
         addWrappedBinding(nozzleTip, "zCalibrationFailHoming", zCalibrationFailHoming, "selected");
+        addWrappedBinding(nozzleTip, "useRunoutCalibrationForUnload", useRunoutCalibrationForUnload, "selected");
 
         addWrappedBinding(nozzleTip, "templateNozzleTip", templateNozzleTip, "selected");
         addWrappedBinding(nozzleTip, "templateClone", templateClone, "selected");
@@ -1088,6 +1100,8 @@ public class ReferenceNozzleTipToolChangerWizard extends AbstractConfigurationWi
     private JTextField calibrationOffsetZ;
     private JLabel lblFailHoming;
     private JCheckBox zCalibrationFailHoming;
+    private JLabel lblUseRunoutCalibrationForUnload;
+    private JCheckBox useRunoutCalibrationForUnload;
     private JButton btnLevelZ;
     private JPanel panelVision;
     private JPanel panelClone;
