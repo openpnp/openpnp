@@ -2922,16 +2922,23 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                     travelCost = null;
                 }
                 if (travelCost != null) {
-                    // find the placement with the least cost for motion to averagePlickLocation and averagePlaceLocation
+                    // find the placement with the least cost for motion to averagePickLocation and averagePlaceLocation
                     double leastCost = Double.MAX_VALUE;
+                    HashMap<Part, Double> travelCostForPickingPart = new HashMap<>(); // cache travel cost for picking each part
                     for (JobPlacement p : compatibleJobPlacements) {
-                        double cost = travelCost.getCost(pickLocator.getLocation(p, nozzle), averagePickLocation) 
-                                    + travelCost.getCost(placeLocator.getLocation(p, nozzle), averagePlaceLocation);
-    
-                        // if this placement is closes with respect to its pick and place 
+                        Part part = p.getPlacement().getPart();
+                        Double cost = travelCostForPickingPart.get(part);
+                        if (cost == null) { // calculate the travel cost for picking this part and cache it, so we only do this once per part
+                            cost = travelCost.getCost(pickLocator.getLocation(p, nozzle), averagePickLocation);
+                            travelCostForPickingPart.put(part,cost);
+                        }
                         if (leastCost > cost) {
-                            planningCost = leastCost = cost;
-                            bestPlacement = p;
+                            cost += travelCost.getCost(placeLocator.getLocation(p, nozzle), averagePlaceLocation);
+                            // if this placement is closes with respect to its pick and place
+                            if (leastCost > cost) {
+                                planningCost = leastCost = cost;
+                                bestPlacement = p;
+                            }
                         }
                     }
                 }
