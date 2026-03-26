@@ -5,6 +5,8 @@ a complete change list, only those that may directly interest or affect users.
 
 ## New Features
 
+* Reduce horizontal padding in some table columns, for more compact displays [PR 1950](https://github.com/openpnp/openpnp/pull/1950)
+
 ## Bug Fixes
 
 
