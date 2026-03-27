@@ -89,7 +89,15 @@ public abstract class CsvImporter {
     abstract String[] getSidePattern();
     abstract String[] getHeightPattern();
     abstract String[] getCommentPattern();
+    public String[] getPartIdPattern() {
+    	return new String[] {
+    		    "ID", 	//$NON-NLS-1$
+    		    "PN" 	//$NON-NLS-1$
+    	};
+    }
     
+	
+	
     // this variables hold the pattern to decode the data
     private String referencePattern[];
     private String valuePattern[];
@@ -100,6 +108,7 @@ public abstract class CsvImporter {
     private String sidePattern[];
     private String heightPattern[];
     private String commentPattern[];
+    private String partIdPattern[];
     
     private Board board;
     private File file;
@@ -117,7 +126,7 @@ public abstract class CsvImporter {
     	sidePattern      = getSidePattern();
     	heightPattern    = getHeightPattern();
     	commentPattern   = getCommentPattern();
-
+		partIdPattern    = getPartIdPattern() ;
     	// open the file import dialog
         Dlg dlg = new Dlg(parent);
         dlg.setVisible(true);
@@ -137,6 +146,8 @@ public abstract class CsvImporter {
     private int sideIndex;
     private int heightIndex;
     private int commentIndex;
+    private int partIdIndex;
+	
     
     // the length field contains the amount of columns required in data after the
     // header line has been detected and decoded
@@ -193,6 +204,8 @@ public abstract class CsvImporter {
             heightIndex  = checkCSV(heightPattern , str); // optional height field
             sideIndex    = checkCSV(sidePattern,    str); // optional top/bottom layer field
             commentIndex = checkCSV(commentPattern, str); // optional comment field
+			partIdIndex = checkCSV(partIdPattern, str); // optional part ID field. If missing, part ID will be built based on footprint and comment/value
+
 
         	// test if any value requires mil to mm conversion
             xUnitsMil = str[xIndex].endsWith(MilToMM);
@@ -219,6 +232,7 @@ public abstract class CsvImporter {
             len = Math.max(len, sideIndex);
             len = Math.max(len, heightIndex);
             len = Math.max(len, commentIndex);
+            len = Math.max(len, partIdIndex);
             Logger.trace("checkCSV: Len = " + len); //$NON-NLS-1$
             return true;
         }
@@ -232,6 +246,7 @@ public abstract class CsvImporter {
         Logger.trace("checkCSV: sideIndex = "      + sideIndex);      //$NON-NLS-1$
         Logger.trace("checkCSV: heightIndex = "    + heightIndex);    //$NON-NLS-1$
         Logger.trace("checkCSV: commentIndex = "   + commentIndex);   //$NON-NLS-1$
+        Logger.trace("checkCSV: partIdIndex = "    + partIdIndex);   //$NON-NLS-1$
         // force length to invalid for following stages
         len = 0;
         return false;
@@ -320,7 +335,7 @@ public abstract class CsvImporter {
     }
     
     private List<Placement> parseFile(File file, boolean createMissingParts,
-            boolean updateHeights) throws Exception {
+            boolean updateHeights, boolean usePartIdFromFile) throws Exception {
         String characterset = detectCharacterSet(file);
         BufferedReader reader =
                 new BufferedReader(new InputStreamReader(new FileInputStream(file), characterset));
@@ -364,7 +379,18 @@ public abstract class CsvImporter {
                 // convert rotation to [-180 .. 180]
                 placementRotation = Utils2D.angleNorm(placementRotation, 180);
                 
-                String partId = as[packageIndex] + "-" + as[valueIndex]; //$NON-NLS-1$
+                String partId;
+				
+				if( usePartIdFromFile && partIdIndex >=0 )
+				{
+					// We have part ID from file and are allowed to use it
+					partId = as[ partIdIndex ];
+				}
+				else
+				{
+					partId = as[packageIndex] + "-" + as[valueIndex]; //$NON-NLS-1$
+				}
+				
                 Part part = cfg.getPart(partId);
 
                 // if part does not exist, create it
@@ -436,6 +462,7 @@ public abstract class CsvImporter {
         private final Action cancelAction = new SwingAction_3();
         private JCheckBox chckbxCreateMissingParts;
         private JCheckBox chckbxUpdatePartHeight;
+        private JCheckBox chckbxUsePartIdFromFile;
 
         public Dlg(Frame parent) {
             super(parent, getImporterDescription(), true);
@@ -469,7 +496,7 @@ public abstract class CsvImporter {
             getContentPane().add(panel_1);
             panel_1.setLayout(new FormLayout(
                     new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
-                    new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                    new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                             RowSpec.decode("default:grow")})); //$NON-NLS-1$
 
             chckbxCreateMissingParts = new JCheckBox(Translations.getString("CsvImporter.OptionsPanel.createMissingPartsChkbox.text")); //$NON-NLS-1$
@@ -479,6 +506,14 @@ public abstract class CsvImporter {
             chckbxUpdatePartHeight = new JCheckBox(Translations.getString("CsvImporter.OptionsPanel.updatePartHeightChkbox.text")); //$NON-NLS-1$
             chckbxUpdatePartHeight.setSelected(true);
             panel_1.add(chckbxUpdatePartHeight, "2, 3"); //$NON-NLS-1$
+
+            chckbxUsePartIdFromFile = new JCheckBox(Translations.getString("CsvImporter.OptionsPanel.UsePartIdFromFile.text")); //$NON-NLS-1$
+            chckbxUsePartIdFromFile.setSelected(false);
+            panel_1.add(chckbxUsePartIdFromFile, "2, 4"); //$NON-NLS-1$
+
+
+
+
 
             JSeparator separator = new JSeparator();
             getContentPane().add(separator);
@@ -548,7 +583,7 @@ public abstract class CsvImporter {
                 try {
                     if (file.exists()) {
                         placements.addAll(parseFile(file, chckbxCreateMissingParts.isSelected(),
-                                chckbxUpdatePartHeight.isSelected()));
+                                chckbxUpdatePartHeight.isSelected(),  chckbxUsePartIdFromFile.isSelected()));
                     }
                 }
                 catch (Exception e1) {
