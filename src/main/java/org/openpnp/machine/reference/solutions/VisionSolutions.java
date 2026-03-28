@@ -55,6 +55,7 @@ import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Solutions;
+import org.openpnp.model.Solutions.Issue.Portability;
 import org.openpnp.model.Solutions.Milestone;
 import org.openpnp.model.Solutions.Severity;
 import org.openpnp.model.Solutions.State;
@@ -290,8 +291,8 @@ public class VisionSolutions implements Solutions.Subject {
 
     public class VisionFeatureIssue extends Solutions.Issue {
 
-        public VisionFeatureIssue(Subject subject, ReferenceCamera camera, Length featureDiameterIfKnown, String issue, String solution, Severity severity, String uri) {
-            super(subject, issue, solution, severity, uri);
+        public VisionFeatureIssue(Subject subject, ReferenceCamera camera, Length featureDiameterIfKnown, String issue, String solution, Severity severity, String uri, Portability portability) {
+            super(subject, issue, solution, severity, uri, portability);
             this.camera = camera;
             featureDiameter = 20;
             if (camera.getUnitsPerPixelPrimary().getX() != 0
@@ -300,6 +301,9 @@ public class VisionSolutions implements Solutions.Subject {
                 // Existing diameter setting.
                 featureDiameter = (int) Math.round(featureDiameterIfKnown.divide(camera.getUnitsPerPixel().getLengthX()));
             }
+        }
+        public VisionFeatureIssue(Subject subject, ReferenceCamera camera, Length featureDiameterIfKnown, String issue, String solution, Severity severity, String uri) {
+            this(subject, camera, featureDiameterIfKnown, issue, solution, severity, uri, Portability.Portable);
         }
 
         private ReferenceCamera camera; 
@@ -708,7 +712,8 @@ public class VisionSolutions implements Solutions.Subject {
                     "Determine the up-looking camera "+camera.getName()+" position and initial calibration.", 
                     "Move the nozzle "+defaultNozzle.getName()+" over the up-looking camera "+camera.getName()+" and capture the position.", 
                     Solutions.Severity.Fundamental,
-                    "https://github.com/openpnp/openpnp/wiki/Vision-Solutions#up-looking-camera-offsets") {
+                    "https://github.com/openpnp/openpnp/wiki/Vision-Solutions#up-looking-camera-offsets",
+                    Portability.NonPortableController) {
 
                 @Override 
                 public void activate() throws Exception {
