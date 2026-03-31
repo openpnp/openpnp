@@ -672,14 +672,24 @@ public class FeederVisionHelper {
                                 Location pickLocation = partLocation.convertToUnits(LengthUnit.Millimeters);
                                 Location relativePickLocation = pickLocation
                                         .subtract(hole1Location);
-                                // rotate from old angle
-                                relativePickLocation =  relativePickLocation.rotateXy(-pickLocation.getRotation())
+                                // rotate by tape angle, so dX multiply of partPitchMinMm, and dY pick-hole line distance
+                                relativePickLocation =  relativePickLocation.rotateXy(-angleTape)
                                         .derive(null, null, null, 0.0);
                                 // normalize to a nominal local pick location according to EIA 481
+                                // vertical hole to part distances are 3.5, 5.5, 7.5, 11.5mm for 8, 12, 16, 24mm tapes
                                 if (normalizePickLocation) {
+                                    double dY = Math.abs(relativePickLocation.getY());
+                                    if (dY > sprocketHoleToPartGridMm / 2) {
+                                        dY = Math.round((dY - sprocketHoleToPartMinMm)/sprocketHoleToPartGridMm)*sprocketHoleToPartGridMm + sprocketHoleToPartMinMm;
+                                        if (relativePickLocation.getY() < 0) {
+                                            dY = -dY;
+                                        }
+                                    } else {
+                                        dY = relativePickLocation.getY();
+                                    }
                                     relativePickLocation = new Location(LengthUnit.Millimeters,
                                             Math.round(relativePickLocation.getX()/partPitchMinMm)*partPitchMinMm,
-                                            -sprocketHoleToPartMinMm+Math.round((relativePickLocation.getY()+sprocketHoleToPartMinMm)/sprocketHoleToPartGridMm)*sprocketHoleToPartGridMm,
+                                            dY,
                                             0, 0);
                                 }
                                 // calculate the new pick location with the new hole 1 location and tape angle
