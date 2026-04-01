@@ -20,11 +20,18 @@
 package org.openpnp.machine.reference.wizards;
 
 import java.awt.BorderLayout;
+import java.awt.FlowLayout;
+import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.JButton;
+import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.JToolBar;
 import javax.swing.table.AbstractTableModel;
 
 import org.openpnp.Translations;
@@ -34,6 +41,7 @@ import org.openpnp.model.Configuration;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
+import org.openpnp.util.Cycles;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 
@@ -43,6 +51,9 @@ public class ReferenceNozzleCompatibleNozzleTipsWizard extends AbstractConfigura
     private JTable table;
     private NozzleTipsTableModel tableModel;
     private JScrollPane scrollPane;
+    private JPanel buttonPanel;
+    private JButton btnClearPart;
+    private JButton btnClearTip;
 
     public ReferenceNozzleCompatibleNozzleTipsWizard(ReferenceNozzle nozzle) {
         this.nozzle = nozzle;
@@ -56,11 +67,22 @@ public class ReferenceNozzleCompatibleNozzleTipsWizard extends AbstractConfigura
     private void createUi() {
         contentPanel.setLayout(new BorderLayout(0, 0));
         scrollPane = new JScrollPane();
-        contentPanel.add(scrollPane);
+        contentPanel.add(scrollPane, BorderLayout.SOUTH);
         
+        buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        contentPanel.add(buttonPanel, BorderLayout.NORTH);
+
         tableModel = new NozzleTipsTableModel();
         table = new JTable(tableModel);
         scrollPane.setViewportView(table);
+
+        btnClearPart = new JButton(clearPartAction);
+        btnClearPart.setToolTipText(Translations.getString("JogControlsPanel.btnClearPart.toolTipText")); //$NON-NLS-1$
+        buttonPanel.add(btnClearPart);
+
+        btnClearTip = new JButton(clearTipAction);
+        btnClearTip.setToolTipText(Translations.getString("JogControlsPanel.btnClearTip.toolTipText")); //$NON-NLS-1$
+        buttonPanel.add(btnClearTip);
     }
 
     @Override
@@ -173,4 +195,23 @@ public class ReferenceNozzleCompatibleNozzleTipsWizard extends AbstractConfigura
             }
         }
     }
+
+    public Action clearPartAction = new AbstractAction(Translations.getString("JogControlsPanel.Action.ClearPart")) { //$NON-NLS-1$
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            UiUtils.submitUiMachineTask(() -> {
+                Cycles.clear(nozzle);
+            });
+        }
+    };
+
+    public Action clearTipAction = new AbstractAction(Translations.getString("JogControlsPanel.Action.ClearTip")) { //$NON-NLS-1$
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            UiUtils.submitUiMachineTask(() -> {
+                nozzle.clearNozzleTip();
+            });
+        }
+    };
+
 }
