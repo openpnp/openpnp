@@ -53,9 +53,11 @@ import org.openpnp.machine.reference.feeder.wizards.AbstractReferenceFeederConfi
 import org.openpnp.machine.pandaplacer.BambooFeederAutoVision;
 import org.openpnp.machine.pandaplacer.AbstractPandaplacerVisionFeeder.CalibrationTrigger;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Location;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
 import org.openpnp.util.FeederVisionHelper.PipelineType;
+import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.ui.CvPipelineEditor;
@@ -303,6 +305,8 @@ extends AbstractReferenceFeederConfigurationWizard {
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
 
         lblVisionType = new JLabel("Vision Type");
@@ -367,6 +371,42 @@ extends AbstractReferenceFeederConfigurationWizard {
 
         btnResetStatistics = new JButton(resetStatisticsAction);
         panelVisionEnabled.add(btnResetStatistics, "12, 6, 3, 1");
+
+        lblVisionOffsetX = new JLabel("X");
+        panelVisionEnabled.add(lblVisionOffsetX, "4, 8, center, default");
+
+        lblVisionOffsetY = new JLabel("Y");
+        panelVisionEnabled.add(lblVisionOffsetY, "6, 8, center, default");
+
+        lblVisionLocationOffset = new JLabel("Vision Offset");
+        lblVisionLocationOffset.setToolTipText("<html>X/Y offset applied to the camera position during sprocket hole vision operations.<br/>"
+                + "Use this to shift the camera away from component pockets when using clear carrier tape,<br/>"
+                + "so the camera sees a better background for hole detection. Leave at (0,0) for normal use.</html>");
+        panelVisionEnabled.add(lblVisionLocationOffset, "2, 10, right, default");
+
+        textFieldVisionOffsetX = new JTextField();
+        textFieldVisionOffsetX.setToolTipText("<html>X offset added to the camera position for vision calibration.<br/>"
+                + "Positive moves the camera right relative to the sprocket hole midpoint.</html>");
+        panelVisionEnabled.add(textFieldVisionOffsetX, "4, 10");
+        textFieldVisionOffsetX.setColumns(10);
+
+        textFieldVisionOffsetY = new JTextField();
+        textFieldVisionOffsetY.setToolTipText("<html>Y offset added to the camera position for vision calibration.<br/>"
+                + "Positive moves the camera upward relative to the sprocket hole midpoint.</html>");
+        panelVisionEnabled.add(textFieldVisionOffsetY, "6, 10");
+        textFieldVisionOffsetY.setColumns(10);
+
+        btnMoveCameraToVisionOffset = new JButton(moveCameraToVisionOffsetAction);
+        btnMoveCameraToVisionOffset.setToolTipText("<html>Move the camera to the position used for vision calibration<br/>"
+                + "(sprocket hole midpoint plus the offset above). Use this to verify<br/>"
+                + "the offset gives a good view of the tape without component pockets.</html>");
+        panelVisionEnabled.add(btnMoveCameraToVisionOffset, "8, 10");
+
+        btnCaptureVisionOffset = new JButton(captureVisionOffsetAction);
+        btnCaptureVisionOffset.setToolTipText("<html>Capture the current camera position as the vision offset.<br/>"
+                + "Move the camera to a good viewing position for the sprocket holes,<br/>"
+                + "then press this button. The offset is stored relative to the hole midpoint.</html>");
+        panelVisionEnabled.add(btnCaptureVisionOffset, "10, 10");
 
 
 // Panel End: Vision
@@ -513,6 +553,13 @@ extends AbstractReferenceFeederConfigurationWizard {
 
         addWrappedBinding(feeder, "pipelineType", pipelineType, "selectedItem");
 
+        MutableLocationProxy visionLocationOffset = new MutableLocationProxy();
+        bind(UpdateStrategy.READ_WRITE, feeder, "visionLocationOffset", visionLocationOffset, "location");
+        addWrappedBinding(visionLocationOffset, "lengthX", textFieldVisionOffsetX, "text",
+                lengthConverter);
+        addWrappedBinding(visionLocationOffset, "lengthY", textFieldVisionOffsetY, "text",
+                lengthConverter);
+
         addWrappedBinding(feeder, "feedActuator", comboBoxFeedActuator, "selectedItem", actuatorConverter);
         addWrappedBinding(feeder, "feedActuatorValue", feedActuatorValue, "text", doubleConverter);
 
@@ -530,6 +577,8 @@ extends AbstractReferenceFeederConfigurationWizard {
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldHole1LocationY);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldHole2LocationX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldHole2LocationY);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldVisionOffsetX);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldVisionOffsetY);
 
         ComponentDecorators.decorateWithAutoSelect(feedActuatorValue);
         ComponentDecorators.decorateWithAutoSelect(postPickActuatorValue);
@@ -648,6 +697,49 @@ extends AbstractReferenceFeederConfigurationWizard {
             });
         }
     };
+
+    private Action moveCameraToVisionOffsetAction =
+            new AbstractAction("", Icons.centerCamera) {
+        {
+            putValue(Action.SHORT_DESCRIPTION,
+                    "Move the camera to the vision offset position (midpoint + offset).");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            UiUtils.submitUiMachineTask(() -> {
+                Camera camera = feeder.getCamera();
+                feeder.ensureCameraZ(camera, true);
+                Location target = feeder.getNominalVisionLocation();
+                MovableUtils.moveToLocationAtSafeZ(camera, target);
+                MovableUtils.fireTargetedUserAction(camera);
+            });
+        }
+    };
+
+    private Action captureVisionOffsetAction =
+            new AbstractAction("", Icons.captureCamera) {
+        {
+            putValue(Action.SHORT_DESCRIPTION,
+                    "Capture the current camera position as the vision offset (relative to the sprocket hole midpoint).");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            UiUtils.messageBoxOnException(() -> {
+                applyAction.actionPerformed(e);
+                UiUtils.submitUiMachineTask(() -> {
+                    Camera camera = feeder.getCamera();
+                    Location cameraLocation = camera.getLocation();
+                    Location midPoint = feeder.getHole1Location().add(feeder.getHole2Location()).multiply(0.5);
+                    Location offset = cameraLocation.subtract(midPoint)
+                            .derive(null, null, 0.0, 0.0);
+                    feeder.setVisionLocationOffset(offset);
+                });
+            });
+        }
+    };
+
     private Action autoSetupAction =
             new AbstractAction("Auto-Setup with Camera at Pick Location", Icons.captureCamera) {
         {
@@ -774,6 +866,13 @@ extends AbstractReferenceFeederConfigurationWizard {
     private JButton btnResetStatistics;
     private JLabel lblPrecisionConfidenceLimit;
     private JTextField textFieldPrecisionConfidenceLimit;
+    private JLabel lblVisionLocationOffset;
+    private JLabel lblVisionOffsetX;
+    private JLabel lblVisionOffsetY;
+    private JTextField textFieldVisionOffsetX;
+    private JTextField textFieldVisionOffsetY;
+    private JButton btnMoveCameraToVisionOffset;
+    private JButton btnCaptureVisionOffset;
     private JLabel lblNormalizePickLocation;
     private JCheckBox checkBoxNormalizePickLocation;
     private JLabel lblSnapToAxis;
