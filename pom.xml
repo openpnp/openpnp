@@ -384,6 +384,7 @@
 								</module>
 								<module name="MethodName">
 									<property name="format" value="^[a-z][a-zA-Z0-9]*$" />
+									<property name="id" value="MethodNameCheck" />
 								</module>
 								<module name="LocalVariableName">
 									<property name="format" value="^[a-z][a-zA-Z0-9_]*$" />
@@ -406,9 +407,8 @@
 					<failsOnError>true</failsOnError>
 					<linkXRef>false</linkXRef>
 					<includeTestSourceDirectory>true</includeTestSourceDirectory>
-					<!-- Exclude Eagle importer code, which is auto generated -->
-					<!-- Exclude Neoden dll function names we can't modify -->
-					<excludes>org/openpnp/model/eagle/xml/*,org/openpnp/machine/neoden4/Neoden4CameraDriver*</excludes>
+					<!-- Exclude auto-generated Eagle code, Neoden4 DLL wrappers, and HWGC JNA SDK interfaces -->
+					<excludes>org/openpnp/model/eagle/xml/*,org/openpnp/machine/neoden4/Neoden4CameraDriver*,**/hwgc/HwgcDvrSdk.java,**/hwgc/MvCamSdk.java</excludes>
 					<!-- Add any resource files to exclude here -->
 					<resourceExcludes></resourceExcludes>
 				</configuration>
