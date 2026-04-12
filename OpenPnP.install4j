@@ -70,7 +70,7 @@
     </entries>
   </files>
   <launchers>
-    <launcher name="OpenPnP" id="23" icnsFile="./src/main/resources/icons/OpenPnP-logo.icns">
+    <launcher name="OpenPnP" id="23" icnsFile="./src/main/resources/icons/OpenPnP-logo.icns" addMacEntitlements="true" macEntitlementsFile="./.github/entitlements.plist">
       <executable name="OpenPnP" iconSet="true" executableMode="gui" singleInstance="true" dpiAware="false" />
       <splashScreen bitmapFile="./logo/OpenPnP-logo.iconset/icon_128x128.png" />
       <java mainClass="org.openpnp.Main" vmParameters="--add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.desktop/java.awt=ALL-UNNAMED --add-opens=java.desktop/java.awt.color=ALL-UNNAMED">
