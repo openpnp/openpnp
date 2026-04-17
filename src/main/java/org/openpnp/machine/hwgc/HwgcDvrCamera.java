@@ -24,12 +24,16 @@ import java.io.File;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.imageio.ImageIO;
 
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.hwgc.wizards.HwgcDvrCameraConfigurationWizard;
 import org.openpnp.machine.reference.camera.ReferenceCamera;
+import org.openpnp.model.Configuration;
+import org.openpnp.spi.Camera;
 import org.openpnp.spi.PropertySheetHolder;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
@@ -236,6 +240,39 @@ public class HwgcDvrCamera extends ReferenceCamera {
 
     public void setChannel(int channel) {
         this.channel = channel;
+    }
+
+    /**
+     * Tears down and re-initializes every {@link HwgcDvrCamera} attached to
+     * the current machine. Use when the DVR feed freezes — closes all DVR
+     * cameras (the last one triggers a full SDK teardown via
+     * {@link #close()}), then reopens each so the next capture re-runs
+     * {@link #ensureOpen()} and re-inits the hwsys.dll SDK end-to-end.
+     */
+    public static void reopenAll() throws Exception {
+        List<HwgcDvrCamera> cams = new ArrayList<>();
+        for (Camera c : Configuration.get().getMachine().getAllCameras()) {
+            if (c instanceof HwgcDvrCamera) {
+                cams.add((HwgcDvrCamera) c);
+            }
+        }
+        Logger.info("HWGC DVR: reopening {} camera(s)", cams.size());
+        for (HwgcDvrCamera c : cams) {
+            try {
+                c.close();
+            }
+            catch (Exception e) {
+                Logger.warn("HWGC DVR: close failed for {}: {}", c.getName(), e.getMessage());
+            }
+        }
+        for (HwgcDvrCamera c : cams) {
+            try {
+                c.open();
+            }
+            catch (Exception e) {
+                Logger.warn("HWGC DVR: open failed for {}: {}", c.getName(), e.getMessage());
+            }
+        }
     }
 
     @Override

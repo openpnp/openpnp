@@ -118,9 +118,13 @@ public class HwgcDriver extends AbstractReferenceDriver {
     @Attribute(required = false)
     protected double scaleZ = 100.0;
 
-    /** Scale factor for rotation: machine units per degree. */
+    /**
+     * Scale factor for rotation: machine units per degree.
+     * Negated so that a positive OpenPnP angle rotates the physical nozzle
+     * in the direction bottom-vision expects for Test Alignment.
+     */
     @Attribute(required = false)
-    protected double scaleA = 25600.0 / 360.0;  // 71.111 — 200-step motor × 128 microsteps = 25600 steps/rev
+    protected double scaleA = -25600.0 / 360.0;  // -71.111 — 200-step motor × 128 microsteps = 25600 steps/rev
 
     /** Break vacuum air blow duration in seconds. */
     @Attribute(required = false)
