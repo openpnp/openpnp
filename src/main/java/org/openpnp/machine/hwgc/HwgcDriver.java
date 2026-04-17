@@ -218,7 +218,8 @@ public class HwgcDriver extends AbstractReferenceDriver {
         for (String actName : new String[] {
                 "Lights-Down", "Lights-Up", "Mark-LED", "Mark-LED-Ill",
                 "Fast-Cam-1-Light", "Fast-Cam-2-Light", "Fast-Cam-3-Light", "Fast-Cam-4-Light",
-                "Buzzer", "Board-In", "Board-Out", "Board-Clamp"}) {
+                "Buzzer", "InBoard", "OutBoard", "Clamp", "Unclamp",
+                "Track-Wider", "Track-Narrower"}) {
             getOrCreateMachineActuator(machine, actName);
         }
 
@@ -761,8 +762,11 @@ public class HwgcDriver extends AbstractReferenceDriver {
             throw new IOException("HWGC: no response to A position query");
         }
         int a = decode32LE(resp);
-        // Sanity check: rotation range is roughly ±360° × scaleA
-        int maxA = (int) (360 * scaleA * 2);
+        // Sanity check: rotation range is roughly ±360° × |scaleA|. Use
+        // abs() because scaleA may be negative to flip rotation direction —
+        // without this, every read trips the bogus check and the motion
+        // completion loop spins on stale cached positions until timeout.
+        int maxA = (int) (360 * Math.abs(scaleA) * 2);
         if (a < -maxA || a > maxA) {
             Logger.warn("HWGC: bogus A position {} for nozzle {} (limit ±{}) — using cached {}",
                     a, nozzle, maxA, posA[nozzle]);
@@ -908,15 +912,43 @@ public class HwgcDriver extends AbstractReferenceDriver {
 
     // Board handling
 
-    private void sendInBoard() throws Exception {
+    /**
+     * Load and clamp the board via the IN_BOARD (0x30) opcode. The firmware
+     * state machine drives the conveyor and automatically engages the clamp
+     * solenoid when the board reaches the middle sensor — there is no
+     * standalone clamp command on HW_4SG_50.
+     */
+    public void sendInBoard() throws Exception {
+        sendInBoard(2);
+    }
+
+    /**
+     * Load a board onto the conveyor via IN_BOARD (0x30).
+     * @param velocity conveyor speed (1-9, default in SmtProgram is 7)
+     */
+    public void sendInBoard(int velocity) throws Exception {
         byte[] cmd = new byte[CMD_PACKET_LEN];
         cmd[CMD_BYTE_INDEX] = (byte) IN_BOARD;
+        cmd[3] = (byte) velocity;
         sendCommand(cmd);
     }
 
-    private void sendOutBoard() throws Exception {
+    /**
+     * Release the clamp and unload the board via the OUT_BOARD (0x31)
+     * opcode.
+     */
+    public void sendOutBoard() throws Exception {
+        sendOutBoard(2);
+    }
+
+    /**
+     * Unload a board from the conveyor via OUT_BOARD (0x31).
+     * @param velocity conveyor speed (1-9, default in SmtProgram is 7)
+     */
+    public void sendOutBoard(int velocity) throws Exception {
         byte[] cmd = new byte[CMD_PACKET_LEN];
         cmd[CMD_BYTE_INDEX] = (byte) OUT_BOARD;
+        cmd[3] = (byte) velocity;
         sendCommand(cmd);
     }
 
@@ -924,6 +956,39 @@ public class HwgcDriver extends AbstractReferenceDriver {
         byte[] cmd = new byte[CMD_PACKET_LEN];
         cmd[CMD_BYTE_INDEX] = (byte) TRACK_DINGBAN;
         cmd[5] = (byte) (clamp ? 1 : 0);
+        sendCommand(cmd);
+    }
+
+    /**
+     * Clamp or unclamp the PCB using opcode 0x35 (Execute Plywood).
+     * Decompiled from QIGN_COMMON.exe ClassLibrary1.DLL sendexetueplywood().
+     * byte[4]=boardNo, byte[5]=1 clamp / 0 unclamp.
+     */
+    public void sendExecutePlywood(int boardNo, boolean clamp) throws Exception {
+        byte[] cmd = new byte[CMD_PACKET_LEN];
+        cmd[CMD_BYTE_INDEX] = (byte) EXECUTE_PLYWOOD;
+        cmd[4] = (byte) boardNo;
+        cmd[5] = (byte) (clamp ? 1 : 0);
+        sendCommand(cmd);
+    }
+
+    /**
+     * Jog conveyor track at constant speed (0x32) to widen or narrow rails.
+     * On HW_4SG_50: direction 0 = widen (Track+), 1 = narrow (Track-).
+     * Call {@link #sendTrackStopMove()} to stop.
+     */
+    public void sendTrackConstantSpeed(int direction, int speed) throws Exception {
+        byte[] cmd = new byte[CMD_PACKET_LEN];
+        cmd[CMD_BYTE_INDEX] = (byte) TRACK_CONST_SPEED;
+        cmd[4] = (byte) direction;
+        cmd[5] = (byte) (64 - speed + 1);
+        sendCommand(cmd);
+    }
+
+    /** Stop conveyor track movement (0x33). */
+    public void sendTrackStopMove() throws Exception {
+        byte[] cmd = new byte[CMD_PACKET_LEN];
+        cmd[CMD_BYTE_INDEX] = (byte) TRACK_STOP_MOVE;
         sendCommand(cmd);
     }
 
@@ -1092,6 +1157,11 @@ public class HwgcDriver extends AbstractReferenceDriver {
             aMoved[i] = false;
         }
 
+        // Compute speed from feedrate: driver reports 250 mm/s at 100% speed slider,
+        // so feedRate = 250 * nominalSpeed.  Map to firmware range 1-64.
+        double feedRate = move.getFeedRatePerSecond();
+        int speed = (int) Math.max(1, Math.min(SPEED_MAX, feedRate / 4.0));
+
         // Drive rotation axes first
         for (ControllerAxis axis : displacement.byType(Axis.Type.Rotation).getControllerAxes()) {
             int index = "ABCD".indexOf(axis.getLetter());
@@ -1101,7 +1171,7 @@ public class HwgcDriver extends AbstractReferenceDriver {
             }
             double degrees = location1.getCoordinate(axis, units);
             int machineA = (int) (degrees * scaleA);
-            moveAMachineUnits(index, machineA, SPEED_MAX);
+            moveAMachineUnits(index, machineA, speed);
             targetA[index] = machineA;
             aMoved[index] = true;
         }
@@ -1143,16 +1213,13 @@ public class HwgcDriver extends AbstractReferenceDriver {
         // Send exactly one command per motor pair that needs to move
         for (int p = 0; p < numPairs; p++) {
             if (pairNeeded[p]) {
-                moveZMachineUnits(pairSourceNozzle[p], pairTarget[p], SPEED_MAX);
+                moveZMachineUnits(pairSourceNozzle[p], pairTarget[p], speed);
             }
         }
 
         // Drive XY axes
         if (displacement.getAxis(Axis.Type.X) != null
                 || displacement.getAxis(Axis.Type.Y) != null) {
-
-            double feedRate = move.getFeedRatePerSecond();
-            int speed = (int) Math.max(1, Math.min(64, feedRate / 4.0));
 
             double x = location1.getCoordinate(
                     location1.getAxis(this, Axis.Type.X), units);
@@ -1347,18 +1414,41 @@ public class HwgcDriver extends AbstractReferenceDriver {
             case "Buzzer":
                 sendBuzzer(on);
                 break;
-            case "Board-In":
+            case "InBoard":
                 if (on) {
                     sendInBoard();
                 }
                 break;
-            case "Board-Out":
+            case "OutBoard":
                 if (on) {
                     sendOutBoard();
                 }
                 break;
-            case "Board-Clamp":
-                sendBoardClamp(on);
+            case "Clamp":
+                sendExecutePlywood(0, true);
+                break;
+            case "Unclamp":
+                sendExecutePlywood(0, false);
+                break;
+            case "Track-Wider":
+                if (on) {
+                    sendTrackConstantSpeed(0, 7);
+                } else {
+                    sendTrackStopMove();
+                }
+                break;
+            case "Track-Narrower":
+                if (on) {
+                    sendTrackConstantSpeed(1, 7);
+                } else {
+                    sendTrackStopMove();
+                }
+                break;
+            case "Pump":
+                // HWGC machines have per-nozzle vacuum solenoids rather than
+                // a central pump. OpenPnP still toggles its configured pump
+                // actuator at pick start/end; silently accept so the log
+                // stays clean and pick/place aren't delayed.
                 break;
             default:
                 Logger.warn("HWGC: unknown boolean actuator '{}'", name);
@@ -1419,6 +1509,194 @@ public class HwgcDriver extends AbstractReferenceDriver {
     @Override
     public String actuatorRead(Actuator actuator) throws Exception {
         return null;
+    }
+
+    // ──────────────────────────────────────────
+    //  Continuous jog (constant speed) commands
+    // ──────────────────────────────────────────
+    //
+    // The HWGC firmware supports two motion modes:
+    //   1. Goto position (0x60/0x62/0x16): move to absolute coords, used by moveTo().
+    //   2. Constant speed (0x18/0x19/0x1A): move in a direction until stopped, used for jogging.
+    //
+    // The methods below implement mode 2. They are NOT yet called by OpenPnP because
+    // the JogControlsPanel uses click-to-step (each click → moveTo with increment).
+    //
+    // TO INTEGRATE INTO OPENPNP UI (JogControlsPanel.java):
+    //
+    // 1. The jog buttons currently use ActionListener which only fires on click/release.
+    //    To support hold-to-jog, add a MouseListener to each jog JButton:
+    //      - mousePressed:  start continuous jog (call jogXyConstantSpeed / jogZConstantSpeed / etc.)
+    //      - mouseReleased: stop movement (call jogStop())
+    //
+    // 2. The JogControlsPanel needs a reference to the HwgcDriver. Options:
+    //    a) Add an optional interface (e.g. ContinuousJogCapable) that HwgcDriver implements,
+    //       then check: if (driver instanceof ContinuousJogCapable) { use hold-to-jog }
+    //       else { fall back to existing click-to-step behavior }.
+    //    b) Or add jogStart/jogStop methods to the Driver SPI as default no-op methods.
+    //
+    // 3. Speed: the jogSpeed parameter (1-64) should be derived from the existing speed
+    //    slider (JogControlsPanel.getSpeed() returns 0.0-1.0):
+    //      int jogSpeed = Math.max(1, (int)(slider * SPEED_MAX));
+    //
+    // 4. For XY, the firmware needs repeated sends every ~50ms (see startJogRepeatLoop).
+    //    For Z and A, a single send is sufficient — firmware maintains constant speed
+    //    until a STOP_MOVE (0x1F) command is received on release.
+    //
+    // 5. Direction mapping from OpenPnP jog buttons to firmware direction values:
+    //    XY: use the XY_DIR_* constants below (combined X/Y nibble encoding).
+    //    Z:  POSITIVE (1) = down, REVERSE (-1) = up. Even nozzles need inversion.
+    //    A:  POSITIVE (1) = CW, REVERSE (-1) = CCW.
+    //
+    // See java-driver HwgcTestPanel.jogHoldBtn() / zHoldBtn() / aHoldBtn() for a
+    // working reference implementation of hold-to-jog with MouseListener.
+
+    // XY jog direction constants (combined X high-nibble / Y low-nibble)
+    public static final int XY_DIR_STOP              = 0x00;
+    public static final int XY_DIR_Y_POSITIVE        = 0x01;
+    public static final int XY_DIR_Y_REVERSE         = 0x0F;
+    public static final int XY_DIR_X_POSITIVE        = 0x10;
+    public static final int XY_DIR_X_POSITIVE_Y_POS  = 0x11;
+    public static final int XY_DIR_X_POSITIVE_Y_REV  = 0x1F;
+    public static final int XY_DIR_X_REVERSE         = 0xF0;
+    public static final int XY_DIR_X_REVERSE_Y_POS   = 0xF1;
+    public static final int XY_DIR_X_REVERSE_Y_REV   = 0xFF;
+
+    // Z/A jog direction constants
+    public static final int JOG_DIR_STOP     = 0;
+    public static final int JOG_DIR_POSITIVE = 1;
+    public static final int JOG_DIR_REVERSE  = -1;
+
+    /** Recommended repeat interval for XY jog commands (ms). */
+    public static final int JOG_REPEAT_MS = 50;
+
+    private volatile Thread jogThread;
+    private volatile Runnable activeJogAction;
+
+    /**
+     * Jog XY at constant speed in the given direction.
+     * Must be called repeatedly (~50ms) while the button is held.
+     * Call jogXyStop() on release.
+     *
+     * @param xyDir  Combined direction (XY_DIR_* constant)
+     * @param speed  Speed 1-64 (map from UI slider: max(1, slider * 64))
+     */
+    public void jogXyConstantSpeed(int xyDir, int speed) throws Exception {
+        byte[] cmd = new byte[CMD_PACKET_LEN];
+        cmd[CMD_BYTE_INDEX] = (byte) XY_CONSTANT_SPEED;
+        int xDir = (xyDir & 0xF0) >> 4;
+        int yDir = xyDir & 0x0F;
+        // Convert 15 (0x0F) to -1 (0xFF) — firmware uses signed direction bytes
+        if (xDir == 15) {
+            xDir = -1;
+        }
+        if (yDir == 15) {
+            yDir = -1;
+        }
+        cmd[2] = (byte) xDir;
+        cmd[3] = (byte) yDir;
+        cmd[5] = encodeSpeed(speed);
+        sendCommand(cmd);
+    }
+
+    /**
+     * Stop XY constant-speed jog by sending direction = 0.
+     */
+    public void jogXyStop(int speed) throws Exception {
+        jogXyConstantSpeed(XY_DIR_STOP, speed);
+    }
+
+    /**
+     * Jog Z at constant speed. Send once on press — firmware continues until jogStop().
+     * Even nozzles (0, 2) need direction inversion because they share a motor with
+     * odd nozzles but are mounted on the opposite side.
+     *
+     * @param nozzle  Nozzle index (0-based)
+     * @param dir     JOG_DIR_POSITIVE (down) or JOG_DIR_REVERSE (up)
+     * @param speed   Speed 1-64
+     */
+    public void jogZConstantSpeed(int nozzle, int dir, int speed) throws Exception {
+        // Invert direction for even nozzles (opposite side of shared motor)
+        int effectiveDir = dir;
+        if (nozzle % 2 == 0) {
+            if (dir == JOG_DIR_POSITIVE) {
+                effectiveDir = JOG_DIR_REVERSE;
+            }
+            else if (dir == JOG_DIR_REVERSE) {
+                effectiveDir = JOG_DIR_POSITIVE;
+            }
+        }
+        byte[] cmd = new byte[CMD_PACKET_LEN];
+        cmd[CMD_BYTE_INDEX] = (byte) Z_CONSTANT_SPEED;
+        cmd[3] = (byte) effectiveDir;
+        cmd[4] = (byte) (nozzle / 2);
+        cmd[5] = encodeSpeed(speed);
+        sendCommand(cmd);
+    }
+
+    /**
+     * Jog rotation (A) axis at constant speed. Send once — firmware continues until jogStop().
+     *
+     * @param nozzle  Nozzle index (0-based)
+     * @param dir     JOG_DIR_POSITIVE (CW) or JOG_DIR_REVERSE (CCW)
+     * @param speed   Speed 1-64
+     */
+    public void jogAConstantSpeed(int nozzle, int dir, int speed) throws Exception {
+        byte[] cmd = new byte[CMD_PACKET_LEN];
+        cmd[CMD_BYTE_INDEX] = (byte) A_CONSTANT_SPEED;
+        cmd[3] = (byte) dir;
+        cmd[4] = (byte) nozzle;
+        cmd[5] = encodeSpeed(speed);
+        sendCommand(cmd);
+    }
+
+    /**
+     * Emergency stop all axes — call on button release to halt jog motion.
+     */
+    public void jogStop() throws Exception {
+        stopJogRepeatLoop();
+        byte[] cmd = new byte[CMD_PACKET_LEN];
+        cmd[0] = 1;
+        cmd[CMD_BYTE_INDEX] = (byte) STOP_MOVE;
+        sendCommand(cmd);
+    }
+
+    /**
+     * Start a background thread that repeatedly sends an XY jog command every
+     * {@link #JOG_REPEAT_MS} ms. XY constant speed requires repeated sends to
+     * maintain motion; Z and A do not (firmware keeps moving until stop).
+     *
+     * @param action  The jog command to repeat (e.g. () -> jogXyConstantSpeed(dir, speed))
+     */
+    public void startJogRepeatLoop(Runnable action) {
+        stopJogRepeatLoop();
+        activeJogAction = action;
+        jogThread = new Thread(() -> {
+            while (activeJogAction == action) {
+                try {
+                    action.run();
+                    Thread.sleep(JOG_REPEAT_MS);
+                } catch (InterruptedException ex) {
+                    break;
+                } catch (Exception ex) {
+                    Logger.warn("HWGC jog loop error: {}", ex.getMessage());
+                    break;
+                }
+            }
+        }, "hwgc-jog-loop");
+        jogThread.setDaemon(true);
+        jogThread.start();
+    }
+
+    /**
+     * Stop the XY jog repeat loop.
+     */
+    public void stopJogRepeatLoop() {
+        activeJogAction = null;
+        if (jogThread != null) {
+            jogThread.interrupt();
+            jogThread = null;
+        }
     }
 
     // ──────────────────────────────────────────
