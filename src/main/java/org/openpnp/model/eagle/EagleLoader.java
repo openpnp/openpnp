@@ -7,6 +7,8 @@ import java.io.InputStream;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Unmarshaller;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParserFactory;
 import javax.xml.transform.Source;
 import javax.xml.transform.sax.SAXSource;
 
@@ -23,7 +25,7 @@ import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
-import org.xml.sax.helpers.XMLReaderFactory;
+
 
 public class EagleLoader {
 
@@ -48,7 +50,11 @@ public class EagleLoader {
         JAXBContext ctx = JAXBContext.newInstance(packageName);
         Unmarshaller unmarshaller = ctx.createUnmarshaller();
 
-        XMLReader xmlreader = XMLReaderFactory.createXMLReader();
+        SAXParserFactory factory = SAXParserFactory.newInstance();
+        factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
+        factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+        factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
+        XMLReader xmlreader = factory.newSAXParser().getXMLReader();
         xmlreader.setFeature(FEATURE_NAMESPACES, true);
         xmlreader.setFeature(FEATURE_NAMESPACE_PREFIXES, true);
         xmlreader.setEntityResolver(new EntityResolver() {
