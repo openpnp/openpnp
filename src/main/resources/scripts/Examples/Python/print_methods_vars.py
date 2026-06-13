@@ -2,12 +2,12 @@
 def print_methods_vars(element, clip=True):
     for item in dir(element):
         try:
-            s1 = '{}.{} = {}'.format(element.name, item, eval('element.{}'.format(item)))
+            s1 = '{}.{} = {}'.format(element.name, item, getattr(element, item))
             if clip:
                 s1 = s1[:78]
             print(s1)
-        except TypeError as e:
+        except Exception as e:
             print('WARNING ... for {}: {}'.format(item, e))
 
 
-print_methods_vars(machine.defaultHead.defaultNozzle)
+print_methods_vars(machine.defaultHead.defaultNozzle)  # pyrefly: ignore
