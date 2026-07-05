@@ -1,0 +1,21 @@
+<openpnp-machine>
+   <machine class="org.openpnp.machine.reference.ReferenceMachine">
+      <heads>
+         <head class="org.openpnp.machine.reference.ReferenceHead" id="H1" name="H1">
+            <nozzles/>
+            <actuators/>
+            <cameras/>
+         </head>
+      </heads>
+      <feeders/>
+      <cameras/>
+      <actuators/>
+      <nozzle-tips/>
+      <part-alignments>
+         <part-alignment class="org.openpnp.machine.reference.vision.ReferenceBottomVision" enabled="true" pre-rotate="false"/>
+      </part-alignments>
+      <driver class="org.openpnp.machine.hwgc.HwgcDriver" nozzle-count="4" com-type="0" max-x="44300" max-y="57200" max-z="11520" scale-x="100.0" scale-y="100.0" scale-z="100.0" scale-a="-71.111">
+         <serial port-name="" baud="460800" data-bits="Eight" stop-bits="One" parity="None" flow-control="Off" set-dtr="false" set-rts="false"/>
+      </driver>
+   </machine>
+</openpnp-machine>

@@ -32,6 +32,10 @@ import org.openpnp.ConfigurationListener;
 import org.openpnp.Translations;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
+import org.openpnp.machine.hwgc.HwgcDriver;
+import org.openpnp.machine.hwgc.HwgcDvrCamera;
+import org.openpnp.machine.hwgc.HwgcFeeder;
+import org.openpnp.machine.hwgc.HwgcUsb3Camera;
 import org.openpnp.machine.neoden4.NeoDen4Driver;
 import org.openpnp.machine.neoden4.NeoDen4FeederActuator;
 import org.openpnp.machine.neoden4.Neoden4Camera;
@@ -450,6 +454,7 @@ public class ReferenceMachine extends AbstractMachine {
         l.add(SlotSchultzFeeder.class);
         l.add(RapidFeeder.class);
         l.add(Neoden4Feeder.class);
+        l.add(HwgcFeeder.class);
         l.add(PhotonFeeder.class);
         l.add(BambooFeederAutoVision.class);
         l.addAll(registeredFeederClasses);
@@ -470,6 +475,8 @@ public class ReferenceMachine extends AbstractMachine {
         l.add(SimulatedUpCamera.class);
         l.add(MjpgCaptureCamera.class);
         l.add(GstreamerCamera.class);
+        l.add(HwgcDvrCamera.class);
+        l.add(HwgcUsb3Camera.class);
         return l;
     }
 
@@ -508,6 +515,7 @@ public class ReferenceMachine extends AbstractMachine {
         l.add(GcodeDriver.class);
         l.add(GcodeAsyncDriver.class);
         l.add(NeoDen4Driver.class);
+        l.add(HwgcDriver.class);
         return l;
     }
 
