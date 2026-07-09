@@ -33,6 +33,7 @@ import java.util.TreeMap;
 import javax.swing.Action;
 import javax.swing.Icon;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceMachine;
@@ -1108,7 +1109,8 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
 
     @Override
     public PropertySheet[] getPropertySheets() {
-        return new PropertySheet[] {new PropertySheetWizardAdapter(getConfigurationWizard(), "Motion Planning")};
+        return new PropertySheet[] {new PropertySheetWizardAdapter(getConfigurationWizard(),
+                Translations.getString("CommonPropertySheet.MotionPlanning"))}; //$NON-NLS-1$
     }
 
     @Override

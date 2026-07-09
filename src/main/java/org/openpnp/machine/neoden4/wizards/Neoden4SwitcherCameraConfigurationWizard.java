@@ -5,6 +5,7 @@ import javax.swing.JLabel;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.IntegerConverter;
@@ -56,13 +57,13 @@ public class Neoden4SwitcherCameraConfigurationWizard extends AbstractConfigurat
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
-        lblNewLabel = new JLabel("Source Camera");
+        lblNewLabel = new JLabel(Translations.getString("Neoden4SwitcherCameraConfigurationWizard.SourceCamera")); //$NON-NLS-1$
         contentPanel.add(lblNewLabel, "2, 2, right, default");
         
         sourceCamera = new JComboBox();
         contentPanel.add(sourceCamera, "4, 2, fill, default");
         
-        lblNewLabel_1 = new JLabel("Switcher Number");
+        lblNewLabel_1 = new JLabel(Translations.getString("Neoden4SwitcherCameraConfigurationWizard.SwitcherNumber")); //$NON-NLS-1$
         contentPanel.add(lblNewLabel_1, "2, 4, right, default");
         
         switcher = new JTextField();
@@ -74,7 +75,7 @@ public class Neoden4SwitcherCameraConfigurationWizard extends AbstractConfigurat
         }
         
         
-        lblExposure = new JLabel("Exposure");
+        lblExposure = new JLabel(Translations.getString("CommonWords.Exposure")); //$NON-NLS-1$
         lblExposure.setHorizontalAlignment(SwingConstants.TRAILING);
         contentPanel.add(lblExposure, "2, 6, right, default");
         
@@ -82,7 +83,7 @@ public class Neoden4SwitcherCameraConfigurationWizard extends AbstractConfigurat
         cameraExposureTextField.setColumns(16);
         contentPanel.add(cameraExposureTextField, "4, 6, fill, default");
         
-        lblGain = new JLabel("Gain");
+        lblGain = new JLabel(Translations.getString("CommonWords.Gain")); //$NON-NLS-1$
         lblGain.setHorizontalAlignment(SwingConstants.TRAILING);
         contentPanel.add(lblGain, "2, 8, right, default");
         

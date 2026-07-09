@@ -306,7 +306,7 @@ public class PackagesPanel extends JPanel implements WizardContainer {
         public void actionPerformed(ActionEvent arg0) {
             String id;
             while ((id = JOptionPane.showInputDialog(frame,
-                    "Please enter an ID for the new package.")) != null) {
+                    Translations.getString("PackagesPanel.NewPackagePrompt"))) != null) { //$NON-NLS-1$
                 id = id.trim();
                 if (id.isEmpty()) {
                     break;
@@ -410,7 +410,7 @@ public class PackagesPanel extends JPanel implements WizardContainer {
         public void actionPerformed(ActionEvent arg0) {
             String id;
             while ((id = JOptionPane.showInputDialog(frame,
-                    "Please enter an ID for the pasted package.")) != null) {
+                    Translations.getString("PackagesPanel.PastePackagePrompt"))) != null) { //$NON-NLS-1$
                 id = id.trim();
                 if (id.isEmpty()) {
                     break;

@@ -23,6 +23,7 @@ package org.openpnp.machine.reference.solutions;
 
 import javax.swing.Icon;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.LengthConverter;
@@ -70,19 +71,14 @@ public class KinematicSolutions implements Solutions.Subject {
             if (! machine.isHomed()) {
                 solutions.add(new Solutions.Issue(
                         machine, 
-                        "To continue, the machine must be enabled and homed.", 
-                        "Home the machine now.",
+                        Translations.getString("KinematicSolutions.Issue.MachineMustBeHomed"), //$NON-NLS-1$
+                        Translations.getString("KinematicSolutions.Solution.MachineMustBeHomed"), //$NON-NLS-1$
                         Severity.Fundamental,
                         "https://github.com/openpnp/openpnp/wiki/User-Manual#machine-controls") {
 
                     @Override 
                     public String getExtendedDescription() {
-                        return "<html>"
-                                + "<p>You must be sure that your machine supports the homing command with the "
-                                + "proper axis end-switches wired and configured.</p><br/>"
-                                + "<p>Press <strong>Accept</strong> to perform the homing.</p><br/>"
-                                + "<p>Afterwards, press <strong>Find Issues & Solutions</strong> again.</p>"
-                                + "</html>";
+                        return Translations.getString("KinematicSolutions.ExtendedDescription.MachineMustBeHomed"); //$NON-NLS-1$
                     }
 
                     @Override
@@ -116,8 +112,8 @@ public class KinematicSolutions implements Solutions.Subject {
                         final boolean oldDynamicSafeZ = refNozzle.isEnableDynamicSafeZ();
                         Issue issue = new Solutions.Issue(
                                 nozzle, 
-                                "Dynamic Safe Z for "+nozzle.getName()+".", 
-                                "Decide whether "+nozzle.getName()+" has dynamic Safe Z or not.", 
+                                Translations.format("KinematicSolutions.Issue.DynamicSafeZ", nozzle.getName()), //$NON-NLS-1$
+                                Translations.format("KinematicSolutions.Solution.DynamicSafeZ", nozzle.getName()), //$NON-NLS-1$
                                 Solutions.Severity.Fundamental,
                                 "https://github.com/openpnp/openpnp/wiki/Kinematic-Solutions#dynamic-safe-z") {
                             {
@@ -127,20 +123,10 @@ public class KinematicSolutions implements Solutions.Subject {
                             public Solutions.Issue.Choice[] getChoices() {
                                 return new Solutions.Issue.Choice[] {
                                         new Solutions.Issue.Choice(true, 
-                                                "<html><h3>Dynamic Safe Z</h3>"
-                                                        + "<p>If a part is on the nozzle, the nozzle is lifted to Safe Z <strong>+</strong> part height.</p><br/>"
-                                                        + "<p>Safe Z must only account for the tallest obstacle.</p><br/>"
-                                                        + "<p>This will result in faster, more optimized machine motion.</p><br/>"
-                                                        + "<p><strong>Recommended.</strong>.</p><br/>"
-                                                        + "</html>",
-                                                        Icons.safeZDynamic),
+                                                Translations.getString("KinematicSolutions.Choice.DynamicSafeZ"), //$NON-NLS-1$
+                                                Icons.safeZDynamic),
                                         new Solutions.Issue.Choice(false, 
-                                                "<html><h3>Fixed Safe Z</h3>"
-                                                        + "<p>Safe Z is always at a fixed level.</p><br/>"
-                                                        + "<p>Safe Z must account for <em>both</em> the tallest "
-                                                        + "obstacle <em>and</em> the tallest part on the nozzle.</p><br/>"
-                                                        + "<p>This will result in slower, less optimized machine motion.</p>"
-                                                        + "</html>",
+                                                Translations.getString("KinematicSolutions.Choice.FixedSafeZ"), //$NON-NLS-1$
                                                         Icons.safeZFixed),
                                 };
                             }
@@ -192,8 +178,8 @@ public class KinematicSolutions implements Solutions.Subject {
                                         && axisZ.getSafeZoneLow().compareTo(axisZ.getSafeZoneHigh()) > 0) {
                                         solutions.add(new Solutions.Issue(
                                                 axisZ, 
-                                                "Invalid Safe Z Zone on "+axisZ.getName()+".", 
-                                                "The Safe Z Zone of "+axisZ.getName()+" is invalid (lower limit > higher limit). Start fresh configuration.", 
+                                                Translations.format("KinematicSolutions.Issue.InvalidSafeZZone", axisZ.getName()), //$NON-NLS-1$
+                                                Translations.format("KinematicSolutions.Solution.InvalidSafeZZone", axisZ.getName()), //$NON-NLS-1$
                                                 Solutions.Severity.Error,
                                                 "https://github.com/openpnp/openpnp/wiki/Machine-Axes#kinematic-settings--axis-limits") {
                                             @Override
@@ -209,18 +195,16 @@ public class KinematicSolutions implements Solutions.Subject {
                                             && hm.getSafeZ().convertToUnits(LengthUnit.Millimeters).getValue() > 2.0) {
                                             solutions.add(new Solutions.PlainIssue(
                                                     hm,
-                                                    "Unconventional Z Axis on "+hm.getName()+".",
-                                                    "The Safe Z of "+hm.getName()+" is positive, which is unconventional. "+
-                                                    "OpenPnp typically uses Z coordinates that have Z=0 when the nozzle is retracted, with the PCB surface in the negative Z range. "+
-                                                    "Please read the Wiki to understand the implications of not following this convention.",
+                                                    Translations.format("KinematicSolutions.Issue.UnconventionalZ", hm.getName()), //$NON-NLS-1$
+                                                    Translations.format("KinematicSolutions.Solution.UnconventionalZ", hm.getName()), //$NON-NLS-1$
                                                     Solutions.Severity.Warning,
                                                     "https://github.com/openpnp/openpnp/wiki/Machine-Axes#a-word-about-z-coordinates"));
                                         }
 
                                         safeZSolved = solutions.add(new Solutions.Issue(
                                                 hm, 
-                                                "Set Safe Z of "+hm.getName()+".", 
-                                                "Jog "+hm.getName()+" over the tallest obstacle and capture.", 
+                                                Translations.format("KinematicSolutions.Issue.SetSafeZ", hm.getName()), //$NON-NLS-1$
+                                                Translations.format("KinematicSolutions.Solution.SetSafeZ", hm.getName()), //$NON-NLS-1$
                                                 Solutions.Severity.Fundamental,
                                                 "https://github.com/openpnp/openpnp/wiki/Kinematic-Solutions#capture-safe-z") {
 
@@ -231,20 +215,12 @@ public class KinematicSolutions implements Solutions.Subject {
 
                                             @Override 
                                             public String getExtendedDescription() {
-                                                return "<html>"
-                                                        + "<p>Jog "+hm.getName()+" over the tallest obstacle on your machine, "
-                                                                + "including the the tallest parts that may be placed on the PCB.</p><br/>"
-                                                        + "<p>Then lower it down so it still has sufficient clearance"
-                                                        + (partClearance ? " even with the tallest part on the nozzle" : "")
-                                                        + ".</p><br/>"
-                                                        + "<p>Then press Accept to capture the Safe Z.</p>"
-                                                        + (head.getNozzles().size() > 1 ? 
-                                                                "<br/><p>Note: optimizing Safe Z will improve your overall motion speed, "
-                                                                + "however your nozzles may appear unbalanced and they will sometimes see-saw "
-                                                                + "during motion. If you rather prefer a strictly symmetric appearance, you might "
-                                                                + "want to dismiss this solution, and setup Safe Z manually.</p>":
-                                                            "")
-                                                        + "</html>";
+                                                return Translations.format("KinematicSolutions.ExtendedDescription.SetSafeZ", //$NON-NLS-1$
+                                                        hm.getName(),
+                                                        (partClearance ? Translations.getString("KinematicSolutions.ExtendedDescription.SetSafeZ.PartClearance") : ""), //$NON-NLS-1$
+                                                        (head.getNozzles().size() > 1 ? 
+                                                                Translations.getString("KinematicSolutions.ExtendedDescription.SetSafeZ.MultiNozzle") : //$NON-NLS-1$
+                                                            ""));
                                             }
 
                                             @Override
@@ -334,38 +310,24 @@ public class KinematicSolutions implements Solutions.Subject {
                     if (oldCamWheelRadius.getValue() != 0 || oldCamWheelGap.getValue() != 0) {
                         solutions.add(new Solutions.Issue(
                                 cam1Axis, 
-                                "Deprecated cam transform on axis "+cam1Axis.getName()+" detected.", 
-                                "Remove cam transform axis "+cam1Axis.getName()+" "
-                                        + (oldCamWheelRadius.getValue() != 0 ? "wheel radius, " : "")
-                                        + (oldCamWheelGap.getValue() != 0 ? "wheel gap, " : "")
-                                        + "and compensate in nozzle offset.", 
+                                Translations.format("KinematicSolutions.Issue.DeprecatedCamTransform", cam1Axis.getName()), //$NON-NLS-1$
+                                Translations.format("KinematicSolutions.Solution.DeprecatedCamTransform", cam1Axis.getName(), //$NON-NLS-1$
+                                        (oldCamWheelRadius.getValue() != 0 ? Translations.getString("KinematicSolutions.Choice.DeprecatedCamTransform.WheelRadius") : "") //$NON-NLS-1$
+                                        + (oldCamWheelGap.getValue() != 0 ? Translations.getString("KinematicSolutions.Choice.DeprecatedCamTransform.WheelGap") : "")), //$NON-NLS-1$
                                 Solutions.Severity.Warning,
                                 "https://github.com/openpnp/openpnp/wiki/Transformed-Axes#referencecamcounterclockwiseaxis") {
 
                             @Override 
                             public String getExtendedDescription() {
-                                return "<html>"
-                                        + "<p>The cam transform on axis "+cam1Axis.getName()+" with non-zero "
-                                                + (oldCamWheelRadius.getValue() != 0 ? "wheel radius, " : "")
-                                                + (oldCamWheelGap.getValue() != 0 ? "wheel gap, " : "")
-                                                +" is deprecated.</p><br/>"
-                                                + "<p><strong color=\"red\">CAUTION:</strong> These offsets will create problems when "
-                                                + "Issues & Solutions wants to (re-)reference the Z coordinate system later. Failing "
-                                                + "to accept this solution may ultimately lead to a dead end in the machine setup "
-                                                + "process.</p><br/>"
-                                                + "<p>Press <strong>Accept</strong> to remove the "
-                                                + (oldCamWheelRadius.getValue() != 0 ? "wheel radius, " : "")
-                                                + (oldCamWheelGap.getValue() != 0 ? "wheel gap, " : "")
-                                                + "as recommended."
-                                                + (hm1 != null || hm2 != null ?
-                                                        "</p><br/>"
-                                                        + "<p><strong>Note:</strong> this change will be compensated in the Z head offset of "
-                                                        + (hm1 != null ? hm1.getClass().getSimpleName()+" "+hm1.getName()+", " : "")
-                                                        + (hm2 != null ? hm2.getClass().getSimpleName()+" "+hm2.getName()+", " : "")
-                                                        + "so that Z coordinates captured before effectively remain the same.":
-                                                        "")
-                                                + "</p>"
-                                        + "</html>";
+                                String wheelText = (oldCamWheelRadius.getValue() != 0 ? Translations.getString("KinematicSolutions.Choice.DeprecatedCamTransform.WheelRadius") : "") //$NON-NLS-1$
+                                        + (oldCamWheelGap.getValue() != 0 ? Translations.getString("KinematicSolutions.Choice.DeprecatedCamTransform.WheelGap") : ""); //$NON-NLS-1$
+                                String note = (hm1 != null || hm2 != null ?
+                                        Translations.format("KinematicSolutions.ExtendedDescription.DeprecatedCamTransform.Note", //$NON-NLS-1$
+                                                (hm1 != null ? hm1.getClass().getSimpleName()+" "+hm1.getName()+", " : "")
+                                                + (hm2 != null ? hm2.getClass().getSimpleName()+" "+hm2.getName()+", " : ""))
+                                        : "");
+                                return Translations.format("KinematicSolutions.ExtendedDescription.DeprecatedCamTransform", //$NON-NLS-1$
+                                        cam1Axis.getName(), wheelText, wheelText, note);
                             }
 
                             @Override
@@ -428,12 +390,12 @@ public class KinematicSolutions implements Solutions.Subject {
                         final Length oldLimitLow = controllerAxis.getSoftLimitLow();
                         final Length oldLimitHigh = controllerAxis.getSoftLimitHigh();  
                         for (boolean limitLow : new Boolean[] {true, false}) {
-                            String qualifier = limitLow ? "low side" : "high side";
+                            String qualifier = limitLow ? Translations.getString("KinematicSolutions.Choice.SoftLimit.Low") : Translations.getString("KinematicSolutions.Choice.SoftLimit.High"); //$NON-NLS-1$ //$NON-NLS-2$
                             if (!(limitLow ? controllerAxis.isSoftLimitLowEnabled() : controllerAxis.isSoftLimitHighEnabled())) {
                                 solutions.add(new Solutions.Issue(
                                         controllerAxis, 
-                                        "Set the "+qualifier+" soft limit of "+controllerAxis.getName()+".", 
-                                        "Move axis "+controllerAxis.getName()+" to the "+qualifier+" soft limit and capture.", 
+                                        Translations.format("KinematicSolutions.Issue.SoftLimit", qualifier, controllerAxis.getName()), //$NON-NLS-1$
+                                        Translations.format("KinematicSolutions.Solution.SoftLimit", controllerAxis.getName(), qualifier), //$NON-NLS-1$
                                         Solutions.Severity.Suggestion,
                                         "https://github.com/openpnp/openpnp/wiki/Kinematic-Solutions#capture-soft-limits") {
 
@@ -444,14 +406,10 @@ public class KinematicSolutions implements Solutions.Subject {
 
                                     @Override 
                                     public String getExtendedDescription() {
-                                        return "<html>"
-                                                + "<p>Move axis "+controllerAxis.getName()+" to the "+qualifier+" soft limit.</p><br/>"
-                                                + "<p>Jog "+controllerAxis.getType().getDefaultLetter()+" of "
-                                                + hm.getClass().getSimpleName()+" "+hm.getName()+" to do so.</p><br/>"
-                                                + "<p>If the axis has a limit switch, use a position close to it but still safe "
-                                                + "to not trigger the switch by accident.</p><br/>"
-                                                + "<p>Then press Accept to capture the lower soft limit.</p>"
-                                                + "</html>";
+                                        return Translations.format("KinematicSolutions.ExtendedDescription.SoftLimit", //$NON-NLS-1$
+                                                controllerAxis.getName(), qualifier,
+                                                controllerAxis.getType().getDefaultLetter(),
+                                                hm.getClass().getSimpleName(), hm.getName());
                                     }
 
                                     @Override
@@ -515,28 +473,20 @@ public class KinematicSolutions implements Solutions.Subject {
                     if (signum2*signum1 == -1) {
                         solutions.add(new Solutions.PlainIssue(
                                 nt, 
-                                "Nozzle "+nozzle.getName()+" with tip "+nt.getName()+" Safe Z Zone violation.", 
-                                "With dynamic safe Z, the Max. Part Height of each compatible nozzle tip must be smaller than the axis "+rawAxisZ.getName()+" Safe Z Zone.", 
+                                Translations.format("KinematicSolutions.Issue.SafeZZoneViolation", nozzle.getName(), nt.getName()), //$NON-NLS-1$
+                                Translations.format("KinematicSolutions.Solution.SafeZZoneViolation", rawAxisZ.getName()), //$NON-NLS-1$
                                 Severity.Error,
                                 "https://github.com/openpnp/openpnp/wiki/Kinematic-Solutions#dynamic-safe-z-zone") {
 
                                     @Override
                                     public String getExtendedDescription() {
-                                        return "<html>"
-                                                + "<p>With <strong>Dynamic Safe Z</strong> enabled, the nozzle needs a head-room, the so-called Safe Z Zone "
-                                                + "to lift the nozzle higher with taller parts. The maximum expected part height is specified on the "
-                                                + "nozzle tip <strong>Max. Part Height</strong>.</p><br/>"
-                                                + "<p>Nozzle "+nozzle.getName()+" with compatible tip "+nt.getName()+" has a <strong>Max. Part Height</strong> of "
-                                                + lengthConverter.convertForward(maxHeight)+" which is larger than the Safe Z Zone of "
-                                                + lengthConverter.convertForward(zone)+". Note, the safe Z Zone is configured on the "+rawAxisZ.getName()+" axis "
-                                                + "to reach from "+lengthConverter.convertForward(rawAxisZ.getSafeZoneLow())+" to "
-                                                + lengthConverter.convertForward(rawAxisZ.getSafeZoneHigh())+" in (untransformed) coordinates.</p><br/>"
-                                                + "<p>Please either enlarge the Safe Z Zone, by reducing the nozzle "+nozzle.getName()+" Z clearance, or reduce "
-                                                + "the <strong>Max. Part Height</strong> on nozzle tip "+nt.getName()+".</p><br/>"
-                                                + "<p>Reducing Z clearance is best done by revisiting the Safe Z solution for nozzle "+nozzle.getName()+". "
-                                                + "Enable the <strong>Include Solved?</strong> checkbox at the top, "
-                                                + "then reopen the \"Set Safe Z of "+nozzle.getName()+"\" solution and redo it.</p>"
-                                                + "</html>";
+                                        return Translations.format("KinematicSolutions.ExtendedDescription.SafeZZoneViolation", //$NON-NLS-1$
+                                                nozzle.getName(), nt.getName(),
+                                                lengthConverter.convertForward(maxHeight),
+                                                lengthConverter.convertForward(zone),
+                                                rawAxisZ.getName(),
+                                                lengthConverter.convertForward(rawAxisZ.getSafeZoneLow()),
+                                                lengthConverter.convertForward(rawAxisZ.getSafeZoneHigh()));
                                     }
                                     @Override
                                     public Icon getExtendedIcon() {
@@ -556,34 +506,23 @@ public class KinematicSolutions implements Solutions.Subject {
                             if (signum3*signum1 == -1) {
                                 solutions.add(new Solutions.PlainIssue(
                                         nt, 
-                                        "Nozzle "+nozzle.getName()+" with tip "+nt.getName()+" and nozzle "+nozzle2.getName()+" with tip "+nt2.getName()
-                                        +" potential Safe Z Zone violation.", 
-                                        "With dynamic safe Z, the combined Max. Part Heights of compatible nozzle tips must be smaller than the axis "
-                                        +rawAxisZ.getName()+" Safe Z Zone.", 
+                                        Translations.format("KinematicSolutions.Issue.SafeZZoneViolationCombined", nozzle.getName(), nt.getName(), nozzle2.getName(), nt2.getName()), //$NON-NLS-1$
+                                        Translations.format("KinematicSolutions.Solution.SafeZZoneViolationCombined", rawAxisZ.getName()), //$NON-NLS-1$
                                         Severity.Warning,
                                         "https://github.com/openpnp/openpnp/wiki/Kinematic-Solutions#dynamic-safe-z-zone") {
 
                                     @Override
                                     public String getExtendedDescription() {
-                                        return "<html>"
-                                                + "<p>With <strong>Dynamic Safe Z</strong> enabled, the nozzles need a head-room, the so-called Safe Z Zone to lift "
-                                                + "the nozzles higher with taller parts. On nozzles with shared Z axes the part heights compete for the same head-room. "
-                                                + "The maximum expected part height is specified on the nozzle tip <strong>Max. Part Height</strong>.</p><br/>"
-                                                + "<p>Nozzle "+nozzle.getName()+" with compatible tip "+nt.getName()+" has a <strong>Max. Part Height</strong> of "
-                                                + lengthConverter.convertForward(maxHeight)+", furthermore, nozzle "+nozzle2.getName()+" with compatible tip "
-                                                + nt2.getName()+" has a largest <strong>Max. Part Height</strong> of "+lengthConverter.convertForward(maxHeight2)+", which "
-                                                + "in combination (and after transformation) is larger than the Safe Z Zone of "+lengthConverter.convertForward(zone)+". "
-                                                + "Note, the safe Z Zone is configured on the "+rawAxisZ.getName()+" axis to reach from "
-                                                + lengthConverter.convertForward(rawAxisZ.getSafeZoneLow())+" to "
-                                                + lengthConverter.convertForward(rawAxisZ.getSafeZoneHigh())+" in (untransformed) coordinates.</p><br/>"
-                                                + "<p>Please either enlarge the Safe Z Zone, by reducing the nozzle "+nozzle.getName()+" and "+nozzle2.getName()
-                                                + " Z clearances, or reduce the <strong>Max. Part Height</strong> on nozzle tips "+nt.getName()+" and "
-                                                + nt2.getName()+".</p><br/>"
-                                                + "<p>Reducing Z clearances is best done by revisiting the Safe Z solutions for nozzles "+nozzle.getName()+" and "
-                                                + nozzle2.getName()+". "
-                                                + "Enable the <strong>Include Solved?</strong> checkbox at the top, "
-                                                + "then reopen the \"Set Safe Z of "+nozzle2.getName()+"\" solution and redo it.</p>"
-                                                + "</html>";
+                                        return Translations.format("KinematicSolutions.ExtendedDescription.SafeZZoneViolationCombined", //$NON-NLS-1$
+                                                nozzle.getName(), nt.getName(),
+                                                lengthConverter.convertForward(maxHeight),
+                                                nozzle2.getName(), nt2.getName(),
+                                                lengthConverter.convertForward(maxHeight2),
+                                                lengthConverter.convertForward(zone),
+                                                rawAxisZ.getName(),
+                                                lengthConverter.convertForward(rawAxisZ.getSafeZoneLow()),
+                                                lengthConverter.convertForward(rawAxisZ.getSafeZoneHigh()),
+                                                nozzle2.getName());
                                     }
                                     @Override
                                     public Icon getExtendedIcon() {

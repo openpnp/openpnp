@@ -30,6 +30,7 @@ import java.util.List;
 import javax.swing.Action;
 
 import org.apache.commons.io.IOUtils;
+import org.openpnp.Translations;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
@@ -2160,8 +2161,10 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     @Override
     public PropertySheet[] getPropertySheets() {
         return new PropertySheet[] {
-                new PropertySheetWizardAdapter(getConfigurationWizard(), "Configuration"),
-                new PropertySheetWizardAdapter(new ReferencePushPullMotionConfigurationWizard(this), "Push-Pull Motion"),
+                new PropertySheetWizardAdapter(getConfigurationWizard(),
+                        Translations.getString("CommonPropertySheet.Configuration")), //$NON-NLS-1$
+                new PropertySheetWizardAdapter(new ReferencePushPullMotionConfigurationWizard(this),
+                        Translations.getString("CommonPropertySheet.PushPullMotion")), //$NON-NLS-1$
         };
     }
 

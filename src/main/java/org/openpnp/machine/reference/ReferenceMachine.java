@@ -651,8 +651,8 @@ public class ReferenceMachine extends AbstractMachine {
             if (getMotionPlanner() instanceof NullMotionPlanner) {
                 solutions.add(new Solutions.Issue(
                         this, 
-                        "Advanced Motion Planner not set. Accept or Dismiss to continue.", 
-                        "Change to ReferenceAdvancedMotionPlanner", 
+                        Translations.getString("ReferenceMachine.Issue.AdvancedMotionPlanner"), //$NON-NLS-1$
+                        Translations.getString("ReferenceMachine.Solution.AdvancedMotionPlanner"), //$NON-NLS-1$
                         Solutions.Severity.Fundamental,
                         "https://github.com/openpnp/openpnp/wiki/Motion-Planner#choosing-a-motion-planner") {
                     final MotionPlanner oldMotionPlanner =  ReferenceMachine.this.getMotionPlanner();
@@ -675,8 +675,8 @@ public class ReferenceMachine extends AbstractMachine {
             if (!(getMotionPlanner() instanceof NullMotionPlanner)) {
                 solutions.add(new Solutions.Issue(
                         this, 
-                        "Advanced motion planner set. Revert to a simpler, safer planner.", 
-                        "Change to NullMotionPlanner", 
+                        Translations.getString("ReferenceMachine.Issue.RevertMotionPlanner"), //$NON-NLS-1$
+                        Translations.getString("ReferenceMachine.Solution.RevertMotionPlanner"), //$NON-NLS-1$
                         Solutions.Severity.Information,
                         "https://github.com/openpnp/openpnp/wiki/Motion-Planner#choosing-a-motion-planner") {
                     final MotionPlanner oldMotionPlanner =  ReferenceMachine.this.getMotionPlanner();
@@ -689,9 +689,7 @@ public class ReferenceMachine extends AbstractMachine {
 
                     @Override 
                     public String getExtendedDescription() {
-                        return "<html><span color=\"red\">CAUTION:</span> This is a troubleshooting option, offered to remove the ReferenceAdvancedMotionPlanner "
-                                + "if it causes problems, or if you don't want it after all. Going back to the plain NullPlanner will lose you all the "
-                                + "advanced configuration.</html>";
+                        return Translations.getString("ReferenceMachine.ExtendedDescription.RevertMotionPlanner"); //$NON-NLS-1$
                     }
 
                     @Override
@@ -710,8 +708,8 @@ public class ReferenceMachine extends AbstractMachine {
         if (solutions.isTargeting(Milestone.Basics) && ! isAutoToolSelect()) {
             solutions.add(new Solutions.Issue(
                     this, 
-                    "OpenPnP can often automatically select the right tool for you in Machine Controls.", 
-                    "Enable Auto tool select.", 
+                    Translations.getString("ReferenceMachine.Issue.AutoToolSelect"), //$NON-NLS-1$
+                    Translations.getString("ReferenceMachine.Solution.AutoToolSelect"), //$NON-NLS-1$
                     Solutions.Severity.Suggestion,
                     "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration_Machine-Setup#configuration") {
 

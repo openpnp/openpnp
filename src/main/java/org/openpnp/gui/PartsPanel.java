@@ -309,20 +309,21 @@ public class PartsPanel extends JPanel implements WizardContainer {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             if (Configuration.get().getPackages().size() == 0) {
-                MessageBoxes.errorBox(getTopLevelAncestor(), "Error",
-                        "There are currently no packages defined in the system. Please create at least one package before creating a part.");
+                MessageBoxes.errorBox(getTopLevelAncestor(), Translations.getString("CommonWords.Error"), //$NON-NLS-1$
+                        Translations.getString("PartsPanel.Error.NoPackages")); //$NON-NLS-1$
                 return;
             }
 
             String id;
             while ((id = JOptionPane.showInputDialog(frame,
-                    "Please enter an ID for the new part.")) != null) {
+                    Translations.getString("PartsPanel.Error.NewPartPrompt"))) != null) { //$NON-NLS-1$
                 id = id.trim();
                 if (id.isEmpty()) {
                     break;
                 }
                 if (configuration.getPart(id) != null) {
-                    MessageBoxes.errorBox(frame, "Error", "Part ID " + id + " already exists.");
+                    MessageBoxes.errorBox(frame, Translations.getString("CommonWords.Error"), //$NON-NLS-1$
+                            Translations.format("PartsPanel.Error.PartIdExists", id)); //$NON-NLS-1$
                     continue;
                 }
                 Part part = new Part(id);
@@ -427,7 +428,7 @@ public class PartsPanel extends JPanel implements WizardContainer {
         public void actionPerformed(ActionEvent arg0) {
             String id;
             while ((id = JOptionPane.showInputDialog(frame,
-                    "Please enter an ID for the pasted part.")) != null) {
+                    Translations.getString("PartsPanel.Error.PastePartPrompt"))) != null) { //$NON-NLS-1$
                 id = id.trim();
                 if (id.isEmpty()) {
                     break;
@@ -435,7 +436,8 @@ public class PartsPanel extends JPanel implements WizardContainer {
                 if (configuration.getPart(id) == null) {
                     break;
                 }
-                MessageBoxes.errorBox(frame, "Error", "Part ID " + id + " already exists.");
+                MessageBoxes.errorBox(frame, Translations.getString("CommonWords.Error"), //$NON-NLS-1$
+                        Translations.format("PartsPanel.Error.PartIdExists", id)); //$NON-NLS-1$
             }
             if (id == null || id.isEmpty()) {
                 return;

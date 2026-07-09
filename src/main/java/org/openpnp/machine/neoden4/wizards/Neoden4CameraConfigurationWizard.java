@@ -28,6 +28,7 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.IntegerConverter;
@@ -52,7 +53,7 @@ public class Neoden4CameraConfigurationWizard extends AbstractConfigurationWizar
         panelGeneral = new JPanel();
         contentPanel.add(panelGeneral);
         panelGeneral.setBorder(new TitledBorder(null,
-                "General", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+                Translations.getString("CommonPropertySheet.General"), TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0))); //$NON-NLS-1$
         panelGeneral.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
@@ -74,7 +75,7 @@ public class Neoden4CameraConfigurationWizard extends AbstractConfigurationWizar
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
 
-        lblTimeout = new JLabel("Timeout");
+        lblTimeout = new JLabel(Translations.getString("Neoden4CameraConfigurationWizard.Timeout")); //$NON-NLS-1$
         lblTimeout.setHorizontalAlignment(SwingConstants.TRAILING);
         panelGeneral.add(lblTimeout, "2, 6, right, default");
         
@@ -82,13 +83,13 @@ public class Neoden4CameraConfigurationWizard extends AbstractConfigurationWizar
         timeoutMillisTextField.setColumns(16);
         panelGeneral.add(timeoutMillisTextField, "4, 6, fill, default");
         
-        lbluseForTimeout = new JLabel("(millisecs)");
+        lbluseForTimeout = new JLabel(Translations.getString("CommonUnits.millisecs")); //$NON-NLS-1$
         panelGeneral.add(lbluseForTimeout, "6, 6");
                 
         panelImage = new JPanel();
         contentPanel.add(panelImage);
         panelImage.setBorder(new TitledBorder(null, 
-        		"Image settings", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+        		Translations.getString("Neoden4CameraConfigurationWizard.ImageSettings"), TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0))); //$NON-NLS-1$
         panelImage.setLayout(new FormLayout(new ColumnSpec[] {
         		FormSpecs.RELATED_GAP_COLSPEC,
         		FormSpecs.DEFAULT_COLSPEC,
@@ -114,7 +115,7 @@ public class Neoden4CameraConfigurationWizard extends AbstractConfigurationWizar
         		FormSpecs.RELATED_GAP_ROWSPEC,
         		FormSpecs.DEFAULT_ROWSPEC,}));
 
-        lblImageWidth = new JLabel("Width");
+        lblImageWidth = new JLabel(Translations.getString("CommonWords.Width")); //$NON-NLS-1$
         lblImageWidth.setHorizontalAlignment(SwingConstants.TRAILING);
         panelImage.add(lblImageWidth, "2, 2, right, default");
 
@@ -122,17 +123,17 @@ public class Neoden4CameraConfigurationWizard extends AbstractConfigurationWizar
         panelImage.add(imageWidthTextField, "4, 2");
         imageWidthTextField.setColumns(16);
         
-        lblShiftX = new JLabel("Shift X");
+        lblShiftX = new JLabel(Translations.getString("Neoden4CameraConfigurationWizard.ShiftX")); //$NON-NLS-1$
         panelImage.add(lblShiftX, "8, 2, right, default");
         
         shiftXTextField = new JTextField();
         panelImage.add(shiftXTextField, "10, 2, fill, default");
         shiftXTextField.setColumns(10);
         
-        lblXPixels = new JLabel("(pixels)");
+        lblXPixels = new JLabel(Translations.getString("CommonUnits.pixels")); //$NON-NLS-1$
         panelImage.add(lblXPixels, "12, 2");
 
-        lblImageHeight = new JLabel("Height");
+        lblImageHeight = new JLabel(Translations.getString("CommonWords.Height")); //$NON-NLS-1$
         lblImageHeight.setHorizontalAlignment(SwingConstants.TRAILING);
         panelImage.add(lblImageHeight, "2, 4, right, default");
 
@@ -140,14 +141,14 @@ public class Neoden4CameraConfigurationWizard extends AbstractConfigurationWizar
         panelImage.add(imageHeightTextField, "4, 4");
         imageHeightTextField.setColumns(16);
         
-        lblShiftY = new JLabel("Shift Y");
+        lblShiftY = new JLabel(Translations.getString("Neoden4CameraConfigurationWizard.ShiftY")); //$NON-NLS-1$
         panelImage.add(lblShiftY, "8, 4, right, default");
         
         shiftYTextField = new JTextField();
         panelImage.add(shiftYTextField, "10, 4, fill, default");
         shiftYTextField.setColumns(10);
         
-        lblYPixels = new JLabel("(pixels)");
+        lblYPixels = new JLabel(Translations.getString("CommonUnits.pixels")); //$NON-NLS-1$
         panelImage.add(lblYPixels, "12, 4");
     }
     

@@ -258,6 +258,10 @@ public class Solutions extends AbstractTableModel {
         Severity(Color color) {
             this.color = color;
         }
+
+        public String toDisplayString() {
+            return Translations.getString("Solutions.Severity." + name()); //$NON-NLS-1$
+        }
     }
 
     public enum State {
@@ -269,6 +273,10 @@ public class Solutions extends AbstractTableModel {
 
         State(Color color) {
             this.color = color;
+        }
+
+        public String toDisplayString() {
+            return Translations.getString("Solutions.State." + name()); //$NON-NLS-1$
         }
     }
 
@@ -825,7 +833,7 @@ public class Solutions extends AbstractTableModel {
             Severity severity = (Severity) value; 
             setForeground(Color.black);
             setBackground(severity.color);
-            setText(severity.toString());
+            setText(severity.toDisplayString());
             setBorder(new LineBorder(getBackground()));
         }
     }
@@ -838,7 +846,7 @@ public class Solutions extends AbstractTableModel {
             State state = (State) value; 
             setForeground(Color.black);
             setBackground(state.color);
-            setText(state.toString());
+            setText(state.toDisplayString());
             setBorder(new LineBorder(getBackground()));
         }
     }

@@ -43,6 +43,7 @@ import org.opencv.core.Size;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 import org.openpnp.ConfigurationListener;
+import org.openpnp.Translations;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
@@ -2608,8 +2609,10 @@ public class BlindsFeeder extends ReferenceFeeder {
     @Override
     public PropertySheet[] getPropertySheets() {
         return new PropertySheet[] {
-                new PropertySheetWizardAdapter(getConfigurationWizard(), "Configuration"),
-                new PropertySheetWizardAdapter(new BlindsFeederArrayConfigurationWizard(this), "Feeder Array"),
+                new PropertySheetWizardAdapter(getConfigurationWizard(),
+                        Translations.getString("CommonPropertySheet.Configuration")), //$NON-NLS-1$
+                new PropertySheetWizardAdapter(new BlindsFeederArrayConfigurationWizard(this),
+                        Translations.getString("CommonPropertySheet.FeederArray")), //$NON-NLS-1$
         };
     }
 

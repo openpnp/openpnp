@@ -4,6 +4,7 @@ import java.io.*;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
+import java.text.MessageFormat;
 import java.util.*;
 
 public class Translations {
@@ -17,6 +18,14 @@ public class Translations {
     public static String getString(String key) {
         try {
             return RESOURCE_BUNDLE.getString(key);
+        } catch (MissingResourceException e) {
+            return '!' + key + '!';
+        }
+    }
+
+    public static String format(String key, Object... args) {
+        try {
+            return MessageFormat.format(getString(key), args);
         } catch (MissingResourceException e) {
             return '!' + key + '!';
         }

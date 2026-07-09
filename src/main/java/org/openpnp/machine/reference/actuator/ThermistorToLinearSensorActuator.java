@@ -1,5 +1,6 @@
 package org.openpnp.machine.reference.actuator;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.machine.reference.actuator.wizards.ThermistorToLinearSensorActuatorTransforms;
@@ -75,7 +76,8 @@ public class ThermistorToLinearSensorActuator extends ReferenceActuator {
     public PropertySheet[] getPropertySheets() {
         return new PropertySheet[] {
                 new PropertySheetWizardAdapter(super.getConfigurationWizard()),
-                new PropertySheetWizardAdapter(new ThermistorToLinearSensorActuatorTransforms(this), "Transforms")
+                new PropertySheetWizardAdapter(new ThermistorToLinearSensorActuatorTransforms(this),
+                        Translations.getString("CommonPropertySheet.Transforms")) //$NON-NLS-1$
         };
     }
 

@@ -1,6 +1,7 @@
 package org.openpnp.machine.photon;
 
 import org.openpnp.ConfigurationListener;
+import org.openpnp.Translations;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.photon.exceptions.FeedFailureException;
 import org.openpnp.machine.photon.exceptions.FeederHasNoLocationOffsetException;
@@ -141,8 +142,8 @@ public class PhotonFeeder extends ReferenceFeeder {
         if (slotAddress != null && getSlot().getLocation() == null) {
             solutions.add(new Solutions.PlainIssue(
                     this,
-                    "Feeder slot has no configured location",
-                    "Select the feeder in the Feeders tab and make sure the slot has a set location",
+                    Translations.getString("PhotonFeeder.Issue.SlotNoLocation"), //$NON-NLS-1$
+                    Translations.getString("PhotonFeeder.Solution.SlotNoLocation"), //$NON-NLS-1$
                     Solutions.Severity.Error,
                     "https://github.com/openpnp/openpnp/wiki/Photon-Feeder#slots-and-feeder-locations"
             ));
@@ -151,8 +152,8 @@ public class PhotonFeeder extends ReferenceFeeder {
         if (offset == null) {
             solutions.add(new Solutions.PlainIssue(
                     this,
-                    "Feeder has no configured offset",
-                    "Select the feeder in the Feeders tab and make sure the feeder has an offset location from the slot",
+                    Translations.getString("PhotonFeeder.Issue.NoOffset"), //$NON-NLS-1$
+                    Translations.getString("PhotonFeeder.Solution.NoOffset"), //$NON-NLS-1$
                     Solutions.Severity.Error,
                     "https://github.com/openpnp/openpnp/wiki/Photon-Feeder#slots-and-feeder-locations"
             ));
@@ -174,7 +175,7 @@ public class PhotonFeeder extends ReferenceFeeder {
             }
         }
 
-        throw new Exception("Failed to find and initialize the feeder");
+        throw new Exception(Translations.getString("PhotonFeeder.Exception.InitFailed")); //$NON-NLS-1$
     }
 
     public void findSlotAddress() throws Exception {
