@@ -184,13 +184,14 @@ public class FeederConfigurationWizard extends AbstractConfigurationWizard {
 				FormSpecs.DEFAULT_ROWSPEC,
 				FormSpecs.RELATED_GAP_ROWSPEC,}));
 		
-		JLabel xOffsetLabel = new JLabel("X"); //$NON-NLS-1$
+		JLabel xOffsetLabel = new JLabel(Translations.getString("CommonWords.X")); //$NON-NLS-1$
 		locationPanel.add(xOffsetLabel, "4, 2, center, center"); //$NON-NLS-1$
 		
-		JLabel yOffsetLabel = new JLabel("Y"); //$NON-NLS-1$
+		JLabel yOffsetLabel = new JLabel(Translations.getString("CommonWords.Y")); //$NON-NLS-1$
 		locationPanel.add(yOffsetLabel, "6, 2, center, center"); //$NON-NLS-1$
 		
-		JLabel zOffsetLabel = new JLabel("Z"); //$NON-NLS-1$
+		JLabel zOffsetLabel = new JLabel(Translations.getString(
+		        "FeederConfigurationWizard.LocationPanel.ZLabel.text")); //$NON-NLS-1$
 		locationPanel.add(zOffsetLabel, "8, 2, center, center"); //$NON-NLS-1$
 		
 		JLabel rotationOffsetLabel = new JLabel(Translations.getString("FeederConfigurationWizard.LocationPanel.rotationOffsetLabel.text")); //$NON-NLS-1$

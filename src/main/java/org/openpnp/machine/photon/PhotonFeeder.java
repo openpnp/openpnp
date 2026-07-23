@@ -96,19 +96,19 @@ public class PhotonFeeder extends ReferenceFeeder {
             UnconfiguredSlotException, FeederHasNoLocationOffsetException {
         if (slotAddress == null) {
             throw new NoSlotAddressException(
-                    String.format("Photon Feeder with address %s has no address. Is it inserted?", hardwareId)
+                    Translations.format("PhotonFeeder.Exception.NoSlotAddress", hardwareId) //$NON-NLS-1$
             );
         }
 
         if (getSlot().getLocation() == null) {
             throw new UnconfiguredSlotException(
-                    String.format("The slot at address %s has no location configured.", slotAddress)
+                    Translations.format("PhotonFeeder.Exception.UnconfiguredSlot", slotAddress) //$NON-NLS-1$
             );
         }
 
         if (offset == null) {
             throw new FeederHasNoLocationOffsetException(
-                    String.format("Photon Feeder with address %s has no location offset.", hardwareId)
+                    Translations.format("PhotonFeeder.Exception.NoLocationOffset", hardwareId) //$NON-NLS-1$
             );
         }
     }
@@ -280,7 +280,8 @@ public class PhotonFeeder extends ReferenceFeeder {
             if (moveFeedForwardResponse == null) {
                 slotAddress = null;
                 initialized = false;
-                throw new FeedFailureException("Feed command timed out");
+                throw new FeedFailureException(Translations.getString(
+                        "PhotonFeeder.Exception.FeedCommandTimedOut")); //$NON-NLS-1$
             } else if (moveFeedForwardResponse.error == ErrorTypes.UNINITIALIZED_FEEDER) {
                 slotAddress = null;
                 initialized = false;
@@ -309,14 +310,17 @@ public class PhotonFeeder extends ReferenceFeeder {
                 if (moveFeedStatusResponse.error == ErrorTypes.NONE) {
                     return;
                 } else if (moveFeedStatusResponse.error == ErrorTypes.COULD_NOT_REACH) {
-                    throw new FeedFailureException("Feeder could not reach its destination.");
+                    throw new FeedFailureException(Translations.getString(
+                            "PhotonFeeder.Exception.FeederCouldNotReachDestination")); //$NON-NLS-1$
                 }
             }
 
-            throw new FeedFailureException("Feeder timed out when we requested a feed status update.");
+            throw new FeedFailureException(Translations.getString(
+                    "PhotonFeeder.Exception.FeedStatusTimedOut")); //$NON-NLS-1$
         }
 
-        throw new FeedFailureException("Failed to feed for an unknown reason. Is the feeder inserted?");
+        throw new FeedFailureException(Translations.getString(
+                "PhotonFeeder.Exception.FeedFailedUnknown")); //$NON-NLS-1$
     }
 
     @Override
@@ -342,9 +346,9 @@ public class PhotonFeeder extends ReferenceFeeder {
     public String getPropertySheetHolderTitle() {
         String classSimpleName = getClass().getSimpleName();
         if (hardwareId == null) {
-            return String.format("Unconfigured %s", classSimpleName);
+            return Translations.format("PhotonFeeder.PropertySheetHolderTitle.Unconfigured", classSimpleName); //$NON-NLS-1$
         } else {
-            return String.format("%s %s", classSimpleName, getName());
+            return Translations.format("PhotonFeeder.PropertySheetHolderTitle.Configured", classSimpleName, getName()); //$NON-NLS-1$
         }
     }
 
@@ -379,22 +383,13 @@ public class PhotonFeeder extends ReferenceFeeder {
     @Override
     public String getName() {
         if (hardwareId == null) {
-            return String.format("Unconfigured %s", getClass().getSimpleName());
+            return Translations.format("PhotonFeeder.Name.Unconfigured", getClass().getSimpleName()); //$NON-NLS-1$
         }
 
-        StringBuilder result = new StringBuilder();
-        result.append(name);
-        result.append(" (Slot: ");
-
-        if (slotAddress == null) {
-            result.append("None");
-        } else {
-            result.append(slotAddress);
-        }
-
-        result.append(")");
-
-        return result.toString();
+        return Translations.format("PhotonFeeder.Name.WithSlot", name, //$NON-NLS-1$
+                slotAddress == null
+                        ? Translations.getString("PhotonFeeder.Name.SlotNone") //$NON-NLS-1$
+                        : slotAddress);
     }
 
     @Override

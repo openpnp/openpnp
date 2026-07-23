@@ -32,6 +32,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.ActuatorsComboBoxModel;
 import org.openpnp.gui.support.DoubleConverter;
@@ -95,7 +96,8 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
 
         JPanel panelActuator = new JPanel();
         panelActuator.setBorder(new TitledBorder(null,
-                "Actuators", TitledBorder.LEADING, TitledBorder.TOP, null));
+                Translations.getString("SchultzFeederConfigurationWizard.ActuatorsPanel.Border.title"), //$NON-NLS-1$
+                TitledBorder.LEADING, TitledBorder.TOP, null));
         contentPanel.add(panelActuator);
         panelActuator.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -132,17 +134,20 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
                         FormSpecs.RELATED_GAP_ROWSPEC,
                         FormSpecs.DEFAULT_ROWSPEC,}));
 
-        JLabel lblActuatorValue = new JLabel("Feeder Number:");
+        JLabel lblActuatorValue = new JLabel(Translations.getString(
+                "SchultzFeederConfigurationWizard.ActuatorsPanel.FeederNumberLabel.text")); //$NON-NLS-1$
         panelActuator.add(lblActuatorValue, "4, 2, right, default");
 
         actuatorValue = new JTextField();
         panelActuator.add(actuatorValue, "6, 2");
         actuatorValue.setColumns(6);
 
-        JLabel lblActuator = new JLabel("Actuator");
+        JLabel lblActuator = new JLabel(Translations.getString(
+                "SchultzFeederConfigurationWizard.ActuatorsPanel.ActuatorLabel.text")); //$NON-NLS-1$
         panelActuator.add(lblActuator, "4, 4, left, default");
 
-        JLabel lblGetID = new JLabel("Get ID");
+        JLabel lblGetID = new JLabel(Translations.getString(
+                "SchultzFeederConfigurationWizard.ActuatorsPanel.GetIdLabel.text")); //$NON-NLS-1$
         panelActuator.add(lblGetID, "2, 6, right, default");
 
         comboBoxIdActuator = new JComboBox();
@@ -156,7 +161,8 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
         idText.setColumns(10);
         panelActuator.add(idText, "8, 6");
 
-        JLabel lblFeed = new JLabel("Pre Pick");
+        JLabel lblFeed = new JLabel(Translations.getString(
+                "SchultzFeederConfigurationWizard.ActuatorsPanel.PrePickLabel.text")); //$NON-NLS-1$
         panelActuator.add(lblFeed, "2, 8, right, default");
 
         comboBoxFeedActuator = new JComboBox();
@@ -166,7 +172,8 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
         btnTestFeedActuator = new JButton(testFeedActuatorAction);
         panelActuator.add(btnTestFeedActuator, "6, 8");
 
-        JLabel lblPostPick = new JLabel("Post Pick");
+        JLabel lblPostPick = new JLabel(Translations.getString(
+                "SchultzFeederConfigurationWizard.ActuatorsPanel.PostPickLabel.text")); //$NON-NLS-1$
         panelActuator.add(lblPostPick, "2, 10, right, default");
 
         comboBoxPostPickActuator = new JComboBox();
@@ -176,7 +183,8 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
         btnTestPostPickActuator = new JButton(testPostPickActuatorAction);
         panelActuator.add(btnTestPostPickActuator, "6, 10");
 
-        JLabel lblFeedCount = new JLabel("Get Feed Count");
+        JLabel lblFeedCount = new JLabel(Translations.getString(
+                "SchultzFeederConfigurationWizard.ActuatorsPanel.GetFeedCountLabel.text")); //$NON-NLS-1$
         panelActuator.add(lblFeedCount, "2, 12, right, default");
 
         comboBoxFeedCountActuator = new JComboBox();
@@ -190,7 +198,8 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
         feedCountValue.setColumns(8);
         panelActuator.add(feedCountValue, "8, 12");
 
-        JLabel lblClearCount = new JLabel("Clear Feed Count");
+        JLabel lblClearCount = new JLabel(Translations.getString(
+                "SchultzFeederConfigurationWizard.ActuatorsPanel.ClearFeedCountLabel.text")); //$NON-NLS-1$
         panelActuator.add(lblClearCount, "2, 14, right, default");
 
         comboBoxClearCountActuator = new JComboBox();
@@ -200,7 +209,8 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
         btnClearCountActuator = new JButton(clearCountActuatorAction);
         panelActuator.add(btnClearCountActuator, "6, 14");
 
-        JLabel lblGetPitch = new JLabel("Get Pitch");
+        JLabel lblGetPitch = new JLabel(Translations.getString(
+                "SchultzFeederConfigurationWizard.ActuatorsPanel.GetPitchLabel.text")); //$NON-NLS-1$
         panelActuator.add(lblGetPitch, "2, 16, right, default");
 
         comboBoxPitchActuator = new JComboBox();
@@ -214,7 +224,8 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
         pitchValue.setColumns(8);
         panelActuator.add(pitchValue, "8, 16");
 
-        JLabel lblTogglePitch = new JLabel("Toggle Pitch");
+        JLabel lblTogglePitch = new JLabel(Translations.getString(
+                "SchultzFeederConfigurationWizard.ActuatorsPanel.TogglePitchLabel.text")); //$NON-NLS-1$
         panelActuator.add(lblTogglePitch, "2, 18, right, default");
 
         comboBoxTogglePitchActuator = new JComboBox();
@@ -224,10 +235,12 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
         btnTogglePitchActuator = new JButton(togglePitchActuatorAction);
         panelActuator.add(btnTogglePitchActuator, "6, 18");
 
-        JLabel lblTogglePitchDesc = new JLabel("Toggle between 2 MM and 4 MM");
+        JLabel lblTogglePitchDesc = new JLabel(Translations.getString(
+                "SchultzFeederConfigurationWizard.ActuatorsPanel.TogglePitchDescriptionLabel.text")); //$NON-NLS-1$
         panelActuator.add(lblTogglePitchDesc, "8, 18, left, default");
 
-        JLabel lblGetStatus = new JLabel("Get Status");
+        JLabel lblGetStatus = new JLabel(Translations.getString(
+                "SchultzFeederConfigurationWizard.ActuatorsPanel.GetStatusLabel.text")); //$NON-NLS-1$
         panelActuator.add(lblGetStatus, "2, 20, right, default");
 
         comboBoxStatusActuator = new JComboBox();
@@ -271,7 +284,8 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
         ComponentDecorators.decorateWithAutoSelect(actuatorValue);
     }
 
-    private Action getIdActuatorAction = new AbstractAction("Get ID") {
+    private Action getIdActuatorAction = new AbstractAction(Translations.getString(
+            "SchultzFeederConfigurationWizard.ActuatorsPanel.GetIdButton.text")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
@@ -283,8 +297,9 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
                         .getActuatorByName(feeder.getIdActuatorName());
 
                 if (actuator == null) {
-                    throw new Exception(
-                            "Failed, unable to find an actuator named " + feeder.getIdActuatorName());
+                    throw new Exception(Translations.format(
+                            "SchultzFeederConfigurationWizard.Exception.ActuatorNotFound", //$NON-NLS-1$
+                            feeder.getIdActuatorName()));
                 }
                 String s = actuator.read(feeder.getActuatorValue());
                 SwingUtilities.invokeLater(() -> {
@@ -294,7 +309,8 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
         }
     };
 
-    private Action testFeedActuatorAction = new AbstractAction("Test pre pick") {
+    private Action testFeedActuatorAction = new AbstractAction(Translations.getString(
+            "SchultzFeederConfigurationWizard.ActuatorsPanel.TestPrePickButton.text")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
@@ -305,7 +321,9 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
                 Actuator actuator = Configuration.get().getMachine().getActuatorByName(feeder.getActuatorName());
 
                 if (actuator == null) {
-                    throw new Exception("Feed failed. Unable to find an actuator named " + feeder.getActuatorName());
+                    throw new Exception(Translations.format(
+                            "SchultzFeederConfigurationWizard.Exception.FeedActuatorNotFound", //$NON-NLS-1$
+                            feeder.getActuatorName()));
                 }
                 AbstractActuator.suggestValueType(actuator, Actuator.ActuatorValueType.Double);
                 actuator.actuate(feeder.getActuatorValue());
@@ -313,7 +331,8 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
         }
     };
 
-    private Action testPostPickActuatorAction = new AbstractAction("Test post pick") {
+    private Action testPostPickActuatorAction = new AbstractAction(Translations.getString(
+            "SchultzFeederConfigurationWizard.ActuatorsPanel.TestPostPickButton.text")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
@@ -325,8 +344,9 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
                         .getActuatorByName(feeder.getPostPickActuatorName());
 
                 if (actuator == null) {
-                    throw new Exception(
-                            "Feed failed. Unable to find an actuator named " + feeder.getPostPickActuatorName());
+                    throw new Exception(Translations.format(
+                            "SchultzFeederConfigurationWizard.Exception.PostPickActuatorNotFound", //$NON-NLS-1$
+                            feeder.getPostPickActuatorName()));
                 }
                 AbstractActuator.suggestValueType(actuator, Actuator.ActuatorValueType.Double);
                 actuator.actuate(feeder.getActuatorValue());
@@ -335,7 +355,8 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
         }
     };
 
-    private Action getFeedCountActuatorAction = new AbstractAction("Get feed count") {
+    private Action getFeedCountActuatorAction = new AbstractAction(Translations.getString(
+            "SchultzFeederConfigurationWizard.ActuatorsPanel.GetFeedCountButton.text")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
@@ -347,8 +368,9 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
                         .getActuatorByName(feeder.getFeedCountActuatorName());
 
                 if (actuator == null) {
-                    throw new Exception(
-                            "Failed, unable to find an actuator named " + feeder.getFeedCountActuatorName());
+                    throw new Exception(Translations.format(
+                            "SchultzFeederConfigurationWizard.Exception.ActuatorNotFound", //$NON-NLS-1$
+                            feeder.getFeedCountActuatorName()));
                 }
                 String s = actuator.read(feeder.getActuatorValue());
                 SwingUtilities.invokeLater(() -> {
@@ -358,7 +380,8 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
         }
     };
 
-    private Action clearCountActuatorAction = new AbstractAction("Clear feed count") {
+    private Action clearCountActuatorAction = new AbstractAction(Translations.getString(
+            "SchultzFeederConfigurationWizard.ActuatorsPanel.ClearFeedCountButton.text")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
@@ -370,8 +393,9 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
                         .getActuatorByName(feeder.getClearCountActuatorName());
 
                 if (actuator == null) {
-                    throw new Exception(
-                            "Failed, unable to find an actuator named " + feeder.getClearCountActuatorName());
+                    throw new Exception(Translations.format(
+                            "SchultzFeederConfigurationWizard.Exception.ActuatorNotFound", //$NON-NLS-1$
+                            feeder.getClearCountActuatorName()));
                 }
 
                 AbstractActuator.suggestValueType(actuator, Actuator.ActuatorValueType.Double);
@@ -383,7 +407,8 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
         }
     };
 
-    private Action pitchActuatorAction = new AbstractAction("Get pitch") {
+    private Action pitchActuatorAction = new AbstractAction(Translations.getString(
+            "SchultzFeederConfigurationWizard.ActuatorsPanel.GetPitchButton.text")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
@@ -395,8 +420,9 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
                         .getActuatorByName(feeder.getPitchActuatorName());
 
                 if (actuator == null) {
-                    throw new Exception(
-                            "Failed, unable to find an actuator named " + feeder.getPitchActuatorName());
+                    throw new Exception(Translations.format(
+                            "SchultzFeederConfigurationWizard.Exception.ActuatorNotFound", //$NON-NLS-1$
+                            feeder.getPitchActuatorName()));
                 }
                 String s = actuator.read(feeder.getActuatorValue());
                 SwingUtilities.invokeLater(() -> {
@@ -406,7 +432,8 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
         }
     };
 
-    private Action togglePitchActuatorAction = new AbstractAction("Toggle pitch") {
+    private Action togglePitchActuatorAction = new AbstractAction(Translations.getString(
+            "SchultzFeederConfigurationWizard.ActuatorsPanel.TogglePitchButton.text")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
@@ -418,8 +445,9 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
                         .getActuatorByName(feeder.getTogglePitchActuatorName());
 
                 if (actuator == null) {
-                    throw new Exception(
-                            "Failed, unable to find an actuator named " + feeder.getTogglePitchActuatorName());
+                    throw new Exception(Translations.format(
+                            "SchultzFeederConfigurationWizard.Exception.ActuatorNotFound", //$NON-NLS-1$
+                            feeder.getTogglePitchActuatorName()));
                 }
                 AbstractActuator.suggestValueType(actuator, Actuator.ActuatorValueType.Double);
                 actuator.actuate(feeder.getActuatorValue());
@@ -428,7 +456,8 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
         }
     };
 
-    private Action statusActuatorAction = new AbstractAction("Get status") {
+    private Action statusActuatorAction = new AbstractAction(Translations.getString(
+            "SchultzFeederConfigurationWizard.ActuatorsPanel.GetStatusButton.text")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
@@ -440,8 +469,9 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
                         .getActuatorByName(feeder.getStatusActuatorName());
 
                 if (actuator == null) {
-                    throw new Exception(
-                            "Failed, unable to find an actuator named " + feeder.getStatusActuatorName());
+                    throw new Exception(Translations.format(
+                            "SchultzFeederConfigurationWizard.Exception.ActuatorNotFound", //$NON-NLS-1$
+                            feeder.getStatusActuatorName()));
                 }
                 String s = actuator.read(feeder.getActuatorValue());
                 SwingUtilities.invokeLater(() -> {
