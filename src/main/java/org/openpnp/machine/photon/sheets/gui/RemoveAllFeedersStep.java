@@ -1,13 +1,12 @@
 package org.openpnp.machine.photon.sheets.gui;
 
-import javax.swing.JPanel;
-import javax.swing.BoxLayout;
-import javax.swing.JLabel;
-import javax.swing.SwingConstants;
 import java.awt.BorderLayout;
+import javax.swing.JPanel;
 import javax.swing.JTextArea;
 import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
+
+import org.openpnp.Translations;
 
 public class RemoveAllFeedersStep extends JPanel {
 
@@ -23,7 +22,7 @@ public class RemoveAllFeedersStep extends JPanel {
 		helpText.setBackground(UIManager.getColor("Panel.background"));
 		helpText.setWrapStyleWord(true);
 		helpText.setLineWrap(true);
-		helpText.setText("To program your slots, begin by removing all the Photon feeders from your machine. Then, click Next.");
+		helpText.setText(Translations.getString("PhotonFeeder.RemoveAllFeedersStep.helpText")); //$NON-NLS-1$
 		add(helpText, BorderLayout.CENTER);
 
 	}

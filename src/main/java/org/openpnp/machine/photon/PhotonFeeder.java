@@ -344,11 +344,11 @@ public class PhotonFeeder extends ReferenceFeeder {
 
     @Override
     public String getPropertySheetHolderTitle() {
-        String classSimpleName = getClass().getSimpleName();
+        String typeName = Translations.getString("PhotonFeeder.TypeName"); //$NON-NLS-1$
         if (hardwareId == null) {
-            return Translations.format("PhotonFeeder.PropertySheetHolderTitle.Unconfigured", classSimpleName); //$NON-NLS-1$
+            return Translations.format("PhotonFeeder.PropertySheetHolderTitle.Unconfigured", typeName); //$NON-NLS-1$
         } else {
-            return Translations.format("PhotonFeeder.PropertySheetHolderTitle.Configured", classSimpleName, getName()); //$NON-NLS-1$
+            return Translations.format("PhotonFeeder.PropertySheetHolderTitle.Configured", typeName, getName()); //$NON-NLS-1$
         }
     }
 
@@ -383,7 +383,8 @@ public class PhotonFeeder extends ReferenceFeeder {
     @Override
     public String getName() {
         if (hardwareId == null) {
-            return Translations.format("PhotonFeeder.Name.Unconfigured", getClass().getSimpleName()); //$NON-NLS-1$
+            return Translations.format("PhotonFeeder.Name.Unconfigured", //$NON-NLS-1$
+                    Translations.getString("PhotonFeeder.TypeName")); //$NON-NLS-1$
         }
 
         return Translations.format("PhotonFeeder.Name.WithSlot", name, //$NON-NLS-1$
@@ -394,7 +395,8 @@ public class PhotonFeeder extends ReferenceFeeder {
 
     @Override
     public void setName(String name) {
-        Matcher matcher = Pattern.compile("(\\(Slot: [\\w+]+\\))").matcher(name);
+        // Strip localized slot suffixes, e.g. "(Slot: 12)" or "（槽位：12）".
+        Matcher matcher = Pattern.compile("(?:\\(Slot: |（槽位：)[\\w+]*(?:\\)|）)").matcher(name);
         while (matcher.find()) {
             name = name.replace(matcher.group(), "");
         }

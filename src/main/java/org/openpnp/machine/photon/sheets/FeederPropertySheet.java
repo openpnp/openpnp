@@ -1,5 +1,6 @@
 package org.openpnp.machine.photon.sheets;
 
+import org.openpnp.Translations;
 import org.openpnp.machine.photon.PhotonFeeder;
 import org.openpnp.machine.photon.sheets.gui.FeederConfigurationWizard;
 import org.openpnp.spi.PropertySheetHolder;
@@ -15,7 +16,7 @@ public class FeederPropertySheet implements PropertySheetHolder.PropertySheet {
 
     @Override
     public String getPropertySheetTitle() {
-        return "Feeder";
+        return Translations.getString("PhotonFeeder.PropertySheet.Feeder.title"); //$NON-NLS-1$
     }
 
     @Override

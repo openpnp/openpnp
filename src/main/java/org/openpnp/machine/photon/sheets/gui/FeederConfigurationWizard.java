@@ -84,12 +84,16 @@ public class FeederConfigurationWizard extends AbstractConfigurationWizard {
 				FormSpecs.DEFAULT_ROWSPEC,}));
 		
 		JLabel hardwareIdLabel = new JLabel(Translations.getString("FeederConfigurationWizard.InfoPanel.hardwareIdLabel.text")); //$NON-NLS-1$
+		hardwareIdLabel.setToolTipText(Translations.getString(
+				"FeederConfigurationWizard.InfoPanel.hardwareIdLabel.toolTipText")); //$NON-NLS-1$
 		infoPanel.add(hardwareIdLabel, "2, 2, left, center"); //$NON-NLS-1$
 		
 		hardwareIdValue = new JLabel(""); //$NON-NLS-1$
 		infoPanel.add(hardwareIdValue, "4, 2, 5, 1, left, center"); //$NON-NLS-1$
 		
 		JLabel slotAddressLabel = new JLabel(Translations.getString("FeederConfigurationWizard.InfoPanel.slotAddressLabel.text")); //$NON-NLS-1$
+		slotAddressLabel.setToolTipText(Translations.getString(
+				"FeederConfigurationWizard.InfoPanel.slotAddressLabel.toolTipText")); //$NON-NLS-1$
 		infoPanel.add(slotAddressLabel, "2, 4"); //$NON-NLS-1$
 
 		slotAddressValue = new JLabel(""); //$NON-NLS-1$
@@ -130,9 +134,13 @@ public class FeederConfigurationWizard extends AbstractConfigurationWizard {
         partCb.setRenderer(new IdentifiableListCellRenderer<Part>());
 		
 		JLabel partPitchLabel = new JLabel(Translations.getString("FeederConfigurationWizard.PartPanel.partPitchLabel.text")); //$NON-NLS-1$
+		partPitchLabel.setToolTipText(Translations.getString(
+				"FeederConfigurationWizard.PartPanel.partPitchLabel.toolTipText")); //$NON-NLS-1$
 		partPanel.add(partPitchLabel, "2, 4, right, default"); //$NON-NLS-1$
 		
 		partPitchTf = new JTextField();
+		partPitchTf.setToolTipText(Translations.getString(
+				"FeederConfigurationWizard.PartPanel.partPitchLabel.toolTipText")); //$NON-NLS-1$
 		partPanel.add(partPitchTf, "4, 4, fill, default"); //$NON-NLS-1$
 		partPitchTf.setColumns(10);
 		
@@ -143,16 +151,24 @@ public class FeederConfigurationWizard extends AbstractConfigurationWizard {
 		partPanel.add(feedOneMmButton, "8, 4"); //$NON-NLS-1$
 		
 		JLabel feedRetryLabel = new JLabel(Translations.getString("FeederConfigurationWizard.PartPanel.feedRetryLabel.text")); //$NON-NLS-1$
+		feedRetryLabel.setToolTipText(Translations.getString(
+				"FeederConfigurationWizard.PartPanel.feedRetryLabel.toolTipText")); //$NON-NLS-1$
 		partPanel.add(feedRetryLabel, "2, 6, right, default"); //$NON-NLS-1$
 		
 		feedRetryCountTf = new JTextField();
+		feedRetryCountTf.setToolTipText(Translations.getString(
+				"FeederConfigurationWizard.PartPanel.feedRetryLabel.toolTipText")); //$NON-NLS-1$
 		partPanel.add(feedRetryCountTf, "4, 6, fill, default"); //$NON-NLS-1$
 		feedRetryCountTf.setColumns(10);
 		
 		JLabel pickRetryLabel = new JLabel(Translations.getString("FeederConfigurationWizard.PartPanel.pickRetryLabel.text")); //$NON-NLS-1$
+		pickRetryLabel.setToolTipText(Translations.getString(
+				"FeederConfigurationWizard.PartPanel.pickRetryLabel.toolTipText")); //$NON-NLS-1$
 		partPanel.add(pickRetryLabel, "2, 8, right, default"); //$NON-NLS-1$
 		
 		pickRetryCountTf = new JTextField();
+		pickRetryCountTf.setToolTipText(Translations.getString(
+				"FeederConfigurationWizard.PartPanel.pickRetryLabel.toolTipText")); //$NON-NLS-1$
 		partPanel.add(pickRetryCountTf, "4, 8, fill, default"); //$NON-NLS-1$
 		pickRetryCountTf.setColumns(10);
 		
@@ -198,6 +214,8 @@ public class FeederConfigurationWizard extends AbstractConfigurationWizard {
 		locationPanel.add(rotationOffsetLabel, "10, 2, center, center"); //$NON-NLS-1$
 		
 		JLabel slotLocationLabel = new JLabel(Translations.getString("FeederConfigurationWizard.LocationPanel.slotLocationLabel.text")); //$NON-NLS-1$
+		slotLocationLabel.setToolTipText(Translations.getString(
+				"FeederConfigurationWizard.LocationPanel.slotLocationLabel.toolTipText")); //$NON-NLS-1$
 		locationPanel.add(slotLocationLabel, "2, 4, right, center"); //$NON-NLS-1$
 		
 		xSlotTf = new JTextField();
@@ -220,6 +238,8 @@ public class FeederConfigurationWizard extends AbstractConfigurationWizard {
 		locationPanel.add(slotLocationPanel, "12, 4, left, top"); //$NON-NLS-1$
 		
 		JLabel offsetLabel = new JLabel(Translations.getString("FeederConfigurationWizard.LocationPanel.offsetLabel.text")); //$NON-NLS-1$
+		offsetLabel.setToolTipText(Translations.getString(
+				"FeederConfigurationWizard.LocationPanel.offsetLabel.toolTipText")); //$NON-NLS-1$
 		locationPanel.add(offsetLabel, "2, 6, right, center"); //$NON-NLS-1$
 		
 		xOffsetTf = new JTextField();
@@ -315,6 +335,10 @@ public class FeederConfigurationWizard extends AbstractConfigurationWizard {
 	}
 
 	private final Action findSlotAddressAction = new AbstractAction(Translations.getString("FeederConfigurationWizard.FindSlotAddressAction.Name")) { //$NON-NLS-1$
+		{
+			putValue(Action.SHORT_DESCRIPTION, Translations.getString(
+					"FeederConfigurationWizard.FindSlotAddressAction.toolTipText")); //$NON-NLS-1$
+		}
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			UiUtils.submitUiMachineTask(feeder::findSlotAddress);
@@ -322,6 +346,10 @@ public class FeederConfigurationWizard extends AbstractConfigurationWizard {
 	};
 
 	private final Action feedAction = new AbstractAction(Translations.getString("FeederConfigurationWizard.FeedAction.Name")) { //$NON-NLS-1$
+		{
+			putValue(Action.SHORT_DESCRIPTION, Translations.getString(
+					"FeederConfigurationWizard.FeedAction.toolTipText")); //$NON-NLS-1$
+		}
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			UiUtils.submitUiMachineTask(() -> {
@@ -331,6 +359,10 @@ public class FeederConfigurationWizard extends AbstractConfigurationWizard {
 	};
 
 	private final Action feedOneMmAction = new AbstractAction(Translations.getString("FeederConfigurationWizard.FeedOneMmAction.Name")) { //$NON-NLS-1$
+		{
+			putValue(Action.SHORT_DESCRIPTION, Translations.getString(
+					"FeederConfigurationWizard.FeedOneMmAction.toolTipText")); //$NON-NLS-1$
+		}
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			UiUtils.submitUiMachineTask(() -> {
