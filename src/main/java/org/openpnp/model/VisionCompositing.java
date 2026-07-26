@@ -55,6 +55,11 @@ public class VisionCompositing extends AbstractModelObject{
         Automatic,
         SingleCorners;
 
+        @Override
+        public String toString() {
+            return Translations.getString("VisionCompositing.CompositingMethod." + name()); //$NON-NLS-1$
+        }
+
         public boolean isEnforced() {
             return this == Body || this == Automatic || this == SingleCorners;
         }

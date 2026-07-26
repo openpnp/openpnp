@@ -794,27 +794,27 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                     else {
                         if (gcodeDriver.getUnits() == LengthUnit.Millimeters) {
                             if (command.contains("G20 ")) {
-                                rationale += "Replace G20 (inches) with G21 (millimeters). ";
+                                rationale += Translations.getString("GcodeDriverSolutions.Rationale.ReplaceG20WithG21"); //$NON-NLS-1$
                                 commandBuilt = command
                                         .replace("G20 ", "G21 ")
                                         .replace("inches", "millimeters");
                             }
                             else if (! command.contains("G21 "))
                             {
-                                rationale += "Explicitly set millimeters mode. ";
+                                rationale += Translations.getString("GcodeDriverSolutions.Rationale.SetMillimeters"); //$NON-NLS-1$
                                 commandBuilt = "G21 ; Set millimeters mode \n" + command;
                             }
                         }
                         else if (gcodeDriver.getUnits() == LengthUnit.Inches) {
                             if (command.contains("G21 ")) {
-                                rationale += "Replace G21 (millimeters) with G20 (inches). ";
+                                rationale += Translations.getString("GcodeDriverSolutions.Rationale.ReplaceG21WithG20"); //$NON-NLS-1$
                                 commandBuilt = command
                                         .replace("G21 ", "G20 ")
                                         .replace("millimeters", "inches");
                             }
                             else if (! command.contains("G20 "))
                             {
-                                rationale += "Explicitly set inches mode. ";
+                                rationale += Translations.getString("GcodeDriverSolutions.Rationale.SetInches"); //$NON-NLS-1$
                                 commandBuilt = "G20 ; Set inches mode \n" + command;
                             }
                         }

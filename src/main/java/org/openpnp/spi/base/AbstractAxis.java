@@ -231,7 +231,7 @@ public abstract class AbstractAxis extends AbstractModelObject implements Axis {
 
     @Override
     public String getPropertySheetHolderTitle() {
-        return getClass().getSimpleName() + " " + getName();
+        return Translations.typeAndName(getClass(), getName());
     }
 
 }

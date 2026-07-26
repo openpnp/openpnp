@@ -36,6 +36,7 @@ import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
 import org.openpnp.ConfigurationListener;
+import org.openpnp.Translations;
 import org.openpnp.gui.support.CameraItem;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Camera;
@@ -46,9 +47,12 @@ import org.openpnp.spi.base.AbstractCamera;
  */
 @SuppressWarnings("serial")
 public class CameraPanel extends JPanel {
-    private static final String SHOW_NONE_ITEM = "Show None";
-    private static final String SHOW_ALL_ITEM_H = "Show All Horizontal";
-    private static final String SHOW_ALL_ITEM_V = "Show All Vertical";
+    private static final String SHOW_NONE_ITEM =
+            Translations.getString("CameraPanel.ShowNone"); //$NON-NLS-1$
+    private static final String SHOW_ALL_ITEM_H =
+            Translations.getString("CameraPanel.ShowAllHorizontal"); //$NON-NLS-1$
+    private static final String SHOW_ALL_ITEM_V =
+            Translations.getString("CameraPanel.ShowAllVertical"); //$NON-NLS-1$
 
     private Map<Camera, CameraView> cameraViews = new LinkedHashMap<>();
 

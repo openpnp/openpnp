@@ -1,5 +1,7 @@
 package org.openpnp.machine.neoden4;
 
+
+import org.openpnp.Translations;
 import java.awt.Point;
 import java.awt.image.BufferedImage;
 import java.beans.PropertyChangeListener;
@@ -325,7 +327,7 @@ public class Neoden4Feeder extends ReferenceFeeder {
 
     @Override
     public String getPropertySheetHolderTitle() {
-        return getClass().getSimpleName() + " " + getName();
+        return Translations.typeAndName(getClass(), getName());
     }
 
     @Override

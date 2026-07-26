@@ -26,6 +26,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import org.opencv.core.Mat;
+import org.openpnp.Translations;
 import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 import org.openpnp.model.Point;
@@ -105,6 +106,12 @@ public class DetectCircularSymmetry extends CvStage {
                 return 16;
             }
             return 1;
+        }
+
+        @Override
+        public String toString() {
+            String s = Translations.getStringOrNull("DetectCircularSymmetry.SymmetryScore." + name()); //$NON-NLS-1$
+            return s != null ? s : name();
         }
     }
     @Attribute(required = false)

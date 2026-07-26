@@ -731,7 +731,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
 
     @Override
     public String getPropertySheetHolderTitle() {
-        return "Bottom Vision";
+        return Translations.getString("ReferenceBottomVision.PropertySheetHolderTitle"); //$NON-NLS-1$
     }
 
     public static CvPipeline createStockPipeline(String variant) {
@@ -758,15 +758,33 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
     }
 
     public enum PreRotateUsage {
-        Default, AlwaysOn, AlwaysOff
+        Default, AlwaysOn, AlwaysOff;
+
+        @Override
+        public String toString() {
+            String s = Translations.getStringOrNull("ReferenceBottomVision.PreRotateUsage." + name()); //$NON-NLS-1$
+            return s != null ? s : name();
+        }
     }
 
     public enum PartSizeCheckMethod {
-        Disabled, BodySize, PadExtents
+        Disabled, BodySize, PadExtents;
+
+        @Override
+        public String toString() {
+            String s = Translations.getStringOrNull("ReferenceBottomVision.PartSizeCheckMethod." + name()); //$NON-NLS-1$
+            return s != null ? s : name();
+        }
     }
 
     public enum MaxRotation {
-        Adjust, Full
+        Adjust, Full;
+
+        @Override
+        public String toString() {
+            String s = Translations.getStringOrNull("ReferenceBottomVision.MaxRotation." + name()); //$NON-NLS-1$
+            return s != null ? s : name();
+        }
     }
 
     @Deprecated

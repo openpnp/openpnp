@@ -192,7 +192,13 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
 
     public enum FocusSensingMethod {
         None,
-        AutoFocus
+        AutoFocus;
+
+        @Override
+        public String toString() {
+            String s = Translations.getStringOrNull("ReferenceCamera.FocusSensingMethod." + name()); //$NON-NLS-1$
+            return s != null ? s : name();
+        }
     }
 
     public ReferenceCamera() {

@@ -964,9 +964,9 @@ public class CalibrationSolutions implements Solutions.Subject {
             axis.setBacklashSpeedFactor(backlashProbingSpeeds[consistent-1]);
         }
         else {
-            throw new Exception("Axis "+axis.getName()+" seems to overshoot, even at the lowest speed factor. "
-                    + "Make sure OpenPnP has effective acceleration/jerk control. "
-                    + "Automatic compensation not possible.");
+            throw new Exception(Translations.format(
+                    "CalibrationSolutions.Exception.AxisOvershoot", //$NON-NLS-1$
+                    axis.getName()));
         }
         // Because this change may affect the coordinate system, perform a (visual) homing cycle.
         if (head.getVisualHomingMethod() == VisualHomingMethod.ResetToFiducialLocation) {

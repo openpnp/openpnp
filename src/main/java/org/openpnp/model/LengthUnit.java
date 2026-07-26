@@ -19,6 +19,8 @@
 
 package org.openpnp.model;
 
+import org.openpnp.Translations;
+
 public enum LengthUnit {
     Meters("m", "Meter"),
     Centimeters("cm", "Centimeter"),
@@ -43,5 +45,10 @@ public enum LengthUnit {
 
     public String getSingularName() {
         return singularName;
+    }
+
+    @Override
+    public String toString() {
+        return Translations.getString("LengthUnit." + name()); //$NON-NLS-1$
     }
 }

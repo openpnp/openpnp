@@ -166,7 +166,13 @@ public class BlindsFeeder extends ReferenceFeeder {
     public enum OcrAction {
         None,
         CheckCorrect,
-        ChangePart
+        ChangePart;
+
+        @Override
+        public String toString() {
+            String s = Translations.getStringOrNull("BlindsFeeder.OcrAction." + name()); //$NON-NLS-1$
+            return s != null ? s : name();
+        }
     }
     @Attribute(required = false) 
     private OcrAction ocrAction = OcrAction.None;
@@ -182,7 +188,13 @@ public class BlindsFeeder extends ReferenceFeeder {
 
     public enum OcrTextOrientation {
         AwayFromTape,
-        TowardsTape
+        TowardsTape;
+
+        @Override
+        public String toString() {
+            String s = Translations.getStringOrNull("BlindsFeeder.OcrTextOrientation." + name()); //$NON-NLS-1$
+            return s != null ? s : name();
+        }
     };
     @Attribute(required = false) 
     private OcrTextOrientation ocrTextOrientation = OcrTextOrientation.AwayFromTape;
@@ -1269,10 +1281,22 @@ public class BlindsFeeder extends ReferenceFeeder {
     }
 
     public enum CoverType {
-        NoCover, BlindsCover, PushCover
+        NoCover, BlindsCover, PushCover;
+
+        @Override
+        public String toString() {
+            String s = Translations.getStringOrNull("BlindsFeeder.CoverType." + name()); //$NON-NLS-1$
+            return s != null ? s : name();
+        }
     }
     public enum CoverActuation {
-        Manual, CheckOpen, OpenOnFirstUse, OpenOnJobStart
+        Manual, CheckOpen, OpenOnFirstUse, OpenOnJobStart;
+
+        @Override
+        public String toString() {
+            String s = Translations.getStringOrNull("BlindsFeeder.CoverActuation." + name()); //$NON-NLS-1$
+            return s != null ? s : name();
+        }
     }
 
     @Attribute(required = false)
@@ -2603,7 +2627,7 @@ public class BlindsFeeder extends ReferenceFeeder {
 
     @Override
     public String getPropertySheetHolderTitle() {
-        return getClass().getSimpleName() + " " + getName();
+        return Translations.typeAndName(getClass(), getName());
     }
 
     @Override

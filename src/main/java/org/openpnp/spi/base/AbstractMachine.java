@@ -19,6 +19,7 @@ import java.util.stream.Stream;
 
 import javax.swing.Icon;
 
+import org.openpnp.Translations;
 import org.openpnp.machine.reference.axis.ReferenceLinearTransformAxis;
 import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.LengthUnit;
@@ -571,7 +572,8 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
                     T result = null;
                     try {
                         if (!ignoreEnabled && !isEnabled()) {
-                            throw new Exception("Machine has not been started.");
+                            throw new Exception(Translations.getString(
+                                    "AbstractMachine.Error.MachineNotStarted")); //$NON-NLS-1$
                         }
                         result = callable.call();
                         // Make sure all pending motion commands are planned and sent to the controllers. 

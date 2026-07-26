@@ -19,6 +19,8 @@
 
 package org.openpnp.machine.reference.camera;
 
+
+import org.openpnp.Translations;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.List;
@@ -314,7 +316,7 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
 
     @Override
     public String getPropertySheetHolderTitle() {
-        return getClass().getSimpleName() + " " + getName();
+        return Translations.typeAndName(getClass(), getName());
     }
 
     @Override

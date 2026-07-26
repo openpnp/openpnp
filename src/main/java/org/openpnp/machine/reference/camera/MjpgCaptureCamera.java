@@ -20,6 +20,8 @@
 
 package org.openpnp.machine.reference.camera;
 
+
+import org.openpnp.Translations;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -275,7 +277,7 @@ public class MjpgCaptureCamera extends ReferenceCamera {
 
     @Override
     public String getPropertySheetHolderTitle() {
-        return getClass().getSimpleName() + " " + getName();
+        return Translations.typeAndName(getClass(), getName());
     }
 
     @Override

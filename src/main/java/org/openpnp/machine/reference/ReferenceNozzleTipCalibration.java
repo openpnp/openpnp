@@ -20,6 +20,7 @@ import org.opencv.core.RotatedRect;
 import org.opencv.core.Size;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
+import org.openpnp.Translations;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.machine.reference.camera.ReferenceCamera;
 import org.openpnp.model.AbstractModelObject;
@@ -511,7 +512,13 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
     }
 
     public enum RecalibrationTrigger {
-        NozzleTipChange, NozzleTipChangeInJob, MachineHome,  Manual
+        NozzleTipChange, NozzleTipChangeInJob, MachineHome,  Manual;
+
+        @Override
+        public String toString() {
+            String s = Translations.getStringOrNull("ReferenceNozzleTipCalibration.RecalibrationTrigger." + name()); //$NON-NLS-1$
+            return s != null ? s : name();
+        }
     }
 
     @Attribute(required = false)
@@ -525,7 +532,12 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
     private RecalibrationTrigger recalibrationTrigger = RecalibrationTrigger.NozzleTipChangeInJob;
 
     public enum BackgroundCalibrationMethod {
-        None, Brightness, BrightnessAndKeyColor
+        None, Brightness, BrightnessAndKeyColor;
+
+        @Override
+        public String toString() {
+            return Translations.getString("ReferenceNozzleTipCalibration.BackgroundCalibrationMethod." + name()); //$NON-NLS-1$
+        }
     }
 
     @Attribute(required = false)

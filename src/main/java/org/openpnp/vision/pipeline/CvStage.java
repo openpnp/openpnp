@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.opencv.core.Mat;
+import org.openpnp.Translations;
 import org.openpnp.model.Area;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
@@ -84,6 +85,11 @@ public abstract class CvStage {
 
     public String getCategory() {
         try {
+            String translated = Translations.getStringOrNull(
+                    "CvStage." + getClass().getSimpleName() + ".category"); //$NON-NLS-1$ //$NON-NLS-2$
+            if (translated != null) {
+                return translated;
+            }
             Stage a = getClass().getAnnotation(Stage.class);
             return a.category();
         }
@@ -92,8 +98,23 @@ public abstract class CvStage {
         }
     }
 
+    /**
+     * Localized display name for the stage type (shown in the Stage column).
+     * Falls back to the Java class simple name.
+     */
+    public String getStageTypeName() {
+        String translated = Translations.getStringOrNull(
+                "CvStage." + getClass().getSimpleName() + ".displayName"); //$NON-NLS-1$ //$NON-NLS-2$
+        return translated != null ? translated : getClass().getSimpleName();
+    }
+
     public String getDescription() {
         try {
+            String translated = Translations.getStringOrNull(
+                    "CvStage." + getClass().getSimpleName() + ".description"); //$NON-NLS-1$ //$NON-NLS-2$
+            if (translated != null) {
+                return translated;
+            }
             Stage a = getClass().getAnnotation(Stage.class);
             return a.description();
         }
@@ -113,6 +134,19 @@ public abstract class CvStage {
             try {
                 fld = cls.getDeclaredField(propertyName);
                 Property a = fld.getAnnotation(Property.class);
+                String translated = Translations.getStringOrNull(
+                        "CvStage." + getClass().getSimpleName() + ".property." + propertyName); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                if (translated != null) {
+                    return translated;
+                }
+                // Also try declaring class (for inherited properties).
+                if (cls != getClass()) {
+                    translated = Translations.getStringOrNull(
+                            "CvStage." + cls.getSimpleName() + ".property." + propertyName); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                    if (translated != null) {
+                        return translated;
+                    }
+                }
                 return a.description();
             }
             catch (Exception e) {
@@ -197,6 +231,11 @@ public abstract class CvStage {
                 String propertyName = pd.getName();
                 Object overrideProperty = getPropertyOverride(propertyName);
                 String description = CvStage.this.getDescription(propertyName);
+                String displayName = Translations.getStringOrNull(
+                        "CvStage.PropertyDisplayName." + propertyName); //$NON-NLS-1$
+                if (displayName != null) {
+                    pd.setDisplayName(displayName);
+                }
                 if (overrideProperty != null) {
                     try {
                         pd.setReadMethod(null);

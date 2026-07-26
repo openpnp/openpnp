@@ -19,6 +19,8 @@
 
 package org.openpnp.machine.reference.camera;
 
+
+import org.openpnp.Translations;
 import java.awt.image.BufferedImage;
 import java.util.WeakHashMap;
 
@@ -69,7 +71,7 @@ public class BufferedImageCamera extends ReferenceCamera {
 
     @Override
     public String getPropertySheetHolderTitle() {
-        return getClass().getSimpleName() + " " + getName();
+        return Translations.typeAndName(getClass(), getName());
     }
 
     @Override

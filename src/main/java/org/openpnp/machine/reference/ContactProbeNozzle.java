@@ -107,6 +107,12 @@ public class ContactProbeNozzle extends ReferenceNozzle {
         public boolean isPlacementCompatible() {
             return this == ContactSenseActuator;
         }
+
+        @Override
+        public String toString() {
+            String s = Translations.getStringOrNull("ContactProbeNozzle.ContactProbeMethod." + name()); //$NON-NLS-1$
+            return s != null ? s : name();
+        }
     };
     @Attribute(required=false)
     private ContactProbeMethod contactProbeMethod = ContactProbeMethod.ContactSenseActuator;
@@ -115,7 +121,13 @@ public class ContactProbeNozzle extends ReferenceNozzle {
         Off,
         Once,
         AfterHoming,
-        EachTime
+        EachTime;
+
+        @Override
+        public String toString() {
+            String s = Translations.getStringOrNull("ContactProbeNozzle.ContactProbeTrigger." + name()); //$NON-NLS-1$
+            return s != null ? s : name();
+        }
     };
 
     @Attribute(required=false)

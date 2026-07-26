@@ -204,7 +204,13 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         SwapFeeders,
         SwapOrCreate,
         ChangePart,
-        ChangePartAndClone
+        ChangePartAndClone;
+
+        @Override
+        public String toString() {
+            String s = Translations.getStringOrNull("ReferencePushPullFeeder.OcrWrongPartAction." + name()); //$NON-NLS-1$
+            return s != null ? s : name();
+        }
     }
 
     @Attribute(required = false)
@@ -263,7 +269,13 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         None,
         OnFirstUse,
         UntilConfident,
-        OnEachTapeFeed
+        OnEachTapeFeed;
+
+        @Override
+        public String toString() {
+            String s = Translations.getStringOrNull("ReferencePushPullFeeder.CalibrationTrigger." + name()); //$NON-NLS-1$
+            return s != null ? s : name();
+        }
     }
 
     @Attribute(required = false)
@@ -2155,7 +2167,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
 
     @Override
     public String getPropertySheetHolderTitle() {
-        return getClass().getSimpleName() + " " + getName();
+        return Translations.typeAndName(getClass(), getName());
     }
 
     @Override

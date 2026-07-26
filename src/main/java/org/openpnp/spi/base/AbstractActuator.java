@@ -3,6 +3,7 @@ package org.openpnp.spi.base;
 import javax.swing.Icon;
 
 import org.openpnp.ConfigurationListener;
+import org.openpnp.Translations;
 import org.openpnp.machine.reference.ActuatorInterlockMonitor;
 import org.openpnp.machine.reference.solutions.ActuatorSolutions;
 import org.openpnp.model.Configuration;
@@ -82,6 +83,11 @@ public abstract class AbstractActuator extends AbstractHeadMountable implements 
         CommandStillstand,
         WaitForStillstand,
         WaitForUnconditionalCoordination;
+
+        @Override
+        public String toString() {
+            return Translations.getString("AbstractActuator.Coordination." + name()); //$NON-NLS-1$
+        }
     }
     
     @Attribute(required = false)
