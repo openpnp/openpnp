@@ -150,7 +150,9 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
                 if (settingsHolder != null && bottomVision.getParentHolder(settingsHolder) != null) {
                     if (visionSettings.getUsedBottomVisionIn().size() == 1 
                             && visionSettings.getUsedBottomVisionIn().get(0) == settingsHolder) {
-                        throw new Exception("Vision Settings already specialized for "+settingsHolder.getShortName()+".");
+                        throw new Exception(Translations.format(
+                                "BottomVisionSettingsConfigurationWizard.Error.AlreadySpecialized", //$NON-NLS-1$
+                                settingsHolder.getShortName()));
                     }
                     BottomVisionSettings newSettings = new BottomVisionSettings();
                     newSettings.setValues(visionSettings);
@@ -166,19 +168,24 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
         });
         panel.add(btnSpecializeSetting, "4, 6, 3, 1");
 
-        final String subjects = settingsHolder instanceof Package ? "Parts" : "Parts and Packages";
+        final String subjects = settingsHolder instanceof Package
+                ? Translations.getString("BottomVisionSettingsConfigurationWizard.Subjects.Parts") //$NON-NLS-1$
+                : Translations.getString("BottomVisionSettingsConfigurationWizard.Subjects.PartsAndPackages"); //$NON-NLS-1$
         btnGeneralizeSettings = new JButton(Translations.getString(
                 "BottomVisionSettingsConfigurationWizard.GeneralizeButton.text")); //$NON-NLS-1$
         btnGeneralizeSettings.addActionListener((e) -> {
             UiUtils.messageBoxOnException(() -> {
                 List<PartSettingsHolder> list = settingsHolder.getSpecializedBottomVisionIn();
                 if (list.size() == 0) {
-                    throw new Exception("There are no specializations on "+subjects+" with the "+settingsHolder.getClass().getSimpleName()+" "+settingsHolder.getShortName()+".");
+                    throw new Exception(Translations.format(
+                            "BottomVisionSettingsConfigurationWizard.Error.NoSpecializations", //$NON-NLS-1$
+                            subjects,
+                            settingsHolder.getClass().getSimpleName(),
+                            settingsHolder.getShortName()));
                 }
                 int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                        "This will remove the specialized vision settings in:\n\n"+
-                                new AbstractVisionSettings.ListConverter(false).convertForward(list)+"\n\n"+
-                                "Are you sure?", null,
+                        Translations.format("BottomVisionSettingsConfigurationWizard.Confirm.Generalize", //$NON-NLS-1$
+                                new AbstractVisionSettings.ListConverter(false).convertForward(list)), null,
                                 JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
                 if (result == JOptionPane.YES_OPTION) {
                     UiUtils.messageBoxOnException(() -> {
@@ -210,7 +217,7 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
         resetButton.addActionListener(e -> {
             UiUtils.messageBoxOnException(() -> {
                 int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                        "This will reset the bottom vision settings with to the default settings. Are you sure??", null,
+                        Translations.getString("BottomVisionSettingsConfigurationWizard.Confirm.Reset"), null, //$NON-NLS-1$
                         JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
                 if (result == JOptionPane.YES_OPTION) {
                     ReferenceBottomVision bottomVision = ReferenceBottomVision.getDefault();
@@ -282,7 +289,7 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
             @Override
             public void resetPipeline() throws Exception {
                 int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                        "This will replace the Pipeline with the default. Are you sure??", null,
+                        Translations.getString("BottomVisionSettingsConfigurationWizard.Confirm.ResetPipeline"), null, //$NON-NLS-1$
                         JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
                 if (result == JOptionPane.YES_OPTION) {
                     UiUtils.messageBoxOnException(() -> {
@@ -513,39 +520,49 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
         String packageSource = null;
         if (part != null) {
             pkg = part.getPackage();
-            packageSource = "selected through part "+part.getId()+" loaded on "+nozzle.getName();
+            packageSource = Translations.format(
+                    "BottomVisionSettingsConfigurationWizard.PackageSource.LoadedPart", //$NON-NLS-1$
+                    part.getId(), nozzle.getName());
         }
         else if (settingsHolder instanceof Part) {
             part = (Part) settingsHolder;
             pkg = part.getPackage();
-            packageSource = "selected through part "+part.getId()+" here";
+            packageSource = Translations.format(
+                    "BottomVisionSettingsConfigurationWizard.PackageSource.CurrentPart", //$NON-NLS-1$
+                    part.getId());
         }
         else if (settingsHolder instanceof Package) {
             pkg = (Package) settingsHolder;
-            packageSource = "selected here";
+            packageSource = Translations.getString(
+                    "BottomVisionSettingsConfigurationWizard.PackageSource.CurrentPackage"); //$NON-NLS-1$
         }
         else if (MainFrame.get().getPartsTab().getSelectedPart() != null) {
             part = MainFrame.get().getPartsTab().getSelectedPart();
             pkg = part.getPackage();
-            packageSource = "selected through part "+part.getId()+" in the Parts tab";
+            packageSource = Translations.format(
+                    "BottomVisionSettingsConfigurationWizard.PackageSource.PartsTab", //$NON-NLS-1$
+                    part.getId());
         }
         else if (MainFrame.get().getPackagesTab().getSelectedPackage() != null) {
             pkg = MainFrame.get().getPackagesTab().getSelectedPackage();
-            packageSource = "selected in the Packages tab";
+            packageSource = Translations.getString(
+                    "BottomVisionSettingsConfigurationWizard.PackageSource.PackagesTab"); //$NON-NLS-1$
         }
         if (pkg == null) {
-            throw new Exception("A package must be designated to configure the pipeline. "
-                    + "Please pick a part with selected nozzle "+nozzle.getName()+". "
-                    + "Alternatively, you can select a single part or package on the Parts or "
-                    + "Packages tab for a \"dry-run\" with empty nozzle (like after a failed pick).");
+            throw new Exception(Translations.format(
+                    "BottomVisionSettingsConfigurationWizard.Error.PackageRequired", //$NON-NLS-1$
+                    nozzle.getName()));
         }
         NozzleTip nt = nozzle.getNozzleTip();
         if (nt == null) {
-            throw new Exception("A nozzle tip must be loaded on selected nozzle "+nozzle.getName()+".");
+            throw new Exception(Translations.format(
+                    "BottomVisionSettingsConfigurationWizard.Error.NoNozzleTip", //$NON-NLS-1$
+                    nozzle.getName()));
         }
         if (! pkg.getCompatibleNozzleTips().contains(nt)) {
-            throw new Exception("Nozzle tip "+nt.getName()+" loaded on selected nozzle "+nozzle.getName()
-            +" is not compatible with package "+pkg.getId()+" "+packageSource+".");
+            throw new Exception(Translations.format(
+                    "BottomVisionSettingsConfigurationWizard.Error.IncompatibleNozzleTip", //$NON-NLS-1$
+                    nt.getName(), nozzle.getName(), pkg.getId(), packageSource));
         }
         Location location = bottomVision.getCameraLocationAtPartHeight(part, 
                 camera,
@@ -645,22 +662,31 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
         Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
         Part part = nozzle.getPart(); 
         if (part == null) {
-            throw new Exception("Nozzle "+nozzle.getName()+" does not have a part loaded");
+            throw new Exception(Translations.format(
+                    "BottomVisionSettingsConfigurationWizard.Error.NoPartLoaded", //$NON-NLS-1$
+                    nozzle.getName()));
         }
         if (settingsHolder instanceof Part 
                 && part != this.settingsHolder) {
-            throw new Exception("Wrong part "+part.getId()+" on Nozzle "+nozzle.getName());
+            throw new Exception(Translations.format(
+                    "BottomVisionSettingsConfigurationWizard.Error.WrongPart", //$NON-NLS-1$
+                    part.getId(), nozzle.getName()));
         }
         else if (settingsHolder instanceof Package 
                 && part.getPackage() != this.settingsHolder) {
-            throw new Exception("Wrong package "+part.getPackage().getId()+" on Nozzle "+nozzle.getName());
+            throw new Exception(Translations.format(
+                    "BottomVisionSettingsConfigurationWizard.Error.WrongPackage", //$NON-NLS-1$
+                    part.getPackage().getId(), nozzle.getName()));
         }
         if (bottomVision == null) {
-            throw new Exception("Bottom Vision for vision settings "+visionSettings.getName()+" not enabled.");
+            throw new Exception(Translations.format(
+                    "BottomVisionSettingsConfigurationWizard.Error.BottomVisionDisabled", //$NON-NLS-1$
+                    visionSettings.getName()));
         }
         if (bottomVision.getInheritedVisionSettings(part) != visionSettings) {
-            throw new Exception("Present Bottom Vision Settings are not effective for part "+part.getId()+" on Nozzle "+nozzle.getName()+". "
-                    +"Assign to Package of Part.");
+            throw new Exception(Translations.format(
+                    "BottomVisionSettingsConfigurationWizard.Error.SettingsNotEffective", //$NON-NLS-1$
+                    part.getId(), nozzle.getName()));
         }
         return nozzle;
     }

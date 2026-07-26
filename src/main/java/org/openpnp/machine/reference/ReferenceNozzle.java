@@ -910,7 +910,7 @@ public class ReferenceNozzle extends AbstractNozzle implements HeadMountable {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             if (getHead().getNozzles().size() == 1) {
-                MessageBoxes.errorBox(null, "Error: Nozzle Not Deleted", "Can't delete last nozzle. There must be at least one nozzle.");
+                MessageBoxes.errorBox(null, "Error: Nozzle Not Deleted", Translations.getString("ReferenceNozzle.Error.CantDeleteLastNozzle")); //$NON-NLS-1$ //$NON-NLS-2$
                 return;
             }
             int ret = JOptionPane.showConfirmDialog(MainFrame.get(),

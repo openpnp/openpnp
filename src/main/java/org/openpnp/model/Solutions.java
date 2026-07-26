@@ -282,7 +282,8 @@ public class Solutions extends AbstractTableModel {
 
     public boolean confirm(String message, boolean warning) {
         int result = JOptionPane.showConfirmDialog(MainFrame.get(),
-                message, warning ? "Warning" : "Question", 
+                message, warning ? Translations.getString("MessageBoxes.Title.Warning") //$NON-NLS-1$
+                        : Translations.getString("MessageBoxes.Title.Question"), //$NON-NLS-1$
                         JOptionPane.YES_NO_OPTION, 
                         warning ? JOptionPane.WARNING_MESSAGE : JOptionPane.QUESTION_MESSAGE);
         return (result == JOptionPane.YES_OPTION);

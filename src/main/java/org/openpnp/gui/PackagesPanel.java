@@ -312,7 +312,7 @@ public class PackagesPanel extends JPanel implements WizardContainer {
                     break;
                 }
                 if (configuration.getPackage(id) != null) {
-                    MessageBoxes.errorBox(frame, "Error", "Package ID " + id + " already exists.");
+                    MessageBoxes.errorBox(frame, "Error", Translations.format("PackagesPanel.Error.PackageIdExists", id)); //$NON-NLS-1$ //$NON-NLS-2$
                     continue;
                 }
                 Package this_package = new Package(id);
@@ -418,7 +418,7 @@ public class PackagesPanel extends JPanel implements WizardContainer {
                 if (configuration.getPackage(id) == null) {
                     break;
                 }
-                MessageBoxes.errorBox(frame, "Error", "Package ID " + id + " already exists.");
+                MessageBoxes.errorBox(frame, "Error", Translations.format("PackagesPanel.Error.PackageIdExists", id)); //$NON-NLS-1$ //$NON-NLS-2$
             }
             if (id == null || id.isEmpty()) {
                 return;

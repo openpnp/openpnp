@@ -10,6 +10,7 @@ import org.opencv.core.Point;
 import org.opencv.core.RotatedRect;
 import org.opencv.core.Size;
 import org.openpnp.ConfigurationListener;
+import org.openpnp.Translations;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.LengthConverter;
@@ -469,9 +470,11 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                 pkg, bottomVisionSettings, nozzle, nozzleTip, camera, wantedLocation);
         if (visionCompositing.getCompositingMethod().isEnforced() 
                 && composite.getCompositingSolution().isInvalid()) {
-            throw new Exception("Vision Compositing has not found a valid solution for package "+pkg.getId()+". "
-                    + "Status: "+composite.getCompositingSolution()+", "+composite.getDiagnostics()+". "
-                    + "For more diagnostic information go to the Vision Compositing tab on package "+pkg.getId()+". ");
+            throw new Exception(Translations.format(
+                    "VisionCompositing.Error.NoValidSolution", //$NON-NLS-1$
+                    pkg.getId(),
+                    composite.getCompositingSolution().getLocalizedName(),
+                    composite.getDiagnostics()));
         }
         pipeline.resetReusedPipeline();
         for (Shot shot : composite.getShotsTravel()) {

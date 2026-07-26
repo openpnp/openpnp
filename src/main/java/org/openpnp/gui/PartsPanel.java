@@ -382,7 +382,7 @@ public class PartsPanel extends JPanel implements WizardContainer {
                 Part part = getSelectedPart();
                 Feeder feeder = FeederUtils.findFeeder(Configuration.get().getMachine(),part,null,null);
                 if (feeder == null) {
-                    throw new Exception("No valid feeder found for " + part.getId());
+                    throw new Exception(Translations.format("PartsPanel.Error.NoValidFeeder", part.getId())); //$NON-NLS-1$
                 }
                 // Perform the whole Job like pick cycle as in the FeedersPanel. 
                 FeedersPanel.pickFeeder(feeder);
