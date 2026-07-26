@@ -2,6 +2,7 @@ package org.openpnp.spi;
 
 import java.util.Set;
 
+import org.openpnp.Translations;
 import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
@@ -43,7 +44,12 @@ public interface Nozzle
         /**
          * Mode needed when the nozzle has limited rotation articulation. 
          */
-        LimitedArticulation
+        LimitedArticulation;
+
+        @Override
+        public String toString() {
+            return Translations.getString("Nozzle.RotationMode." + name()); //$NON-NLS-1$
+        }
     }
 
     /**

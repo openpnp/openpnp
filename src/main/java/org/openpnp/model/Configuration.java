@@ -47,6 +47,7 @@ import javax.swing.JOptionPane;
 
 import org.apache.commons.io.FileUtils;
 import org.openpnp.ConfigurationListener;
+import org.openpnp.Translations;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.ThemeInfo;
 import org.openpnp.gui.components.ThemeSettingsPanel;
@@ -1017,9 +1018,8 @@ public class Configuration extends AbstractModelObject {
     private void confirmSaveOfModified(PlacementsHolder<?> placementsHolder) {
         if (placementsHolder.isDirty()) {
             int result = JOptionPane.showConfirmDialog(MainFrame.get(),
-                    "Do you want to save your changes to " + placementsHolder.getFile().getName() + "?" //$NON-NLS-1$ //$NON-NLS-2$
-                            + "\n" + "If you don't save, your changes will be lost.", //$NON-NLS-1$ //$NON-NLS-2$
-                    "Save " + placementsHolder.getFile().getName() + "?", //$NON-NLS-1$ //$NON-NLS-2$
+                    Translations.format("Configuration.ConfirmSave.message", placementsHolder.getFile().getName()), //$NON-NLS-1$
+                    Translations.format("Configuration.ConfirmSave.title", placementsHolder.getFile().getName()), //$NON-NLS-1$
                     JOptionPane.YES_NO_CANCEL_OPTION);
             if (result == JOptionPane.YES_OPTION) {
                 try {

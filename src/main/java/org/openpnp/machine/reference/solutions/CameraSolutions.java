@@ -83,10 +83,10 @@ public class CameraSolutions implements Solutions.Subject  {
             }
         }
         if (solutions.isTargeting(Milestone.Basics)) {
-            ActuatorSolutions.findActuateIssues(solutions, camera, camera.getLightActuator(), "camera light",
+            ActuatorSolutions.findActuateIssues(solutions, camera, camera.getLightActuator(), Translations.getString("CameraSolutions.Qualifier.CameraLight"), //$NON-NLS-1$
                 "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Camera-Lighting");
             if (camera instanceof SwitcherCamera) {
-                ActuatorSolutions.findActuateIssues(solutions, camera, ((SwitcherCamera)camera).getActuator(), "camera switcher",
+                ActuatorSolutions.findActuateIssues(solutions, camera, ((SwitcherCamera)camera).getActuator(), Translations.getString("CameraSolutions.Qualifier.CameraSwitcher"), //$NON-NLS-1$
                     "https://github.com/openpnp/openpnp/wiki/SwitcherCamera#configuration");
             }
         }
@@ -95,8 +95,8 @@ public class CameraSolutions implements Solutions.Subject  {
             if (previewFps > 15) {
                 solutions.add(new Solutions.Issue(
                         camera, 
-                        "A high Preview FPS value might create undue CPU load.", 
-                        "Set to 5 FPS.", 
+                        Translations.getString("CameraSolutions.Issue.HighPreviewFps"), //$NON-NLS-1$
+                        Translations.getString("CameraSolutions.Solution.HighPreviewFps"), //$NON-NLS-1$
                         Severity.Suggestion,
                         "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration_General-Camera-Setup#general-configuration") {
 
@@ -111,9 +111,8 @@ public class CameraSolutions implements Solutions.Subject  {
             if (! camera.isSuspendPreviewInTasks()) {
                 solutions.add(new Solutions.Issue(
                         camera, 
-                        ((camera instanceof SwitcherCamera) ? "For a SwitcherCamera it is mandatory" : "It is recommended")
-                        +" to suspend camera preview during machine tasks / Jobs.", 
-                        "Enable Suspend during tasks.", 
+                        Translations.getString((camera instanceof SwitcherCamera) ? "CameraSolutions.Issue.SuspendPreview.Switcher" : "CameraSolutions.Issue.SuspendPreview.Recommended"), //$NON-NLS-1$ //$NON-NLS-2$
+                        Translations.getString("CameraSolutions.Solution.SuspendPreview"), //$NON-NLS-1$
                         ((camera instanceof SwitcherCamera) ? Severity.Error : Severity.Suggestion),
                         "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration_General-Camera-Setup#general-configuration") {
 
@@ -127,8 +126,8 @@ public class CameraSolutions implements Solutions.Subject  {
             if (! camera.isAutoVisible()) {
                 solutions.add(new Solutions.Issue(
                         camera, 
-                        "In single camera preview OpenPnP can automatically switch the camera for you.", 
-                        "Enable Auto Camera View.", 
+                        Translations.getString("CameraSolutions.Issue.AutoCameraView"), //$NON-NLS-1$
+                        Translations.getString("CameraSolutions.Solution.AutoCameraView"), //$NON-NLS-1$
                         Severity.Suggestion,
                         "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration_General-Camera-Setup#general-configuration") {
 
@@ -146,8 +145,8 @@ public class CameraSolutions implements Solutions.Subject  {
                 if (renderingQuality.ordinal() < RenderingQuality.High.ordinal()) {
                     solutions.add(new Solutions.Issue(
                             camera, 
-                            "The preview rendering quality can be improved.", 
-                            "Set to Rendering Quality to High (right click the Camera View to see other options).", 
+                            Translations.getString("CameraSolutions.Issue.RenderingQuality"), //$NON-NLS-1$
+                            Translations.getString("CameraSolutions.Solution.RenderingQuality"), //$NON-NLS-1$
                             Severity.Suggestion,
                             "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration_General-Camera-Setup#camera-view-configuration") {
 
@@ -189,8 +188,8 @@ public class CameraSolutions implements Solutions.Subject  {
                     if (oldSettleMethod == SettleMethod.FixedTime) {
                         solutions.add(new Solutions.Issue(
                                 camera, 
-                                "Use an adaptive camera settling method.", 
-                                "Set a suitable camera settling method automatically.", 
+                                Translations.getString("CameraSolutions.Issue.AdaptiveSettling"), //$NON-NLS-1$
+                                Translations.getString("CameraSolutions.Solution.AdaptiveSettling"), //$NON-NLS-1$
                                 Severity.Fundamental,
                                 "https://github.com/openpnp/openpnp/wiki/Camera-Settling") {
 
@@ -202,35 +201,21 @@ public class CameraSolutions implements Solutions.Subject  {
 
                             @Override 
                             public String getExtendedDescription() {
-                                return "<html>"
-                                        + "<p>For precision in computer vision it is very important that the camera image has settled down "
-                                        + "after the machine has moved the camera or the subject. Some cameras exhibit a slight lag, where the "
-                                        + "frames might still show the camera in motion. Motion might also cause vibration that must "
-                                        + "abate sufficently before computer vision is performed.</p><br/>"
-                                        + "<p>The simple solution is just to wait for a fixed amount of time. However, this is wasteful if there "
-                                        + "was no motion in the first place. Using an adaptive settling method can reduce the wait time in these "
-                                        + "cases, i.e. one does not need to set a large worst case settle wait time.</p><br/>"
-                                        + (movable == camera ? 
-                                                "<p><strong color=\"red\">CAUTION</strong>: The camera "+camera.getName()+" will move over the primary fiducial "
-                                                + "and then perform a camera settling test pattern.</p><br/>"
-                                                : (movable != null ? 
-                                                        "<p><strong color=\"red\">CAUTION</strong>: The "+movable.getClass().getSimpleName()+" "+movable.getName()
-                                                        +" will move to the camera "+camera.getName()+" "+ "and then perform a camera settling test pattern.</p><br/>"
-                                                        : ""))
-                                        + "<p>When ready, press Accept.</p>"
-                                        + (getState() == State.Solved  ? 
-                                                "<br/><h4>Results</h4>"
-                                                + "<table>"
-                                                + "<tr><td>Selected method:</td><td>"+camera.getSettleMethod()+"</td></tr>"
-                                                + "<tr><td>Compute time:</td><td>"+camera.getRecordedComputeMilliseconds()+" ms per frame</td></tr>"
-                                                + "<tr><td>Settle time:</td><td>"+camera.getRecordedSettleMilliseconds()+" ms</td></tr>"
-                                                + "</table><br/>"
-                                                + (camera.getRecordedSettleMilliseconds() > camera.getSettleTimeoutMs()/2 ?
-                                                        "<p>The settle time is rather large, perhaps due to excessive machine vibration. "
-                                                        + "Try setting stricter X/Y axes acceleration or jerk limits (if supported).</p><br/>" : "")
-                                                + "<p>More information on the Camera Settling tab of camera "+camera.getName()+".</p>"
-                                                : "")
-                                        + "</html>";
+                                String caution = (movable == camera ? 
+                                        Translations.format("CameraSolutions.ExtendedDescription.AdaptiveSettling.CautionCamera", camera.getName()) //$NON-NLS-1$
+                                        : (movable != null ? 
+                                                Translations.format("CameraSolutions.ExtendedDescription.AdaptiveSettling.CautionMovable", movable.getClass().getSimpleName(), movable.getName(), camera.getName()) //$NON-NLS-1$
+                                                : ""));
+                                String results = (getState() == State.Solved  ? 
+                                        Translations.format("CameraSolutions.ExtendedDescription.AdaptiveSettling.Results", //$NON-NLS-1$
+                                                camera.getSettleMethod(),
+                                                camera.getRecordedComputeMilliseconds(),
+                                                camera.getRecordedSettleMilliseconds(),
+                                                (camera.getRecordedSettleMilliseconds() > camera.getSettleTimeoutMs()/2 ?
+                                                        Translations.getString("CameraSolutions.ExtendedDescription.AdaptiveSettling.LargeSettleTime") : ""), //$NON-NLS-1$
+                                                camera.getName())
+                                        : "");
+                                return Translations.format("CameraSolutions.ExtendedDescription.AdaptiveSettling", caution, results); //$NON-NLS-1$
                             }
                             @Override
                             public void setState(Solutions.State state) throws Exception {
@@ -265,22 +250,22 @@ public class CameraSolutions implements Solutions.Subject  {
                 // Some properties just need to be set to best values.
                 propertiesOK = addCapturePropertyValueSolution(solutions, 
                         "brightness", pnpCamera.getBrightness(), 
-                        "revert to the default setting", null, 
+                        Translations.getString("CameraSolutions.Solution.CapturePropertyValue.Revert"), null, 
                         "https://github.com/openpnp/openpnp/wiki/OpenPnpCaptureCamera#camera-properties")
                         && propertiesOK;
                 propertiesOK = addCapturePropertyValueSolution(solutions, 
                         "contrast", pnpCamera.getContrast(), 
-                        "revert to the default setting", null, 
+                        Translations.getString("CameraSolutions.Solution.CapturePropertyValue.Revert"), null, 
                         "https://github.com/openpnp/openpnp/wiki/OpenPnpCaptureCamera#camera-properties")
                         && propertiesOK;
                 propertiesOK = addCapturePropertyValueSolution(solutions, 
                         "gamma", pnpCamera.getGamma(), 
-                        "revert to the default setting", null, 
+                        Translations.getString("CameraSolutions.Solution.CapturePropertyValue.Revert"), null, 
                         "https://github.com/openpnp/openpnp/wiki/OpenPnpCaptureCamera#camera-properties")
                         && propertiesOK;
                 propertiesOK = addCapturePropertyValueSolution(solutions, 
                         "gain", pnpCamera.getGain(), 
-                        "revert to the default setting", null, 
+                        Translations.getString("CameraSolutions.Solution.CapturePropertyValue.Revert"), null, 
                         "https://github.com/openpnp/openpnp/wiki/OpenPnpCaptureCamera#camera-properties")
                         && propertiesOK;
 
@@ -288,8 +273,7 @@ public class CameraSolutions implements Solutions.Subject  {
                 final CapturePropertyHolder exposureProperty = pnpCamera.getExposure();
                 propertiesOK = addCapturePropertyAutoSolution(solutions, 
                         "exposure", exposureProperty, 
-                        "set to a static exposure value that will be calibrated with this solution. "
-                        + "The camera should look at a representative, rather bright subject when you press Accept",
+                        Translations.getString("CameraSolutions.Solution.CapturePropertyAuto.Exposure"),
                         (Solutions.Issue issue) -> {
                             final State oldState = issue.getState();
                             UiUtils.submitUiMachineTask(() -> {
@@ -311,21 +295,21 @@ public class CameraSolutions implements Solutions.Subject  {
                 // More regular props.
                 addCapturePropertyValueSolution(solutions, 
                         "sharpness", pnpCamera.getSharpness(), 
-                        "set to the minimum", pnpCamera.getSharpness().getMin(), 
+                        Translations.getString("CameraSolutions.Solution.CapturePropertyValue.Min"), pnpCamera.getSharpness().getMin(), 
                         "https://github.com/openpnp/openpnp/wiki/OpenPnpCaptureCamera#camera-properties");
                 propertiesOK = addCapturePropertyValueSolution(solutions, 
                         "hue", pnpCamera.getHue(), 
-                        "revert to the default setting", null, 
+                        Translations.getString("CameraSolutions.Solution.CapturePropertyValue.Revert"), null, 
                         "https://github.com/openpnp/openpnp/wiki/OpenPnpCaptureCamera#camera-properties")
                         && propertiesOK;
                 propertiesOK = addCapturePropertyValueSolution(solutions, 
                         "saturation", pnpCamera.getSaturation(), 
-                        "revert to the default setting", null, 
+                        Translations.getString("CameraSolutions.Solution.CapturePropertyValue.Revert"), null, 
                         "https://github.com/openpnp/openpnp/wiki/OpenPnpCaptureCamera#camera-properties")
                         && propertiesOK;
                 propertiesOK = addCapturePropertyValueSolution(solutions, 
                         "white balance", pnpCamera.getWhiteBalance(), 
-                        "revert to the default setting. Issues & Solutions will propose calibrating static white balance instead", null, 
+                        Translations.getString("CameraSolutions.Solution.CapturePropertyValue.WhiteBalance"), null, 
                         "https://github.com/openpnp/openpnp/wiki/Camera-White-Balance#problems-with-device-white-balance")
                         && propertiesOK;
             }
@@ -338,8 +322,8 @@ public class CameraSolutions implements Solutions.Subject  {
                     final boolean _propertiesOK = propertiesOK;
                     solutions.add(new Solutions.Issue(
                             camera, 
-                            "Calibrate static white balance for camera "+camera.getName()+".", 
-                            "For best results with color-keyed computer vision, it is recommended to use static white balance.", 
+                            Translations.format("CameraSolutions.Issue.WhiteBalance", camera.getName()), //$NON-NLS-1$
+                            Translations.getString("CameraSolutions.Solution.WhiteBalance"), //$NON-NLS-1$
                             Severity.Suggestion,
                             "https://github.com/openpnp/openpnp/wiki/Camera-White-Balance") {
 
@@ -351,21 +335,9 @@ public class CameraSolutions implements Solutions.Subject  {
 
                         @Override 
                         public String getExtendedDescription() {
-                            return "<html>"
-                                    + (_propertiesOK ? "" : "<p><strong color=\"red\">WARNING:</strong> make sure the device properties are set as recommended "
-                                            + "by Issues & Solutions. Press <strong>Find Issues & Solutions</strong> to check for the latest status. "
-                                            + "Proceed only when you are sure the properties are OK, white balance must be computed as the last step.</p><br/>")
-                                    + "<p>Color-keyed computer vision needs stable, and accurate colors. Neither the unstable Auto white balance, "
-                                    + "nor the device manual white balance is suitable (typically merely a red-blue-shift)."
-                                    + "Therefore OpenPnP offers its own elaborate and static white balance. You can automatically calibrate it now.</p><br/>"
-                                    + "<p>Make sure a suitable white balance calibration object is visible in the camera view. "
-                                    + "Brushed metal and paper are recommended. The camera should see all brightness levels, i.e., "
-                                    + "an assortment of metal objects with holes, bevels, shadows etc. usually provides good gradients."
-                                    + "Conversely, make sure there are no colored objects visible. Lighting conditions must be as in operation.<p><br/>"
-                                    + "<p>Alternatively, you can perform white balance on camera "+camera.getName()+"'s <strong>White Balance</strong> tab.</p><br>"
-                                    + "<p>Press the blue info button (below) for more information.</p><br>"
-                                    + "<p>When ready, press Accept.</p>"
-                                    + "</html>";
+                            return Translations.format("CameraSolutions.ExtendedDescription.WhiteBalance", //$NON-NLS-1$
+                                    (_propertiesOK ? "" : Translations.getString("CameraSolutions.ExtendedDescription.WhiteBalance.Warning")), //$NON-NLS-1$
+                                    camera.getName());
                         }
 
                         @Override
@@ -438,9 +410,8 @@ public class CameraSolutions implements Solutions.Subject  {
             final int oldValue = property.getValue();
             solutions.add(new Solutions.Issue(
                     camera, 
-                    "The "+propertyName+" of camera "+camera.getName()+" should not be set to Auto.", 
-                    "Computer vision can only be robust and repeatable if the effect of "+propertyName+" is stable. "
-                            + "Switch off the Auto "+propertyName+" and "+valueName+".", 
+                    Translations.format("CameraSolutions.Issue.CapturePropertyAuto", propertyName, camera.getName()), //$NON-NLS-1$
+                    Translations.format("CameraSolutions.Solution.CapturePropertyAuto", propertyName, valueName),
                             Severity.Suggestion,
                             uri) {
 
@@ -491,10 +462,10 @@ public class CameraSolutions implements Solutions.Subject  {
             final int oldValue = property.getValue();
             solutions.add(new Solutions.Issue(
                     camera, 
-                    "The "+propertyName+" of camera "+camera.getName()+" should be set to "+wantedValue+".", 
-                    "Computer vision works best with raw information from the camera sensor, "
-                            + "even if the images look less appealing to humans. "
-                            + (oldAuto ? "Switch off the Auto "+propertyName+" and " : "Therefore, ")+valueName+".", 
+                    Translations.format("CameraSolutions.Issue.CapturePropertyValue", propertyName, camera.getName(), wantedValue), //$NON-NLS-1$
+                    Translations.format("CameraSolutions.Solution.CapturePropertyValue", //$NON-NLS-1$
+                            (oldAuto ? Translations.format("CameraSolutions.Solution.CapturePropertyValue.SwitchOffAuto", propertyName) : Translations.getString("CameraSolutions.Solution.CapturePropertyValue.Therefore")), //$NON-NLS-1$ //$NON-NLS-2$
+                            valueName),
                             Severity.Suggestion,
                             uri) {
 

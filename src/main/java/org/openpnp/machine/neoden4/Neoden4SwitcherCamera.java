@@ -1,5 +1,7 @@
 package org.openpnp.machine.neoden4;
 
+
+import org.openpnp.Translations;
 import java.awt.image.BufferedImage;
 import java.util.HashMap;
 import java.util.Map;
@@ -88,7 +90,7 @@ public class Neoden4SwitcherCamera extends ReferenceCamera {
 
     @Override
     public String getPropertySheetHolderTitle() {
-        return getClass().getSimpleName() + " " + getName();
+        return Translations.typeAndName(getClass(), getName());
     }
 
     @Override

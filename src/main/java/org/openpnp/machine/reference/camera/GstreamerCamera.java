@@ -19,6 +19,8 @@
 
 package org.openpnp.machine.reference.camera;
 
+
+import org.openpnp.Translations;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
 import java.io.IOException;
@@ -174,7 +176,7 @@ public class GstreamerCamera extends ReferenceCamera {
 
     @Override
     public String getPropertySheetHolderTitle() {
-        return getClass().getSimpleName() + " " + getName();
+        return Translations.typeAndName(getClass(), getName());
     }
 
     @Override

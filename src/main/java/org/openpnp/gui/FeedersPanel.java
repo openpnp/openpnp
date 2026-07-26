@@ -371,8 +371,8 @@ public class FeedersPanel extends JPanel implements WizardContainer {
             applyChangesDialogPending = true;
             try {
                 selection = JOptionPane.showConfirmDialog(null,
-                        priorFeeder.getName() + " changed.  Apply changes?",
-                        "Warning!",
+                        Translations.format("FeedersPanel.UnsavedChanges.message", priorFeeder.getName()), //$NON-NLS-1$
+                        Translations.getString("FeedersPanel.UnsavedChanges.title"), //$NON-NLS-1$
                         JOptionPane.YES_NO_CANCEL_OPTION,
                         JOptionPane.QUESTION_MESSAGE,
                         null
@@ -503,8 +503,8 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         }
         
         if (Configuration.get().getParts().size() == 0) {
-            MessageBoxes.errorBox(getTopLevelAncestor(), "Error",
-                    "There are currently no parts defined in the system. Please create at least one part before creating a feeder.");
+            MessageBoxes.errorBox(getTopLevelAncestor(), Translations.getString("CommonWords.Error"), //$NON-NLS-1$
+                    Translations.getString("FeedersPanel.Error.NoParts")); //$NON-NLS-1$
             return;
         }
 
@@ -650,7 +650,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
      */
     public static Nozzle feedFeeder(Feeder feeder) throws Exception {
         if (feeder.getPart() == null) {
-            throw new Exception("Feeder "+feeder.getName()+" has no part.");
+            throw new Exception(Translations.format("Exception.FeederHasNoPart", feeder.getName())); //$NON-NLS-1$
         }
         // Simulate a "one feeder" job, prepare the feeder.
         if (feeder.getJobPreparationLocation() != null) {
@@ -747,7 +747,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 
     protected static Nozzle getCompatibleNozzleAndTip(Feeder feeder, boolean allowNozzleTipChange) throws Exception {
         if (feeder.getPart() == null) {
-            throw new Exception("Feeder has not part set.");
+            throw new Exception(Translations.getString("FeedersPanel.Error.NoPartSet")); //$NON-NLS-1$
         }
         // Check the nozzle tip package compatibility.
         Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
@@ -773,26 +773,25 @@ public class FeedersPanel extends JPanel implements WizardContainer {
                     altNozzle = nozzle2;
                 }
             }
-            String errMsg = "";
+            String errMsg = ""; //$NON-NLS-1$
             if (nozzle.getNozzleTip() == null) {
-                errMsg += "No nozzle tip loaded on nozzle "+nozzle.getName()+". ";
+                errMsg += Translations.format("FeedersPanel.Error.NoNozzleTipLoaded", nozzle.getName()); //$NON-NLS-1$
             }
             else {
-                errMsg += "Nozzle "+nozzle.getName()+" loaded nozzle tip "+
-                        nozzle.getNozzleTip().getName()+" is not compatible with package "+packag.getId()+". ";
+                errMsg += Translations.format("FeedersPanel.Error.IncompatibleNozzleTip", //$NON-NLS-1$
+                        nozzle.getName(), nozzle.getNozzleTip().getName(), packag.getId());
                 if (nozzle.getPart() != null) {
-                    errMsg += "There is already a part "+nozzle.getPart().getId()+" loaded. "; 
+                    errMsg += Translations.format("FeedersPanel.Error.PartAlreadyLoaded", nozzle.getPart().getId()); //$NON-NLS-1$
                 }
             }
             if (altNozzle != null) {
-                errMsg += "Consider selecting nozzle "+altNozzle.getName()+", "
-                        + "it has compatible nozzle tip "+altNozzle.getNozzleTip().getName()+" loaded. ";
+                errMsg += Translations.format("FeedersPanel.Error.ConsiderSelectingNozzle", //$NON-NLS-1$
+                        altNozzle.getName(), altNozzle.getNozzleTip().getName());
             }
             else if (allowNozzleTipChange && !nozzle.isNozzleTipChangedOnManualFeed()) { 
-                errMsg += "You may want to enable automatic nozzle tip change on manual pick on the "
-                        + "Nozzle / Tool Changer. ";
+                errMsg += Translations.getString("FeedersPanel.Error.EnableAutoNozzleTipChange"); //$NON-NLS-1$
             }
-            errMsg += "The pick will always be performed with the nozzle selected in the Machine Controls. ";
+            errMsg += Translations.getString("FeedersPanel.Error.PickUsesSelectedNozzle"); //$NON-NLS-1$
             throw new Exception(errMsg);
         }
         return nozzle;

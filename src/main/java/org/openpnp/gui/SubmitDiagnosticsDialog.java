@@ -33,6 +33,7 @@ import javax.swing.border.SoftBevelBorder;
 
 import org.apache.commons.io.FileUtils;
 import org.openpnp.Main;
+import org.openpnp.Translations;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.imgur.Imgur;
 import org.openpnp.imgur.Imgur.Album;
@@ -121,7 +122,7 @@ public class SubmitDiagnosticsDialog extends JDialog {
         fl_contentPanel.setColumnGroups(new int[][]{new int[]{4, 2}});
         contentPanel.setLayout(fl_contentPanel);
         {
-            lblSubmitAHelp = new JLabel("Submit Diagnostics");
+            lblSubmitAHelp = new JLabel(Translations.getString("SubmitDiagnosticsDialog.title")); //$NON-NLS-1$
             lblSubmitAHelp.setFont(new Font("Lucida Grande", Font.PLAIN, 24));
             contentPanel.add(lblSubmitAHelp, "2, 2, 3, 1");
         }
@@ -130,19 +131,19 @@ public class SubmitDiagnosticsDialog extends JDialog {
             txtpnToSubmitA.setBackground(UIManager.getColor("Label.background"));
             txtpnToSubmitA.setEditable(false);
             txtpnToSubmitA.setText(
-                    "Describe the problem you are experiencing below, select the checkboxes to include content that will help the developers resolve your issue, then click send.\n\nWhen the upload finishes your browser will open to Pastebin. You may be prompted to enter a captcha to complete the process - this is normal. You can then copy the URL to share it.\n\nBe aware that the information you send may be visible to the OpenPnP community, so you should not include private or proprietary information.");
+                    Translations.getString("SubmitDiagnosticsDialog.instructions")); //$NON-NLS-1$
             contentPanel.add(txtpnToSubmitA, "2, 6, 3, 1, fill, fill");
         }
         {
             txtpnWarningIfYou = new JTextPane();
-            txtpnWarningIfYou.setText("Warning: If you include a screenshot or Vision Debug Images these images may include output from your machine's cameras. If these images contain content you don't want to share you should uncheck these options. You can review the images from the generated link before sharing it.");
+            txtpnWarningIfYou.setText(Translations.getString("SubmitDiagnosticsDialog.warning")); //$NON-NLS-1$
             txtpnWarningIfYou.setForeground(Color.RED);
             txtpnWarningIfYou.setBackground(UIManager.getColor("Label.background"));
             txtpnWarningIfYou.setEditable(false);
             contentPanel.add(txtpnWarningIfYou, "2, 8, 3, 1, fill, fill");
         }
         {
-            JLabel lblComments = new JLabel("Please Describe The Issue");
+            JLabel lblComments = new JLabel(Translations.getString("SubmitDiagnosticsDialog.pleaseDescribe")); //$NON-NLS-1$
             lblComments.setFont(new Font("Lucida Grande", Font.BOLD, 14));
             contentPanel.add(lblComments, "2, 12");
         }
@@ -154,47 +155,47 @@ public class SubmitDiagnosticsDialog extends JDialog {
             contentPanel.add(descriptionTa, "2, 14, 3, 1, fill, fill");
         }
         {
-            JLabel lblInclude = new JLabel("Include");
+            JLabel lblInclude = new JLabel(Translations.getString("SubmitDiagnosticsDialog.include")); //$NON-NLS-1$
             lblInclude.setFont(new Font("Lucida Grande", Font.BOLD, 14));
             contentPanel.add(lblInclude, "2, 18");
         }
         {
-            includeMachineXmlChk = new JCheckBox("machine.xml");
+            includeMachineXmlChk = new JCheckBox(Translations.getString("SubmitDiagnosticsDialog.machineXml")); //$NON-NLS-1$
             includeMachineXmlChk.setSelected(true);
             contentPanel.add(includeMachineXmlChk, "2, 20");
         }
         {
-            includePartsXmlChk = new JCheckBox("parts.xml");
+            includePartsXmlChk = new JCheckBox(Translations.getString("SubmitDiagnosticsDialog.partsXml")); //$NON-NLS-1$
             includePartsXmlChk.setSelected(true);
             contentPanel.add(includePartsXmlChk, "4, 20");
         }
         {
-            includePackagesXmlChk = new JCheckBox("packages.xml");
+            includePackagesXmlChk = new JCheckBox(Translations.getString("SubmitDiagnosticsDialog.packagesXml")); //$NON-NLS-1$
             includePackagesXmlChk.setSelected(true);
             contentPanel.add(includePackagesXmlChk, "2, 22");
         }
         {
-            includeLogChk = new JCheckBox("Latest Log File");
+            includeLogChk = new JCheckBox(Translations.getString("SubmitDiagnosticsDialog.latestLog")); //$NON-NLS-1$
             includeLogChk.setSelected(true);
             contentPanel.add(includeLogChk, "4, 22");
         }
         {
-            includeSystemInfoChk = new JCheckBox("Anonymous System Information");
+            includeSystemInfoChk = new JCheckBox(Translations.getString("SubmitDiagnosticsDialog.systemInfo")); //$NON-NLS-1$
             includeSystemInfoChk.setSelected(true);
             contentPanel.add(includeSystemInfoChk, "2, 24");
         }
         {
-            includeJobChk = new JCheckBox("Current Job Data (Job Will Be Saved First)");
+            includeJobChk = new JCheckBox(Translations.getString("SubmitDiagnosticsDialog.currentJob")); //$NON-NLS-1$
             includeJobChk.setSelected(true);
             contentPanel.add(includeJobChk, "4, 24");
         }
         {
-            includeScreenShotChk = new JCheckBox("OpenPnP Window Screen Shot");
+            includeScreenShotChk = new JCheckBox(Translations.getString("SubmitDiagnosticsDialog.screenshot")); //$NON-NLS-1$
             includeScreenShotChk.setSelected(true);
             contentPanel.add(includeScreenShotChk, "2, 26");
         }
         {
-            includeVisionChk = new JCheckBox("Vision Debug Images (10 Newest)");
+            includeVisionChk = new JCheckBox(Translations.getString("SubmitDiagnosticsDialog.visionDebug")); //$NON-NLS-1$
             includeVisionChk.setSelected(true);
             contentPanel.add(includeVisionChk, "4, 26");
         }
@@ -230,7 +231,7 @@ public class SubmitDiagnosticsDialog extends JDialog {
     }
 
     @SuppressWarnings("serial")
-    public Action sendAction = new AbstractAction("Send") {
+    public Action sendAction = new AbstractAction(Translations.getString("CommonWords.Send")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent e) {
             /**
@@ -354,7 +355,7 @@ public class SubmitDiagnosticsDialog extends JDialog {
                 }
                 catch (Exception e1) {
                     e1.printStackTrace();
-                    MessageBoxes.errorBox(MainFrame.get(), "Submit Failed", e1);
+                    MessageBoxes.errorBox(MainFrame.get(), Translations.getString("SubmitDiagnosticsDialog.SubmitFailed"), e1); //$NON-NLS-1$
                     okButton.setEnabled(true);
                 }
                 thread = null;
@@ -365,7 +366,7 @@ public class SubmitDiagnosticsDialog extends JDialog {
     };
 
     @SuppressWarnings("serial")
-    public Action cancelAction = new AbstractAction("Cancel") {
+    public Action cancelAction = new AbstractAction(Translations.getString("CommonWords.Cancel")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
             try {

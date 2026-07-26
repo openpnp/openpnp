@@ -653,7 +653,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         String homeCompleteRegex = getCommand(null, CommandType.HOME_COMPLETE_REGEX);
         if (homeCompleteRegex != null) {
             receiveResponses(homeCompleteRegex, timeout, (responses) -> { 
-                throw new Exception("Timed out waiting for home to complete."); 
+                throw new Exception(Translations.getString("Exception.TimedOutWaitingForHome")); //$NON-NLS-1$ 
             });
         }
 
@@ -1061,7 +1061,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
                     receiveResponses(moveToCompleteRegex, completionType == CompletionType.WaitForStillstandIndefinitely ?
                             -1 : getTimeoutAtMachineSpeed(),
                             (responses) -> {
-                        throw new Exception("Timed out waiting for move to complete.");
+                        throw new Exception(Translations.getString("Exception.TimedOutWaitingForMove")); //$NON-NLS-1$
                     });
                 }
             }

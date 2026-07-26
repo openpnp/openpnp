@@ -26,6 +26,7 @@ import java.util.Locale;
 import javax.swing.ToolTipManager;
 import javax.swing.UIManager;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.ThemeDialog;
 import org.openpnp.gui.components.ThemeInfo;
@@ -188,6 +189,17 @@ public class Main {
         ThemeInfo theme = configuration.getThemeInfo();
         new ThemeSettingsPanel().setTheme(theme, configuration.getFontSize(), configuration.isAlternateRows());
         ThemeDialog.getInstance().setOldTheme(theme);
+
+        // Localize common Swing dialog button labels after Look&Feel/theme is applied.
+        UIManager.put("OptionPane.okButtonText",
+                Translations.getString("UIManager.OptionPane.okButtonText")); //$NON-NLS-1$
+        UIManager.put("OptionPane.cancelButtonText",
+                Translations.getString("UIManager.OptionPane.cancelButtonText")); //$NON-NLS-1$
+        UIManager.put("OptionPane.yesButtonText",
+                Translations.getString("UIManager.OptionPane.yesButtonText")); //$NON-NLS-1$
+        UIManager.put("OptionPane.noButtonText",
+                Translations.getString("UIManager.OptionPane.noButtonText")); //$NON-NLS-1$
+
         ToolTipManager.sharedInstance().setDismissDelay(60000);
 
         EventQueue.invokeLater(new Runnable() {

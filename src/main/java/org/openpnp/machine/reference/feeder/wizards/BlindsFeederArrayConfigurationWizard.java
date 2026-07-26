@@ -44,6 +44,7 @@ import javax.swing.border.TitledBorder;
 
 import org.apache.commons.io.IOUtils;
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
+import org.openpnp.Translations;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.components.LocationButtonsPanel;
@@ -114,7 +115,9 @@ public class BlindsFeederArrayConfigurationWizard extends AbstractConfigurationW
 
         panelArray = new JPanel();
         contentPanel.add(panelArray);
-        panelArray.setBorder(new TitledBorder(null, "Array", TitledBorder.LEADING,
+        panelArray.setBorder(new TitledBorder(null, Translations.getString(
+                "BlindsFeederArrayConfigurationWizard.PanelArray.Border.title"), //$NON-NLS-1$
+                TitledBorder.LEADING,
                 TitledBorder.TOP, null, null));
         panelArray.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -133,7 +136,8 @@ public class BlindsFeederArrayConfigurationWizard extends AbstractConfigurationW
                         FormSpecs.RELATED_GAP_ROWSPEC,
                         RowSpec.decode("max(16dlu;min)"),}));
 
-        lblGroupName = new JLabel("Feeder Group Name");
+        lblGroupName = new JLabel(Translations.getString(
+                "BlindsFeederArrayConfigurationWizard.FeederGroupNameLabel.text")); //$NON-NLS-1$
         panelArray.add(lblGroupName, "2, 2, right, default");
         feederGroupName = new JComboBox(blindsFeederGroupNames.toArray());
         feederGroupName.setEditable(true);
@@ -148,7 +152,9 @@ public class BlindsFeederArrayConfigurationWizard extends AbstractConfigurationW
 
         panelLocations = new JPanel();
         contentPanel.add(panelLocations);
-        panelLocations.setBorder(new TitledBorder(null, "Locations", TitledBorder.LEADING,
+        panelLocations.setBorder(new TitledBorder(null, Translations.getString(
+                "ReferenceStripFeederConfigurationWizard.PanelLocations.Border.title"), //$NON-NLS-1$
+                TitledBorder.LEADING,
                 TitledBorder.TOP, null, null));
         panelLocations.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -178,15 +184,16 @@ public class BlindsFeederArrayConfigurationWizard extends AbstractConfigurationW
                         FormSpecs.DEFAULT_ROWSPEC,}));
 
 
-        JLabel lblX = new JLabel("X");
+        JLabel lblX = new JLabel(Translations.getString("CommonWords.X")); //$NON-NLS-1$
         panelLocations.add(lblX, "4, 4, center, default");
 
-        JLabel lblY = new JLabel("Y");
+        JLabel lblY = new JLabel(Translations.getString("CommonWords.Y")); //$NON-NLS-1$
         panelLocations.add(lblY, "6, 4, center, default");
 
-        JLabel lblFiducial1Location = new JLabel("Fiducial 1");
-        lblFiducial1Location.setToolTipText(
-                "The location of the first diamond shaped fiducial (marked by a square besides it).");
+        JLabel lblFiducial1Location = new JLabel(Translations.getString(
+                "BlindsFeederArrayConfigurationWizard.Fiducial1Label.text")); //$NON-NLS-1$
+        lblFiducial1Location.setToolTipText(Translations.getString(
+                "BlindsFeederArrayConfigurationWizard.Fiducial1Label.toolTipText")); //$NON-NLS-1$
         panelLocations.add(lblFiducial1Location, "2, 6, right, default");
 
         textFieldFiducial1X = new JTextField();
@@ -202,9 +209,10 @@ public class BlindsFeederArrayConfigurationWizard extends AbstractConfigurationW
                 textFieldFiducial1Y, null, null);
         panelLocations.add(locationButtonsPanelFiducial1, "10, 6");
 
-        JLabel lblFiducial2Location = new JLabel("Fiducial 2");
-        lblFiducial2Location.setToolTipText(
-                "The location of the second diamond shaped fiducial counter-clockwise from the first.");
+        JLabel lblFiducial2Location = new JLabel(Translations.getString(
+                "BlindsFeederArrayConfigurationWizard.Fiducial2Label.text")); //$NON-NLS-1$
+        lblFiducial2Location.setToolTipText(Translations.getString(
+                "BlindsFeederArrayConfigurationWizard.Fiducial2Label.toolTipText")); //$NON-NLS-1$
         panelLocations.add(lblFiducial2Location, "2, 8, right, default");
 
         textFieldFiducial2X = new JTextField();
@@ -220,8 +228,10 @@ public class BlindsFeederArrayConfigurationWizard extends AbstractConfigurationW
                 textFieldFiducial2Y, null, null);
         panelLocations.add(locationButtonsPanelFiducial2, "10, 8");
 
-        lblFiducial3Location = new JLabel("Fiducial 3");
-        lblFiducial3Location.setToolTipText("The location of the third diamond shaped fiducial counter-clockwise from the first.");
+        lblFiducial3Location = new JLabel(Translations.getString(
+                "BlindsFeederArrayConfigurationWizard.Fiducial3Label.text")); //$NON-NLS-1$
+        lblFiducial3Location.setToolTipText(Translations.getString(
+                "BlindsFeederArrayConfigurationWizard.Fiducial3Label.toolTipText")); //$NON-NLS-1$
         panelLocations.add(lblFiducial3Location, "2, 10, right, default");
 
         textFieldFiducial3X = new JTextField();
@@ -236,8 +246,10 @@ public class BlindsFeederArrayConfigurationWizard extends AbstractConfigurationW
                 textFieldFiducial3Y, null, null);
         panelLocations.add(locationButtonsPanelFiducial3, "10, 10");
 
-        lblNormalize = new JLabel("Normalize");
-        lblNormalize.setToolTipText("<html>\r\nNormalize the fiducial distances and shear to the theoretically correct <br />\r\nvalues (whole millimeter square grid). This means you trust the mechanics  <br />\r\nof your machine and of your 3D printer over the computer vision fiducial fixes.  <br />\r\nOverall absolute position and angle are still determined by vision. \r\n</html>");
+        lblNormalize = new JLabel(Translations.getString(
+                "BlindsFeederArrayConfigurationWizard.NormalizeLabel.text")); //$NON-NLS-1$
+        lblNormalize.setToolTipText(Translations.getString(
+                "BlindsFeederArrayConfigurationWizard.NormalizeLabel.toolTipText")); //$NON-NLS-1$
         panelLocations.add(lblNormalize, "2, 12, right, default");
 
         chckbxNormalize = new JCheckBox("");
@@ -248,7 +260,9 @@ public class BlindsFeederArrayConfigurationWizard extends AbstractConfigurationW
         panelLocations.add(btnCalibrateFiducials, "10, 12");
 
         JPanel panelVision = new JPanel();
-        panelVision.setBorder(new TitledBorder(null, "Vision Settings", TitledBorder.LEADING, TitledBorder.TOP,
+        panelVision.setBorder(new TitledBorder(null, Translations.getString(
+                "BlindsFeederArrayConfigurationWizard.PanelVision.Border.title"), //$NON-NLS-1$
+                TitledBorder.LEADING, TitledBorder.TOP,
                 null, null));
         contentPanel.add(panelVision);
         panelVision.setLayout(new FormLayout(new ColumnSpec[] {
@@ -278,8 +292,10 @@ public class BlindsFeederArrayConfigurationWizard extends AbstractConfigurationW
                         FormSpecs.RELATED_GAP_ROWSPEC,
                         FormSpecs.DEFAULT_ROWSPEC,}));
 
-        lblUseVision = new JLabel("Use Fiducial Vision?");
-        lblUseVision.setToolTipText("<html><p>Use vision for fiducial calibration when the feeder is first used. </p>\r\n<p>Even if fiducial vision is disabled, vision will still be used for setup and <br />\r\ncover open checking</p><html>");
+        lblUseVision = new JLabel(Translations.getString(
+                "BlindsFeederArrayConfigurationWizard.UseFiducialVisionLabel.text")); //$NON-NLS-1$
+        lblUseVision.setToolTipText(Translations.getString(
+                "BlindsFeederArrayConfigurationWizard.UseFiducialVisionLabel.toolTipText")); //$NON-NLS-1$
         panelVision.add(lblUseVision, "2, 2, right, default");
 
         JButton btnEditPipeline = new JButton(editPipelineAction);
@@ -287,7 +303,8 @@ public class BlindsFeederArrayConfigurationWizard extends AbstractConfigurationW
         chckbxUseVision = new JCheckBox("");
         panelVision.add(chckbxUseVision, "4, 2");
 
-        lblOcrAction = new JLabel("OCR Action");
+        lblOcrAction = new JLabel(Translations.getString(
+                "BlindsFeederArrayConfigurationWizard.OcrActionLabel.text")); //$NON-NLS-1$
         panelVision.add(lblOcrAction, "2, 4, right, default");
 
         ocrAction = new JComboBox(BlindsFeeder.OcrAction.values());
@@ -306,26 +323,32 @@ public class BlindsFeederArrayConfigurationWizard extends AbstractConfigurationW
         btnSetOcrSettings = new JButton(setOcrSettingsToAllAction);
         panelVision.add(btnSetOcrSettings, "8, 4");
 
-        lblOcrTextOrientation = new JLabel("OCR Text Orientation");
+        lblOcrTextOrientation = new JLabel(Translations.getString(
+                "BlindsFeederArrayConfigurationWizard.OcrTextOrientationLabel.text")); //$NON-NLS-1$
         panelVision.add(lblOcrTextOrientation, "2, 6, right, default");
 
         ocrTextOrientation = new JComboBox(BlindsFeeder.OcrTextOrientation.values());
         panelVision.add(ocrTextOrientation, "4, 6, fill, default");
 
-        lblOcrMargin = new JLabel("OCR Margin");
-        lblOcrMargin.setToolTipText("<html>Size of the margin where the OCR/Barcode labels are attached.<br/>When a negative value is given, the labels are assumed to be located at the end of the feeder.");
+        lblOcrMargin = new JLabel(Translations.getString(
+                "BlindsFeederArrayConfigurationWizard.OcrMarginLabel.text")); //$NON-NLS-1$
+        lblOcrMargin.setToolTipText(Translations.getString(
+                "BlindsFeederArrayConfigurationWizard.OcrMarginLabel.toolTipText")); //$NON-NLS-1$
         panelVision.add(lblOcrMargin, "6, 6, right, default");
 
         ocrMargin = new JTextField();
         panelVision.add(ocrMargin, "8, 6, fill, default");
         ocrMargin.setColumns(10);
-        lblOcrFontName = new JLabel("OCR Font");
+        lblOcrFontName = new JLabel(Translations.getString(
+                "BlindsFeederArrayConfigurationWizard.OcrFontLabel.text")); //$NON-NLS-1$
         panelVision.add(lblOcrFontName, "2, 8, right, default");
         ocrFontName = new JComboBox(fontList.toArray());
-        lblOcrFontName.setToolTipText("<html>Name of the OCR font to be recognized or [Barcode].<br/>\r\nMonospace fonts work much better, allow lower resolution and therefore faster <br/>\r\noperation. Use a font where all the used characters are easily distinguishable.<br/>\r\nFonts with clear separation between glyphs are much preferred.</html>");
+        lblOcrFontName.setToolTipText(Translations.getString(
+                "BlindsFeederArrayConfigurationWizard.OcrFontLabel.toolTipText")); //$NON-NLS-1$
         panelVision.add(ocrFontName, "4, 8, fill, default");
 
-        lblFontSizept = new JLabel("Font Size [pt]");
+        lblFontSizept = new JLabel(Translations.getString(
+                "BlindsFeederArrayConfigurationWizard.FontSizePtLabel.text")); //$NON-NLS-1$
         panelVision.add(lblFontSizept, "6, 8, right, default");
 
         ocrFontSizePt = new JTextField();
@@ -338,7 +361,6 @@ public class BlindsFeederArrayConfigurationWizard extends AbstractConfigurationW
         panelVision.add(btnResetPipeline, "4, 12");
 
         btnPipelineToAllFeeders = new JButton(setPipelineToAllAction);
-        btnPipelineToAllFeeders.setText("Set Pipeline to all");
         panelVision.add(btnPipelineToAllFeeders, "8, 12");
 
     }
@@ -405,10 +427,11 @@ public class BlindsFeederArrayConfigurationWizard extends AbstractConfigurationW
     }
 
     private Action extract3DPrintingAction =
-            new AbstractAction("Extract 3D-Printing Files", Icons.openSCadIcon) {
+            new AbstractAction(Translations.getString(
+                    "BlindsFeederArrayConfigurationWizard.Action.Extract3DPrintingFiles"), Icons.openSCadIcon) { //$NON-NLS-1$
         {
             putValue(Action.SHORT_DESCRIPTION,
-                    "Extract OpenSCAD files to generate models for 3D-printing the BlindsFeeders.");
+                    Translations.getString("BlindsFeederArrayConfigurationWizard.Action.Extract3DPrintingFiles.description")); //$NON-NLS-1$
         }
 
         @Override
@@ -426,7 +449,9 @@ public class BlindsFeederArrayConfigurationWizard extends AbstractConfigurationW
                                 .getResource(fileName));
                         File file = new File(directory,  fileName);
                         if (file.exists()) {
-                            throw new Exception("File "+file.getAbsolutePath()+" already esists.");
+                            throw new Exception(Translations.format(
+                                    "BlindsFeederArrayConfigurationWizard.Exception.FileAlreadyExists", //$NON-NLS-1$
+                                    file.getAbsolutePath()));
                         }
                         try (PrintWriter out = new PrintWriter(file.getAbsolutePath())) {
                             out.print(fileContent);
@@ -440,7 +465,9 @@ public class BlindsFeederArrayConfigurationWizard extends AbstractConfigurationW
                         }
                     }
                     if (! opended) {
-                        JOptionPane.showMessageDialog(getTopLevelAncestor(), "<html><p>Files extracted to:</p><p>"+directory.getAbsolutePath()+"</p><p>Cannot open with OpenSCAD automatically (Desktop command failed)</p>");
+                        JOptionPane.showMessageDialog(getTopLevelAncestor(), Translations.format(
+                                "BlindsFeederArrayConfigurationWizard.Message.FilesExtracted", //$NON-NLS-1$
+                                directory.getAbsolutePath()));
                     }
                 }
             });
@@ -448,10 +475,11 @@ public class BlindsFeederArrayConfigurationWizard extends AbstractConfigurationW
     };
 
     private Action calibrateFiducialsAction =
-            new AbstractAction("Calibrate Fiducials") {
+            new AbstractAction(Translations.getString(
+                    "BlindsFeederArrayConfigurationWizard.Action.CalibrateFiducials")) { //$NON-NLS-1$
         {
             putValue(Action.SHORT_DESCRIPTION,
-                    "Calibrate the fiducials to redetermine their precise locations.");
+                    Translations.getString("BlindsFeederArrayConfigurationWizard.Action.CalibrateFiducials.description")); //$NON-NLS-1$
         }
 
         @Override
@@ -462,10 +490,11 @@ public class BlindsFeederArrayConfigurationWizard extends AbstractConfigurationW
     };
 
     private Action editPipelineAction =
-            new AbstractAction("Edit Pipeline") {
+            new AbstractAction(Translations.getString(
+                    "ReferenceStripFeederConfigurationWizard.PanelVision.EditPipelineButton.text")) { //$NON-NLS-1$
         {
             putValue(Action.SHORT_DESCRIPTION,
-                    "Edit the Pipeline to be used for all vision operations of this feeder.");
+                    Translations.getString("BlindsFeederArrayConfigurationWizard.Action.EditPipeline.description")); //$NON-NLS-1$
         }
 
         @Override
@@ -477,10 +506,11 @@ public class BlindsFeederArrayConfigurationWizard extends AbstractConfigurationW
     };
 
     private Action resetPipelineAction =
-            new AbstractAction("Reset Pipeline") {
+            new AbstractAction(Translations.getString(
+                    "ReferenceStripFeederConfigurationWizard.PanelVision.ResetPipelineButton.text")) { //$NON-NLS-1$
         {
             putValue(Action.SHORT_DESCRIPTION,
-                    "Reset the Pipeline for this feeder to the OpenPNP standard.");
+                    Translations.getString("BlindsFeederArrayConfigurationWizard.Action.ResetPipeline.description")); //$NON-NLS-1$
         }
 
         @Override
@@ -492,17 +522,18 @@ public class BlindsFeederArrayConfigurationWizard extends AbstractConfigurationW
     };
 
     private Action setOcrSettingsToAllAction =
-            new AbstractAction("Set OCR Settings to all") {
+            new AbstractAction(Translations.getString(
+                    "BlindsFeederArrayConfigurationWizard.Action.SetOcrSettingsToAll")) { //$NON-NLS-1$
         {
             putValue(Action.SHORT_DESCRIPTION,
-                    "Set these OCR settings to all the BlindsFeeders on the machine.");
+                    Translations.getString("BlindsFeederArrayConfigurationWizard.Action.SetOcrSettingsToAll.description")); //$NON-NLS-1$
         }
 
         @Override
         public void actionPerformed(ActionEvent e) {
             UiUtils.messageBoxOnException(() -> {
                 int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                        "This will replace the OCR settings of all the other BlindsFeeders on the machine with those of this BlindsFeeder. Are you sure?",
+                        Translations.getString("BlindsFeederArrayConfigurationWizard.Confirm.SetOcrSettingsToAll"), //$NON-NLS-1$
                         null, JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
                 if (result == JOptionPane.YES_OPTION) {
                     UiUtils.messageBoxOnException(() -> {
@@ -514,17 +545,18 @@ public class BlindsFeederArrayConfigurationWizard extends AbstractConfigurationW
     };
 
     private Action setPipelineToAllAction =
-            new AbstractAction("Set Pipeline to all") {
+            new AbstractAction(Translations.getString(
+                    "BlindsFeederArrayConfigurationWizard.Action.SetPipelineToAll")) { //$NON-NLS-1$
         {
             putValue(Action.SHORT_DESCRIPTION,
-                    "Set this pipeline to all the BlindsFeeders on the machine.");
+                    Translations.getString("BlindsFeederArrayConfigurationWizard.Action.SetPipelineToAll.description")); //$NON-NLS-1$
         }
 
         @Override
         public void actionPerformed(ActionEvent e) {
             UiUtils.messageBoxOnException(() -> {
                 int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                        "This will replace the pipeline of all the other BlindsFeeders on the machine with the pipeline of this BlindsFeeder. Are you sure?",
+                        Translations.getString("BlindsFeederArrayConfigurationWizard.Confirm.SetPipelineToAll"), //$NON-NLS-1$
                         null, JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
                 if (result == JOptionPane.YES_OPTION) {
                     UiUtils.messageBoxOnException(() -> {
@@ -550,7 +582,10 @@ public class BlindsFeederArrayConfigurationWizard extends AbstractConfigurationW
         Camera camera = feeder.getCamera();
         CvPipeline pipeline = feeder.getCvPipeline(camera, false, feeder.getOcrAction());
         CvPipelineEditor editor = new CvPipelineEditor(pipeline);
-        JDialog dialog = new CvPipelineEditorDialog(MainFrame.get(), feeder.getName() + " Pipeline", editor);
+        JDialog dialog = new CvPipelineEditorDialog(MainFrame.get(),
+                Translations.format("BlindsFeederArrayConfigurationWizard.Dialog.Pipeline.title", //$NON-NLS-1$
+                        feeder.getName()),
+                editor);
         dialog.setVisible(true);
     }
 
@@ -566,4 +601,3 @@ public class BlindsFeederArrayConfigurationWizard extends AbstractConfigurationW
         feeder.setPipelineToAllFeeders();
     }
 }
-

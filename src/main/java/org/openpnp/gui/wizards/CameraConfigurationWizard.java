@@ -761,10 +761,8 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
             }
             if (!nozzleLocation.equals(desiredNozzleLocation)) {
                 int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                        "<html>This will position the nozzle "+nozzle.getName()+" over the camera "+camera.getName()+". <br/><br/>"
-                                + "<span style=\"color:red;\">CAUTION:</span> Nozzle head offset, nozzle Safe Z, camera <br/>"
-                                + "location, basic motion etc. must already be set up.<br/><br/>"
-                                + "Are you sure?</html>",
+                        Translations.format("CameraConfigurationWizard.Confirm.PositionNozzleOverCamera", //$NON-NLS-1$
+                                nozzle.getName(), camera.getName()),
                                 null, JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
                 if (result == JOptionPane.NO_OPTION) {
                     throw new Exception("Measurement aborted.");
@@ -779,10 +777,8 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
             measurementLocation = nozzle.getLocation()
                     .convertToUnits(units);
             int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                    "<html>This will move camera "+camera.getName()+" over to the position of the nozzle "+nozzle.getName()+". <br/><br/>"
-                            + "<span style=\"color:red;\">CAUTION:</span> Nozzle head offset, nozzle Safe Z, basic <br/>"
-                            + "motion etc. must already be set up.<br/><br/>"
-                            + "Are you sure?</html>",
+                    Translations.format("CameraConfigurationWizard.Confirm.MoveCameraOverNozzle", //$NON-NLS-1$
+                            camera.getName(), nozzle.getName()),
                             null, JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
             if (result == JOptionPane.NO_OPTION) {
                 throw new Exception("Measurement aborted.");

@@ -172,7 +172,13 @@ public class VisionSettingsPanel extends JPanel implements WizardContainer {
 
     protected enum VisionTypeFilter {
         BottomVision,
-        FiducialVision
+        FiducialVision;
+
+        @Override
+        public String toString() {
+            String s = Translations.getStringOrNull("VisionSettingsPanel.VisionTypeFilter." + name()); //$NON-NLS-1$
+            return s != null ? s : name();
+        }
     }
 
     private AbstractVisionSettings getSelection() {

@@ -23,6 +23,8 @@
 
 package org.openpnp.machine.pandaplacer;
 
+
+import org.openpnp.Translations;
 import javax.swing.Action;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
@@ -261,7 +263,7 @@ public class BambooFeederAutoVision extends AbstractPandaplacerVisionFeeder {
 
     @Override
     public String getPropertySheetHolderTitle() {
-        return getClass().getSimpleName() + " " + getName();
+        return Translations.typeAndName(getClass(), getName());
     }
 
     @Override

@@ -165,15 +165,21 @@ public abstract class AbstractAxis extends AbstractModelObject implements Axis {
                  }
             }
             if (message != "") {
-                message = "<html><p>Axis currently assigned in:</p><ul>"+message+"</ul>"
-                        +"<p>Are you sure you want to delete " + getName() + "?</p></html>";
+                message = Translations.format(
+                        "AbstractAxis.ConfirmDelete.Assigned.message", //$NON-NLS-1$
+                        message, getName());
             }
             else {
-                message = "Are you sure you want to delete " + getName() + "?";
+                message = Translations.format(
+                        "AbstractAxis.ConfirmDelete.message", //$NON-NLS-1$
+                        getName());
             }
             int ret = JOptionPane.showConfirmDialog(MainFrame.get(),
                     message,
-                    "Delete " + getName() + "?", JOptionPane.YES_NO_OPTION);
+                    Translations.format(
+                            "AbstractAxis.ConfirmDelete.title", //$NON-NLS-1$
+                            getName()),
+                    JOptionPane.YES_NO_OPTION);
             if (ret == JOptionPane.YES_OPTION) {
                 Configuration.get().getMachine().removeAxis(AbstractAxis.this);
             }
@@ -225,7 +231,7 @@ public abstract class AbstractAxis extends AbstractModelObject implements Axis {
 
     @Override
     public String getPropertySheetHolderTitle() {
-        return getClass().getSimpleName() + " " + getName();
+        return Translations.typeAndName(getClass(), getName());
     }
 
 }
