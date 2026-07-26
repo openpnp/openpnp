@@ -4,6 +4,7 @@ import java.awt.geom.Point2D;
 import java.io.IOException;
 import java.util.concurrent.TimeoutException;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 // import org.openpnp.logging.CalibrationLogger;
 import org.openpnp.machine.neoden4.wizards.Neoden4DriverConfigurationWizard;
@@ -1249,7 +1250,8 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
     public PropertySheet[] getPropertySheets() {
         return new PropertySheet[] {
             new PropertySheetWizardAdapter(super.getConfigurationWizard()),
-            new PropertySheetWizardAdapter(new Neoden4DriverConfigurationWizard(this), "Machine")
+            new PropertySheetWizardAdapter(new Neoden4DriverConfigurationWizard(this),
+                    Translations.getString("Neoden4DriverConfigurationWizard.tab.title")) //$NON-NLS-1$
         };
     }
 

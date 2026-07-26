@@ -16,6 +16,7 @@ import org.opencv.core.Mat;
 import org.opencv.core.Point;
 import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
+import org.openpnp.Translations;
 import org.openpnp.vision.FluentCv.ColorSpace;
 import org.openpnp.vision.pipeline.CvStage.Result;
 import org.pmw.tinylog.Logger;
@@ -183,15 +184,15 @@ public class CvPipeline implements AutoCloseable {
      */
     public Result getExpectedResult(String name) throws Exception {
         if (name == null || name.trim().isEmpty()) {
-            throw new Exception("Stage name must be given.");
+            throw new Exception(Translations.getString("Exception.StageNameMustBeGiven")); //$NON-NLS-1$
         }
         CvStage stage = getStage(name);
         if (stage == null) {
-            throw new Exception("Stage \""+name+"\" is missing in the pipeline.");
+            throw new Exception(Translations.format("Exception.StageMissingInPipeline", name)); //$NON-NLS-1$
         }
         Result result = getResult(stage);
         if (result == null) {
-            throw new Exception("Stage \""+name+"\" returned no result.");
+            throw new Exception(Translations.format("Exception.StageReturnedNoResult", name)); //$NON-NLS-1$
         }
         if (result.model instanceof Exception) {
             throw (Exception)(result.model);

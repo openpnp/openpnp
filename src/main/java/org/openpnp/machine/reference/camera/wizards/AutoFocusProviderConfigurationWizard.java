@@ -32,6 +32,7 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
@@ -222,11 +223,7 @@ public class AutoFocusProviderConfigurationWizard extends AbstractConfigurationW
                     throw new Exception("Nozzle "+nozzle.getName()+" unexpected location. Please center and focus first.");
                 }
                 int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                        "<html>This will overwrite the current camera Z position and therefore<br/>"
-                                +"change the camera-to-subject distance and the subject scale.<br/>"
-                                +"<span color=\"red\">You will need to recalibrate the Units per Pixel!</span>"
-                                +"<br/><br/>"
-                                +"Are you sure?</html>",
+                        Translations.getString("AutoFocusProviderConfigurationWizard.Confirm.OverwriteCameraZ"), //$NON-NLS-1$
                                 null, JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
                 if (result == JOptionPane.YES_OPTION) {
                     Length offsetZ = camera.getLocation(nozzle).getLengthZ().subtract(nozzle.getLocation().getLengthZ());

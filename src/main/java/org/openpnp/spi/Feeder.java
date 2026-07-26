@@ -19,6 +19,7 @@
 
 package org.openpnp.spi;
 
+import org.openpnp.Translations;
 import org.openpnp.model.Identifiable;
 import org.openpnp.model.Location;
 import org.openpnp.model.Named;
@@ -141,7 +142,12 @@ public interface Feeder extends Identifiable, Named, WizardConfigurable, Propert
      */
 
     public enum Priority {
-        High,Normal,Low
+        High,Normal,Low;
+
+        @Override
+        public String toString() {
+            return Translations.getString("Feeder.Priority." + name()); //$NON-NLS-1$
+        }
     }
 
     public Priority getPriority();

@@ -82,6 +82,11 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
          */
         DirectionalSneakUp;
 
+        @Override
+        public String toString() {
+            return Translations.getString("ReferenceControllerAxis.BacklashCompensationMethod." + name()); //$NON-NLS-1$
+        }
+
         public boolean isOneSidedPositioningMethod() {
             return this == OneSidedPositioning || this == OneSidedOptimizedPositioning;
         }

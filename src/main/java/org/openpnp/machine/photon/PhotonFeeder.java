@@ -1,6 +1,7 @@
 package org.openpnp.machine.photon;
 
 import org.openpnp.ConfigurationListener;
+import org.openpnp.Translations;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.photon.exceptions.FeedFailureException;
 import org.openpnp.machine.photon.exceptions.FeederHasNoLocationOffsetException;
@@ -95,19 +96,19 @@ public class PhotonFeeder extends ReferenceFeeder {
             UnconfiguredSlotException, FeederHasNoLocationOffsetException {
         if (slotAddress == null) {
             throw new NoSlotAddressException(
-                    String.format("Photon Feeder with address %s has no address. Is it inserted?", hardwareId)
+                    Translations.format("PhotonFeeder.Exception.NoSlotAddress", hardwareId) //$NON-NLS-1$
             );
         }
 
         if (getSlot().getLocation() == null) {
             throw new UnconfiguredSlotException(
-                    String.format("The slot at address %s has no location configured.", slotAddress)
+                    Translations.format("PhotonFeeder.Exception.UnconfiguredSlot", slotAddress) //$NON-NLS-1$
             );
         }
 
         if (offset == null) {
             throw new FeederHasNoLocationOffsetException(
-                    String.format("Photon Feeder with address %s has no location offset.", hardwareId)
+                    Translations.format("PhotonFeeder.Exception.NoLocationOffset", hardwareId) //$NON-NLS-1$
             );
         }
     }
@@ -141,8 +142,8 @@ public class PhotonFeeder extends ReferenceFeeder {
         if (slotAddress != null && getSlot().getLocation() == null) {
             solutions.add(new Solutions.PlainIssue(
                     this,
-                    "Feeder slot has no configured location",
-                    "Select the feeder in the Feeders tab and make sure the slot has a set location",
+                    Translations.getString("PhotonFeeder.Issue.SlotNoLocation"), //$NON-NLS-1$
+                    Translations.getString("PhotonFeeder.Solution.SlotNoLocation"), //$NON-NLS-1$
                     Solutions.Severity.Error,
                     "https://github.com/openpnp/openpnp/wiki/Photon-Feeder#slots-and-feeder-locations"
             ));
@@ -151,8 +152,8 @@ public class PhotonFeeder extends ReferenceFeeder {
         if (offset == null) {
             solutions.add(new Solutions.PlainIssue(
                     this,
-                    "Feeder has no configured offset",
-                    "Select the feeder in the Feeders tab and make sure the feeder has an offset location from the slot",
+                    Translations.getString("PhotonFeeder.Issue.NoOffset"), //$NON-NLS-1$
+                    Translations.getString("PhotonFeeder.Solution.NoOffset"), //$NON-NLS-1$
                     Solutions.Severity.Error,
                     "https://github.com/openpnp/openpnp/wiki/Photon-Feeder#slots-and-feeder-locations"
             ));
@@ -174,7 +175,7 @@ public class PhotonFeeder extends ReferenceFeeder {
             }
         }
 
-        throw new Exception("Failed to find and initialize the feeder");
+        throw new Exception(Translations.getString("PhotonFeeder.Exception.InitFailed")); //$NON-NLS-1$
     }
 
     public void findSlotAddress() throws Exception {
@@ -279,7 +280,8 @@ public class PhotonFeeder extends ReferenceFeeder {
             if (moveFeedForwardResponse == null) {
                 slotAddress = null;
                 initialized = false;
-                throw new FeedFailureException("Feed command timed out");
+                throw new FeedFailureException(Translations.getString(
+                        "PhotonFeeder.Exception.FeedCommandTimedOut")); //$NON-NLS-1$
             } else if (moveFeedForwardResponse.error == ErrorTypes.UNINITIALIZED_FEEDER) {
                 slotAddress = null;
                 initialized = false;
@@ -308,14 +310,17 @@ public class PhotonFeeder extends ReferenceFeeder {
                 if (moveFeedStatusResponse.error == ErrorTypes.NONE) {
                     return;
                 } else if (moveFeedStatusResponse.error == ErrorTypes.COULD_NOT_REACH) {
-                    throw new FeedFailureException("Feeder could not reach its destination.");
+                    throw new FeedFailureException(Translations.getString(
+                            "PhotonFeeder.Exception.FeederCouldNotReachDestination")); //$NON-NLS-1$
                 }
             }
 
-            throw new FeedFailureException("Feeder timed out when we requested a feed status update.");
+            throw new FeedFailureException(Translations.getString(
+                    "PhotonFeeder.Exception.FeedStatusTimedOut")); //$NON-NLS-1$
         }
 
-        throw new FeedFailureException("Failed to feed for an unknown reason. Is the feeder inserted?");
+        throw new FeedFailureException(Translations.getString(
+                "PhotonFeeder.Exception.FeedFailedUnknown")); //$NON-NLS-1$
     }
 
     @Override
@@ -339,11 +344,11 @@ public class PhotonFeeder extends ReferenceFeeder {
 
     @Override
     public String getPropertySheetHolderTitle() {
-        String classSimpleName = getClass().getSimpleName();
+        String typeName = Translations.getString("PhotonFeeder.TypeName"); //$NON-NLS-1$
         if (hardwareId == null) {
-            return String.format("Unconfigured %s", classSimpleName);
+            return Translations.format("PhotonFeeder.PropertySheetHolderTitle.Unconfigured", typeName); //$NON-NLS-1$
         } else {
-            return String.format("%s %s", classSimpleName, getName());
+            return Translations.format("PhotonFeeder.PropertySheetHolderTitle.Configured", typeName, getName()); //$NON-NLS-1$
         }
     }
 
@@ -378,27 +383,20 @@ public class PhotonFeeder extends ReferenceFeeder {
     @Override
     public String getName() {
         if (hardwareId == null) {
-            return String.format("Unconfigured %s", getClass().getSimpleName());
+            return Translations.format("PhotonFeeder.Name.Unconfigured", //$NON-NLS-1$
+                    Translations.getString("PhotonFeeder.TypeName")); //$NON-NLS-1$
         }
 
-        StringBuilder result = new StringBuilder();
-        result.append(name);
-        result.append(" (Slot: ");
-
-        if (slotAddress == null) {
-            result.append("None");
-        } else {
-            result.append(slotAddress);
-        }
-
-        result.append(")");
-
-        return result.toString();
+        return Translations.format("PhotonFeeder.Name.WithSlot", name, //$NON-NLS-1$
+                slotAddress == null
+                        ? Translations.getString("PhotonFeeder.Name.SlotNone") //$NON-NLS-1$
+                        : slotAddress);
     }
 
     @Override
     public void setName(String name) {
-        Matcher matcher = Pattern.compile("(\\(Slot: [\\w+]+\\))").matcher(name);
+        // Strip localized slot suffixes, e.g. "(Slot: 12)" or "（槽位：12）".
+        Matcher matcher = Pattern.compile("(?:\\(Slot: |（槽位：)[\\w+]*(?:\\)|）)").matcher(name);
         while (matcher.find()) {
             name = name.replace(matcher.group(), "");
         }

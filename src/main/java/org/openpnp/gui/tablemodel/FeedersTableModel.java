@@ -153,8 +153,14 @@ public class FeedersTableModel extends AbstractObjectTableModel {
         switch (col) {
             case 0:
                 return feeders.get(row).getName();
-            case 1:
-                return feeders.get(row).getClass().getSimpleName();
+            case 1: {
+                String simpleName = feeders.get(row).getClass().getSimpleName();
+                String typeName = Translations.getString(simpleName + ".TypeName"); //$NON-NLS-1$
+                if (typeName.startsWith("!") && typeName.endsWith("!")) {
+                    return simpleName;
+                }
+                return typeName;
+            }
             case 2: {
                 Part part = feeders.get(row).getPart();
                 if (part == null) {

@@ -294,7 +294,7 @@ public class PackageVisionWizard extends AbstractConfigurationWizard {
         public void actionPerformed(ActionEvent arg0) {
             String name;
             while ((name = JOptionPane.showInputDialog(getTopLevelAncestor(),
-                    "Please enter a name for the new pad.")) != null) {
+                    Translations.getString("PackageVisionWizard.PadsPanel.NewPadNamePrompt"))) != null) { //$NON-NLS-1$
                 name = name.trim();
                 if (name.isEmpty()) {
                     break;
@@ -398,8 +398,9 @@ public class PackageVisionWizard extends AbstractConfigurationWizard {
             try{
                 if (!footprint.getPads().isEmpty()) {
                     int ret = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                            "Are you sure you want to delete all existing pads?",
-                            "Delete all pads?", JOptionPane.YES_NO_OPTION);
+                            Translations.getString("PackageVisionWizard.Confirm.DeleteAllPads.message"), //$NON-NLS-1$
+                            Translations.getString("PackageVisionWizard.Confirm.DeleteAllPads.title"), //$NON-NLS-1$
+                            JOptionPane.YES_NO_OPTION);
                     if (ret != JOptionPane.YES_OPTION) {
                         return; // Abort.
                     }

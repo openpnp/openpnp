@@ -3,6 +3,7 @@ package org.openpnp.vision.pipeline.stages;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.imgproc.Imgproc;
+import org.openpnp.Translations;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
 import org.openpnp.vision.pipeline.Property;
@@ -32,6 +33,12 @@ public class HistogramEqualize extends CvStage {
 
         public int getCode() {
             return code;
+        }
+
+        @Override
+        public String toString() {
+            String s = Translations.getStringOrNull("HistogramEqualize.ChannelsToEqualize." + name()); //$NON-NLS-1$
+            return s != null ? s : name();
         }
     }
     

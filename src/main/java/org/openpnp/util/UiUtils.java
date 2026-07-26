@@ -18,6 +18,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.text.JTextComponent;
 
 import org.apache.commons.lang3.SystemUtils;
+import org.openpnp.Translations;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.model.Configuration;
@@ -144,7 +145,7 @@ public class UiUtils {
      * title is fixed to "Error" and the parent is the main frame.
      */
     public static void showError(Throwable t) {
-        showError(MainFrame.get(), "Error", t);
+        showError(MainFrame.get(), Translations.getString("CommonWords.Error"), t); //$NON-NLS-1$
     }
     
     /**
@@ -275,7 +276,7 @@ public class UiUtils {
                 if (allowWithoutMove) {
                     if (moveBeforeActionDescription != null) {
                         result = JOptionPane.showConfirmDialog(parentComponent,
-                                "Do you want to "+moveBeforeActionDescription+"?\n",
+                                Translations.format("UiUtils.ConfirmMove.DoYouWantTo", moveBeforeActionDescription), //$NON-NLS-1$
                                 null, JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
                     }
                     else {
@@ -284,8 +285,7 @@ public class UiUtils {
                 }
                 else {
                     result = JOptionPane.showConfirmDialog(parentComponent,
-                            "About to "+moveBeforeActionDescription+".\n"
-                                    +"Do you want to proceed?",
+                            Translations.format("UiUtils.ConfirmMove.AboutToProceed", moveBeforeActionDescription), //$NON-NLS-1$
                                     null, JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
                 }
                 if (result == JOptionPane.YES_OPTION) {
@@ -304,13 +304,12 @@ public class UiUtils {
                 // We can't move but should.
                 if (!allowWithoutMove) {
                     // Just say we can't. 
-                    throw new Exception("Machine not enabled, unable to "+moveBeforeActionDescription+".");
+                    throw new Exception(Translations.format("UiUtils.ConfirmMove.MachineNotEnabled", moveBeforeActionDescription)); //$NON-NLS-1$
                 }
                 else {
                     // Ask the user if it is OK to proceed without moving. 
                     int result = JOptionPane.showConfirmDialog(parentComponent,
-                            "Machine not enabled, unable to "+moveBeforeActionDescription+".\n"
-                                    +"Do you want to proceed anyway?",
+                            Translations.format("UiUtils.ConfirmMove.MachineNotEnabledProceedAnyway", moveBeforeActionDescription), //$NON-NLS-1$
                                     null, JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
                     if (result == JOptionPane.YES_OPTION) {
                         actionThrunnable.thrun();
@@ -358,16 +357,12 @@ public class UiUtils {
                     Toolkit.getDefaultToolkit().getSystemClipboard()
                     .setContents(new StringSelection(uri), null);
                     // And tell the user.
-                    MessageBoxes.infoBox("Open Web Browser", 
-                            "<html>"
-                                    + "<p>This platform does not support direct web browsing.</p><br/>"
-                                    + "<p>However, the URI was copied to the clipboard, please paste into your favorite browser's address line.</p><br/>"
-                                    + "<p><a href=\""+uri+"\">"+uri+"</a></p>"
-                                    + "</html>");
+                    MessageBoxes.infoBox("Open Web Browser", //$NON-NLS-1$
+                            Translations.format("MessageBoxes.BrowseUri.InfoBody", uri)); //$NON-NLS-1$
                 }
                 catch (Exception e1) {
                     // Even that failed, nothing left but to lament.
-                    throw new Exception("No system support for URI browsing found. See the log. "+uri, e1);
+                    throw new Exception(Translations.format("UiUtils.BrowseUri.NoSupport", uri), e1); //$NON-NLS-1$
                 }
             }
         });

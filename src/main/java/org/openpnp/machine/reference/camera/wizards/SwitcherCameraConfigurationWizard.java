@@ -23,6 +23,7 @@ import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JTextField;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.ActuatorItem;
@@ -76,33 +77,33 @@ public class SwitcherCameraConfigurationWizard extends AbstractConfigurationWiza
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
-        lblNewLabel = new JLabel("Source Camera");
+        lblNewLabel = new JLabel(Translations.getString("SwitcherCameraConfigurationWizard.SourceCamera")); //$NON-NLS-1$
         contentPanel.add(lblNewLabel, "2, 2, right, default");
         
         sourceCamera = new JComboBox();
         contentPanel.add(sourceCamera, "4, 2, fill, default");
         
-        lblNewLabel_1 = new JLabel("Switcher Number");
+        lblNewLabel_1 = new JLabel(Translations.getString("SwitcherCameraConfigurationWizard.SwitcherNumber")); //$NON-NLS-1$
         contentPanel.add(lblNewLabel_1, "2, 4, right, default");
         
         switcher = new JTextField();
         contentPanel.add(switcher, "4, 4, fill, default");
         switcher.setColumns(10);
         
-        lblNewLabel_2 = new JLabel("Actuator");
+        lblNewLabel_2 = new JLabel(Translations.getString("SwitcherCameraConfigurationWizard.Actuator")); //$NON-NLS-1$
         contentPanel.add(lblNewLabel_2, "2, 6, right, default");
         
         actuator = new JComboBox();
         contentPanel.add(actuator, "4, 6, fill, default");
         
-        lblNewLabel_4 = new JLabel("Actuator Delay (ms)");
+        lblNewLabel_4 = new JLabel(Translations.getString("SwitcherCameraConfigurationWizard.ActuatorDelayMs")); //$NON-NLS-1$
         contentPanel.add(lblNewLabel_4, "2, 8, right, default");
         
         actuatorDelayMillis = new JTextField();
         contentPanel.add(actuatorDelayMillis, "4, 8, fill, default");
         actuatorDelayMillis.setColumns(10);
         
-        lblNewLabel_3 = new JLabel("Actuator Value");
+        lblNewLabel_3 = new JLabel(Translations.getString("SwitcherCameraConfigurationWizard.ActuatorValue")); //$NON-NLS-1$
         contentPanel.add(lblNewLabel_3, "2, 10, right, default");
         
         actuatorDoubleValue = new JTextField();

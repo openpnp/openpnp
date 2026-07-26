@@ -1,5 +1,6 @@
 package org.openpnp.machine.reference.solutions;
 
+import org.openpnp.Translations;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.model.Configuration;
 
@@ -27,8 +28,9 @@ public class ScriptingSolutions implements Solutions.Subject {
                              .getMachine()
                              .isPoolScriptingEngines() == false) {
                 solutions.add(new Solutions.Issue(machine,
-                        "Script execuction performance can be improved by enabling engine pooling.",
-                        "Enable script engine pooling.", Severity.Suggestion,
+                        Translations.getString("ScriptingSolutions.Issue.EnginePooling"), //$NON-NLS-1$
+                        Translations.getString("ScriptingSolutions.Solution.EnginePooling"), //$NON-NLS-1$
+                        Severity.Suggestion,
                         "https://github.com/openpnp/openpnp/wiki/Scripting#script-engine-pooling") {
 
                     @Override
@@ -42,12 +44,7 @@ public class ScriptingSolutions implements Solutions.Subject {
 
                     @Override
                     public String getExtendedDescription() {
-                        return "<html>By default, every time a script should be executed, a new instance of the appropriate script engine is created.<br><br>"
-                                + "By enabling script engine pooling, a new instance of any script engine is only created if the pool doesn't contain an available instance of the appropriate type. "
-                                + "Following executions re-use the already initialized script engines, lowering execution time for scripting hooks."
-                                + "This feature is only relevant if you use scripting in OpenPnP.<br><br>"
-                                + "<span style=\"color:red;\">Script engine pooling can - depending on the script engine implementation - cause global state to be kept in following invocations. "
-                                + "Check the wiki for further information.</span></html>";
+                        return Translations.getString("ScriptingSolutions.ExtendedDescription.EnginePooling"); //$NON-NLS-1$
                     }
                 });
             }

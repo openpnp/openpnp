@@ -593,13 +593,13 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
                     return refNozzle; 
                 }
             }
-            throw new Exception("Please unload the nozzle tip on the selected nozzle.");
+            throw new Exception(Translations.getString("Exception.PleaseUnloadNozzleTip")); //$NON-NLS-1$
         }
         else {
             // For real nozzle tips, the nozzle where it is currently attached to is well-defined.
             refNozzle = nozzleTip.getNozzleWhereLoaded();
             if (refNozzle == null) {
-                throw new Exception("Please load the nozzle tip on a nozzle.");
+                throw new Exception(Translations.getString("Exception.PleaseLoadNozzleTip")); //$NON-NLS-1$
             }
             return refNozzle;
         }
@@ -651,13 +651,17 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
 
         final Location moveToLocation = location;
         UiUtils.confirmMoveToLocationAndAct(getTopLevelAncestor(), 
-                "move nozzle "+nozzle.getName()+" to the camera center location before editing the pipeline", 
+                Translations.format(
+                        "ReferenceNozzleTipCalibrationWizard.PipelineEditor.MoveNozzlePrompt", //$NON-NLS-1$
+                        nozzle.getName()),
                 nozzle, 
                 moveToLocation, true, () -> {
                     CvPipeline pipeline = calibration
                             .getPreparedPipeline(camera, nozzle, moveToLocation);
                     CvPipelineEditor editor = new CvPipelineEditor(pipeline);
-                    JDialog dialog = new CvPipelineEditorDialog(MainFrame.get(), "Calibration Pipeline", editor);
+                    JDialog dialog = new CvPipelineEditorDialog(MainFrame.get(),
+                            Translations.getString("ReferenceNozzleTipCalibrationWizard.PipelineEditor.Title"), //$NON-NLS-1$
+                            editor);
                     dialog.setVisible(true);
                 });
     }
@@ -773,7 +777,9 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
             int n = backgroundCalibrationImages.length;
             if (n == 0) {
                 if (noProblems) {
-                    throw new Exception("Background calibration for "+nozzleTip.getName()+" does not indicate any problems.");
+                    throw new Exception(Translations.format(
+                            "Exception.BackgroundCalibrationNoProblems", //$NON-NLS-1$
+                            nozzleTip.getName()));
                 }
                 else {
                     return;

@@ -368,6 +368,15 @@ public class ThemeSettingsPanel extends JPanel {
         else {
             UIManager.put("Table.alternateRowColor", null);
         }
+        // Keep dialog button labels localized across Look&Feel / theme switches.
+        UIManager.put("OptionPane.okButtonText",
+                Translations.getString("UIManager.OptionPane.okButtonText")); //$NON-NLS-1$
+        UIManager.put("OptionPane.cancelButtonText",
+                Translations.getString("UIManager.OptionPane.cancelButtonText")); //$NON-NLS-1$
+        UIManager.put("OptionPane.yesButtonText",
+                Translations.getString("UIManager.OptionPane.yesButtonText")); //$NON-NLS-1$
+        UIManager.put("OptionPane.noButtonText",
+                Translations.getString("UIManager.OptionPane.noButtonText")); //$NON-NLS-1$
         FlatLaf.updateUI();
         removeAll();
         initComponents();

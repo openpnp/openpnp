@@ -306,13 +306,13 @@ public class PackagesPanel extends JPanel implements WizardContainer {
         public void actionPerformed(ActionEvent arg0) {
             String id;
             while ((id = JOptionPane.showInputDialog(frame,
-                    "Please enter an ID for the new package.")) != null) {
+                    Translations.getString("PackagesPanel.NewPackagePrompt"))) != null) { //$NON-NLS-1$
                 id = id.trim();
                 if (id.isEmpty()) {
                     break;
                 }
                 if (configuration.getPackage(id) != null) {
-                    MessageBoxes.errorBox(frame, "Error", "Package ID " + id + " already exists.");
+                    MessageBoxes.errorBox(frame, "Error", Translations.format("PackagesPanel.Error.PackageIdExists", id)); //$NON-NLS-1$ //$NON-NLS-2$
                     continue;
                 }
                 Package this_package = new Package(id);
@@ -410,7 +410,7 @@ public class PackagesPanel extends JPanel implements WizardContainer {
         public void actionPerformed(ActionEvent arg0) {
             String id;
             while ((id = JOptionPane.showInputDialog(frame,
-                    "Please enter an ID for the pasted package.")) != null) {
+                    Translations.getString("PackagesPanel.PastePackagePrompt"))) != null) { //$NON-NLS-1$
                 id = id.trim();
                 if (id.isEmpty()) {
                     break;
@@ -418,7 +418,7 @@ public class PackagesPanel extends JPanel implements WizardContainer {
                 if (configuration.getPackage(id) == null) {
                     break;
                 }
-                MessageBoxes.errorBox(frame, "Error", "Package ID " + id + " already exists.");
+                MessageBoxes.errorBox(frame, "Error", Translations.format("PackagesPanel.Error.PackageIdExists", id)); //$NON-NLS-1$ //$NON-NLS-2$
             }
             if (id == null || id.isEmpty()) {
                 return;

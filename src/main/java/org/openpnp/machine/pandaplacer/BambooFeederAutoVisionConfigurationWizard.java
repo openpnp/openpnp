@@ -38,6 +38,7 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
+import org.openpnp.Translations;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.components.LocationButtonsPanel;
@@ -83,12 +84,14 @@ extends AbstractReferenceFeederConfigurationWizard {
 
 // Panel: Tape Settings
         panelLocations = new JPanel();
-        panelLocations.setBorder(new TitledBorder(null, "Tape Settings", TitledBorder.LEADING,
+        panelLocations.setBorder(new TitledBorder(null, Translations.getString(
+                "ReferenceStripFeederConfigurationWizard.PanelTapeSettings.Border.title"), TitledBorder.LEADING, //$NON-NLS-1$
                 TitledBorder.TOP, null, null));
 
         panelTape = new JPanel();
         panelFields.add(panelTape);
-        panelTape.setBorder(new TitledBorder(null, "Tape Settings", TitledBorder.LEADING, TitledBorder.TOP, null));
+        panelTape.setBorder(new TitledBorder(null, Translations.getString(
+                "ReferenceStripFeederConfigurationWizard.PanelTapeSettings.Border.title"), TitledBorder.LEADING, TitledBorder.TOP, null)); //$NON-NLS-1$
         panelTape.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
@@ -106,42 +109,55 @@ extends AbstractReferenceFeederConfigurationWizard {
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
 
-        lblPartPitch = new JLabel("Part Pitch");
+        lblPartPitch = new JLabel(Translations.getString(
+                "ReferenceStripFeederConfigurationWizard.PartPitchLabel.text")); //$NON-NLS-1$
         panelTape.add(lblPartPitch, "2, 2, right, default");
-        lblPartPitch.setToolTipText("Pitch of the parts in the tape (2mm, 4mm, 8mm, 12mm, etc.)");
+        lblPartPitch.setToolTipText(Translations.getString(
+                "BambooFeederAutoVisionConfigurationWizard.PartPitchLabel.toolTipText")); //$NON-NLS-1$
 
         textFieldPartPitch = new JComboBox<>(pitchValues);
         panelTape.add(textFieldPartPitch, "4, 2");
-        textFieldPartPitch.setToolTipText("Pitch of the parts in the tape (2mm, 4mm, 8mm, 12mm, etc.)");
+        textFieldPartPitch.setToolTipText(Translations.getString(
+                "BambooFeederAutoVisionConfigurationWizard.PartPitchComboBox.toolTipText")); //$NON-NLS-1$
 
-        lblFeedPitch = new JLabel("Feed Pitch");
+        lblFeedPitch = new JLabel(Translations.getString(
+                "BambooFeederAutoVisionConfigurationWizard.FeedPitchLabel.text")); //$NON-NLS-1$
         panelTape.add(lblFeedPitch, "6, 2, right, default");
-        lblFeedPitch.setToolTipText("How much the tape will be advanced by one lever actuation (usually multiples of 4mm)");
+        lblFeedPitch.setToolTipText(Translations.getString(
+                "BambooFeederAutoVisionConfigurationWizard.FeedPitchLabel.toolTipText")); //$NON-NLS-1$
 
         textFieldFeedPitch = new JComboBox<>(pitchValues);
         panelTape.add(textFieldFeedPitch, "8, 2");
-        textFieldFeedPitch.setToolTipText("How much the tape will be advanced by one lever actuation (usually multiples of 4mm)");
+        textFieldFeedPitch.setToolTipText(Translations.getString(
+                "BambooFeederAutoVisionConfigurationWizard.FeedPitchComboBox.toolTipText")); //$NON-NLS-1$
 
         btnDiscardParts = new JButton(discardPartsAction);
-        btnDiscardParts.setToolTipText("<html>Discard parts left over in the (multi-part) feed cycle.<br/>\r\nStarts with a fresh feed cycle including vision calibration (if enabled). \r\n</html>");
+        btnDiscardParts.setToolTipText(Translations.getString(
+                "BambooFeederAutoVisionConfigurationWizard.Action.DiscardParts.toolTipText")); //$NON-NLS-1$
         panelTape.add(btnDiscardParts, "10, 2");
 
-        lblRotation = new JLabel("Rotation in Tape");
+        lblRotation = new JLabel(Translations.getString(
+                "ReferenceStripFeederConfigurationWizard.RotationInTapeLabel.text")); //$NON-NLS-1$
         panelTape.add(lblRotation, "2, 4, right, default");
-        lblRotation.setToolTipText("<html>Rotation of the part inside the tape as seen when the sprocket holes <br/>\r\nare on top. Your E-CAD part orientation is the reference.<br/>\r\nSee also: \r\n<ul>\r\n<li>EIA-481</li>\r\n<li>Component Zero Orientations for CAD Libraries</li>\r\n</ul>\r\n</html>");
+        lblRotation.setToolTipText(Translations.getString(
+                "BambooFeederAutoVisionConfigurationWizard.RotationInTapeLabel.toolTipText")); //$NON-NLS-1$
 
         textFieldRotationInTape = new JTextField();
         panelTape.add(textFieldRotationInTape, "4, 4");
-        textFieldRotationInTape.setToolTipText("<html>\n<p>The <strong>Rotation in Tape</strong> setting must be interpreted relative to the tape's orientation, <br/>\nregardless of how the feeder/tape is oriented on the machine. </p>\n<ol>\n<li>\n<p>Look at the <strong>neutral</strong> upright orientation of the part package/footprint <br/>\nas drawn inside your E-CAD <strong>library</strong>.</p>\n</li>\n<li>\n<p>Note how pin 1, polarity, cathode etc. are oriented.  <br/>\nThis is your 0° for the part.</p>\n</li>\n<li>\n<p>Look at the tape so that the sprocket holes are at the top. <br/>\nThis is your 0° tape orientation (per EIA-481 industry standard).</p>\n</li>\n<li>\n<p>Determine how the part is rotated inside the tape pocket, <em>relative</em> from  <br/>\nits upright orientation in (1).  Positive rotation goes counter-clockwise.<br/>\nThis is your <strong>Rotation in Tape</strong>.</p>\n</li>\n</ol>\n</html>");
+        textFieldRotationInTape.setToolTipText(Translations.getString(
+                "ReferenceStripFeederConfigurationWizard.RotationInTapeLabel.toolTipText")); //$NON-NLS-1$
         textFieldRotationInTape.setColumns(10);
 
-        lblFeedCount = new JLabel("Feed Count");
+        lblFeedCount = new JLabel(Translations.getString(
+                "ReferenceStripFeederConfigurationWizard.FeedCountLabel.text")); //$NON-NLS-1$
         panelTape.add(lblFeedCount, "6, 4, right, default");
-        lblFeedCount.setToolTipText("Total feed count of the feeder.");
+        lblFeedCount.setToolTipText(Translations.getString(
+                "BambooFeederAutoVisionConfigurationWizard.FeedCountLabel.toolTipText")); //$NON-NLS-1$
 
         textFieldFeedCount = new JTextField();
         panelTape.add(textFieldFeedCount, "8, 4");
-        textFieldFeedCount.setToolTipText("Total feed count of the feeder.");
+        textFieldFeedCount.setToolTipText(Translations.getString(
+                "BambooFeederAutoVisionConfigurationWizard.FeedCountTextField.toolTipText")); //$NON-NLS-1$
         textFieldFeedCount.setColumns(10);
 
         btnReset = new JButton(resetFeedCountAction);
@@ -151,7 +167,8 @@ extends AbstractReferenceFeederConfigurationWizard {
 
 // Panel: Locations
         panelLocations = new JPanel();
-        panelLocations.setBorder(new TitledBorder(null, "Locations", TitledBorder.LEADING,
+        panelLocations.setBorder(new TitledBorder(null, Translations.getString(
+                "ReferenceStripFeederConfigurationWizard.PanelLocations.Border.title"), TitledBorder.LEADING, //$NON-NLS-1$
                 TitledBorder.TOP, null, null));
 
         panelFields.add(panelLocations);
@@ -185,24 +202,29 @@ extends AbstractReferenceFeederConfigurationWizard {
                 FormSpecs.DEFAULT_ROWSPEC,}));
 
         btnShowVisionFeatures = new JButton(showVisionFeaturesAction);
-        btnShowVisionFeatures.setToolTipText("Preview the features recognized by Computer Vision.");
-        btnShowVisionFeatures.setText("Preview Vision Features");
+        btnShowVisionFeatures.setToolTipText(Translations.getString(
+                "BambooFeederAutoVisionConfigurationWizard.Action.PreviewVisionFeatures.toolTipText")); //$NON-NLS-1$
+        btnShowVisionFeatures.setText(Translations.getString(
+                "BambooFeederAutoVisionConfigurationWizard.Action.PreviewVisionFeatures.text")); //$NON-NLS-1$
         panelLocations.add(btnShowVisionFeatures, "2, 2, default, fill");
 
         btnAutoSetup = new JButton(autoSetupAction);
         panelLocations.add(btnAutoSetup, "4, 2, 5, 1");
 
-        lblX_1 = new JLabel("X");
+        lblX_1 = new JLabel(Translations.getString("CommonWords.X")); //$NON-NLS-1$
         panelLocations.add(lblX_1, "4, 4, center, default");
 
-        lblY_1 = new JLabel("Y");
+        lblY_1 = new JLabel(Translations.getString("CommonWords.Y")); //$NON-NLS-1$
         panelLocations.add(lblY_1, "6, 4, center, default");
 
-        lblZ_1 = new JLabel("Z");
+        lblZ_1 = new JLabel(Translations.getString(
+                "BambooFeederAutoVisionConfigurationWizard.ZLabel.text")); //$NON-NLS-1$
         panelLocations.add(lblZ_1, "8, 4, center, default");
 
-        lblPickLocation = new JLabel("Pick Location");
-        lblPickLocation.setToolTipText("<html>Pick Location of the part. If multiple are produced by a feed operation<br/>\r\nthis must be the last one picked i.e. the one closest to the the tape reel.</html>");
+        lblPickLocation = new JLabel(Translations.getString(
+                "BambooFeederAutoVisionConfigurationWizard.PickLocationLabel.text")); //$NON-NLS-1$
+        lblPickLocation.setToolTipText(Translations.getString(
+                "BambooFeederAutoVisionConfigurationWizard.PickLocationLabel.toolTipText")); //$NON-NLS-1$
         panelLocations.add(lblPickLocation, "2, 6, right, default");
 
         textFieldPickLocationX = new JTextField();
@@ -220,8 +242,10 @@ extends AbstractReferenceFeederConfigurationWizard {
         locationButtonsPanelFirstPick = new LocationButtonsPanel(textFieldPickLocationX, textFieldPickLocationY, textFieldPickLocationZ, null);
         panelLocations.add(locationButtonsPanelFirstPick, "10, 6");
 
-        lblHole1Location = new JLabel("Hole 1 Location");
-        lblHole1Location.setToolTipText("<html>Choose Hole 1 closer to the tape reel.<br/>\r\nIf possible choose two holes that bracket the part(s) to be picked.\r\n</html>");
+        lblHole1Location = new JLabel(Translations.getString(
+                "BambooFeederAutoVisionConfigurationWizard.Hole1LocationLabel.text")); //$NON-NLS-1$
+        lblHole1Location.setToolTipText(Translations.getString(
+                "BambooFeederAutoVisionConfigurationWizard.Hole1LocationLabel.toolTipText")); //$NON-NLS-1$
         panelLocations.add(lblHole1Location, "2, 8, right, default");
 
         textFieldHole1LocationX = new JTextField();
@@ -235,8 +259,10 @@ extends AbstractReferenceFeederConfigurationWizard {
         locationButtonsPanelHole1 = new LocationButtonsPanel(textFieldHole1LocationX, textFieldHole1LocationY, (JTextField) null, (JTextField) null);
         panelLocations.add(locationButtonsPanelHole1, "10, 8");
 
-        lblHole2Location = new JLabel("Hole 2 Location");
-        lblHole2Location.setToolTipText("<html>Choose Hole 2 further away from the tape reel.<br/>\r\nIf possible choose two holes that bracket the part(s) to be picked.\r\n</html>");
+        lblHole2Location = new JLabel(Translations.getString(
+                "BambooFeederAutoVisionConfigurationWizard.Hole2LocationLabel.text")); //$NON-NLS-1$
+        lblHole2Location.setToolTipText(Translations.getString(
+                "BambooFeederAutoVisionConfigurationWizard.Hole2LocationLabel.toolTipText")); //$NON-NLS-1$
         panelLocations.add(lblHole2Location, "2, 10, right, default");
 
         textFieldHole2LocationX = new JTextField();
@@ -250,21 +276,27 @@ extends AbstractReferenceFeederConfigurationWizard {
         locationButtonsPanelHole2 = new LocationButtonsPanel(textFieldHole2LocationX, textFieldHole2LocationY, (JTextField) null, (JTextField) null);
         panelLocations.add(locationButtonsPanelHole2, "10, 10");
 
-        lblNormalizePickLocation = new JLabel("Normalize?");
+        lblNormalizePickLocation = new JLabel(Translations.getString(
+                "BambooFeederAutoVisionConfigurationWizard.NormalizePickLocationLabel.text")); //$NON-NLS-1$
         panelLocations.add(lblNormalizePickLocation, "2, 12, right, default");
-        lblNormalizePickLocation.setToolTipText("Normalize the pick location relative to the sprocket holes according to the EIA-481 standard.");
+        lblNormalizePickLocation.setToolTipText(Translations.getString(
+                "BambooFeederAutoVisionConfigurationWizard.NormalizePickLocationLabel.toolTipText")); //$NON-NLS-1$
 
         checkBoxNormalizePickLocation = new JCheckBox("");
         panelLocations.add(checkBoxNormalizePickLocation, "4, 12");
         checkBoxNormalizePickLocation.setSelected(true);
-        checkBoxNormalizePickLocation.setToolTipText("Normalize the pick location relative to the sprocket holes according to the EIA-481 standard.");
+        checkBoxNormalizePickLocation.setToolTipText(Translations.getString(
+                "BambooFeederAutoVisionConfigurationWizard.NormalizePickLocationCheckBox.toolTipText")); //$NON-NLS-1$
 
-        lblSnapToAxis = new JLabel("Snap to Axis?");
-        lblSnapToAxis.setToolTipText("Snap rows of sprocket holes to the Axis parallel.");
+        lblSnapToAxis = new JLabel(Translations.getString(
+                "BambooFeederAutoVisionConfigurationWizard.SnapToAxisLabel.text")); //$NON-NLS-1$
+        lblSnapToAxis.setToolTipText(Translations.getString(
+                "BambooFeederAutoVisionConfigurationWizard.SnapToAxisLabel.toolTipText")); //$NON-NLS-1$
         panelLocations.add(lblSnapToAxis, "6, 12, right, default");
 
         checkBoxSnapToAxis = new JCheckBox("");
-        checkBoxSnapToAxis.setToolTipText("Snap rows of sprocket holes to the Axis parallel.");
+        checkBoxSnapToAxis.setToolTipText(Translations.getString(
+                "BambooFeederAutoVisionConfigurationWizard.SnapToAxisCheckBox.toolTipText")); //$NON-NLS-1$
         panelLocations.add(checkBoxSnapToAxis, "8, 12");
 
 
@@ -273,7 +305,8 @@ extends AbstractReferenceFeederConfigurationWizard {
 
 // Panel: Vision
         panelVision = new JPanel();
-        panelVision.setBorder(new TitledBorder(null, "Vision", TitledBorder.LEADING,
+        panelVision.setBorder(new TitledBorder(null, Translations.getString(
+                "ReferenceStripFeederConfigurationWizard.PanelVision.Border.title"), TitledBorder.LEADING, //$NON-NLS-1$
                 TitledBorder.TOP, null, null));
         panelFields.add(panelVision);
         panelVision.setLayout(new BoxLayout(panelVision, BoxLayout.Y_AXIS));
@@ -305,8 +338,10 @@ extends AbstractReferenceFeederConfigurationWizard {
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
 
-        lblVisionType = new JLabel("Vision Type");
-        lblVisionType.setToolTipText("<html>\r\n<p>Choose the vision type, then press <strong>Reset Pipeline</strong> to assign the<br/>\r\ndefault pipeline of that type. Sprocket holes are detected as follows:</p>\r\n<ul>\r\n<li><strong>ColorKeyed</strong>: the background under the holes must be of a vivid color<br/>\r\n(green by default).</li>\r\n<li><strong>CircularSymmetry</strong>: the shape of the holes must be circular, their<br/>\r\ninside/outside must be plain.</li>\r\n</ul>\r\n<p>Both types of pipeline will further assess detected holes by size, alignment, pitch<br/>\r\nand expected distance.</p>\r\n</html>");
+        lblVisionType = new JLabel(Translations.getString(
+                "BambooFeederAutoVisionConfigurationWizard.VisionTypeLabel.text")); //$NON-NLS-1$
+        lblVisionType.setToolTipText(Translations.getString(
+                "BambooFeederAutoVisionConfigurationWizard.VisionTypeLabel.toolTipText")); //$NON-NLS-1$
         panelVisionEnabled.add(lblVisionType, "2, 2, right, default");
 
         pipelineType = new JComboBox(PipelineType.values());
@@ -323,23 +358,28 @@ extends AbstractReferenceFeederConfigurationWizard {
         panelVisionEnabled.add(btnResetPipeline, "12, 2, 3, 1");
 
 
-        lblCalibrationTrigger = new JLabel("Calibration Trigger");
+        lblCalibrationTrigger = new JLabel(Translations.getString(
+                "BambooFeederAutoVisionConfigurationWizard.CalibrationTriggerLabel.text")); //$NON-NLS-1$
         panelVisionEnabled.add(lblCalibrationTrigger, "2, 4, right, default");
 
         comboBoxCalibrationTrigger = new JComboBox(CalibrationTrigger.values());
         panelVisionEnabled.add(comboBoxCalibrationTrigger, "4, 4");
 
-        lblPrecisionAverage = new JLabel("Precision Average");
-        lblPrecisionAverage.setToolTipText("Obtained precision average i.e. offset of the pick location, as detected by the calibration");
+        lblPrecisionAverage = new JLabel(Translations.getString(
+                "BambooFeederAutoVisionConfigurationWizard.PrecisionAverageLabel.text")); //$NON-NLS-1$
+        lblPrecisionAverage.setToolTipText(Translations.getString(
+                "BambooFeederAutoVisionConfigurationWizard.PrecisionAverageLabel.toolTipText")); //$NON-NLS-1$
         panelVisionEnabled.add(lblPrecisionAverage, "8, 4, right, default");
 
         textFieldPrecisionAverage = new JTextField();
-        textFieldPrecisionAverage.setToolTipText("Obtained precision average i.e. offset of the pick location, as detected by the calibration");
+        textFieldPrecisionAverage.setToolTipText(Translations.getString(
+                "BambooFeederAutoVisionConfigurationWizard.PrecisionAverageTextField.toolTipText")); //$NON-NLS-1$
         textFieldPrecisionAverage.setEditable(false);
         panelVisionEnabled.add(textFieldPrecisionAverage, "10, 4");
         textFieldPrecisionAverage.setColumns(10);
 
-        lblCalibrationCount = new JLabel("Calibration Count");
+        lblCalibrationCount = new JLabel(Translations.getString(
+                "BambooFeederAutoVisionConfigurationWizard.CalibrationCountLabel.text")); //$NON-NLS-1$
         panelVisionEnabled.add(lblCalibrationCount, "12, 4, right, default");
 
         textFieldCalibrationCount = new JTextField();
@@ -347,17 +387,22 @@ extends AbstractReferenceFeederConfigurationWizard {
         panelVisionEnabled.add(textFieldCalibrationCount, "14, 4");
         textFieldCalibrationCount.setColumns(10);
 
-        lblPrecisionWanted = new JLabel("Precision wanted");
-        lblPrecisionWanted.setToolTipText("Precision wanted i.e. the tolerable pick location offset");
+        lblPrecisionWanted = new JLabel(Translations.getString(
+                "BambooFeederAutoVisionConfigurationWizard.PrecisionWantedLabel.text")); //$NON-NLS-1$
+        lblPrecisionWanted.setToolTipText(Translations.getString(
+                "BambooFeederAutoVisionConfigurationWizard.PrecisionWantedLabel.toolTipText")); //$NON-NLS-1$
         panelVisionEnabled.add(lblPrecisionWanted, "2, 6, right, default");
 
         textFieldPrecisionWanted = new JTextField();
-        textFieldPrecisionWanted.setToolTipText("Precision wanted i.e. the tolerable pick location offset");
+        textFieldPrecisionWanted.setToolTipText(Translations.getString(
+                "BambooFeederAutoVisionConfigurationWizard.PrecisionWantedTextField.toolTipText")); //$NON-NLS-1$
         panelVisionEnabled.add(textFieldPrecisionWanted, "4, 6");
         textFieldPrecisionWanted.setColumns(10);
 
-        lblPrecisionConfidenceLimit = new JLabel("Precision Confidence Limit");
-        lblPrecisionConfidenceLimit.setToolTipText("Precision obtained with 95% confidence (assuming normal distribution)");
+        lblPrecisionConfidenceLimit = new JLabel(Translations.getString(
+                "BambooFeederAutoVisionConfigurationWizard.PrecisionConfidenceLimitLabel.text")); //$NON-NLS-1$
+        lblPrecisionConfidenceLimit.setToolTipText(Translations.getString(
+                "BambooFeederAutoVisionConfigurationWizard.PrecisionConfidenceLimitLabel.toolTipText")); //$NON-NLS-1$
         panelVisionEnabled.add(lblPrecisionConfidenceLimit, "8, 6, right, default");
 
         textFieldPrecisionConfidenceLimit = new JTextField();
@@ -375,7 +420,7 @@ extends AbstractReferenceFeederConfigurationWizard {
 // Panel: Actuators
         panelActuator = new JPanel();
         panelActuator.setBorder(new TitledBorder(null,
-                "Actuators", TitledBorder.LEADING, TitledBorder.TOP, null));
+                Translations.getString("BambooFeederAutoVisionConfigurationWizard.PanelActuators.Border.title"), TitledBorder.LEADING, TitledBorder.TOP, null)); //$NON-NLS-1$
         panelFields.add(panelActuator);
         panelActuator.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -398,59 +443,73 @@ extends AbstractReferenceFeederConfigurationWizard {
                         FormSpecs.RELATED_GAP_ROWSPEC,
                         FormSpecs.DEFAULT_ROWSPEC,}));
 
-        lblActuator = new JLabel("Actuator");
+        lblActuator = new JLabel(Translations.getString(
+                "BambooFeederAutoVisionConfigurationWizard.ActuatorLabel.text")); //$NON-NLS-1$
         panelActuator.add(lblActuator, "4, 2, center, default");
 
-        lblActuatorValue = new JLabel("Actuator Value");
+        lblActuatorValue = new JLabel(Translations.getString(
+                "BambooFeederAutoVisionConfigurationWizard.ActuatorValueLabel.text")); //$NON-NLS-1$
         panelActuator.add(lblActuatorValue, "6, 2, center, default");
 
-        lblFeed = new JLabel("Feed");
+        lblFeed = new JLabel(Translations.getString(
+                "BambooFeederAutoVisionConfigurationWizard.FeedLabel.text")); //$NON-NLS-1$
         panelActuator.add(lblFeed, "2, 4, right, default");
-        lblFeed.setToolTipText("Select the actuator for the feed action");
+        lblFeed.setToolTipText(Translations.getString(
+                "BambooFeederAutoVisionConfigurationWizard.FeedLabel.toolTipText")); //$NON-NLS-1$
 
 
         comboBoxFeedActuator = new JComboBox();
         comboBoxFeedActuator.setModel(new ActuatorsComboBoxModel(Configuration.get().getMachine()));
         panelActuator.add(comboBoxFeedActuator, "4, 4, fill, default");
-        comboBoxFeedActuator.setToolTipText("Select the actuator for the feed action");
+        comboBoxFeedActuator.setToolTipText(Translations.getString(
+                "BambooFeederAutoVisionConfigurationWizard.FeedActuatorComboBox.toolTipText")); //$NON-NLS-1$
 
 
         feedActuatorValue = new JTextField();
         panelActuator.add(feedActuatorValue, "6, 4");
         feedActuatorValue.setColumns(10);
-        feedActuatorValue.setToolTipText("<html>\r\n<p>For Duble: numerical value<br/>\r\nFor Boolean: 1 = True, 0 = False</p></html>");
+        feedActuatorValue.setToolTipText(Translations.getString(
+                "BambooFeederAutoVisionConfigurationWizard.FeedActuatorValueTextField.toolTipText")); //$NON-NLS-1$
 
         btnTestFeedActuator = new JButton(testFeedActuatorAction);
-        btnTestFeedActuator.setToolTipText("<html>Do atomic feed, i.e. not full feed based on <i>Part&Feed pitch</i>.</html>");
+        btnTestFeedActuator.setToolTipText(Translations.getString(
+                "BambooFeederAutoVisionConfigurationWizard.Action.TestFeed.toolTipText")); //$NON-NLS-1$
         panelActuator.add(btnTestFeedActuator, "8, 4");
 
-        lblPostPick = new JLabel("Post Pick");
+        lblPostPick = new JLabel(Translations.getString(
+                "BambooFeederAutoVisionConfigurationWizard.PostPickLabel.text")); //$NON-NLS-1$
         panelActuator.add(lblPostPick, "2, 6, right, default");
-        lblPostPick.setToolTipText("<html>\r\n<p>Select the actuator for the post pick action<br/>\r\nThis is optional: blank selection will skip the post pick operation\r\n</p></html>");
+        lblPostPick.setToolTipText(Translations.getString(
+                "BambooFeederAutoVisionConfigurationWizard.PostPickLabel.toolTipText")); //$NON-NLS-1$
 
 
         comboBoxPostPickActuator = new JComboBox();
         comboBoxPostPickActuator.setModel(new ActuatorsComboBoxModel(Configuration.get().getMachine()));
         panelActuator.add(comboBoxPostPickActuator, "4, 6, fill, default");
-        comboBoxPostPickActuator.setToolTipText("<html>\r\n<p>Select the actuator for the post pick action<br/>\r\nThis is optional: blank selection will skip the post pick operation\r\n</p></html>");
+        comboBoxPostPickActuator.setToolTipText(Translations.getString(
+                "BambooFeederAutoVisionConfigurationWizard.PostPickActuatorComboBox.toolTipText")); //$NON-NLS-1$
 
 
         postPickActuatorValue = new JTextField();
         postPickActuatorValue.setColumns(10);
         panelActuator.add(postPickActuatorValue, "6, 6");
-        postPickActuatorValue.setToolTipText("<html>\r\n<p>For Duble: numerical value<br/>\r\nFor Boolean: 1 = True, 0 = False</p></html>");
+        postPickActuatorValue.setToolTipText(Translations.getString(
+                "BambooFeederAutoVisionConfigurationWizard.PostPickActuatorValueTextField.toolTipText")); //$NON-NLS-1$
 
 
         btnTestPostPickActuator = new JButton(testPostPickActuatorAction);
         panelActuator.add(btnTestPostPickActuator, "8, 6");
 
-        lblMoveBeforeFeed = new JLabel("Move before feed");
+        lblMoveBeforeFeed = new JLabel(Translations.getString(
+                "BambooFeederAutoVisionConfigurationWizard.MoveBeforeFeedLabel.text")); //$NON-NLS-1$
         panelActuator.add(lblMoveBeforeFeed, "2, 8, right, default");
-        lblMoveBeforeFeed.setToolTipText("Move nozzle to pick location before actuating the feed actuator");
+        lblMoveBeforeFeed.setToolTipText(Translations.getString(
+                "BambooFeederAutoVisionConfigurationWizard.MoveBeforeFeedLabel.toolTipText")); //$NON-NLS-1$
 
         ckBoxMoveBeforeFeed = new JCheckBox();
         panelActuator.add(ckBoxMoveBeforeFeed, "4, 8, left, default");
-        ckBoxMoveBeforeFeed.setToolTipText("Move nozzle to pick location before actuating the feed actuator");
+        ckBoxMoveBeforeFeed.setToolTipText(Translations.getString(
+                "BambooFeederAutoVisionConfigurationWizard.MoveBeforeFeedCheckBox.toolTipText")); //$NON-NLS-1$
 
 // Panel End: Actuators
 
@@ -536,10 +595,11 @@ extends AbstractReferenceFeederConfigurationWizard {
     }
 
     private Action editPipelineAction =
-            new AbstractAction("Edit Pipeline") {
+            new AbstractAction(Translations.getString(
+                    "ReferenceStripFeederConfigurationWizard.PanelVision.EditPipelineButton.text")) { //$NON-NLS-1$
         {
             putValue(Action.SHORT_DESCRIPTION,
-                    "Edit the Pipeline to be used for all vision operations of this feeder.");
+                    Translations.getString("BambooFeederAutoVisionConfigurationWizard.Action.EditPipeline.shortDescription")); //$NON-NLS-1$
         }
 
         @Override
@@ -547,7 +607,7 @@ extends AbstractReferenceFeederConfigurationWizard {
             UiUtils.messageBoxOnException(() -> {
                 UiUtils.confirmMoveToLocationAndAct(
                         getTopLevelAncestor(),
-                        "move the camera to the proper feeder vision location before editing the pipeline",
+                        Translations.getString("BambooFeederAutoVisionConfigurationWizard.ConfirmMoveToLocation.message"), //$NON-NLS-1$
                         feeder.getCamera(),
                         feeder.getNominalVisionLocation(),
                         true, () -> {
@@ -558,17 +618,18 @@ extends AbstractReferenceFeederConfigurationWizard {
     };
 
     private Action resetPipelineAction =
-            new AbstractAction("Reset Pipeline") {
+            new AbstractAction(Translations.getString(
+                    "ReferenceStripFeederConfigurationWizard.PanelVision.ResetPipelineButton.text")) { //$NON-NLS-1$
         {
             putValue(Action.SHORT_DESCRIPTION,
-                    "Reset the Pipeline for this feeder to the selected type default.");
+                    Translations.getString("BambooFeederAutoVisionConfigurationWizard.Action.ResetPipeline.shortDescription")); //$NON-NLS-1$
         }
 
         @Override
         public void actionPerformed(ActionEvent e) {
             PipelineType type = (PipelineType) pipelineType.getSelectedItem();
             int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                    "This will reset the pipeline to the "+type+" type default. Are you sure?",
+                    Translations.format("BambooFeederAutoVisionConfigurationWizard.Action.ResetPipeline.confirmMessage", type), //$NON-NLS-1$
                     null, JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
             if (result == JOptionPane.YES_OPTION) {
                 applyAction.actionPerformed(null);
@@ -580,10 +641,11 @@ extends AbstractReferenceFeederConfigurationWizard {
     };
 
     private Action resetStatisticsAction =
-            new AbstractAction("Reset Statistics") {
+            new AbstractAction(Translations.getString(
+                    "BambooFeederAutoVisionConfigurationWizard.Action.ResetStatistics.text")) { //$NON-NLS-1$
         {
             putValue(Action.SHORT_DESCRIPTION,
-                    "Reset the average obtained precision statistics.");
+                    Translations.getString("BambooFeederAutoVisionConfigurationWizard.Action.ResetStatistics.shortDescription")); //$NON-NLS-1$
         }
 
         @Override
@@ -595,16 +657,17 @@ extends AbstractReferenceFeederConfigurationWizard {
     };
 
     private Action resetFeedCountAction =
-            new AbstractAction("Reset Feed Count") {
+            new AbstractAction(Translations.getString(
+                    "BambooFeederAutoVisionConfigurationWizard.Action.ResetFeedCount.text")) { //$NON-NLS-1$
         {
             putValue(Action.SHORT_DESCRIPTION,
-                    "Reset the feed count e.g. when a tape has been changed.");
+                    Translations.getString("BambooFeederAutoVisionConfigurationWizard.Action.ResetFeedCount.shortDescription")); //$NON-NLS-1$
         }
 
         @Override
         public void actionPerformed(ActionEvent e) {
             int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                    "This will reset the recorded feed count of this feeder. Are you sure?",
+                    Translations.getString("BambooFeederAutoVisionConfigurationWizard.Action.ResetFeedCount.confirmMessage"), //$NON-NLS-1$
                     null, JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
             if (result == JOptionPane.YES_OPTION) {
                 UiUtils.messageBoxOnException(() -> {
@@ -617,10 +680,11 @@ extends AbstractReferenceFeederConfigurationWizard {
         }
     };
     private Action discardPartsAction =
-            new AbstractAction("Discard Parts") {
+            new AbstractAction(Translations.getString(
+                    "BambooFeederAutoVisionConfigurationWizard.Action.DiscardParts.text")) { //$NON-NLS-1$
         {
             putValue(Action.SHORT_DESCRIPTION,
-                    "Discard parts that have been produced by the last tape transport.");
+                    Translations.getString("BambooFeederAutoVisionConfigurationWizard.Action.DiscardParts.shortDescription")); //$NON-NLS-1$
         }
 
         @Override
@@ -635,10 +699,11 @@ extends AbstractReferenceFeederConfigurationWizard {
         }
     };
     private Action showVisionFeaturesAction =
-            new AbstractAction("Preview Vision Features") {
+            new AbstractAction(Translations.getString(
+                    "BambooFeederAutoVisionConfigurationWizard.Action.PreviewVisionFeatures.text")) { //$NON-NLS-1$
         {
             putValue(Action.SHORT_DESCRIPTION,
-                    "Preview the features recognized by Computer Vision.");
+                    Translations.getString("BambooFeederAutoVisionConfigurationWizard.Action.PreviewVisionFeatures.toolTipText")); //$NON-NLS-1$
         }
 
         @Override
@@ -649,11 +714,11 @@ extends AbstractReferenceFeederConfigurationWizard {
         }
     };
     private Action autoSetupAction =
-            new AbstractAction("Auto-Setup with Camera at Pick Location", Icons.captureCamera) {
+            new AbstractAction(Translations.getString(
+                    "BambooFeederAutoVisionConfigurationWizard.Action.AutoSetup.text"), Icons.captureCamera) { //$NON-NLS-1$
         {
             putValue(Action.SHORT_DESCRIPTION,
-                    "<html>Center the camera on the pick location and press this button to Auto-Setup <br/>"
-                            +"If there are multiple picks per feed cycle, choose the one closest to the tape reel.</html>");
+                    Translations.getString("BambooFeederAutoVisionConfigurationWizard.Action.AutoSetup.toolTipText")); //$NON-NLS-1$
         }
 
         @Override
@@ -667,9 +732,7 @@ extends AbstractReferenceFeederConfigurationWizard {
                 else {
                     // ask the user
                     result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                            "<html>"
-                            + "<p>This may overwrite all your current settings. Are you sure?</p>"
-                            + "</html>",
+                            Translations.getString("BambooFeederAutoVisionConfigurationWizard.Action.AutoSetup.confirmMessage"), //$NON-NLS-1$
                             null, JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
                 }
                 if (result == JOptionPane.YES_OPTION) {
@@ -682,17 +745,20 @@ extends AbstractReferenceFeederConfigurationWizard {
         }
     };
 
-    private Action testFeedActuatorAction = new AbstractAction("Test feed") {
+    private Action testFeedActuatorAction = new AbstractAction(Translations.getString(
+            "BambooFeederAutoVisionConfigurationWizard.Action.TestFeed.text")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
                 if (feeder.getFeedActuatorName() == null || feeder.getFeedActuatorName().equals("")) {
-                  throw new Exception("No feedActuatorName specified for feeder " + feeder.getName() + ".");
+                  throw new Exception(Translations.format(
+                          "BambooFeederAutoVisionConfigurationWizard.Exception.NoFeedActuatorName", feeder.getName())); //$NON-NLS-1$
                 }
                 Actuator actuator = Configuration.get().getMachine().getActuatorByName(feeder.getFeedActuatorName());
 
                 if (actuator == null) {
-                    throw new Exception("Feed failed. Unable to find an actuator named " + feeder.getFeedActuatorName());
+                    throw new Exception(Translations.format(
+                            "BambooFeederAutoVisionConfigurationWizard.Exception.FeedActuatorNotFound", feeder.getFeedActuatorName())); //$NON-NLS-1$
                 }
                 // Use the generic Object method to interpret the value as the actuator.valueType.
                 actuator.actuate((Object)feeder.getFeedActuatorValue());
@@ -700,17 +766,20 @@ extends AbstractReferenceFeederConfigurationWizard {
         }
     };
 
-    private Action testPostPickActuatorAction = new AbstractAction("Test post pick") {
+    private Action testPostPickActuatorAction = new AbstractAction(Translations.getString(
+            "BambooFeederAutoVisionConfigurationWizard.Action.TestPostPick.text")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
                 if (feeder.getPostPickActuatorName() == null || feeder.getPostPickActuatorName().equals("")) {
-                  throw new Exception("No postPickActuatorName specified for feeder " + feeder.getName() + ".");
+                  throw new Exception(Translations.format(
+                          "BambooFeederAutoVisionConfigurationWizard.Exception.NoPostPickActuatorName", feeder.getName())); //$NON-NLS-1$
                 }
                 Actuator actuator = Configuration.get().getMachine().getActuatorByName(feeder.getPostPickActuatorName());
 
                 if (actuator == null) {
-                    throw new Exception("Feed failed. Unable to find an actuator named " + feeder.getPostPickActuatorName());
+                    throw new Exception(Translations.format(
+                            "BambooFeederAutoVisionConfigurationWizard.Exception.PostPickActuatorNotFound", feeder.getPostPickActuatorName())); //$NON-NLS-1$
                 }
                 // Use the generic Object method to interpret the value as the actuator.valueType.
                 actuator.actuate((Object)feeder.getPostPickActuatorValue());
@@ -722,7 +791,9 @@ extends AbstractReferenceFeederConfigurationWizard {
         Camera camera = feeder.getCamera();
         CvPipeline pipeline = feeder.getCvPipeline(camera, false, true);
         CvPipelineEditor editor = new CvPipelineEditor(pipeline);
-        JDialog dialog = new CvPipelineEditorDialog(MainFrame.get(), feeder.getName() + " Pipeline", editor);
+        JDialog dialog = new CvPipelineEditorDialog(MainFrame.get(),
+                Translations.format("BambooFeederAutoVisionConfigurationWizard.Dialog.Pipeline.title", feeder.getName()), //$NON-NLS-1$
+                editor);
         dialog.setVisible(true);
     }
 

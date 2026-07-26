@@ -136,7 +136,9 @@ public class FiducialVisionSettingsConfigurationWizard extends AbstractConfigura
                 if (settingsHolder != null && fiducialLocator.getParentHolder(settingsHolder) != null) {
                     if (visionSettings.getUsedFiducialVisionIn().size() == 1 
                             && visionSettings.getUsedFiducialVisionIn().get(0) == settingsHolder) {
-                        throw new Exception("Vision Settings already specialized for "+settingsHolder.getShortName()+".");
+                        throw new Exception(Translations.format(
+                                "FiducialVisionSettingsConfigurationWizard.Error.AlreadySpecialized", //$NON-NLS-1$
+                                settingsHolder.getShortName()));
                     }
                     FiducialVisionSettings newSettings = new FiducialVisionSettings();
                     newSettings.setValues(visionSettings);
@@ -152,19 +154,24 @@ public class FiducialVisionSettingsConfigurationWizard extends AbstractConfigura
         });
         panel.add(btnSpecializeSetting, "4, 6, 3, 1");
 
-        final String subjects = settingsHolder instanceof Package ? "Parts" : "Parts and Packages";
+        final String subjects = settingsHolder instanceof Package
+                ? Translations.getString("FiducialVisionSettingsConfigurationWizard.Subjects.Parts") //$NON-NLS-1$
+                : Translations.getString("FiducialVisionSettingsConfigurationWizard.Subjects.PartsAndPackages"); //$NON-NLS-1$
         btnGeneralizeSettings = new JButton(Translations.getString(
                 "FiducialVisionSettingsConfigurationWizard.GeneralPanel.GeneralizeSettingsButton.text")); //$NON-NLS-1$
         btnGeneralizeSettings.addActionListener((e) -> {
             UiUtils.messageBoxOnException(() -> {
                 List<PartSettingsHolder> list = settingsHolder.getSpecializedFiducialVisionIn();
                 if (list.size() == 0) {
-                    throw new Exception("There are no specializations on "+subjects+" with the "+settingsHolder.getClass().getSimpleName()+" "+settingsHolder.getShortName()+".");
+                    throw new Exception(Translations.format(
+                            "FiducialVisionSettingsConfigurationWizard.Error.NoSpecializations", //$NON-NLS-1$
+                            subjects,
+                            settingsHolder.getClass().getSimpleName(),
+                            settingsHolder.getShortName()));
                 }
                 int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                        "This will remove the specialized vision settings in:\n\n"+
-                                new AbstractVisionSettings.ListConverter(false).convertForward(list)+"\n\n"+
-                                "Are you sure?", null,
+                        Translations.format("FiducialVisionSettingsConfigurationWizard.Confirm.Generalize", //$NON-NLS-1$
+                                new AbstractVisionSettings.ListConverter(false).convertForward(list)), null,
                                 JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
                 if (result == JOptionPane.YES_OPTION) {
                     UiUtils.messageBoxOnException(settingsHolder::generalizeFiducialVisionSettings);
@@ -192,7 +199,7 @@ public class FiducialVisionSettingsConfigurationWizard extends AbstractConfigura
         resetButton.addActionListener(e -> {
             UiUtils.messageBoxOnException(() -> {
                 int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                        "This will reset the fiducial vision settings with to the default settings. Are you sure??", null,
+                        Translations.getString("FiducialVisionSettingsConfigurationWizard.Confirm.Reset"), null, //$NON-NLS-1$
                         JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
                 if (result == JOptionPane.YES_OPTION) {
                     ReferenceFiducialLocator fiducialVision = ReferenceFiducialLocator.getDefault();
@@ -234,7 +241,7 @@ public class FiducialVisionSettingsConfigurationWizard extends AbstractConfigura
             @Override
             public void resetPipeline() throws Exception {
                 int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                        "This will replace the Pipeline with the default. Are you sure??", null,
+                        Translations.getString("FiducialVisionSettingsConfigurationWizard.Confirm.ResetPipeline"), null, //$NON-NLS-1$
                         JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
                 if (result == JOptionPane.YES_OPTION) {
                     UiUtils.messageBoxOnException(() -> {

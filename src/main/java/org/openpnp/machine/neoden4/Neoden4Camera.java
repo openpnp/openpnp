@@ -19,6 +19,8 @@
 
 package org.openpnp.machine.neoden4;
 
+
+import org.openpnp.Translations;
 import java.awt.image.BufferedImage;
 
 import org.opencv.core.Mat;
@@ -230,7 +232,7 @@ public class Neoden4Camera extends ReferenceCamera {
 
 	@Override
 	public String getPropertySheetHolderTitle() {
-		return getClass().getSimpleName() + " " + getName();
+		return Translations.typeAndName(getClass(), getName());
 	}
 
 	@Override
