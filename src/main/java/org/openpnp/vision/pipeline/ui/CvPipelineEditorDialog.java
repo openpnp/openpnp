@@ -9,6 +9,8 @@ import java.awt.event.WindowEvent;
 import javax.swing.JDialog;
 import javax.swing.JOptionPane;
 
+import org.openpnp.Translations;
+
 public class CvPipelineEditorDialog extends JDialog {
     private CvPipelineEditor editor;
 
@@ -20,8 +22,8 @@ public class CvPipelineEditorDialog extends JDialog {
             public void windowClosing(WindowEvent e) {
                 if (editor.isDirty()) {
                     int selection = JOptionPane.showConfirmDialog(owner,
-                            "Save pipeline changes?",
-                            "Closing Pipeline Editor!",
+                            Translations.getString("CvPipelineEditorDialog.ConfirmSave.message"), //$NON-NLS-1$
+                            Translations.getString("CvPipelineEditorDialog.Closing.title"), //$NON-NLS-1$
                             JOptionPane.YES_NO_CANCEL_OPTION,
                             JOptionPane.QUESTION_MESSAGE,
                             null

@@ -22,6 +22,7 @@ package org.openpnp.spi;
 import java.awt.image.BufferedImage;
 import java.io.Closeable;
 
+import org.openpnp.Translations;
 import org.openpnp.CameraListener;
 import org.openpnp.model.Length;
 import org.openpnp.model.Location;
@@ -32,7 +33,13 @@ import org.openpnp.model.Location;
 public interface Camera extends HeadMountable, WizardConfigurable,
         PropertySheetHolder, Closeable {
     public enum Looking {
-        Down, Up
+        Down, Up;
+
+        @Override
+        public String toString() {
+            String s = Translations.getStringOrNull("Camera.Looking." + name()); //$NON-NLS-1$
+            return s != null ? s : name();
+        }
     }
 
     /**
@@ -124,6 +131,12 @@ public interface Camera extends HeadMountable, WizardConfigurable,
         Skip,
         Settle,
         SettleFullArea;
+
+        @Override
+        public String toString() {
+            String s = Translations.getStringOrNull("Camera.SettleOption." + name()); //$NON-NLS-1$
+            return s != null ? s : name();
+        }
     }
 
     /**

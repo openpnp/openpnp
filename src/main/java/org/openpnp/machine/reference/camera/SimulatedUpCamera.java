@@ -88,6 +88,12 @@ public class SimulatedUpCamera extends ReferenceCamera {
         Color getNozzleTipColor() {
             return new Color(rgbNozzleTip);
         }
+
+        @Override
+        public String toString() {
+            String s = Translations.getStringOrNull("SimulatedUpCamera.BackgroundScenario." + name()); //$NON-NLS-1$
+            return s != null ? s : name();
+        }
     }
 
     @Attribute(required=false)
@@ -417,7 +423,7 @@ public class SimulatedUpCamera extends ReferenceCamera {
 
     @Override
     public String getPropertySheetHolderTitle() {
-        return getClass().getSimpleName() + " " + getName();
+        return Translations.typeAndName(getClass(), getName());
     }
 
     @Override

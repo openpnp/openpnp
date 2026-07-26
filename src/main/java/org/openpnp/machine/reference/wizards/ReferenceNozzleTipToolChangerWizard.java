@@ -825,13 +825,13 @@ public class ReferenceNozzleTipToolChangerWizard extends AbstractConfigurationWi
     protected BufferedImage captureTemplateImage() throws Exception {
         Location location = nozzleTip.getVisionCalibration().getLocation(nozzleTip);
         if (location == null) {
-            throw new Exception("Select a vision calibration location first.");
+            throw new Exception(Translations.getString("Exception.SelectVisionCalibrationLocationFirst")); //$NON-NLS-1$
         }
         location = location.add(new Location(nozzleTip.getVisionCalibrationZAdjust().getUnits(), 
                 0, 0, nozzleTip.getVisionCalibrationZAdjust().getValue(), 0));
         Camera camera = getCamera();
         if (camera == null) {
-            throw new Exception("No down-looking camera found.");
+            throw new Exception(Translations.getString("Exception.NoDownLookingCamera")); //$NON-NLS-1$
         }
         MovableUtils.moveToLocationAtSafeZ(camera, location);
         BufferedImage image = camera.lightSettleAndCapture();
@@ -912,8 +912,9 @@ public class ReferenceNozzleTipToolChangerWizard extends AbstractConfigurationWi
             applyAction.actionPerformed(e);
             UiUtils.messageBoxOnException(() -> {
                 if (!nozzleTip.getChangerStartLocation().isInitialized()) {
-                    throw new Exception("Nozzle tip "+nozzleTip.getName()+" must at least have the First Location defined, "
-                            + "before it can clone from the template. The displacement between the two changer slots must be known.");
+                    throw new Exception(Translations.format(
+                            "Exception.NozzleTipFirstLocationRequired", //$NON-NLS-1$
+                            nozzleTip.getName()));
                 }
                 ReferenceNozzleTip templateNozzleTip = ReferenceNozzleTip.getTemplateNozzleTip();
                 nozzleTip.assignNozzleTipChangerSettings(templateNozzleTip, 

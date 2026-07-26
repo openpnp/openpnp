@@ -4,6 +4,7 @@ import java.io.*;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
+import java.text.MessageFormat;
 import java.util.*;
 
 public class Translations {
@@ -20,6 +21,41 @@ public class Translations {
         } catch (MissingResourceException e) {
             return '!' + key + '!';
         }
+    }
+
+    /**
+     * @return the translated string, or {@code null} if the key is missing.
+     */
+    public static String getStringOrNull(String key) {
+        try {
+            return RESOURCE_BUNDLE.getString(key);
+        } catch (MissingResourceException e) {
+            return null;
+        }
+    }
+
+    public static String format(String key, Object... args) {
+        try {
+            return MessageFormat.format(getString(key), args);
+        } catch (MissingResourceException e) {
+            return '!' + key + '!';
+        }
+    }
+
+    /**
+     * Localized display name for a machine-setup type (class simple name), falling back to the
+     * English class name when no translation exists.
+     */
+    public static String typeName(Class<?> type) {
+        String s = getStringOrNull("MachineSetup.Type." + type.getSimpleName()); //$NON-NLS-1$
+        return s != null ? s : type.getSimpleName();
+    }
+
+    /**
+     * Localized "Type Name" title used by PropertySheetHolder tree nodes.
+     */
+    public static String typeAndName(Class<?> type, String name) {
+        return typeName(type) + " " + name; //$NON-NLS-1$
     }
 
     public static class UTF8Control extends ResourceBundle.Control {

@@ -19,6 +19,8 @@
 
 package org.openpnp.machine.reference.feeder;
 
+
+import org.openpnp.Translations;
 import java.awt.Point;
 import java.awt.image.BufferedImage;
 import java.beans.PropertyChangeListener;
@@ -122,7 +124,7 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
         Logger.debug("feed({})", nozzle);
 
         if (actuatorName == null) {
-            throw new Exception("No actuator name set.");
+            throw new Exception(Translations.getString("Exception.NoActuatorNameSet")); //$NON-NLS-1$
         }
 
 
@@ -259,15 +261,15 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
         }
 
         if (camera == null) {
-            throw new Exception("No vision capable camera found on head.");
+            throw new Exception(Translations.getString("Exception.NoVisionCapableCameraOnHead")); //$NON-NLS-1$
         }
         
         if (vision.getTemplateImage() == null) {
-            throw new Exception("Template image is required when vision is enabled.");
+            throw new Exception(Translations.getString("Exception.TemplateImageRequiredWhenVisionEnabled")); //$NON-NLS-1$
         }
         
         if (vision.getAreaOfInterest().getWidth() == 0 || vision.getAreaOfInterest().getHeight() == 0) {
-            throw new Exception("Area of Interest is required when vision is enabled.");
+            throw new Exception(Translations.getString("Exception.AreaOfInterestRequiredWhenVisionEnabled")); //$NON-NLS-1$
         }
 
         // Position the camera over the pick location.
@@ -442,7 +444,7 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
 
     @Override
     public String getPropertySheetHolderTitle() {
-        return getClass().getSimpleName() + " " + getName();
+        return Translations.typeAndName(getClass(), getName());
     }
 
     @Override

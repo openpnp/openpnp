@@ -3,6 +3,7 @@ package org.openpnp.vision.pipeline.stages;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 
+import org.openpnp.Translations;
 import org.openpnp.model.Footprint;
 import org.openpnp.model.Length;
 import org.openpnp.spi.Camera;
@@ -23,7 +24,13 @@ public class CreateFootprintTemplateImage extends CvStage {
     public enum FootprintView {
         Fiducial,
         TopView,
-        BottomView
+        BottomView;
+
+        @Override
+        public String toString() {
+            String s = Translations.getStringOrNull("CreateFootprintTemplateImage.FootprintView." + name()); //$NON-NLS-1$
+            return s != null ? s : name();
+        }
     }
     @Attribute(required=false)
     @Property(description = "Determines, how the footprint is drawn. Fiducial: only draws the pads, TopView: draws body over pads, "

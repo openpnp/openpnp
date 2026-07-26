@@ -6,6 +6,7 @@ import java.util.List;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
 import org.opencv.imgproc.Imgproc;
+import org.openpnp.Translations;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
 import org.simpleframework.xml.Attribute;
@@ -27,6 +28,12 @@ public class FindContours extends CvStage {
         public int getCode() {
             return code;
         }
+
+        @Override
+        public String toString() {
+            String s = Translations.getStringOrNull("FindContours.RetrievalMode." + name()); //$NON-NLS-1$
+            return s != null ? s : name();
+        }
     }
     
     public enum ApproximationMethod {
@@ -43,6 +50,12 @@ public class FindContours extends CvStage {
 
         public int getCode() {
             return code;
+        }
+
+        @Override
+        public String toString() {
+            String s = Translations.getStringOrNull("FindContours.ApproximationMethod." + name()); //$NON-NLS-1$
+            return s != null ? s : name();
         }
     }
     

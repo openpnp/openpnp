@@ -2,6 +2,7 @@ package org.openpnp.vision.pipeline.stages;
 
 import org.opencv.core.Mat;
 import org.opencv.imgproc.Imgproc;
+import org.openpnp.Translations;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.spi.Camera;
@@ -75,13 +76,13 @@ public class DetectFixedCirclesHough extends CvStage {
     public Result process(CvPipeline pipeline) throws Exception {
         Camera camera = (Camera) pipeline.getProperty("camera");
         if (camera == null) {
-            throw new Exception("No Camera set on pipeline.");
+            throw new Exception(Translations.getString("Exception.NoCameraSetOnPipeline")); //$NON-NLS-1$
         }
         Integer minDistance = (Integer) pipeline.getProperty("DetectFixedCirclesHough.minDistance");
         Integer minDiameter = (Integer) pipeline.getProperty("DetectFixedCirclesHough.minDiameter");
         Integer maxDiameter = (Integer) pipeline.getProperty("DetectFixedCirclesHough.maxDiameter");
         if ((minDistance == null) || (minDiameter == null) || (maxDiameter == null)) {
-            throw new Exception("DetectFixedCirclesHough properties are not set on pipeline.");
+            throw new Exception(Translations.getString("Exception.DetectFixedCirclesHoughPropertiesNotSet")); //$NON-NLS-1$
         }
 
         Mat mat = pipeline.getWorkingImage();

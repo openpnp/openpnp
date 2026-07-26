@@ -14,7 +14,10 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.prefs.Preferences;
 
+import java.awt.Component;
+
 import javax.swing.AbstractAction;
+import javax.swing.DefaultListCellRenderer;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
@@ -250,11 +253,33 @@ public class LogPanel extends JPanel {
         return searchField;
     }
 
+    private String getLogLevelLabel(Level level) {
+        if (level == null) {
+            return "";
+        }
+        return Translations.getString("LogPanel.LogLevel." + level.name()); //$NON-NLS-1$
+    }
+
+    private void localizeLogLevelComboBox(JComboBox<Level> comboBox) {
+        comboBox.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index,
+                    boolean isSelected, boolean cellHasFocus) {
+                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                if (value instanceof Level) {
+                    setText(getLogLevelLabel((Level) value));
+                }
+                return this;
+            }
+        });
+    }
+
     private JPanel createFilterLogLevelPanel() {
         JPanel filterLogLevelPanel = new JPanel();
         filterLogLevelPanel.add(new JLabel(Translations.getString(
                 "LogPanel.FilterLoggingPanel.LogLevelLabel.text"))); //$NON-NLS-1$
-        JComboBox logLevelFilterComboBox = new JComboBox(Level.values());
+        JComboBox<Level> logLevelFilterComboBox = new JComboBox<>(Level.values());
+        localizeLogLevelComboBox(logLevelFilterComboBox);
         logLevelFilterComboBox.setSelectedItem(filterLogLevel);
         logLevelFilterComboBox.addActionListener(e -> {
             LogEntry entry = getSelectedEntry();
@@ -271,7 +296,8 @@ public class LogPanel extends JPanel {
         JPanel globalLogLevelPanel = new JPanel();
         globalLogLevelPanel.add(new JLabel(Translations.getString(
                 "LogPanel.FilterLoggingPanel.GlobalLogLevelLabel.text"))); //$NON-NLS-1$
-        JComboBox logLevelFilterComboBox = new JComboBox(Level.values());
+        JComboBox<Level> logLevelFilterComboBox = new JComboBox<>(Level.values());
+        localizeLogLevelComboBox(logLevelFilterComboBox);
         logLevelFilterComboBox.setSelectedItem((Level.valueOf(prefs.get(PREF_LOG_LEVEL, PREF_LOG_LEVEL_DEF))));
         logLevelFilterComboBox.addActionListener(e -> {
             Level logLevel = (Level) logLevelFilterComboBox.getSelectedItem();

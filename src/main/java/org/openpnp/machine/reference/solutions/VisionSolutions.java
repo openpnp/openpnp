@@ -21,6 +21,8 @@
 
 package org.openpnp.machine.reference.solutions;
 
+
+import org.openpnp.Translations;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.image.BufferedImage;
@@ -212,11 +214,8 @@ public class VisionSolutions implements Solutions.Subject {
             if (Configuration.get().getTablesLinked() == TablesLinked.Unlinked) {
                 solutions.add(new Solutions.Issue(
                         machine, 
-                        "Link the Placements/Parts/Packages/Vision Settings/Feeders tables between tabs.", 
-                        "When a table row is selected on one tab, automatically select the corresponding ones on the other tabs. "
-                        + "For instance, if a placement is selected, the corresponding part will be selected on the Parts tab, "
-                        + "the package on the Packages tab, the vision settings on the Vision tab, and the feeder on "
-                        + "the Feeders tab, if one is present for the part.", 
+                        Translations.getString("VisionSolutions.Issue.LinkTables"), //$NON-NLS-1$ 
+                        Translations.getString("VisionSolutions.Solution.LinkTables"), //$NON-NLS-1$ 
                         Severity.Suggestion,
                         "https://github.com/openpnp/openpnp/wiki/User-Manual#the-tabs") {
 
@@ -315,8 +314,8 @@ public class VisionSolutions implements Solutions.Subject {
             int maxDiameter = (int)(Math.min(camera.getWidth(), camera.getHeight())*maxCameraRelativeSubjectDiameter);
             return new Solutions.Issue.CustomProperty[] {
                     new Solutions.Issue.IntegerProperty(
-                            "Feature diameter",
-                            "Adjust the feature diameter that should be detected.",
+                            Translations.getString("VisionSolutions.Property.FeatureDiameter"), //$NON-NLS-1$
+                            Translations.getString("VisionSolutions.Property.FeatureDiameterDescription"), //$NON-NLS-1$
                             3, maxDiameter) {
                         @Override
                         public int get() {
@@ -331,7 +330,8 @@ public class VisionSolutions implements Solutions.Subject {
                                     try {
                                         // This show a diagnostic detection image in the camera view.
                                         getSubjectPixelLocation(camera, null, new Circle(0, 0, value), 0.05, 
-                                                "Diameter "+(int)value+" px - Score {score} ", null, true);
+                                                Translations.format("VisionSolutions.Property.DiameterScore", (int)value, "{score}"), //$NON-NLS-1$
+                                                null, true);
                                     }
                                     catch (Exception e) {
                                         Toolkit.getDefaultToolkit().beep();
@@ -344,10 +344,10 @@ public class VisionSolutions implements Solutions.Subject {
                         }
                     },
                     new Solutions.Issue.ActionProperty( 
-                            "", "Cycle to the next auto-detected contour") {
+                            "", Translations.getString("VisionSolutions.Property.AutoDetectNext")) { //$NON-NLS-1$
                         @Override
                         public Action get() {
-                            return new AbstractAction("Auto-Detect Next", Icons.rotateCounterclockwise) {
+                            return new AbstractAction(Translations.getString("VisionSolutions.Action.AutoDetectNext"), Icons.rotateCounterclockwise) { //$NON-NLS-1$
                                 @Override
                                 public void actionPerformed(ActionEvent e) {
                                     new Thread(() -> {
@@ -359,7 +359,8 @@ public class VisionSolutions implements Solutions.Subject {
                                                     try {
                                                         ScoreRange scoreRange = new ScoreRange();
                                                         Circle result = getSubjectPixelLocation(camera, null, new Circle(0, 0, (int)diameter), 0.05,
-                                                                "Diameter "+(int)diameter+" px - Score {score} ", scoreRange, true);
+                                                                Translations.format("VisionSolutions.Property.DiameterScore", (int)diameter, "{score}"), //$NON-NLS-1$
+                                                                scoreRange, true);
                                                         results.put((int) Math.round(diameter), scoreRange.finalScore);
                                                     }
                                                     catch (Exception e1) {
@@ -394,7 +395,8 @@ public class VisionSolutions implements Solutions.Subject {
                                                 try {
                                                     Circle result = getSubjectPixelLocation(camera, null, new Circle(0, 0, (int)featureDiameter), 0.05, null, null, false);
                                                     featureDiameter = (int) Math.round(result.diameter);
-                                                    getSubjectPixelLocation(camera, null, new Circle(0, 0, (int)featureDiameter), 0.05, "Best Diameter "+(int)featureDiameter+" px", null, false);
+                                                    getSubjectPixelLocation(camera, null, new Circle(0, 0, (int)featureDiameter), 0.05, Translations.format("VisionSolutions.Property.BestDiameter", (int)featureDiameter), //$NON-NLS-1$
+                                                    null, false);
                                                     Logger.debug("Next best feature diameter auto-detected at "+featureDiameter+"px");
                                                 }
                                                 catch (Exception e1) {
@@ -418,14 +420,10 @@ public class VisionSolutions implements Solutions.Subject {
             if (camera.getLooking() == Looking.Up) {
                 return new Solutions.Issue.Choice[]{
                     new Solutions.Issue.Choice(true,  
-                                      "<html><h3>Use Auto-Focus</h3>" 
-                                    + "<p>This is the recommended setting.</p>"
-                                    + "</html>", 
+                                      Translations.getString("VisionSolutions.Choice.UseAutoFocus"), //$NON-NLS-1$ 
                                     null), 
                     new Solutions.Issue.Choice(false,  
-                                      "<html><h3>Use nozzle Z location</h3>" 
-                                    + "<p><span style=\"color:red;\">CAUTION:</span> This will invalidate part height auto detection using auto focus.</p>" 
-                                    + "</html>", 
+                                      Translations.getString("VisionSolutions.Choice.UseNozzleZ"), //$NON-NLS-1$ 
                                     null), 
                 };
             } else {
@@ -445,8 +443,8 @@ public class VisionSolutions implements Solutions.Subject {
                     camera, 
                     camera,
                     oldFiducialDiameter,
-                    "Primary calibration fiducial position and initial camera calibration.", 
-                    "Move the camera over the primary calibration fiducial and capture its position.", 
+                    Translations.getString("VisionSolutions.Issue.PrimaryFiducial"), //$NON-NLS-1$ 
+                    Translations.getString("VisionSolutions.Solution.PrimaryFiducial"), //$NON-NLS-1$ 
                     Solutions.Severity.Fundamental,
                     "https://github.com/openpnp/openpnp/wiki/Vision-Solutions#calibration-primary-fiducial") {
 
@@ -458,23 +456,7 @@ public class VisionSolutions implements Solutions.Subject {
 
                 @Override 
                 public String getExtendedDescription() {
-                    return "<html>"
-                            + "<p>Camera calibration can be performed automatically by looking at fiducials while moving the "
-                            + "camera around in a certain pattern. This solution determines the X, Y position of the primary "
-                            + "fiducial and it performs preliminary camera calibration.</p><br/>"
-                            + "<p>Instructions for how to create and position the primary fiducial must be obtained in the OpenPnP "
-                            + "Wiki. <strong>There are very important rules that must be observed!</strong> Press the "
-                            + "blue Info button (below) to open the Wiki.</p><br/>"
-                            + "<p>Once you have prepared the calibration primary fiducial you can capture its position "
-                            + "in X, Y.</p><br/>"
-                            + "<p>Jog camera " + camera.getName()
-                            + " over the privary fiducial. Target it roughly with the cross-hairs.</p><br/>"
-                            + "<p>Adjust the <strong>Feature diameter</strong> up and down and see if it is detected right in the "
-                            + "camera view. A green circle and cross-hairs should appear and hug the fiducial contour. "
-                            + "Zoom the camera using the scroll-wheel.</p><br/>"
-                            + "<p>Then press Accept to capture the position. The camera will perform a small calibration movement "
-                            + "pattern</p>"
-                            + "</html>";
+                    return Translations.format("VisionSolutions.ExtendedDescription.PrimaryFiducial", camera.getName()); //$NON-NLS-1$
                 }
 
                 @Override
@@ -528,8 +510,8 @@ public class VisionSolutions implements Solutions.Subject {
                     camera, 
                     camera,
                     oldSecondaryFiducialDiameter,
-                    "Secondary calibration fiducial position.", 
-                    "Move the camera over the secondary calibration fiducial and capture its position.", 
+                    Translations.getString("VisionSolutions.Issue.SecondaryFiducial"), //$NON-NLS-1$ 
+                    Translations.getString("VisionSolutions.Solution.SecondaryFiducial"), //$NON-NLS-1$ 
                     Solutions.Severity.Fundamental,
                     "https://github.com/openpnp/openpnp/wiki/Vision-Solutions#calibration-secondary-fiducial") {
 
@@ -541,22 +523,7 @@ public class VisionSolutions implements Solutions.Subject {
 
                 @Override 
                 public String getExtendedDescription() {
-                    return "<html>"
-                            + "<p>Camera calibration also requires looking at a secondary fiducial at different "
-                            + "Z level. This will provide the calibration algorithm with the needed 3D/spacial information to "
-                            + "determine the true focal length of the lens and the optical position of the camera in space.</p><br/>"
-                            + "<p>Instructions for how to create and position the secondary fiducial must be obtained in the OpenPnP "
-                            + "Wiki. There are very important rules that must be observed, so don't miss it! Press the "
-                            + "blue Info button (below) to open the Wiki.</p><br/>"
-                            + "<p>Once you have prepared the calibration secondary fiducial you can capture its position "
-                            + "in X, Y.</p><br/>"
-                            + "<p>Jog camera " + camera.getName()
-                            + " over the secondary fiducial. Target it roughly with the cross-hairs.</p><br/>"
-                            + "<p>Adjust the <strong>Feature diameter</strong> up and down and see if it is detected right in the "
-                            + "camera view. A green circle and cross-hairs should appear and hug the fiducial contour. "
-                            + "Zoom the camera using the scroll-wheel.</p><br/>"
-                            + "<p>Then press Accept to capture the position.</p>"
-                            + "</html>";
+                    return Translations.format("VisionSolutions.ExtendedDescription.SecondaryFiducial", camera.getName()); //$NON-NLS-1$
                 }
 
                 @Override
@@ -612,8 +579,8 @@ public class VisionSolutions implements Solutions.Subject {
                     camera, 
                     camera,
                     head.getCalibrationPrimaryFiducialDiameter(),
-                    "Determine the camera head offsets.", 
-                    "Move the camera "+camera.getName()+" over the secondary calibration fiducial and capture its offsets.", 
+                    Translations.getString("VisionSolutions.Issue.CameraHeadOffsets"), //$NON-NLS-1$ 
+                    Translations.format("VisionSolutions.Solution.CameraHeadOffsets", camera.getName()), //$NON-NLS-1$ 
                     Solutions.Severity.Fundamental,
                     "https://github.com/openpnp/openpnp/wiki/Vision-Solutions#down-looking-camera-offsets") {
 
@@ -625,16 +592,7 @@ public class VisionSolutions implements Solutions.Subject {
 
                 @Override 
                 public String getExtendedDescription() {
-                    return "<html>"
-                            + "<p>Once the calibration primary fiducial is captured you can use it to capture the camera head "
-                            + "offsets (first approximation).</p><br/>"
-                            + "<p>Jog camera " + camera.getName()
-                            + " over the primary fiducial. Target it with the cross-hairs.</p><br/>"
-                            + "<p>Adjust the <strong>Feature diameter</strong> up and down and see if it is detected right in the "
-                            + "camera view. A green circle and cross-hairs should appear and hug the fiducial contour. "
-                            + "Zoom the camera using the scroll-wheel.</p><br/>"
-                            + "<p>Then press Accept to capture the offsets. The camera will perform a small calibration movement "
-                            + "</html>";
+                    return Translations.format("VisionSolutions.ExtendedDescription.CameraHeadOffsets", camera.getName()); //$NON-NLS-1$
                 }
 
                 @Override
@@ -647,7 +605,7 @@ public class VisionSolutions implements Solutions.Subject {
                 public void setState(Solutions.State state) throws Exception {
                     if (state == State.Solved) {
                         if (! isSolvedPrimaryXY(head)) {
-                            throw new Exception("The head "+head.getName()+" primary fiducial location X and Y must be set first.");
+                            throw new Exception(Translations.format("CalibrationSolutions.Exception.PrimaryXYRequired", head.getName())); //$NON-NLS-1$
                         }
 
                         final State oldState = getState();
@@ -705,8 +663,8 @@ public class VisionSolutions implements Solutions.Subject {
                     camera, 
                     camera,
                     oldVisionDiameter,
-                    "Determine the up-looking camera "+camera.getName()+" position and initial calibration.", 
-                    "Move the nozzle "+defaultNozzle.getName()+" over the up-looking camera "+camera.getName()+" and capture the position.", 
+                    Translations.format("VisionSolutions.Issue.UpLookingCamera", camera.getName()), //$NON-NLS-1$ 
+                    Translations.format("VisionSolutions.Solution.UpLookingCamera", defaultNozzle.getName(), camera.getName()), //$NON-NLS-1$ 
                     Solutions.Severity.Fundamental,
                     "https://github.com/openpnp/openpnp/wiki/Vision-Solutions#up-looking-camera-offsets") {
 
@@ -718,24 +676,7 @@ public class VisionSolutions implements Solutions.Subject {
 
                 @Override 
                 public String getExtendedDescription() {
-                    return "<html>"
-                            + "<p>Up-looking camera calibration can be performed automatically by looking at a nozzle tip while moving the "
-                            + "nozzle around in a certain pattern. This solution determines the X, Y position of the camera "
-                            + "and it performs preliminary camera calibration.</p><br/>"
-                            + "<p>Load nozzle "+ defaultNozzle.getName() + " with the smallest nozzle tip that you can reliably detect "
-                            + "(it may take some trial and error).</p><br/>"
-                            + "<p>Jog nozzle " + defaultNozzle.getName()
-                            + " over the camera "+camera.getName()+". Target it with the cross-hairs.</p><br/>"
-                            + "<p>Jog the nozzle tip point down in Z so it is in focus. This should be more or less on the same Z level "
-                            + "as the PCB surface. If not, consider adjusting the camera focus to make it so.</p><br/>"
-                            + "<p>If enabled, auto-focus will be used to detect the precise Z location.</p><br/>"
-                            + "<p>Adjust the <strong>Feature diameter</strong> up and down and see if it is detected right in the "
-                            + "camera view. A green circle and cross-hairs should appear and hug the wanted contour. "
-                            + "Zoom the camera using the scroll-wheel.</p><br/>"
-                            + "<p>Make sure to target a circular edge that can be detected consistently even when seen from the side. "
-                            + "This means it has to be a rather sharp-angled edge. Typically, the air bore contour is targeted.</p><br/>"
-                            + "<p>Then press Accept to capture the camera position.</p>"
-                            + "</html>";
+                    return Translations.format("VisionSolutions.ExtendedDescription.UpLookingCamera", defaultNozzle.getName(), camera.getName()); //$NON-NLS-1$
                 }
 
                 @Override
@@ -752,15 +693,14 @@ public class VisionSolutions implements Solutions.Subject {
                 public void setState(Solutions.State state) throws Exception {
                     if (state == State.Solved) {
                         if (! (defaultNozzle.getHeadOffsets().isInitialized() || camera instanceof SimulatedUpCamera)) {
-                            throw new Exception("The nozzle "+defaultNozzle.getName()+" head offsets are not yet set. "
-                                    + "You need to perform the \"Nozzle "+defaultNozzle.getName()+" offsets for the primary fiducial\" calibration first.");
+                            throw new Exception(Translations.format("VisionSolutions.Exception.NozzleOffsetsNotSet", defaultNozzle.getName())); //$NON-NLS-1$
                         }
                         // Re-evaluate the loaded nozzle tip, the user might have unloaded/loaded since the last findIssues().
                         // Note the referenceNozzleTip and oldVisionDiameter still need to be stored as members, to support undo.
                         referenceNozzleTip = (defaultNozzle.getNozzleTip() instanceof ReferenceNozzleTip) ?
                                 (ReferenceNozzleTip)defaultNozzle.getNozzleTip() : null;
                         if (referenceNozzleTip == null) {
-                            throw new Exception("The nozzle "+defaultNozzle.getName()+" has no nozzle tip loaded.");
+                            throw new Exception(Translations.format("VisionSolutions.Exception.NozzleTipNotLoaded", defaultNozzle.getName())); //$NON-NLS-1$
                         }
                         oldVisionDiameter = referenceNozzleTip.getCalibration().getCalibrationTipDiameter();
                         final State oldState = getState();
@@ -830,7 +770,7 @@ public class VisionSolutions implements Solutions.Subject {
                             .convertToUnits(LengthUnit.Millimeters).getValue()) < fiducialsMinimumZOffsetMm) {
                 solutions.add(new Solutions.PlainIssue(
                         head, 
-                        "Primary/secondary calibration fiducial Z too close together.", 
+                        Translations.getString("VisionSolutions.Issue.FiducialZTooClose"), //$NON-NLS-1$ 
                         "Head "+head.getName()+" primary and secondary calibration fiducial Z coordinates must be at least "
                                 +fiducialsMinimumZOffsetMm+"\u00A0mm apart.", 
                                 Solutions.Severity.Error,
@@ -838,7 +778,7 @@ public class VisionSolutions implements Solutions.Subject {
             }
 
             for (boolean primary : (nozzle == defaultNozzle && isSolvedSecondaryXY(head)) ? new boolean [] {true, false} : new boolean [] {true} ) {
-                String qualifier = primary ? "primary" : "secondary";
+                String qualifier = primary ? Translations.getString("VisionSolutions.Choice.Fiducial.Primary") : Translations.getString("VisionSolutions.Choice.Fiducial.Secondary"); //$NON-NLS-1$ //$NON-NLS-2$
                 Location oldLocation = primary ? oldPrimaryFiducialLocation : oldSecondaryFiducialLocation;
                 boolean isNonZeroReferenceZOffset = (primary 
                         && nozzle == defaultNozzle 
@@ -849,16 +789,15 @@ public class VisionSolutions implements Solutions.Subject {
                         && oldLocation.getLengthZ().compareTo(nozzle.getSafeZ()) >= 0) {
                     solutions.add(new Solutions.PlainIssue(
                             nozzle, 
-                            "Safe Z of Nozzle "+nozzle.getName()+" lower than "+qualifier+" fiducial Z.", 
-                            "Safe Z of Nozzle "+nozzle.getName()+" is lower than the calibration "+qualifier+" fiducial Z. "
-                                    + "Please change the calibration rig "+qualifier+" height or adjust Safe Z.", 
+                            Translations.format("VisionSolutions.Issue.SafeZBelowFiducial", nozzle.getName(), qualifier), //$NON-NLS-1$ 
+                            Translations.format("VisionSolutions.Solution.SafeZBelowFiducial", nozzle.getName(), qualifier), //$NON-NLS-1$ 
                             Solutions.Severity.Error,
                             "https://github.com/openpnp/openpnp/wiki/Vision-Solutions#nozzle-offsets"));
                 }
                 solutions.add(new Solutions.Issue(
                         nozzle, 
-                        "Nozzle "+nozzle.getName()+" offsets for the "+qualifier+" fiducial.", 
-                        "Move the nozzle "+nozzle.getName()+" to the "+qualifier+" calibration fiducial and capture its offsets.", 
+                        Translations.format("VisionSolutions.Issue.NozzleFiducialOffsets", nozzle.getName(), qualifier), //$NON-NLS-1$ 
+                        Translations.format("VisionSolutions.Solution.NozzleFiducialOffsets", nozzle.getName(), qualifier), //$NON-NLS-1$ 
                         Solutions.Severity.Fundamental,
                         "https://github.com/openpnp/openpnp/wiki/Vision-Solutions#nozzle-offsets") {
 
@@ -869,26 +808,15 @@ public class VisionSolutions implements Solutions.Subject {
 
                     @Override 
                     public String getExtendedDescription() {
-                        return "<html>"
-                                + "<p>Once the calibration "+qualifier+" fiducial is captured in X, Y you can use it to capture the nozzle head "
-                                + "offsets (first approximation).</p><br/>"
-                                + ((nozzle == defaultNozzle) ? 
-                                        "<p>This will also capture the calibration "+qualifier+" fiducial Z coordinate.</p><br/>" : 
-                                            "<p>This will also equalize Z of nozzle "+nozzle.getName()+" to Z of the default nozzle "+defaultNozzle.getName()+".</p><br/>")
-                                + (isNonZeroReferenceZOffset ?
-                                        "<p><strong color=\"red\">CAUTION:</strong> A non-zero head offsets Z has been detected on "
-                                        + "default nozzle "+nozzle.getName()+". "
-                                        + "Accepting this solution will reset it to zero, creating the new reference in Z. "
-                                        + "This will change the meaning of Z coordinates that have already been captured. "
-                                        + "Do not accept this solution, unless you are confident this is OK. "
-                                        + "In the worst case, this may lead to machine collisions! "
-                                        + "<strong color=\"red\">You have been warned!</strong></p><br/>" : 
-                                        "")
-                                + "<p>Jog nozzle " + nozzle.getName()
-                                + " over the "+qualifier+" fiducial. Lower the nozzle tip down until it touches the fiducial.</p><br/>"
-                                        + "<p><strong style=\"color:red;\">CAUTION:</strong> this is a very important Z coordinate, please capture it with care.</p><br/>"
-                                        + "<p>Then press Accept to capture the nozzle head offsets.</p>"
-                                + "</html>";
+                        return Translations.format("VisionSolutions.ExtendedDescription.NozzleFiducialOffsets", //$NON-NLS-1$
+                                qualifier,
+                                ((nozzle == defaultNozzle) ? 
+                                        Translations.format("VisionSolutions.ExtendedDescription.NozzleFiducialOffsets.CaptureZ", qualifier) : //$NON-NLS-1$
+                                            Translations.format("VisionSolutions.ExtendedDescription.NozzleFiducialOffsets.EqualizeZ", nozzle.getName(), defaultNozzle.getName())), //$NON-NLS-1$
+                                (isNonZeroReferenceZOffset ?
+                                        Translations.format("VisionSolutions.ExtendedDescription.NozzleFiducialOffsets.NonZeroZWarning", nozzle.getName()) : //$NON-NLS-1$
+                                        ""),
+                                nozzle.getName());
                     }
 
                     @Override
@@ -910,13 +838,13 @@ public class VisionSolutions implements Solutions.Subject {
                         if (state == State.Solved) {
                             // Check pre-conditions.
                             if (nozzle.getSafeZ() == null) {
-                                throw new Exception("The nozzle "+nozzle.getName()+" Z axis Safe Z Zone must be set first.");
+                                throw new Exception(Translations.format("VisionSolutions.Exception.SafeZRequired", nozzle.getName())); //$NON-NLS-1$
                             }
                             if (! isSolvedPrimaryXY(head)) {
-                                throw new Exception("The head "+head.getName()+" primary fiducial location X and Y must be set first.");
+                                throw new Exception(Translations.format("CalibrationSolutions.Exception.PrimaryXYRequired", head.getName())); //$NON-NLS-1$
                             }
                             if (! (defaultNozzle == nozzle || isSolvedPrimaryZ(head))) {
-                                throw new Exception("The head "+head.getName()+" primary fiducial location Z must be set first.");
+                                throw new Exception(Translations.format("CalibrationSolutions.Exception.PrimaryZRequired", head.getName())); //$NON-NLS-1$
                             }
                             if (!primary) {
                                 if (! isSolvedSecondaryXY(head)) {
@@ -936,14 +864,13 @@ public class VisionSolutions implements Solutions.Subject {
                                         if (nozzle == defaultNozzle) {
                                             // This is the reference nozzle, set the Z of the fiducial.
                                             if (nozzle.getSafeZ().compareTo(nozzleLocation.getLengthZ()) <= 0) {
-                                                throw new Exception("The calibration "+qualifier+" fidcuial Z must be lower than Safe Z.");
+                                                throw new Exception(Translations.format("VisionSolutions.Exception.FiducialZBelowSafeZ", qualifier)); //$NON-NLS-1$
                                             }
                                             else if (!primary
                                                     && Math.abs(head.getCalibrationPrimaryFiducialLocation().getLengthZ()
                                                     .subtract(nozzleLocation.getLengthZ())
                                                     .convertToUnits(LengthUnit.Millimeters).getValue()) < fiducialsMinimumZOffsetMm) {
-                                                throw new Exception("Primary and secondary calibration fidcuial Z must be more than "
-                                                        +fiducialsMinimumZOffsetMm+"\u00A0mm apart.");
+                                                throw new Exception(Translations.format("VisionSolutions.Exception.FiducialZTooClose", fiducialsMinimumZOffsetMm)); //$NON-NLS-1$
                                             }
                                             if (primary) {
                                                 head.setCalibrationPrimaryFiducialLocation(head.getCalibrationPrimaryFiducialLocation()
@@ -1053,8 +980,8 @@ public class VisionSolutions implements Solutions.Subject {
                     head, 
                     defaultCamera,
                     oldFiducialDiameter,
-                    "Enable Visual Homing.", 
-                    "Mount a permanent fiducial to your machine and use it for repeatable precision X/Y homing.", 
+                    Translations.getString("VisionSolutions.Issue.VisualHoming"), //$NON-NLS-1$ 
+                    Translations.getString("VisionSolutions.Solution.VisualHoming"), //$NON-NLS-1$ 
                     Solutions.Severity.Suggestion,
                     "https://github.com/openpnp/openpnp/wiki/Visual-Homing") {
 
@@ -1066,22 +993,7 @@ public class VisionSolutions implements Solutions.Subject {
 
                 @Override 
                 public String getExtendedDescription() {
-                    return "<html>"
-                            + "<p>Mount a permanent fiducial to your machine table. Choose a mounting point that is mechanically coupled to the "
-                            + "most important parts of your machine table. Make sure it is very unlikely you will ever need to change this new "
-                            + "frame of reference. The fiducial must be at the same Z level as the PCB surface. More information is avaible "
-                            + "online, please press the blue Info button (below).</p><br/>"
-                            + "<p>Home the machine by means of your controller/manually. The controller must presently work in the wanted "
-                            + "coordinate system.</p><br/>"
-                            + "<p>Jog camera "+defaultCamera.getName()+" over the fiducial. Target it roughly with the cross-hairs.</p><br/>"
-                            + "<p>Adjust the <strong>Feature diameter</strong> up and down and see if it is detected right in the "
-                            + "camera view. A green circle and cross-hairs should appear and hug the fiducial contour. "
-                            + "Zoom the camera using the scroll-wheel.</p><br/>"
-                            + "<p>Then press Accept to detect the precise position of the fiducial and set it up for visual homing.</p><br/>"
-                            + "<p>Note: This will not change your present machine coordinate system, but rather pin it down to the fiducial. "
-                            + "If the mechanics were to change slightly in the future (e.g. a homing end-switch slightly moved), the "
-                            + "homing fiducial will still be able to precisely preserve the frame of reference in X and Y.</p>"
-                            + "</html>";
+                    return Translations.format("VisionSolutions.ExtendedDescription.VisualHoming", defaultCamera.getName()); //$NON-NLS-1$
                 }
 
                 @Override
@@ -1093,8 +1005,7 @@ public class VisionSolutions implements Solutions.Subject {
                 public void setState(Solutions.State state) throws Exception {
                     if (state == State.Solved) {
                         if (! defaultCamera.getUnitsPerPixelPrimary().isInitialized()) {
-                            throw new Exception("The camera "+defaultCamera.getName()+" has no initial calibration. "
-                                    + "Use the \"Primary calibration fiducial position and initial camera calibration\".");
+                            throw new Exception(Translations.format("VisionSolutions.Exception.CameraNotCalibrated", defaultCamera.getName())); //$NON-NLS-1$
                         }
                         final State oldState = getState();
                         UiUtils.submitUiMachineTask(
@@ -1165,8 +1076,7 @@ public class VisionSolutions implements Solutions.Subject {
     public Length autoCalibrateCamera(ReferenceCamera camera, HeadMountable movable, Double expectedDiameter, String diagnostics, boolean secondary, boolean autoFocus) 
             throws Exception {
         if (camera.getAdvancedCalibration().isOverridingOldTransformsAndDistortionCorrectionSettings()) {
-            throw new Exception("Preliminary camera "+camera.getName()+" calibration cannot be performed, "
-                    + "because the Advanced Camera Calibration is already active.");
+            throw new Exception(Translations.format("VisionSolutions.Exception.AdvancedCalibrationActive", camera.getName())); //$NON-NLS-1$
         }
         Location initialLocation = movable.getLocation();
         // Temporarily set very conservative settling (calibration can happen before or after Camera Settling has been configured).
@@ -1334,7 +1244,7 @@ public class VisionSolutions implements Solutions.Subject {
 
                 if (pass > 0) {
                     if (!confirmed) {
-                        throw new Exception("The camera rotation/mirroring detected earlier was not confirmed.");
+                        throw new Exception(Translations.getString("VisionSolutions.Exception.RotationNotConfirmed")); //$NON-NLS-1$
                     }
                     // Fine-adjust rotation
                     double angle = Math.toDegrees(Math.atan2(dyX, dxX));
@@ -1534,7 +1444,7 @@ public class VisionSolutions implements Solutions.Subject {
             });
         }
         if (results.size() < 1) {
-            throw new Exception("Subject not found.");
+            throw new Exception(Translations.getString("VisionSolutions.Exception.SubjectNotFound")); //$NON-NLS-1$
         }
         Circle result = results.get(0);
         return result;

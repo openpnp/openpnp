@@ -30,6 +30,7 @@ import java.util.List;
 import javax.swing.Action;
 
 import org.apache.commons.io.IOUtils;
+import org.openpnp.Translations;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
@@ -203,7 +204,13 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         SwapFeeders,
         SwapOrCreate,
         ChangePart,
-        ChangePartAndClone
+        ChangePartAndClone;
+
+        @Override
+        public String toString() {
+            String s = Translations.getStringOrNull("ReferencePushPullFeeder.OcrWrongPartAction." + name()); //$NON-NLS-1$
+            return s != null ? s : name();
+        }
     }
 
     @Attribute(required = false)
@@ -262,7 +269,13 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         None,
         OnFirstUse,
         UntilConfident,
-        OnEachTapeFeed
+        OnEachTapeFeed;
+
+        @Override
+        public String toString() {
+            String s = Translations.getStringOrNull("ReferencePushPullFeeder.CalibrationTrigger." + name()); //$NON-NLS-1$
+            return s != null ? s : name();
+        }
     }
 
     @Attribute(required = false)
@@ -2154,14 +2167,16 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
 
     @Override
     public String getPropertySheetHolderTitle() {
-        return getClass().getSimpleName() + " " + getName();
+        return Translations.typeAndName(getClass(), getName());
     }
 
     @Override
     public PropertySheet[] getPropertySheets() {
         return new PropertySheet[] {
-                new PropertySheetWizardAdapter(getConfigurationWizard(), "Configuration"),
-                new PropertySheetWizardAdapter(new ReferencePushPullMotionConfigurationWizard(this), "Push-Pull Motion"),
+                new PropertySheetWizardAdapter(getConfigurationWizard(),
+                        Translations.getString("CommonPropertySheet.Configuration")), //$NON-NLS-1$
+                new PropertySheetWizardAdapter(new ReferencePushPullMotionConfigurationWizard(this),
+                        Translations.getString("CommonPropertySheet.PushPullMotion")), //$NON-NLS-1$
         };
     }
 

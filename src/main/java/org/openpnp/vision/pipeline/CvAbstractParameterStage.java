@@ -26,6 +26,7 @@ import java.beans.PropertyDescriptor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
+import org.openpnp.Translations;
 import org.simpleframework.xml.Attribute;
 
 public abstract class CvAbstractParameterStage extends CvStage {
@@ -55,7 +56,7 @@ public abstract class CvAbstractParameterStage extends CvStage {
     protected boolean previewResult = true;
 
     public String getParameterLabel() {
-        return parameterLabel;
+        return translateParameterText(parameterLabel);
     }
 
     public void setParameterLabel(String parameterLabel) {
@@ -67,11 +68,63 @@ public abstract class CvAbstractParameterStage extends CvStage {
     }
 
     public String getParameterDescription() {
-        return parameterDescription;
+        return translateParameterText(parameterDescription);
     }
 
     public void setParameterDescription(String parameterDescription) {
         this.parameterDescription = parameterDescription;
+    }
+
+    private static String translateParameterText(String text) {
+        if (text == null) {
+            return null;
+        }
+        String key = null;
+        if ("Min. Detail Size".equals(text)) {
+            key = "CvStage.ParameterText.MinDetailSize"; //$NON-NLS-1$
+        }
+        else if ("Threshold".equals(text)) {
+            key = "CvStage.ParameterText.Threshold"; //$NON-NLS-1$
+        }
+        else if ("Max. Distance".equals(text)) {
+            key = "CvStage.ParameterText.MaxDistance"; //$NON-NLS-1$
+        }
+        else if ("Symmetry Left/Right".equals(text)) {
+            key = "CvStage.ParameterText.SymmetryLeftRight"; //$NON-NLS-1$
+        }
+        else if ("Symmetry Upper/Lower".equals(text)) {
+            key = "CvStage.ParameterText.SymmetryUpperLower"; //$NON-NLS-1$
+        }
+        else if ("Minimal size of a detail that should be included in the detected shape.".equals(text)) {
+            key = "CvStage.ParameterText.MinDetailDescription"; //$NON-NLS-1$
+        }
+        else if ("Minimum Detail Size that should be considered masked. Only relevant for asymmetric detection."
+                .equals(text)) {
+            key = "CvStage.ParameterText.MinMaskedDetailDescription"; //$NON-NLS-1$
+        }
+        else if ("Set the brightness threshold that isolates the shiny contacts of a part.".equals(text)) {
+            key = "CvStage.ParameterText.ThresholdDescription"; //$NON-NLS-1$
+        }
+        else if ("Threshold brightness for relevant image elements (shiny contacts). Only relevant for asymmetric detection."
+                .equals(text)) {
+            key = "CvStage.ParameterText.AsymmetricThresholdDescription"; //$NON-NLS-1$
+        }
+        else if ("Maximum allowed distance between nominal fiducial location and detected location.".equals(text)) {
+            key = "CvStage.ParameterText.MaxDistanceDescription"; //$NON-NLS-1$
+        }
+        else if ("Switch On if parts are symmetric Left/Right (seen in 0° rotation).".equals(text)) {
+            key = "CvStage.ParameterText.SymmetryLeftRightDescription"; //$NON-NLS-1$
+        }
+        else if ("Switch On if parts are symmetric Upper/Lower (seen in 0° rotation)".equals(text)) {
+            key = "CvStage.ParameterText.SymmetryUpperLowerDescription"; //$NON-NLS-1$
+        }
+        if (key != null) {
+            String translation = Translations.getStringOrNull(key);
+            if (translation != null) {
+                return translation;
+            }
+        }
+        return text;
     }
 
     public void setStageName(String stageName) {

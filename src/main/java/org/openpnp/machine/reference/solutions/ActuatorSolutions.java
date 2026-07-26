@@ -26,6 +26,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.openpnp.Translations;
 import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.machine.reference.driver.GcodeDriver;
 import org.openpnp.machine.reference.driver.GcodeDriver.CommandType;
@@ -65,8 +66,8 @@ public class ActuatorSolutions implements Solutions.Subject {
         if (actuator == null) {
             solutions.add(new Solutions.PlainIssue(
                     holder, 
-                    holder.getSubjectText()+" is missing a "+qualifier+" actuator.", 
-                    "Create and assign a "+qualifier+" actuator as described in the Wiki.", 
+                    Translations.format("ActuatorSolutions.Issue.MissingActuator", holder.getSubjectText(), qualifier), //$NON-NLS-1$
+                    Translations.format("ActuatorSolutions.Solution.MissingActuator", qualifier), //$NON-NLS-1$
                     Severity.Warning,
                     uri));
         }
@@ -138,16 +139,16 @@ public class ActuatorSolutions implements Solutions.Subject {
         if (actuator == null) {
             solutions.add(new Solutions.PlainIssue(
                     holder, 
-                    holder.getSubjectText()+" is missing a "+qualifier+" actuator.", 
-                    "Create and assign a "+qualifier+" actuator as described in the Wiki.", 
+                    Translations.format("ActuatorSolutions.Issue.MissingActuator", holder.getSubjectText(), qualifier), //$NON-NLS-1$
+                    Translations.format("ActuatorSolutions.Solution.MissingActuator", qualifier), //$NON-NLS-1$
                     Severity.Warning,
                     uri));
         }
         else if (actuator.getDriver() == null) {
             if (!actuator.isDriverless()) {solutions.add(new Solutions.PlainIssue(
                     actuator, 
-                    "The "+qualifier+" actuator "+actuator.getName()+" has no driver assigned.", 
-                    "Assign a driver as described in the Wiki.", 
+                    Translations.format("ActuatorSolutions.Issue.NoDriver", qualifier, actuator.getName()), //$NON-NLS-1$
+                    Translations.getString("ActuatorSolutions.Solution.NoDriver"), //$NON-NLS-1$
                     Severity.Warning,
                     "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Actuators#driver-assignment"));
             }
@@ -163,9 +164,10 @@ public class ActuatorSolutions implements Solutions.Subject {
                             qualifier,
                             commandType, 
                             (suggestions != null ? suggestions.get(commandType) : null), 
-                            "The "+qualifier+" actuator "+actuator.getName()+" has no "+commandType+" assigned.", 
-                            "Assign the "+(commandType.name().contains("REGEX") ? "regular expression":"command")
-                            +" to driver "+driver.getName()+" as described in the Wiki.", 
+                            Translations.format("ActuatorSolutions.Issue.NoCommand", qualifier, actuator.getName(), commandType), //$NON-NLS-1$
+                            Translations.format("ActuatorSolutions.Solution.NoCommand", //$NON-NLS-1$
+                            (commandType.name().contains("REGEX") ? Translations.getString("ActuatorSolutions.Choice.NoCommand.Regex") : Translations.getString("ActuatorSolutions.Choice.NoCommand.Command")), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                            driver.getName()),
                             Severity.Warning,
                             uri));
                 }
@@ -195,24 +197,17 @@ public class ActuatorSolutions implements Solutions.Subject {
             this.suggestions = suggestions;
             oldGcode = driver.getCommand(actuator, commandType);
             newGcode = (oldGcode != null ? oldGcode : "");
-            suggestionToolTip = "<html>"
-                    + "Suggested templates for the <code>"+commandType+"</code>.<br/><br/>\n"
-                    + "<strong>CAUTION:</strong> You may need to adapt these to your specific <br/>\n"
-                    + holder.getSubjectText()+", controller and/or "+qualifier+".<br/>\n"
-                    + "Replace placeholders \u00BF with the proper numbers/letters/designators."
-                    + "</html>";
+            suggestionToolTip = Translations.format("ActuatorSolutions.ExtendedDescription.SuggestionTooltip", commandType, holder.getSubjectText(), qualifier); //$NON-NLS-1$
         }
 
         @Override
         public void setState(Solutions.State state) throws Exception {
             if (state == State.Solved) {
                 if (newGcode.isEmpty()) {
-                    throw new Exception(commandType+" must not be empty");
+                    throw new Exception(Translations.format("ActuatorSolutions.Exception.CommandEmpty", commandType)); //$NON-NLS-1$
                 }
                 if (newGcode.contains("\u00BF")) {
-                    throw new Exception(commandType+" still contains placeholders \u00BF. "
-                            + "Please replace with the proper digits or letters specific to your "
-                            + "controller/"+qualifier+" configuration.");
+                    throw new Exception(Translations.format("ActuatorSolutions.Exception.CommandPlaceholders", commandType, qualifier)); //$NON-NLS-1$
                 }
                 driver.setCommand(actuator, commandType, newGcode);
             }
@@ -235,7 +230,7 @@ public class ActuatorSolutions implements Solutions.Subject {
                 return new Solutions.Issue.CustomProperty[] {
                         new Solutions.Issue.MultiLineTextProperty(
                                 commandType.toString(),
-                                "The "+commandType+" for the "+actuator.getName()+".") {
+                                Translations.format("ActuatorSolutions.Property.CommandDescription", commandType, actuator.getName())) { //$NON-NLS-1$
 
                             @Override
                             public String get() {
@@ -260,8 +255,8 @@ public class ActuatorSolutions implements Solutions.Subject {
 
         protected MultiLineTextProperty booleanCommandProperty(boolean on) {
             return new Solutions.Issue.MultiLineTextProperty(
-                    "<html>"+(on ? "ON":"OFF")+"-Switching<br/>"+commandType.toString()+"</html>",
-                    "The "+(on ? "ON":"OFF")+"-switching "+commandType+" for the "+actuator.getName()+".") {
+                    Translations.format(on ? "ActuatorSolutions.Property.BooleanOnLabel" : "ActuatorSolutions.Property.BooleanOffLabel", commandType.toString()), //$NON-NLS-1$ //$NON-NLS-2$
+                    Translations.format(on ? "ActuatorSolutions.Property.BooleanOnDescription" : "ActuatorSolutions.Property.BooleanOffDescription", commandType, actuator.getName())) { //$NON-NLS-1$ //$NON-NLS-2$
 
                 @Override
                 public String get() {

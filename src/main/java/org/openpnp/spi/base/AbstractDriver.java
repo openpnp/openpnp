@@ -250,7 +250,7 @@ public abstract class AbstractDriver extends AbstractModelObject implements Driv
 
     @Override
     public String getPropertySheetHolderTitle() {
-        return getClass().getSimpleName() + " " + getName();
+        return Translations.typeAndName(getClass(), getName());
     }
 
     public void createDefaults() throws Exception  {}

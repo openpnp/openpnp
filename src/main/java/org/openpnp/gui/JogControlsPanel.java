@@ -659,7 +659,7 @@ public class JogControlsPanel extends JPanel {
 
                 // just make sure a part is there
                 if (part == null) {
-                    throw new Exception("No Part on the current nozzle!");
+                    throw new Exception(Translations.getString("JogControlsPanel.Error.NoPartOnNozzle")); //$NON-NLS-1$
                 }
                 
                 Feeder feeder = FeederUtils.findFeeder(Configuration.get().getMachine(),part,nozzle.getPartsFeeder(),null);

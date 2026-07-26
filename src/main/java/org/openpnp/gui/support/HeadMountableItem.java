@@ -19,6 +19,7 @@
 
 package org.openpnp.gui.support;
 
+import org.openpnp.Translations;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Nozzle;
 
@@ -35,7 +36,10 @@ public class HeadMountableItem {
 
     @Override
     public String toString() {
-        return String.format("HeadMountable: %s - %s", hm.getName(),
-        		hm.getHead() != null ? String.format("(Head: %s)", hm.getHead().getName()) : "");
+        return String.format(Translations.getString("HeadMountableItem.Format.HeadMountable"), //$NON-NLS-1$
+                hm.getName(),
+                hm.getHead() != null ? String.format(
+                        Translations.getString("HeadMountableItem.Format.Head"), //$NON-NLS-1$
+                        hm.getHead().getName()) : "");
     }
 }

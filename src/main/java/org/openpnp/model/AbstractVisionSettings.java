@@ -8,6 +8,7 @@ import java.util.function.Function;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.jdesktop.beansbinding.Converter;
+import org.openpnp.Translations;
 import org.openpnp.machine.reference.vision.AbstractPartSettingsHolder;
 import org.openpnp.machine.reference.vision.ReferenceFiducialLocator;
 import org.openpnp.spi.Machine;
@@ -106,6 +107,20 @@ public abstract class AbstractVisionSettings extends AbstractModelObject impleme
     }
 
     public String toString() {
+        return getLocalizedName();
+    }
+
+    /**
+     * Display name for UI lists/combos. Stock/default settings keep English names in configuration
+     * but show a localized label when a translation exists.
+     */
+    public String getLocalizedName() {
+        if (id != null) {
+            String translated = Translations.getStringOrNull("VisionSettings.StockName." + id); //$NON-NLS-1$
+            if (translated != null) {
+                return translated;
+            }
+        }
         return getName();
     }
 

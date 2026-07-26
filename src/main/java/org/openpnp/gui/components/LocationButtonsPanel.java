@@ -452,11 +452,7 @@ public class LocationButtonsPanel extends JPanel {
             if (isContactProbeReference()) {
                 /// Warn the user.
                 result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                        "<html>This will overwrite the Z reference and therefore<br/>"
-                                +"change the meaning of previously captured Z coordinates.<br/>"
-                                +"<span color=\"red\">You will need to recapture these locations!</span>"
-                                +"<br/><br/>"
-                                +"Are you sure?</html>",
+                        Translations.getString("LocationButtonsPanel.Confirm.OverwriteZReference"), //$NON-NLS-1$
                                 null, JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
             }
             if (result == JOptionPane.YES_OPTION) {
@@ -467,7 +463,9 @@ public class LocationButtonsPanel extends JPanel {
                         tool = ContactProbeNozzle.getDefaultNozzle();
                     }
                     if (! (tool instanceof ContactProbeNozzle)) {
-                        throw new Exception("Nozzle "+tool.getName()+" is not a ContactProbeNozzle.");
+                        throw new Exception(Translations.format(
+                                "LocationButtonsPanel.Error.NotContactProbeNozzle", //$NON-NLS-1$
+                                tool.getName()));
                     }
                     ContactProbeNozzle nozzle =  (ContactProbeNozzle)tool;
                     Location nominalLocation = getParsedLocation();
