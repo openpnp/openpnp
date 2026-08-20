@@ -41,7 +41,7 @@ import org.openpnp.gui.support.ActuatorsComboBoxModel;
 import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.LengthConverter;
-import org.openpnp.gui.support.LongConverter;
+import org.openpnp.gui.support.IntegerConverter;;
 import org.openpnp.gui.support.NamedConverter;
 import org.openpnp.machine.reference.ContactProbeNozzle;
 import org.openpnp.machine.reference.ContactProbeNozzle.ContactProbeMethod;
@@ -243,7 +243,7 @@ public class ContactProbeNozzleWizard extends AbstractConfigurationWizard {
     @Override
     public void createBindings() {
         LengthConverter lengthConverter = new LengthConverter();
-        LongConverter longConverter = new LongConverter();
+        IntergerConverter integerConverter = new IntegerConve();
         DoubleConverter doubleConverter = new DoubleConverter(Configuration.get().getLengthDisplayFormat());
         NamedConverter<Actuator> actuatorConverter = (new NamedConverter<>(nozzle.getHead().getActuators()));
 
@@ -254,7 +254,7 @@ public class ContactProbeNozzleWizard extends AbstractConfigurationWizard {
         addWrappedBinding(nozzle, "contactProbeDepthZ", contactProbeDepthZ, "text", lengthConverter);
         addWrappedBinding(nozzle, "contactProbeSpeed", contactProbeSpeed, "text", doubleConverter);
         addWrappedBinding(nozzle, "sniffleIncrementZ", sniffleIncrementZ, "text", lengthConverter);
-        addWrappedBinding(nozzle, "sniffleDwellTime", sniffleDwellTime, "text", longConverter);
+        addWrappedBinding(nozzle, "sniffleDwellTime", sniffleDwellTime, "text", integerConverter);
         addWrappedBinding(nozzle, "contactProbeAdjustZ", contactProbeAdjustZ, "text", lengthConverter);
 
         addWrappedBinding(nozzle, "feederHeightProbing", feederHeightProbing, "selectedItem");

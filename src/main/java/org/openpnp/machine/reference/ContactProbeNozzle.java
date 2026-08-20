@@ -437,7 +437,7 @@ public class ContactProbeNozzle extends ReferenceNozzle {
         this.sniffleIncrementZ = sniffleIncrementZ;
     }
 
-    public long getSniffleDwellTime() {
+    public int getSniffleDwellTime() {
         return sniffleDwellTime;
     }
 
