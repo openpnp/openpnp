@@ -3,6 +3,7 @@ package org.openpnp.machine.neoden4;
 import java.awt.geom.Point2D;
 import java.io.IOException;
 import java.util.concurrent.TimeoutException;
+import java.util.Arrays;
 
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 // import org.openpnp.logging.CalibrationLogger;
@@ -289,17 +290,22 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
         getCommunications().write(d);
     }
 
+    void writeBytes(byte[] b, boolean log) throws Exception {
+        if (log) {
+            StringBuffer sb = new StringBuffer();
+            for (int i = 0; i < b.length; i++) {
+                sb.append(String.format("%02x", b[i] & 0xff));
+            }
+            Logger.trace("> " + sb.toString());
+        }
+
+        getCommunications().writeBytes(b);
+    }
+
     void writeWithChecksum(byte[] b) throws Exception {
-        StringBuffer sb = new StringBuffer();
-        for (int i = 0; i < b.length; i++) {
-            sb.append(String.format("%02x", b[i] & 0xff));
-        }
-        sb.append(String.format("%02x", checksum(b) & 0xff));
-        Logger.trace("> " + sb.toString());
-        for (int i = 0; i < b.length; i++) {
-            write(b[i], false);
-        }
-        getCommunications().write(checksum(b) & 0xff);
+        byte target[] = Arrays.copyOf(b, b.length+1);
+        target[b.length] = (byte)(checksum(b) & 0xff);
+        writeBytes(target, true);
     }
 
     byte[] readWithChecksum(int length) throws Exception {
