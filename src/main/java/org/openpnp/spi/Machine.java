@@ -381,18 +381,29 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
     public boolean isParkAfterHomed();
     
     /**
-     * 
-     * Virtual Z axes (typically on cameras) are invisible, therefore it can easily be overlooked 
-     * by users that it is at unsafe Z. When they later press the Move tool to camera location button, 
-     * an unexpected Z down-move will result, potentially crashing the tool. 
-     * The maximum allowable roaming distance at unsafe Z therefore limits the jogging area 
+     *
+     * Virtual Z axes (typically on cameras) are invisible, therefore it can easily be overlooked
+     * by users that it is at unsafe Z. When they later press the Move tool to camera location button,
+     * an unexpected Z down-move will result, potentially crashing the tool.
+     * The maximum allowable roaming distance at unsafe Z therefore limits the jogging area
      * within which an unsafe virtual Z is kept. It should be enough to fine-adjust a captured
      * location, but jogging further away will automatically move the virtual axis to Safe Z.
-     * 
-     * @return Maximum allowable roaming distance at unsafe Z. 
+     *
+     * @return Maximum allowable roaming distance at unsafe Z.
      */
     public Length getUnsafeZRoamingDistance();
-    
+
+    /**
+     *
+     * During placement, this is the distance *below* board Z where parts are placed.
+     * Commonly this is zero, and parts are placed on the board surface.
+     * A positive value can be used to thoroughly squash the parts down into the paste,
+     * or to compensate for a nozzle that contracts when vacuum is applied
+     *
+     * @return Maximum allowable roaming distance at unsafe Z.
+     */
+    public Length getPlacementOffset();
+
     /**
      * @return True if scripting engines should be pooled for faster reuse.
      */
