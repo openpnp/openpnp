@@ -14,6 +14,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
 import org.junit.jupiter.api.Test;
+import org.openpnp.Translations;
 
 class MessageBoxesTest {
     @Test
@@ -24,7 +25,7 @@ class MessageBoxesTest {
             assertFalse(plain.editor.isEditable());
             assertTrue(plain.editor.isFocusable());
             assertEquals("A plain message", plain.getPlainText());
-            assertEquals(1, plain.getComponentCount());
+            assertEquals(2, plain.getComponentCount());
             assertNull(plain.copyButton.getParent());
 
             MessageBoxes.MessageContent empty =
@@ -66,9 +67,12 @@ class MessageBoxesTest {
             MessageBoxes.MessageContent content =
                     MessageBoxes.createMessageContent("<html>One<br><b>Two</b></html>", clipboard);
             content.editor.select(0, 1);
+            assertEquals(" ", content.copiedMessage.getText());
             content.copyButton.doClick();
             assertEquals(0, content.editor.getSelectionStart());
             assertEquals(1, content.editor.getSelectionEnd());
+            assertEquals(Translations.getString("MessageBoxes.CopyDone"),
+                    content.copiedMessage.getText());
         });
 
         assertEquals("One\nTwo", clipboard.getData(DataFlavor.stringFlavor));

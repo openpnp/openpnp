@@ -30,6 +30,7 @@ import java.io.StringWriter;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JEditorPane;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
@@ -63,6 +64,7 @@ public class MessageBoxes {
     static class MessageContent extends JPanel {
         final JEditorPane editor;
         final JButton copyButton;
+        final JLabel copiedMessage;
 
         MessageContent(String html, Clipboard clipboard) {
             super(new BorderLayout());
@@ -73,6 +75,9 @@ public class MessageBoxes {
             editor.putClientProperty(JEditorPane.HONOR_DISPLAY_PROPERTIES, Boolean.TRUE);
             add(editor, BorderLayout.CENTER);
 
+            copiedMessage = new JLabel(" ");
+            add(copiedMessage, BorderLayout.SOUTH);
+
             copyButton = new JButton(Translations.getString("MessageBoxes.Copy"));
             copyButton.setHorizontalAlignment(SwingConstants.CENTER);
             copyButton.addActionListener(e -> {
@@ -81,6 +86,7 @@ public class MessageBoxes {
                             ? Toolkit.getDefaultToolkit().getSystemClipboard()
                             : clipboard;
                     target.setContents(new StringSelection(getPlainText()), null);
+                    copiedMessage.setText(Translations.getString("MessageBoxes.CopyDone"));
                 }
                 catch (RuntimeException ex) {
                     Logger.error(ex, "Unable to copy message dialog text to the clipboard.");
