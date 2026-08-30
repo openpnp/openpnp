@@ -30,6 +30,7 @@ import org.openpnp.machine.photon.PhotonFeeder;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Part;
 import org.openpnp.util.UiUtils;
+import org.openpnp.util.UiUtils.Thrunnable;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
@@ -41,6 +42,7 @@ public class FeederConfigurationWizard extends AbstractConfigurationWizard {
 	
 	private final JLabel hardwareIdValue;
 	private final JLabel slotAddressValue;
+	private final JLabel firmwareVersionValue;
 	private final JComboBox partCb;
 	private final JTextField partPitchTf;
 	private final JTextField feedRetryCountTf;
@@ -82,6 +84,8 @@ public class FeederConfigurationWizard extends AbstractConfigurationWizard {
 			new RowSpec[] {
 				FormSpecs.RELATED_GAP_ROWSPEC,
 				FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
 				FormSpecs.RELATED_GAP_ROWSPEC,
 				FormSpecs.DEFAULT_ROWSPEC,}));
 		
@@ -102,6 +106,12 @@ public class FeederConfigurationWizard extends AbstractConfigurationWizard {
 
 		JButton identifyButton = new JButton(identifyFeederAction);
 		infoPanel.add(identifyButton, "8, 4"); //$NON-NLS-1$
+
+		JLabel firmwareVersionLabel = new JLabel(Translations.getString("FeederConfigurationWizard.InfoPanel.firmwareVersionLabel.text")); //$NON-NLS-1$
+        infoPanel.add(firmwareVersionLabel, "2, 6, left, center"); //$NON-NLS-1$
+        
+        firmwareVersionValue = new JLabel(""); //$NON-NLS-1$
+        infoPanel.add(firmwareVersionValue, "4, 6, 5, 1, left, center"); //$NON-NLS-1$
 		
 		JPanel partPanel = new JPanel();
 		partPanel.setBorder(new TitledBorder(null, Translations.getString("FeederConfigurationWizard.PartPanel.Border.title"), TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0))); //$NON-NLS-1$
@@ -280,6 +290,7 @@ public class FeederConfigurationWizard extends AbstractConfigurationWizard {
 		addWrappedBinding(feeder, "hardwareId", hardwareIdValue, "text"); //$NON-NLS-1$ //$NON-NLS-2$
 		bind(UpdateStrategy.READ, slotProxy, "slotAddress", slotAddressValue, "text"); //$NON-NLS-1$ //$NON-NLS-2$
 		bind(UpdateStrategy.READ, slotProxy, "enabled", identifyFeederAction, "enabled"); //$NON-NLS-1$ //$NON-NLS-2$
+		addWrappedBinding(feeder, "firmwareVersion", firmwareVersionValue, "text"); //$NON-NLS-1$ //$NON-NLS-2$
 
 		addWrappedBinding(feeder, "part", partCb, "selectedItem"); //$NON-NLS-1$ //$NON-NLS-2$
 		addWrappedBinding(feeder, "partPitch", partPitchTf, "text", intConverter); //$NON-NLS-1$ //$NON-NLS-2$
@@ -322,7 +333,12 @@ public class FeederConfigurationWizard extends AbstractConfigurationWizard {
 	private final Action findSlotAddressAction = new AbstractAction(Translations.getString("FeederConfigurationWizard.FindSlotAddressAction.Name")) { //$NON-NLS-1$
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			UiUtils.submitUiMachineTask(feeder::findSlotAddress);
+		    UiUtils.submitUiMachineTask(new Thrunnable() {
+                public void thrun() throws Exception {
+                    feeder.findSlotAddress();
+                    feeder.queryFirmwareVersion();
+                }
+            });
 		}
 	};
 
