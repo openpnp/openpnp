@@ -1,5 +1,13 @@
 package org.openpnp.machine.photon;
 
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.swing.Action;
+
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.photon.exceptions.FeedFailureException;
@@ -9,28 +17,30 @@ import org.openpnp.machine.photon.exceptions.UnconfiguredSlotException;
 import org.openpnp.machine.photon.protocol.ErrorTypes;
 import org.openpnp.machine.photon.protocol.PhotonBus;
 import org.openpnp.machine.photon.protocol.PhotonBusInterface;
-import org.openpnp.machine.photon.protocol.commands.*;
+import org.openpnp.machine.photon.protocol.commands.GetFeederAddress;
+import org.openpnp.machine.photon.protocol.commands.GetFeederId;
+import org.openpnp.machine.photon.protocol.commands.InitializeFeeder;
+import org.openpnp.machine.photon.protocol.commands.MoveFeedForward;
+import org.openpnp.machine.photon.protocol.commands.MoveFeedStatus;
 import org.openpnp.machine.photon.sheets.FeederPropertySheet;
 import org.openpnp.machine.photon.sheets.GlobalConfigPropertySheet;
 import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.machine.reference.driver.GcodeDriver;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Solutions;
-import org.openpnp.spi.*;
+import org.openpnp.spi.Actuator;
+import org.openpnp.spi.Driver;
+import org.openpnp.spi.Feeder;
+import org.openpnp.spi.Machine;
+import org.openpnp.spi.Nozzle;
+import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.util.MovableUtils;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
-
-import javax.swing.*;
-
-import java.time.Duration;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class PhotonFeeder extends ReferenceFeeder {
     public static final String ACTUATOR_DATA_NAME = "PhotonFeederData";
@@ -50,6 +60,14 @@ public class PhotonFeeder extends ReferenceFeeder {
 
     @Element(required = false)
     private Location offset;
+
+    final private double correctionLimit = 5.0; // millimeters
+    final private double correctionGain = 0.5; // portion of error to correct each bottom vision
+
+    private Location pickCorrectionIntegral = new Location(LengthUnit.Millimeters);
+
+    private Location pickCorrectionAveragingAccumulatorSinceLastFeed = new Location(LengthUnit.Millimeters);
+    private int visionsSinceLastFeed = 0;
 
     private static PhotonBusInterface photonBus;
 
@@ -86,11 +104,19 @@ public class PhotonFeeder extends ReferenceFeeder {
         photonBus = new PhotonBus(0, getDataActuator());
     }
 
-    @Override
-    public Location getPickLocation() throws Exception {
+    private Location getPickCorrectionOffset() throws Exception {
+        return pickCorrectionIntegral;
+    }
+
+    private Location getPickLocationWithoutError() throws Exception {
         verifyFeederLocationIsFullyConfigured();
 
         return offset.offsetWithRotationFrom(getSlot().getLocation());
+    }
+
+    @Override
+    public Location getPickLocation() throws Exception {
+        return getPickLocationWithoutError().add(getPickCorrectionOffset());
     }
 
     private void verifyFeederLocationIsFullyConfigured() throws NoSlotAddressException,
@@ -117,6 +143,7 @@ public class PhotonFeeder extends ReferenceFeeder {
     public void setOffset(Location offsets) {
         Object oldValue = this.offset;
         this.offset = offsets;
+        resetPickCorrection();
         firePropertyChange("offsets", oldValue, offsets);
     }
 
@@ -347,7 +374,7 @@ public class PhotonFeeder extends ReferenceFeeder {
         return actuator;
     }
 
-    private void feed(Nozzle nozzle, int distance_mm) throws Exception {
+    private void feed(Nozzle nozzle, int distance_HundredMicrons) throws Exception {
         for (int i = 0; i <= photonProperties.getFeederCommunicationMaxRetry(); i++) {
             findSlotAddressIfNeeded();
             initializeIfNeeded();
@@ -358,7 +385,7 @@ public class PhotonFeeder extends ReferenceFeeder {
 
             verifyFeederLocationIsFullyConfigured();
 
-            MoveFeedForward moveFeedForward = new MoveFeedForward(slotAddress, distance_mm * 10);
+            MoveFeedForward moveFeedForward = new MoveFeedForward(slotAddress, distance_HundredMicrons);
             MoveFeedForward.Response moveFeedForwardResponse = moveFeedForward.send(photonBus);
 
             if (moveFeedForwardResponse == null) {
@@ -415,11 +442,40 @@ public class PhotonFeeder extends ReferenceFeeder {
             return;
         }
 
-        feed(nozzle, partPitch);
+        emptyPickCorrectionAccumulatorIntoCorrection();
+
+        // To solve long term drift. Nudge the part pitch sent to the feeder if the correction offset is big enough.
+        Location nudgeOffset = new Location(LengthUnit.Millimeters);
+        int partPitchNudgeTicks = 0;
+        final double feedTickMm = 0.1;
+
+        double yPlaneErrorMm = pickCorrectionIntegral.getLengthY().convertToUnits(LengthUnit.Millimeters).getValue();
+
+        if (yPlaneErrorMm <= -feedTickMm || feedTickMm <= yPlaneErrorMm) {
+            // far enough to nudge the part pitch
+            partPitchNudgeTicks = -(int)(yPlaneErrorMm / feedTickMm);
+            nudgeOffset = new Location(LengthUnit.Millimeters, 0, (double)partPitchNudgeTicks * feedTickMm, 0, 0);
+            if (getSlotAddress() > 25) {
+                // back row of feeders; tape flows oposite direction as our commands so invert the nudge
+                partPitchNudgeTicks = -partPitchNudgeTicks;
+            }
+            Logger.debug("{}: Nudging tape by {} ticks", getSlotAddress(), partPitchNudgeTicks);
+        }
+
+        pickCorrectionIntegral = pickCorrectionIntegral.add(nudgeOffset);
+
+        try {
+            feed(nozzle, getPartPitch() * 10 + partPitchNudgeTicks);
+        } catch (Exception e) {
+            // Didn't feed, revert correction offset.
+            pickCorrectionIntegral = pickCorrectionIntegral.subtract(nudgeOffset);
+            throw e;
+        }
     }
 
     public void feedOneMm() throws Exception {
-        feed(null, 1);
+        feed(null, 10);
+        resetPickCorrection();
     }
 
     @Override
@@ -528,6 +584,16 @@ public class PhotonFeeder extends ReferenceFeeder {
 
         this.slotAddress = slotAddress;
 
+        if (oldSlot.getFeeder() == this) {
+            oldSlot.setFeeder(null);
+        }
+
+        if (getSlot() != null) {
+            getSlot().setFeeder(this);
+        }
+
+        resetPickCorrection();
+
         firePropertyChange("slotAddress", oldValue, slotAddress);
         firePropertyChange("slot", oldSlot, getSlot());
         firePropertyChange("name", oldName, getName());
@@ -544,6 +610,8 @@ public class PhotonFeeder extends ReferenceFeeder {
         if (getClass().getSimpleName().equals(name)) {
             name = hardwareId;
         }
+
+        resetPickCorrection();
 
         firePropertyChange("hardwareId", oldValue, hardwareId);
     }
@@ -564,6 +632,7 @@ public class PhotonFeeder extends ReferenceFeeder {
 
     public void setPartPitch(int partPitch) {
         this.partPitch = partPitch;
+        resetPickCorrection();
     }
 
     public int getPartPitch() {
@@ -687,5 +756,42 @@ public class PhotonFeeder extends ReferenceFeeder {
     @Override
     public boolean supportsFeedOptions() {
         return true;
+    }
+
+    @Override
+    public void bottomVisionCorrectionCallback(Location offset) {
+        Location pickLocation;
+        try {
+            pickLocation = getPickLocationWithoutError();
+        } catch (Exception e) {
+            Logger.error("{}: Could not get pick location without error for bottom vision callback: {}", getSlotAddress(), e);
+            return;
+        }
+
+        visionsSinceLastFeed++;
+        pickCorrectionAveragingAccumulatorSinceLastFeed = pickCorrectionAveragingAccumulatorSinceLastFeed.add(offset.rotateXy(pickLocation.getRotation()));
+    }
+
+    private void emptyPickCorrectionAccumulatorIntoCorrection() {
+        if (visionsSinceLastFeed <= 0)
+            return;
+
+        Location averageOffset = pickCorrectionAveragingAccumulatorSinceLastFeed.multiply(1.0 / (double)visionsSinceLastFeed);
+        pickCorrectionIntegral = pickCorrectionIntegral.add(averageOffset.multiply(correctionGain));
+
+        visionsSinceLastFeed = 0;
+        pickCorrectionAveragingAccumulatorSinceLastFeed = new Location(pickCorrectionAveragingAccumulatorSinceLastFeed.getUnits());
+
+        double distance = pickCorrectionIntegral.convertToUnits(LengthUnit.Millimeters).getLinearDistanceTo(0, 0);
+        if (distance > correctionLimit) {
+            // Avoid physical damage, saturate it back to limit.
+            pickCorrectionIntegral = pickCorrectionIntegral.multiply(correctionLimit / distance);
+        }
+    }
+
+    public void resetPickCorrection() {
+        pickCorrectionIntegral = new Location(LengthUnit.Millimeters);
+        visionsSinceLastFeed = 0;
+        pickCorrectionAveragingAccumulatorSinceLastFeed = new Location(LengthUnit.Millimeters);
     }
 }
