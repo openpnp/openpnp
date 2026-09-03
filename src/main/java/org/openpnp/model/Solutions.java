@@ -30,6 +30,7 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 import javax.swing.Action;
 import javax.swing.Icon;
@@ -281,27 +282,42 @@ public class Solutions extends AbstractTableModel {
     }
 
     public static abstract class Issue extends AbstractModelObject {
+        /**
+         * Declare the portability of Issues between machines
+         */
+        public enum Portability {
+            Portable,               //* issue is full portable
+            NonPortableController,  //* issue shall be checked between controllers - falls back to NonPortablePC if not available
+            NonPortablePC           //* issue shall be checked between PCs
+        };
+        
         final Subject subject;
         final String issue;
         final String solution;
         final Severity severity;
         final String uri;
+        final Portability portability;
         private State state;
         private Object choice;
 
-        public Issue(Subject subject, String issue, String solution, Severity severity, String uri) {
+        public Issue(Subject subject, String issue, String solution, Severity severity, String uri, Portability portability) {
             super();
             this.subject = subject; 
             this.issue = issue;
             this.solution = solution;
             this.severity = severity;
             this.uri = uri;
+            this.portability = portability;
             if (solution.isEmpty()) {
                 state = State.Dismissed;
             }
             else {
                 state = State.Open;
             }
+        }
+        // default constructor: consider Issue as portable
+        public Issue(Subject subject, String issue, String solution, Severity severity, String uri) {
+            this(subject, issue, solution, severity, uri, Portability.Portable);
         }
         public Subject getSubject() {
             return subject;
@@ -316,7 +332,17 @@ public class Solutions extends AbstractTableModel {
             return severity;
         }
         public String getFingerprint() {
-            return DigestUtils.shaHex(subject.getSubjectText()+"\n"+issue+"\n"+solution);
+            // primary key of this issue
+            String s = subject.getSubjectText()+"\n"+issue+"\n"+solution;
+            // if the issue is marked as nonPortable, add machine uuid
+            // FIXME: this could be extended to distinguish between PC and Controller bases non-portability as indicated by the issue.
+            if (portability != Portability.Portable) {
+                UUID uuid = Configuration.get().getMachineUuid();
+                if (uuid != null) {
+                    s += uuid;
+                }
+            }
+            return DigestUtils.shaHex(s);
         }
 
         public State getState() {
@@ -511,8 +537,12 @@ public class Solutions extends AbstractTableModel {
     public static class PlainIssue extends Issue {
 
         public PlainIssue(Subject subject, String issue, String solution, Severity severity,
+                String uri, Portability portability) {
+            super(subject, issue, solution, severity, uri, portability);
+        }
+        public PlainIssue(Subject subject, String issue, String solution, Severity severity,
                 String uri) {
-            super(subject, issue, solution, severity, uri);
+            this(subject, issue, solution, severity, uri, Portability.Portable);
         }
 
         @Override
