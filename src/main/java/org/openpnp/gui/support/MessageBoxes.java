@@ -19,12 +19,27 @@
 
 package org.openpnp.gui.support;
 
+import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
+import javax.swing.JButton;
+import javax.swing.JDialog;
+import javax.swing.JEditorPane;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.SwingConstants;
+import javax.swing.UIManager;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.html.HTML;
+import javax.swing.text.html.HTMLDocument;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.MainFrame;
 import org.pmw.tinylog.Logger;
 
@@ -35,15 +50,131 @@ public class MessageBoxes {
         if (message == null) {
             message = "";
         }
-        message = message.replaceAll("\n", "<br/>");
-        message = message.replaceAll("\r", "");
+        message = message.replace("\r", "").replace("\n", "<br/>");
+        if (message.regionMatches(true, 0, "<html>", 0, 6)) {
+            message = message.substring(6);
+            if (message.toLowerCase().endsWith("</html>")) {
+                message = message.substring(0, message.length() - 7);
+            }
+        }
         message = "<html><body width=\"400\">" + message + "</body></html>";
         return message;
-    }    
+    }
 
-    public static boolean errorBox(Component parent, String title, Throwable cause, boolean withContinuation) {
+    static class MessageContent extends JPanel {
+        final JEditorPane editor;
+        final JButton copyButton;
+        final JLabel copiedMessage;
+
+        MessageContent(String html, Clipboard clipboard) {
+            super(new BorderLayout());
+            editor = new JEditorPane("text/html", html);
+            editor.setEditable(false);
+            editor.setFocusable(true);
+            editor.setOpaque(false);
+            editor.putClientProperty(JEditorPane.HONOR_DISPLAY_PROPERTIES, Boolean.TRUE);
+            add(editor, BorderLayout.CENTER);
+
+            copiedMessage = new JLabel(" ");
+            add(copiedMessage, BorderLayout.SOUTH);
+
+            copyButton = new JButton(Translations.getString("MessageBoxes.Copy"));
+            copyButton.setHorizontalAlignment(SwingConstants.CENTER);
+            copyButton.addActionListener(e -> {
+                try {
+                    Clipboard target = clipboard == null
+                            ? Toolkit.getDefaultToolkit().getSystemClipboard()
+                            : clipboard;
+                    target.setContents(new StringSelection(getPlainText()), null);
+                    copiedMessage.setText(Translations.getString("MessageBoxes.CopyDone"));
+                }
+                catch (RuntimeException ex) {
+                    Logger.error(ex, "Unable to copy message dialog text to the clipboard.");
+                }
+            });
+        }
+
+        String getPlainText() {
+            try {
+                String text = editor.getDocument().getText(0, editor.getDocument().getLength());
+                // Swing's HTML document adds one structural newline before the body.
+                int structuralOffset = text.startsWith("\n") ? 1 : 0;
+                StringBuilder plainText = new StringBuilder(text.substring(structuralOffset));
+                HTMLDocument document = (HTMLDocument) editor.getDocument();
+                HTMLDocument.Iterator breaks = document.getIterator(HTML.Tag.BR);
+                while (breaks.isValid()) {
+                    int offset = breaks.getStartOffset() - structuralOffset;
+                    if (offset >= 0 && offset < plainText.length()) {
+                        plainText.setCharAt(offset, '\n');
+                    }
+                    breaks.next();
+                }
+                return plainText.toString();
+            }
+            catch (BadLocationException e) {
+                throw new IllegalStateException(e);
+            }
+        }
+    }
+
+    static MessageContent createMessageContent(String message, Clipboard clipboard) {
+        return new MessageContent(prepareMessage(message), clipboard);
+    }
+
+    private static MessageContent createMessageContent(String message) {
+        return createMessageContent(message, null);
+    }
+
+    private static int showDialog(Component parent, MessageContent content, String title,
+            int optionType, int messageType) {
+        JOptionPane optionPane = new JOptionPane(content, messageType, optionType);
+        JButton acceptButton;
+        JButton rejectButton = null;
+        switch (optionType) {
+            case JOptionPane.YES_NO_OPTION:
+                acceptButton = createOptionButton(optionPane, "OptionPane.yesButtonText",
+                        "OptionPane.yesButtonMnemonic", JOptionPane.YES_OPTION);
+                rejectButton = createOptionButton(optionPane, "OptionPane.noButtonText",
+                        "OptionPane.noButtonMnemonic", JOptionPane.NO_OPTION);
+                break;
+            case JOptionPane.OK_CANCEL_OPTION:
+                acceptButton = createOptionButton(optionPane, "OptionPane.okButtonText",
+                        "OptionPane.okButtonMnemonic", JOptionPane.OK_OPTION);
+                rejectButton = createOptionButton(optionPane, "OptionPane.cancelButtonText",
+                        "OptionPane.cancelButtonMnemonic", JOptionPane.CANCEL_OPTION);
+                break;
+            default:
+                acceptButton = createOptionButton(optionPane, "OptionPane.okButtonText",
+                        "OptionPane.okButtonMnemonic", JOptionPane.OK_OPTION);
+                break;
+        }
+        Object[] options = rejectButton == null
+                ? new Object[] { acceptButton, content.copyButton }
+                : new Object[] { acceptButton, rejectButton, content.copyButton };
+        optionPane.setOptions(options);
+        optionPane.setInitialValue(acceptButton);
+
+        JDialog dialog = optionPane.createDialog(parent, title);
+        dialog.setVisible(true);
+        dialog.dispose();
+
+        Object selected = optionPane.getValue();
+        return selected instanceof Integer ? (Integer) selected : JOptionPane.CLOSED_OPTION;
+    }
+
+    static JButton createOptionButton(JOptionPane optionPane, String textKey,
+            String mnemonicKey, int value) {
+        JButton button = new JButton(UIManager.getString(textKey));
+        int mnemonic = UIManager.getInt(mnemonicKey);
+        if (mnemonic != 0) {
+            button.setMnemonic(mnemonic);
+        }
+        button.addActionListener(e -> optionPane.setValue(value));
+        return button;
+    }
+
+    static String prepareThrowableMessage(Throwable cause) {
         String message = null;
-        boolean ret = false;
         if (cause != null) {
             message = cause.getMessage();
             if (message == null || message.trim().isEmpty()) {
@@ -57,16 +188,21 @@ public class MessageBoxes {
         if (message == null) {
             message = "No message supplied.";
         }
+        return message.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
+    }
+
+    public static boolean errorBox(Component parent, String title, Throwable cause, boolean withContinuation) {
+        boolean ret = false;
         Logger.debug("{}: {}", title, cause);
-        message = message.replaceAll("<", "&lt;");
-        message = message.replaceAll(">", "&gt;");
-        message = prepareMessage(message);
+        MessageContent content = createMessageContent(prepareThrowableMessage(cause));
 
         // if this errorBox shall ask for Continuation, show a ConfirmDialog and return if the user selected YES
         if (withContinuation) {
-            ret = JOptionPane.showConfirmDialog(parent, message, title, JOptionPane.OK_CANCEL_OPTION, JOptionPane.ERROR_MESSAGE) == JOptionPane.OK_OPTION;
+            ret = showDialog(parent, content, title, JOptionPane.OK_CANCEL_OPTION,
+                    JOptionPane.ERROR_MESSAGE) == JOptionPane.OK_OPTION;
         } else {
-            JOptionPane.showMessageDialog(parent, message, title, JOptionPane.ERROR_MESSAGE);
+            showDialog(parent, content, title, JOptionPane.DEFAULT_OPTION,
+                    JOptionPane.ERROR_MESSAGE);
         }
         
         return ret;
@@ -81,8 +217,8 @@ public class MessageBoxes {
             message = "";
         }
         Logger.debug("{}: {}", title, message);
-        message = prepareMessage(message);
-        JOptionPane.showMessageDialog(parent, message, title, JOptionPane.ERROR_MESSAGE);
+        showDialog(parent, createMessageContent(message), title, JOptionPane.DEFAULT_OPTION,
+                JOptionPane.ERROR_MESSAGE);
     }
 
     public static boolean errorBoxWithRetry(Component parent, String title, String message) {
@@ -90,16 +226,17 @@ public class MessageBoxes {
             message = "";
         }
         Logger.debug("{}: {}", title, message);
-        message = prepareMessage(message);
-        return JOptionPane.showConfirmDialog(parent, message, title, JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION;
+        return showDialog(parent, createMessageContent(message), title,
+                JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE) == JOptionPane.YES_OPTION;
     }
 
     public static void infoBox(String title, String message) {
-        if (message == null) {
-            message = "";
-        }
-        message = prepareMessage(message);
-        JOptionPane.showMessageDialog(MainFrame.get(), message, title, JOptionPane.INFORMATION_MESSAGE);
+        infoBox(MainFrame.get(), title, message, JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    public static void infoBox(Component parent, String title, String message, int messageType) {
+        showDialog(parent, createMessageContent(message), title, JOptionPane.DEFAULT_OPTION,
+                messageType);
     }
 
     public static void notYetImplemented(Component parent) {

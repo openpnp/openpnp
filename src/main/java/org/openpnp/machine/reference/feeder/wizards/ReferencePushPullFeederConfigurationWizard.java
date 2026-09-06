@@ -54,6 +54,7 @@ import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.LongConverter;
+import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.machine.reference.feeder.ReferencePushPullFeeder;
 import org.openpnp.machine.reference.feeder.ReferencePushPullFeeder.OcrWrongPartAction;
@@ -773,7 +774,8 @@ extends AbstractReferenceFeederConfigurationWizard {
                     if (report.length() == 0) {
                         report.append("No action taken.");
                     }
-                    JOptionPane.showMessageDialog(getTopLevelAncestor(), "<html>"+report+"</html>", "OCR Report", JOptionPane.INFORMATION_MESSAGE);
+                    MessageBoxes.infoBox(getTopLevelAncestor(), "OCR Report", "<html>"+report+"</html>",
+                            JOptionPane.INFORMATION_MESSAGE);
                 });
             });
         }
@@ -824,7 +826,8 @@ extends AbstractReferenceFeederConfigurationWizard {
                 if (report.length() == 0) {
                     report.append("No action taken.");
                 }
-                JOptionPane.showMessageDialog(getTopLevelAncestor(), "<html>"+report+"</html>", "OCR Report", JOptionPane.INFORMATION_MESSAGE);
+                MessageBoxes.infoBox(getTopLevelAncestor(), "OCR Report", "<html>"+report+"</html>",
+                        JOptionPane.INFORMATION_MESSAGE);
             });
         }
     };
