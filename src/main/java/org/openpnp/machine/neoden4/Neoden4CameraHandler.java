@@ -10,7 +10,7 @@ public final class Neoden4CameraHandler implements Neoden4CameraDriver {
 	private static Neoden4CameraDriver driver;
 
 	public Neoden4CameraHandler() {
-		String sharedLib = "libneodencam";
+		String sharedLib = "neodencam"; // translates to libneodencam.so
 		if (SystemUtils.IS_OS_WINDOWS) {
 			sharedLib = "NeodenCamera.dll";
 		}
