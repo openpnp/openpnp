@@ -103,14 +103,10 @@ public class HttpActuator extends ReferenceActuator {
     }
 
     protected void actuateUrl(Object value, URL url) throws IOException, ProtocolException {
-        if (this.lastActuationUrl != null 
-                && this.lastActuationUrl.equals(url.toString())) {
-            // URL hasn't changed: don't bother.
-            return;
-        }
         HttpURLConnection con = (HttpURLConnection) url.openConnection();
         con.setRequestMethod("GET");
         con.setRequestProperty("User-Agent", "Mozilla/5.0");
+        con.setUseCaches(false);
 
         int responseCode = con.getResponseCode();
 
@@ -142,6 +138,7 @@ public class HttpActuator extends ReferenceActuator {
 
         con.setRequestMethod("GET");
         con.setRequestProperty("User-Agent", "Mozilla/5.0");
+        con.setUseCaches(false);
 
         int responseCode = con.getResponseCode();
 
