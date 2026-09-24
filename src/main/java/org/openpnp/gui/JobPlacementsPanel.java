@@ -481,8 +481,8 @@ public class JobPlacementsPanel extends JPanel {
         filters.add(sideFilter);
         
         try {
-            RowFilter<PlacementsHolderPlacementsTableModel, Integer> searchFilter = 
-                    RowFilter.regexFilter("(?i)" + searchTextField.getText().trim()); //$NON-NLS-1$
+            RowFilter<PlacementsHolderPlacementsTableModel, Integer> searchFilter =
+                    TableUtils.createVisibleColumnsSearchFilter(table, searchTextField.getText());
             filters.add(searchFilter);
         }
         catch (PatternSyntaxException e) {

@@ -65,6 +65,7 @@ import org.openpnp.Translations;
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.components.CameraView;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
+import org.openpnp.gui.support.TableUtils;
 import org.openpnp.gui.support.ActionGroup;
 import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.Icons;
@@ -283,10 +284,10 @@ public class PackagesPanel extends JPanel implements WizardContainer {
         return selections;
     }
     private void search() {
-        RowFilter<PackagesTableModel, Object> rf = null;
+        RowFilter<PackagesTableModel, Integer> rf = null;
         // If current expression doesn't parse, don't update.
         try {
-            rf = RowFilter.regexFilter("(?i)" + searchTextField.getText().trim());
+            rf = TableUtils.createVisibleColumnsSearchFilter(table, searchTextField.getText());
         }
         catch (PatternSyntaxException e) {
             Logger.warn(e, "Search failed");

@@ -421,7 +421,7 @@ public class BoardPlacementsPanel extends JPanel {
         List<RowFilter<PlacementsHolderPlacementsTableModel, Integer>> filters = new ArrayList<>();
         
         try {
-            RowFilter<PlacementsHolderPlacementsTableModel, Integer> searchFilter = RowFilter.regexFilter("(?i)" + searchTextField.getText().trim()); //$NON-NLS-1$
+            RowFilter<PlacementsHolderPlacementsTableModel, Integer> searchFilter = TableUtils.createVisibleColumnsSearchFilter(table, searchTextField.getText());
             filters.add(searchFilter);
         }
         catch (PatternSyntaxException e) {
