@@ -211,7 +211,10 @@ public class PhotonFeeder extends ReferenceFeeder {
                 continue;
             }
 
-            verifyFeederLocationIsFullyConfigured();
+            if (slotAddress == null) {
+                throw new NoSlotAddressException(
+                        String.format("Photon Feeder with address %s has no slot address. Is it inserted?", hardwareId));
+            }
 
             IdentifyFeeder identifyFeeder = new IdentifyFeeder(hardwareId);
             IdentifyFeeder.Response response = identifyFeeder.send(photonBus);
