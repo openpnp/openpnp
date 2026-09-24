@@ -290,8 +290,8 @@ public class FeederConfigurationWizard extends AbstractConfigurationWizard {
 		addWrappedBinding(feeder, "hardwareId", hardwareIdValue, "text"); //$NON-NLS-1$ //$NON-NLS-2$
 		bind(UpdateStrategy.READ, slotProxy, "slotAddress", slotAddressValue, "text"); //$NON-NLS-1$ //$NON-NLS-2$
 		bind(UpdateStrategy.READ, slotProxy, "enabled", identifyFeederAction, "enabled"); //$NON-NLS-1$ //$NON-NLS-2$
-		addWrappedBinding(feeder, "firmwareVersion", firmwareVersionValue, "text"); //$NON-NLS-1$ //$NON-NLS-2$
 
+		bind(UpdateStrategy.READ, feeder, "firmwareVersion", firmwareVersionValue, "text"); //$NON-NLS-1$ //$NON-NLS-2$
 		addWrappedBinding(feeder, "part", partCb, "selectedItem"); //$NON-NLS-1$ //$NON-NLS-2$
 		addWrappedBinding(feeder, "partPitch", partPitchTf, "text", intConverter); //$NON-NLS-1$ //$NON-NLS-2$
 		addWrappedBinding(feeder, "feedRetryCount", feedRetryCountTf, "text", intConverter); //$NON-NLS-1$ //$NON-NLS-2$
