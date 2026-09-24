@@ -13,12 +13,14 @@ import org.openpnp.machine.photon.protocol.helpers.TestBus;
 import org.openpnp.machine.photon.protocol.helpers.TestBus.ContinuedVerification;
 import org.openpnp.machine.photon.sheets.FeederPropertySheet;
 import org.openpnp.machine.photon.sheets.GlobalConfigPropertySheet;
+import org.openpnp.gui.support.PickOffsetCorrectionPropertySheet;
 import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.model.*;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
+import org.openpnp.spi.base.AbstractMachine;
 import org.pmw.tinylog.Logger;
 
 import java.io.File;
@@ -1201,9 +1203,24 @@ public class PhotonFeederTest {
 
         PropertySheetHolder.PropertySheet[] sheets = feeder.getPropertySheets();
 
-        assertEquals(2, sheets.length);
+        assertEquals(3, sheets.length);
         assertTrue(sheets[0] instanceof FeederPropertySheet);
-        assertTrue(sheets[1] instanceof GlobalConfigPropertySheet);
+        assertTrue(sheets[1] instanceof PickOffsetCorrectionPropertySheet);
+        assertTrue(sheets[2] instanceof GlobalConfigPropertySheet);
+    }
+
+    @Test
+    public void unhomedMachineResetsPickCorrection() throws Exception {
+        feeder.getPickOffsetCorrection().addOffset(new Location(LengthUnit.Millimeters, 1, 2, 0, 0));
+        assertTrue(feeder.getPickOffsetCorrection().getOffset()
+                .getLinearDistanceTo(0, 0) > 0.0001);
+
+        // The machine going unhomed should drop the learned correction, matching openpnp's
+        // convention that homing clears transient state. home() fires this with false then true.
+        ((AbstractMachine) machine).fireMachineHomed(false);
+
+        assertEquals(0, feeder.getPickOffsetCorrection().getOffset()
+                .getLinearDistanceTo(0, 0), 0.0001);
     }
 
     @Test
