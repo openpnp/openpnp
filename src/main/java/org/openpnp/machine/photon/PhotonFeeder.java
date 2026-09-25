@@ -16,7 +16,10 @@ import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.machine.reference.driver.GcodeDriver;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.model.Package;
+import org.openpnp.model.Part;
 import org.openpnp.model.Solutions;
 import org.openpnp.spi.*;
 import org.openpnp.util.MovableUtils;
@@ -307,6 +310,7 @@ public class PhotonFeeder extends ReferenceFeeder {
 
             // This other feeder is in the slot we thought we were
             otherFeeder.setSlotAddress(response.fromAddress);
+            otherFeeder.applyDiscoveryDefaults();
         } else {
             initialized = true;
         }
@@ -533,6 +537,47 @@ public class PhotonFeeder extends ReferenceFeeder {
         firePropertyChange("name", oldName, getName());
     }
 
+    /**
+     * Fills in unset values on a newly discovered feeder. partId is a required XML attribute, so
+     * machine.xml can't be saved while it's null.
+     */
+    void applyDiscoveryDefaults() {
+        if (partId == null) {
+            setPart(getDefaultPart());
+        }
+
+        if (slotAddress != null) {
+            PhotonFeederSlots.Slot slot = getSlot();
+            if (slot != null && slot.getLocation() == null) {
+                slot.setLocation(new Location(LengthUnit.Millimeters));
+            }
+        }
+    }
+
+    /**
+     * Prefers a fiducial so the placeholder isn't mistaken for real stock.
+     */
+    private static Part getDefaultPart() {
+        Configuration configuration = Configuration.get();
+
+        Part fiducialHome = configuration.getPart("FIDUCIAL-HOME");
+        if (fiducialHome != null) {
+            return fiducialHome;
+        }
+
+        for (Part part : configuration.getParts()) {
+            Package pkg = part.getPackage();
+            String pkgId = pkg == null ? null : pkg.getId();
+            if ((pkgId != null && pkgId.toUpperCase().contains("FIDUCIAL"))
+                    || part.getId().toUpperCase().contains("FIDUCIAL")) {
+                return part;
+            }
+        }
+
+        List<Part> parts = configuration.getParts();
+        return parts.isEmpty() ? null : parts.get(0);
+    }
+
     public String getHardwareId() {
         return hardwareId;
     }
@@ -660,6 +705,7 @@ public class PhotonFeeder extends ReferenceFeeder {
 
                 otherFeeder.setHardwareId(response.uuid);
                 otherFeeder.setSlotAddress(address);
+                otherFeeder.applyDiscoveryDefaults();
 
                 Logger.trace("Found feeder with hardware uuid " + otherFeeder.getHardwareId() + " at address " + otherFeeder.getSlotAddress());
                 
