@@ -44,6 +44,11 @@ lib_dir="$cache_dir/opencv-lib"
 mkdir -p "$lib_dir"
 unzip -o -q -j "$opencv_jar" nu/pattern/opencv/linux/x86_64/libopencv_java455.so -d "$lib_dir"
 
+# Embeds the OpenCL kernels as C++ raw string literals.
+for kernel in "$src_dir"/*.cl; do
+    { printf 'R"OCL('; cat "$kernel"; printf ')OCL"\n'; } > "$cache_dir/generated/$(basename "$kernel").inc"
+done
+
 mkdir -p "$out_dir"
 g++ -std=c++17 -O2 -fPIC -shared -fvisibility=hidden \
     -I"$java_home/include" -I"$java_home/include/linux" \
