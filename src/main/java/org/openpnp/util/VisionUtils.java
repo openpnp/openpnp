@@ -292,9 +292,11 @@ public class VisionUtils {
             if (f != null && offsets != null) {
                 Location realError = offsets.getLocation();
                 if (offsets.getPreRotated()) {
-                    realError = realError.rotateXy(
-                        -Utils2D.calculateBoardPlacementLocation(boardLocation, placement.getLocation()).getRotation()
-                    );
+                    // Test alignments have no board, so the placement angle is already global.
+                    double placementAngle = boardLocation == null
+                            ? placement.getLocation().getRotation()
+                            : Utils2D.calculateBoardPlacementLocation(boardLocation, placement.getLocation()).getRotation();
+                    realError = realError.rotateXy(-placementAngle);
                 }
                 f.deferredBottomVisionResult(realError);
             }
