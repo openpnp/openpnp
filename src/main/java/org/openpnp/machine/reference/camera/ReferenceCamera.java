@@ -197,7 +197,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
 
     boolean gpuTransforms = true;
     private final Object gpuLock = new Object();
-    private OclCameraTransform gpuTransform;
+    private volatile OclCameraTransform gpuTransform;
     private List<Object> gpuTransformKey;
     private boolean gpuTransformFailed;
 
@@ -251,7 +251,48 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
      */
     @Override
     public BufferedImage captureTransformed() {
+        BufferedImage image = captureGpuTransformed();
+        if (image != null) {
+            return image;
+        }
         return transformImage(captureRaw());
+    }
+
+    /**
+     * Cameras that can hand raw V4L2 frames to the GPU return their stream here.
+     */
+    protected V4l2Stream getV4l2Stream() {
+        return null;
+    }
+
+    private BufferedImage captureGpuTransformed() {
+        V4l2Stream stream = getV4l2Stream();
+        if (stream == null || !gpuTransforms || gpuTransformFailed || isCalibrating() || isDeinterlaced()) {
+            return null;
+        }
+        boolean advanced = advancedCalibration.isOverridingOldTransformsAndDistortionCorrectionSettings();
+        BufferedImage image;
+        synchronized (gpuLock) {
+            try {
+                prepareGpuTransform(stream.getWidth(), stream.getHeight(), advanced);
+                image = stream.captureTransformed(gpuTransform, 500);
+            }
+            catch (IOException | IllegalStateException e) {
+                Logger.debug(e, "Camera {} V4L2 capture failed.", getName());
+                return null;
+            }
+            catch (Exception e) {
+                Logger.warn(e, "Camera {} GPU transforms failed, using the CPU instead.", getName());
+                gpuTransformFailed = true;
+                return null;
+            }
+        }
+        if (image != null) {
+            width = image.getWidth();
+            height = image.getHeight();
+            setLastTransformedImage(image);
+        }
+        return image;
     }
     
     /**
@@ -681,22 +722,11 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
                     && image.getType() != BufferedImage.TYPE_BYTE_GRAY) {
                 image = ImageUtils.convertBufferedImage(image, BufferedImage.TYPE_3BYTE_BGR);
             }
-            if (isWhiteBalanced()) {
-                initWhiteBalanceLut();
-            }
-            if (gpuTransform == null) {
-                gpuTransform = new OclCameraTransform();
-                gpuTransformKey = null;
-            }
-            if (!gpuTransformSettings(image, advanced).equals(gpuTransformKey)) {
-                Mat[] maps = buildTransformMaps(image.getWidth(), image.getHeight(), advanced);
-                gpuTransform.setTransform(maps[0], maps[1], isWhiteBalanced() ? lut : null);
-                maps[0].release();
-                maps[1].release();
-                // Building the maps may have created the undistortion maps, which are part of the key.
-                gpuTransformKey = gpuTransformSettings(image, advanced);
-            }
+            prepareGpuTransform(image.getWidth(), image.getHeight(), advanced);
             return gpuTransform.apply(image);
+        }
+        catch (IllegalStateException e) {
+            return null;
         }
         catch (Exception e) {
             Logger.warn(e, "Camera {} GPU transforms failed, using the CPU instead.", getName());
@@ -705,8 +735,40 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
         }
     }
 
-    private List<Object> gpuTransformSettings(BufferedImage image, boolean advanced) {
-        return Arrays.asList(image.getWidth(), image.getHeight(), advanced, cropWidth, cropHeight,
+    private void prepareGpuTransform(int frameWidth, int frameHeight, boolean advanced) {
+        if (isWhiteBalanced()) {
+            initWhiteBalanceLut();
+        }
+        if (gpuTransform == null || gpuTransform.isClosed()) {
+            gpuTransform = new OclCameraTransform();
+            gpuTransformKey = null;
+        }
+        if (gpuTransformSettings(frameWidth, frameHeight, advanced).equals(gpuTransformKey)) {
+            return;
+        }
+        Mat balance = isWhiteBalanced() ? lut : null;
+        if (hasGeometricTransforms(advanced)) {
+            Mat[] maps = buildTransformMaps(frameWidth, frameHeight, advanced);
+            gpuTransform.setTransform(maps[0], maps[1], balance, frameWidth, frameHeight);
+            maps[0].release();
+            maps[1].release();
+        }
+        else {
+            gpuTransform.setTransform(null, null, balance, frameWidth, frameHeight);
+        }
+        // Building the maps may have created the undistortion maps, which are part of the key.
+        gpuTransformKey = gpuTransformSettings(frameWidth, frameHeight, advanced);
+    }
+
+    private boolean hasGeometricTransforms(boolean advanced) {
+        if (advanced) {
+            return isCropped() || advancedCalibration.isEnabled();
+        }
+        return isCropped() || isUndistorted() || isScaled() || isRotated() || isOffset() || isFlipped();
+    }
+
+    private List<Object> gpuTransformSettings(int frameWidth, int frameHeight, boolean advanced) {
+        return Arrays.asList(frameWidth, frameHeight, advanced, cropWidth, cropHeight,
                 scaleWidth, scaleHeight, rotation, offsetX, offsetY, flipX, flipY, isUndistorted(),
                 advancedCalibration.isEnabled(), isWhiteBalanced() ? lut : null, undistortionMap1,
                 undistortionMap2);
@@ -746,11 +808,10 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
     @Override
     public void close() throws IOException {
         super.close();
-        synchronized (gpuLock) {
-            if (gpuTransform != null) {
-                gpuTransform.close();
-                gpuTransform = null;
-            }
+        // No gpuLock here: map building takes the camera lock while holding it.
+        OclCameraTransform transform = gpuTransform;
+        if (transform != null) {
+            transform.close();
         }
     }
 

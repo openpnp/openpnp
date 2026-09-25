@@ -143,7 +143,8 @@ public class CameraTransformGpuTest {
             c.setBlueGamma(0.8);
             c.setRotation(0.37);
         };
-        for (Consumer<TestCamera> settings : List.of(rotateFlip, cropScaleOffset, undistort, deinterlaceRotate, whiteBalance)) {
+        Consumer<TestCamera> whiteBalanceOnly = c -> c.setGreenBalance(0.9);
+        for (Consumer<TestCamera> settings : List.of(rotateFlip, cropScaleOffset, undistort, deinterlaceRotate, whiteBalance, whiteBalanceOnly)) {
             BufferedImage cpu = cpuCamera(settings).transformImage(image);
             TestCamera gpu = camera(settings);
             assertSimilar(cpu, gpu.transformImage(image));

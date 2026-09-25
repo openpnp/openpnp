@@ -49,7 +49,7 @@ g++ -std=c++17 -O2 -fPIC -shared -fvisibility=hidden \
     -I"$java_home/include" -I"$java_home/include/linux" \
     -I"$cache_dir/generated" \
     -I"$opencv_src/modules/core/include" -I"$opencv_src/modules/imgproc/include" \
-    "$src_dir/openpnp_ocl.cpp" \
+    "$src_dir/openpnp_ocl.cpp" "$src_dir/v4l2_stream.cpp" \
     -L"$lib_dir" -l:libopencv_java455.so \
     -o "$out_dir/libopenpnp_ocl.so"
 echo "openpnp_ocl: built $out_dir/libopenpnp_ocl.so"

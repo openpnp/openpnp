@@ -33,6 +33,7 @@ import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.camera.wizards.OpenPnpCaptureCameraConfigurationWizard;
 import org.openpnp.model.AbstractModelObject;
 import org.openpnp.spi.PropertySheetHolder;
+import org.openpnp.vision.gpu.OclSupport;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -44,6 +45,7 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
     private CaptureDevice device;
     private CaptureFormat format;
     private CaptureStream stream;
+    private V4l2Stream v4l2Stream;
 
     @Attribute(required = false)
     private String uniqueId;
@@ -102,6 +104,15 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
         if (! ensureOpen()) {
             return null;
         }
+        if (v4l2Stream != null) {
+            try {
+                return v4l2Stream.captureBgr(500);
+            }
+            catch (IOException e) {
+                Logger.debug(e, "Camera {} V4L2 capture failed.", getName());
+                return null;
+            }
+        }
         try {
             /**
              * The timeout is only needed if the stream is somehow in error and not producing frames (anymore) 
@@ -125,31 +136,28 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
     @Override
     protected synchronized boolean isOpen() {
         return super.isOpen() 
-                && stream != null;
+                && (stream != null || v4l2Stream != null);
     }
     
     @Override
     public synchronized boolean hasNewFrame() {
         if (isOpen()) {
-            return stream.hasNewFrame();
+            return v4l2Stream != null ? v4l2Stream.hasNewFrame() : stream.hasNewFrame();
         }        
         return false;
+    }
+
+    @Override
+    protected synchronized V4l2Stream getV4l2Stream() {
+        return isOpen() ? v4l2Stream : null;
     }
 
     @Override
     public synchronized void open() throws Exception {
         stop();
 
-        if (stream != null) {
-            try {
-                stream.close();
-            }
-            catch (Exception e) {
-                e.printStackTrace();
-            }
-            stream = null;
-        }
-        setPropertiesStream(stream);
+        closeStreams();
+        setPropertiesControls(null);
 
         clearCalibrationCache();
         
@@ -200,8 +208,14 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
             width = null;
             height = null;
 
-            stream = device.openStream(format);
-            setPropertiesStream(stream);
+            v4l2Stream = openV4l2Stream();
+            if (v4l2Stream != null) {
+                setPropertiesControls(v4l2Stream);
+            }
+            else {
+                stream = device.openStream(format);
+                setPropertiesControls(controlsOf(stream));
+            }
         }
         catch (Exception e) {
             e.printStackTrace();
@@ -211,9 +225,41 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
         super.open();
     }
 
+    private V4l2Stream openV4l2Stream() {
+        if (format.getFormatInfo().fourcc != V4l2Stream.FOURCC_YUYV || !OclSupport.isAvailable()) {
+            return null;
+        }
+        try {
+            V4l2Stream v4l2 = new V4l2Stream(uniqueId, format.getFormatInfo().width,
+                    format.getFormatInfo().height, format.getFormatInfo().fps);
+            Logger.info("Camera {} streams YUYV from V4L2 and converts it on the GPU.", getName());
+            return v4l2;
+        }
+        catch (Exception e) {
+            Logger.warn(e, "Camera {} could not stream from V4L2, using openpnp-capture.", getName());
+            return null;
+        }
+    }
+
+    private void closeStreams() {
+        if (stream != null) {
+            try {
+                stream.close();
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+            }
+            stream = null;
+        }
+        if (v4l2Stream != null) {
+            v4l2Stream.close();
+            v4l2Stream = null;
+        }
+    }
+
     public synchronized double estimateCaptureFps() throws Exception {
         ensureOpen();
-        if (stream == null || format == null) {
+        if ((stream == null && v4l2Stream == null) || format == null) {
             throw new Exception("Camera stream not properly initialized."); 
         }
         // Stop the broadcasting thread.
@@ -225,10 +271,15 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
         long t1 = 0;
         int capturedFrames = 0;
         for (int frames = 0; frames < 480; frames++) {
-            stream.capture();
+            if (v4l2Stream != null) {
+                v4l2Stream.captureBgr(0);
+            }
+            else {
+                stream.capture();
+            }
             while (true) {
                 t1 = System.currentTimeMillis();
-                if (stream.hasNewFrame()) {
+                if (hasNewFrame()) {
                     capturedFrames++;
                     break;
                 }
@@ -274,35 +325,71 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
         zoom.setCamera(this);
     }
 
-    private void setPropertiesStream(CaptureStream stream) {
-        backLightCompensation.setStream(stream);
-        brightness.setStream(stream);
-        contrast.setStream(stream);
-        exposure.setStream(stream);
-        focus.setStream(stream);
-        gain.setStream(stream);
-        gamma.setStream(stream);
-        hue.setStream(stream);
-        powerLineFrequency.setStream(stream);
-        saturation.setStream(stream);
-        sharpness.setStream(stream);
-        whiteBalance.setStream(stream);
-        zoom.setStream(stream);
+    private void setPropertiesControls(CaptureControls controls) {
+        backLightCompensation.setControls(controls);
+        brightness.setControls(controls);
+        contrast.setControls(controls);
+        exposure.setControls(controls);
+        focus.setControls(controls);
+        gain.setControls(controls);
+        gamma.setControls(controls);
+        hue.setControls(controls);
+        powerLineFrequency.setControls(controls);
+        saturation.setControls(controls);
+        sharpness.setControls(controls);
+        whiteBalance.setControls(controls);
+        zoom.setControls(controls);
+    }
+
+    public interface CaptureControls {
+        PropertyLimits getPropertyLimits(CaptureProperty property) throws Exception;
+
+        void setAutoProperty(CaptureProperty property, boolean auto) throws Exception;
+
+        boolean getAutoProperty(CaptureProperty property) throws Exception;
+
+        void setProperty(CaptureProperty property, int value) throws Exception;
+
+        int getProperty(CaptureProperty property) throws Exception;
+    }
+
+    private static CaptureControls controlsOf(CaptureStream stream) {
+        if (stream == null) {
+            return null;
+        }
+        return new CaptureControls() {
+            @Override
+            public PropertyLimits getPropertyLimits(CaptureProperty property) throws Exception {
+                return stream.getPropertyLimits(property);
+            }
+
+            @Override
+            public void setAutoProperty(CaptureProperty property, boolean auto) throws Exception {
+                stream.setAutoProperty(property, auto);
+            }
+
+            @Override
+            public boolean getAutoProperty(CaptureProperty property) throws Exception {
+                return stream.getAutoProperty(property);
+            }
+
+            @Override
+            public void setProperty(CaptureProperty property, int value) throws Exception {
+                stream.setProperty(property, value);
+            }
+
+            @Override
+            public int getProperty(CaptureProperty property) throws Exception {
+                return stream.getProperty(property);
+            }
+        };
     }
 
     @Override
     public synchronized void close() throws IOException {
         super.close();
 
-        if (stream != null) {
-            try {
-                stream.close();
-            }
-            catch (Exception e) {
-                e.printStackTrace();
-            }
-            stream = null;
-        }
+        closeStreams();
 
         capture.close();
     }
@@ -437,7 +524,7 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
         private Boolean auto;
 
         private OpenPnpCaptureCamera camera;
-        private CaptureStream stream;
+        private CaptureControls stream;
 
         public CapturePropertyHolder(CaptureProperty property) {
             this.property = property;
@@ -457,7 +544,7 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
             });
         }
 
-        public void setStream(CaptureStream stream) {
+        public void setControls(CaptureControls stream) {
             this.stream = stream;
             if (stream == null) {
                 return;
@@ -591,7 +678,7 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
     }
 
     public void reapplyProperties() {
-        setPropertiesStream(stream);
+        setPropertiesControls(v4l2Stream != null ? v4l2Stream : controlsOf(stream));
     }
 
     @Override
