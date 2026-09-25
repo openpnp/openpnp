@@ -143,6 +143,10 @@ const char circularSymmetrySource[] =
 #include "circular_symmetry.cl.inc"
 ;
 
+const char rectlinearSymmetrySource[] =
+#include "rectlinear_symmetry.cl.inc"
+;
+
 cv::UMat upload(JNIEnv *env, jarray array, int type) {
     jsize length = env->GetArrayLength(array);
     cv::UMat result;
@@ -301,6 +305,57 @@ JNIEXPORT void JNICALL Java_org_openpnp_vision_gpu_OclCircularSymmetry_score(JNI
         hostScores.release();
         cv::Mat hostRadii = gpuRadii.getMat(cv::ACCESS_READ);
         env->SetIntArrayRegion(radii, 0, cols * rows, hostRadii.ptr<jint>());
+    }
+    catch (const std::exception &e) {
+        throwJava(env, e.what());
+    }
+}
+
+JNIEXPORT void JNICALL Java_org_openpnp_vision_gpu_OclRectlinearSymmetry_crossSections(JNIEnv *env, jclass,
+        jbyteArray pixels, jfloatArray gammaLut, jfloatArray sines, jfloatArray cosines, jintArray params,
+        jfloatArray floatParams, jfloatArray sums, jfloatArray weights, jfloatArray maskedWeights) {
+    try {
+        static cv::ocl::ProgramSource source(rectlinearSymmetrySource);
+        cv::ocl::Kernel kernel("rectlinear_cross_sections", source);
+        if (kernel.empty()) {
+            throw std::runtime_error("rectlinear_cross_sections kernel failed to build");
+        }
+        jint p[11];
+        env->GetIntArrayRegion(params, 0, 11, p);
+        jfloat f[3];
+        env->GetFloatArrayRegion(floatParams, 0, 3, f);
+        int channels = p[1];
+        int bins = p[8] + p[9];
+        int angles = p[10];
+        cv::UMat gpuPixels = upload(env, pixels, CV_8U);
+        cv::UMat gpuLut = upload(env, gammaLut, CV_32F);
+        cv::UMat gpuSines = upload(env, sines, CV_32F);
+        cv::UMat gpuCosines = upload(env, cosines, CV_32F);
+        cv::UMat gpuSums(1, angles * bins * channels, CV_32F);
+        cv::UMat gpuWeights(1, angles * bins, CV_32F);
+        cv::UMat gpuMasked(1, angles * bins, CV_32F);
+        kernel.args(cv::ocl::KernelArg::PtrReadOnly(gpuPixels), cv::ocl::KernelArg::PtrReadOnly(gpuLut),
+                cv::ocl::KernelArg::PtrReadOnly(gpuSines), cv::ocl::KernelArg::PtrReadOnly(gpuCosines),
+                cv::ocl::KernelArg::PtrWriteOnly(gpuSums), cv::ocl::KernelArg::PtrWriteOnly(gpuWeights),
+                cv::ocl::KernelArg::PtrWriteOnly(gpuMasked), p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7],
+                p[8], p[9], f[0], f[1], f[2], p[10]);
+        size_t global[2] = {(size_t) bins, (size_t) angles};
+        if (!kernel.run(2, global, nullptr, false)) {
+            throw std::runtime_error("rectlinear_cross_sections kernel failed to run");
+        }
+        waitForGpu();
+        {
+            cv::Mat host = gpuSums.getMat(cv::ACCESS_READ);
+            env->SetFloatArrayRegion(sums, 0, angles * bins * channels, host.ptr<jfloat>());
+        }
+        {
+            cv::Mat host = gpuWeights.getMat(cv::ACCESS_READ);
+            env->SetFloatArrayRegion(weights, 0, angles * bins, host.ptr<jfloat>());
+        }
+        {
+            cv::Mat host = gpuMasked.getMat(cv::ACCESS_READ);
+            env->SetFloatArrayRegion(maskedWeights, 0, angles * bins, host.ptr<jfloat>());
+        }
     }
     catch (const std::exception &e) {
         throwJava(env, e.what());
