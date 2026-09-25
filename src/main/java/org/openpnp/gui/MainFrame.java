@@ -1088,10 +1088,7 @@ public class MainFrame extends JFrame {
         catch (Exception e) {
 			String message = "There was a problem saving the configuration. The reason was:\n\n" + e.getMessage() //$NON-NLS-1$
 					+ "\n\n"; //$NON-NLS-1$
-			message = message.replaceAll("\n", "<br/>"); //$NON-NLS-1$ //$NON-NLS-2$
-			message = message.replaceAll("\r", ""); //$NON-NLS-1$ //$NON-NLS-2$
-			message = "<html><body width=\"400\">" + message + "</body></html>"; //$NON-NLS-1$ //$NON-NLS-2$
-			JOptionPane.showMessageDialog(this, message, "Configuration Save Error", JOptionPane.ERROR_MESSAGE); //$NON-NLS-1$
+			MessageBoxes.infoBox(this, "Configuration Save Error", message, JOptionPane.ERROR_MESSAGE); //$NON-NLS-1$
 			return false;
         }
 
