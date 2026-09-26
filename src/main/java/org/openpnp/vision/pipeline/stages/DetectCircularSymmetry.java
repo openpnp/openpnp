@@ -29,6 +29,8 @@ import org.opencv.core.Mat;
 import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 import org.openpnp.model.Point;
+import org.openpnp.vision.gpu.GpuCircularSymmetry;
+import org.openpnp.vision.gpu.GpuImage;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
 import org.openpnp.vision.pipeline.Property;
@@ -261,7 +263,10 @@ public class DetectCircularSymmetry extends CvStage {
 
     @Override
     public Result process(CvPipeline pipeline) throws Exception {
-        Mat mat = pipeline.getWorkingImage();
+        GpuImage gpuImage = pipeline.getWorkingGpuImage();
+        Mat mat = gpuImage == null ? pipeline.getWorkingImage() : null;
+        int cols = gpuImage != null ? gpuImage.cols() : mat.cols();
+        int rows = gpuImage != null ? gpuImage.rows() : mat.rows();
         
         // Get overriding properties, if any and convert to pixels if necessary.
         double diameter = Double.NaN; //Nan means no override for diameter
@@ -271,7 +276,7 @@ public class DetectCircularSymmetry extends CvStage {
         int searchWidth = this.searchWidth;
         int searchHeight = this.searchHeight;
         SymmetryScore symmetryScore = this.symmetryScore;
-        Point center = new Point(mat.cols()*0.5, mat.rows()*0.5);
+        Point center = new Point(cols*0.5, rows*0.5);
         
         if (!propertyName.isEmpty()) {
             diameter = getPossiblePipelinePropertyOverride(diameter, pipeline, 
@@ -303,6 +308,28 @@ public class DetectCircularSymmetry extends CvStage {
             searchHeight = maxDistance*2;
         }
 
+        if (gpuImage != null && maxTargetCount == 1 && gpuEnabled && GpuCircularSymmetry.isAvailable()) {
+            try {
+                GpuCircularSymmetry.Search search = GpuCircularSymmetry.search(gpuImage, (int)center.x, (int)center.y, 
+                        minDiameter, maxDiameter, maxDistance*2, searchWidth, searchHeight, minSymmetry, 
+                        subSampling, superSampling, symmetryScore.ordinal(), symmetryScore.getAngularBins(), 
+                        diagnostics, heatMap);
+                double[] found = search.result();
+                List<Result.Circle> circles = new ArrayList<>();
+                if (found != null) {
+                    circles.add(new SymmetryCircle(found[0], found[1], found[2], found[3]));
+                }
+                GpuImage painted = search.getDiagnosticImage();
+                return painted != null ? new Result(painted, null, circles, 0, this) : new Result(null, circles);
+            }
+            catch (IllegalStateException e) {
+                Logger.warn(e, "Circular symmetry on the GPU failed, using the CPU instead.");
+                gpuEnabled = false;
+            }
+        }
+        if (mat == null) {
+            mat = pipeline.getWorkingImage();
+        }
         List<Result.Circle> circles = findCircularSymmetry(mat, (int)center.x, (int)center.y, 
                 minDiameter, maxDiameter, maxDistance*2, searchWidth, searchHeight, maxTargetCount, minSymmetry, corrSymmetry, 
                 subSampling, superSampling, symmetryScore, diagnostics, heatMap, new ScoreRange());
@@ -380,6 +407,12 @@ public class DetectCircularSymmetry extends CvStage {
      * The candidate targets kept for iteration, as a factor of the requested target count.
      */
     private static final int iterationTargetsFactor = 2;
+    /**
+     * Passes with fewer pixel samples than this (samples × candidates) stay on the CPU, where they are cheaper 
+     * than a GPU round trip.
+     */
+    static long gpuMinWork = 1_000_000;
+    static volatile boolean gpuEnabled = true;
 
     /**
      * Find the circle that has its center at the greatest circular symmetry in the given image,
@@ -545,6 +578,25 @@ public class DetectCircularSymmetry extends CvStage {
                     histogramFactor[i] = histogramN[i] > 0 ? 1.0/histogramN[i] : 0;
                 }
 
+                float[] gpuScores = null;
+                int[] gpuRadii = null;
+                if (gpuEnabled && (long) samples*wSearchRangeMap*hSearchRangeMap >= gpuMinWork 
+                        && GpuCircularSymmetry.isAvailable()) {
+                    gpuScores = new float[wSearchRangeMap*hSearchRangeMap];
+                    gpuRadii = new int[wSearchRangeMap*hSearchRangeMap];
+                    try {
+                        scoreOnGpu(pixelSamples, idxPixelData, idxHistogram, samples, histogramDim, 
+                                width, channels, x0SearchRange, subSamplingEff, wSearchRangeMap, hSearchRangeMap, 
+                                xSearch, ySearch, rSearchSq, rDim, angleDim, symmetryScore, r0, minDiameter, 
+                                gpuScores, gpuRadii);
+                    }
+                    catch (Exception e) {
+                        Logger.warn(e, "Circular symmetry on the GPU failed, using the CPU instead.");
+                        gpuEnabled = false;
+                        gpuScores = null;
+                    }
+                }
+
                 // Now iterate through all the pixel offsets and find the maximum circular symmetry.
                 for (int yi = 0, yis = 0; yi < hSearchRange; yi += subSamplingEff, yis++) {
                     for (int xi = 0, xis = 0, idxOffset = (yi*width + x0SearchRange) * channels; 
@@ -552,110 +604,116 @@ public class DetectCircularSymmetry extends CvStage {
                             xi += subSamplingEff, xis++, idxOffset += channels*subSamplingEff) {
                         int distSq = (xi - xSearch)*(xi - xSearch) + (yi - ySearch)*(yi - ySearch);
                         if (distSq <= rSearchSq) {
-                            Arrays.fill(histogramSum, 0);
-                            Arrays.fill(histogramSumSq, 0);
-                            for (int i = 0; i < samples; i++) {
-                                int idxPixel = idxPixelData[i];
-                                int idxHisto = idxHistogram[i];
-                                int pixel = Byte.toUnsignedInt(pixelSamples[idxOffset + idxPixel]);
-                                histogramSum[idxHisto] += pixel;
-                                histogramSumSq[idxHisto] += pixel*pixel;
-                            }
-
-                            // Analyze the ring sums to find the circular symmetry score, which is ratio between radial 
-                            // and circular variance.
-                            // We use the naive formula
-                            //    Var = (SumSq − (Sum × Sum) / n) / (n − 1), 
-                            // See https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Na%C3%AFve_algorithm
-                            // But we weigh all our variances by the pixel count, so we do not divide by (n - 1).
-                            final double div0Guard = 0.1;
                             double score;
-                            double contrastBest = Double.NEGATIVE_INFINITY;
                             int riContrastBest = 0;
-                            double varianceRing = 0;
-                            double [] sumAcross = new double[channels];
-                            double [] sumSqAcross = new double[channels];
-                            double [] lastAvg = new double[channels];
-                            int [] nAcross = new int[channels];
-                            for (int idxR = 0; idxR < rDim; idxR++) {
-                                double contrast = 0;
-                                for (int ch = 0; ch < channels; ch++) {
-                                    double sumRing = 0;
-                                    double sumSqRing = 0;
+                            if (gpuScores != null) {
+                                score = gpuScores[yis*wSearchRangeMap + xis];
+                                riContrastBest = gpuRadii[yis*wSearchRangeMap + xis];
+                            }
+                            else {
+                                Arrays.fill(histogramSum, 0);
+                                Arrays.fill(histogramSumSq, 0);
+                                for (int i = 0; i < samples; i++) {
+                                    int idxPixel = idxPixelData[i];
+                                    int idxHisto = idxHistogram[i];
+                                    int pixel = Byte.toUnsignedInt(pixelSamples[idxOffset + idxPixel]);
+                                    histogramSum[idxHisto] += pixel;
+                                    histogramSumSq[idxHisto] += pixel*pixel;
+                                }
 
-                                    int nRing = 0;
-                                    switch (symmetryScore) { 
-                                        case OverallVarianceVsRingVarianceSum:
-                                        {
-                                            int idxHisto = (idxR*angleDim + 0)*channels + ch;
-                                            sumRing += histogramSum[idxHisto];
-                                            sumSqRing += histogramSumSq[idxHisto];
-                                            nRing += histogramN[idxHisto];
-                                            double variance = (sumSqRing - Math.pow(sumRing, 2)/nRing);
-                                            varianceRing += variance;
-                                            sumAcross[ch] += sumRing;
-                                            sumSqAcross[ch] += sumSqRing;
-                                        }
-                                        break;
-                                        case RingAvgeragesVarianceVsRingVarianceSum:
-                                        {
-                                            for (int idxAngle = 0; idxAngle < angleDim; idxAngle++) {
-                                                int idxHisto = (idxR*angleDim + idxAngle)*channels + ch;
-                                                int n = histogramN[idxHisto];
-                                                double segmentAvg = histogramSum[idxHisto]*histogramFactor[idxHisto];
-                                                double segmentAvgSq = Math.pow(segmentAvg, 2);
+                                // Analyze the ring sums to find the circular symmetry score, which is ratio between radial 
+                                // and circular variance.
+                                // We use the naive formula
+                                //    Var = (SumSq − (Sum × Sum) / n) / (n − 1), 
+                                // See https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Na%C3%AFve_algorithm
+                                // But we weigh all our variances by the pixel count, so we do not divide by (n - 1).
+                                final double div0Guard = 0.1;
+                                double contrastBest = Double.NEGATIVE_INFINITY;
+                                double varianceRing = 0;
+                                double [] sumAcross = new double[channels];
+                                double [] sumSqAcross = new double[channels];
+                                double [] lastAvg = new double[channels];
+                                int [] nAcross = new int[channels];
+                                for (int idxR = 0; idxR < rDim; idxR++) {
+                                    double contrast = 0;
+                                    for (int ch = 0; ch < channels; ch++) {
+                                        double sumRing = 0;
+                                        double sumSqRing = 0;
+
+                                        int nRing = 0;
+                                        switch (symmetryScore) { 
+                                            case OverallVarianceVsRingVarianceSum:
+                                            {
+                                                int idxHisto = (idxR*angleDim + 0)*channels + ch;
                                                 sumRing += histogramSum[idxHisto];
                                                 sumSqRing += histogramSumSq[idxHisto];
-                                                sumSqAcross[ch] += segmentAvgSq*n;
-                                                nRing += n;
+                                                nRing += histogramN[idxHisto];
+                                                double variance = (sumSqRing - Math.pow(sumRing, 2)/nRing);
+                                                varianceRing += variance;
+                                                sumAcross[ch] += sumRing;
+                                                sumSqAcross[ch] += sumSqRing;
                                             }
-                                            sumAcross[ch] += sumRing;
-                                            double variance = (sumSqRing - Math.pow(sumRing, 2)/nRing);
-                                            varianceRing += variance;
-                                        }
-                                        break;
-                                        case RingMedianVarianceVsRingVarianceSum: 
-                                        {
-                                            int slotAngle = 0; 
-                                            for (int idxAngle = 0; idxAngle < angleDim; idxAngle++) {
-                                                int idxHisto = (idxR*angleDim + idxAngle)*channels + ch;
-                                                int n = histogramN[idxHisto];
-                                                if (n > 0) {
+                                            break;
+                                            case RingAvgeragesVarianceVsRingVarianceSum:
+                                            {
+                                                for (int idxAngle = 0; idxAngle < angleDim; idxAngle++) {
+                                                    int idxHisto = (idxR*angleDim + idxAngle)*channels + ch;
+                                                    int n = histogramN[idxHisto];
                                                     double segmentAvg = histogramSum[idxHisto]*histogramFactor[idxHisto];
-                                                    //double segmentAvgSq = Math.pow(segmentAvg, 2);
-                                                    segmentValues[slotAngle++] = segmentAvg;
+                                                    double segmentAvgSq = Math.pow(segmentAvg, 2);
                                                     sumRing += histogramSum[idxHisto];
-                                                    sumSqRing += /*segmentAvgSq*n;*/histogramSumSq[idxHisto];
+                                                    sumSqRing += histogramSumSq[idxHisto];
+                                                    sumSqAcross[ch] += segmentAvgSq*n;
                                                     nRing += n;
                                                 }
+                                                sumAcross[ch] += sumRing;
+                                                double variance = (sumSqRing - Math.pow(sumRing, 2)/nRing);
+                                                varianceRing += variance;
                                             }
-                                            Arrays.sort(segmentValues, 0, slotAngle);
-                                            double median = (segmentValues[Math.max(0, slotAngle/2 - 1)] + segmentValues[slotAngle/2])*0.5;
-                                            double medianSq = Math.pow(median, 2);
-                                            sumAcross[ch] += median*nRing;
-                                            sumSqAcross[ch] += medianSq*nRing;
-                                            double variance = (sumSqRing - Math.pow(sumRing, 2)/nRing);
-                                            varianceRing += variance;
+                                            break;
+                                            case RingMedianVarianceVsRingVarianceSum: 
+                                            {
+                                                int slotAngle = 0; 
+                                                for (int idxAngle = 0; idxAngle < angleDim; idxAngle++) {
+                                                    int idxHisto = (idxR*angleDim + idxAngle)*channels + ch;
+                                                    int n = histogramN[idxHisto];
+                                                    if (n > 0) {
+                                                        double segmentAvg = histogramSum[idxHisto]*histogramFactor[idxHisto];
+                                                        //double segmentAvgSq = Math.pow(segmentAvg, 2);
+                                                        segmentValues[slotAngle++] = segmentAvg;
+                                                        sumRing += histogramSum[idxHisto];
+                                                        sumSqRing += /*segmentAvgSq*n;*/histogramSumSq[idxHisto];
+                                                        nRing += n;
+                                                    }
+                                                }
+                                                Arrays.sort(segmentValues, 0, slotAngle);
+                                                double median = (segmentValues[Math.max(0, slotAngle/2 - 1)] + segmentValues[slotAngle/2])*0.5;
+                                                double medianSq = Math.pow(median, 2);
+                                                sumAcross[ch] += median*nRing;
+                                                sumSqAcross[ch] += medianSq*nRing;
+                                                double variance = (sumSqRing - Math.pow(sumRing, 2)/nRing);
+                                                varianceRing += variance;
+                                            }
+                                            break;
                                         }
-                                        break;
+                                        nAcross[ch] += nRing;
+                                        double avg1 = sumRing/nRing;
+                                        contrast += Math.pow(lastAvg[ch] - avg1, 2);
+                                        lastAvg[ch] = avg1;
                                     }
-                                    nAcross[ch] += nRing;
-                                    double avg1 = sumRing/nRing;
-                                    contrast += Math.pow(lastAvg[ch] - avg1, 2);
-                                    lastAvg[ch] = avg1;
-                                }
-                                if (rRing[idxR]*2 >= minDiameter) {
-                                    if (contrastBest < contrast) {
-                                        contrastBest = contrast;
-                                        riContrastBest = rRing[idxR];
+                                    if (rRing[idxR]*2 >= minDiameter) {
+                                        if (contrastBest < contrast) {
+                                            contrastBest = contrast;
+                                            riContrastBest = rRing[idxR];
+                                        }
                                     }
                                 }
+                                double varianceAcross = 0;
+                                for (int ch = 0; ch < channels; ch++) {
+                                    varianceAcross += (sumSqAcross[ch] - Math.pow(sumAcross[ch], 2) / nAcross[ch]);
+                                }
+                                score = (varianceAcross + div0Guard)/(varianceRing + div0Guard);
                             }
-                            double varianceAcross = 0;
-                            for (int ch = 0; ch < channels; ch++) {
-                                varianceAcross += (sumSqAcross[ch] - Math.pow(sumAcross[ch], 2) / nAcross[ch]);
-                            }
-                            score = (varianceAcross + div0Guard)/(varianceRing + div0Guard);
                             scoreRange.add(score);
                             if (scoreBestSampling < score) {
                                 scoreBestSampling = score;
@@ -910,6 +968,35 @@ public class DetectCircularSymmetry extends CvStage {
             }
         }
         return ret;
+    }
+
+    /**
+     * Regroups the ring samples by (ring, channel, angle) bin, the order the GPU kernel walks them.
+     */
+    private static void scoreOnGpu(byte[] pixelSamples, int[] idxPixelData, int[] idxHistogram, 
+            int samples, int histogramDim, int width, int channels, int x0, int sub, int cols, int rows, 
+            int xSearch, int ySearch, int rSearchSq, int rDim, int angleDim, SymmetryScore symmetryScore, 
+            int r0, int minDiameter, float[] scores, int[] radii) {
+        int[] binOf = new int[samples];
+        int[] binStart = new int[histogramDim + 1];
+        for (int i = 0; i < samples; i++) {
+            int ch = idxHistogram[i] % channels;
+            int idxAngle = (idxHistogram[i] / channels) % angleDim;
+            int idxR = idxHistogram[i] / channels / angleDim;
+            binOf[i] = (idxR*channels + ch)*angleDim + idxAngle;
+            binStart[binOf[i] + 1]++;
+        }
+        for (int bin = 0; bin < histogramDim; bin++) {
+            binStart[bin + 1] += binStart[bin];
+        }
+        int[] fill = Arrays.copyOf(binStart, histogramDim);
+        int[] offsets = new int[samples];
+        for (int i = 0; i < samples; i++) {
+            offsets[fill[binOf[i]]++] = idxPixelData[i];
+        }
+        GpuCircularSymmetry.score(pixelSamples, binStart, offsets, width, channels, x0, sub, cols, rows, 
+                xSearch, ySearch, rSearchSq, rDim, angleDim, symmetryScore.ordinal(), r0, minDiameter, 
+                scores, radii);
     }
 
     protected static List<SymmetryCircle> sortAndLimit(List<SymmetryCircle> circles,

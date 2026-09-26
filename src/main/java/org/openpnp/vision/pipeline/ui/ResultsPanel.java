@@ -214,8 +214,8 @@ public class ResultsPanel extends JPanel {
             result = editor.getPipeline().getResult(displayStage);
             if (result != null) {
                 try {
-                    if (result.image != null) {
-                        image = result.image.clone();
+                    if (result.getImage() != null) {
+                        image = result.getImage().clone();
                         if (displayTrueColors) {
                             image = OpenCvUtils.toRGB(image, result.colorSpace);
                         }
@@ -290,7 +290,7 @@ public class ResultsPanel extends JPanel {
         if (displayStage != null) {
             result = editor.getPipeline().getResult(displayStage);
             if (result != null) {
-                image = result.image;
+                image = result.getImage();
                 model = result.model;
             }
         }

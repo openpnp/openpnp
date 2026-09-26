@@ -1,0 +1,199 @@
+#version 450
+#extension GL_EXT_shader_explicit_arithmetic_types_int64 : require
+
+// Scores every candidate center of one DetectCircularSymmetry search pass, mirroring
+// DetectCircularSymmetry.findCircularSymmetry(). Samples are grouped per (ring, channel, angle) bin,
+// with one table per super-sampling offset along z. The search window comes from the pass' plan.
+// Variances use exact 64-bit integer sums, or sums shifted by the first ring's value, to avoid float
+// cancellation in flat (e.g. saturated) areas.
+
+layout(local_size_x = 8, local_size_y = 8) in;
+
+// Fixed at compile time so the per-channel and per-angle arrays stay in registers.
+layout(constant_id = 0) const int CHANNELS = 1;
+layout(constant_id = 1) const int MODE = 0;
+layout(constant_id = 2) const int ANGLES = 1;
+
+const int MODE_OVERALL = 0;
+const int MODE_RING_AVERAGES = 1;
+const int MODE_RING_MEDIAN = 2;
+
+layout(binding = 0) uniform Params {
+    int width;
+    int sub;
+    int maxCols;
+    int maxRows;
+    int rSearchSq;
+    int rDim;
+    int r0;
+    int minDiameter;
+    int bins;
+    int level;
+} p;
+
+layout(binding = 1) readonly buffer Pixels {
+    uint words[];
+} pixels;
+
+layout(binding = 2) readonly buffer BinStart {
+    int binStart[];
+};
+
+layout(binding = 3) readonly buffer Offsets {
+    int offsets[];
+};
+
+layout(binding = 4) writeonly buffer Scores {
+    float scores[];
+};
+
+layout(binding = 5) writeonly buffer Radii {
+    int radii[];
+};
+
+#define STATE_BINDING 6
+#include "symmetry_state.glsl"
+
+#define NAN uintBitsToFloat(0x7fc00000u)
+
+int pixelAt(int i) {
+    return int((pixels.words[i >> 2] >> ((i & 3) * 8)) & 0xFFu);
+}
+
+void main() {
+    int xis = int(gl_GlobalInvocationID.x);
+    int yis = int(gl_GlobalInvocationID.y);
+    int z = int(gl_GlobalInvocationID.z);
+    Level plan = state.levels[p.level];
+    if (plan.status != STATUS_OK || xis >= plan.cols || yis >= plan.rows) {
+        return;
+    }
+    int out_ = (z * p.maxRows + yis) * p.maxCols + xis;
+    int xi = xis * p.sub;
+    int yi = yis * p.sub;
+    int dx = xi - plan.xSearch;
+    int dy = yi - plan.ySearch;
+    if (dx * dx + dy * dy > p.rSearchSq) {
+        scores[out_] = NAN;
+        radii[out_] = 0;
+        return;
+    }
+    int base = ((plan.y0 + yi) * p.width + plan.x0 + xi) * CHANNELS;
+    int binBase = z * (p.bins + 1);
+
+    float varianceRing = 0.0;
+    int64_t sumAcross[CHANNELS];
+    int64_t sumSqAcross[CHANNELS];
+    int64_t nAcross[CHANNELS];
+    float shift[CHANNELS];
+    bool shifted[CHANNELS];
+    float shiftedSum[CHANNELS];
+    float shiftedSumSq[CHANNELS];
+    float lastAvg[CHANNELS];
+    for (int ch = 0; ch < CHANNELS; ch++) {
+        sumAcross[ch] = 0;
+        sumSqAcross[ch] = 0;
+        nAcross[ch] = 0;
+        shift[ch] = 0.0;
+        shifted[ch] = false;
+        shiftedSum[ch] = 0.0;
+        shiftedSumSq[ch] = 0.0;
+        lastAvg[ch] = 0.0;
+    }
+    float contrastBest = uintBitsToFloat(0xff800000u);
+    int rContrastBest = 0;
+    float segments[ANGLES];
+
+    for (int ri = 0; ri < p.rDim; ri++) {
+        float contrast = 0.0;
+        for (int ch = 0; ch < CHANNELS; ch++) {
+            int64_t sumRing = 0;
+            int64_t sumSqRing = 0;
+            int nRing = 0;
+            int slots = 0;
+            for (int a = 0; a < ANGLES; a++) {
+                int bin = (ri * CHANNELS + ch) * ANGLES + a;
+                int sum = 0;
+                int sumSq = 0;
+                int start = binStart[binBase + bin];
+                int end = binStart[binBase + bin + 1];
+                for (int k = start; k < end; k++) {
+                    int v = pixelAt(base + offsets[k]);
+                    sum += v;
+                    sumSq += v * v;
+                }
+                int n = end - start;
+                sumRing += sum;
+                sumSqRing += sumSq;
+                nRing += n;
+                if (MODE == MODE_RING_AVERAGES && n > 0) {
+                    float value = float(sum) / n;
+                    if (!shifted[ch]) {
+                        shift[ch] = value;
+                        shifted[ch] = true;
+                    }
+                    float d = value - shift[ch];
+                    shiftedSum[ch] += d * n;
+                    shiftedSumSq[ch] += d * d * n;
+                }
+                else if (MODE == MODE_RING_MEDIAN && n > 0) {
+                    segments[slots++] = float(sum) / n;
+                }
+            }
+            if (MODE == MODE_RING_MEDIAN) {
+                for (int i = 1; i < slots; i++) {
+                    float v = segments[i];
+                    int j = i - 1;
+                    while (j >= 0 && segments[j] > v) {
+                        segments[j + 1] = segments[j];
+                        j--;
+                    }
+                    segments[j + 1] = v;
+                }
+                if (slots > 0) {
+                    float median = (segments[max(0, slots / 2 - 1)] + segments[slots / 2]) * 0.5;
+                    if (!shifted[ch]) {
+                        shift[ch] = median;
+                        shifted[ch] = true;
+                    }
+                    float d = median - shift[ch];
+                    shiftedSum[ch] += d * nRing;
+                    shiftedSumSq[ch] += d * d * nRing;
+                }
+            }
+            if (nRing == 0) {
+                // The CPU code divides 0 by 0 here, which poisons the whole candidate.
+                varianceRing = NAN;
+                contrast = NAN;
+                continue;
+            }
+            varianceRing += float(int64_t(nRing) * sumSqRing - sumRing * sumRing) / nRing;
+            sumAcross[ch] += sumRing;
+            sumSqAcross[ch] += sumSqRing;
+            nAcross[ch] += nRing;
+            float avg = float(sumRing) / nRing;
+            contrast += (lastAvg[ch] - avg) * (lastAvg[ch] - avg);
+            lastAvg[ch] = avg;
+        }
+        if ((p.r0 + ri * p.sub) * 2 >= p.minDiameter && contrastBest < contrast) {
+            contrastBest = contrast;
+            rContrastBest = p.r0 + ri * p.sub;
+        }
+    }
+
+    float varianceAcross = 0.0;
+    for (int ch = 0; ch < CHANNELS; ch++) {
+        if (nAcross[ch] == 0) {
+            varianceAcross = NAN;
+        }
+        else if (MODE == MODE_OVERALL) {
+            varianceAcross += float(nAcross[ch] * sumSqAcross[ch] - sumAcross[ch] * sumAcross[ch]) / float(nAcross[ch]);
+        }
+        else {
+            varianceAcross += shiftedSumSq[ch] - shiftedSum[ch] * shiftedSum[ch] / float(nAcross[ch]);
+        }
+    }
+    const float div0Guard = 0.1;
+    scores[out_] = (varianceAcross + div0Guard) / (varianceRing + div0Guard);
+    radii[out_] = rContrastBest;
+}

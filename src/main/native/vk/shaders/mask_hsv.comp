@@ -1,0 +1,50 @@
+#version 450
+#extension GL_EXT_shader_8bit_storage : require
+#extension GL_EXT_shader_explicit_arithmetic_types_int8 : require
+
+// MaskHsv without soft edges: pixels inside the HSV ranges (hue may wrap) are blackened, or all
+// others when inverted; with BINARY, writes the 0/255 keep-mask instead.
+
+layout(local_size_x = 256) in;
+
+layout(constant_id = 0) const bool BINARY = false;
+
+layout(binding = 0) uniform Params {
+    int pixels;
+    int hueMin;
+    int hueMax;
+    int saturationMin;
+    int saturationMax;
+    int valueMin;
+    int valueMax;
+    int invert;
+} p;
+
+layout(binding = 1) readonly buffer Source {
+    uint8_t src[];
+};
+
+layout(binding = 2) writeonly buffer Destination {
+    uint8_t dst[];
+};
+
+void main() {
+    int i = int(gl_GlobalInvocationID.x);
+    if (i >= p.pixels) {
+        return;
+    }
+    int h = int(src[i * 3]);
+    int s = int(src[i * 3 + 1]);
+    int v = int(src[i * 3 + 2]);
+    bool hueIn = p.hueMin <= p.hueMax ? h >= p.hueMin && h <= p.hueMax : h >= p.hueMin || h <= p.hueMax;
+    bool in_ = hueIn && s >= p.saturationMin && s <= p.saturationMax && v >= p.valueMin && v <= p.valueMax;
+    bool keep = in_ == (p.invert != 0);
+    if (BINARY) {
+        dst[i] = keep ? uint8_t(255) : uint8_t(0);
+    }
+    else {
+        for (int c = 0; c < 3; c++) {
+            dst[i * 3 + c] = keep ? src[i * 3 + c] : uint8_t(0);
+        }
+    }
+}

@@ -138,7 +138,7 @@ public class MatchPartsTemplate extends CvStage {
         }
         Result template = pipeline.getExpectedResult(templateStageName);
         // no template image is an error
-        if (template == null || template.image == null) {
+        if (template == null || template.getImage() == null) {
 
             return null;
         }
@@ -183,7 +183,7 @@ public class MatchPartsTemplate extends CvStage {
 
     private RotatedRect handleSingleRectangle(Mat originalImage, Result template,
             RotatedRect rrect) {
-        Mat timage = template.image.clone();
+        Mat timage = template.getImage().clone();
         
         if (log) {
             Logger.info("part found = " + rrect);

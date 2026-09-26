@@ -23,8 +23,10 @@ import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.swing.AbstractAction;
@@ -38,8 +40,10 @@ import org.opencv.core.Mat;
 import org.opencv.core.Point;
 import org.opencv.core.Rect;
 import org.opencv.core.RotatedRect;
+import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
+import org.openpnp.CameraPreviewListener;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.Translations;
 import org.openpnp.gui.MainFrame;
@@ -68,12 +72,16 @@ import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Machine;
 import org.openpnp.util.Collect;
+import org.openpnp.util.ImageUtils;
 import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.SimpleGraph;
 import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.LensCalibration;
 import org.openpnp.vision.LensCalibration.LensModel;
 import org.openpnp.vision.LensCalibration.Pattern;
+import org.openpnp.vision.gpu.GpuCameraTransform;
+import org.openpnp.vision.gpu.GpuImage;
+import org.openpnp.vision.gpu.GpuRuntime;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -186,6 +194,17 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
     private Mat undistortionMap2;
     private Mat lut;
 
+    private static final Scalar BLACK = new Scalar(0);
+    // Far enough outside any frame that remap still sees it as outside after interpolation.
+    private static final Scalar OUTSIDE = new Scalar(-1e6);
+
+    boolean gpuTransforms = true;
+    private final Object gpuLock = new Object();
+    private volatile GpuCameraTransform gpuTransform;
+    private List<Object> gpuTransformKey;
+    private boolean gpuTransformFailed;
+    private volatile boolean previewing;
+
     private LensCalibration lensCalibration;
 
     private Actuator lightActuator;
@@ -236,7 +255,48 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
      */
     @Override
     public BufferedImage captureTransformed() {
+        BufferedImage image = captureGpuTransformed();
+        if (image != null) {
+            return image;
+        }
         return transformImage(captureRaw());
+    }
+
+    /**
+     * Cameras that can hand raw V4L2 frames to the GPU return their stream here.
+     */
+    protected V4l2Stream getV4l2Stream() {
+        return null;
+    }
+
+    private BufferedImage captureGpuTransformed() {
+        V4l2Stream stream = getV4l2Stream();
+        if (!canRenderOnGpu(stream)) {
+            return null;
+        }
+        boolean advanced = advancedCalibration.isOverridingOldTransformsAndDistortionCorrectionSettings();
+        BufferedImage image;
+        synchronized (gpuLock) {
+            try {
+                prepareGpuTransform(stream.getWidth(), stream.getHeight(), advanced);
+                image = stream.captureTransformed(gpuTransform, 500);
+            }
+            catch (IOException | IllegalStateException e) {
+                Logger.debug(e, "Camera {} V4L2 capture failed.", getName());
+                return null;
+            }
+            catch (Exception e) {
+                Logger.warn(e, "Camera {} GPU transforms failed, using the CPU instead.", getName());
+                gpuTransformFailed = true;
+                return null;
+            }
+        }
+        if (image != null) {
+            width = image.getWidth();
+            height = image.getHeight();
+            setLastTransformedImage(image);
+        }
+        return image;
     }
     
     /**
@@ -252,6 +312,173 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
     public boolean hasNewFrame() {
         // Default behavior: always has frames when open.
         return isOpen();
+    }
+
+    private boolean canRenderOnGpu(V4l2Stream stream) {
+        return stream != null && gpuTransforms && !gpuTransformFailed && !isCalibrating() && !isDeinterlaced();
+    }
+
+    @Override
+    protected boolean canCaptureGpuFrames() {
+        return canRenderOnGpu(getV4l2Stream());
+    }
+
+    @Override
+    protected GpuFrame captureGpuFrame() {
+        V4l2Stream stream = getV4l2Stream();
+        if (!canRenderOnGpu(stream)) {
+            return null;
+        }
+        GpuCameraTransform transform;
+        int[] size;
+        synchronized (gpuLock) {
+            try {
+                prepareGpuTransform(stream.getWidth(), stream.getHeight(),
+                        advancedCalibration.isOverridingOldTransformsAndDistortionCorrectionSettings());
+            }
+            catch (Exception e) {
+                Logger.warn(e, "Camera {} GPU transforms failed, using the CPU instead.", getName());
+                gpuTransformFailed = true;
+                return null;
+            }
+            transform = gpuTransform;
+            size = transform.outputSize(stream.getWidth(), stream.getHeight());
+        }
+        V4l2Stream.Frame frame = null;
+        long deadline = System.currentTimeMillis() + captureTryTimeoutMs;
+        try {
+            for (int i = 0; frame == null && i < getCaptureTryCount() && System.currentTimeMillis() <= deadline; i++) {
+                frame = stream.acquireFrame(500);
+            }
+        }
+        catch (IOException | IllegalStateException e) {
+            Logger.debug(e, "Camera {} V4L2 capture failed.", getName());
+        }
+        if (frame == null) {
+            return null;
+        }
+        width = size[0];
+        height = size[1];
+        V4l2Stream.Frame held = frame;
+        return new GpuFrame() {
+            @Override
+            public int width() {
+                return size[0];
+            }
+
+            @Override
+            public int height() {
+                return size[1];
+            }
+
+            @Override
+            public Mat settleImage(int cropX, int cropY, int cropWidth, int cropHeight, int divisor) {
+                return held.settleImage(transform, cropX, cropY, cropWidth, cropHeight, divisor);
+            }
+
+            @Override
+            public GpuImage record() {
+                return held.record(transform);
+            }
+
+            @Override
+            public void close() {
+                held.close();
+            }
+        };
+    }
+
+    @Override
+    protected boolean broadcastPreview() {
+        V4l2Stream stream = getV4l2Stream();
+        if (!canRenderOnGpu(stream)) {
+            return false;
+        }
+        List<CameraPreviewListener> previews = new ArrayList<>();
+        synchronized (listeners) {
+            for (ListenerEntry entry : listeners) {
+                if (!(entry.listener instanceof CameraPreviewListener)) {
+                    return false;
+                }
+                previews.add((CameraPreviewListener) entry.listener);
+            }
+        }
+        previewing = true;
+        previews.removeIf(preview -> !preview.isPreviewWanted());
+        if (previews.isEmpty() || !stream.hasNewPreviewFrame()) {
+            return true;
+        }
+        boolean advanced = advancedCalibration.isOverridingOldTransformsAndDistortionCorrectionSettings();
+        int[] size;
+        synchronized (gpuLock) {
+            try {
+                prepareGpuTransform(stream.getWidth(), stream.getHeight(), advanced);
+            }
+            catch (Exception e) {
+                Logger.warn(e, "Camera {} GPU transforms failed, using the CPU instead.", getName());
+                gpuTransformFailed = true;
+                return false;
+            }
+            size = gpuTransform.outputSize(stream.getWidth(), stream.getHeight());
+        }
+        // Listeners are asked outside gpuLock: they take their own locks, which painting holds
+        // while calling back into the camera.
+        CameraPreviewListener.Preview[] buffers = new CameraPreviewListener.Preview[previews.size()];
+        for (int i = 0; i < buffers.length; i++) {
+            buffers[i] = previews.get(i).previewBuffer(size[0], size[1]);
+            if (buffers[i] == null) {
+                previewing = false;
+                return false;
+            }
+        }
+        boolean rendered;
+        synchronized (gpuLock) {
+            try {
+                rendered = stream.capturePreview(gpuTransform, buffers);
+            }
+            catch (IOException | IllegalStateException e) {
+                Logger.debug(e, "Camera {} V4L2 preview failed.", getName());
+                return true;
+            }
+        }
+        if (rendered) {
+            width = size[0];
+            height = size[1];
+            for (int i = 0; i < buffers.length; i++) {
+                previews.get(i).previewReceived(buffers[i], size[0], size[1]);
+            }
+        }
+        return true;
+    }
+
+    @Override
+    protected void broadcastCapture(BufferedImage img) {
+        previewing = false;
+        super.broadcastCapture(img);
+    }
+
+    /**
+     * While full frames aren't broadcast, renders the newest frame at full resolution instead.
+     */
+    @Override
+    public BufferedImage getLastBroadcastImage() {
+        V4l2Stream stream = getV4l2Stream();
+        if (previewing && canRenderOnGpu(stream)) {
+            synchronized (gpuLock) {
+                try {
+                    prepareGpuTransform(stream.getWidth(), stream.getHeight(),
+                            advancedCalibration.isOverridingOldTransformsAndDistortionCorrectionSettings());
+                    BufferedImage image = stream.captureNewest(gpuTransform, 500);
+                    if (image != null) {
+                        return image;
+                    }
+                }
+                catch (Exception e) {
+                    Logger.debug(e, "Camera {} could not render the newest frame.", getName());
+                }
+            }
+        }
+        return super.getLastBroadcastImage();
     }
 
     protected abstract BufferedImage internalCapture();
@@ -572,15 +799,24 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
                 return null;
             }
 
-            if (advancedCalibration.isOverridingOldTransformsAndDistortionCorrectionSettings()) {
+            boolean advanced = advancedCalibration.isOverridingOldTransformsAndDistortionCorrectionSettings();
+            BufferedImage gpuImage = null;
+            // Deinterlacing shuffles rows, which a single interpolated remap cannot represent.
+            if (gpuTransforms && !isCalibrating() && !isDeinterlaced() && hasImageTransforms(advanced)) {
+                gpuImage = gpuTransformImage(image, advanced);
+            }
+            if (gpuImage != null) {
+                image = gpuImage;
+            }
+            else if (advanced) {
                 //Skip all the old style image transforms and distortion corrections except for 
                 //deinterlacing, cropping, and white balancing
-                if (isDeinterlaced() || isCropped() || isWhiteBalanced() || advancedCalibration.isEnabled()) {
+                if (hasImageTransforms(true)) {
                     Mat mat = OpenCvUtils.toMat(image);
                     mat = deinterlace(mat);
                     mat = crop(mat);
                     mat = whiteBalance(mat);
-                    mat = advancedUndistort(mat);
+                    mat = advancedUndistort(mat, BLACK);
                     image = OpenCvUtils.toBufferedImage(mat);
                     mat.release();
                 }
@@ -588,15 +824,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
             // Old style of image transforms and distortion correction
             // We do skip the convert to and from Mat if no transforms are needed.
             // But we must enter while performing original calibration.
-            else if (isDeinterlaced()
-                || isCropped() 
-                || isCalibrating()
-                || isUndistorted()
-                || isScaled()
-                || isRotated()
-                || isOffset()
-                || isFlipped()
-                || isWhiteBalanced()) {
+            else if (hasImageTransforms(false)) {
 
                 Mat mat = OpenCvUtils.toMat(image);
 
@@ -608,14 +836,14 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
 
                 mat = calibrate(mat);
 
-                mat = undistort(mat);
+                mat = undistort(mat, BLACK);
 
                 // apply affine transformations
                 mat = scale(mat);
 
-                mat = rotate(mat);
+                mat = rotate(mat, BLACK);
 
-                mat = offset(mat);
+                mat = offset(mat, BLACK);
 
                 mat = flip(mat);
 
@@ -635,6 +863,129 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
         return image;
     }
 
+    private boolean hasImageTransforms(boolean advanced) {
+        if (advanced) {
+            return isDeinterlaced() || isCropped() || isWhiteBalanced() || advancedCalibration.isEnabled();
+        }
+        return isDeinterlaced()
+                || isCropped() 
+                || isCalibrating()
+                || isUndistorted()
+                || isScaled()
+                || isRotated()
+                || isOffset()
+                || isFlipped()
+                || isWhiteBalanced();
+    }
+
+    private BufferedImage gpuTransformImage(BufferedImage image, boolean advanced) {
+        if (gpuTransformFailed || !GpuRuntime.isAvailable()) {
+            return null;
+        }
+        synchronized (gpuLock) {
+            return gpuTransformImageLocked(image, advanced);
+        }
+    }
+
+    private BufferedImage gpuTransformImageLocked(BufferedImage image, boolean advanced) {
+        try {
+            if (image.getType() != BufferedImage.TYPE_3BYTE_BGR
+                    && image.getType() != BufferedImage.TYPE_BYTE_GRAY) {
+                image = ImageUtils.convertBufferedImage(image, BufferedImage.TYPE_3BYTE_BGR);
+            }
+            prepareGpuTransform(image.getWidth(), image.getHeight(), advanced);
+            return gpuTransform.apply(image);
+        }
+        catch (IllegalStateException e) {
+            return null;
+        }
+        catch (Exception e) {
+            Logger.warn(e, "Camera {} GPU transforms failed, using the CPU instead.", getName());
+            gpuTransformFailed = true;
+            return null;
+        }
+    }
+
+    private void prepareGpuTransform(int frameWidth, int frameHeight, boolean advanced) {
+        if (isWhiteBalanced()) {
+            initWhiteBalanceLut();
+        }
+        if (gpuTransform == null || gpuTransform.isClosed()) {
+            gpuTransform = new GpuCameraTransform();
+            gpuTransformKey = null;
+        }
+        if (gpuTransformSettings(frameWidth, frameHeight, advanced).equals(gpuTransformKey)) {
+            return;
+        }
+        Mat balance = isWhiteBalanced() ? lut : null;
+        if (hasGeometricTransforms(advanced)) {
+            Mat[] maps = buildTransformMaps(frameWidth, frameHeight, advanced);
+            gpuTransform.setTransform(maps[0], maps[1], balance);
+            maps[0].release();
+            maps[1].release();
+        }
+        else {
+            gpuTransform.setTransform(null, null, balance);
+        }
+        // Building the maps may have created the undistortion maps, which are part of the key.
+        gpuTransformKey = gpuTransformSettings(frameWidth, frameHeight, advanced);
+    }
+
+    private boolean hasGeometricTransforms(boolean advanced) {
+        if (advanced) {
+            return isCropped() || advancedCalibration.isEnabled();
+        }
+        return isCropped() || isUndistorted() || isScaled() || isRotated() || isOffset() || isFlipped();
+    }
+
+    private List<Object> gpuTransformSettings(int frameWidth, int frameHeight, boolean advanced) {
+        return Arrays.asList(frameWidth, frameHeight, advanced, cropWidth, cropHeight,
+                scaleWidth, scaleHeight, rotation, offsetX, offsetY, flipX, flipY, isUndistorted(),
+                advancedCalibration.isEnabled(), isWhiteBalanced() ? lut : null, undistortionMap1,
+                undistortionMap2);
+    }
+
+    /**
+     * Runs coordinate images through the same geometric stages as transformImage(), giving the
+     * source X and Y for every output pixel so the whole chain becomes a single remap.
+     */
+    Mat[] buildTransformMaps(int width, int height, boolean advanced) {
+        Mat[] maps = new Mat[2];
+        float[] coordinates = new float[width * height];
+        for (int axis = 0; axis < 2; axis++) {
+            for (int y = 0, i = 0; y < height; y++) {
+                for (int x = 0; x < width; x++, i++) {
+                    coordinates[i] = axis == 0 ? x : y;
+                }
+            }
+            Mat mat = new Mat(height, width, CvType.CV_32FC1);
+            mat.put(0, 0, coordinates);
+            mat = crop(mat);
+            if (advanced) {
+                mat = advancedUndistort(mat, OUTSIDE);
+            }
+            else {
+                mat = undistort(mat, OUTSIDE);
+                mat = scale(mat);
+                mat = rotate(mat, OUTSIDE);
+                mat = offset(mat, OUTSIDE);
+                mat = flip(mat);
+            }
+            maps[axis] = mat;
+        }
+        return maps;
+    }
+
+    @Override
+    public void close() throws IOException {
+        super.close();
+        // No gpuLock here: map building takes the camera lock while holding it.
+        GpuCameraTransform transform = gpuTransform;
+        if (transform != null) {
+            transform.close();
+        }
+    }
+
     @Override
     public synchronized Location getUnitsPerPixel(Length viewingPlaneZ) {
         if (advancedCalibration.isOverridingOldTransformsAndDistortionCorrectionSettings() && 
@@ -649,7 +1000,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
         return super.getUnitsPerPixel(viewingPlaneZ);
     }
 
-    private synchronized Mat advancedUndistort(Mat mat) {
+    private synchronized Mat advancedUndistort(Mat mat, Scalar border) {
         if (!advancedCalibration.isEnabled()) {
             return mat;
         }
@@ -663,7 +1014,8 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
             }
             advancedCalibration.initUndistortRectifyMap(undistortionMap1, undistortionMap2);
         }
-        Imgproc.remap(mat, dst, undistortionMap1, undistortionMap2, Imgproc.INTER_LINEAR);
+        Imgproc.remap(mat, dst, undistortionMap1, undistortionMap2, Imgproc.INTER_LINEAR,
+                Core.BORDER_CONSTANT, border);
         mat.release();
 
         return dst;
@@ -1000,7 +1352,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
         return deinterlace;
     }
 
-    private Mat rotate(Mat mat) {
+    private Mat rotate(Mat mat, Scalar border) {
         if (!isRotated()) {
             return mat;
         }
@@ -1021,7 +1373,8 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
         mapMatrix.put(1, 2, cy);
 
         Mat dst = new Mat(bbox.width, bbox.height, mat.type());
-        Imgproc.warpAffine(mat, dst, mapMatrix, bbox.size(), Imgproc.INTER_LINEAR);
+        Imgproc.warpAffine(mat, dst, mapMatrix, bbox.size(), Imgproc.INTER_LINEAR,
+                Core.BORDER_CONSTANT, border);
         mat.release();
 
         mapMatrix.release();
@@ -1033,7 +1386,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
         return rotation != 0D;
     }
 
-    private Mat offset(Mat mat) {
+    private Mat offset(Mat mat, Scalar border) {
         if (!isOffset()) {
             return mat;
         }
@@ -1046,7 +1399,8 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
         };
 
         Mat dst = mat.clone();
-        Imgproc.warpAffine(mat, dst, mapMatrix, mat.size(), Imgproc.INTER_LINEAR);
+        Imgproc.warpAffine(mat, dst, mapMatrix, mat.size(), Imgproc.INTER_LINEAR,
+                Core.BORDER_CONSTANT, border);
         mat.release();
 
         mapMatrix.release();
@@ -1072,7 +1426,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
         return scaleWidth != 0D || scaleHeight != 0D;
     }
 
-    private Mat undistort(Mat mat) {
+    private Mat undistort(Mat mat, Scalar border) {
         if (!isUndistorted()) {
             return mat;
         }
@@ -1089,7 +1443,8 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
         }
 
         Mat dst = mat.clone();
-        Imgproc.remap(mat, dst, undistortionMap1, undistortionMap2, Imgproc.INTER_LINEAR);
+        Imgproc.remap(mat, dst, undistortionMap1, undistortionMap2, Imgproc.INTER_LINEAR,
+                Core.BORDER_CONSTANT, border);
         mat.release();
 
         return dst;

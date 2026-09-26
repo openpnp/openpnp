@@ -46,6 +46,7 @@ import org.openpnp.spi.base.AbstractCamera;
 import org.openpnp.util.NanosecondTime;
 import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.SimpleGraph;
+import org.openpnp.vision.gpu.GpuImage;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.core.Commit;
@@ -263,10 +264,158 @@ public abstract class AbstractSettlingCamera extends AbstractCamera {
         }
     }
 
+    /**
+     * The frames a settle loop captures: CPU images, or frames held on the GPU.
+     */
+    private interface SettleFrames<F> {
+        F capture() throws Exception;
+
+        int width(F frame);
+
+        int height(F frame);
+
+        /**
+         * The frame converted for comparison: gray unless settleFullColor, cropped, contrast
+         * enhanced and shrunk by divisor.
+         */
+        Mat compared(F frame, Rect crop, int divisor, Mat maskFullsize);
+
+        void discard(F frame);
+    }
+
+    private final SettleFrames<BufferedImage> cpuFrames = new SettleFrames<BufferedImage>() {
+        @Override
+        public BufferedImage capture() throws Exception {
+            return AbstractSettlingCamera.this.capture();
+        }
+
+        @Override
+        public int width(BufferedImage frame) {
+            return frame.getWidth();
+        }
+
+        @Override
+        public int height(BufferedImage frame) {
+            return frame.getHeight();
+        }
+
+        @Override
+        public Mat compared(BufferedImage frame, Rect crop, int divisor, Mat maskFullsize) {
+            Mat mat = OpenCvUtils.toMat(frame);
+            if (!settleFullColor) {
+                Imgproc.cvtColor(mat, mat, Imgproc.COLOR_BGR2GRAY);
+            }
+            if (crop.width != mat.cols() || crop.height != mat.rows()) {
+                Mat cropMat = mat.submat(crop);
+                mat.release();
+                mat = cropMat;
+            }
+            if (settleContrastEnhance > 0.0) {
+                // Enhance the contrast. Note we need to do this before scaling the image down, so mixed
+                // colors can be created in the full dynamic range. 
+                mat = enhanceContrast(mat, maskFullsize);
+            }
+            if (divisor > 1) {
+                Mat resizeMat = new Mat();
+                Imgproc.resize(mat, resizeMat, new Size(mat.cols()/divisor, mat.rows()/divisor), 1.0/divisor, 1.0/divisor);
+                mat.release();
+                mat = resizeMat;
+            }
+            return mat;
+        }
+
+        @Override
+        public void discard(BufferedImage frame) {
+        }
+    };
+
+    private final SettleFrames<GpuFrame> gpuFrames = new SettleFrames<GpuFrame>() {
+        @Override
+        public GpuFrame capture() throws Exception {
+            return captureGpuFrameWithEvents();
+        }
+
+        @Override
+        public int width(GpuFrame frame) {
+            return frame.width();
+        }
+
+        @Override
+        public int height(GpuFrame frame) {
+            return frame.height();
+        }
+
+        // A crop that isn't a multiple of the divisor loses its last few pixels instead of being
+        // resampled like OpenCV's resize does; both frames compared are treated alike.
+        @Override
+        public Mat compared(GpuFrame frame, Rect crop, int divisor, Mat maskFullsize) {
+            return frame.settleImage(crop.x, crop.y, crop.width - crop.width % divisor,
+                    crop.height - crop.height % divisor, divisor);
+        }
+
+        @Override
+        public void discard(GpuFrame frame) {
+            frame.close();
+        }
+    };
+
+    /**
+     * A camera frame held on the GPU until it is recorded into a vision pipeline or closed.
+     */
+    protected interface GpuFrame extends AutoCloseable {
+        /**
+         * The transformed frame's size.
+         */
+        int width();
+
+        int height();
+
+        /**
+         * The frame converted to gray, cropped and shrunk by an integer divisor.
+         */
+        Mat settleImage(int cropX, int cropY, int cropWidth, int cropHeight, int divisor);
+
+        /**
+         * Records transforming the frame into the thread's GpuRecording, which releases it.
+         */
+        GpuImage record();
+
+        @Override
+        void close();
+    }
+
+    /**
+     * Holds the next frame on the GPU, or returns null when the camera can't do that right now.
+     */
+    protected GpuFrame captureGpuFrame() {
+        return null;
+    }
+
+    protected boolean canCaptureGpuFrames() {
+        return false;
+    }
+
+    private GpuFrame captureGpuFrameWithEvents() throws Exception {
+        Map<String, Object> globals = new HashMap<>();
+        globals.put("camera", this);
+        Configuration.get().getScripting().on("Camera.BeforeCapture", globals);
+        GpuFrame frame = captureGpuFrame();
+        Configuration.get().getScripting().on("Camera.AfterCapture", globals);
+        if (frame == null) {
+            throw new Exception("Camera "+getName()+" delivered no frame.");
+        }
+        return frame;
+    }
+
     private BufferedImage autoSettleAndCapture(double settleMaskCircle) throws Exception {
+        return autoSettle(settleMaskCircle, cpuFrames);
+    }
+
+    private <F> F autoSettle(double settleMaskCircle, SettleFrames<F> frames) throws Exception {
         Mat mask = null;
         Mat maskFullsize = null;
         Mat lastSettleMat = null;
+        F image = null;
 
         try {
             long t0 = NanosecondTime.getRuntimeMilliseconds();
@@ -286,7 +435,11 @@ public abstract class AbstractSettlingCamera extends AbstractCamera {
                 }
 
                 // The actual capture.
-                BufferedImage image = capture();
+                if (image != null) {
+                    frames.discard(image);
+                    image = null;
+                }
+                image = frames.capture();
 
                 long t1 = NanosecondTime.getRuntimeMilliseconds();
                 double tCapture = 0.0; 
@@ -295,12 +448,6 @@ public abstract class AbstractSettlingCamera extends AbstractCamera {
                     // Record end of capture.
                     settleGraph.getRow(BOOLEAN, CAPTURE).recordDataPoint(tCapture, 1);
                     settleGraph.getRow(BOOLEAN, CAPTURE).recordDataPoint(settleGraph.getT(), 0);
-                }
-
-                // Convert to Mat and if not full color, convert to gray.
-                Mat mat = OpenCvUtils.toMat(image);
-                if (!settleFullColor) {
-                    Imgproc.cvtColor(mat, mat, Imgproc.COLOR_BGR2GRAY);
                 }
 
                 // Gaussian blur is the most expensive operation, so if it is large, we rescale the image instead.
@@ -313,26 +460,26 @@ public abstract class AbstractSettlingCamera extends AbstractCamera {
                         (settleGaussianBlur+resizeToMaxGaussianKernelSize/2)/resizeToMaxGaussianKernelSize
                         : 1;
 
+                int cols = frames.width(image);
+                int rows = frames.height(image);
+                Rect rectCrop = new Rect(0, 0, cols, rows);
                 int maskDiameter = 0;
                 if (settleMaskCircle > 0.0) {
                     // Crop the image to the mask dimension. 
-                    int imageDimension = Math.min(mat.rows(), mat.cols());
+                    int imageDimension = Math.min(rows, cols);
                     maskDiameter = Math.max(1, (int)(settleMaskCircle*imageDimension));
-                    int maskedWidth= Math.min(mat.cols(), maskDiameter);
-                    int maskedHeight= Math.min(mat.rows(), maskDiameter);
+                    int maskedWidth= Math.min(cols, maskDiameter);
+                    int maskedHeight= Math.min(rows, maskDiameter);
                     // Make it multiples of the rescale divisor*2.
                     maskDiameter = (int)Math.floor(maskDiameter/divisor/2)*divisor*2;
                     maskedWidth = (int)Math.floor(maskedWidth/divisor/2)*divisor*2;
                     maskedHeight = (int)Math.floor(maskedHeight/divisor/2)*divisor*2;
-                    Rect rectCrop = new Rect(
-                            (mat.cols() - maskedWidth)/2, (mat.rows() - maskedHeight)/2,
+                    rectCrop = new Rect(
+                            (cols - maskedWidth)/2, (rows - maskedHeight)/2,
                             maskedWidth, maskedHeight);
-                    Mat cropMat = mat.submat(rectCrop);
-                    mat.release();
-                    mat = cropMat;
                     if (maskFullsize == null) {
                         // This must be the first frame, also create the mask circle.
-                        maskFullsize = createMask(mat, maskDiameter);
+                        maskFullsize = createMask(maskedHeight, maskedWidth, maskDiameter);
                         if (divisor == 1) {
                             // also valid as the rescaled mask
                             mask = maskFullsize;
@@ -340,19 +487,11 @@ public abstract class AbstractSettlingCamera extends AbstractCamera {
                     }
                 }
 
-                if (settleContrastEnhance > 0.0) {
-                    // Enhance the contrast. Note we need to do this before scaling the image down, so mixed
-                    // colors can be created in the full dynamic range. 
-                    mat = enhanceContrast(mat, maskFullsize);
-                }
+                Mat mat = frames.compared(image, rectCrop, divisor, maskFullsize);
 
                 if (divisor > 1) {
                     // Scale the image down, see the calculations further up.  
                     gaussianBlurEff = ((settleGaussianBlur)/divisor)|1;
-                    Mat resizeMat = new Mat();
-                    Imgproc.resize(mat, resizeMat, new Size(mat.cols()/divisor, mat.rows()/divisor), 1.0/divisor, 1.0/divisor);
-                    mat.release();
-                    mat = resizeMat;
                     maskDiameter /= divisor;
                 }
 
@@ -436,11 +575,16 @@ public abstract class AbstractSettlingCamera extends AbstractCamera {
                     }
                     recordedSettleMilliseconds = NanosecondTime.getRuntimeMilliseconds() - t0;
                     Logger.debug("autoSettleAndCapture in {} ms", recordedSettleMilliseconds);
-                    return image;
+                    F settled = image;
+                    image = null;
+                    return settled;
                 }
             }
         }
         finally {
+            if (image != null) {
+                frames.discard(image);
+            }
             // Whatever happens, always release these looping mats.
             if (maskFullsize != null) {
                 maskFullsize.release();
@@ -457,14 +601,17 @@ public abstract class AbstractSettlingCamera extends AbstractCamera {
         }
     }
 
-    protected static Mat createMask(Mat mat, int maskDiameter) {
-        Mat mask;
-        mask = new Mat(mat.rows(), mat.cols(), CvType.CV_8U, Scalar.all(0));
+    protected static Mat createMask(int rows, int cols, int maskDiameter) {
+        Mat mask = new Mat(rows, cols, CvType.CV_8U, Scalar.all(0));
         Imgproc.circle(mask,
-                new Point(mat.cols()/2, mat.rows()/2),
+                new Point(cols/2, rows/2),
                 maskDiameter/2,
                 new Scalar(255, 255, 255), -1);
         return mask;
+    }
+
+    protected static Mat createMask(Mat mat, int maskDiameter) {
+        return createMask(mat.rows(), mat.cols(), maskDiameter);
     }
 
     protected Mat enhanceContrast(Mat mat, Mat mask) {
@@ -639,6 +786,54 @@ public abstract class AbstractSettlingCamera extends AbstractCamera {
         }
         finally {
             actuateLightAfterCapture();
+        }
+    }
+
+    /**
+     * Settles like settleAndCapture() and records the captured frame into the thread's
+     * GpuRecording, so it never has to leave the GPU. Returns null when the camera can't.
+     */
+    @Override
+    public GpuImage settleAndCaptureGpu(SettleOption settleOption) throws Exception {
+        if (!canCaptureGpuFrames()) {
+            return null;
+        }
+        if (settleOption == SettleOption.Skip) {
+            return recordFrame(captureGpuFrameWithEvents());
+        }
+        if (settleMethod != null && settleMethod != SettleMethod.FixedTime
+                && (settleFullColor || settleContrastEnhance > 0.0)) {
+            return null;
+        }
+        Map<String, Object> globals = new HashMap<>();
+        globals.put("camera", this);
+        Configuration.get().getScripting().on("Camera.BeforeSettle", globals);
+        try {
+            waitForCompletion(CompletionType.WaitForStillstand);
+            if (settleMethod == null || settleMethod == SettleMethod.FixedTime) {
+                try {
+                    Logger.trace(getName()+" settling fixed time "+getSettleTimeMs()+"ms");
+                    Thread.sleep(getSettleTimeMs());
+                }
+                catch (Exception e) {
+
+                }
+                return recordFrame(captureGpuFrameWithEvents());
+            }
+            return recordFrame(autoSettle(settleOption == SettleOption.SettleFullArea ? 0 : settleMaskCircle,
+                    gpuFrames));
+        }
+        finally {
+            Configuration.get().getScripting().on("Camera.AfterSettle", globals);
+        }
+    }
+
+    private GpuImage recordFrame(GpuFrame frame) {
+        try {
+            return frame.record();
+        }
+        finally {
+            frame.close();
         }
     }
 

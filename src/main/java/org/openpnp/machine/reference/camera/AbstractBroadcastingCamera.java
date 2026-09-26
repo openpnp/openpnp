@@ -70,6 +70,8 @@ public abstract class AbstractBroadcastingCamera extends AbstractSettlingCamera 
      */
     private AtomicReference<BufferedImage> lastTransformedImage = new AtomicReference<>();
 
+    private volatile BufferedImage lastBroadcastImage;
+
     volatile private boolean cameraViewDirty;
 
     AbstractBroadcastingCamera() {
@@ -165,6 +167,13 @@ public abstract class AbstractBroadcastingCamera extends AbstractSettlingCamera 
         return lastTransformedImage.get();
     }
 
+    /**
+     * The frame last shown in the live view, without capturing a new one.
+     */
+    public BufferedImage getLastBroadcastImage() {
+        return lastBroadcastImage;
+    }
+
     protected void setLastTransformedImage(BufferedImage lastTransformedImage) {
         this.lastTransformedImage.set(lastTransformedImage);
         notifyCapture();
@@ -232,7 +241,16 @@ public abstract class AbstractBroadcastingCamera extends AbstractSettlingCamera 
         }
     }
 
+    /**
+     * Renders frames at display size for preview listeners, for cameras that can. Returns false to
+     * broadcast full frames instead.
+     */
+    protected boolean broadcastPreview() {
+        return false;
+    }
+
     protected void broadcastCapture(BufferedImage img) {
+        lastBroadcastImage = img;
         for (ListenerEntry listener : new ArrayList<>(listeners)) {
             listener.listener.frameReceived(img);
         }
@@ -331,7 +349,7 @@ public abstract class AbstractBroadcastingCamera extends AbstractSettlingCamera 
                 // to computer vision.  
                 // Note, by using the atomic getAndSet() we make sure not to miss the last image.
                 BufferedImage img = lastTransformedImage.getAndSet(null);
-                if (img == null && !isPreviewSuspended()) {
+                if (img == null && !isPreviewSuspended() && !broadcastPreview()) {
                     if (hasNewFrame()){
                         // None available, try capture a new frame.
                         captureTransformed();

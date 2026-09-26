@@ -13,6 +13,8 @@ import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 import org.openpnp.vision.FluentCv;
 import org.openpnp.vision.FluentCv.ColorSpace;
+import org.openpnp.vision.gpu.GpuImage;
+import org.openpnp.vision.gpu.GpuImageOps;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
 import org.openpnp.vision.pipeline.Property;
@@ -206,6 +208,18 @@ public class MaskHsv extends CvStage {
         commit();
         softFactor = Math.max(0, softFactor);
 
+        GpuImage gpuImage = pipeline.getWorkingGpuImage();
+        if (gpuImage != null && !auto && softEdge <= 0 && softFactor >= 1 && gpuImage.channels() == 3) {
+            GpuImage masked = GpuImageOps.maskHsv(gpuImage,
+                    getPossiblePipelinePropertyOverride(this.hueMin, pipeline, propertyName+".hueMin"),
+                    getPossiblePipelinePropertyOverride(this.hueMax, pipeline, propertyName+".hueMax"),
+                    getPossiblePipelinePropertyOverride(this.saturationMin, pipeline, propertyName+".saturationMin"),
+                    getPossiblePipelinePropertyOverride(this.saturationMax, pipeline, propertyName+".saturationMax"),
+                    getPossiblePipelinePropertyOverride(this.valueMin, pipeline, propertyName+".valueMin"),
+                    getPossiblePipelinePropertyOverride(this.valueMax, pipeline, propertyName+".valueMax"),
+                    invert, binaryMask);
+            return binaryMask ? new Result(masked, ColorSpace.Gray) : new Result(masked);
+        }
         Mat mat = pipeline.getWorkingImage();
         Mat masked = mat.clone();
         Scalar color = FluentCv.colorToScalar(Color.black);

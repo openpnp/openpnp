@@ -31,10 +31,12 @@ import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 import org.openpnp.model.Point;
 import org.openpnp.util.KernelUtils;
+import org.openpnp.vision.gpu.GpuRectlinearSymmetry;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
 import org.openpnp.vision.pipeline.Property;
 import org.openpnp.vision.pipeline.Stage;
+import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 
 /**
@@ -486,6 +488,7 @@ public class DetectRectlinearSymmetry extends CvStage {
      * Some extra debugging stuff used for development, that might be useful again in the future. DEBUG has levels 1 and 2.  
      */
     static final int DEBUG = 0;
+    static volatile boolean gpuEnabled = true;
 
     /**
      * Find the angle, location and bounds of the subject with largest rectlinear symmetry. 
@@ -593,8 +596,45 @@ public class DetectRectlinearSymmetry extends CvStage {
             gammaLut[i] = Math.pow(i, gamma);
         }
 
-        // Determine the angle with the largest rectlinear cross-section contrast.
+        int angles = 0;
         for (double angle = a0; angle <= a1; angle += angleStep) {
+            angles++;
+        }
+        int cols = (wPixels + subSamplingEff - 1)/subSamplingEff;
+        int rows = (hPixels + subSamplingEff - 1)/subSamplingEff;
+        float[] gpuSums = null;
+        float[] gpuWeights = null;
+        float[] gpuMasked = null;
+        if (gpuEnabled && GpuRectlinearSymmetry.isAvailable()) {
+            float[] sines = new float[angles];
+            float[] cosines = new float[angles];
+            int a = 0;
+            for (double angle = a0; angle <= a1; angle += angleStep, a++) {
+                sines[a] = (float) (superSamplingEff*Math.sin(-angle)/subSamplingEff);
+                cosines[a] = (float) (superSamplingEff*Math.cos(-angle)/subSamplingEff);
+            }
+            float[] lut = new float[256];
+            for (int i = 0; i < 256; i++) {
+                lut[i] = (float) gammaLut[i];
+            }
+            gpuSums = new float[angles*(wCross + hCross)*channels];
+            gpuWeights = new float[angles*(wCross + hCross)];
+            gpuMasked = new float[angles*(wCross + hCross)];
+            try {
+                GpuRectlinearSymmetry.crossSections(pixelSamples, lut, sines, cosines, width, channels, 
+                        x0Pixels, subSamplingEff, cols, rows, cxPixels, cyPixels, wCross, hCross, 
+                        (float) cxCross, (float) cyCross, (float) thresholdLuminance, gpuSums, gpuWeights, gpuMasked);
+            }
+            catch (Exception e) {
+                Logger.warn(e, "Rectlinear symmetry on the GPU failed, using the CPU instead.");
+                gpuEnabled = false;
+                gpuSums = null;
+            }
+        }
+
+        // Determine the angle with the largest rectlinear cross-section contrast.
+        int angleIndex = 0;
+        for (double angle = a0; angle <= a1; angle += angleStep, angleIndex++) {
             // Note, this is the reverse rotation, i.e. angle is negative.
             double s = superSamplingEff*Math.sin(-angle)/subSamplingEff;
             double c = superSamplingEff*Math.cos(-angle)/subSamplingEff;
@@ -605,59 +645,80 @@ public class DetectRectlinearSymmetry extends CvStage {
             Arrays.fill(yCrossSectionN, 0);
             Arrays.fill(xCrossSectionMasked, 0);
             Arrays.fill(yCrossSectionMasked, 0);
-            // Calculate the cross-sections from the pixels.
-            for (int y = 0, dy = -cyPixels, iy = 0; y < hPixels; y += subSamplingEff, dy += subSamplingEff, iy += width*channels*subSamplingEff) {
-                double sy = s*dy;
-                double cy = c*dy;
-                for (int x = 0, dx = -cxPixels, idx = iy + x0Pixels*channels; x < wPixels; x += subSamplingEff, dx += subSamplingEff, idx += channels*subSamplingEff) {
-                    double sx = s*dx;
-                    double cx = c*dx;
-                    // Note: this is a left-handed coordinate system, i.e. y pointing down.
-                    double xCross = cx + sy + cxCross;
-                    double yCross = -sx + cy + cyCross;
-                    int ixCross = (int) Math.round(xCross);
-                    int iyCross = (int) Math.round(yCross);
-                    double xWeight1 = xCross + 0.5 - ixCross;
-                    double xWeight0 = 1 - xWeight1;
-                    double yWeight1 = yCross + 0.5 - iyCross;
-                    double yWeight0 = 1 - yWeight1;
-                    if (iyCross > 1 && iyCross < hCross) {
-                        if (ixCross > 1 && ixCross < wCross) {
-                            /*int dSq = dx*dx + dy*dy;
-                            if (dSq < rSq)*/ {
-                                double luminance = 0;
-                                for (int ch = 0; ch < channels; ch++) {
-                                    int xai = ixCross*channels + ch;
-                                    int yai = iyCross*channels + ch;
-                                    double pixel = gammaLut[Byte.toUnsignedInt(pixelSamples[idx + ch])];
-                                    luminance += pixel;
-                                    xCrossSection[xai] += pixel*xWeight1;
-                                    xCrossSection[xai - channels] += pixel*xWeight0;
-                                    yCrossSection[yai] += pixel*yWeight1;
-                                    yCrossSection[yai - channels] += pixel*yWeight0;
-                                    if (DEBUG >= 2) {
-                                        if (Math.abs(angle - (a0+a1)/2) < angleStep) {
-                                            byte [] pixelData = new byte[channels];
-                                            image.get(y0Pixels + y, x0Pixels + x, pixelData);
-                                            if (ch == 2) {
-                                                pixelData[ch] = (byte)(127.0*ixCross/wCross + pixelData[ch]/2);
+            if (gpuSums != null) {
+                int bins = wCross + hCross;
+                for (int x = 0; x < wCross; x++) {
+                    int bin = angleIndex*bins + x;
+                    for (int ch = 0; ch < channels; ch++) {
+                        xCrossSection[x*channels + ch] = gpuSums[bin*channels + ch];
+                    }
+                    xCrossSectionN[x] = gpuWeights[bin];
+                    xCrossSectionMasked[x] = gpuMasked[bin];
+                }
+                for (int y = 0; y < hCross; y++) {
+                    int bin = angleIndex*bins + wCross + y;
+                    for (int ch = 0; ch < channels; ch++) {
+                        yCrossSection[y*channels + ch] = gpuSums[bin*channels + ch];
+                    }
+                    yCrossSectionN[y] = gpuWeights[bin];
+                    yCrossSectionMasked[y] = gpuMasked[bin];
+                }
+            }
+            else {
+                // Calculate the cross-sections from the pixels.
+                for (int y = 0, dy = -cyPixels, iy = 0; y < hPixels; y += subSamplingEff, dy += subSamplingEff, iy += width*channels*subSamplingEff) {
+                    double sy = s*dy;
+                    double cy = c*dy;
+                    for (int x = 0, dx = -cxPixels, idx = iy + x0Pixels*channels; x < wPixels; x += subSamplingEff, dx += subSamplingEff, idx += channels*subSamplingEff) {
+                        double sx = s*dx;
+                        double cx = c*dx;
+                        // Note: this is a left-handed coordinate system, i.e. y pointing down.
+                        double xCross = cx + sy + cxCross;
+                        double yCross = -sx + cy + cyCross;
+                        int ixCross = (int) Math.round(xCross);
+                        int iyCross = (int) Math.round(yCross);
+                        double xWeight1 = xCross + 0.5 - ixCross;
+                        double xWeight0 = 1 - xWeight1;
+                        double yWeight1 = yCross + 0.5 - iyCross;
+                        double yWeight0 = 1 - yWeight1;
+                        if (iyCross > 1 && iyCross < hCross) {
+                            if (ixCross > 1 && ixCross < wCross) {
+                                /*int dSq = dx*dx + dy*dy;
+                                if (dSq < rSq)*/ {
+                                    double luminance = 0;
+                                    for (int ch = 0; ch < channels; ch++) {
+                                        int xai = ixCross*channels + ch;
+                                        int yai = iyCross*channels + ch;
+                                        double pixel = gammaLut[Byte.toUnsignedInt(pixelSamples[idx + ch])];
+                                        luminance += pixel;
+                                        xCrossSection[xai] += pixel*xWeight1;
+                                        xCrossSection[xai - channels] += pixel*xWeight0;
+                                        yCrossSection[yai] += pixel*yWeight1;
+                                        yCrossSection[yai - channels] += pixel*yWeight0;
+                                        if (DEBUG >= 2) {
+                                            if (Math.abs(angle - (a0+a1)/2) < angleStep) {
+                                                byte [] pixelData = new byte[channels];
+                                                image.get(y0Pixels + y, x0Pixels + x, pixelData);
+                                                if (ch == 2) {
+                                                    pixelData[ch] = (byte)(127.0*ixCross/wCross + pixelData[ch]/2);
+                                                }
+                                                else if (ch == 1) {
+                                                    pixelData[ch] = (byte)(127.0*iyCross/hCross + pixelData[ch]/2);
+                                                }
+                                                image.put(y0Pixels + y, x0Pixels + x, pixelData);
                                             }
-                                            else if (ch == 1) {
-                                                pixelData[ch] = (byte)(127.0*iyCross/hCross + pixelData[ch]/2);
-                                            }
-                                            image.put(y0Pixels + y, x0Pixels + x, pixelData);
                                         }
                                     }
-                                }
-                                xCrossSectionN[ixCross] += xWeight1;
-                                xCrossSectionN[ixCross - 1] += xWeight0;
-                                yCrossSectionN[iyCross] += yWeight1;
-                                yCrossSectionN[iyCross - 1] += yWeight0;
-                                if (luminance > thresholdLuminance) {
-                                    xCrossSectionMasked[ixCross] += xWeight1;
-                                    xCrossSectionMasked[ixCross - 1] += xWeight0;
-                                    yCrossSectionMasked[iyCross] += yWeight1;
-                                    yCrossSectionMasked[iyCross - 1] += yWeight0;
+                                    xCrossSectionN[ixCross] += xWeight1;
+                                    xCrossSectionN[ixCross - 1] += xWeight0;
+                                    yCrossSectionN[iyCross] += yWeight1;
+                                    yCrossSectionN[iyCross - 1] += yWeight0;
+                                    if (luminance > thresholdLuminance) {
+                                        xCrossSectionMasked[ixCross] += xWeight1;
+                                        xCrossSectionMasked[ixCross - 1] += xWeight0;
+                                        yCrossSectionMasked[iyCross] += yWeight1;
+                                        yCrossSectionMasked[iyCross - 1] += yWeight0;
+                                    }
                                 }
                             }
                         }

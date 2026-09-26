@@ -24,6 +24,7 @@ import org.openpnp.spi.Camera;
 import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.FluentCv.ColorSpace;
 import org.openpnp.vision.pipeline.ui.PipelinePropertySheetTable;
+import org.openpnp.vision.gpu.GpuImage;
 import org.simpleframework.xml.Attribute;
 
 /**
@@ -245,17 +246,40 @@ public abstract class CvStage {
 
     public static class Result {
         final public CvStage stage;
-        final public Mat image;
+        private Mat image;
+        private final GpuImage gpuImage;
         final public Object model;
         final public long processingTimeNs;
         final public ColorSpace colorSpace;
 
         public Result(Mat image, ColorSpace colorSpace, Object model, long processingTimeNs, CvStage stage) {
             this.image = image;
+            this.gpuImage = null;
             this.model = model;
             this.processingTimeNs = processingTimeNs;
             this.stage = stage;
             this.colorSpace = colorSpace;
+        }
+
+        /**
+         * A result whose image stays on the GPU until getImage() is called. Takes over the
+         * caller's reference to gpuImage.
+         */
+        public Result(GpuImage gpuImage, ColorSpace colorSpace, Object model, long processingTimeNs, CvStage stage) {
+            this.image = null;
+            this.gpuImage = gpuImage;
+            this.model = model;
+            this.processingTimeNs = processingTimeNs;
+            this.stage = stage;
+            this.colorSpace = colorSpace;
+        }
+
+        public Result(GpuImage gpuImage, ColorSpace colorSpace) {
+            this(gpuImage, colorSpace, null, 0, null);
+        }
+
+        public Result(GpuImage gpuImage) {
+            this(gpuImage, (ColorSpace) null);
         }
 
         public Result(Mat image, Object model, long processingTimeNs) {
@@ -278,8 +302,28 @@ public abstract class CvStage {
             this(image, null);
         }
         
-        public Mat getImage() {
+        public synchronized Mat getImage() {
+            if (image == null && gpuImage != null) {
+                image = gpuImage.download();
+            }
             return image;
+        }
+
+        public GpuImage getGpuImage() {
+            return gpuImage;
+        }
+
+        synchronized Mat getImageIfOnCpu() {
+            return gpuImage == null ? image : null;
+        }
+
+        synchronized void release() {
+            if (image != null) {
+                image.release();
+            }
+            if (gpuImage != null) {
+                gpuImage.release();
+            }
         }
         
         public Object getModel() {
