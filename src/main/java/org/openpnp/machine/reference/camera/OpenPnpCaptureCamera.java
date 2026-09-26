@@ -33,7 +33,7 @@ import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.camera.wizards.OpenPnpCaptureCameraConfigurationWizard;
 import org.openpnp.model.AbstractModelObject;
 import org.openpnp.spi.PropertySheetHolder;
-import org.openpnp.vision.gpu.OclSupport;
+import org.openpnp.vision.gpu.GpuRuntime;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -226,7 +226,7 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
     }
 
     private V4l2Stream openV4l2Stream() {
-        if (format.getFormatInfo().fourcc != V4l2Stream.FOURCC_YUYV || !OclSupport.isAvailable()) {
+        if (format.getFormatInfo().fourcc != V4l2Stream.FOURCC_YUYV || !GpuRuntime.isAvailable()) {
             return null;
         }
         try {

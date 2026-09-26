@@ -18,6 +18,21 @@ public class GpuBuffer extends GpuObject {
         }
     }
 
+    private GpuBuffer(long handle, long size, boolean hostVisible) {
+        super(handle);
+        this.size = size;
+        if (hostVisible) {
+            mapped = GpuNative.map(handle).order(ByteOrder.nativeOrder());
+        }
+    }
+
+    /**
+     * Takes ownership of a buffer handle created by other native code of this library.
+     */
+    public static GpuBuffer adopt(long handle, long size, boolean hostVisible) {
+        return new GpuBuffer(handle, size, hostVisible);
+    }
+
     public long getSize() {
         return size;
     }

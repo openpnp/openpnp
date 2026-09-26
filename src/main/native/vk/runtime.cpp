@@ -155,10 +155,31 @@ void Runtime::create() {
     queueInfo.pQueuePriorities = &priority;
     VkPhysicalDeviceVulkan12Features enable12{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES};
     enable12.timelineSemaphore = VK_TRUE;
+    uint32_t extensionCount = 0;
+    vk.vkEnumerateDeviceExtensionProperties(physical_, nullptr, &extensionCount, nullptr);
+    std::vector<VkExtensionProperties> extensions(extensionCount);
+    vk.vkEnumerateDeviceExtensionProperties(physical_, nullptr, &extensionCount, extensions.data());
+    auto hasExtension = [&](const char *name) {
+        for (const VkExtensionProperties &e : extensions) {
+            if (strcmp(e.extensionName, name) == 0) {
+                return true;
+            }
+        }
+        return false;
+    };
+    std::vector<const char *> enabled;
+    dmaBuf_ = hasExtension(VK_KHR_EXTERNAL_MEMORY_FD_EXTENSION_NAME)
+            && hasExtension(VK_EXT_EXTERNAL_MEMORY_DMA_BUF_EXTENSION_NAME);
+    if (dmaBuf_) {
+        enabled.push_back(VK_KHR_EXTERNAL_MEMORY_FD_EXTENSION_NAME);
+        enabled.push_back(VK_EXT_EXTERNAL_MEMORY_DMA_BUF_EXTENSION_NAME);
+    }
     VkDeviceCreateInfo deviceInfo{VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO};
     deviceInfo.pNext = &enable12;
     deviceInfo.queueCreateInfoCount = 1;
     deviceInfo.pQueueCreateInfos = &queueInfo;
+    deviceInfo.enabledExtensionCount = enabled.size();
+    deviceInfo.ppEnabledExtensionNames = enabled.data();
     check(vk.vkCreateDevice(physical_, &deviceInfo, nullptr, &device_), "vkCreateDevice");
 #define LOAD_DEVICE(name) \
     vk.name = reinterpret_cast<PFN_##name>(vk.vkGetDeviceProcAddr(device_, #name)); \
@@ -166,6 +187,9 @@ void Runtime::create() {
         throw std::runtime_error(#name " not found"); \
     }
     VK_DEVICE_FUNCS(LOAD_DEVICE)
+    if (dmaBuf_) {
+        VK_DMABUF_FUNCS(LOAD_DEVICE)
+    }
 #undef LOAD_DEVICE
     vk.vkGetDeviceQueue(device_, queueFamily_, 0, &queue_);
 
@@ -237,6 +261,49 @@ std::shared_ptr<Buffer> Runtime::createBuffer(VkDeviceSize size, bool hostVisibl
     check(vk.vkBindBufferMemory(device_, buffer->buffer, buffer->memory, 0), "vkBindBufferMemory");
     if (hostVisible) {
         check(vk.vkMapMemory(device_, buffer->memory, 0, VK_WHOLE_SIZE, 0, &buffer->mapped), "vkMapMemory");
+    }
+    return buffer;
+}
+
+std::shared_ptr<Buffer> Runtime::importDmaBuf(int fd, VkDeviceSize size) {
+    if (!dmaBuf_) {
+        close(fd);
+        return nullptr;
+    }
+    auto buffer = std::make_shared<Buffer>();
+    buffer->size = size;
+    VkExternalMemoryBufferCreateInfo external{VK_STRUCTURE_TYPE_EXTERNAL_MEMORY_BUFFER_CREATE_INFO};
+    external.handleTypes = VK_EXTERNAL_MEMORY_HANDLE_TYPE_DMA_BUF_BIT_EXT;
+    VkBufferCreateInfo info{VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO};
+    info.pNext = &external;
+    info.size = size;
+    info.usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+    VkMemoryFdPropertiesKHR fdProps{VK_STRUCTURE_TYPE_MEMORY_FD_PROPERTIES_KHR};
+    VkMemoryRequirements req{};
+    if (vk.vkCreateBuffer(device_, &info, nullptr, &buffer->buffer) != VK_SUCCESS) {
+        close(fd);
+        return nullptr;
+    }
+    vk.vkGetBufferMemoryRequirements(device_, buffer->buffer, &req);
+    if (req.size > size || vk.vkGetMemoryFdPropertiesKHR(device_, VK_EXTERNAL_MEMORY_HANDLE_TYPE_DMA_BUF_BIT_EXT,
+            fd, &fdProps) != VK_SUCCESS) {
+        close(fd);
+        return nullptr;
+    }
+    uint32_t type = memoryType(req.memoryTypeBits & fdProps.memoryTypeBits, 0, 0, 0);
+    VkImportMemoryFdInfoKHR import{VK_STRUCTURE_TYPE_IMPORT_MEMORY_FD_INFO_KHR};
+    import.handleType = VK_EXTERNAL_MEMORY_HANDLE_TYPE_DMA_BUF_BIT_EXT;
+    import.fd = fd;
+    VkMemoryAllocateInfo alloc{VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO};
+    alloc.pNext = &import;
+    alloc.allocationSize = size;
+    alloc.memoryTypeIndex = type;
+    if (type == UINT32_MAX || vk.vkAllocateMemory(device_, &alloc, nullptr, &buffer->memory) != VK_SUCCESS) {
+        close(fd);
+        return nullptr;
+    }
+    if (vk.vkBindBufferMemory(device_, buffer->buffer, buffer->memory, 0) != VK_SUCCESS) {
+        return nullptr;
     }
     return buffer;
 }

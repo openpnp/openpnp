@@ -4,7 +4,7 @@ package org.openpnp.vision.gpu;
  * Owns a native GPU object. Closing it only drops Java's reference; the object is destroyed once
  * neither the GPU nor any program still uses it.
  */
-public abstract class GpuObject implements AutoCloseable {
+public abstract class GpuObject implements GpuResource {
     private long handle;
 
     protected GpuObject(long handle) {

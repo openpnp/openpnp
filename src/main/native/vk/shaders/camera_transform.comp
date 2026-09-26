@@ -1,0 +1,179 @@
+#version 450
+
+// Converts a camera frame, applies the white balance LUT and the composite transform remap,
+// matching ReferenceCamera's CPU path (OpenCV cvtColor, LUT, then an INTER_LINEAR remap).
+
+layout(local_size_x = 64) in;
+
+layout(constant_id = 0) const int INPUT = 0;
+layout(constant_id = 1) const int OUTPUT = 0;
+layout(constant_id = 2) const bool HAS_MAP = false;
+layout(constant_id = 3) const bool HAS_LUT = false;
+layout(constant_id = 4) const int BOX = 1;
+
+const int INPUT_YUYV = 0;
+const int INPUT_BGR = 1;
+const int INPUT_GRAY = 2;
+// Full resolution as packed BGR (or gray) bytes, or preview pixels as 0x00RRGGBB words.
+const int OUTPUT_PACKED = 0;
+const int OUTPUT_XRGB = 1;
+
+const float OUTSIDE = -1000.0;
+
+layout(binding = 0) uniform Params {
+    int srcWidth;
+    int srcHeight;
+    int srcStride;
+    int dstWidth;
+    int dstHeight;
+    int mapWidth;
+    int mapHeight;
+    int pad;
+    vec2 scale;
+} p;
+
+layout(binding = 1) readonly buffer Source {
+    uint words[];
+} src;
+
+layout(binding = 2) readonly buffer Map {
+    vec2 xy[];
+} map;
+
+layout(binding = 3) readonly buffer Lut {
+    uint entries[];
+} lut;
+
+layout(binding = 4) writeonly buffer Destination {
+    uint words[];
+} dst;
+
+uint byteAt(int offset) {
+    return (src.words[offset >> 2] >> ((offset & 3) * 8)) & 0xFFu;
+}
+
+// OpenCV's fixed-point ITU-R BT.601 YUV422 conversion.
+ivec3 yuvToBgr(int y, int u, int v) {
+    int yy = max(0, y - 16) * 1220542;
+    int r = (yy + 1673527 * (v - 128) + (1 << 19)) >> 20;
+    int g = (yy - 852492 * (v - 128) - 409993 * (u - 128) + (1 << 19)) >> 20;
+    int b = (yy + 2116026 * (u - 128) + (1 << 19)) >> 20;
+    return clamp(ivec3(b, g, r), 0, 255);
+}
+
+ivec3 pixel(int x, int y) {
+    ivec3 bgr;
+    if (INPUT == INPUT_YUYV) {
+        uint word = src.words[(y * p.srcStride + (x & ~1) * 2) >> 2];
+        int luma = int((x & 1) == 0 ? word & 0xFFu : (word >> 16) & 0xFFu);
+        bgr = yuvToBgr(luma, int((word >> 8) & 0xFFu), int(word >> 24));
+    }
+    else if (INPUT == INPUT_BGR) {
+        int offset = y * p.srcStride + x * 3;
+        bgr = ivec3(byteAt(offset), byteAt(offset + 1), byteAt(offset + 2));
+    }
+    else {
+        return ivec3(int(byteAt(y * p.srcStride + x)));
+    }
+    if (HAS_LUT) {
+        bgr = ivec3(lut.entries[bgr.x] & 0xFFu, (lut.entries[bgr.y] >> 8) & 0xFFu, (lut.entries[bgr.z] >> 16) & 0xFFu);
+    }
+    return bgr;
+}
+
+// Bilinear sample with OpenCV's 1/32 pixel fractions; taps outside the frame are black.
+vec3 bilinear(vec2 s) {
+    if (s.x < OUTSIDE || s.y < OUTSIDE) {
+        return vec3(0.0);
+    }
+    ivec2 fixedXY = ivec2(round(s * 32.0));
+    ivec2 i0 = fixedXY >> 5;
+    vec2 f = vec2(fixedXY & 31) / 32.0;
+    vec3 sum = vec3(0.0);
+    for (int dy = 0; dy < 2; dy++) {
+        for (int dx = 0; dx < 2; dx++) {
+            int x = i0.x + dx;
+            int y = i0.y + dy;
+            float w = (dx == 0 ? 1.0 - f.x : f.x) * (dy == 0 ? 1.0 - f.y : f.y);
+            if (w > 0.0 && x >= 0 && y >= 0 && x < p.srcWidth && y < p.srcHeight) {
+                sum += w * vec3(pixel(x, y));
+            }
+        }
+    }
+    return sum;
+}
+
+vec2 mapAt(ivec2 t) {
+    return map.xy[t.y * p.mapWidth + t.x];
+}
+
+// Interpolates the map for downscaled previews; any contributing tap outside the frame
+// makes the sample black.
+vec2 mapInterpolated(vec2 t) {
+    t = clamp(t, vec2(0.0), vec2(p.mapWidth - 1, p.mapHeight - 1));
+    ivec2 i0 = ivec2(floor(t));
+    ivec2 i1 = min(i0 + 1, ivec2(p.mapWidth - 1, p.mapHeight - 1));
+    vec2 f = t - vec2(i0);
+    vec2 a = mapAt(i0);
+    vec2 b = mapAt(ivec2(i1.x, i0.y));
+    vec2 c = mapAt(ivec2(i0.x, i1.y));
+    vec2 d = mapAt(i1);
+    if (min(min(a, b), min(c, d)).x < OUTSIDE || min(min(a, b), min(c, d)).y < OUTSIDE) {
+        return vec2(2.0 * OUTSIDE);
+    }
+    return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
+}
+
+vec3 fullPixel(int x, int y) {
+    return bilinear(HAS_MAP ? mapAt(ivec2(x, y)) : vec2(x, y));
+}
+
+vec3 previewPixel(int x, int y) {
+    vec3 sum = vec3(0.0);
+    for (int j = 0; j < BOX; j++) {
+        for (int i = 0; i < BOX; i++) {
+            vec2 t = (vec2(x, y) + (vec2(i, j) + 0.5) / float(BOX)) * p.scale - 0.5;
+            sum += bilinear(HAS_MAP ? mapInterpolated(t) : t);
+        }
+    }
+    return sum / float(BOX * BOX);
+}
+
+uint toByte(float v) {
+    return uint(clamp(round(v), 0.0, 255.0));
+}
+
+void main() {
+    int id = int(gl_GlobalInvocationID.x);
+    int total = p.dstWidth * p.dstHeight;
+    if (OUTPUT == OUTPUT_XRGB) {
+        if (id < total) {
+            vec3 bgr = previewPixel(id % p.dstWidth, id / p.dstWidth);
+            dst.words[id] = (toByte(bgr.z) << 16) | (toByte(bgr.y) << 8) | toByte(bgr.x);
+        }
+        return;
+    }
+    // Each invocation writes four consecutive pixels, so whole words never straddle invocations.
+    int first = id * 4;
+    if (first >= total) {
+        return;
+    }
+    uint bytes[12];
+    for (int k = 0; k < 4; k++) {
+        int i = first + k;
+        vec3 bgr = i < total ? fullPixel(i % p.dstWidth, i / p.dstWidth) : vec3(0.0);
+        if (INPUT == INPUT_GRAY) {
+            bytes[k] = toByte(bgr.x);
+        }
+        else {
+            bytes[k * 3] = toByte(bgr.x);
+            bytes[k * 3 + 1] = toByte(bgr.y);
+            bytes[k * 3 + 2] = toByte(bgr.z);
+        }
+    }
+    int words = INPUT == INPUT_GRAY ? 1 : 3;
+    for (int w = 0; w < words; w++) {
+        dst.words[id * words + w] = bytes[w * 4] | (bytes[w * 4 + 1] << 8) | (bytes[w * 4 + 2] << 16)
+                | (bytes[w * 4 + 3] << 24);
+    }
+}

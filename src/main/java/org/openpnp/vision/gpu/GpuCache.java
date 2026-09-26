@@ -15,7 +15,7 @@ import java.util.function.Function;
  * Lazily creates GPU objects by key and closes them once they have not been used for a while.
  * Keys must be value objects (records, lists of settings, ...).
  */
-public class GpuCache<K, V extends GpuObject> {
+public class GpuCache<K, V extends GpuResource> {
     private static final List<WeakReference<GpuCache<?, ?>>> caches = new ArrayList<>();
     private static ScheduledExecutorService sweeper;
 

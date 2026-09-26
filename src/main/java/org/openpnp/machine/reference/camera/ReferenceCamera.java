@@ -77,8 +77,8 @@ import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.LensCalibration;
 import org.openpnp.vision.LensCalibration.LensModel;
 import org.openpnp.vision.LensCalibration.Pattern;
-import org.openpnp.vision.gpu.OclCameraTransform;
-import org.openpnp.vision.gpu.OclSupport;
+import org.openpnp.vision.gpu.GpuCameraTransform;
+import org.openpnp.vision.gpu.GpuRuntime;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -197,7 +197,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
 
     boolean gpuTransforms = true;
     private final Object gpuLock = new Object();
-    private volatile OclCameraTransform gpuTransform;
+    private volatile GpuCameraTransform gpuTransform;
     private List<Object> gpuTransformKey;
     private boolean gpuTransformFailed;
 
@@ -708,7 +708,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
     }
 
     private BufferedImage gpuTransformImage(BufferedImage image, boolean advanced) {
-        if (gpuTransformFailed || !OclSupport.isAvailable()) {
+        if (gpuTransformFailed || !GpuRuntime.isAvailable()) {
             return null;
         }
         synchronized (gpuLock) {
@@ -740,7 +740,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
             initWhiteBalanceLut();
         }
         if (gpuTransform == null || gpuTransform.isClosed()) {
-            gpuTransform = new OclCameraTransform();
+            gpuTransform = new GpuCameraTransform();
             gpuTransformKey = null;
         }
         if (gpuTransformSettings(frameWidth, frameHeight, advanced).equals(gpuTransformKey)) {
@@ -749,12 +749,12 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
         Mat balance = isWhiteBalanced() ? lut : null;
         if (hasGeometricTransforms(advanced)) {
             Mat[] maps = buildTransformMaps(frameWidth, frameHeight, advanced);
-            gpuTransform.setTransform(maps[0], maps[1], balance, frameWidth, frameHeight);
+            gpuTransform.setTransform(maps[0], maps[1], balance);
             maps[0].release();
             maps[1].release();
         }
         else {
-            gpuTransform.setTransform(null, null, balance, frameWidth, frameHeight);
+            gpuTransform.setTransform(null, null, balance);
         }
         // Building the maps may have created the undistortion maps, which are part of the key.
         gpuTransformKey = gpuTransformSettings(frameWidth, frameHeight, advanced);
@@ -809,7 +809,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
     public void close() throws IOException {
         super.close();
         // No gpuLock here: map building takes the camera lock while holding it.
-        OclCameraTransform transform = gpuTransform;
+        GpuCameraTransform transform = gpuTransform;
         if (transform != null) {
             transform.close();
         }

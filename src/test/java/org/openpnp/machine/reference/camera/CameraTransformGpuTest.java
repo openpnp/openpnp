@@ -20,7 +20,7 @@ import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 import org.openpnp.model.Configuration;
 import org.openpnp.util.OpenCvUtils;
-import org.openpnp.vision.gpu.OclSupport;
+import org.openpnp.vision.gpu.GpuRuntime;
 
 public class CameraTransformGpuTest {
     static class TestCamera extends ImageCamera {
@@ -136,7 +136,7 @@ public class CameraTransformGpuTest {
 
     @Test
     public void gpuMatchesCpu() {
-        Assumptions.assumeTrue(OclSupport.isAvailable());
+        Assumptions.assumeTrue(GpuRuntime.isAvailable());
         BufferedImage image = testImage();
         Consumer<TestCamera> whiteBalance = c -> {
             c.setRedBalance(1.2);

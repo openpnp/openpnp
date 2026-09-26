@@ -78,6 +78,8 @@ public:
     VkDevice device() const { return device_; }
 
     std::shared_ptr<Buffer> createBuffer(VkDeviceSize size, bool hostVisible);
+    // Wraps a dma-buf without copying and takes ownership of fd; nullptr when that isn't possible.
+    std::shared_ptr<Buffer> importDmaBuf(int fd, VkDeviceSize size);
     std::shared_ptr<Pipeline> createPipeline(const std::string &shader, const std::vector<int32_t> &spec,
             const std::vector<VkDescriptorType> &bindings);
     std::shared_ptr<Program> createProgram(std::vector<Step> steps);
@@ -112,6 +114,7 @@ private:
     std::string deviceName_;
     VkSemaphore timeline_ = VK_NULL_HANDLE;
     std::atomic<bool> failed_{false};
+    bool dmaBuf_ = false;
 
     std::mutex recordLock_;
     VkCommandPool commandPool_ = VK_NULL_HANDLE;

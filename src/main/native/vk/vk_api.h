@@ -59,11 +59,16 @@
     X(vkCmdPipelineBarrier) \
     X(vkCmdCopyBuffer)
 
+// Present only when the device supports importing dma-bufs.
+#define VK_DMABUF_FUNCS(X) \
+    X(vkGetMemoryFdPropertiesKHR)
+
 struct VkApi {
 #define VK_API_MEMBER(name) PFN_##name name = nullptr;
     VK_GLOBAL_FUNCS(VK_API_MEMBER)
     VK_INSTANCE_FUNCS(VK_API_MEMBER)
     VK_DEVICE_FUNCS(VK_API_MEMBER)
+    VK_DMABUF_FUNCS(VK_API_MEMBER)
 #undef VK_API_MEMBER
 };
 
