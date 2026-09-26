@@ -892,7 +892,14 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                     }
                     break;
                 case DELAY_COMMAND:
-                    commandBuilt = "{TimeMS:G4 P%d} ; Delay for given time in [ms]";
+                    // Smoothie V1 and V2 support 'P' and expects Milliseconds
+                    // "The NIST RS274NGC Interpreter - Version 3" specifies, that 'P' expects seconds
+                    if (dialect.isSmoothie()) {
+                        commandBuilt = "{TimeMS:G4 P%d} ; Delay for given time in [ms]";
+                    }
+                    else {
+                        commandBuilt = "{TimeSeconds:G4 P%.3f} ; Delay for given time in [s]";
+                    }
                     break;
                 case MOVE_TO_COMMAND:
                     if (hasAxes) {
