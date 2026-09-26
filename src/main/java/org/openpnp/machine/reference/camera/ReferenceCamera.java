@@ -423,7 +423,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
         }
         // Listeners are asked outside gpuLock: they take their own locks, which painting holds
         // while calling back into the camera.
-        BufferedImage[] buffers = new BufferedImage[previews.size()];
+        CameraPreviewListener.Preview[] buffers = new CameraPreviewListener.Preview[previews.size()];
         for (int i = 0; i < buffers.length; i++) {
             buffers[i] = previews.get(i).previewBuffer(size[0], size[1]);
             if (buffers[i] == null) {

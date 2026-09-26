@@ -69,6 +69,7 @@ import javax.swing.SwingUtilities;
 
 import org.openpnp.CameraListener;
 import org.openpnp.CameraPreviewListener;
+import org.openpnp.CameraPreviewListener.Preview;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.reticle.Reticle;
 import org.openpnp.gui.support.LengthConverter;
@@ -146,6 +147,8 @@ public class CameraView extends JComponent implements CameraPreviewListener {
 
     private final BufferedImage[] previewPool = new BufferedImage[3];
     private BufferedImage pendingPreview;
+    // The region of the frame lastFrame shows when it is a preview, null for full frames.
+    private Preview lastPreview;
 
     private LinkedHashMap<Object, Reticle> reticles = new LinkedHashMap<>();
 
@@ -550,8 +553,7 @@ public class CameraView extends JComponent implements CameraPreviewListener {
 
         // The selection is in full frame pixels, which a downscaled preview doesn't have.
         BufferedImage frame = lastFrame;
-        if ((frame.getWidth() != frameWidth || frame.getHeight() != frameHeight)
-                && camera instanceof AbstractBroadcastingCamera) {
+        if (lastPreview != null && camera instanceof AbstractBroadcastingCamera) {
             BufferedImage full = ((AbstractBroadcastingCamera) camera).getLastBroadcastImage();
             if (full != null) {
                 frame = full;
@@ -581,7 +583,7 @@ public class CameraView extends JComponent implements CameraPreviewListener {
         if (img == null) {
             return;
         }
-        showFrame(img, img.getWidth(), img.getHeight());
+        showFrame(img, null, img.getWidth(), img.getHeight());
     }
 
     @Override
@@ -590,14 +592,23 @@ public class CameraView extends JComponent implements CameraPreviewListener {
     }
 
     @Override
-    public synchronized BufferedImage previewBuffer(int frameWidth, int frameHeight) {
+    public synchronized Preview previewBuffer(int frameWidth, int frameHeight) {
         if (cameraViewFilter != null) {
             return null;
         }
+        // Only the part of the frame inside the component, at the size it is painted at.
+        Insets ins = getInsets();
+        int viewWidth = Math.max(1, getWidth() - ins.left - ins.right);
+        int viewHeight = Math.max(1, getHeight() - ins.top - ins.bottom);
         Dimension scaled = scaledSize(frameWidth, frameHeight);
-        // Zoomed in past 1:1 the full frame is the most detail there is.
-        int width = Math.max(1, Math.min(scaled.width, frameWidth));
-        int height = Math.max(1, Math.min(scaled.height, frameHeight));
+        int x0 = viewWidth / 2 - scaled.width / 2;
+        int y0 = viewHeight / 2 - scaled.height / 2;
+        int left = Math.max(0, -x0);
+        int top = Math.max(0, -y0);
+        int width = Math.max(1, Math.min(scaled.width, viewWidth - x0) - left);
+        int height = Math.max(1, Math.min(scaled.height, viewHeight - y0) - top);
+        double ratioX = frameWidth / (double) scaled.width;
+        double ratioY = frameHeight / (double) scaled.height;
         for (int i = 0; i < previewPool.length; i++) {
             BufferedImage image = previewPool[i];
             if (image != null && (image == lastFrame || image == pendingPreview)) {
@@ -608,26 +619,27 @@ public class CameraView extends JComponent implements CameraPreviewListener {
                 previewPool[i] = image;
             }
             pendingPreview = image;
-            return image;
+            return new Preview(image, left * ratioX, top * ratioY, width * ratioX, height * ratioY);
         }
         return null;
     }
 
     @Override
-    public void previewReceived(BufferedImage preview, int frameWidth, int frameHeight) {
+    public void previewReceived(Preview preview, int frameWidth, int frameHeight) {
         synchronized (this) {
-            if (preview == pendingPreview) {
+            if (preview.image == pendingPreview) {
                 pendingPreview = null;
             }
         }
-        showFrame(preview, frameWidth, frameHeight);
+        showFrame(preview.image, preview, frameWidth, frameHeight);
     }
 
-    private void showFrame(BufferedImage img, int width, int height) {
+    private void showFrame(BufferedImage img, Preview preview, int width, int height) {
         boolean resized = !camera.getUnitsPerPixelAtZ().equals(lastUnitsPerPixel);
         synchronized (this) {
             resized |= lastFrame == null || width != frameWidth || height != frameHeight;
             lastFrame = img;
+            lastPreview = preview;
             frameWidth = width;
             frameHeight = height;
         }
@@ -723,9 +735,23 @@ public class CameraView extends JComponent implements CameraPreviewListener {
         Graphics2D g2d = (Graphics2D) g;
         g.setColor(getBackground());
         g2d.fillRect(ins.left, ins.top, width, height);
+        Preview preview = lastPreview;
         if (image != null) {
             // Only render if there is a valid image.
-            if (image.getWidth() == scaledWidth && image.getHeight() == scaledHeight) {
+            if (preview != null && preview.image == image) {
+                int x = imageX + (int) Math.round(preview.x / scaleRatioX);
+                int y = imageY + (int) Math.round(preview.y / scaleRatioY);
+                int w = (int) Math.round(preview.width / scaleRatioX);
+                int h = (int) Math.round(preview.height / scaleRatioY);
+                if (w == image.getWidth() && h == image.getHeight()) {
+                    g2d.drawImage(image, x, y, null);
+                }
+                else {
+                    // Zoomed or resized since this preview was rendered; the next one fits again.
+                    g2d.drawImage(image, x, y, w, h, null);
+                }
+            }
+            else if (image.getWidth() == scaledWidth && image.getHeight() == scaledHeight) {
                 g2d.drawImage(image, imageX, imageY, null);
             }
             else if (renderingQuality == RenderingQuality.Low) {

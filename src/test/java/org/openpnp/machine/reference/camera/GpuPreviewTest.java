@@ -49,13 +49,14 @@ public class GpuPreviewTest {
         }
 
         @Override
-        public BufferedImage previewBuffer(int frameWidth, int frameHeight) {
-            return fullFrames ? null : new BufferedImage(frameWidth / 4, frameHeight / 4, BufferedImage.TYPE_INT_RGB);
+        public CameraPreviewListener.Preview previewBuffer(int frameWidth, int frameHeight) {
+            return fullFrames ? null : new CameraPreviewListener.Preview(new BufferedImage(frameWidth / 4,
+                    frameHeight / 4, BufferedImage.TYPE_INT_RGB), 0, 0, frameWidth, frameHeight);
         }
 
         @Override
-        public void previewReceived(BufferedImage preview, int frameWidth, int frameHeight) {
-            received.add(preview);
+        public void previewReceived(CameraPreviewListener.Preview preview, int frameWidth, int frameHeight) {
+            received.add(preview.image);
             this.frameWidth = frameWidth;
         }
     }

@@ -35,6 +35,7 @@ layout(binding = 0) uniform Params {
     vec2 scale;
     ivec2 crop;
     int divisor;
+    vec2 origin;
 } p;
 
 // Every buffer a camera stream captures into, so one recorded program serves any frame.
@@ -138,7 +139,7 @@ vec3 previewPixel(int x, int y) {
     vec3 sum = vec3(0.0);
     for (int j = 0; j < BOX; j++) {
         for (int i = 0; i < BOX; i++) {
-            vec2 t = (vec2(x, y) + (vec2(i, j) + 0.5) / float(BOX)) * p.scale - 0.5;
+            vec2 t = p.origin + (vec2(x, y) + (vec2(i, j) + 0.5) / float(BOX)) * p.scale - 0.5;
             sum += bilinear(HAS_MAP ? mapInterpolated(t) : t);
         }
     }

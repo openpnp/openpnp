@@ -160,6 +160,38 @@ public class GpuCameraTransformTest {
     }
 
     @Test
+    public void previewRegionAtFullScaleIsExact() {
+        Mat image = bgrImage();
+        BufferedImage source = OpenCvUtils.toBufferedImage(image);
+        byte[] bytes = ((DataBufferByte) source.getRaster().getDataBuffer()).getData();
+        BufferedImage preview = new BufferedImage(200, 150, BufferedImage.TYPE_INT_RGB);
+        try (GpuCameraTransform transform = new GpuCameraTransform(); GpuBuffer upload = upload(bytes)) {
+            transform.renderPreview(transform.slots(upload), 0, Input.Bgr, WIDTH, HEIGHT, WIDTH * 3, preview, 123, 77,
+                    200, 150, value -> {
+                    });
+        }
+        Mat expected = image.submat(77, 227, 123, 323);
+        assertEquals(0, meanDifference(expected, xrgbToBgr(preview)));
+    }
+
+    @Test
+    public void zoomedPreviewMatchesUpscaledRegion() {
+        Mat image = bgrImage();
+        BufferedImage source = OpenCvUtils.toBufferedImage(image);
+        byte[] bytes = ((DataBufferByte) source.getRaster().getDataBuffer()).getData();
+        BufferedImage preview = new BufferedImage(400, 300, BufferedImage.TYPE_INT_RGB);
+        try (GpuCameraTransform transform = new GpuCameraTransform(); GpuBuffer upload = upload(bytes)) {
+            transform.renderPreview(transform.slots(upload), 0, Input.Bgr, WIDTH, HEIGHT, WIDTH * 3, preview, 100, 80,
+                    100, 75, value -> {
+                    });
+        }
+        Mat expected = new Mat();
+        Imgproc.resize(image.submat(80, 155, 100, 200), expected, new Size(400, 300), 0, 0, Imgproc.INTER_LINEAR);
+        double mean = meanDifference(expected.submat(4, 296, 4, 396), xrgbToBgr(preview).submat(4, 296, 4, 396));
+        assertTrue(mean < 1.5, "mean difference " + mean);
+    }
+
+    @Test
     public void previewFollowsTheRemap() {
         Mat image = bgrImage();
         Mat mapX = new Mat(400, 500, CvType.CV_32FC1);

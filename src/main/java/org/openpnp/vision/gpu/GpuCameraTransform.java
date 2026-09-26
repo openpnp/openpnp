@@ -214,18 +214,29 @@ public class GpuCameraTransform implements AutoCloseable {
     /**
      * Renders a frame downscaled (or upscaled) into a TYPE_INT_RGB image of any size.
      */
+    public void renderPreview(GpuBuffer[] slots, int slot, Input input, int width, int height, int stride,
+            BufferedImage preview, LongConsumer submitted) {
+        int[] full = outputSize(width, height);
+        renderPreview(slots, slot, input, width, height, stride, preview, 0, 0, full[0], full[1], submitted);
+    }
+
+    /**
+     * Renders the region at x, y of size regionWidth x regionHeight of the full resolution frame,
+     * in its pixels, into a TYPE_INT_RGB image of any size.
+     */
     public synchronized void renderPreview(GpuBuffer[] slots, int slot, Input input, int width, int height,
-            int stride, BufferedImage preview, LongConsumer submitted) {
+            int stride, BufferedImage preview, double x, double y, double regionWidth, double regionHeight,
+            LongConsumer submitted) {
         checkOpen();
-        int fullWidth = map != null ? mapWidth : width;
-        int fullHeight = map != null ? mapHeight : height;
         int dstWidth = preview.getWidth();
         int dstHeight = preview.getHeight();
-        float scaleX = (float) fullWidth / dstWidth;
-        float scaleY = (float) fullHeight / dstHeight;
+        float scaleX = (float) (regionWidth / dstWidth);
+        float scaleY = (float) (regionHeight / dstHeight);
         int box = Math.max(1, Math.min(MAX_BOX, (int) Math.ceil(Math.max(scaleX, scaleY))));
         Target target = target(new TargetKey(Arrays.asList(slots), input, OUTPUT_XRGB, dstWidth, dstHeight, box));
-        run(target, params(slot, width, height, stride, dstWidth, dstHeight, scaleX, scaleY), submitted);
+        ByteBuffer params = params(slot, width, height, stride, dstWidth, dstHeight, scaleX, scaleY);
+        params.putFloat(56, (float) x).putFloat(60, (float) y);
+        run(target, params, submitted);
         target.output.map().asIntBuffer().get(((DataBufferInt) preview.getRaster().getDataBuffer()).getData());
     }
 

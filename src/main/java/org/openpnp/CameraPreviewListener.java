@@ -8,15 +8,35 @@ import java.awt.image.BufferedImage;
  */
 public interface CameraPreviewListener extends CameraListener {
     /**
+     * An image to render part of a frame into: the region at x, y of size width x height, in full
+     * frame pixels, stretched over the whole image.
+     */
+    final class Preview {
+        public final BufferedImage image;
+        public final double x;
+        public final double y;
+        public final double width;
+        public final double height;
+
+        public Preview(BufferedImage image, double x, double y, double width, double height) {
+            this.image = image;
+            this.x = x;
+            this.y = y;
+            this.width = width;
+            this.height = height;
+        }
+    }
+
+    /**
      * Whether frames are wanted at all right now, e.g. false while hidden.
      */
     boolean isPreviewWanted();
 
     /**
-     * A TYPE_INT_RGB image to render a frame of the given full size into, which the listener
-     * doesn't display until previewReceived(). Null to receive full frames through frameReceived().
+     * Where to render a frame of the given full size, as a TYPE_INT_RGB image the listener doesn't
+     * display until previewReceived(). Null to receive full frames through frameReceived().
      */
-    BufferedImage previewBuffer(int frameWidth, int frameHeight);
+    Preview previewBuffer(int frameWidth, int frameHeight);
 
-    void previewReceived(BufferedImage preview, int frameWidth, int frameHeight);
+    void previewReceived(Preview preview, int frameWidth, int frameHeight);
 }

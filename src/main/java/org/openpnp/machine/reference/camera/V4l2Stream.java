@@ -8,6 +8,7 @@ import java.util.function.LongConsumer;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.opencv.core.Mat;
+import org.openpnp.CameraPreviewListener.Preview;
 import org.openpnp.capture.CaptureProperty;
 import org.openpnp.capture.PropertyLimits;
 import org.openpnp.vision.gpu.GpuBuffer;
@@ -285,14 +286,14 @@ public class V4l2Stream implements OpenPnpCaptureCamera.CaptureControls, AutoClo
     }
 
     /**
-     * Renders the newest frame not previewed yet into each TYPE_INT_RGB preview image. Returns
-     * false when there is no new frame.
+     * Renders the newest frame not previewed yet into each preview. Returns false when there is no
+     * new frame.
      */
-    public boolean capturePreview(GpuCameraTransform transform, BufferedImage[] previews) throws IOException {
+    public boolean capturePreview(GpuCameraTransform transform, Preview[] previews) throws IOException {
         Boolean rendered = withFrame(previewSequence, 0, 0, (slot, submitted) -> {
-            for (BufferedImage preview : previews) {
+            for (Preview preview : previews) {
                 transform.renderPreview(slotBuffers(transform), slot, GpuCameraTransform.Input.Yuyv, width, height,
-                        stride, preview, submitted);
+                        stride, preview.image, preview.x, preview.y, preview.width, preview.height, submitted);
             }
             return true;
         });
