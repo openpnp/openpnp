@@ -24,9 +24,10 @@ public:
     bool zeroCopy() const { return zeroCopy_; }
 
     bool hasNewFrame(uint64_t after);
-    // Holds the newest frame with a sequence number above after, waiting up to timeoutMs for one.
+    // Holds the newest frame with a sequence number above after, and captured no earlier than
+    // notBeforeNs on CLOCK_MONOTONIC (0 for any time), waiting up to timeoutMs for one.
     // Returns its slot, or -1 on timeout.
-    int acquire(uint64_t after, int timeoutMs, uint64_t *sequence, int64_t *timestampNs);
+    int acquire(uint64_t after, int64_t notBeforeNs, int timeoutMs, uint64_t *sequence, int64_t *timestampNs);
     std::shared_ptr<gpu::Buffer> slotBuffer(int slot);
     // Gives a slot back once the GPU has passed gpuValue.
     void release(int slot, uint64_t gpuValue);
@@ -60,6 +61,7 @@ private:
     int bytesPerLine_ = 0;
     bool zeroCopy_ = false;
     bool validated_ = false;
+    bool monotonic_ = false;
     bool closed_ = false;
     std::vector<Slot> slots_;
     int newest_ = -1;

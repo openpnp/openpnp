@@ -59,11 +59,11 @@ JNIEXPORT jboolean JNICALL Java_org_openpnp_machine_reference_camera_V4l2Stream_
 }
 
 JNIEXPORT jint JNICALL Java_org_openpnp_machine_reference_camera_V4l2Stream_acquire(JNIEnv *env, jclass,
-        jlong handle, jlong after, jint timeoutMs, jlongArray info) {
+        jlong handle, jlong after, jlong notBeforeNs, jint timeoutMs, jlongArray info) {
     try {
         uint64_t sequence = 0;
         int64_t timestamp = 0;
-        int slot = streamOf(handle).acquire(after, timeoutMs, &sequence, &timestamp);
+        int slot = streamOf(handle).acquire(after, notBeforeNs, timeoutMs, &sequence, &timestamp);
         if (slot >= 0) {
             jlong values[2] = {(jlong) sequence, timestamp};
             env->SetLongArrayRegion(info, 0, 2, values);

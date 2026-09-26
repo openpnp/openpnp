@@ -152,6 +152,13 @@ public class GpuCameraTransform implements AutoCloseable {
     }
 
     /**
+     * The width and height of full resolution renders of a width x height input.
+     */
+    public synchronized int[] outputSize(int width, int height) {
+        return map != null ? new int[] { mapWidth, mapHeight } : new int[] { width, height };
+    }
+
+    /**
      * Renders a frame from a GPU buffer at full resolution. submitted receives the GPU value to
      * wait for before the source may be overwritten.
      */

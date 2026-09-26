@@ -4,6 +4,7 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.LongConsumer;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.openpnp.capture.CaptureProperty;
@@ -66,7 +67,9 @@ public class V4l2Stream implements OpenPnpCaptureCamera.CaptureControls, AutoClo
     private final int height;
     private final int stride;
     private final GpuBuffer[] slots = new GpuBuffer[16];
+    // Vision captures and previews each see every frame once, independently of each other.
     private final AtomicLong lastSequence = new AtomicLong();
+    private final AtomicLong previewSequence = new AtomicLong();
     // Captures only need the stream to stay open; blocking in one must not hold up controls.
     private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
     private GpuCameraTransform rawTransform;
@@ -82,7 +85,8 @@ public class V4l2Stream implements OpenPnpCaptureCamera.CaptureControls, AutoClo
 
     private static native boolean hasNewFrame(long handle, long after);
 
-    private static native int acquire(long handle, long after, int timeoutMs, long[] info) throws IOException;
+    private static native int acquire(long handle, long after, long notBeforeNs, int timeoutMs, long[] info)
+            throws IOException;
 
     private static native long slotBuffer(long handle, int slot);
 
@@ -147,24 +151,70 @@ public class V4l2Stream implements OpenPnpCaptureCamera.CaptureControls, AutoClo
     }
 
     /**
-     * Converts and transforms the next frame not captured yet, waiting up to timeoutMs for one.
+     * Converts and transforms the next frame not captured yet. With a timeout, the frame must also
+     * have been captured after this call, so it never shows the scene before e.g. settling.
      * Returns null on timeout.
      */
     public BufferedImage captureTransformed(GpuCameraTransform transform, int timeoutMs) throws IOException {
+        long notBefore = timeoutMs > 0 ? System.nanoTime() : 0;
+        return withFrame(lastSequence, notBefore, timeoutMs, (slot, submitted) -> transform.render(slot,
+                GpuCameraTransform.Input.Yuyv, width, height, stride, submitted));
+    }
+
+    public boolean hasNewPreviewFrame() {
+        lock.readLock().lock();
+        try {
+            return handle != 0 && hasNewFrame(handle, previewSequence.get());
+        }
+        finally {
+            lock.readLock().unlock();
+        }
+    }
+
+    /**
+     * Renders the newest frame not previewed yet into each TYPE_INT_RGB preview image. Returns
+     * false when there is no new frame.
+     */
+    public boolean capturePreview(GpuCameraTransform transform, BufferedImage[] previews) throws IOException {
+        Boolean rendered = withFrame(previewSequence, 0, 0, (slot, submitted) -> {
+            for (BufferedImage preview : previews) {
+                transform.renderPreview(slot, GpuCameraTransform.Input.Yuyv, width, height, stride, preview,
+                        submitted);
+            }
+            return true;
+        });
+        return rendered != null;
+    }
+
+    /**
+     * Renders the newest frame, whether or not it was captured or previewed before.
+     */
+    public BufferedImage captureNewest(GpuCameraTransform transform, int timeoutMs) throws IOException {
+        return withFrame(null, 0, timeoutMs, (slot, submitted) -> transform.render(slot,
+                GpuCameraTransform.Input.Yuyv, width, height, stride, submitted));
+    }
+
+    private interface FrameRenderer<T> {
+        T render(GpuBuffer slot, LongConsumer submitted);
+    }
+
+    private <T> T withFrame(AtomicLong consumed, long notBeforeNs, int timeoutMs, FrameRenderer<T> renderer)
+            throws IOException {
         lock.readLock().lock();
         try {
             checkOpen();
             long[] info = new long[2];
-            int slot = acquire(handle, lastSequence.get(), timeoutMs, info);
+            int slot = acquire(handle, consumed == null ? 0 : consumed.get(), notBeforeNs, timeoutMs, info);
             if (slot < 0) {
                 return null;
             }
-            lastSequence.accumulateAndGet(info[0], Math::max);
+            if (consumed != null) {
+                consumed.accumulateAndGet(info[0], Math::max);
+            }
             reportMode();
             long[] gpuValue = new long[1];
             try {
-                return transform.render(slot(slot), GpuCameraTransform.Input.Yuyv, width, height, stride,
-                        value -> gpuValue[0] = value);
+                return renderer.render(slot(slot), value -> gpuValue[0] = Math.max(gpuValue[0], value));
             }
             finally {
                 release(handle, slot, gpuValue[0]);

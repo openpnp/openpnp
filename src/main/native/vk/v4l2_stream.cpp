@@ -257,6 +257,7 @@ void V4l2Stream::onReadable() {
             continue;
         }
         slot.sequence = ++frames_;
+        monotonic_ = (buf.flags & V4L2_BUF_FLAG_TIMESTAMP_MASK) == V4L2_BUF_FLAG_TIMESTAMP_MONOTONIC;
         slot.timestampNs = (int64_t) buf.timestamp.tv_sec * 1000000000 + (int64_t) buf.timestamp.tv_usec * 1000;
         slot.copied = false;
         int previous = newest_;
@@ -276,12 +277,14 @@ bool V4l2Stream::hasNewFrame(uint64_t after) {
     return newest_ >= 0 && slots_[newest_].sequence > after;
 }
 
-int V4l2Stream::acquire(uint64_t after, int timeoutMs, uint64_t *sequence, int64_t *timestampNs) {
+int V4l2Stream::acquire(uint64_t after, int64_t notBeforeNs, int timeoutMs, uint64_t *sequence,
+        int64_t *timestampNs) {
     int index;
     {
         std::unique_lock<std::mutex> lock(lock_);
         bool ready = frameArrived_.wait_for(lock, std::chrono::milliseconds(timeoutMs), [&] {
-            return closed_ || (newest_ >= 0 && slots_[newest_].sequence > after);
+            return closed_ || (newest_ >= 0 && slots_[newest_].sequence > after
+                    && (!monotonic_ || slots_[newest_].timestampNs >= notBeforeNs));
         });
         if (closed_) {
             throw std::runtime_error("V4L2 stream closed");

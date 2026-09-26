@@ -23,6 +23,7 @@ import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -42,6 +43,7 @@ import org.opencv.core.RotatedRect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
+import org.openpnp.CameraPreviewListener;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.Translations;
 import org.openpnp.gui.MainFrame;
@@ -200,6 +202,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
     private volatile GpuCameraTransform gpuTransform;
     private List<Object> gpuTransformKey;
     private boolean gpuTransformFailed;
+    private volatile boolean previewing;
 
     private LensCalibration lensCalibration;
 
@@ -267,7 +270,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
 
     private BufferedImage captureGpuTransformed() {
         V4l2Stream stream = getV4l2Stream();
-        if (stream == null || !gpuTransforms || gpuTransformFailed || isCalibrating() || isDeinterlaced()) {
+        if (!canRenderOnGpu(stream)) {
             return null;
         }
         boolean advanced = advancedCalibration.isOverridingOldTransformsAndDistortionCorrectionSettings();
@@ -308,6 +311,103 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
     public boolean hasNewFrame() {
         // Default behavior: always has frames when open.
         return isOpen();
+    }
+
+    private boolean canRenderOnGpu(V4l2Stream stream) {
+        return stream != null && gpuTransforms && !gpuTransformFailed && !isCalibrating() && !isDeinterlaced();
+    }
+
+    @Override
+    protected boolean broadcastPreview() {
+        V4l2Stream stream = getV4l2Stream();
+        if (!canRenderOnGpu(stream)) {
+            return false;
+        }
+        List<CameraPreviewListener> previews = new ArrayList<>();
+        synchronized (listeners) {
+            for (ListenerEntry entry : listeners) {
+                if (!(entry.listener instanceof CameraPreviewListener)) {
+                    return false;
+                }
+                previews.add((CameraPreviewListener) entry.listener);
+            }
+        }
+        previewing = true;
+        previews.removeIf(preview -> !preview.isPreviewWanted());
+        if (previews.isEmpty() || !stream.hasNewPreviewFrame()) {
+            return true;
+        }
+        boolean advanced = advancedCalibration.isOverridingOldTransformsAndDistortionCorrectionSettings();
+        int[] size;
+        synchronized (gpuLock) {
+            try {
+                prepareGpuTransform(stream.getWidth(), stream.getHeight(), advanced);
+            }
+            catch (Exception e) {
+                Logger.warn(e, "Camera {} GPU transforms failed, using the CPU instead.", getName());
+                gpuTransformFailed = true;
+                return false;
+            }
+            size = gpuTransform.outputSize(stream.getWidth(), stream.getHeight());
+        }
+        // Listeners are asked outside gpuLock: they take their own locks, which painting holds
+        // while calling back into the camera.
+        BufferedImage[] buffers = new BufferedImage[previews.size()];
+        for (int i = 0; i < buffers.length; i++) {
+            buffers[i] = previews.get(i).previewBuffer(size[0], size[1]);
+            if (buffers[i] == null) {
+                previewing = false;
+                return false;
+            }
+        }
+        boolean rendered;
+        synchronized (gpuLock) {
+            try {
+                rendered = stream.capturePreview(gpuTransform, buffers);
+            }
+            catch (IOException | IllegalStateException e) {
+                Logger.debug(e, "Camera {} V4L2 preview failed.", getName());
+                return true;
+            }
+        }
+        if (rendered) {
+            width = size[0];
+            height = size[1];
+            for (int i = 0; i < buffers.length; i++) {
+                previews.get(i).previewReceived(buffers[i], size[0], size[1]);
+            }
+        }
+        return true;
+    }
+
+    @Override
+    protected void broadcastCapture(BufferedImage img) {
+        previewing = false;
+        super.broadcastCapture(img);
+    }
+
+    /**
+     * While full frames aren't broadcast, renders the newest frame at full resolution instead.
+     */
+    @Override
+    public BufferedImage getLastBroadcastImage() {
+        V4l2Stream stream = getV4l2Stream();
+        if (previewing && canRenderOnGpu(stream)) {
+            synchronized (gpuLock) {
+                try {
+                    prepareGpuTransform(stream.getWidth(), stream.getHeight(),
+                            advancedCalibration.isOverridingOldTransformsAndDistortionCorrectionSettings());
+                    BufferedImage image = stream.captureNewest(gpuTransform, 500);
+                    if (image != null) {
+                        return image;
+                    }
+                }
+                catch (Exception e) {
+                    Logger.debug(e, "Camera {} could not render the newest frame.", getName());
+                }
+            }
+        }
+        return super.getLastBroadcastImage();
     }
 
     protected abstract BufferedImage internalCapture();
