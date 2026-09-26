@@ -12,6 +12,8 @@ final class GpuNative {
 
     static native boolean hasByteStorage();
 
+    static native boolean hasArrayIndexing();
+
     static native long completed();
 
     static native boolean await(long value, long timeoutNs);
@@ -22,10 +24,10 @@ final class GpuNative {
 
     static native ByteBuffer map(long handle);
 
-    static native long createPipeline(String shader, int[] spec, int[] uniformBindings);
+    static native long createPipeline(String shader, int[] spec, int[] uniformBindings, int[] counts);
 
-    static native long createProgram(long[] pipelines, long[] buffers, int[] bufferCounts, int[] groups,
-            long[] indirect, long[] offsets);
+    static native long createProgram(long[] pipelines, long[] buffers, long[] bufferRanges, int[] bufferCounts,
+            int[] groups, long[] indirect, long[] offsets);
 
     static native long submit(long program);
 }

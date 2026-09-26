@@ -75,6 +75,10 @@ JNIEXPORT jboolean JNICALL Java_org_openpnp_vision_gpu_GpuNative_hasByteStorage(
     return Runtime::get()->byteStorage() ? JNI_TRUE : JNI_FALSE;
 }
 
+JNIEXPORT jboolean JNICALL Java_org_openpnp_vision_gpu_GpuNative_hasArrayIndexing(JNIEnv *, jclass) {
+    return Runtime::get()->arrayIndexing() ? JNI_TRUE : JNI_FALSE;
+}
+
 JNIEXPORT jlong JNICALL Java_org_openpnp_vision_gpu_GpuNative_completed(JNIEnv *, jclass) {
     return Runtime::get()->completed();
 }
@@ -122,7 +126,7 @@ JNIEXPORT jobject JNICALL Java_org_openpnp_vision_gpu_GpuNative_map(JNIEnv *env,
 }
 
 JNIEXPORT jlong JNICALL Java_org_openpnp_vision_gpu_GpuNative_createPipeline(JNIEnv *env, jclass,
-        jstring shader, jintArray spec, jintArray bindings) {
+        jstring shader, jintArray spec, jintArray bindings, jintArray counts) {
     try {
         const char *chars = env->GetStringUTFChars(shader, nullptr);
         std::string name(chars);
@@ -132,8 +136,10 @@ JNIEXPORT jlong JNICALL Java_org_openpnp_vision_gpu_GpuNative_createPipeline(JNI
         for (jint uniform : ints(env, bindings)) {
             types.push_back(uniform ? VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER : VK_DESCRIPTOR_TYPE_STORAGE_BUFFER);
         }
+        std::vector<jint> countValues = ints(env, counts);
         return toHandle(Runtime::get()->createPipeline(name,
-                std::vector<int32_t>(specValues.begin(), specValues.end()), types));
+                std::vector<int32_t>(specValues.begin(), specValues.end()), types,
+                std::vector<uint32_t>(countValues.begin(), countValues.end())));
     }
     catch (const std::exception &e) {
         throwJava(env, e.what());
@@ -142,14 +148,16 @@ JNIEXPORT jlong JNICALL Java_org_openpnp_vision_gpu_GpuNative_createPipeline(JNI
 }
 
 // Each step is a dispatch (pipelines[i] != 0) or a buffer copy. Dispatch buffers are flattened
-// into buffers, bufferCounts[i] per step; a copy uses two buffers and copies[3 * i ..] as
+// into buffers, bufferCounts[i] per step, each bound from bufferRanges[2 * b] with size
+// bufferRanges[2 * b + 1] (0 for the rest); a copy uses two buffers and offsets[3 * i ..] as
 // srcOffset, dstOffset, size. groups holds 3 counts per step, or an indirect buffer and offset.
 JNIEXPORT jlong JNICALL Java_org_openpnp_vision_gpu_GpuNative_createProgram(JNIEnv *env, jclass,
-        jlongArray pipelines, jlongArray buffers, jintArray bufferCounts, jintArray groups,
-        jlongArray indirect, jlongArray offsets) {
+        jlongArray pipelines, jlongArray buffers, jlongArray bufferRanges, jintArray bufferCounts,
+        jintArray groups, jlongArray indirect, jlongArray offsets) {
     try {
         std::vector<jlong> pipelineHandles = longs(env, pipelines);
         std::vector<jlong> bufferHandles = longs(env, buffers);
+        std::vector<jlong> ranges = longs(env, bufferRanges);
         std::vector<jint> counts = ints(env, bufferCounts);
         std::vector<jint> groupCounts = ints(env, groups);
         std::vector<jlong> indirectHandles = longs(env, indirect);
@@ -169,8 +177,9 @@ JNIEXPORT jlong JNICALL Java_org_openpnp_vision_gpu_GpuNative_createProgram(JNIE
             else {
                 step.dispatch = std::make_unique<gpu::Dispatch>();
                 step.dispatch->pipeline = fromHandle<Pipeline>(pipelineHandles[i]);
-                for (jint b = 0; b < counts.at(i); b++) {
-                    step.dispatch->buffers.push_back(fromHandle<Buffer>(bufferHandles.at(next++)));
+                for (jint b = 0; b < counts.at(i); b++, next++) {
+                    step.dispatch->buffers.push_back({fromHandle<Buffer>(bufferHandles.at(next)),
+                            (VkDeviceSize) ranges.at(2 * next), (VkDeviceSize) ranges.at(2 * next + 1)});
                 }
                 if (indirectHandles.at(i) != 0) {
                     step.dispatch->indirect = fromHandle<Buffer>(indirectHandles[i]);

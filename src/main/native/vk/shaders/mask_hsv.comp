@@ -1,5 +1,6 @@
 #version 450
 #extension GL_EXT_shader_8bit_storage : require
+#extension GL_EXT_shader_explicit_arithmetic_types_int8 : require
 
 // MaskHsv without soft edges: pixels inside the HSV ranges (hue may wrap) are blackened, or all
 // others when inverted; with BINARY, writes the 0/255 keep-mask instead.

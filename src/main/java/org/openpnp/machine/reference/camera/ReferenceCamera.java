@@ -80,6 +80,7 @@ import org.openpnp.vision.LensCalibration;
 import org.openpnp.vision.LensCalibration.LensModel;
 import org.openpnp.vision.LensCalibration.Pattern;
 import org.openpnp.vision.gpu.GpuCameraTransform;
+import org.openpnp.vision.gpu.GpuImage;
 import org.openpnp.vision.gpu.GpuRuntime;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
@@ -315,6 +316,76 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
 
     private boolean canRenderOnGpu(V4l2Stream stream) {
         return stream != null && gpuTransforms && !gpuTransformFailed && !isCalibrating() && !isDeinterlaced();
+    }
+
+    @Override
+    protected boolean canCaptureGpuFrames() {
+        return canRenderOnGpu(getV4l2Stream());
+    }
+
+    @Override
+    protected GpuFrame captureGpuFrame() {
+        V4l2Stream stream = getV4l2Stream();
+        if (!canRenderOnGpu(stream)) {
+            return null;
+        }
+        GpuCameraTransform transform;
+        int[] size;
+        synchronized (gpuLock) {
+            try {
+                prepareGpuTransform(stream.getWidth(), stream.getHeight(),
+                        advancedCalibration.isOverridingOldTransformsAndDistortionCorrectionSettings());
+            }
+            catch (Exception e) {
+                Logger.warn(e, "Camera {} GPU transforms failed, using the CPU instead.", getName());
+                gpuTransformFailed = true;
+                return null;
+            }
+            transform = gpuTransform;
+            size = transform.outputSize(stream.getWidth(), stream.getHeight());
+        }
+        V4l2Stream.Frame frame = null;
+        long deadline = System.currentTimeMillis() + captureTryTimeoutMs;
+        try {
+            for (int i = 0; frame == null && i < getCaptureTryCount() && System.currentTimeMillis() <= deadline; i++) {
+                frame = stream.acquireFrame(500);
+            }
+        }
+        catch (IOException | IllegalStateException e) {
+            Logger.debug(e, "Camera {} V4L2 capture failed.", getName());
+        }
+        if (frame == null) {
+            return null;
+        }
+        width = size[0];
+        height = size[1];
+        V4l2Stream.Frame held = frame;
+        return new GpuFrame() {
+            @Override
+            public int width() {
+                return size[0];
+            }
+
+            @Override
+            public int height() {
+                return size[1];
+            }
+
+            @Override
+            public Mat settleImage(int cropX, int cropY, int cropWidth, int cropHeight, int divisor) {
+                return held.settleImage(transform, cropX, cropY, cropWidth, cropHeight, divisor);
+            }
+
+            @Override
+            public GpuImage record() {
+                return held.record(transform);
+            }
+
+            @Override
+            public void close() {
+                held.close();
+            }
+        };
     }
 
     @Override

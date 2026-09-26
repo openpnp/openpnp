@@ -13,6 +13,8 @@ import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 import org.openpnp.util.Utils2D;
 import org.openpnp.vision.FluentCv;
+import org.openpnp.vision.gpu.GpuImage;
+import org.openpnp.vision.gpu.GpuImageOps;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
 import org.openpnp.vision.pipeline.Property;
@@ -153,8 +155,10 @@ public class MinAreaRect extends CvStage {
         if (pipeline.getWorkingColorSpace() != FluentCv.ColorSpace.Gray){
             throw new Exception(String.format("%s is not compatible with %s colorspace. Only Grey colorspace is supported.", MinAreaRect.class.getSimpleName(), pipeline.getWorkingColorSpace()));
         }
-        Mat mat = pipeline.getWorkingImage();
-        Point center = new Point(mat.cols()*0.5, mat.rows()*0.5);
+        GpuImage gpuImage = diagnostics ? null : pipeline.getWorkingGpuImage();
+        Mat mat = gpuImage == null ? pipeline.getWorkingImage() : null;
+        Point center = gpuImage != null ? new Point(gpuImage.cols()*0.5, gpuImage.rows()*0.5)
+                : new Point(mat.cols()*0.5, mat.rows()*0.5);
         double expectedAngle = getExpectedAngle();
         double searchAngle = getSearchAngle();
         boolean leftEdge = isLeftEdge();
@@ -179,9 +183,13 @@ public class MinAreaRect extends CvStage {
         }
 
         List<Point> points = new ArrayList<>();
-        byte[] rowData = new byte[mat.cols()];
-        final int cols = mat.cols();
-        final int rows = mat.rows();
+        final int cols = gpuImage != null ? gpuImage.cols() : mat.cols();
+        final int rows = gpuImage != null ? gpuImage.rows() : mat.rows();
+        // The GPU delivers each row's first and last set column, pixel count and column sum.
+        int[] rowExtremes = gpuImage != null
+                ? GpuImageOps.rowExtremes(gpuImage, thresholdMin, thresholdMax)
+                : null;
+        byte[] rowData = rowExtremes == null ? new byte[cols] : null;
         // Only take the set pixels that are the first or last pixel in BOTH their horizontal AND vertical 
         // scan-lines. These few pixels are sufficient to stake out the convex hull of the subject. 
         int[] firstRowVertical = new int[cols]; 
@@ -192,10 +200,19 @@ public class MinAreaRect extends CvStage {
         long ySum = 0;
         int nPixels = 0;
         for (int row = 0; row < rows; row++) {
-            mat.get(row, 0, rowData);
             int firstColHorizontal = -1;
             int lastColHorizontal = -1;
-            for (int col = 0; col < cols; col++) {
+            if (rowExtremes != null) {
+                firstColHorizontal = rowExtremes[row*4];
+                lastColHorizontal = rowExtremes[row*4 + 1];
+                nPixels += rowExtremes[row*4 + 2];
+                xSum += rowExtremes[row*4 + 3];
+                ySum += (long) row*rowExtremes[row*4 + 2];
+            }
+            else {
+                mat.get(row, 0, rowData);
+            }
+            for (int col = 0; rowData != null && col < cols; col++) {
                 int pixel = ((int) rowData[col]) & 0xff;
                 if (pixel >= thresholdMin && pixel <= thresholdMax) {
                     if (firstColHorizontal < 0) {

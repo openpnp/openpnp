@@ -1,5 +1,6 @@
 #version 450
 #extension GL_EXT_shader_8bit_storage : require
+#extension GL_EXT_shader_explicit_arithmetic_types_int8 : require
 
 // A separable Gaussian applied as one 2D convolution, with OpenCV's default BORDER_REFLECT_101.
 

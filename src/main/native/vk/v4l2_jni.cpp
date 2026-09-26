@@ -48,6 +48,11 @@ JNIEXPORT jint JNICALL Java_org_openpnp_machine_reference_camera_V4l2Stream_byte
     return streamOf(handle).bytesPerLine();
 }
 
+JNIEXPORT jint JNICALL Java_org_openpnp_machine_reference_camera_V4l2Stream_slotCount(JNIEnv *, jclass,
+        jlong handle) {
+    return streamOf(handle).slotCount();
+}
+
 JNIEXPORT jboolean JNICALL Java_org_openpnp_machine_reference_camera_V4l2Stream_isZeroCopy(JNIEnv *, jclass,
         jlong handle) {
     return streamOf(handle).zeroCopy() ? JNI_TRUE : JNI_FALSE;

@@ -160,6 +160,7 @@ void Runtime::create() {
     int64_ = available.features.shaderInt64;
     // Byte-wise shaders need 8-bit storage and 8-bit integer values for their constants.
     byteStorage_ = available12.storageBuffer8BitAccess && available12.shaderInt8;
+    arrayIndexing_ = available.features.shaderStorageBufferArrayDynamicIndexing;
     VkPhysicalDeviceVulkan12Features enable12{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES};
     enable12.timelineSemaphore = VK_TRUE;
     enable12.storageBuffer8BitAccess = byteStorage_;
@@ -167,6 +168,7 @@ void Runtime::create() {
     VkPhysicalDeviceFeatures2 enable{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2};
     enable.pNext = &enable12;
     enable.features.shaderInt64 = int64_;
+    enable.features.shaderStorageBufferArrayDynamicIndexing = arrayIndexing_;
     uint32_t extensionCount = 0;
     vk.vkEnumerateDeviceExtensionProperties(physical_, nullptr, &extensionCount, nullptr);
     std::vector<VkExtensionProperties> extensions(extensionCount);
@@ -328,7 +330,7 @@ std::shared_ptr<Buffer> Runtime::importDmaBuf(int fd, VkDeviceSize size) {
 }
 
 std::shared_ptr<Pipeline> Runtime::createPipeline(const std::string &shader, const std::vector<int32_t> &spec,
-        const std::vector<VkDescriptorType> &bindings) {
+        const std::vector<VkDescriptorType> &bindings, const std::vector<uint32_t> &counts) {
     const ShaderSource *source = nullptr;
     for (const ShaderSource &s : shaderSources) {
         if (s.name != nullptr && shader == s.name) {
@@ -340,6 +342,7 @@ std::shared_ptr<Pipeline> Runtime::createPipeline(const std::string &shader, con
     }
     auto pipeline = std::make_shared<Pipeline>();
     pipeline->bindings = bindings;
+    pipeline->counts = counts;
     VkShaderModuleCreateInfo moduleInfo{VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO};
     moduleInfo.codeSize = source->words * 4;
     moduleInfo.pCode = source->code;
@@ -349,7 +352,7 @@ std::shared_ptr<Pipeline> Runtime::createPipeline(const std::string &shader, con
     for (size_t i = 0; i < bindings.size(); i++) {
         layoutBindings[i].binding = i;
         layoutBindings[i].descriptorType = bindings[i];
-        layoutBindings[i].descriptorCount = 1;
+        layoutBindings[i].descriptorCount = counts[i];
         layoutBindings[i].stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
     }
     VkDescriptorSetLayoutCreateInfo setInfo{VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO};
@@ -393,13 +396,16 @@ std::shared_ptr<Program> Runtime::createProgram(std::vector<Step> steps) {
     for (const Step &step : steps) {
         if (step.dispatch) {
             const Dispatch &d = *step.dispatch;
-            if (d.buffers.size() != d.pipeline->bindings.size()) {
+            size_t expected = 0;
+            for (size_t b = 0; b < d.pipeline->bindings.size(); b++) {
+                expected += d.pipeline->counts[b];
+                (d.pipeline->bindings[b] == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER ? uniforms : storages)
+                        += d.pipeline->counts[b];
+            }
+            if (d.buffers.size() != expected) {
                 throw std::runtime_error("dispatch buffer count does not match the pipeline bindings");
             }
             sets++;
-            for (VkDescriptorType type : d.pipeline->bindings) {
-                (type == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER ? uniforms : storages)++;
-            }
         }
     }
     std::vector<VkDescriptorPoolSize> sizes;
@@ -462,16 +468,19 @@ std::shared_ptr<Program> Runtime::createProgram(std::vector<Step> steps) {
         setInfo.pSetLayouts = &d.pipeline->setLayout;
         check(vk.vkAllocateDescriptorSets(device_, &setInfo, &set), "vkAllocateDescriptorSets");
         std::vector<VkDescriptorBufferInfo> infos(d.buffers.size());
-        std::vector<VkWriteDescriptorSet> writes(d.buffers.size());
+        std::vector<VkWriteDescriptorSet> writes(d.pipeline->bindings.size());
         for (size_t i = 0; i < d.buffers.size(); i++) {
-            infos[i] = {d.buffers[i]->buffer, 0, VK_WHOLE_SIZE};
-            writes[i] = {VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET};
-            writes[i].dstSet = set;
-            writes[i].dstBinding = i;
-            writes[i].descriptorCount = 1;
-            writes[i].descriptorType = d.pipeline->bindings[i];
-            writes[i].pBufferInfo = &infos[i];
-            program->refs.push_back(d.buffers[i]);
+            const Range &r = d.buffers[i];
+            infos[i] = {r.buffer->buffer, r.offset, r.size == 0 ? VK_WHOLE_SIZE : r.size};
+            program->refs.push_back(r.buffer);
+        }
+        for (size_t b = 0, first = 0; b < writes.size(); first += d.pipeline->counts[b], b++) {
+            writes[b] = {VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET};
+            writes[b].dstSet = set;
+            writes[b].dstBinding = b;
+            writes[b].descriptorCount = d.pipeline->counts[b];
+            writes[b].descriptorType = d.pipeline->bindings[b];
+            writes[b].pBufferInfo = &infos[first];
         }
         vk.vkUpdateDescriptorSets(device_, writes.size(), writes.data(), 0, nullptr);
         vk.vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, d.pipeline->pipeline);

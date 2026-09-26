@@ -7,10 +7,14 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.LongConsumer;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import org.opencv.core.Mat;
 import org.openpnp.capture.CaptureProperty;
 import org.openpnp.capture.PropertyLimits;
 import org.openpnp.vision.gpu.GpuBuffer;
 import org.openpnp.vision.gpu.GpuCameraTransform;
+import org.openpnp.vision.gpu.GpuImage;
+import org.openpnp.vision.gpu.GpuPipeline;
+import org.openpnp.vision.gpu.GpuRecording;
 import org.openpnp.vision.gpu.GpuRuntime;
 import org.pmw.tinylog.Logger;
 
@@ -66,7 +70,7 @@ public class V4l2Stream implements OpenPnpCaptureCamera.CaptureControls, AutoClo
     private final int width;
     private final int height;
     private final int stride;
-    private final GpuBuffer[] slots = new GpuBuffer[16];
+    private final GpuBuffer[] slots;
     // Vision captures and previews each see every frame once, independently of each other.
     private final AtomicLong lastSequence = new AtomicLong();
     private final AtomicLong previewSequence = new AtomicLong();
@@ -80,6 +84,8 @@ public class V4l2Stream implements OpenPnpCaptureCamera.CaptureControls, AutoClo
     private static native void close(long handle);
 
     private static native int bytesPerLine(long handle);
+
+    private static native int slotCount(long handle);
 
     private static native boolean isZeroCopy(long handle);
 
@@ -106,6 +112,12 @@ public class V4l2Stream implements OpenPnpCaptureCamera.CaptureControls, AutoClo
         this.width = width;
         this.height = height;
         this.stride = bytesPerLine(handle);
+        this.slots = new GpuBuffer[slotCount(handle)];
+        if (slots.length > GpuPipeline.SLOTS) {
+            close(handle);
+            handle = 0;
+            throw new IllegalStateException("V4L2 driver allocated " + slots.length + " buffers");
+        }
     }
 
     public int getWidth() {
@@ -157,8 +169,109 @@ public class V4l2Stream implements OpenPnpCaptureCamera.CaptureControls, AutoClo
      */
     public BufferedImage captureTransformed(GpuCameraTransform transform, int timeoutMs) throws IOException {
         long notBefore = timeoutMs > 0 ? System.nanoTime() : 0;
-        return withFrame(lastSequence, notBefore, timeoutMs, (slot, submitted) -> transform.render(slot,
-                GpuCameraTransform.Input.Yuyv, width, height, stride, submitted));
+        return withFrame(lastSequence, notBefore, timeoutMs, (slot, submitted) -> transform.render(
+                slotBuffers(transform), slot, GpuCameraTransform.Input.Yuyv, width, height, stride, submitted));
+    }
+
+    /**
+     * Holds the next frame not captured yet, captured after this call. Returns null on timeout.
+     */
+    public Frame acquireFrame(int timeoutMs) throws IOException {
+        long notBefore = System.nanoTime();
+        lock.readLock().lock();
+        try {
+            checkOpen();
+            long[] info = new long[2];
+            int slot = acquire(handle, lastSequence.get(), notBefore, timeoutMs, info);
+            if (slot < 0) {
+                return null;
+            }
+            lastSequence.accumulateAndGet(info[0], Math::max);
+            reportMode();
+            return new Frame(slot);
+        }
+        finally {
+            lock.readLock().unlock();
+        }
+    }
+
+    /**
+     * A captured frame the driver may not overwrite until it is recorded or closed.
+     */
+    public final class Frame implements AutoCloseable {
+        private final int slot;
+        private long gpuValue;
+        private boolean released;
+
+        private Frame(int slot) {
+            this.slot = slot;
+        }
+
+        /**
+         * The gray, cropped and shrunk frame motion settling compares, see
+         * GpuCameraTransform.renderSettle().
+         */
+        public Mat settleImage(GpuCameraTransform transform, int cropX, int cropY, int cropWidth, int cropHeight,
+                int divisor) {
+            lock.readLock().lock();
+            try {
+                checkLive();
+                return transform.renderSettle(slotBuffers(transform), slot, GpuCameraTransform.Input.Yuyv, width,
+                        height, stride, cropX, cropY, cropWidth, cropHeight, divisor,
+                        value -> gpuValue = Math.max(gpuValue, value));
+            }
+            finally {
+                lock.readLock().unlock();
+            }
+        }
+
+        /**
+         * Records transforming the frame into the thread's GpuRecording and hands the frame back
+         * to the driver once the GPU read it.
+         */
+        public GpuImage record(GpuCameraTransform transform) {
+            lock.readLock().lock();
+            try {
+                checkLive();
+                try (GpuRecording recording = GpuRecording.open()) {
+                    GpuImage image = transform.record(slotBuffers(transform), slot, GpuCameraTransform.Input.Yuyv,
+                            width, height, stride);
+                    released = true;
+                    recording.onSubmit(value -> releaseSlot(slot, Math.max(gpuValue, value)));
+                    return image;
+                }
+            }
+            finally {
+                lock.readLock().unlock();
+            }
+        }
+
+        private void checkLive() {
+            checkOpen();
+            if (released) {
+                throw new IllegalStateException("frame was released");
+            }
+        }
+
+        @Override
+        public void close() {
+            if (!released) {
+                released = true;
+                releaseSlot(slot, gpuValue);
+            }
+        }
+    }
+
+    private void releaseSlot(int slot, long gpuValue) {
+        lock.readLock().lock();
+        try {
+            if (handle != 0) {
+                release(handle, slot, gpuValue);
+            }
+        }
+        finally {
+            lock.readLock().unlock();
+        }
     }
 
     public boolean hasNewPreviewFrame() {
@@ -178,8 +291,8 @@ public class V4l2Stream implements OpenPnpCaptureCamera.CaptureControls, AutoClo
     public boolean capturePreview(GpuCameraTransform transform, BufferedImage[] previews) throws IOException {
         Boolean rendered = withFrame(previewSequence, 0, 0, (slot, submitted) -> {
             for (BufferedImage preview : previews) {
-                transform.renderPreview(slot, GpuCameraTransform.Input.Yuyv, width, height, stride, preview,
-                        submitted);
+                transform.renderPreview(slotBuffers(transform), slot, GpuCameraTransform.Input.Yuyv, width, height,
+                        stride, preview, submitted);
             }
             return true;
         });
@@ -190,12 +303,12 @@ public class V4l2Stream implements OpenPnpCaptureCamera.CaptureControls, AutoClo
      * Renders the newest frame, whether or not it was captured or previewed before.
      */
     public BufferedImage captureNewest(GpuCameraTransform transform, int timeoutMs) throws IOException {
-        return withFrame(null, 0, timeoutMs, (slot, submitted) -> transform.render(slot,
+        return withFrame(null, 0, timeoutMs, (slot, submitted) -> transform.render(slotBuffers(transform), slot,
                 GpuCameraTransform.Input.Yuyv, width, height, stride, submitted));
     }
 
     private interface FrameRenderer<T> {
-        T render(GpuBuffer slot, LongConsumer submitted);
+        T render(int slot, LongConsumer submitted);
     }
 
     private <T> T withFrame(AtomicLong consumed, long notBeforeNs, int timeoutMs, FrameRenderer<T> renderer)
@@ -214,7 +327,7 @@ public class V4l2Stream implements OpenPnpCaptureCamera.CaptureControls, AutoClo
             reportMode();
             long[] gpuValue = new long[1];
             try {
-                return renderer.render(slot(slot), value -> gpuValue[0] = Math.max(gpuValue[0], value));
+                return renderer.render(slot, value -> gpuValue[0] = Math.max(gpuValue[0], value));
             }
             finally {
                 release(handle, slot, gpuValue[0]);
@@ -234,11 +347,13 @@ public class V4l2Stream implements OpenPnpCaptureCamera.CaptureControls, AutoClo
         }
     }
 
-    private synchronized GpuBuffer slot(int slot) {
-        if (slots[slot] == null) {
-            slots[slot] = GpuBuffer.adopt(slotBuffer(handle, slot), (long) stride * height, false);
+    private synchronized GpuBuffer[] slotBuffers(GpuCameraTransform transform) {
+        for (int i = 0; i < slots.length; i++) {
+            if (slots[i] == null) {
+                slots[i] = GpuBuffer.adopt(slotBuffer(handle, i), (long) stride * height, false);
+            }
         }
-        return slots[slot];
+        return transform.slots(slots);
     }
 
     private interface Control<T> {

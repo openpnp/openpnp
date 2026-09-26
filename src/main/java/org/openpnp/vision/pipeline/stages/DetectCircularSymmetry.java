@@ -30,6 +30,7 @@ import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 import org.openpnp.model.Point;
 import org.openpnp.vision.gpu.GpuCircularSymmetry;
+import org.openpnp.vision.gpu.GpuImage;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
 import org.openpnp.vision.pipeline.Property;
@@ -262,7 +263,10 @@ public class DetectCircularSymmetry extends CvStage {
 
     @Override
     public Result process(CvPipeline pipeline) throws Exception {
-        Mat mat = pipeline.getWorkingImage();
+        GpuImage gpuImage = pipeline.getWorkingGpuImage();
+        Mat mat = gpuImage == null ? pipeline.getWorkingImage() : null;
+        int cols = gpuImage != null ? gpuImage.cols() : mat.cols();
+        int rows = gpuImage != null ? gpuImage.rows() : mat.rows();
         
         // Get overriding properties, if any and convert to pixels if necessary.
         double diameter = Double.NaN; //Nan means no override for diameter
@@ -272,7 +276,7 @@ public class DetectCircularSymmetry extends CvStage {
         int searchWidth = this.searchWidth;
         int searchHeight = this.searchHeight;
         SymmetryScore symmetryScore = this.symmetryScore;
-        Point center = new Point(mat.cols()*0.5, mat.rows()*0.5);
+        Point center = new Point(cols*0.5, rows*0.5);
         
         if (!propertyName.isEmpty()) {
             diameter = getPossiblePipelinePropertyOverride(diameter, pipeline, 
@@ -304,6 +308,28 @@ public class DetectCircularSymmetry extends CvStage {
             searchHeight = maxDistance*2;
         }
 
+        if (gpuImage != null && maxTargetCount == 1 && gpuEnabled && GpuCircularSymmetry.isAvailable()) {
+            try {
+                GpuCircularSymmetry.Search search = GpuCircularSymmetry.search(gpuImage, (int)center.x, (int)center.y, 
+                        minDiameter, maxDiameter, maxDistance*2, searchWidth, searchHeight, minSymmetry, 
+                        subSampling, superSampling, symmetryScore.ordinal(), symmetryScore.getAngularBins(), 
+                        diagnostics, heatMap);
+                double[] found = search.result();
+                List<Result.Circle> circles = new ArrayList<>();
+                if (found != null) {
+                    circles.add(new SymmetryCircle(found[0], found[1], found[2], found[3]));
+                }
+                GpuImage painted = search.getDiagnosticImage();
+                return painted != null ? new Result(painted, null, circles, 0, this) : new Result(null, circles);
+            }
+            catch (IllegalStateException e) {
+                Logger.warn(e, "Circular symmetry on the GPU failed, using the CPU instead.");
+                gpuEnabled = false;
+            }
+        }
+        if (mat == null) {
+            mat = pipeline.getWorkingImage();
+        }
         List<Result.Circle> circles = findCircularSymmetry(mat, (int)center.x, (int)center.y, 
                 minDiameter, maxDiameter, maxDistance*2, searchWidth, searchHeight, maxTargetCount, minSymmetry, corrSymmetry, 
                 subSampling, superSampling, symmetryScore, diagnostics, heatMap, new ScoreRange());

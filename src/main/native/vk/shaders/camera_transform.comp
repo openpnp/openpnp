@@ -14,9 +14,12 @@ layout(constant_id = 4) const int BOX = 1;
 const int INPUT_YUYV = 0;
 const int INPUT_BGR = 1;
 const int INPUT_GRAY = 2;
-// Full resolution as packed BGR (or gray) bytes, or preview pixels as 0x00RRGGBB words.
+// Full resolution as packed BGR (or gray) bytes, preview pixels as 0x00RRGGBB words, or the gray,
+// cropped and downscaled frame motion settling compares.
 const int OUTPUT_PACKED = 0;
 const int OUTPUT_XRGB = 1;
+const int OUTPUT_SETTLE = 2;
+const int SLOTS = 8;
 
 const float OUTSIDE = -1000.0;
 
@@ -28,13 +31,16 @@ layout(binding = 0) uniform Params {
     int dstHeight;
     int mapWidth;
     int mapHeight;
-    int pad;
+    int slot;
     vec2 scale;
+    ivec2 crop;
+    int divisor;
 } p;
 
+// Every buffer a camera stream captures into, so one recorded program serves any frame.
 layout(binding = 1) readonly buffer Source {
     uint words[];
-} src;
+} src[SLOTS];
 
 layout(binding = 2) readonly buffer Map {
     vec2 xy[];
@@ -49,7 +55,7 @@ layout(binding = 4) writeonly buffer Destination {
 } dst;
 
 uint byteAt(int offset) {
-    return (src.words[offset >> 2] >> ((offset & 3) * 8)) & 0xFFu;
+    return (src[p.slot].words[offset >> 2] >> ((offset & 3) * 8)) & 0xFFu;
 }
 
 // OpenCV's fixed-point ITU-R BT.601 YUV422 conversion.
@@ -64,7 +70,7 @@ ivec3 yuvToBgr(int y, int u, int v) {
 ivec3 pixel(int x, int y) {
     ivec3 bgr;
     if (INPUT == INPUT_YUYV) {
-        uint word = src.words[(y * p.srcStride + (x & ~1) * 2) >> 2];
+        uint word = src[p.slot].words[(y * p.srcStride + (x & ~1) * 2) >> 2];
         int luma = int((x & 1) == 0 ? word & 0xFFu : (word >> 16) & 0xFFu);
         bgr = yuvToBgr(luma, int((word >> 8) & 0xFFu), int(word >> 24));
     }
@@ -143,6 +149,24 @@ uint toByte(float v) {
     return uint(clamp(round(v), 0.0, 255.0));
 }
 
+// OpenCV's BGR2GRAY coefficients.
+uint gray(int x, int y) {
+    vec3 bgr = fullPixel(x, y);
+    return (toByte(bgr.x) * 3735u + toByte(bgr.y) * 19235u + toByte(bgr.z) * 9798u + (1u << 14)) >> 15;
+}
+
+// Resizing by an integer divisor with INTER_LINEAR samples one pixel for odd divisors, or averages
+// the two middle pixels in each direction for even ones.
+uint settlePixel(int x, int y) {
+    int d = p.divisor;
+    int x0 = p.crop.x + x * d + (d - 1) / 2;
+    int y0 = p.crop.y + y * d + (d - 1) / 2;
+    if ((d & 1) == 1) {
+        return gray(x0, y0);
+    }
+    return (gray(x0, y0) + gray(x0 + 1, y0) + gray(x0, y0 + 1) + gray(x0 + 1, y0 + 1) + 2u) >> 2;
+}
+
 void main() {
     int id = int(gl_GlobalInvocationID.x);
     int total = p.dstWidth * p.dstHeight;
@@ -156,6 +180,15 @@ void main() {
     // Each invocation writes four consecutive pixels, so whole words never straddle invocations.
     int first = id * 4;
     if (first >= total) {
+        return;
+    }
+    if (OUTPUT == OUTPUT_SETTLE) {
+        uint word = 0u;
+        for (int k = 0; k < 4 && first + k < total; k++) {
+            int i = first + k;
+            word |= settlePixel(i % p.dstWidth, i / p.dstWidth) << (8 * k);
+        }
+        dst.words[id] = word;
         return;
     }
     uint bytes[12];

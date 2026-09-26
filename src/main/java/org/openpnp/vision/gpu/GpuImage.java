@@ -14,7 +14,8 @@ import org.opencv.core.Mat;
 /**
  * An 8-bit, 1 or 3 channel image in GPU memory, packed row by row like a continuous Mat. Its pixels
  * never change once written, so pipeline results can share it; it is reference counted and its
- * buffer goes back to a pool on the last release().
+ * buffer goes back to a pool, or to the recorded program that wrote it, on the last release().
+ * Images written by a GpuRecording have no buffer until the recording is submitted.
  */
 public final class GpuImage {
     private static final long POOL_IDLE_NS = TimeUnit.MINUTES.toNanos(1);
@@ -24,6 +25,9 @@ public final class GpuImage {
     private final int cols;
     private final int type;
     private GpuBuffer buffer;
+    private GpuRecording recording;
+    private GpuRecording.Instance owner;
+    private boolean failed;
     private int references = 1;
     private long ready;
     private long lastUse;
@@ -43,7 +47,17 @@ public final class GpuImage {
         this.rows = rows;
         this.cols = cols;
         this.type = type;
-        this.buffer = acquire((long) rows * cols * CvType.channels(type));
+        this.buffer = acquire(byteSize());
+    }
+
+    GpuImage(int rows, int cols, int type, GpuRecording recording) {
+        if (!isSupported(type)) {
+            throw new IllegalArgumentException("unsupported image type " + CvType.typeToString(type));
+        }
+        this.rows = rows;
+        this.cols = cols;
+        this.type = type;
+        this.recording = recording;
     }
 
     public static boolean isSupported(int type) {
@@ -109,8 +123,14 @@ public final class GpuImage {
     public synchronized void release() {
         checkLive();
         if (--references == 0) {
-            recycle(buffer, lastUse);
+            if (owner != null) {
+                owner.release();
+            }
+            else if (buffer != null) {
+                recycle(buffer, lastUse);
+            }
             buffer = null;
+            owner = null;
         }
     }
 
@@ -118,20 +138,54 @@ public final class GpuImage {
      * Waits for the pixels and copies them into a new Mat.
      */
     public Mat download() {
-        GpuBuffer b;
+        GpuBuffer b = buffer();
+        long value;
         synchronized (this) {
-            checkLive();
-            b = buffer;
+            value = ready;
         }
-        if (ready > 0) {
-            GpuRuntime.await(ready, GpuCompute.TIMEOUT_NS);
+        if (value > 0) {
+            GpuRuntime.await(value, GpuCompute.TIMEOUT_NS);
         }
         return new Mat(rows, cols, type, b.map()).clone();
     }
 
-    synchronized GpuBuffer buffer() {
-        checkLive();
-        return buffer;
+    long byteSize() {
+        return (long) rows * cols * CvType.channels(type);
+    }
+
+    /**
+     * The buffer holding the pixels, submitting the recording that computes them first.
+     */
+    GpuBuffer buffer() {
+        GpuRecording pending;
+        synchronized (this) {
+            checkLive();
+            pending = recording;
+        }
+        if (pending != null) {
+            pending.flush();
+        }
+        synchronized (this) {
+            checkLive();
+            if (failed) {
+                throw new IllegalStateException("GPU work failed");
+            }
+            return buffer;
+        }
+    }
+
+    synchronized void bind(GpuBuffer buffer, GpuRecording.Instance owner) {
+        recording = null;
+        if (references > 0) {
+            this.buffer = buffer;
+            this.owner = owner;
+            owner.hold();
+        }
+    }
+
+    synchronized void fail() {
+        recording = null;
+        failed = true;
     }
 
     /**
@@ -155,7 +209,7 @@ public final class GpuImage {
     }
 
     private void checkLive() {
-        if (buffer == null) {
+        if (references <= 0) {
             throw new IllegalStateException("GpuImage is released");
         }
     }

@@ -100,6 +100,13 @@ public class ImageCapture extends CvStage {
             // Light, settle and capture the image. Keep the lights on for possible averaging.
             camera.actuateLightBeforeCapture((defaultLight ? null : getLight()));
             try {
+                if (count <= 1 && CvPipeline.isGpuAvailable()) {
+                    GpuImage gpuImage = camera.settleAndCaptureGpu(settleOption);
+                    if (gpuImage != null) {
+                        pipeline.setLastCapturedImage(gpuImage);
+                        return new Result(gpuImage, ColorSpace.Bgr);
+                    }
+                }
                 BufferedImage bufferedImage = camera.settleAndCapture(settleOption); 
                 // Remember the last captured image. This specifically records the native camera image, 
                 // i.e. it does not apply averaging (we want an unaltered raw image for analysis purposes).

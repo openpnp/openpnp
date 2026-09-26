@@ -1,9 +1,6 @@
 package org.openpnp.vision.gpu;
 
-import java.nio.ByteBuffer;
 import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
@@ -11,8 +8,8 @@ import org.opencv.imgproc.Imgproc;
 import org.openpnp.vision.gpu.GpuPipeline.Binding;
 
 /**
- * Vision pipeline operations on GpuImages, matching their OpenCV counterparts. Each returns a new
- * image right after submitting; nothing waits until someone downloads a result.
+ * Vision pipeline operations on GpuImages, matching their OpenCV counterparts. Each records into the
+ * thread's GpuRecording and returns a new image; nothing waits until someone needs a result.
  */
 public class GpuImageOps {
     public enum ColorConversion {
@@ -47,46 +44,18 @@ public class GpuImageOps {
         }
     }
 
-    private static final GpuCache<List<Object>, Op> ops = new GpuCache<>(2, TimeUnit.MINUTES);
     private static int[] hsvTables;
-
-    // A recorded dispatch with its own parameters, which may only be rewritten once the GPU ran it.
-    private static final class Op implements GpuResource {
-        final GpuProgram program;
-        final GpuBuffer params;
-        long lastSubmit;
-
-        Op(GpuProgram program, GpuBuffer params) {
-            this.program = program;
-            this.params = params;
-        }
-
-        @Override
-        public boolean isClosed() {
-            return program.isClosed();
-        }
-
-        @Override
-        public void close() {
-            program.close();
-            params.close();
-        }
-    }
 
     public static GpuImage maskCircle(GpuImage src, int cx, int cy, int radius, boolean invert) {
         int[] halfWidth = radius >= 0 ? circleHalfWidths(radius, Math.max(cy, src.rows() - cy)) : new int[1];
-        GpuImage dst = GpuImage.allocate(src.rows(), src.cols(), src.type());
-        run("mask_circle", new int[] { src.channels() }, groups2d(src), src, dst, GpuCompute.constant(halfWidth),
-                src.cols(), src.rows(), cx, cy, radius, invert ? 1 : 0);
-        return dst;
+        return run("mask_circle", new int[] { src.channels() }, groups2d(src), src, src.type(),
+                GpuCompute.constant(halfWidth), src.cols(), src.rows(), cx, cy, radius, invert ? 1 : 0);
     }
 
     public static GpuImage threshold(GpuImage src, double threshold, boolean invert) {
         int count = src.rows() * src.cols() * src.channels();
-        GpuImage dst = GpuImage.allocate(src.rows(), src.cols(), src.type());
-        run("threshold", new int[0], new int[] { (count + 255) / 256, 1, 1 }, src, dst, null, count,
+        return run("threshold", new int[0], new int[] { (count + 255) / 256, 1, 1 }, src, src.type(), null, count,
                 (int) Math.floor(threshold), invert ? 1 : 0);
-        return dst;
     }
 
     public static GpuImage gaussianBlur(GpuImage src, int kernelSize) {
@@ -94,10 +63,8 @@ public class GpuImageOps {
         float[] weights = new float[kernelSize];
         kernel.get(0, 0, weights);
         kernel.release();
-        GpuImage dst = GpuImage.allocate(src.rows(), src.cols(), src.type());
-        run("gaussian_blur", new int[] { src.channels(), kernelSize }, groups2d(src), src, dst,
+        return run("gaussian_blur", new int[] { src.channels(), kernelSize }, groups2d(src), src, src.type(),
                 GpuCompute.constant(weights), src.cols(), src.rows());
-        return dst;
     }
 
     /**
@@ -108,10 +75,8 @@ public class GpuImageOps {
             return null;
         }
         int pixels = src.rows() * src.cols();
-        GpuImage dst = GpuImage.allocate(src.rows(), src.cols(), CvType.CV_8UC(conversion.outChannels));
-        run("convert_color", new int[] { conversion.shaderCode }, new int[] { (pixels + 255) / 256, 1, 1 }, src, dst,
-                GpuCompute.constant(hsvTables()), pixels);
-        return dst;
+        return run("convert_color", new int[] { conversion.shaderCode }, new int[] { (pixels + 255) / 256, 1, 1 },
+                src, CvType.CV_8UC(conversion.outChannels), GpuCompute.constant(hsvTables()), pixels);
     }
 
     /**
@@ -121,43 +86,48 @@ public class GpuImageOps {
     public static GpuImage maskHsv(GpuImage src, int hueMin, int hueMax, int saturationMin, int saturationMax,
             int valueMin, int valueMax, boolean invert, boolean binaryMask) {
         int pixels = src.rows() * src.cols();
-        GpuImage dst = GpuImage.allocate(src.rows(), src.cols(), binaryMask ? CvType.CV_8UC1 : CvType.CV_8UC3);
-        run("mask_hsv", new int[] { binaryMask ? 1 : 0 }, new int[] { (pixels + 255) / 256, 1, 1 }, src, dst, null,
-                pixels, hueMin, hueMax, saturationMin, saturationMax, valueMin, valueMax, invert ? 1 : 0);
-        return dst;
+        return run("mask_hsv", new int[] { binaryMask ? 1 : 0 }, new int[] { (pixels + 255) / 256, 1, 1 }, src,
+                binaryMask ? CvType.CV_8UC1 : CvType.CV_8UC3, null, pixels, hueMin, hueMax, saturationMin,
+                saturationMax, valueMin, valueMax, invert ? 1 : 0);
+    }
+
+    /**
+     * Per row of a gray image: the first and last column with a value in [low, high], or -1, then
+     * the count and column sum of those pixels.
+     */
+    public static int[] rowExtremes(GpuImage src, int low, int high) {
+        if (src.channels() != 1) {
+            throw new IllegalArgumentException("row extremes need a gray image");
+        }
+        GpuPipeline pipeline = GpuCompute.pipeline("row_extremes", new int[0], Binding.Uniform, Binding.Storage,
+                Binding.Storage);
+        GpuRecording.Scratch extremes;
+        try (GpuRecording recording = GpuRecording.open()) {
+            extremes = recording.scratch(src.rows() * 16L, true);
+            recording.dispatch(pipeline, (src.rows() + 63) / 64, 1, 1,
+                    GpuRecording.params(src.cols(), src.rows(), low, high), src, extremes);
+        }
+        int[] values = new int[src.rows() * 4];
+        extremes.read().asIntBuffer().get(values);
+        return values;
     }
 
     private static int[] groups2d(GpuImage image) {
         return new int[] { (image.cols() + 15) / 16, (image.rows() + 15) / 16, 1 };
     }
 
-    private static void run(String shader, int[] spec, int[] groups, GpuImage src, GpuImage dst, GpuBuffer extra,
+    private static GpuImage run(String shader, int[] spec, int[] groups, GpuImage src, int dstType, GpuBuffer extra,
             int... params) {
         Binding[] bindings = extra == null
                 ? new Binding[] { Binding.Uniform, Binding.Storage, Binding.Storage }
                 : new Binding[] { Binding.Uniform, Binding.Storage, Binding.Storage, Binding.Storage };
         GpuPipeline pipeline = GpuCompute.pipeline(shader, spec, bindings);
-        GpuBuffer in = src.buffer();
-        GpuBuffer out = dst.buffer();
-        Op op = ops.get(Arrays.asList(pipeline, groups[0], groups[1], groups[2], in, out, extra), k -> {
-            GpuBuffer paramBuffer = new GpuBuffer(64, true);
-            GpuBuffer[] buffers = extra == null ? new GpuBuffer[] { paramBuffer, in, out }
-                    : new GpuBuffer[] { paramBuffer, in, out, extra };
-            return new Op(new GpuProgram.Builder().dispatch(pipeline, groups[0], groups[1], groups[2], buffers)
-                    .build(), paramBuffer);
-        });
-        synchronized (op) {
-            if (op.lastSubmit > 0) {
-                GpuRuntime.await(op.lastSubmit, GpuCompute.TIMEOUT_NS);
-            }
-            ByteBuffer p = op.params.map();
-            for (int i = 0; i < params.length; i++) {
-                p.putInt(i * 4, params[i]);
-            }
-            op.lastSubmit = op.program.submit();
+        try (GpuRecording recording = GpuRecording.open()) {
+            GpuImage dst = recording.image(src.rows(), src.cols(), dstType);
+            Object[] args = extra == null ? new Object[] { src, dst } : new Object[] { src, dst, extra };
+            recording.dispatch(pipeline, groups[0], groups[1], groups[2], GpuRecording.params(params), args);
+            return dst;
         }
-        src.readBy(op.lastSubmit);
-        dst.writtenBy(op.lastSubmit);
     }
 
     /**

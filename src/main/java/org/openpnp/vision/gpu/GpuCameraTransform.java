@@ -27,7 +27,8 @@ public class GpuCameraTransform implements AutoCloseable {
 
     private static final int OUTPUT_PACKED = 0;
     private static final int OUTPUT_XRGB = 1;
-    private static final int PARAMS_SIZE = 48;
+    private static final int OUTPUT_SETTLE = 2;
+    private static final int PARAMS_SIZE = 64;
     private static final int MAX_BOX = 4;
     private static final long TIMEOUT_NS = TimeUnit.SECONDS.toNanos(5);
 
@@ -43,14 +44,14 @@ public class GpuCameraTransform implements AutoCloseable {
     private boolean closed;
 
     private static final class TargetKey {
-        final GpuBuffer source;
+        final List<GpuBuffer> source;
         final Input input;
         final int output;
         final int dstWidth;
         final int dstHeight;
         final int box;
 
-        TargetKey(GpuBuffer source, Input input, int output, int dstWidth, int dstHeight, int box) {
+        TargetKey(List<GpuBuffer> source, Input input, int output, int dstWidth, int dstHeight, int box) {
             this.source = source;
             this.input = input;
             this.output = output;
@@ -65,13 +66,13 @@ public class GpuCameraTransform implements AutoCloseable {
                 return false;
             }
             TargetKey k = (TargetKey) o;
-            return source == k.source && input == k.input && output == k.output && dstWidth == k.dstWidth
+            return source.equals(k.source) && input == k.input && output == k.output && dstWidth == k.dstWidth
                     && dstHeight == k.dstHeight && box == k.box;
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(System.identityHashCode(source), input, output, dstWidth, dstHeight, box);
+            return Objects.hash(source, input, output, dstWidth, dstHeight, box);
         }
     }
 
@@ -101,10 +102,23 @@ public class GpuCameraTransform implements AutoCloseable {
     }
 
     public GpuCameraTransform() {
-        if (!GpuRuntime.isAvailable()) {
+        if (!GpuRuntime.hasArrayIndexing()) {
             throw new IllegalStateException("GPU is not available");
         }
         unused = new GpuBuffer(16, false);
+    }
+
+    /**
+     * The buffers a camera captures into, padded to the slots the shader binds. Frames are
+     * rendered from one of them by index, so one recorded program serves every frame.
+     */
+    public synchronized GpuBuffer[] slots(GpuBuffer... buffers) {
+        if (buffers.length > GpuPipeline.SLOTS) {
+            throw new IllegalArgumentException("at most " + GpuPipeline.SLOTS + " frame buffers");
+        }
+        GpuBuffer[] slots = Arrays.copyOf(buffers, GpuPipeline.SLOTS);
+        Arrays.fill(slots, buffers.length, slots.length, unused);
+        return slots;
     }
 
     /**
@@ -159,28 +173,49 @@ public class GpuCameraTransform implements AutoCloseable {
     }
 
     /**
-     * Renders a frame from a GPU buffer at full resolution. submitted receives the GPU value to
+     * Renders a frame from one of the slots at full resolution. submitted receives the GPU value to
      * wait for before the source may be overwritten.
      */
-    public synchronized BufferedImage render(GpuBuffer source, Input input, int width, int height, int stride,
-            LongConsumer submitted) {
+    public synchronized BufferedImage render(GpuBuffer[] slots, int slot, Input input, int width, int height,
+            int stride, LongConsumer submitted) {
         checkOpen();
         int dstWidth = map != null ? mapWidth : width;
         int dstHeight = map != null ? mapHeight : height;
         BufferedImage image = new BufferedImage(dstWidth, dstHeight,
                 input == Input.Gray ? BufferedImage.TYPE_BYTE_GRAY : BufferedImage.TYPE_3BYTE_BGR);
         byte[] data = ((DataBufferByte) image.getRaster().getDataBuffer()).getData();
-        Target target = target(new TargetKey(source, input, OUTPUT_PACKED, dstWidth, dstHeight, 1));
-        run(target, width, height, stride, dstWidth, dstHeight, 1, 1, submitted);
+        Target target = target(new TargetKey(Arrays.asList(slots), input, OUTPUT_PACKED, dstWidth, dstHeight, 1));
+        run(target, params(slot, width, height, stride, dstWidth, dstHeight, 1, 1), submitted);
         target.output.map().get(data);
         return image;
     }
 
     /**
+     * Records rendering a frame at full resolution into the thread's GpuRecording. The slot must
+     * stay untouched until the recording was submitted and the GPU passed its value.
+     */
+    public synchronized GpuImage record(GpuBuffer[] slots, int slot, Input input, int width, int height,
+            int stride) {
+        checkOpen();
+        int dstWidth = map != null ? mapWidth : width;
+        int dstHeight = map != null ? mapHeight : height;
+        GpuPipeline pipeline = pipeline(input, OUTPUT_PACKED, 1);
+        int invocations = (dstWidth * dstHeight + 3) / 4;
+        try (GpuRecording recording = GpuRecording.open()) {
+            GpuImage image = recording.image(dstHeight, dstWidth, input == Input.Gray ? CvType.CV_8UC1
+                    : CvType.CV_8UC3);
+            recording.dispatch(pipeline, (invocations + 63) / 64, 1, 1,
+                    params(slot, width, height, stride, dstWidth, dstHeight, 1, 1), slots,
+                    map != null ? map : unused, lut != null ? lut : unused, image);
+            return image;
+        }
+    }
+
+    /**
      * Renders a frame downscaled (or upscaled) into a TYPE_INT_RGB image of any size.
      */
-    public synchronized void renderPreview(GpuBuffer source, Input input, int width, int height, int stride,
-            BufferedImage preview, LongConsumer submitted) {
+    public synchronized void renderPreview(GpuBuffer[] slots, int slot, Input input, int width, int height,
+            int stride, BufferedImage preview, LongConsumer submitted) {
         checkOpen();
         int fullWidth = map != null ? mapWidth : width;
         int fullHeight = map != null ? mapHeight : height;
@@ -189,9 +224,30 @@ public class GpuCameraTransform implements AutoCloseable {
         float scaleX = (float) fullWidth / dstWidth;
         float scaleY = (float) fullHeight / dstHeight;
         int box = Math.max(1, Math.min(MAX_BOX, (int) Math.ceil(Math.max(scaleX, scaleY))));
-        Target target = target(new TargetKey(source, input, OUTPUT_XRGB, dstWidth, dstHeight, box));
-        run(target, width, height, stride, dstWidth, dstHeight, scaleX, scaleY, submitted);
+        Target target = target(new TargetKey(Arrays.asList(slots), input, OUTPUT_XRGB, dstWidth, dstHeight, box));
+        run(target, params(slot, width, height, stride, dstWidth, dstHeight, scaleX, scaleY), submitted);
         target.output.map().asIntBuffer().get(((DataBufferInt) preview.getRaster().getDataBuffer()).getData());
+    }
+
+    /**
+     * Renders what motion settling compares: the full resolution frame converted to gray like
+     * BGR2GRAY, cropped to cropWidth x cropHeight at cropX, cropY, then shrunk by an integer
+     * divisor like an INTER_LINEAR resize.
+     */
+    public synchronized Mat renderSettle(GpuBuffer[] slots, int slot, Input input, int width, int height, int stride,
+            int cropX, int cropY, int cropWidth, int cropHeight, int divisor, LongConsumer submitted) {
+        checkOpen();
+        int dstWidth = cropWidth / divisor;
+        int dstHeight = cropHeight / divisor;
+        Target target = target(new TargetKey(Arrays.asList(slots), input, OUTPUT_SETTLE, dstWidth, dstHeight, 1));
+        ByteBuffer params = params(slot, width, height, stride, dstWidth, dstHeight, 1, 1);
+        params.putInt(40, cropX).putInt(44, cropY).putInt(48, divisor);
+        run(target, params, submitted);
+        Mat mat = new Mat(dstHeight, dstWidth, CvType.CV_8UC1);
+        byte[] data = new byte[dstWidth * dstHeight];
+        target.output.map().get(data);
+        mat.put(0, 0, data);
+        return mat;
     }
 
     /**
@@ -222,7 +278,7 @@ public class GpuCameraTransform implements AutoCloseable {
             upload = new GpuBuffer(size, true);
         }
         upload.map().put(src);
-        return render(upload, input, image.getWidth(), image.getHeight(), stride, value -> {
+        return render(slots(upload), 0, input, image.getWidth(), image.getHeight(), stride, value -> {
         });
     }
 
@@ -230,14 +286,21 @@ public class GpuCameraTransform implements AutoCloseable {
         return targets.get(key, k -> {
             int pixels = k.dstWidth * k.dstHeight;
             long outputSize = k.output == OUTPUT_XRGB ? pixels * 4L
-                    : ((pixels + 3) / 4) * (k.input == Input.Gray ? 4L : 12L);
+                    : ((pixels + 3) / 4) * (k.input == Input.Gray || k.output == OUTPUT_SETTLE ? 4L : 12L);
             int invocations = k.output == OUTPUT_XRGB ? pixels : (pixels + 3) / 4;
             GpuPipeline pipeline = pipeline(k.input, k.output, k.box);
             GpuBuffer params = new GpuBuffer(PARAMS_SIZE, true);
             GpuBuffer output = new GpuBuffer(outputSize, true);
+            GpuBuffer[] buffers = new GpuBuffer[GpuPipeline.SLOTS + 4];
+            buffers[0] = params;
+            for (int i = 0; i < GpuPipeline.SLOTS; i++) {
+                buffers[1 + i] = k.source.get(i);
+            }
+            buffers[GpuPipeline.SLOTS + 1] = map != null ? map : unused;
+            buffers[GpuPipeline.SLOTS + 2] = lut != null ? lut : unused;
+            buffers[GpuPipeline.SLOTS + 3] = output;
             GpuProgram program = new GpuProgram.Builder()
-                    .dispatch(pipeline, (invocations + 63) / 64, 1, 1, params, k.source,
-                            map != null ? map : unused, lut != null ? lut : unused, output)
+                    .dispatch(pipeline, (invocations + 63) / 64, 1, 1, buffers)
                     .build();
             return new Target(program, params, output);
         });
@@ -248,21 +311,20 @@ public class GpuCameraTransform implements AutoCloseable {
         boolean hasLut = lut != null && input != Input.Gray;
         List<Integer> spec = Arrays.asList(input.ordinal(), output, hasMap ? 1 : 0, hasLut ? 1 : 0, box);
         return pipelines.get(spec, s -> new GpuPipeline("camera_transform", s.stream().mapToInt(Integer::intValue)
-                .toArray(), Binding.Uniform, Binding.Storage, Binding.Storage, Binding.Storage, Binding.Storage));
+                .toArray(), Binding.Uniform, Binding.Slots, Binding.Storage, Binding.Storage, Binding.Storage));
     }
 
-    private void run(Target target, int width, int height, int stride, int dstWidth, int dstHeight, float scaleX,
-            float scaleY, LongConsumer submitted) {
-        target.params.map()
-                .putInt(0, width)
-                .putInt(4, height)
-                .putInt(8, stride)
-                .putInt(12, dstWidth)
-                .putInt(16, dstHeight)
-                .putInt(20, mapWidth)
-                .putInt(24, mapHeight)
-                .putFloat(32, scaleX)
-                .putFloat(36, scaleY);
+    private ByteBuffer params(int slot, int width, int height, int stride, int dstWidth, int dstHeight,
+            float scaleX, float scaleY) {
+        ByteBuffer params = GpuRecording.params();
+        params.putInt(width).putInt(height).putInt(stride).putInt(dstWidth).putInt(dstHeight).putInt(mapWidth)
+                .putInt(mapHeight).putInt(slot).putFloat(scaleX).putFloat(scaleY).putInt(0).putInt(0).putInt(1);
+        return params;
+    }
+
+    private void run(Target target, ByteBuffer params, LongConsumer submitted) {
+        ByteBuffer mapped = target.params.map();
+        mapped.put(params.array(), 0, PARAMS_SIZE);
         long value = target.program.submit();
         submitted.accept(value);
         GpuRuntime.await(value, TIMEOUT_NS);

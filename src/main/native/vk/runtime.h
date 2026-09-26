@@ -36,12 +36,21 @@ struct Pipeline : Resource {
     VkPipelineLayout layout = VK_NULL_HANDLE;
     VkPipeline pipeline = VK_NULL_HANDLE;
     std::vector<VkDescriptorType> bindings;
+    std::vector<uint32_t> counts;
     ~Pipeline() override;
 };
 
+// A range of a buffer bound to one descriptor; size 0 means up to the end.
+struct Range {
+    std::shared_ptr<Buffer> buffer;
+    VkDeviceSize offset = 0;
+    VkDeviceSize size = 0;
+};
+
+// Buffers are listed per binding, several for array bindings.
 struct Dispatch {
     std::shared_ptr<Pipeline> pipeline;
-    std::vector<std::shared_ptr<Buffer>> buffers;
+    std::vector<Range> buffers;
     uint32_t groups[3] = {1, 1, 1};
     std::shared_ptr<Buffer> indirect;
     VkDeviceSize indirectOffset = 0;
@@ -77,13 +86,14 @@ public:
     std::string deviceName() const { return deviceName_; }
     bool int64() const { return int64_; }
     bool byteStorage() const { return byteStorage_; }
+    bool arrayIndexing() const { return arrayIndexing_; }
     VkDevice device() const { return device_; }
 
     std::shared_ptr<Buffer> createBuffer(VkDeviceSize size, bool hostVisible);
     // Wraps a dma-buf without copying and takes ownership of fd; nullptr when that isn't possible.
     std::shared_ptr<Buffer> importDmaBuf(int fd, VkDeviceSize size);
     std::shared_ptr<Pipeline> createPipeline(const std::string &shader, const std::vector<int32_t> &spec,
-            const std::vector<VkDescriptorType> &bindings);
+            const std::vector<VkDescriptorType> &bindings, const std::vector<uint32_t> &counts);
     std::shared_ptr<Program> createProgram(std::vector<Step> steps);
 
     // Queues the program and returns the timeline value it signals.
@@ -118,6 +128,7 @@ private:
     bool dmaBuf_ = false;
     bool int64_ = false;
     bool byteStorage_ = false;
+    bool arrayIndexing_ = false;
 
     std::mutex recordLock_;
     VkCommandPool commandPool_ = VK_NULL_HANDLE;

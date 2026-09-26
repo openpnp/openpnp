@@ -17,7 +17,9 @@ import org.opencv.core.Point;
 import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 import org.openpnp.vision.FluentCv.ColorSpace;
+import org.openpnp.util.OpenCvUtils;
 import org.openpnp.vision.gpu.GpuImage;
+import org.openpnp.vision.gpu.GpuRecording;
 import org.openpnp.vision.gpu.GpuRuntime;
 import org.openpnp.vision.pipeline.CvStage.Result;
 import org.pmw.tinylog.Logger;
@@ -76,6 +78,7 @@ public class CvPipeline implements AutoCloseable {
     private long totalProcessingTimeNs;
 
     private BufferedImage lastCapturedImage;
+    private GpuImage lastCapturedGpuImage;
 
     private int currentShot;
 
@@ -289,6 +292,32 @@ public class CvPipeline implements AutoCloseable {
         for (CvStage stage : stages) {
             stage.processPrepare(this);
         }
+        // All GPU stages record into one command buffer, submitted when a stage needs a result on
+        // the CPU or at the end.
+        GpuRecording recording = isGpuAvailable() ? GpuRecording.open() : null;
+        try {
+            processStages();
+        }
+        finally {
+            if (recording != null) {
+                try {
+                    recording.close();
+                }
+                catch (RuntimeException e) {
+                    Logger.debug(e, "GPU pipeline work failed");
+                }
+                if (recording.hasFailed()) {
+                    Logger.warn("GPU pipeline work failed, running pipelines on the CPU from now on.");
+                    gpuEnabled = false;
+                }
+            }
+        }
+        if (terminalException != null) {
+            throw (terminalException);
+        }
+    }
+
+    private void processStages() {
         for (CvStage stage : stages) {
             // Process and time the stage and get the result.
             long processingTimeNs = System.nanoTime();
@@ -375,9 +404,6 @@ public class CvPipeline implements AutoCloseable {
                     ? new Result(storedGpu, colorSpace, model, processingTimeNs, stage)
                     : new Result(image, colorSpace, model, processingTimeNs, stage));
         }
-        if (terminalException != null) {
-            throw (terminalException);
-        }
     }
 
     /**
@@ -408,6 +434,7 @@ public class CvPipeline implements AutoCloseable {
 
     public void release() {
         releaseWorkingImage();
+        releaseLastCapturedGpuImage();
         for (Result result : results.values()) {
             result.release();
         }
@@ -514,11 +541,33 @@ public class CvPipeline implements AutoCloseable {
     }
 
     public BufferedImage getLastCapturedImage() {
+        if (lastCapturedImage == null && lastCapturedGpuImage != null) {
+            Mat mat = lastCapturedGpuImage.download();
+            lastCapturedImage = OpenCvUtils.toBufferedImage(mat);
+            mat.release();
+        }
         return lastCapturedImage;
     }
 
     public void setLastCapturedImage(BufferedImage lastCapturedImage) {
+        releaseLastCapturedGpuImage();
         this.lastCapturedImage = lastCapturedImage;
+    }
+
+    /**
+     * Keeps the captured frame on the GPU; getLastCapturedImage() downloads it on demand.
+     */
+    public void setLastCapturedImage(GpuImage lastCapturedImage) {
+        releaseLastCapturedGpuImage();
+        this.lastCapturedImage = null;
+        this.lastCapturedGpuImage = lastCapturedImage.retain();
+    }
+
+    private void releaseLastCapturedGpuImage() {
+        if (lastCapturedGpuImage != null) {
+            lastCapturedGpuImage.release();
+            lastCapturedGpuImage = null;
+        }
     }
 
     public abstract class PipelineShot {

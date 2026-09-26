@@ -102,7 +102,7 @@ public class GpuCameraTransformTest {
         Mat expected = new Mat();
         Imgproc.cvtColor(yuyv, expected, Imgproc.COLOR_YUV2BGR_YUYV);
         try (GpuCameraTransform transform = new GpuCameraTransform(); GpuBuffer source = upload(frame)) {
-            BufferedImage image = transform.render(source, Input.Yuyv, WIDTH, HEIGHT, stride, value -> {
+            BufferedImage image = transform.render(transform.slots(source), 0, Input.Yuyv, WIDTH, HEIGHT, stride, value -> {
             });
             assertEquals(BufferedImage.TYPE_3BYTE_BGR, image.getType());
             assertEquals(0, maxDifference(expected, OpenCvUtils.toMat(image)));
@@ -151,7 +151,7 @@ public class GpuCameraTransformTest {
                     size[0] < WIDTH ? Imgproc.INTER_AREA : Imgproc.INTER_LINEAR);
             BufferedImage preview = new BufferedImage(size[0], size[1], BufferedImage.TYPE_INT_RGB);
             try (GpuCameraTransform transform = new GpuCameraTransform(); GpuBuffer upload = upload(bytes)) {
-                transform.renderPreview(upload, Input.Bgr, WIDTH, HEIGHT, WIDTH * 3, preview, value -> {
+                transform.renderPreview(transform.slots(upload), 0, Input.Bgr, WIDTH, HEIGHT, WIDTH * 3, preview, value -> {
                 });
             }
             double mean = meanDifference(expected, xrgbToBgr(preview));
@@ -187,7 +187,7 @@ public class GpuCameraTransformTest {
             byte[] bytes = ((DataBufferByte) source.getRaster().getDataBuffer()).getData();
             BufferedImage preview = new BufferedImage(250, 200, BufferedImage.TYPE_INT_RGB);
             try (GpuBuffer upload = upload(bytes)) {
-                transform.renderPreview(upload, Input.Bgr, WIDTH, HEIGHT, WIDTH * 3, preview, value -> {
+                transform.renderPreview(transform.slots(upload), 0, Input.Bgr, WIDTH, HEIGHT, WIDTH * 3, preview, value -> {
                 });
             }
             Mat halved = new Mat();

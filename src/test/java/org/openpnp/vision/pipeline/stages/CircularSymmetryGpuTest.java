@@ -2,8 +2,10 @@ package org.openpnp.vision.pipeline.stages;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
@@ -20,6 +22,9 @@ import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 import org.openpnp.vision.gpu.GpuCircularSymmetry;
+import org.openpnp.vision.gpu.GpuImage;
+import org.openpnp.vision.gpu.GpuRecording;
+import org.openpnp.vision.gpu.GpuRuntime;
 import org.openpnp.vision.pipeline.CvStage.Result.Circle;
 import org.openpnp.vision.pipeline.stages.DetectCircularSymmetry.ScoreRange;
 import org.openpnp.vision.pipeline.stages.DetectCircularSymmetry.SymmetryCircle;
@@ -116,6 +121,91 @@ public class CircularSymmetryGpuTest {
                     80, 2, 0.5, 0.0, 4, 2, mode, false, false, new ScoreRange());
             assertSame(cpu, gpu, mode + " at " + x + "," + y);
         }
+    }
+
+    private static List<Circle> search(Mat image, int x, int y, int minDiameter, int maxDiameter, int searchDiameter,
+            int searchWidth, int searchHeight, int subSampling, int superSampling, SymmetryScore mode,
+            boolean diagnostics, Mat painted) throws Exception {
+        GpuImage src = GpuImage.upload(image);
+        GpuCircularSymmetry.Search search;
+        try (GpuRecording recording = GpuRecording.open()) {
+            search = GpuCircularSymmetry.search(src, x, y, minDiameter, maxDiameter, searchDiameter, searchWidth,
+                    searchHeight, 1.2, subSampling, superSampling, mode.ordinal(), mode.getAngularBins(),
+                    diagnostics, diagnostics);
+        }
+        List<Circle> circles = new ArrayList<>();
+        double[] found = search.result();
+        if (found != null) {
+            circles.add(new SymmetryCircle(found[0], found[1], found[2], found[3]));
+        }
+        if (search.getDiagnosticImage() != null) {
+            search.getDiagnosticImage().download().copyTo(painted);
+            search.getDiagnosticImage().release();
+        }
+        src.release();
+        return circles;
+    }
+
+    @Test
+    public void recordedSearchMatchesCpuDrivenGpuSearch() throws Exception {
+        Assumptions.assumeTrue(GpuCircularSymmetry.isAvailable() && GpuRuntime.hasByteStorage());
+        for (int channels : new int[] { 1, 3 }) {
+            Mat image = testImage(channels);
+            for (SymmetryScore mode : SymmetryScore.values()) {
+                for (int superSampling : new int[] { 1, 3, 8 }) {
+                    for (int[] geometry : new int[][] { { 320, 240, 90, 150, 500, 600, 440, 8 },
+                            { 250, 212, 100, 150, 30, 30, 30, 8 }, { 470, 330, 30, 50, 60, 60, 60, 4 },
+                            { 40, 30, 20, 40, 200, 200, 200, 8 } }) {
+                        DetectCircularSymmetry.gpuMinWork = 0;
+                        List<Circle> expected = DetectCircularSymmetry.findCircularSymmetry(image, geometry[0],
+                                geometry[1], geometry[2], geometry[3], geometry[4], geometry[5], geometry[6], 1, 1.2,
+                                0.0, geometry[7], superSampling, mode, false, false, new ScoreRange());
+                        List<Circle> recorded = search(image, geometry[0], geometry[1], geometry[2], geometry[3],
+                                geometry[4], geometry[5], geometry[6], geometry[7], superSampling, mode, false, null);
+                        assertSame(expected, recorded, channels + " channels, " + mode + ", superSampling "
+                                + superSampling + " at " + geometry[0] + "," + geometry[1]);
+                    }
+                }
+            }
+        }
+    }
+
+    @Test
+    public void recordedSearchPaintsDiagnosticsLikeCpu() throws Exception {
+        Assumptions.assumeTrue(GpuCircularSymmetry.isAvailable() && GpuRuntime.hasByteStorage());
+        for (int channels : new int[] { 1, 3 }) {
+            for (int[] geometry : new int[][] { { 320, 240, 90, 150 }, { 320, 240, 280, 300 } }) {
+                Mat image = testImage(channels);
+                Mat cpu = image.clone();
+                DetectCircularSymmetry.gpuMinWork = 0;
+                List<Circle> expected = DetectCircularSymmetry.findCircularSymmetry(cpu, geometry[0], geometry[1],
+                        geometry[2], geometry[3], 500, 600, 440, 1, 1.2, 0.0, 8, 1, SymmetryScore.OverallVarianceVsRingVarianceSum,
+                        true, true, new ScoreRange());
+                Mat painted = new Mat();
+                List<Circle> recorded = search(image, geometry[0], geometry[1], geometry[2], geometry[3], 500, 600,
+                        440, 8, 1, SymmetryScore.OverallVarianceVsRingVarianceSum, true, painted);
+                assertSame(expected, recorded, channels + " channels");
+                Mat diff = new Mat();
+                Core.absdiff(cpu, painted, diff);
+                assertTrue(Core.minMaxLoc(diff.reshape(1)).maxVal <= 2, channels + " channels");
+                assertTrue(Core.mean(diff.reshape(1)).val[0] < 0.01, channels + " channels");
+                assertTrue(Core.countNonZero(changed(image, cpu)) > 1000);
+            }
+        }
+    }
+
+    private static Mat changed(Mat a, Mat b) {
+        Mat diff = new Mat();
+        Core.absdiff(a, b, diff);
+        return diff.reshape(1);
+    }
+
+    @Test
+    public void recordedSearchReportsCroppedRange() throws Exception {
+        Assumptions.assumeTrue(GpuCircularSymmetry.isAvailable() && GpuRuntime.hasByteStorage());
+        Mat image = testImage(1);
+        assertThrows(Exception.class, () -> search(image, 320, 240, 400, 500, 50, 50, 50, 8, 1,
+                SymmetryScore.OverallVarianceVsRingVarianceSum, false, null));
     }
 
     private static void assertSame(List<Circle> cpu, List<Circle> gpu, String what) {

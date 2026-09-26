@@ -22,6 +22,7 @@ public:
     int height() const { return height_; }
     int bytesPerLine() const { return bytesPerLine_; }
     bool zeroCopy() const { return zeroCopy_; }
+    int slotCount() const { return (int) slots_.size(); }
 
     bool hasNewFrame(uint64_t after);
     // Holds the newest frame with a sequence number above after, and captured no earlier than

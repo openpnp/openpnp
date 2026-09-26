@@ -43,6 +43,13 @@ public class GpuRuntime {
         return isAvailable() && GpuNative.hasByteStorage();
     }
 
+    /**
+     * Whether shaders may pick one of an array of buffers with a parameter.
+     */
+    public static boolean hasArrayIndexing() {
+        return isAvailable() && GpuNative.hasArrayIndexing();
+    }
+
     public static long completed() {
         return GpuNative.completed();
     }

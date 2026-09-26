@@ -6,7 +6,9 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.awt.image.BufferedImage;
+import java.awt.image.DataBufferByte;
 import java.nio.file.Files;
+import java.util.List;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assumptions;
@@ -24,6 +26,12 @@ import org.openpnp.machine.reference.camera.ImageCamera;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Camera.SettleOption;
 import org.openpnp.util.OpenCvUtils;
+import org.openpnp.vision.pipeline.CvStage.Result.Circle;
+import org.openpnp.vision.gpu.GpuBuffer;
+import org.openpnp.vision.gpu.GpuCameraTransform;
+import org.openpnp.vision.gpu.GpuCameraTransform.Input;
+import org.openpnp.vision.gpu.GpuCircularSymmetry;
+import org.openpnp.vision.gpu.GpuImage;
 import org.openpnp.vision.gpu.GpuRuntime;
 
 public class GpuPipelineTest {
@@ -43,6 +51,32 @@ public class GpuPipelineTest {
         public void actuateLightAfterCapture() {
         }
     }
+
+    // Hands the frame to the pipeline the way a V4L2 camera does: as a transform recorded into
+    // the pipeline's command buffer.
+    static class GpuFixedCamera extends FixedCamera {
+        private final GpuCameraTransform transform = new GpuCameraTransform();
+        private final GpuBuffer upload;
+
+        GpuFixedCamera() {
+            byte[] data = ((DataBufferByte) frame.getRaster().getDataBuffer()).getData();
+            upload = new GpuBuffer(data.length, true);
+            upload.map().put(data);
+        }
+
+        @Override
+        public GpuImage settleAndCaptureGpu(SettleOption settleOption) {
+            return transform.record(transform.slots(upload), 0, Input.Bgr, frame.getWidth(), frame.getHeight(),
+                    frame.getWidth() * 3);
+        }
+    }
+
+    private static final String FIDUCIAL = "<cv-pipeline><stages>"
+            + "<cv-stage class=\"org.openpnp.vision.pipeline.stages.ImageCapture\" name=\"image\" enabled=\"true\" default-light=\"true\" settle-option=\"Settle\" count=\"1\"/>"
+            + "<cv-stage class=\"org.openpnp.vision.pipeline.stages.MaskCircle\" name=\"mask\" enabled=\"true\" diameter=\"900\" property-name=\"MaskCircle\"/>"
+            + "<cv-stage class=\"org.openpnp.vision.pipeline.stages.DetectCircularSymmetry\" name=\"cir\" enabled=\"true\" min-diameter=\"100\" max-diameter=\"140\" max-distance=\"350\" search-width=\"0\" search-height=\"0\" max-target-count=\"1\" min-symmetry=\"1.2\" corr-symmetry=\"0.0\" outer-margin=\"0.2\" inner-margin=\"0.4\" sub-sampling=\"8\" super-sampling=\"4\" symmetry-score=\"OverallVarianceVsRingVarianceSum\" property-name=\"\" diagnostics=\"true\" heat-map=\"true\"/>"
+            + "<cv-stage class=\"org.openpnp.vision.pipeline.stages.ConvertModelToKeyPoints\" name=\"results\" enabled=\"true\" model-stage-name=\"cir\"/>"
+            + "</stages></cv-pipeline>";
 
     private static final String BOTTOM_VISION = "<cv-pipeline><stages>"
             + "<cv-stage class=\"org.openpnp.vision.pipeline.stages.ImageCapture\" name=\"CaptureImage\" enabled=\"true\" default-light=\"true\" settle-option=\"Settle\" count=\"1\"/>"
@@ -93,11 +127,64 @@ public class GpuPipelineTest {
     }
 
     private static CvPipeline run(String xml, boolean gpu) throws Exception {
+        return run(xml, gpu, new FixedCamera());
+    }
+
+    private static CvPipeline run(String xml, boolean gpu, FixedCamera camera) throws Exception {
         CvPipeline.gpuEnabled = gpu;
         CvPipeline pipeline = new CvPipeline(xml);
-        pipeline.setProperty("camera", new FixedCamera());
+        pipeline.setProperty("camera", camera);
         pipeline.process();
         return pipeline;
+    }
+
+    private static long idleTimeline() {
+        long value = GpuRuntime.completed();
+        GpuRuntime.await(value, 5_000_000_000L);
+        return value;
+    }
+
+    @Test
+    public void capturedFrameStaysOnGpuAndRunsInOneSubmit() throws Exception {
+        Assumptions.assumeTrue(CvPipeline.isGpuAvailable() && GpuRuntime.hasArrayIndexing());
+        GpuFixedCamera camera = new GpuFixedCamera();
+        try (CvPipeline cpu = run(BOTTOM_VISION, false)) {
+            run(BOTTOM_VISION, true, camera).close();
+            long before = idleTimeline();
+            try (CvPipeline gpu = run(BOTTOM_VISION, true, camera)) {
+                assertEquals(before + 1, idleTimeline());
+                assertNotNull(gpu.getResult("CaptureImage").getGpuImage());
+                assertSameRect((RotatedRect) cpu.getResult("results").model,
+                        (RotatedRect) gpu.getResult("results").model);
+                assertTrue(meanDifference(cpu.getWorkingImage(), gpu.getWorkingImage()) < 0.05);
+                assertEquals(frame.getWidth(), gpu.getLastCapturedImage().getWidth());
+            }
+        }
+    }
+
+    @Test
+    public void fiducialRunsInOneSubmitAndMatchesCpu() throws Exception {
+        Assumptions.assumeTrue(CvPipeline.isGpuAvailable() && GpuRuntime.hasArrayIndexing()
+                && GpuCircularSymmetry.isAvailable());
+        GpuFixedCamera camera = new GpuFixedCamera();
+        try (CvPipeline cpu = run(FIDUCIAL, false)) {
+            run(FIDUCIAL, true, camera).close();
+            long before = idleTimeline();
+            try (CvPipeline gpu = run(FIDUCIAL, true, camera)) {
+                List<?> circles = (List<?>) gpu.getResult("cir").model;
+                assertEquals(before + 1, idleTimeline());
+                List<?> expected = (List<?>) cpu.getResult("cir").model;
+                assertEquals(1, circles.size());
+                assertEquals(expected.size(), circles.size());
+                Circle e = (Circle) expected.get(0);
+                Circle c = (Circle) circles.get(0);
+                assertEquals(e.x, c.x, 1e-9);
+                assertEquals(e.y, c.y, 1e-9);
+                assertEquals(e.diameter, c.diameter, 1e-9);
+                assertEquals(700.5, c.x, 2.0);
+                assertTrue(meanDifference(cpu.getWorkingImage(), gpu.getWorkingImage()) < 0.05);
+            }
+        }
     }
 
     private static void assertSameRect(RotatedRect expected, RotatedRect actual) {

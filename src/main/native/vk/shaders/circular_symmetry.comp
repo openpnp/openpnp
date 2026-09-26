@@ -2,7 +2,8 @@
 #extension GL_EXT_shader_explicit_arithmetic_types_int64 : require
 
 // Scores every candidate center of one DetectCircularSymmetry search pass, mirroring
-// DetectCircularSymmetry.findCircularSymmetry(). Samples are grouped per (ring, channel, angle) bin.
+// DetectCircularSymmetry.findCircularSymmetry(). Samples are grouped per (ring, channel, angle) bin,
+// with one table per super-sampling offset along z. The search window comes from the pass' plan.
 // Variances use exact 64-bit integer sums, or sums shifted by the first ring's value, to avoid float
 // cancellation in flat (e.g. saturated) areas.
 
@@ -19,16 +20,15 @@ const int MODE_RING_MEDIAN = 2;
 
 layout(binding = 0) uniform Params {
     int width;
-    int x0;
     int sub;
-    int cols;
-    int rows;
-    int xSearch;
-    int ySearch;
+    int maxCols;
+    int maxRows;
     int rSearchSq;
     int rDim;
     int r0;
     int minDiameter;
+    int bins;
+    int level;
 } p;
 
 layout(binding = 1) readonly buffer Pixels {
@@ -51,6 +51,9 @@ layout(binding = 5) writeonly buffer Radii {
     int radii[];
 };
 
+#define STATE_BINDING 6
+#include "symmetry_state.glsl"
+
 #define NAN uintBitsToFloat(0x7fc00000u)
 
 int pixelAt(int i) {
@@ -60,20 +63,23 @@ int pixelAt(int i) {
 void main() {
     int xis = int(gl_GlobalInvocationID.x);
     int yis = int(gl_GlobalInvocationID.y);
-    if (xis >= p.cols || yis >= p.rows) {
+    int z = int(gl_GlobalInvocationID.z);
+    Level plan = state.levels[p.level];
+    if (plan.status != STATUS_OK || xis >= plan.cols || yis >= plan.rows) {
         return;
     }
-    int out_ = yis * p.cols + xis;
+    int out_ = (z * p.maxRows + yis) * p.maxCols + xis;
     int xi = xis * p.sub;
     int yi = yis * p.sub;
-    int dx = xi - p.xSearch;
-    int dy = yi - p.ySearch;
+    int dx = xi - plan.xSearch;
+    int dy = yi - plan.ySearch;
     if (dx * dx + dy * dy > p.rSearchSq) {
         scores[out_] = NAN;
         radii[out_] = 0;
         return;
     }
-    int base = (yi * p.width + p.x0 + xi) * CHANNELS;
+    int base = ((plan.y0 + yi) * p.width + plan.x0 + xi) * CHANNELS;
+    int binBase = z * (p.bins + 1);
 
     float varianceRing = 0.0;
     int64_t sumAcross[CHANNELS];
@@ -109,8 +115,8 @@ void main() {
                 int bin = (ri * CHANNELS + ch) * ANGLES + a;
                 int sum = 0;
                 int sumSq = 0;
-                int start = binStart[bin];
-                int end = binStart[bin + 1];
+                int start = binStart[binBase + bin];
+                int end = binStart[binBase + bin + 1];
                 for (int k = start; k < end; k++) {
                     int v = pixelAt(base + offsets[k]);
                     sum += v;

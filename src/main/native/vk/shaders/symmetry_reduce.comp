@@ -1,0 +1,106 @@
+#version 450
+
+// Finds a circular symmetry pass' best candidate the way findCircularSymmetry() scans them (offsets,
+// then rows, then columns, first maximum wins) and accumulates the score range for diagnostics.
+
+layout(local_size_x = 256) in;
+
+layout(binding = 0) uniform Params {
+    int level;
+    int maxCols;
+    int maxRows;
+    int offsets;
+    int sub;
+    int r;
+} p;
+
+layout(binding = 1) readonly buffer Scores {
+    float scores[];
+};
+
+layout(binding = 2) readonly buffer Radii {
+    int radii[];
+};
+
+#define STATE_BINDING 3
+#include "symmetry_state.glsl"
+
+shared float bestScores[256];
+shared int bestIndices[256];
+shared float mins[256];
+shared float maxs[256];
+shared float sums[256];
+shared int counts[256];
+
+bool better(float score, int index, float than, int thanIndex) {
+    return index >= 0 && (thanIndex < 0 || score > than || (score == than && index < thanIndex));
+}
+
+void main() {
+    int tid = int(gl_LocalInvocationID.x);
+    Level plan = state.levels[p.level];
+    int cells = plan.cols * plan.rows;
+    int total = plan.status == STATUS_OK ? cells * p.offsets : 0;
+    float best = 0.0;
+    int bestIndex = -1;
+    float lo = uintBitsToFloat(0x7f800000u);
+    float hi = uintBitsToFloat(0xff800000u);
+    float sum = 0.0;
+    int n = 0;
+    for (int i = tid; i < total; i += 256) {
+        int z = i / cells;
+        int cell = i - z * cells;
+        int yis = cell / plan.cols;
+        int xis = cell - yis * plan.cols;
+        float s = scores[(z * p.maxRows + yis) * p.maxCols + xis];
+        if (!isnan(s) && (bestIndex < 0 || s > best)) {
+            best = s;
+            bestIndex = i;
+        }
+        if (s > 0.0) {
+            lo = min(lo, s);
+            hi = max(hi, s);
+            sum += s;
+            n++;
+        }
+    }
+    bestScores[tid] = best;
+    bestIndices[tid] = bestIndex;
+    mins[tid] = lo;
+    maxs[tid] = hi;
+    sums[tid] = sum;
+    counts[tid] = n;
+    barrier();
+    for (int stride = 128; stride > 0; stride >>= 1) {
+        if (tid < stride) {
+            int o = tid + stride;
+            if (better(bestScores[o], bestIndices[o], bestScores[tid], bestIndices[tid])) {
+                bestScores[tid] = bestScores[o];
+                bestIndices[tid] = bestIndices[o];
+            }
+            mins[tid] = min(mins[tid], mins[o]);
+            maxs[tid] = max(maxs[tid], maxs[o]);
+            sums[tid] += sums[o];
+            counts[tid] += counts[o];
+        }
+        barrier();
+    }
+    if (tid == 0) {
+        int index = bestIndices[0];
+        if (index >= 0) {
+            int z = index / cells;
+            int cell = index - z * cells;
+            int yis = cell / plan.cols;
+            int xis = cell - yis * plan.cols;
+            state.levels[p.level].index = index;
+            state.levels[p.level].score = bestScores[0];
+            state.levels[p.level].radius = radii[(z * p.maxRows + yis) * p.maxCols + xis];
+            state.levels[p.level].xBase = xis * p.sub + plan.x0 + p.r;
+            state.levels[p.level].yBase = yis * p.sub + plan.y0 + p.r;
+        }
+        state.rangeMin = min(state.rangeMin, mins[0]);
+        state.rangeMax = max(state.rangeMax, maxs[0]);
+        state.rangeSum += sums[0];
+        state.rangeN += counts[0];
+    }
+}
