@@ -600,7 +600,7 @@ public class CameraView extends JComponent implements CameraPreviewListener {
         int height = Math.max(1, Math.min(scaled.height, frameHeight));
         for (int i = 0; i < previewPool.length; i++) {
             BufferedImage image = previewPool[i];
-            if (image == lastFrame || image == pendingPreview) {
+            if (image != null && (image == lastFrame || image == pendingPreview)) {
                 continue;
             }
             if (image == null || image.getWidth() != width || image.getHeight() != height) {
