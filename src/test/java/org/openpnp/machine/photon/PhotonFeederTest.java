@@ -1297,4 +1297,42 @@ public class PhotonFeederTest {
 
         assertEquals(expectedLocation, actualLocation);
     }
+    
+    @Test
+    public void identifyFeederWithPartLocation() throws Exception {
+        feeder.setHardwareId(hardwareId);
+        feeder.setSlotAddress(feederAddress);
+        setSlotLocation(feederAddress, baseLocation);
+        feeder.setLocation(baseLocation);
+        feeder.setOffset(feederOffset);
+
+        bus.when(new InitializeFeeder(feederAddress, hardwareId))
+                .reply(responses.initializeFeeder.ok(feederAddress, hardwareId));
+
+        bus.when(new IdentifyFeeder(hardwareId))
+                .reply(responses.identifyFeeder.ok(feederAddress));
+
+        feeder.identifyFeeder();
+
+        bus.verifyInMockedOrder();
+    }
+    
+    @Test
+    public void identifyFeederWithoutPartLocation() throws Exception {
+        feeder.setHardwareId(hardwareId);
+        feeder.setSlotAddress(feederAddress);
+        setSlotLocation(feederAddress, baseLocation);
+        feeder.setLocation(null);
+        feeder.setOffset(null);
+
+        bus.when(new InitializeFeeder(feederAddress, hardwareId))
+                .reply(responses.initializeFeeder.ok(feederAddress, hardwareId));
+
+        bus.when(new IdentifyFeeder(hardwareId))
+                .reply(responses.identifyFeeder.ok(feederAddress));
+
+        feeder.identifyFeeder();
+
+        bus.verifyInMockedOrder();
+    }
 }
