@@ -428,8 +428,9 @@
 				</executions>
 			</plugin>
 
-			<!-- Builds the OpenCL (T-API) shim over the bundled OpenCV. Skipped with a
-				message where the toolchain is missing; the GPU path is then unavailable. -->
+			<!-- Builds the OpenCL (T-API) shim over the bundled OpenCV and the Vulkan compute
+				runtime. Each is skipped with a message where its toolchain is missing; that GPU
+				path is then unavailable. -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-antrun-plugin</artifactId>
@@ -447,6 +448,22 @@
 									<arg value="${project.basedir}/src/main/native/ocl/build.sh" />
 									<arg value="${project.build.outputDirectory}/native/linux-x86-64" />
 									<arg value="${settings.localRepository}/org/openpnp/opencv/4.5.5-1/opencv-4.5.5-1.jar" />
+									<arg value="${project.build.directory}/native-cache" />
+								</exec>
+							</target>
+						</configuration>
+					</execution>
+					<execution>
+						<id>build-openpnp-vk</id>
+						<phase>generate-resources</phase>
+						<goals>
+							<goal>run</goal>
+						</goals>
+						<configuration>
+							<target>
+								<exec executable="bash" failonerror="false" osfamily="unix">
+									<arg value="${project.basedir}/src/main/native/vk/build.sh" />
+									<arg value="${project.build.outputDirectory}/native/linux-x86-64" />
 									<arg value="${project.build.directory}/native-cache" />
 								</exec>
 							</target>
