@@ -80,7 +80,7 @@ public class ComposeResult extends CvStage {
             colorSpace = pipeline.getWorkingColorSpace();
         }
         else {
-            image = pipeline.getExpectedResult(imageStageName).image;
+            image = pipeline.getExpectedResult(imageStageName).getImage();
             colorSpace = pipeline.getExpectedResult(imageStageName).colorSpace;
         }
         if (model == null) {

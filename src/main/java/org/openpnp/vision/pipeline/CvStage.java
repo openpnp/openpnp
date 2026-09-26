@@ -245,7 +245,7 @@ public abstract class CvStage {
 
     public static class Result {
         final public CvStage stage;
-        final public Mat image;
+        private final Mat image;
         final public Object model;
         final public long processingTimeNs;
         final public ColorSpace colorSpace;

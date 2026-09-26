@@ -122,7 +122,7 @@ public class MatchTemplate extends CvStage {
         }
 
         Mat mat = pipeline.getWorkingImage();
-        Mat template = pipeline.getExpectedResult(templateStageName).image;
+        Mat template = pipeline.getExpectedResult(templateStageName).getImage();
         Mat result = new Mat();
 
         org.openpnp.model.Point center = new org.openpnp.model.Point(mat.cols()*0.5, mat.rows()*0.5);

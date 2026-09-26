@@ -291,7 +291,7 @@ public class CvPipeline implements AutoCloseable {
             Object model = null;
             ColorSpace colorSpace = null;
             if (result != null) {
-                image = result.image;
+                image = result.getImage();
                 model = result.model;
                 colorSpace = result.colorSpace;
             }
@@ -356,8 +356,8 @@ public class CvPipeline implements AutoCloseable {
             workingImage = null;
         }
         for (Result result : results.values()) {
-            if (result.image != null) {
-                result.image.release();
+            if (result.getImage() != null) {
+                result.getImage().release();
             }
         }
         workingModel = null;
