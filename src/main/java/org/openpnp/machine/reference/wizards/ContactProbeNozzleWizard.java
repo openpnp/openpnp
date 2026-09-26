@@ -126,6 +126,13 @@ public class ContactProbeNozzleWizard extends AbstractConfigurationWizard {
         comboBoxContactProbeActuator.setMaximumRowCount(15);
         comboBoxContactProbeActuator.setModel(new ActuatorsComboBoxModel(nozzle.getHead()));
         panel.add(comboBoxContactProbeActuator, "4, 4, default, top");
+
+        lblContinuousVacuum = new JLabel("Continuous Vacuum");
+        lblContinuousVacuum.setToolTipText("<html>When enabled, the vacuum runs continuously using \"Part On\" rules to determine contact.<br/>\r\nWhen disabled, the vacuum runs in a series of bursts using \"Part Off\" rules to determine contact.</html>");
+        panel.add(lblContinuousVacuum, "2, 4, right, default");
+
+        continuousVacuum = new JCheckBox("");
+        panel.add(continuousVacuum, "4, 4");
         
         lblProbeSpeed = new JLabel("Probe Speed");
         lblProbeSpeed.setToolTipText("<html>Probing speed factor.<br/>\r\n<strong>NOTE:</strong> this setting will only become effective, once you<br/>\r\naccept the Issues & Solutions G-code suggestion.</html>");
@@ -215,6 +222,8 @@ public class ContactProbeNozzleWizard extends AbstractConfigurationWizard {
 
         lblContactProbeActuator.setVisible(isActuator);
         comboBoxContactProbeActuator.setVisible(isActuator);
+        lblContinuousVacuum.setVisible(isVacuum);
+        continuousVacuum.setVisible(isVacuum);        
         lblStartOffset.setVisible(isProbing);
         contactProbeStartOffsetZ.setVisible(isProbing);
         lblSniffleIncrement.setVisible(isVacuum);
@@ -250,6 +259,7 @@ public class ContactProbeNozzleWizard extends AbstractConfigurationWizard {
         addWrappedBinding(nozzle, "contactProbeMethod", contactProbeMethod, "selectedItem");
         addWrappedBinding(nozzle, "contactProbeActuator", comboBoxContactProbeActuator, "selectedItem", actuatorConverter);
 
+        addWrappedBinding(nozzle, "continuousVacuum", continuousVacuum, "selected");
         addWrappedBinding(nozzle, "contactProbeStartOffsetZ", contactProbeStartOffsetZ, "text", lengthConverter);
         addWrappedBinding(nozzle, "contactProbeDepthZ", contactProbeDepthZ, "text", lengthConverter);
         addWrappedBinding(nozzle, "contactProbeSpeed", contactProbeSpeed, "text", doubleConverter);
@@ -289,6 +299,8 @@ public class ContactProbeNozzleWizard extends AbstractConfigurationWizard {
     private JPanel panel;
     private JLabel lblContactProbeActuator;
     private JComboBox comboBoxContactProbeActuator;
+    private JLabel lblContinuousVacuum;
+    private JCheckBox continuousVacuum;
     private JLabel lblStartOffset;
     private JTextField contactProbeStartOffsetZ;
     private JLabel lblProbeDepth;

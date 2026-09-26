@@ -80,6 +80,9 @@ public class ContactProbeNozzle extends ReferenceNozzle {
     private String contactProbeActuatorName = "";
     private boolean isDisabled; // for scripts: temporarily disable probing 
 
+    @Attribute(required=false)
+    private boolean continuousVacuum = false; 
+
     @Element(required = false)
     private Length contactProbeStartOffsetZ = new Length(1, LengthUnit.Millimeters);
 
@@ -405,6 +408,14 @@ public class ContactProbeNozzle extends ReferenceNozzle {
         isDisabled = set;
     }
 
+    public boolean isContinuousVacuum() {
+        return continuousVacuum;
+    }
+    
+    public void setContinuousVacuum(boolean continuousVacuum) {
+        this.continuousVacuum = continuousVacuum;
+    }
+    
     public Length getContactProbeStartOffsetZ() {
         return contactProbeStartOffsetZ;
     }
@@ -535,9 +546,29 @@ public class ContactProbeNozzle extends ReferenceNozzle {
                         0, 0, sniffleIncrementZ.convertToUnits(LengthUnit.Millimeters).getValue(), 0);
 
                 // Establish initially free nozzle.
-                if (!isPartOff()) {
-                    throw new Exception("Nozzle "+getName()+" first sniffle-probe was already sensing contact. Check the settings."); 
+                if (continuousVacuum) {
+                    // if the method needs it, store one measurement up front
+                    storeBeforePickVacuumLevel();
+                    
+                    // enable the vacuum
+                    actuateVacuumValve(true);
+
+                    // wait for the Dwell Time and/or make sure the vacuum level builds up to the desired range (with timeout)
+                    establishPickVacuumLevel(this.getPickDwellMilliseconds() + nozzleTip.getPickDwellMilliseconds());
+
+                    // wait for the sniffle dwell time to ensure a steady state
+                    delay(sniffleDwellTime);
+                    
+                    if (isPartOn()) {
+                        actuateVacuumValve(false);
+                        throw new Exception("Nozzle "+getName()+" first sniffle-probe was already sensing contact. Check the settings.");
+                    }
+                } else {
+                    if (!isPartOff()) {
+                        throw new Exception("Nozzle "+getName()+" first sniffle-probe was already sensing contact. Check the settings."); 
+                    }
                 }
+                
                 // We allow two times the offset, i.e. it is a +/- range we probe.   
                 int count = (int) Math.ceil(contactProbeDepthZ.divide(sniffleIncrementZ));
                 Location probedLocation = getLocation();
@@ -545,12 +576,27 @@ public class ContactProbeNozzle extends ReferenceNozzle {
                     probedLocation = probedLocation.subtract(probeIncrement);
                     moveTo(probedLocation);
                     delay(sniffleDwellTime);
-                    if (! isPartOff()) {
+                    
+                    boolean contact = false;
+                    if (continuousVacuum) {
+                        if (isPartOn()) {
+                            contact = true;
+                            actuateVacuumValve(false);
+                        }
+                    } else {
+                        if (!isPartOff()) {
+                            contact = true;
+                        }
+                    }
+                    if (contact) {
                         // We got contact.
                         probedLocation = probedLocation.add(new Location(contactProbeAdjustZ .getUnits(), 0, 0, contactProbeAdjustZ.getValue(), 0));
                         moveTo(probedLocation);
                         return probedLocation;
                     }
+                }
+                if (continuousVacuum) {
+                    actuateVacuumValve(false);
                 }
                 throw new Exception("Nozzle "+getName()+" sniffle-probing made no contact. Check the settings."); 
             }
