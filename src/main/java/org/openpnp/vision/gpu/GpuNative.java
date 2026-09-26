@@ -10,6 +10,8 @@ final class GpuNative {
 
     static native boolean hasInt64();
 
+    static native boolean hasByteStorage();
+
     static native long completed();
 
     static native boolean await(long value, long timeoutNs);

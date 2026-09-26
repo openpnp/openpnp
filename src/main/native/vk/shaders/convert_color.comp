@@ -1,0 +1,103 @@
+#version 450
+#extension GL_EXT_shader_8bit_storage : require
+
+// The 8-bit cvtColor conversions vision pipelines use, following OpenCV's arithmetic: fixed-point
+// gray, integer table based RGB to HSV, and float HSV to RGB.
+
+layout(local_size_x = 256) in;
+
+layout(constant_id = 0) const int CODE = 0;
+
+const int BGR2GRAY = 0;
+const int RGB2GRAY = 1;
+const int GRAY2BGR = 2;
+const int BGR2HSV = 3;
+const int BGR2HSV_FULL = 4;
+const int HSV2BGR = 5;
+const int HSV2BGR_FULL = 6;
+
+layout(binding = 0) uniform Params {
+    int pixels;
+} p;
+
+layout(binding = 1) readonly buffer Source {
+    uint8_t src[];
+};
+
+layout(binding = 2) writeonly buffer Destination {
+    uint8_t dst[];
+};
+
+// sdiv, hdiv180 and hdiv256, 256 entries each, as OpenCV computes them.
+layout(binding = 3) readonly buffer Tables {
+    int tables[];
+};
+
+void main() {
+    int i = int(gl_GlobalInvocationID.x);
+    if (i >= p.pixels) {
+        return;
+    }
+    if (CODE == BGR2GRAY || CODE == RGB2GRAY) {
+        int b = int(src[i * 3 + (CODE == BGR2GRAY ? 0 : 2)]);
+        int g = int(src[i * 3 + 1]);
+        int r = int(src[i * 3 + (CODE == BGR2GRAY ? 2 : 0)]);
+        dst[i] = uint8_t((b * 3735 + g * 19235 + r * 9798 + (1 << 14)) >> 15);
+    }
+    else if (CODE == GRAY2BGR) {
+        dst[i * 3] = src[i];
+        dst[i * 3 + 1] = src[i];
+        dst[i * 3 + 2] = src[i];
+    }
+    else if (CODE == BGR2HSV || CODE == BGR2HSV_FULL) {
+        int b = int(src[i * 3]);
+        int g = int(src[i * 3 + 1]);
+        int r = int(src[i * 3 + 2]);
+        int v = max(max(b, g), r);
+        int vmin = min(min(b, g), r);
+        int diff = v - vmin;
+        int vr = v == r ? -1 : 0;
+        int vg = v == g ? -1 : 0;
+        int s = (diff * tables[v] + (1 << 11)) >> 12;
+        int h = (vr & (g - b)) + (~vr & ((vg & (b - r + 2 * diff)) + ((~vg) & (r - g + 4 * diff))));
+        int hr = CODE == BGR2HSV ? 180 : 256;
+        h = (h * tables[(CODE == BGR2HSV ? 256 : 512) + diff] + (1 << 11)) >> 12;
+        h += h < 0 ? hr : 0;
+        dst[i * 3] = uint8_t(clamp(h, 0, 255));
+        dst[i * 3 + 1] = uint8_t(s);
+        dst[i * 3 + 2] = uint8_t(v);
+    }
+    else {
+        float h = float(int(src[i * 3]));
+        float s = float(int(src[i * 3 + 1])) * (1.0 / 255.0);
+        float v = float(int(src[i * 3 + 2])) * (1.0 / 255.0);
+        float b, g, r;
+        if (s == 0.0) {
+            b = g = r = v;
+        }
+        else {
+            h *= 6.0 / (CODE == HSV2BGR ? 180.0 : 255.0);
+            if (h < 0.0) {
+                h += 6.0;
+            }
+            else if (h >= 6.0) {
+                h -= 6.0;
+            }
+            int sector = int(floor(h));
+            h -= float(sector);
+            if (sector < 0 || sector >= 6) {
+                sector = 0;
+                h = 0.0;
+            }
+            float tab[4] = float[4](v, v * (1.0 - s), v * (1.0 - s * h), v * (1.0 - s * (1.0 - h)));
+            const ivec3 sectors[6] = ivec3[6](ivec3(1, 3, 0), ivec3(1, 0, 2), ivec3(3, 0, 1), ivec3(0, 2, 1),
+                    ivec3(0, 1, 3), ivec3(2, 1, 0));
+            b = tab[sectors[sector].x];
+            g = tab[sectors[sector].y];
+            r = tab[sectors[sector].z];
+        }
+        dst[i * 3] = uint8_t(clamp(int(round(b * 255.0)), 0, 255));
+        dst[i * 3 + 1] = uint8_t(clamp(int(round(g * 255.0)), 0, 255));
+        dst[i * 3 + 2] = uint8_t(clamp(int(round(r * 255.0)), 0, 255));
+    }
+}

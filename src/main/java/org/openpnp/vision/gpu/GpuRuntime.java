@@ -36,6 +36,13 @@ public class GpuRuntime {
         return isAvailable() && GpuNative.hasInt64();
     }
 
+    /**
+     * Whether shaders may read and write single bytes of storage buffers.
+     */
+    public static boolean hasByteStorage() {
+        return isAvailable() && GpuNative.hasByteStorage();
+    }
+
     public static long completed() {
         return GpuNative.completed();
     }

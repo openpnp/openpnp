@@ -76,6 +76,7 @@ public:
 
     std::string deviceName() const { return deviceName_; }
     bool int64() const { return int64_; }
+    bool byteStorage() const { return byteStorage_; }
     VkDevice device() const { return device_; }
 
     std::shared_ptr<Buffer> createBuffer(VkDeviceSize size, bool hostVisible);
@@ -103,8 +104,7 @@ private:
     void create();
     void submitLoop();
     void completionLoop();
-    uint32_t memoryType(uint32_t allowed, VkMemoryPropertyFlags required, VkMemoryPropertyFlags preferred,
-            int skip);
+    uint32_t memoryType(uint32_t allowed, const std::vector<VkMemoryPropertyFlags> &preferences, int skip);
 
     VkInstance instance_ = VK_NULL_HANDLE;
     VkPhysicalDevice physical_ = VK_NULL_HANDLE;
@@ -117,6 +117,7 @@ private:
     std::atomic<bool> failed_{false};
     bool dmaBuf_ = false;
     bool int64_ = false;
+    bool byteStorage_ = false;
 
     std::mutex recordLock_;
     VkCommandPool commandPool_ = VK_NULL_HANDLE;

@@ -3,6 +3,8 @@ package org.openpnp.vision.pipeline.stages;
 import org.opencv.core.Mat;
 import org.opencv.imgproc.Imgproc;
 import org.openpnp.vision.FluentCv;
+import org.openpnp.vision.gpu.GpuImage;
+import org.openpnp.vision.gpu.GpuImageOps;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
 import org.openpnp.vision.pipeline.Property;
@@ -31,6 +33,15 @@ public class ConvertColor extends CvStage {
 
     @Override
     public Result process(CvPipeline pipeline) throws Exception {
+        GpuImage gpuImage = pipeline.getWorkingGpuImage();
+        GpuImageOps.ColorConversion gpuConversion = GpuImageOps.ColorConversion.of(conversion.getCode());
+        if (gpuImage != null && gpuConversion != null) {
+            GpuImage converted = GpuImageOps.convertColor(gpuImage, gpuConversion);
+            if (converted != null) {
+                pipeline.setWorkingColorSpace(conversion.getResultingColorSpace());
+                return new Result(converted);
+            }
+        }
         Mat mat = pipeline.getWorkingImage();
         Imgproc.cvtColor(mat, mat, conversion.getCode());
         pipeline.setWorkingColorSpace(conversion.getResultingColorSpace());

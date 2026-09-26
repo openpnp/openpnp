@@ -22,6 +22,9 @@ public class ImageRecall extends CvStage {
             return null;
         }
         Result result = pipeline.getExpectedResult(imageStageName);
+        if (result.getGpuImage() != null) {
+            return new Result(result.getGpuImage().retain(), result.colorSpace);
+        }
         if (result.getImage() == null) {
             return null;
         }

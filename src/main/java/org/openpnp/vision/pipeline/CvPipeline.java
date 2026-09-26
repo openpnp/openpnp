@@ -17,6 +17,8 @@ import org.opencv.core.Point;
 import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 import org.openpnp.vision.FluentCv.ColorSpace;
+import org.openpnp.vision.gpu.GpuImage;
+import org.openpnp.vision.gpu.GpuRuntime;
 import org.openpnp.vision.pipeline.CvStage.Result;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.ElementList;
@@ -63,6 +65,10 @@ public class CvPipeline implements AutoCloseable {
     private ArrayList<PipelineShot> compositeShots = new ArrayList<>();
 
     private Mat workingImage;
+    // Set instead of workingImage while the working image lives on the GPU.
+    private GpuImage workingGpu;
+
+    public static volatile boolean gpuEnabled = true;
     private Object workingModel;
     private Exception terminalException;
     private ColorSpace workingColorSpace;
@@ -219,6 +225,11 @@ public class CvPipeline implements AutoCloseable {
      * @return
      */
     public Mat getWorkingImage() {
+        if (workingGpu != null) {
+            workingImage = workingGpu.download();
+            workingGpu.release();
+            workingGpu = null;
+        }
         if (workingImage == null || (workingImage.cols() == 0 && workingImage.rows() == 0)) {
             workingImage = new Mat(480, 640, CvType.CV_8UC3, new Scalar(0, 0, 0));
             Imgproc.line(workingImage, new Point(0, 0), new Point(640, 480), new Scalar(0, 0, 255));
@@ -226,6 +237,21 @@ public class CvPipeline implements AutoCloseable {
             workingColorSpace = ColorSpace.Bgr;
         }
         return workingImage;
+    }
+
+    /**
+     * The working image if it is on the GPU, otherwise null. Stages that can run on the GPU do so
+     * only then, so images don't move back and forth.
+     */
+    public GpuImage getWorkingGpuImage() {
+        return workingGpu;
+    }
+
+    /**
+     * Whether stages that produce the first image, like ImageCapture, should put it on the GPU.
+     */
+    public static boolean isGpuAvailable() {
+        return gpuEnabled && GpuRuntime.hasByteStorage();
     }
 
     public Object getWorkingModel() {
@@ -288,10 +314,12 @@ public class CvPipeline implements AutoCloseable {
             totalProcessingTimeNs += processingTimeNs;
 
             Mat image = null;
+            GpuImage gpuImage = null;
             Object model = null;
             ColorSpace colorSpace = null;
             if (result != null) {
-                image = result.getImage();
+                image = result.getImageIfOnCpu();
+                gpuImage = result.getGpuImage();
                 model = result.model;
                 colorSpace = result.colorSpace;
             }
@@ -301,10 +329,21 @@ public class CvPipeline implements AutoCloseable {
             if(stage.isEnabled() && colorSpace != null) {
                 workingColorSpace = colorSpace;
             }
+            // GPU images never change once written, so the working image and the stored result
+            // share one instead of cloning.
+            GpuImage storedGpu = null;
+            if (gpuImage != null) {
+                releaseWorkingImage();
+                workingGpu = gpuImage;
+                storedGpu = gpuImage.retain();
+            }
             // If the result image is null and there is a working image,
             // replace the result image with a clone of the working image.
-            if (image == null) {
-                if (workingImage != null) {
+            else if (image == null) {
+                if (workingGpu != null) {
+                    storedGpu = workingGpu.retain();
+                }
+                else if (workingImage != null) {
                     image = workingImage.clone();
                 }
             }
@@ -313,6 +352,10 @@ public class CvPipeline implements AutoCloseable {
             // Replace the working image with the result image.
             // Clone the result image for storage.
             else {
+                if (workingGpu != null) {
+                    workingGpu.release();
+                    workingGpu = null;
+                }
                 if (workingImage != null && workingImage != image) {
                     workingImage.release();
                 }
@@ -328,7 +371,9 @@ public class CvPipeline implements AutoCloseable {
                 }
             }
 
-            results.put(stage, new Result(image, colorSpace, model, processingTimeNs, stage));
+            results.put(stage, storedGpu != null
+                    ? new Result(storedGpu, colorSpace, model, processingTimeNs, stage)
+                    : new Result(image, colorSpace, model, processingTimeNs, stage));
         }
         if (terminalException != null) {
             throw (terminalException);
@@ -350,15 +395,21 @@ public class CvPipeline implements AutoCloseable {
      * called when the pipeline is no longer needed. This is primarily to release retained native
      * resources from OpenCV.
      */
-    public void release() {
+    private void releaseWorkingImage() {
         if (workingImage != null) {
             workingImage.release();
             workingImage = null;
         }
+        if (workingGpu != null) {
+            workingGpu.release();
+            workingGpu = null;
+        }
+    }
+
+    public void release() {
+        releaseWorkingImage();
         for (Result result : results.values()) {
-            if (result.getImage() != null) {
-                result.getImage().release();
-            }
+            result.release();
         }
         workingModel = null;
         results.clear();

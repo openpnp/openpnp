@@ -1,0 +1,45 @@
+#version 450
+#extension GL_EXT_shader_8bit_storage : require
+
+// Keeps the pixels inside a filled circle and blackens the rest (or the reverse), matching the
+// rows OpenCV's cv::circle fills: halfWidth[|dy|] is the half span it draws dy rows from the center.
+
+layout(local_size_x = 16, local_size_y = 16) in;
+
+layout(constant_id = 0) const int CHANNELS = 3;
+
+layout(binding = 0) uniform Params {
+    int cols;
+    int rows;
+    int cx;
+    int cy;
+    int radius;
+    int invert;
+} p;
+
+layout(binding = 1) readonly buffer Source {
+    uint8_t src[];
+};
+
+layout(binding = 2) writeonly buffer Destination {
+    uint8_t dst[];
+};
+
+layout(binding = 3) readonly buffer HalfWidth {
+    int halfWidth[];
+};
+
+void main() {
+    int x = int(gl_GlobalInvocationID.x);
+    int y = int(gl_GlobalInvocationID.y);
+    if (x >= p.cols || y >= p.rows) {
+        return;
+    }
+    int dy = abs(y - p.cy);
+    bool inside = p.radius >= 0 && dy <= p.radius && abs(x - p.cx) <= halfWidth[dy];
+    bool keep = inside != (p.invert != 0);
+    int i = (y * p.cols + x) * CHANNELS;
+    for (int c = 0; c < CHANNELS; c++) {
+        dst[i + c] = keep ? src[i + c] : uint8_t(0);
+    }
+}

@@ -153,11 +153,17 @@ void Runtime::create() {
     queueInfo.queueFamilyIndex = queueFamily_;
     queueInfo.queueCount = 1;
     queueInfo.pQueuePriorities = &priority;
+    VkPhysicalDeviceVulkan12Features available12{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES};
     VkPhysicalDeviceFeatures2 available{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2};
+    available.pNext = &available12;
     vk.vkGetPhysicalDeviceFeatures2(physical_, &available);
     int64_ = available.features.shaderInt64;
+    // Byte-wise shaders need 8-bit storage and 8-bit integer values for their constants.
+    byteStorage_ = available12.storageBuffer8BitAccess && available12.shaderInt8;
     VkPhysicalDeviceVulkan12Features enable12{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES};
     enable12.timelineSemaphore = VK_TRUE;
+    enable12.storageBuffer8BitAccess = byteStorage_;
+    enable12.shaderInt8 = byteStorage_;
     VkPhysicalDeviceFeatures2 enable{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2};
     enable.pNext = &enable12;
     enable.features.shaderInt64 = int64_;
@@ -225,14 +231,16 @@ void Runtime::create() {
     completionThread_.detach();
 }
 
-uint32_t Runtime::memoryType(uint32_t allowed, VkMemoryPropertyFlags required, VkMemoryPropertyFlags preferred,
-        int skip) {
-    for (int pass = 0; pass < 2; pass++) {
-        VkMemoryPropertyFlags wanted = pass == 0 ? required | preferred : required;
+// The skip-th distinct allowed type, trying each property combination in order of preference.
+uint32_t Runtime::memoryType(uint32_t allowed, const std::vector<VkMemoryPropertyFlags> &preferences, int skip) {
+    uint32_t tried = 0;
+    for (VkMemoryPropertyFlags wanted : preferences) {
         for (uint32_t i = 0; i < memory_.memoryTypeCount; i++) {
-            if ((allowed & (1u << i)) && (memory_.memoryTypes[i].propertyFlags & wanted) == wanted
-                    && skip-- == 0) {
-                return i;
+            if ((allowed & ~tried & (1u << i)) && (memory_.memoryTypes[i].propertyFlags & wanted) == wanted) {
+                tried |= 1u << i;
+                if (skip-- == 0) {
+                    return i;
+                }
             }
         }
     }
@@ -250,12 +258,17 @@ std::shared_ptr<Buffer> Runtime::createBuffer(VkDeviceSize size, bool hostVisibl
     check(vk.vkCreateBuffer(device_, &info, nullptr, &buffer->buffer), "vkCreateBuffer");
     VkMemoryRequirements req;
     vk.vkGetBufferMemoryRequirements(device_, buffer->buffer, &req);
-    VkMemoryPropertyFlags required = hostVisible
-            ? VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT : 0;
-    // Discrete GPUs may only expose a small host-visible device-local heap, so fall back when it is full.
+    const VkMemoryPropertyFlags host = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+    const VkMemoryPropertyFlags cached = VK_MEMORY_PROPERTY_HOST_CACHED_BIT;
+    const VkMemoryPropertyFlags local = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+    // The CPU reads results back, which is very slow from uncached (write-combined) memory such as a
+    // discrete GPU's BAR. Integrated GPUs usually offer memory that is both cached and device local.
+    std::vector<VkMemoryPropertyFlags> preferences = hostVisible
+            ? std::vector<VkMemoryPropertyFlags>{host | cached | local, host | cached, host | local, host}
+            : std::vector<VkMemoryPropertyFlags>{local, 0};
     VkResult result = VK_ERROR_OUT_OF_DEVICE_MEMORY;
     for (int skip = 0; result != VK_SUCCESS; skip++) {
-        uint32_t type = memoryType(req.memoryTypeBits, required, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, skip);
+        uint32_t type = memoryType(req.memoryTypeBits, preferences, skip);
         if (type == UINT32_MAX) {
             check(result, "vkAllocateMemory");
         }
@@ -296,7 +309,7 @@ std::shared_ptr<Buffer> Runtime::importDmaBuf(int fd, VkDeviceSize size) {
         close(fd);
         return nullptr;
     }
-    uint32_t type = memoryType(req.memoryTypeBits & fdProps.memoryTypeBits, 0, 0, 0);
+    uint32_t type = memoryType(req.memoryTypeBits & fdProps.memoryTypeBits, {0}, 0);
     VkImportMemoryFdInfoKHR import{VK_STRUCTURE_TYPE_IMPORT_MEMORY_FD_INFO_KHR};
     import.handleType = VK_EXTERNAL_MEMORY_HANDLE_TYPE_DMA_BUF_BIT_EXT;
     import.fd = fd;
@@ -428,11 +441,11 @@ std::shared_ptr<Program> Runtime::createProgram(std::vector<Step> steps) {
     barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT | VK_ACCESS_UNIFORM_READ_BIT
             | VK_ACCESS_INDIRECT_COMMAND_READ_BIT | VK_ACCESS_TRANSFER_READ_BIT | VK_ACCESS_TRANSFER_WRITE_BIT;
     VkPipelineStageFlags stages = VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_TRANSFER_BIT;
+    // The leading barrier orders this program after everything submitted before it, so programs
+    // can be chained through buffers without waiting in between.
     for (size_t s = 0; s < steps.size(); s++) {
-        if (s > 0) {
-            vk.vkCmdPipelineBarrier(cmd, stages, stages | VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT, 0, 1, &barrier, 0,
-                    nullptr, 0, nullptr);
-        }
+        vk.vkCmdPipelineBarrier(cmd, stages, stages | VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT, 0, 1, &barrier, 0,
+                nullptr, 0, nullptr);
         if (steps[s].copy) {
             const Copy &c = *steps[s].copy;
             VkBufferCopy region{c.srcOffset, c.dstOffset, c.size};

@@ -4,6 +4,8 @@ import org.opencv.core.Mat;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 import org.openpnp.model.Length;
+import org.openpnp.vision.gpu.GpuImage;
+import org.openpnp.vision.gpu.GpuImageOps;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
 import org.openpnp.vision.pipeline.Property;
@@ -41,6 +43,10 @@ public class BlurGaussian extends CvStage {
     public Result process(CvPipeline pipeline) throws Exception {
         int kernelSize = getPossiblePipelinePropertyOverride(this.kernelSize, pipeline, propertyName+".kernelSize",
                 Double.class, Length.class)|1;
+        GpuImage gpuImage = pipeline.getWorkingGpuImage();
+        if (gpuImage != null) {
+            return new Result(GpuImageOps.gaussianBlur(gpuImage, kernelSize));
+        }
         Mat mat = pipeline.getWorkingImage();
         Imgproc.GaussianBlur(mat, mat, new Size(kernelSize, kernelSize), 0);
         return null;

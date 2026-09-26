@@ -10,6 +10,7 @@ import org.openpnp.spi.Camera;
 import org.openpnp.spi.Camera.SettleOption;
 import org.openpnp.util.OpenCvUtils;
 import org.openpnp.vision.FluentCv.ColorSpace;
+import org.openpnp.vision.gpu.GpuImage;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
 import org.openpnp.vision.pipeline.Property;
@@ -103,6 +104,12 @@ public class ImageCapture extends CvStage {
                 // Remember the last captured image. This specifically records the native camera image, 
                 // i.e. it does not apply averaging (we want an unaltered raw image for analysis purposes).
                 pipeline.setLastCapturedImage(bufferedImage);
+                if (count <= 1 && CvPipeline.isGpuAvailable()) {
+                    GpuImage gpuImage = GpuImage.upload(bufferedImage);
+                    if (gpuImage != null) {
+                        return new Result(gpuImage, ColorSpace.Bgr);
+                    }
+                }
                 Mat image = OpenCvUtils.toMat(bufferedImage);
                 if (count <= 1) { 
                     return new Result(image, ColorSpace.Bgr);
