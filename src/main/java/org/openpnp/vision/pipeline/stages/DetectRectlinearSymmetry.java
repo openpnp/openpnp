@@ -588,6 +588,10 @@ public class DetectRectlinearSymmetry extends CvStage {
         }
         double[] kernel = KernelUtils.getGaussianKernel(superSamplingEff, 0, (gaussianSmoothing*superSamplingEff)|1);
         double thresholdLuminance = Math.pow(threshold, gamma)*channels;
+        double[] gammaLut = new double[256];
+        for (int i = 0; i < 256; i++) {
+            gammaLut[i] = Math.pow(i, gamma);
+        }
 
         // Determine the angle with the largest rectlinear cross-section contrast.
         for (double angle = a0; angle <= a1; angle += angleStep) {
@@ -625,7 +629,7 @@ public class DetectRectlinearSymmetry extends CvStage {
                                 for (int ch = 0; ch < channels; ch++) {
                                     int xai = ixCross*channels + ch;
                                     int yai = iyCross*channels + ch;
-                                    double pixel = Math.pow(Byte.toUnsignedInt(pixelSamples[idx + ch]), gamma);
+                                    double pixel = gammaLut[Byte.toUnsignedInt(pixelSamples[idx + ch])];
                                     luminance += pixel;
                                     xCrossSection[xai] += pixel*xWeight1;
                                     xCrossSection[xai - channels] += pixel*xWeight0;
