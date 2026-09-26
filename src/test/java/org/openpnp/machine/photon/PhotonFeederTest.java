@@ -1080,6 +1080,57 @@ public class PhotonFeederTest {
     }
 
     @Test
+    public void findAllFeedersGivesNewFeedersSavableDefaults() throws Exception {
+        int maxFeederAddress = 1;
+        photonProperties.setMaxFeederAddress(maxFeederAddress);
+
+        String newHardwareUuid = "FFEEDDCCBBAA998877665544";
+
+        bus.when(new GetFeederId(1))
+                .reply(responses.getFeederId.ok(1, newHardwareUuid));
+        bus.when(new InitializeFeeder(1, newHardwareUuid))
+                .reply(responses.initializeFeeder.ok(1, newHardwareUuid));
+        bus.when(new VendorOptions(1, new int[] { 0x00 }))
+                .reply(responses.vendorOptions.ok(1, firmwareVersionBytes));
+
+        PhotonFeeder.findAllFeeders(null);
+
+        PhotonFeeder newFeeder = PhotonFeeder.findByHardwareId(newHardwareUuid);
+        assertNotNull(newFeeder);
+
+        assertNotNull(newFeeder.getPart());
+        assertEquals("FIDUCIAL-HOME", newFeeder.getPart().getId());
+
+        assertEquals(new Location(LengthUnit.Millimeters), newFeeder.getSlot().getLocation());
+    }
+
+    @Test
+    public void findAllFeedersDoesNotClobberConfiguredFeeders() throws Exception {
+        int maxFeederAddress = 1;
+        photonProperties.setMaxFeederAddress(maxFeederAddress);
+
+        Part configuredPart = Configuration.get().getPart("R0805-1K");
+        Location configuredSlot = new Location(LengthUnit.Millimeters, 10, 20, 0, 0);
+
+        feeder.setHardwareId(hardwareId);
+        feeder.setSlotAddress(1);
+        feeder.setPart(configuredPart);
+        setSlotLocation(1, configuredSlot);
+
+        bus.when(new GetFeederId(1))
+                .reply(responses.getFeederId.ok(1, hardwareId));
+        bus.when(new InitializeFeeder(1, hardwareId))
+                .reply(responses.initializeFeeder.ok(1, hardwareId));
+        bus.when(new VendorOptions(1, new int[] { 0x00 }))
+                .reply(responses.vendorOptions.ok(1, firmwareVersionBytes));
+
+        PhotonFeeder.findAllFeeders(null);
+
+        assertEquals(configuredPart, feeder.getPart());
+        assertEquals(configuredSlot, feeder.getSlot().getLocation());
+    }
+
+    @Test
     public void findAllFeedersFillsNullHardwareIdFeedersBeforeCreatingNewOnes() throws Exception {
         int maxFeederAddress = 2;
         photonProperties.setMaxFeederAddress(maxFeederAddress);
