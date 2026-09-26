@@ -149,6 +149,14 @@ public class CameraView extends JComponent implements CameraPreviewListener {
     private BufferedImage pendingPreview;
     // The region of the frame lastFrame shows when it is a preview, null for full frames.
     private Preview lastPreview;
+    private BufferedImage[] shownImages;
+    private String[] shownTexts;
+    private long shownStart;
+    private long shownMilliseconds;
+    private ScheduledFuture<?> shownTimer;
+    // A full size frame scaled once to the size it is painted at, instead of on every repaint.
+    private BufferedImage scaledFrame;
+    private BufferedImage scaledFrameSource;
 
     private LinkedHashMap<Object, Reticle> reticles = new LinkedHashMap<>();
 
@@ -481,31 +489,56 @@ public class CameraView extends JComponent implements CameraPreviewListener {
      * @param millseconds
      */
     public void showFilteredImages(BufferedImage [] filteredImages, String [] texts, long milliseconds) {
-        setCameraViewFilter(new CameraViewFilter() {
-            long t = System.currentTimeMillis();
-            int n = filteredImages.length;
-
-            @Override
-            public BufferedImage filterCameraImage(Camera camera, BufferedImage image) {
-                long elapsed = System.currentTimeMillis() - t;
-                if (elapsed < milliseconds*n) {
-                    int i = (int) (elapsed/milliseconds);
-                    if (texts != null && i < texts.length) {
-                        setText(texts[i]);
-                    }
-                    return filteredImages[i];
-                }
-                else {
-                    if (texts != null) {
-                        setText(null);
-                    }
-                    setCameraViewFilter(null);
-                    return image;
-                }
+        synchronized (this) {
+            shownImages = filteredImages;
+            shownTexts = texts;
+            shownStart = System.currentTimeMillis();
+            shownMilliseconds = Math.max(1, milliseconds);
+            if (shownTimer != null) {
+                shownTimer.cancel(false);
             }
-        });
-        // Make sure the filtered image is shown immediately and also counted as fps (for 0 or low fps cameras). 
-        frameReceived(null);
+            shownTimer = scheduledExecutor.scheduleAtFixedRate(this::advanceShownImage, shownMilliseconds,
+                    shownMilliseconds, TimeUnit.MILLISECONDS);
+        }
+        if (camera.isAutoVisible()) {
+            camera.ensureCameraVisible();
+        }
+        advanceShownImage();
+    }
+
+    // Timed images replace the camera image without a CameraViewFilter, so the camera renders no
+    // frames only to have them thrown away meanwhile.
+    private void advanceShownImage() {
+        BufferedImage image;
+        String shownText = null;
+        boolean hasTexts;
+        synchronized (this) {
+            if (shownImages == null) {
+                return;
+            }
+            hasTexts = shownTexts != null;
+            int i = (int) ((System.currentTimeMillis() - shownStart) / shownMilliseconds);
+            if (i >= shownImages.length) {
+                shownImages = null;
+                shownTexts = null;
+                shownTimer.cancel(false);
+                shownTimer = null;
+                image = null;
+            }
+            else {
+                image = shownImages[i];
+                shownText = hasTexts && i < shownTexts.length ? shownTexts[i] : null;
+            }
+        }
+        if (hasTexts) {
+            setText(shownText);
+        }
+        if (image != null) {
+            showFrame(image, null, image.getWidth(), image.getHeight());
+        }
+        else {
+            repaint();
+        }
     }
 
     /**
@@ -577,6 +610,11 @@ public class CameraView extends JComponent implements CameraPreviewListener {
 
     @Override
     public void frameReceived(BufferedImage img) {
+        synchronized (this) {
+            if (shownImages != null) {
+                return;
+            }
+        }
         if (cameraViewFilter != null) {
             img = cameraViewFilter.filterCameraImage(camera, img);
         }
@@ -588,6 +626,11 @@ public class CameraView extends JComponent implements CameraPreviewListener {
 
     @Override
     public boolean isPreviewWanted() {
+        synchronized (this) {
+            if (shownImages != null) {
+                return false;
+            }
+        }
         return isShowing();
     }
 
@@ -629,6 +672,11 @@ public class CameraView extends JComponent implements CameraPreviewListener {
         synchronized (this) {
             if (preview.image == pendingPreview) {
                 pendingPreview = null;
+            }
+        }
+        synchronized (this) {
+            if (shownImages != null) {
+                return;
             }
         }
         showFrame(preview.image, preview, frameWidth, frameHeight);
@@ -722,6 +770,24 @@ public class CameraView extends JComponent implements CameraPreviewListener {
         }
     }
 
+    private BufferedImage scaledFrame(BufferedImage image, int viewWidth, int viewHeight) {
+        if ((long) scaledWidth * scaledHeight > 4L * viewWidth * viewHeight) {
+            return null;
+        }
+        if (scaledFrameSource != image || scaledFrame == null || scaledFrame.getWidth() != scaledWidth
+                || scaledFrame.getHeight() != scaledHeight) {
+            scaledFrame = new BufferedImage(scaledWidth, scaledHeight, image.getColorModel().hasAlpha()
+                    ? BufferedImage.TYPE_INT_ARGB : BufferedImage.TYPE_INT_RGB);
+            Graphics2D g = scaledFrame.createGraphics();
+            g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+            g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+            g.drawImage(image, 0, 0, scaledWidth, scaledHeight, null);
+            g.dispose();
+            scaledFrameSource = image;
+        }
+        return scaledFrame;
+    }
+
     @Override
     protected synchronized void paintComponent(Graphics g) {
         super.paintComponent(g);
@@ -756,6 +822,9 @@ public class CameraView extends JComponent implements CameraPreviewListener {
             }
             else if (renderingQuality == RenderingQuality.Low) {
                 g2d.drawImage(lastFrame, imageX, imageY, scaledWidth, scaledHeight, null);
+            }
+            else if (scaledFrame(image, width, height) != null) {
+                g2d.drawImage(scaledFrame, imageX, imageY, null);
             }
             else {
                 g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);

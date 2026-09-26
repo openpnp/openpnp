@@ -1,6 +1,7 @@
 package org.openpnp.gui.components;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -80,6 +81,16 @@ public class CameraViewPreviewTest {
         assertEquals(1080 / 2.0, preview.y + preview.height / 2, 1.0);
         assertTrue(preview.width < 1920 / 1.5);
         assertEquals(preview.width / 800, preview.height / 600, 1e-3);
+    }
+
+    @Test
+    public void shownResultImagesDontNeedCameraFrames() throws Exception {
+        CameraView view = view();
+        view.showFilteredImage(new BufferedImage(1920, 1080, BufferedImage.TYPE_3BYTE_BGR), "result", 100);
+        assertNotNull(view.previewBuffer(1920, 1080));
+        assertFalse(view.isPreviewWanted());
+        Thread.sleep(300);
+        assertNull(view.getText());
     }
 
     @Test
