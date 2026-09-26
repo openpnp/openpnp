@@ -852,6 +852,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                 // Create other stock pipelines.
                 createStockVisionSettings(configuration, AbstractVisionSettings.STOCK_BOTTOM_RECTLINEAR_ID, "Rectlinear", "- Rectlinear Symmetry Bottom Vision Settings -");
                 createStockVisionSettings(configuration, AbstractVisionSettings.STOCK_BOTTOM_BODY_ID, "Body", "- Whole Part Body Bottom Vision Settings -");
+                createStockVisionSettings(configuration, AbstractVisionSettings.STOCK_BOTTOM_SOT23_ID, "sot23", "- SOT-23 20° Bottom Vision Settings -");
                 return;
             }
         }
@@ -862,6 +863,8 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
         configuration.addVisionSettings(stockBottomVisionSettings);
         BottomVisionSettings rectlinearBottomVisionSettings = createRectlinearBottomVisionSettings();
         configuration.addVisionSettings(rectlinearBottomVisionSettings);
+        BottomVisionSettings sot23BottomVisionSettings = createSot23BottomVisionSettings();
+        configuration.addVisionSettings(sot23BottomVisionSettings);
         PartSettings equivalentPartSettings = new PartSettings();
         equivalentPartSettings.setPipeline(stockBottomVisionSettings.getPipeline());
         bottomVisionSettingsHashMap.put(AbstractVisionSettings.createSettingsFingerprint(equivalentPartSettings), stockBottomVisionSettings);
@@ -936,6 +939,11 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
     protected BottomVisionSettings createRectlinearBottomVisionSettings() {
         return createBottomVisionSettings(AbstractVisionSettings.STOCK_BOTTOM_RECTLINEAR_ID, 
                 "- Rectlinear Symmetry Bottom Vision Settings -", createStockPipeline("Rectlinear"));
+    }
+
+    protected BottomVisionSettings createSot23BottomVisionSettings() {
+        return createBottomVisionSettings(AbstractVisionSettings.STOCK_BOTTOM_SOT23_ID,
+                "- sot-23 20° Bottom Vision Settings -", createStockPipeline("sot23"));
     }
 
     protected BottomVisionSettings createStockBottomVisionSettings() {
