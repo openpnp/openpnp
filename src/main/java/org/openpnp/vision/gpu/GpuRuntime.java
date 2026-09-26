@@ -29,6 +29,13 @@ public class GpuRuntime {
         return isAvailable() ? deviceName : "";
     }
 
+    /**
+     * Whether shaders may use 64-bit integers.
+     */
+    public static boolean hasInt64() {
+        return isAvailable() && GpuNative.hasInt64();
+    }
+
     public static long completed() {
         return GpuNative.completed();
     }

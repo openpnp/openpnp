@@ -153,8 +153,14 @@ void Runtime::create() {
     queueInfo.queueFamilyIndex = queueFamily_;
     queueInfo.queueCount = 1;
     queueInfo.pQueuePriorities = &priority;
+    VkPhysicalDeviceFeatures2 available{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2};
+    vk.vkGetPhysicalDeviceFeatures2(physical_, &available);
+    int64_ = available.features.shaderInt64;
     VkPhysicalDeviceVulkan12Features enable12{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES};
     enable12.timelineSemaphore = VK_TRUE;
+    VkPhysicalDeviceFeatures2 enable{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2};
+    enable.pNext = &enable12;
+    enable.features.shaderInt64 = int64_;
     uint32_t extensionCount = 0;
     vk.vkEnumerateDeviceExtensionProperties(physical_, nullptr, &extensionCount, nullptr);
     std::vector<VkExtensionProperties> extensions(extensionCount);
@@ -175,7 +181,7 @@ void Runtime::create() {
         enabled.push_back(VK_EXT_EXTERNAL_MEMORY_DMA_BUF_EXTENSION_NAME);
     }
     VkDeviceCreateInfo deviceInfo{VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO};
-    deviceInfo.pNext = &enable12;
+    deviceInfo.pNext = &enable;
     deviceInfo.queueCreateInfoCount = 1;
     deviceInfo.pQueueCreateInfos = &queueInfo;
     deviceInfo.enabledExtensionCount = enabled.size();

@@ -67,6 +67,10 @@ JNIEXPORT jstring JNICALL Java_org_openpnp_vision_gpu_GpuNative_init(JNIEnv *env
     }
 }
 
+JNIEXPORT jboolean JNICALL Java_org_openpnp_vision_gpu_GpuNative_hasInt64(JNIEnv *, jclass) {
+    return Runtime::get()->int64() ? JNI_TRUE : JNI_FALSE;
+}
+
 JNIEXPORT jlong JNICALL Java_org_openpnp_vision_gpu_GpuNative_completed(JNIEnv *, jclass) {
     return Runtime::get()->completed();
 }

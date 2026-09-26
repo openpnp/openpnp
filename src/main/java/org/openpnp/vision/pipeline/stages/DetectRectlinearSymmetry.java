@@ -31,8 +31,7 @@ import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 import org.openpnp.model.Point;
 import org.openpnp.util.KernelUtils;
-import org.openpnp.vision.gpu.OclRectlinearSymmetry;
-import org.openpnp.vision.gpu.OclSupport;
+import org.openpnp.vision.gpu.GpuRectlinearSymmetry;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
 import org.openpnp.vision.pipeline.Property;
@@ -606,7 +605,7 @@ public class DetectRectlinearSymmetry extends CvStage {
         float[] gpuSums = null;
         float[] gpuWeights = null;
         float[] gpuMasked = null;
-        if (gpuEnabled && OclSupport.isAvailable()) {
+        if (gpuEnabled && GpuRectlinearSymmetry.isAvailable()) {
             float[] sines = new float[angles];
             float[] cosines = new float[angles];
             int a = 0;
@@ -622,7 +621,7 @@ public class DetectRectlinearSymmetry extends CvStage {
             gpuWeights = new float[angles*(wCross + hCross)];
             gpuMasked = new float[angles*(wCross + hCross)];
             try {
-                OclRectlinearSymmetry.crossSections(pixelSamples, lut, sines, cosines, width, channels, 
+                GpuRectlinearSymmetry.crossSections(pixelSamples, lut, sines, cosines, width, channels, 
                         x0Pixels, subSamplingEff, cols, rows, cxPixels, cyPixels, wCross, hCross, 
                         (float) cxCross, (float) cyCross, (float) thresholdLuminance, gpuSums, gpuWeights, gpuMasked);
             }

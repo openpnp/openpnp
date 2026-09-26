@@ -29,8 +29,7 @@ import org.opencv.core.Mat;
 import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 import org.openpnp.model.Point;
-import org.openpnp.vision.gpu.OclCircularSymmetry;
-import org.openpnp.vision.gpu.OclSupport;
+import org.openpnp.vision.gpu.GpuCircularSymmetry;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
 import org.openpnp.vision.pipeline.Property;
@@ -556,7 +555,7 @@ public class DetectCircularSymmetry extends CvStage {
                 float[] gpuScores = null;
                 int[] gpuRadii = null;
                 if (gpuEnabled && (long) samples*wSearchRangeMap*hSearchRangeMap >= gpuMinWork 
-                        && OclSupport.isAvailable()) {
+                        && GpuCircularSymmetry.isAvailable()) {
                     gpuScores = new float[wSearchRangeMap*hSearchRangeMap];
                     gpuRadii = new int[wSearchRangeMap*hSearchRangeMap];
                     try {
@@ -969,7 +968,7 @@ public class DetectCircularSymmetry extends CvStage {
         for (int i = 0; i < samples; i++) {
             offsets[fill[binOf[i]]++] = idxPixelData[i];
         }
-        OclCircularSymmetry.score(pixelSamples, binStart, offsets, width, channels, x0, sub, cols, rows, 
+        GpuCircularSymmetry.score(pixelSamples, binStart, offsets, width, channels, x0, sub, cols, rows, 
                 xSearch, ySearch, rSearchSq, rDim, angleDim, symmetryScore.ordinal(), r0, minDiameter, 
                 scores, radii);
     }

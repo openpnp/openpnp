@@ -19,7 +19,7 @@ import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
-import org.openpnp.vision.gpu.OclSupport;
+import org.openpnp.vision.gpu.GpuCircularSymmetry;
 import org.openpnp.vision.pipeline.CvStage.Result.Circle;
 import org.openpnp.vision.pipeline.stages.DetectCircularSymmetry.ScoreRange;
 import org.openpnp.vision.pipeline.stages.DetectCircularSymmetry.SymmetryCircle;
@@ -63,7 +63,7 @@ public class CircularSymmetryGpuTest {
 
     @Test
     public void gpuMatchesCpu() throws Exception {
-        Assumptions.assumeTrue(OclSupport.isAvailable());
+        Assumptions.assumeTrue(GpuCircularSymmetry.isAvailable());
         for (int channels : new int[] { 1, 3 }) {
             Mat image = testImage(channels);
             for (SymmetryScore mode : SymmetryScore.values()) {
@@ -83,7 +83,7 @@ public class CircularSymmetryGpuTest {
 
     @Test
     public void flatSaturatedAreaHasNoSymmetry() throws Exception {
-        Assumptions.assumeTrue(OclSupport.isAvailable());
+        Assumptions.assumeTrue(GpuCircularSymmetry.isAvailable());
         Mat image = new Mat(300, 300, CvType.CV_8UC1, new Scalar(255));
         for (SymmetryScore mode : SymmetryScore.values()) {
             List<Circle> gpu = DetectCircularSymmetry.findCircularSymmetry(image, 150, 150, 40, 60, 100,
@@ -98,7 +98,7 @@ public class CircularSymmetryGpuTest {
 
     @Test
     public void randomImagesMatch() throws Exception {
-        Assumptions.assumeTrue(OclSupport.isAvailable());
+        Assumptions.assumeTrue(GpuCircularSymmetry.isAvailable());
         Random random = new Random(3);
         for (int i = 0; i < 6; i++) {
             Mat image = new Mat(200, 260, CvType.CV_8UC3);

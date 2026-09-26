@@ -75,6 +75,7 @@ public:
     static Runtime *get();
 
     std::string deviceName() const { return deviceName_; }
+    bool int64() const { return int64_; }
     VkDevice device() const { return device_; }
 
     std::shared_ptr<Buffer> createBuffer(VkDeviceSize size, bool hostVisible);
@@ -115,6 +116,7 @@ private:
     VkSemaphore timeline_ = VK_NULL_HANDLE;
     std::atomic<bool> failed_{false};
     bool dmaBuf_ = false;
+    bool int64_ = false;
 
     std::mutex recordLock_;
     VkCommandPool commandPool_ = VK_NULL_HANDLE;

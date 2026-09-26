@@ -17,7 +17,7 @@ import org.opencv.core.RotatedRect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
-import org.openpnp.vision.gpu.OclSupport;
+import org.openpnp.vision.gpu.GpuRectlinearSymmetry;
 import org.openpnp.vision.pipeline.stages.DetectRectlinearSymmetry.ScoreRange;
 import org.openpnp.vision.pipeline.stages.DetectRectlinearSymmetry.SymmetryFunction;
 
@@ -60,7 +60,7 @@ public class RectlinearSymmetryGpuTest {
 
     @Test
     public void gpuMatchesCpu() throws Exception {
-        Assumptions.assumeTrue(OclSupport.isAvailable());
+        Assumptions.assumeTrue(GpuRectlinearSymmetry.isAvailable());
         for (int channels : new int[] { 1, 3 }) {
             for (double angle : new double[] { 7, 90, 222 }) {
                 Mat image = part(channels, angle);
