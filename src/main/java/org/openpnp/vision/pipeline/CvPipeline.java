@@ -368,12 +368,6 @@ public class CvPipeline implements AutoCloseable {
     public void close() throws IOException {
         release();
     }
-    
-    @Override
-    protected void finalize() throws Throwable {
-        release();
-        super.finalize();
-    }
 
     /**
      * Convert the pipeline to an XML string that can be read back in with #fromXmlString.
