@@ -156,6 +156,9 @@ public class ReferenceMachine extends AbstractMachine {
     private Length unsafeZRoamingDistance = new Length(10, LengthUnit.Millimeters);
 
     @Element(required = false)
+    private Length placementOffset = new Length(0, LengthUnit.Millimeters);
+
+    @Element(required = false)
     private boolean poolScriptingEngines = false;
 
     @Element(required = false)
@@ -339,6 +342,17 @@ public class ReferenceMachine extends AbstractMachine {
         Object oldValue = this.unsafeZRoamingDistance;
         this.unsafeZRoamingDistance = unsafeZRoamingDistance;
         firePropertyChange("safeRoamingDistance", oldValue, unsafeZRoamingDistance);
+    }
+
+    @Override
+    public Length getPlacementOffset() {
+        return placementOffset;
+    }
+
+    public void setPlacementOffset(Length placementOffset) {
+        Object oldValue = this.placementOffset;
+        this.placementOffset = placementOffset;
+        firePropertyChange("placementOffset", oldValue, placementOffset);
     }
 
     @Override
