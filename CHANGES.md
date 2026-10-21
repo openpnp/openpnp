@@ -10,6 +10,7 @@ a complete change list, only those that may directly interest or affect users.
 * Improved kicad footprint import [PR 1991](https://github.com/openpnp/openpnp/pull/1991) [PR 1758](https://github.com/openpnp/openpnp/pull/1758)
 * Many translation improvement [PR 1969](https://github.com/openpnp/openpnp/pull/1969)
 * Support for 4 discard bins. Each part selects the bin where it should be discarded [PR 1908](https://github.com/openpnp/openpnp/pull/1908)
+* Error message boxes have a "copy" button to copy the error text to the clipboard [PR 1970](https://github.com/openpnp/openpnp/pull/1970)
 * Reduce horizontal padding in some table columns, for more compact displays [PR 1950](https://github.com/openpnp/openpnp/pull/1950)
 
 ## Bug Fixes
