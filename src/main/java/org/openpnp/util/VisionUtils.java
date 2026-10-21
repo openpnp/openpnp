@@ -27,6 +27,7 @@ import org.openpnp.model.Point;
 import org.openpnp.model.Footprint.Pad;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.CameraBatchOperation;
+import org.openpnp.spi.Feeder;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PartAlignment;
@@ -286,6 +287,19 @@ public class VisionUtils {
             }
             globals.put("offsets", offsets);
             Configuration.get().getScripting().on("Vision.PartAlignment.After", globals);
+
+            Feeder f = nozzle.getPartsFeeder();
+            if (f != null && offsets != null) {
+                Location realError = offsets.getLocation();
+                if (offsets.getPreRotated()) {
+                    // Test alignments have no board, so the placement angle is already global.
+                    double placementAngle = boardLocation == null
+                            ? placement.getLocation().getRotation()
+                            : Utils2D.calculateBoardPlacementLocation(boardLocation, placement.getLocation()).getRotation();
+                    realError = realError.rotateXy(-placementAngle);
+                }
+                f.deferredBottomVisionResult(realError);
+            }
         }
     }
 
