@@ -3,8 +3,6 @@ package org.openpnp.machine.photon;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.swing.Action;
 
@@ -542,20 +540,27 @@ public class PhotonFeeder extends ReferenceFeeder implements PickOffsetCorrectab
         return Translations.format("PhotonFeeder.Name.WithSlot", name, //$NON-NLS-1$
                 slotAddress == null
                         ? Translations.getString("PhotonFeeder.Name.SlotNone") //$NON-NLS-1$
-                        : slotAddress);
+                        : formatSlot(slotAddress));
+    }
+
+    public String formatSlot(int slot) {
+        int maxFeederAddress = photonProperties.getMaxFeederAddress();
+        if (maxFeederAddress >= 0) {
+            if (maxFeederAddress < 10) {
+                return String.format("%01d", slot);
+            }
+            if (maxFeederAddress < 100) {
+                return String.format("%02d", slot);
+            }
+        }
+        return String.format("%03d", slot);
     }
 
     @Override
     public void setName(String name) {
-        // Strip localized slot suffixes, e.g. "(Slot: 12)" or "（槽位：12）".
-        Matcher matcher = Pattern.compile("(?:\\(Slot: |（槽位：)[\\w+]*(?:\\)|）)").matcher(name);
-        while (matcher.find()) {
-            name = name.replace(matcher.group(), "");
-        }
-
-        name = name.trim();
-
-        super.setName(name);
+        // Strip the current slot prefix and the older slot suffix, in English and Chinese.
+        super.setName(name.replaceFirst(
+                "(?U)(^(?:Slot: |槽位：)\\w+(?:; |；)|\\s*(?:\\(Slot: |（槽位：)\\w+(?:\\)|）)$)", "").trim());
     }
 
     /**
