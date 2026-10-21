@@ -314,4 +314,20 @@ public abstract class AbstractNozzle extends AbstractHeadMountable implements No
         syncCompatibleNozzleTipIds();
         firePropertyChange("compatibleNozzleTips", null, getCompatibleNozzleTips());
     }
+
+    protected Location stickyDiscardLocation;
+
+    @Override
+    public Location getStickyDiscardLocation() {
+        if (stickyDiscardLocation==null) {
+            stickyDiscardLocation = Configuration.get().getMachine().getDiscardLocation();
+        }
+        return stickyDiscardLocation;
+    }
+
+    @Override
+    public void setStickyDiscardLocation(Location l) {
+        stickyDiscardLocation = l;
+    }
+
 }

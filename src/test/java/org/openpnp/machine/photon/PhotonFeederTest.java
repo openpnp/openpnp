@@ -19,6 +19,7 @@ import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
+import org.pmw.tinylog.Logger;
 
 import java.io.File;
 import java.util.*;
@@ -29,6 +30,8 @@ import static org.mockito.Mockito.*;
 public class PhotonFeederTest {
     private final String hardwareId = "00112233445566778899AABB";
     private final int feederAddress = 5;
+    private final int[] firmwareVersionBytes = new int[] { 'v', '1', '.', '0', '.', '0', 0, 0 };
+    private final String firmwareVersionString = "v1.0.0";
 
     private PhotonFeeder feeder;
 
@@ -994,6 +997,10 @@ public class PhotonFeederTest {
             uuids.put(address, uuid);
             bus.when(new GetFeederId(address))
                     .reply(responses.getFeederId.ok(address, uuid));
+            bus.when(new InitializeFeeder(address, uuid))
+                    .reply(responses.initializeFeeder.ok(address, uuid));
+            bus.when(new VendorOptions(address, new int[] { 0x00 }))
+                    .reply(responses.vendorOptions.ok(address, firmwareVersionBytes));
         }
 
         PhotonFeeder.findAllFeeders(null);
@@ -1008,6 +1015,7 @@ public class PhotonFeederTest {
             assertSame(byUUID, byAddress);
             assertEquals(address, byUUID.getSlotAddress());
             assertEquals(expectedUUID, byAddress.getHardwareId());
+            assertEquals(firmwareVersionString, byAddress.getFirmwareVersion());
         }
 
         bus.verifyInMockedOrder();
@@ -1032,8 +1040,20 @@ public class PhotonFeederTest {
         bus.when(new GetFeederId(1))
                 .reply(responses.getFeederId.ok(1, newHardwareUuid));
 
+        bus.when(new InitializeFeeder(1, newHardwareUuid))
+                .reply(responses.initializeFeeder.ok(1, newHardwareUuid));
+        
+        bus.when(new VendorOptions(1, new int[] { 0x00 }))
+                .reply(responses.vendorOptions.ok(1, firmwareVersionBytes));
+
         bus.when(new GetFeederId(2))
                 .reply(responses.getFeederId.ok(2, hardwareId));
+
+        bus.when(new InitializeFeeder(2, hardwareId))
+                .reply(responses.initializeFeeder.ok(2, hardwareId));
+        
+        bus.when(new VendorOptions(2, new int[] { 0x00 }))
+                .reply(responses.vendorOptions.ok(2, firmwareVersionBytes));
 
         for (int i = 3; i <= maxFeederAddress; i++) {
             bus.when(new GetFeederId(i)).timeout();
@@ -1060,6 +1080,57 @@ public class PhotonFeederTest {
     }
 
     @Test
+    public void findAllFeedersGivesNewFeedersSavableDefaults() throws Exception {
+        int maxFeederAddress = 1;
+        photonProperties.setMaxFeederAddress(maxFeederAddress);
+
+        String newHardwareUuid = "FFEEDDCCBBAA998877665544";
+
+        bus.when(new GetFeederId(1))
+                .reply(responses.getFeederId.ok(1, newHardwareUuid));
+        bus.when(new InitializeFeeder(1, newHardwareUuid))
+                .reply(responses.initializeFeeder.ok(1, newHardwareUuid));
+        bus.when(new VendorOptions(1, new int[] { 0x00 }))
+                .reply(responses.vendorOptions.ok(1, firmwareVersionBytes));
+
+        PhotonFeeder.findAllFeeders(null);
+
+        PhotonFeeder newFeeder = PhotonFeeder.findByHardwareId(newHardwareUuid);
+        assertNotNull(newFeeder);
+
+        assertNotNull(newFeeder.getPart());
+        assertEquals("FIDUCIAL-HOME", newFeeder.getPart().getId());
+
+        assertEquals(new Location(LengthUnit.Millimeters), newFeeder.getSlot().getLocation());
+    }
+
+    @Test
+    public void findAllFeedersDoesNotClobberConfiguredFeeders() throws Exception {
+        int maxFeederAddress = 1;
+        photonProperties.setMaxFeederAddress(maxFeederAddress);
+
+        Part configuredPart = Configuration.get().getPart("R0805-1K");
+        Location configuredSlot = new Location(LengthUnit.Millimeters, 10, 20, 0, 0);
+
+        feeder.setHardwareId(hardwareId);
+        feeder.setSlotAddress(1);
+        feeder.setPart(configuredPart);
+        setSlotLocation(1, configuredSlot);
+
+        bus.when(new GetFeederId(1))
+                .reply(responses.getFeederId.ok(1, hardwareId));
+        bus.when(new InitializeFeeder(1, hardwareId))
+                .reply(responses.initializeFeeder.ok(1, hardwareId));
+        bus.when(new VendorOptions(1, new int[] { 0x00 }))
+                .reply(responses.vendorOptions.ok(1, firmwareVersionBytes));
+
+        PhotonFeeder.findAllFeeders(null);
+
+        assertEquals(configuredPart, feeder.getPart());
+        assertEquals(configuredSlot, feeder.getSlot().getLocation());
+    }
+
+    @Test
     public void findAllFeedersFillsNullHardwareIdFeedersBeforeCreatingNewOnes() throws Exception {
         int maxFeederAddress = 2;
         photonProperties.setMaxFeederAddress(maxFeederAddress);
@@ -1074,9 +1145,21 @@ public class PhotonFeederTest {
 
         bus.when(new GetFeederId(1))
                 .reply(responses.getFeederId.ok(1, hardwareId));
+        
+        bus.when(new InitializeFeeder(1, hardwareId))
+                .reply(responses.initializeFeeder.ok(1, hardwareId));
+        
+        bus.when(new VendorOptions(1, new int[] { 0x00 }))
+                .reply(responses.vendorOptions.ok(1, firmwareVersionBytes));
 
         bus.when(new GetFeederId(2))
                 .reply(responses.getFeederId.ok(2, newHardwareUuid));
+
+        bus.when(new InitializeFeeder(2, newHardwareUuid))
+                .reply(responses.initializeFeeder.ok(2, newHardwareUuid));
+        
+        bus.when(new VendorOptions(2, new int[] { 0x00 }))
+                .reply(responses.vendorOptions.ok(2, firmwareVersionBytes));
 
         PhotonFeeder.findAllFeeders(null);
 
@@ -1264,5 +1347,43 @@ public class PhotonFeederTest {
         Location expectedLocation = new Location(LengthUnit.Millimeters, 2, 3, 3, 45);
 
         assertEquals(expectedLocation, actualLocation);
+    }
+    
+    @Test
+    public void identifyFeederWithPartLocation() throws Exception {
+        feeder.setHardwareId(hardwareId);
+        feeder.setSlotAddress(feederAddress);
+        setSlotLocation(feederAddress, baseLocation);
+        feeder.setLocation(baseLocation);
+        feeder.setOffset(feederOffset);
+
+        bus.when(new InitializeFeeder(feederAddress, hardwareId))
+                .reply(responses.initializeFeeder.ok(feederAddress, hardwareId));
+
+        bus.when(new IdentifyFeeder(hardwareId))
+                .reply(responses.identifyFeeder.ok(feederAddress));
+
+        feeder.identifyFeeder();
+
+        bus.verifyInMockedOrder();
+    }
+    
+    @Test
+    public void identifyFeederWithoutPartLocation() throws Exception {
+        feeder.setHardwareId(hardwareId);
+        feeder.setSlotAddress(feederAddress);
+        setSlotLocation(feederAddress, baseLocation);
+        feeder.setLocation(null);
+        feeder.setOffset(null);
+
+        bus.when(new InitializeFeeder(feederAddress, hardwareId))
+                .reply(responses.initializeFeeder.ok(feederAddress, hardwareId));
+
+        bus.when(new IdentifyFeeder(hardwareId))
+                .reply(responses.identifyFeeder.ok(feederAddress));
+
+        feeder.identifyFeeder();
+
+        bus.verifyInMockedOrder();
     }
 }

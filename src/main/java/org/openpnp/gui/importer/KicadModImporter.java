@@ -23,6 +23,8 @@ import java.awt.FileDialog;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FilenameFilter;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.FileReader;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -167,39 +169,7 @@ public class KicadModImporter {
             File file = new File(new File(fileDialog.getDirectory()), fileDialog.getFile());
             BufferedReader reader = new BufferedReader(new FileReader(file));
             
-            String line = reader.readLine();
-            while (line != null) {
-                if (line.trim().startsWith("(pad ")) {
-                    KicadPad kipad = new KicadPad(line.trim());
-                    if (kipad.getType().equals("smd") && kipad.isTopCu()) {
-                        Pad pad = new Pad();
-                        pad.setName(kipad.getName());
-                        pad.setWidth(kipad.getWidth());
-                        pad.setHeight(kipad.getHeight());
-                        pad.setX(kipad.getX());
-                        pad.setY(kipad.getY());
-                        pad.setRotation(kipad.getRotation());
-
-                        if (kipad.getShape().equals("rect")) {
-                            pad.setRoundness(0);
-                        } else if (kipad.getShape().equals("circle")) {
-                            pad.setRoundness(100);
-                        } else if (kipad.getShape().equals("oval")) {
-                            pad.setRoundness(100);
-                        } else if (kipad.getShape().equals("roundrect")) {
-                            pad.setRoundness(kipad.getRoundness());
-                        } else {
-                            System.out.println("Warning: Unsupported pad type: " + kipad.getShape());
-                            line = reader.readLine();
-                            continue;
-                        }
-
-                        footprint.addPad(pad);
-                    }
-                }
-
-                line = reader.readLine();
-            }
+            readFootprint(reader);
 
             reader.close();
         }
@@ -208,6 +178,82 @@ public class KicadModImporter {
         }
     }
 
+    public KicadModImporter(InputStream stream) throws Exception {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(stream, "UTF-8"));
+        readFootprint(reader);
+        reader.close();
+    }
+    
+    private void readFootprint(BufferedReader reader) throws Exception {
+        String line = reader.readLine();
+        while (line != null) {
+            if (line.trim().startsWith("(pad ")) {
+                int parentheses_cnt = 0;
+                int pos = 0;
+                do {
+                    boolean quoted = false;
+                    while (pos < line.length()) {
+                        switch (line.charAt(pos)) {
+                            case '(':
+                                if (!quoted) {
+                                    parentheses_cnt++;
+                                }
+                                break;
+                            case ')':
+                                if (!quoted) {
+                                    parentheses_cnt--;
+                                }
+                                break;
+                            case '"':
+                                quoted = !quoted;
+                                break;
+                        }
+                        pos++;
+                    }
+                    if (parentheses_cnt > 0) {
+                        String line2 = reader.readLine();
+                        if (line2 == null) {
+                            break;
+                        }
+                        line2 = line2.trim();
+                        if (line2 != "") {
+                            line += " " + line2;
+                        }
+                    }
+                } while (parentheses_cnt > 0);
+
+                KicadPad kipad = new KicadPad(line.trim());
+                if (kipad.getType().equals("smd") && kipad.isTopCu()) {
+                    Pad pad = new Pad();
+                    pad.setName(kipad.getName());
+                    pad.setWidth(kipad.getWidth());
+                    pad.setHeight(kipad.getHeight());
+                    pad.setX(kipad.getX());
+                    pad.setY(kipad.getY());
+                    pad.setRotation(kipad.getRotation());
+
+                    if (kipad.getShape().equals("rect")) {
+                        pad.setRoundness(0);
+                    } else if (kipad.getShape().equals("circle")) {
+                        pad.setRoundness(100);
+                    } else if (kipad.getShape().equals("oval")) {
+                        pad.setRoundness(100);
+                    } else if (kipad.getShape().equals("roundrect")) {
+                        pad.setRoundness(kipad.getRoundness());
+                    } else {
+                        System.out.println("Warning: Unsupported pad type: " + kipad.getShape());
+                        line = reader.readLine();
+                        continue;
+                    }
+
+                    footprint.addPad(pad);
+                }
+            }
+
+            line = reader.readLine();
+        }
+    }
+    
     public List<Pad> getPads() {
         return footprint.getPads();
     }

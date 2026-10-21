@@ -254,4 +254,12 @@ public interface Nozzle
      */
     Length getSafePartHeight(Part part);
 
+    /**
+     * Where did we most recently discard a part? A location determined
+     * my the most recently discarded part. This allows us to redo a discard
+     * action in the same location.
+     */
+    public Location getStickyDiscardLocation();
+
+    public void setStickyDiscardLocation(Location discardLocation);
 }

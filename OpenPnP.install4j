@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<install4j version="10.0.5" transformSequenceNumber="10">
+<install4j version="10.0.9" transformSequenceNumber="10">
   <directoryPresets config="./.github/OpenPnP-Developer-ID-Application.p12" />
   <application name="OpenPnP" applicationId="9204-4030-0867-1434" mediaDir="./installers" mediaFilePattern="${compiler:sys.fullName}-${compiler:sys.platform}-${compiler:mediaFileVersion}" shortName="openpnp" publisher="OpenPnP" publisherWeb="http://openpnp.org" version="develop" allPathsRelative="true" macVolumeId="2f75d25b539292d5" javaMinVersion="11">
     <variables>
@@ -17,6 +17,7 @@
         <entry>opencv-*</entry>
         <entry>openpnp-*</entry>
         <entry>webcam-*</entry>
+        <entry>flatlaf-*</entry>
       </macSearchedJars>
     </codeSigning>
     <jreBundles jdkProviderId="AdoptOpenJDK" release="23/latest" />

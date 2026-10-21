@@ -64,6 +64,7 @@ import javax.swing.table.TableRowSorter;
 import org.openpnp.Translations;
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
+import org.openpnp.gui.support.TableUtils;
 import org.openpnp.gui.support.ActionGroup;
 import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.Icons;
@@ -287,10 +288,10 @@ public class PartsPanel extends JPanel implements WizardContainer {
     }
 
     private void search() {
-        RowFilter<PartsTableModel, Object> rf = null;
+        RowFilter<PartsTableModel, Integer> rf = null;
         // If current expression doesn't parse, don't update.
         try {
-            rf = RowFilter.regexFilter("(?i)" + searchTextField.getText().trim());
+            rf = TableUtils.createVisibleColumnsSearchFilter(table, searchTextField.getText());
         }
         catch (PatternSyntaxException e) {
             Logger.warn(e, "Search failed");

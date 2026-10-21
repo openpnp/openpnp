@@ -19,6 +19,7 @@ public class ResponsesHelper {
     public final MoveFeedStatus moveFeedStatus = new MoveFeedStatus();
     public final GetFeederAddress getFeederAddress = new GetFeederAddress();
     public final IdentifyFeeder identifyFeeder = new IdentifyFeeder();
+    public final VendorOptions vendorOptions = new VendorOptions();
     public final ProgramFeederFloor programFeederFloor = new ProgramFeederFloor();
 
     public ResponsesHelper(int toAddress) {
@@ -116,6 +117,15 @@ public class ResponsesHelper {
         public Packet ok(int feederAddress) {
             return PacketBuilder.response(toAddress, feederAddress)
                     .putOk()
+                    .toPacket();
+        }
+    }
+
+    public class VendorOptions {
+        public Packet ok(int feederAddress, int[] data) {
+            return PacketBuilder.response(toAddress, feederAddress)
+                    .putOk()
+                    .putArray(data)
                     .toPacket();
         }
     }

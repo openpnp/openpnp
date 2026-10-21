@@ -212,17 +212,22 @@
 		<dependency>
 			<groupId>com.formdev</groupId>
 			<artifactId>flatlaf</artifactId>
-			<version>1.0</version>
+			<version>3.7.2</version>
 		</dependency>
 		<dependency>
 			<groupId>com.formdev</groupId>
 			<artifactId>flatlaf-extras</artifactId>
-			<version>1.0</version>
+			<version>3.7.2</version>
+		</dependency>
+		<dependency>
+			<groupId>com.formdev</groupId>
+			<artifactId>flatlaf-intellij-themes</artifactId>
+			<version>3.7.2</version>
 		</dependency>
 		<dependency>
 			<groupId>com.formdev</groupId>
 			<artifactId>svgSalamander</artifactId>
-			<version>1.1.2.4</version>
+			<version>1.1.4</version>
 		</dependency>
 		<dependency>
 			<groupId>org.mockito</groupId>

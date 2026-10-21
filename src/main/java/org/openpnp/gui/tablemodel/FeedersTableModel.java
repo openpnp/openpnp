@@ -24,6 +24,7 @@ import java.util.List;
 
 import org.openpnp.ConfigurationListener;
 import org.openpnp.Translations;
+import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Feeder;
@@ -60,6 +61,11 @@ public class FeedersTableModel extends AbstractObjectTableModel {
     public void refresh() {
         feeders = new ArrayList<>(configuration.getMachine().getFeeders());
         for (Feeder f : feeders) {
+            if (f instanceof AbstractModelObject) {
+                ((AbstractModelObject)f).addPropertyChangeListener("name",  event-> {
+                    fireTableRowsUpdated(0, feeders.size()-1);
+                });
+            }
             if ((f instanceof ReferenceFeeder) && ((ReferenceFeeder)f).supportsFeedOptions()) {
                 ((ReferenceFeeder)f).addPropertyChangeListener("feedOptions",  event-> {
                     fireTableRowsUpdated(0, feeders.size()-1);

@@ -17,7 +17,10 @@ import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.machine.reference.driver.GcodeDriver;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.model.Package;
+import org.openpnp.model.Part;
 import org.openpnp.model.Solutions;
 import org.openpnp.spi.*;
 import org.openpnp.util.MovableUtils;
@@ -42,6 +45,8 @@ public class PhotonFeeder extends ReferenceFeeder {
 
     protected Integer slotAddress = null;
 
+    protected String firmwareVersion = null;
+    
     @Attribute(required = false)
     protected int partPitch = 4;
 
@@ -201,6 +206,92 @@ public class PhotonFeeder extends ReferenceFeeder {
         findSlotAddress(false);
     }
 
+    public void identifyFeeder() throws Exception {
+        for (int i = 0; i <= photonProperties.getFeederCommunicationMaxRetry(); i++) {
+            findSlotAddressIfNeeded();
+            initializeIfNeeded();
+
+            if (!initialized) {
+                continue;
+            }
+
+            if (slotAddress == null) {
+                throw new NoSlotAddressException(
+                        String.format("Photon Feeder with address %s has no slot address. Is it inserted?", hardwareId));
+            }
+
+            IdentifyFeeder identifyFeeder = new IdentifyFeeder(hardwareId);
+            IdentifyFeeder.Response response = identifyFeeder.send(photonBus);
+
+            if (response == null) {
+                continue; // Timeout. retry after delay.
+            }
+
+            if (response.error == ErrorTypes.NONE) {
+                return;
+            } else {
+                Logger.error("{}: Could not identify feeder: {}", getSlotAddress(), response.error.name());
+                return;
+            }
+        }
+    }
+
+    public void queryFirmwareVersion() throws Exception {
+        findSlotAddressIfNeeded();
+        initializeIfNeeded();
+
+        if (!initialized) {
+            return;
+        }
+
+        StringBuilder builder = new StringBuilder();
+        boolean complete = false;
+
+        // Loop through each byte of the version string and query it
+        for (int i = 0; i <= 0x0F; i++) {
+            for (int j = 0; j <= photonProperties.getFeederCommunicationMaxRetry(); j++) {
+                VendorOptions vendorOptions = new VendorOptions(getSlotAddress(), new int[] { i });
+                VendorOptions.Response response = vendorOptions.send(photonBus);
+
+                if (response == null) {
+                    continue; // Timeout. retry after delay.
+                }
+
+                if (response.error == ErrorTypes.NONE) {
+                    if (response.data != null && response.data.length > 0) {
+                        for (int k = 0; k < response.data.length; k++) {
+                            if (response.data[k] == 0) {
+                                complete = true;
+                                break;
+                            }
+                            builder.append((char)(response.data[k] & 0xFF));
+                        }
+                    } else {
+                        complete = true;
+                    }
+                    break;
+                } else {
+                    Logger.error("{}: Could not send version command to feeder: {}", getSlotAddress(), response.error.name());
+                    return;
+                }
+            }
+            if (complete) {
+                break;
+            }
+        }
+        setFirmwareVersion(builder.toString());
+    }
+    
+    private void setFirmwareVersion(String firmwareVersion) {
+        String oldValue = this.firmwareVersion;
+        this.firmwareVersion = firmwareVersion;
+        firePropertyChange("firmwareVersion", oldValue, firmwareVersion);
+    }
+    
+    public String getFirmwareVersion() {
+        return this.firmwareVersion;
+    }
+    
     public void initializeIfNeeded() throws Exception {
         if (initialized || slotAddress == null) {
             return;
@@ -223,6 +314,7 @@ public class PhotonFeeder extends ReferenceFeeder {
 
             // This other feeder is in the slot we thought we were
             otherFeeder.setSlotAddress(response.fromAddress);
+            otherFeeder.applyDiscoveryDefaults();
         } else {
             initialized = true;
         }
@@ -446,6 +538,47 @@ public class PhotonFeeder extends ReferenceFeeder {
         firePropertyChange("name", oldName, getName());
     }
 
+    /**
+     * Fills in unset values on a newly discovered feeder. partId is a required XML attribute, so
+     * machine.xml can't be saved while it's null.
+     */
+    void applyDiscoveryDefaults() {
+        if (partId == null) {
+            setPart(getDefaultPart());
+        }
+
+        if (slotAddress != null) {
+            PhotonFeederSlots.Slot slot = getSlot();
+            if (slot != null && slot.getLocation() == null) {
+                slot.setLocation(new Location(LengthUnit.Millimeters));
+            }
+        }
+    }
+
+    /**
+     * Prefers a fiducial so the placeholder isn't mistaken for real stock.
+     */
+    private static Part getDefaultPart() {
+        Configuration configuration = Configuration.get();
+
+        Part fiducialHome = configuration.getPart("FIDUCIAL-HOME");
+        if (fiducialHome != null) {
+            return fiducialHome;
+        }
+
+        for (Part part : configuration.getParts()) {
+            Package pkg = part.getPackage();
+            String pkgId = pkg == null ? null : pkg.getId();
+            if ((pkgId != null && pkgId.toUpperCase().contains("FIDUCIAL"))
+                    || part.getId().toUpperCase().contains("FIDUCIAL")) {
+                return part;
+            }
+        }
+
+        List<Part> parts = configuration.getParts();
+        return parts.isEmpty() ? null : parts.get(0);
+    }
+
     public String getHardwareId() {
         return hardwareId;
     }
@@ -573,8 +706,11 @@ public class PhotonFeeder extends ReferenceFeeder {
 
                 otherFeeder.setHardwareId(response.uuid);
                 otherFeeder.setSlotAddress(address);
+                otherFeeder.applyDiscoveryDefaults();
 
                 Logger.trace("Found feeder with hardware uuid " + otherFeeder.getHardwareId() + " at address " + otherFeeder.getSlotAddress());
+                
+                otherFeeder.queryFirmwareVersion();
             }
         }
 

@@ -63,6 +63,7 @@ import org.openpnp.events.FeederSelectedEvent;
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.components.ClassSelectionDialog;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
+import org.openpnp.gui.support.TableUtils;
 import org.openpnp.gui.support.ActionGroup;
 import org.openpnp.gui.support.CustomBooleanRenderer;
 import org.openpnp.gui.support.Helpers;
@@ -476,10 +477,10 @@ public class FeedersPanel extends JPanel implements WizardContainer {
     }
 
     private void search() {
-        RowFilter<FeedersTableModel, Object> rf = null;
+        RowFilter<FeedersTableModel, Integer> rf = null;
         // If current expression doesn't parse, don't update.
         try {
-            rf = RowFilter.regexFilter("(?i)" + searchTextField.getText().trim());
+            rf = TableUtils.createVisibleColumnsSearchFilter(table, searchTextField.getText());
         }
         catch (PatternSyntaxException e) {
             Logger.warn(e, "Search failed");
@@ -734,7 +735,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
      */
     public static Location getTestPlacementLocation(Part part) {
         PartAlignment aligner = AbstractPartAlignment.getPartAlignment(part);
-        Location placementLocation = Configuration.get().getMachine().getDiscardLocation();
+        Location placementLocation = part.getDiscardLocation();
         placementLocation = new Location(placementLocation.getUnits(),
                 placementLocation.getX(), 
                 placementLocation.getY(), 
