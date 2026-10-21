@@ -32,6 +32,7 @@ import javax.swing.Action;
 import org.apache.commons.io.IOUtils;
 import org.openpnp.Translations;
 import org.openpnp.ConfigurationListener;
+import org.openpnp.gui.support.PickOffsetCorrectionPropertySheet;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceFeeder;
@@ -43,6 +44,7 @@ import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
+import org.openpnp.model.PickOffsetCorrection;
 import org.openpnp.model.RegionOfInterest;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Axis;
@@ -53,6 +55,7 @@ import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
 import org.openpnp.spi.MotionPlanner;
 import org.openpnp.spi.Nozzle;
+import org.openpnp.spi.PickOffsetCorrectableFeeder;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.util.FeederVisionHelper;
 import org.openpnp.util.FeederVisionHelper.FeederVisionHelperParams;
@@ -68,7 +71,7 @@ import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.core.Persist;
 
-public class ReferencePushPullFeeder extends ReferenceFeeder {
+public class ReferencePushPullFeeder extends ReferenceFeeder implements PickOffsetCorrectableFeeder {
 
     // Rotation of the part within the feeder (i.e. within the tape)
     // This is compatible with tonyluken's pending PR #943 or a similar solution.
@@ -186,6 +189,9 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
 
     @Attribute(required = false)
     private long feedCount = 0;
+
+    @Element(required = false)
+    private PickOffsetCorrection pickOffsetCorrection = new PickOffsetCorrection();
 
     @Element(required = false)
     private CvPipeline pipeline = FeederVisionHelper.createDefaultPipeline(PipelineType.ColorKeyed);
@@ -376,14 +382,19 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         return calibrationTrigger != CalibrationTrigger.None;
     }
 
-    @Override
-    public Location getPickLocation() throws Exception {
+    private Location getPickLocationWithoutCorrection() {
         // Numbers are 1-based (a feed is needed before the very first part can be picked),
         // therefore the modulo calculation is a bit gnarly.
         // The 1-based approach has the benefit, that at feed count 0 (reset) the part closest to the reel 
         // is the pick location which is the last part in a multi-part feed cycle, which is the one we want for setup.  
         long partInCycle = ((getFeedCount()+getPartsPerFeedCycle()-1) % getPartsPerFeedCycle())+1;
         return getPickLocation(partInCycle, visionOffset);
+    }
+
+    @Override
+    public Location getPickLocation() throws Exception {
+        pickOffsetCorrection.settle();
+        return getPickLocationWithoutCorrection().add(pickOffsetCorrection.getOffset());
     }
 
     @Override
@@ -402,6 +413,8 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
             }
             return;
         }
+
+        pickOffsetCorrection.settle();
 
         if (getFeedCount() % getPartsPerFeedCycle() == 0) {
             // Modulo of feed count is zero - no more parts there to pick, must feed 
@@ -603,6 +616,36 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     public void setLocation(Location location) {
         super.setLocation(location);
         resetCalibration();
+        pickOffsetCorrection.reset();
+    }
+
+    @Override
+    public void setPart(Part part) {
+        super.setPart(part);
+        pickOffsetCorrection.reset();
+    }
+
+    @Override
+    public PickOffsetCorrection getPickOffsetCorrection() {
+        return pickOffsetCorrection;
+    }
+
+    @Override
+    public void bakePickOffsetCorrectionIntoPosition() throws Exception {
+        // The pick location is the origin of the feeder transform, so shifting it moves every
+        // pick in the feed cycle by the same amount.
+        Location correctionOffset = pickOffsetCorrection.getOffset()
+                .convertToUnits(getLocation().getUnits())
+                .derive(null, null, 0.0, 0.0);
+        setLocation(getLocation().add(correctionOffset));
+        pickOffsetCorrection.reset();
+    }
+
+    @Override
+    public void deferredBottomVisionResult(Location pickError) {
+        Location pickLocation = getPickLocationWithoutCorrection();
+        // Rotate so the integrated offset is stored independently of how the feeder happens to be oriented.
+        pickOffsetCorrection.recordVision(pickError.rotateXy(pickLocation.getRotation()));
     }
 
     public Double getRotationInFeeder() {
@@ -616,6 +659,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         Object oldValue = this.rotationInFeeder;
         this.rotationInFeeder = rotationInFeeder;
         firePropertyChange("rotationInFeeder", oldValue, rotationInFeeder);
+        pickOffsetCorrection.reset();
     }
 
     public boolean isNormalizePickLocation() {
@@ -646,6 +690,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         Object oldValue = this.hole1Location;
         this.hole1Location = hole1Location;
         firePropertyChange("hole1Location", oldValue, hole1Location);
+        pickOffsetCorrection.reset();
         resetCalibration();
     }
 
@@ -657,6 +702,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         Object oldValue = this.hole2Location;
         this.hole2Location = hole2Location;
         firePropertyChange("hole2Location", oldValue, hole2Location);
+        pickOffsetCorrection.reset();
         resetCalibration();
     }
 
@@ -750,6 +796,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         Object oldValue = this.partPitch;
         this.partPitch = partPitch;
         firePropertyChange("partPitch", oldValue, partPitch);
+        pickOffsetCorrection.reset();
     }
 
     public Length getFeedPitch() {
@@ -760,6 +807,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         Object oldValue = this.feedPitch;
         this.feedPitch = feedPitch;
         firePropertyChange("feedPitch", oldValue, feedPitch);
+        pickOffsetCorrection.reset();
     }
 
     public double getFeedSpeedPush1() {
@@ -1070,6 +1118,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         Object oldValue = this.feedMultiplier;
         this.feedMultiplier = feedMultiplier;
         firePropertyChange("feedMultiplier", oldValue, feedMultiplier);
+        pickOffsetCorrection.reset();
     }
 
     public CalibrationTrigger getCalibrationTrigger() {
@@ -1735,9 +1784,14 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
             setOcrWrongPartAction(templateFeeder.getOcrWrongPartAction());
             setOcrDiscoverOnJobStart(templateFeeder.isOcrDiscoverOnJobStart());
             setOcrStopAfterWrongPart(templateFeeder.isOcrStopAfterWrongPart());
+            PickOffsetCorrection templateCorrection = templateFeeder.getPickOffsetCorrection();
+            pickOffsetCorrection.setEnabled(templateCorrection.isEnabled());
+            pickOffsetCorrection.setITerm(templateCorrection.getITerm());
+            pickOffsetCorrection.setCorrectionLimit(templateCorrection.getCorrectionLimit());
             // reset statistics
             resetCalibration();
             resetCalibrationStatistics();
+            pickOffsetCorrection.reset();
             setFeedCount(0);
         }
         if (clonePipeline) {
@@ -2177,6 +2231,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                         Translations.getString("CommonPropertySheet.Configuration")), //$NON-NLS-1$
                 new PropertySheetWizardAdapter(new ReferencePushPullMotionConfigurationWizard(this),
                         Translations.getString("CommonPropertySheet.PushPullMotion")), //$NON-NLS-1$
+                new PickOffsetCorrectionPropertySheet(this),
         };
     }
 

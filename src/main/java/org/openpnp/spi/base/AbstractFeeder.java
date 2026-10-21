@@ -8,6 +8,7 @@ import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Nozzle;
@@ -181,4 +182,6 @@ public abstract class AbstractFeeder extends AbstractModelObject implements Feed
     @Attribute(required=false)
     protected Priority priority = Priority.Normal;
 
+    @Override
+    public void deferredBottomVisionResult(Location pickError) {}
 }
