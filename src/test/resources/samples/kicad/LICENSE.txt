@@ -1,0 +1,18 @@
+Files:
+C_0603_1608Metric_v7.kicad_mod
+C_0603_1608Metric_v10.kicad_mod
+
+License:
+These files come from the KiCad v7 and v10 footprint libraries, and are
+licensed by the KiCad project under CC-BY-SA as described here:
+https://www.kicad.org/libraries/license/
+
+----
+
+Files:
+MSOP-10-1EP_3x3mm_P0.5mm_EP1.73x1.7mm_ThermalVias.kicad_mod
+SunLike_LED_S1S0.kicad_mod
+
+License:
+These files come from various projects created by Dektronics, Inc,
+and are licensed under CC-BY-SA.
