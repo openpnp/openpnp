@@ -396,7 +396,7 @@ public class ReferenceMachineConfigurationWizard extends AbstractConfigurationWi
 
         // discard location 4
         MutableLocationProxy discardLocation4 = new MutableLocationProxy();
-        bind(UpdateStrategy.READ_WRITE, machine, "discardLocation3", discardLocation4, "location");
+        bind(UpdateStrategy.READ_WRITE, machine, "discardLocation4", discardLocation4, "location");
         addWrappedBinding(discardLocation4, "lengthX", discard4XTf, "text", lengthConverter);
         addWrappedBinding(discardLocation4, "lengthY", discard4YTf, "text", lengthConverter);
         addWrappedBinding(discardLocation4, "lengthZ", discard4ZTf, "text", lengthConverter);
