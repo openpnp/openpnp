@@ -808,6 +808,7 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
                     nozzle.loadNozzleTip(dummyPartForUnknown.getPackage().getCompatibleNozzleTips().toArray(new NozzleTip[0])[0]);
                 }
                 pickPart(nozzle, partLocation, dummyPartForUnknown);
+                // FIXME: is there a better discard location? the user can not define a per-part discard bin
                 HeapFeederHelper.dropPart(nozzle, Configuration.get().getMachine().getDiscardLocation());
             } else {    // known origin, not wasting parts
                 if ( !lastHeap.getPart().getPackage().getCompatibleNozzleTips().contains(nozzle.getNozzleTip())) {

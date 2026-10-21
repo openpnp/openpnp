@@ -6,6 +6,7 @@ import java.util.Map;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.model.Part;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.Nozzle.RotationMode;
@@ -62,7 +63,8 @@ public class Cycles {
      * @throws Exception
      */
     public static void discard(Nozzle nozzle) throws Exception {
-        if (nozzle.getPart() == null) {
+        Part part = nozzle.getPart();
+        if (part == null) {
             return;
         }
 
@@ -77,11 +79,19 @@ public class Cycles {
      * @throws Exception
      */
     public static void discardAlways(Nozzle nozzle) throws Exception {
+        final Part part = nozzle.getPart();
+        if(part!=null)
+        {
+            // If we are carrying a part, that part determines where it gets
+            // discarded and that is sticky in the nozzle.
+            nozzle.setStickyDiscardLocation(part.getDiscardLocation());
+        }
+
         Map<String, Object> globals = new HashMap<>();
         globals.put("nozzle", nozzle);
         Configuration.get().getScripting().on("Job.BeforeDiscard", globals);
-
-        Location discardLocation = Configuration.get().getMachine().getDiscardLocation();
+        
+        Location discardLocation = nozzle.getStickyDiscardLocation();
         if (nozzle.getRotationMode() == RotationMode.LimitedArticulation) {
             // On a limited articulation nozzle, keep the rotation.
             discardLocation = discardLocation.derive(nozzle.getLocation(),
