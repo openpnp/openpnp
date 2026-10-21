@@ -5,6 +5,11 @@ a complete change list, only those that may directly interest or affect users.
 
 ## New Features
 
+* Added closed-loop pick offset correction to Photon and PushPull feeders [PR 1985](https://github.com/openpnp/openpnp/pull/1985) [PR 1914](https://github.com/openpnp/openpnp/pull/1914)
+* Added a new stock example pipeline for SOT-23 and similar parts which have an outline which is more triangular than rectangular [PR 1936](https://github.com/openpnp/openpnp/pull/1936)
+* Improved kicad footprint import [PR 1991](https://github.com/openpnp/openpnp/pull/1991) [PR 1758](https://github.com/openpnp/openpnp/pull/1758)
+* Many translation improvement [PR 1969](https://github.com/openpnp/openpnp/pull/1969)
+* Support for 4 discard bins. Each part selects the bin where it should be discarded [PR 1908](https://github.com/openpnp/openpnp/pull/1908)
 * Reduce horizontal padding in some table columns, for more compact displays [PR 1950](https://github.com/openpnp/openpnp/pull/1950)
 
 ## Bug Fixes
