@@ -26,8 +26,11 @@ import java.beans.PropertyChangeListener;
 import java.util.prefs.Preferences;
 
 import javax.swing.JTable;
+import javax.swing.RowFilter;
 import javax.swing.SwingUtilities;
 import javax.swing.table.TableColumn;
+import javax.swing.table.TableColumnModel;
+import javax.swing.table.TableModel;
 
 import org.openpnp.gui.tablemodel.ColumnWidthSaveable;
 import org.openpnp.gui.tablemodel.ColumnAlignable;
@@ -169,5 +172,24 @@ public class TableUtils {
                 table.getColumnModel().getColumn(iCol).setPreferredWidth(newWidths[iCol]);
             }
         });
+    }
+
+    /**
+     * Creates a case-insensitive {@link RowFilter} that matches the given search text against only
+     * the columns currently shown in the specified table.
+     *
+     * @param table the table whose visible columns should be searched
+     * @param searchText the user's raw search text
+     * @return a filter over the visible columns
+     * @throws java.util.regex.PatternSyntaxException if the search text is not a valid regex
+     */
+    public static <M extends TableModel> RowFilter<M, Integer> createVisibleColumnsSearchFilter(
+            JTable table, String searchText) {
+        TableColumnModel columnModel = table.getColumnModel();
+        int[] modelColumnIndices = new int[columnModel.getColumnCount()];
+        for (int i = 0; i < modelColumnIndices.length; i++) {
+            modelColumnIndices[i] = columnModel.getColumn(i).getModelIndex();
+        }
+        return RowFilter.regexFilter("(?i)" + searchText.trim(), modelColumnIndices); //$NON-NLS-1$
     }
 }
