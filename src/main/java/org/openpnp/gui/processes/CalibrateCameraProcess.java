@@ -42,6 +42,7 @@ import javax.swing.SwingWorker;
 import org.opencv.core.KeyPoint;
 import org.opencv.core.Mat;
 import org.opencv.core.Size;
+import org.openpnp.Translations;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.CameraView;
 import org.openpnp.gui.components.CameraViewFilter;
@@ -167,7 +168,7 @@ public abstract class CalibrateCameraProcess {
             setOfDifferentCalibrationHeights.add(location.convertToUnits(LengthUnit.Millimeters).getLengthZ());
         }
         if (setOfDifferentCalibrationHeights.size() < 2) {
-            throw new Exception("Number of different calibration heights is less than 2.");
+            throw new Exception(Translations.getString("Exception.CalibrationHeightsLessThanTwo")); //$NON-NLS-1$
         }
         
         if (detectionDiameters.size() != calibrationLocations.size()) {

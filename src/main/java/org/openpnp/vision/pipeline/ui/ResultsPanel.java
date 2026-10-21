@@ -27,6 +27,7 @@ import javax.swing.SwingConstants;
 import org.opencv.core.KeyPoint;
 import org.opencv.core.Mat;
 import org.opencv.core.RotatedRect;
+import org.openpnp.Translations;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
@@ -156,7 +157,8 @@ public class ResultsPanel extends JPanel {
                         }
                     }
                     
-                    matStatusLabel.setText(String.format("RGB: %03d, %03d, %03d HSV(full): %03d, %03d, %03d XY: %d, %d %s",
+                    matStatusLabel.setText(String.format(
+                            Translations.getString("CvPipelineEditor.Status.PixelInfo"), //$NON-NLS-1$
                             color.getRed(),
                             color.getGreen(),
                             color.getBlue(),
@@ -336,7 +338,7 @@ public class ResultsPanel extends JPanel {
         {
             putValue(SMALL_ICON, Icons.navigateFirst);
             putValue(NAME, "");
-            putValue(SHORT_DESCRIPTION, "First pipeline stage.");
+            putValue(SHORT_DESCRIPTION, Translations.getString("CvPipelineEditor.Action.FirstStage.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -357,7 +359,7 @@ public class ResultsPanel extends JPanel {
         {
             putValue(SMALL_ICON, Icons.navigatePrevious);
             putValue(NAME, "");
-            putValue(SHORT_DESCRIPTION, "Previous pipeline stage.");
+            putValue(SHORT_DESCRIPTION, Translations.getString("CvPipelineEditor.Action.PreviousStage.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -380,7 +382,7 @@ public class ResultsPanel extends JPanel {
         {
             putValue(SMALL_ICON, Icons.navigateNext);
             putValue(NAME, "");
-            putValue(SHORT_DESCRIPTION, "Next pipeline stage.");
+            putValue(SHORT_DESCRIPTION, Translations.getString("CvPipelineEditor.Action.NextStage.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -403,7 +405,7 @@ public class ResultsPanel extends JPanel {
         {
             putValue(SMALL_ICON, Icons.navigateLast);
             putValue(NAME, "");
-            putValue(SHORT_DESCRIPTION, "Last pipeline stage.");
+            putValue(SHORT_DESCRIPTION, Translations.getString("CvPipelineEditor.Action.LastStage.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -424,7 +426,7 @@ public class ResultsPanel extends JPanel {
         {
             putValue(SMALL_ICON, Icons.pinDisabled);
             putValue(NAME, "");
-            putValue(SHORT_DESCRIPTION, "Pin pipeline stage output.");
+            putValue(SHORT_DESCRIPTION, Translations.getString("CvPipelineEditor.Action.PinStage.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -446,7 +448,7 @@ public class ResultsPanel extends JPanel {
         {
             putValue(SMALL_ICON, Icons.colorTrue);
             putValue(NAME, "");
-            putValue(SHORT_DESCRIPTION, "Images displayed in true color.");
+            putValue(SHORT_DESCRIPTION, Translations.getString("CvPipelineEditor.Action.TrueColor.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -454,12 +456,12 @@ public class ResultsPanel extends JPanel {
             if (displayTrueColors) {
                 displayTrueColors = false;
                 putValue(SMALL_ICON, Icons.colorFalse);
-                putValue(SHORT_DESCRIPTION, "Images displayed assuming BGR color space - colors may not look correct.");
+                putValue(SHORT_DESCRIPTION, Translations.getString("CvPipelineEditor.Action.BgrColor.Description")); //$NON-NLS-1$
             }
             else {
                 displayTrueColors = true;
                 putValue(SMALL_ICON, Icons.colorTrue);
-                putValue(SHORT_DESCRIPTION, "Images displayed in true color.");
+                putValue(SHORT_DESCRIPTION, Translations.getString("CvPipelineEditor.Action.TrueColor.Description")); //$NON-NLS-1$
             }
             updateAllEverything();
         }

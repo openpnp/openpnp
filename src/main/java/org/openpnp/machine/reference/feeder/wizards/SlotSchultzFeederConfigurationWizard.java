@@ -38,6 +38,7 @@ import javax.swing.border.TitledBorder;
 import org.jdesktop.beansbinding.AbstractBindingListener;
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.jdesktop.beansbinding.Binding;
+import org.openpnp.Translations;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.components.LocationButtonsPanel;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
@@ -126,7 +127,9 @@ extends AbstractConfigurationWizard {
         this.feeder = feeder;
 
         JPanel slotPanel = new JPanel();
-        slotPanel.setBorder(new TitledBorder(null, "Slot", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        slotPanel.setBorder(new TitledBorder(null, Translations.getString(
+                "SlotSchultzFeederConfigurationWizard.SlotPanel.Border.title"), //$NON-NLS-1$
+                TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(slotPanel);
         slotPanel.setLayout(new BoxLayout(slotPanel, BoxLayout.Y_AXIS));
 
@@ -175,24 +178,28 @@ extends AbstractConfigurationWizard {
         whateverPanel.add(panel_1, "12, 2");
 
         JButton loadFeederBtn = new JButton(loadFeederAction);
-        loadFeederBtn.setToolTipText("Load installed feeder to slot.");
+        loadFeederBtn.setToolTipText(Translations.getString(
+                "SlotSchultzFeederConfigurationWizard.LoadFeederButton.toolTipText")); //$NON-NLS-1$
         panel_1.add(loadFeederBtn);
 
         //        JButton newFeederBtn = new JButton(newFeederAction);
         //        panel_1.add(newFeederBtn);
 
         JButton deleteFeederBtn = new JButton(deleteFeederAction);
-        deleteFeederBtn.setToolTipText("Remove selected feeder from database.");
+        deleteFeederBtn.setToolTipText(Translations.getString(
+                "SlotSchultzFeederConfigurationWizard.DeleteFeederButton.toolTipText")); //$NON-NLS-1$
         panel_1.add(deleteFeederBtn);
 
-        JLabel lblPickRetryCount = new JLabel("Pick Retry Count");
+        JLabel lblPickRetryCount = new JLabel(Translations.getString(
+                "SlotSchultzFeederConfigurationWizard.PickRetryCountLabel.text")); //$NON-NLS-1$
         whateverPanel.add(lblPickRetryCount, "2, 12, right, default");
 
         pickRetryCount = new JTextField();
         pickRetryCount.setColumns(10);
         whateverPanel.add(pickRetryCount, "4, 12, fill, default");
 
-        JLabel lblBank = new JLabel("Bank");
+        JLabel lblBank = new JLabel(Translations.getString(
+                "SlotSchultzFeederConfigurationWizard.BankLabel.text")); //$NON-NLS-1$
         whateverPanel.add(lblBank, "2, 14, right, default");
 
         bankCb = new JComboBox();
@@ -208,14 +215,17 @@ extends AbstractConfigurationWizard {
             }
         });
 
-        JLabel lblFeeder = new JLabel("Feeder");
+        JLabel lblFeeder = new JLabel(Translations.getString(
+                "SlotSchultzFeederConfigurationWizard.FeederLabel.text")); //$NON-NLS-1$
         whateverPanel.add(lblFeeder, "2, 2, right, default");
 
         feederCb = new JComboBox();
         whateverPanel.add(feederCb, "4, 2, 3, 1");
 
         JPanel feederPanel = new JPanel();
-        feederPanel.setBorder(new TitledBorder(null, "Feeder", TitledBorder.LEADING, TitledBorder.TOP, null));
+        feederPanel.setBorder(new TitledBorder(null, Translations.getString(
+                "SlotSchultzFeederConfigurationWizard.FeederPanel.Border.title"), //$NON-NLS-1$
+                TitledBorder.LEADING, TitledBorder.TOP, null));
         contentPanel.add(feederPanel);
         FormLayout fl_feederPanel = new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -240,19 +250,22 @@ extends AbstractConfigurationWizard {
         fl_feederPanel.setColumnGroups(new int[][]{new int[]{4, 6, 8, 10}});
         feederPanel.setLayout(fl_feederPanel);
 
-        JLabel lblX_1 = new JLabel("X");
+        JLabel lblX_1 = new JLabel(Translations.getString("CommonWords.X")); //$NON-NLS-1$
         feederPanel.add(lblX_1, "4, 2");
 
-        JLabel lblY_1 = new JLabel("Y");
+        JLabel lblY_1 = new JLabel(Translations.getString("CommonWords.Y")); //$NON-NLS-1$
         feederPanel.add(lblY_1, "6, 2");
 
-        JLabel lblZ_1 = new JLabel("Z");
+        JLabel lblZ_1 = new JLabel(Translations.getString(
+                "SlotSchultzFeederConfigurationWizard.ZLabel.text")); //$NON-NLS-1$
         feederPanel.add(lblZ_1, "8, 2");
 
-        JLabel lblRotation_1 = new JLabel("Rotation");
+        JLabel lblRotation_1 = new JLabel(Translations.getString(
+                "SlotSchultzFeederConfigurationWizard.RotationLabel.text")); //$NON-NLS-1$
         feederPanel.add(lblRotation_1, "10, 2");
 
-        JLabel lblOffsets = new JLabel("Offsets");
+        JLabel lblOffsets = new JLabel(Translations.getString(
+                "SlotSchultzFeederConfigurationWizard.FeederPanel.OffsetsLabel.text")); //$NON-NLS-1$
         feederPanel.add(lblOffsets, "2, 4");
 
         xOffsetTf = new JTextField();
@@ -275,7 +288,8 @@ extends AbstractConfigurationWizard {
         offsetLocButtons = new LocationButtonsPanel(xOffsetTf, yOffsetTf, zOffsetTf, null);
         feederPanel.add(offsetLocButtons, "12, 4");
 
-        JLabel lblPart = new JLabel("Part");
+        JLabel lblPart = new JLabel(Translations.getString(
+                "SlotSchultzFeederConfigurationWizard.FeederPanel.PartLabel.text")); //$NON-NLS-1$
         feederPanel.add(lblPart, "2, 6, right, default");
 
         feederPartCb = new JComboBox();
@@ -285,7 +299,8 @@ extends AbstractConfigurationWizard {
 
         JPanel panelActuator = new JPanel();
         panelActuator.setBorder(new TitledBorder(null,
-                "Actuators", TitledBorder.LEADING, TitledBorder.TOP, null));
+                Translations.getString("SlotSchultzFeederConfigurationWizard.ActuatorsPanel.Border.title"), //$NON-NLS-1$
+                TitledBorder.LEADING, TitledBorder.TOP, null));
         contentPanel.add(panelActuator);
         panelActuator.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -320,17 +335,20 @@ extends AbstractConfigurationWizard {
                         FormSpecs.RELATED_GAP_ROWSPEC,
                         FormSpecs.DEFAULT_ROWSPEC,}));
 
-        JLabel lblActuatorValue = new JLabel("Feeder Number:");
+        JLabel lblActuatorValue = new JLabel(Translations.getString(
+                "SlotSchultzFeederConfigurationWizard.ActuatorsPanel.FeederNumberLabel.text")); //$NON-NLS-1$
         panelActuator.add(lblActuatorValue, "4, 2, right, default");
 
         actuatorValue = new JTextField();
         panelActuator.add(actuatorValue, "6, 2");
         actuatorValue.setColumns(6);
 
-        JLabel lblActuator = new JLabel("Actuator");
+        JLabel lblActuator = new JLabel(Translations.getString(
+                "SlotSchultzFeederConfigurationWizard.ActuatorsPanel.ActuatorLabel.text")); //$NON-NLS-1$
         panelActuator.add(lblActuator, "4, 4, left, default");
 
-        JLabel lblGetID = new JLabel("Get ID");
+        JLabel lblGetID = new JLabel(Translations.getString(
+                "SlotSchultzFeederConfigurationWizard.ActuatorsPanel.GetIdLabel.text")); //$NON-NLS-1$
         panelActuator.add(lblGetID, "2, 6, right, default");
 
         comboBoxIdActuator = new JComboBox();
@@ -344,7 +362,8 @@ extends AbstractConfigurationWizard {
         idText.setColumns(10);
         panelActuator.add(idText, "8, 6");
 
-        JLabel lblFeed = new JLabel("Pre Pick");
+        JLabel lblFeed = new JLabel(Translations.getString(
+                "SlotSchultzFeederConfigurationWizard.ActuatorsPanel.PrePickLabel.text")); //$NON-NLS-1$
         panelActuator.add(lblFeed, "2, 8, right, default");
 
         comboBoxFeedActuator = new JComboBox();
@@ -354,7 +373,8 @@ extends AbstractConfigurationWizard {
         btnTestFeedActuator = new JButton(testFeedActuatorAction);
         panelActuator.add(btnTestFeedActuator, "6, 8");
 
-        JLabel lblPostPick = new JLabel("Post Pick");
+        JLabel lblPostPick = new JLabel(Translations.getString(
+                "SlotSchultzFeederConfigurationWizard.ActuatorsPanel.PostPickLabel.text")); //$NON-NLS-1$
         panelActuator.add(lblPostPick, "2, 10, right, default");
 
         comboBoxPostPickActuator = new JComboBox();
@@ -364,7 +384,8 @@ extends AbstractConfigurationWizard {
         btnTestPostPickActuator = new JButton(testPostPickActuatorAction);
         panelActuator.add(btnTestPostPickActuator, "6, 10");
 
-        JLabel lblFeedCount = new JLabel("Get Feed Count");
+        JLabel lblFeedCount = new JLabel(Translations.getString(
+                "SlotSchultzFeederConfigurationWizard.ActuatorsPanel.GetFeedCountLabel.text")); //$NON-NLS-1$
         panelActuator.add(lblFeedCount, "2, 12, right, default");
 
         comboBoxFeedCountActuator = new JComboBox();
@@ -378,7 +399,8 @@ extends AbstractConfigurationWizard {
         feedCountValue.setColumns(8);
         panelActuator.add(feedCountValue, "8, 12");
 
-        JLabel lblClearCount = new JLabel("Clear Feed Count");
+        JLabel lblClearCount = new JLabel(Translations.getString(
+                "SlotSchultzFeederConfigurationWizard.ActuatorsPanel.ClearFeedCountLabel.text")); //$NON-NLS-1$
         panelActuator.add(lblClearCount, "2, 14, right, default");
 
         comboBoxClearCountActuator = new JComboBox();
@@ -388,7 +410,8 @@ extends AbstractConfigurationWizard {
         btnClearCountActuator = new JButton(clearCountActuatorAction);
         panelActuator.add(btnClearCountActuator, "6, 14");
 
-        JLabel lblGetPitch = new JLabel("Get Pitch");
+        JLabel lblGetPitch = new JLabel(Translations.getString(
+                "SlotSchultzFeederConfigurationWizard.ActuatorsPanel.GetPitchLabel.text")); //$NON-NLS-1$
         panelActuator.add(lblGetPitch, "2, 16, right, default");
 
         comboBoxPitchActuator = new JComboBox();
@@ -402,7 +425,8 @@ extends AbstractConfigurationWizard {
         pitchValue.setColumns(8);
         panelActuator.add(pitchValue, "8, 16");
 
-        JLabel lblTogglePitch = new JLabel("Toggle Pitch");
+        JLabel lblTogglePitch = new JLabel(Translations.getString(
+                "SlotSchultzFeederConfigurationWizard.ActuatorsPanel.TogglePitchLabel.text")); //$NON-NLS-1$
         panelActuator.add(lblTogglePitch, "2, 18, right, default");
 
         comboBoxTogglePitchActuator = new JComboBox();
@@ -412,10 +436,12 @@ extends AbstractConfigurationWizard {
         btnTogglePitchActuator = new JButton(togglePitchActuatorAction);
         panelActuator.add(btnTogglePitchActuator, "6, 18");
 
-        JLabel lblTogglePitchDesc = new JLabel("Toggle between 2 MM and 4 MM");
+        JLabel lblTogglePitchDesc = new JLabel(Translations.getString(
+                "SlotSchultzFeederConfigurationWizard.ActuatorsPanel.TogglePitchDescriptionLabel.text")); //$NON-NLS-1$
         panelActuator.add(lblTogglePitchDesc, "8, 18, left, default");
 
-        JLabel lblGetStatus = new JLabel("Get Status");
+        JLabel lblGetStatus = new JLabel(Translations.getString(
+                "SlotSchultzFeederConfigurationWizard.ActuatorsPanel.GetStatusLabel.text")); //$NON-NLS-1$
         panelActuator.add(lblGetStatus, "2, 20, right, default");
 
         comboBoxStatusActuator = new JComboBox();
@@ -441,19 +467,22 @@ extends AbstractConfigurationWizard {
         }
         feederCb.addItem(null);
 
-        JLabel lblX = new JLabel("X");
+        JLabel lblX = new JLabel(Translations.getString("CommonWords.X")); //$NON-NLS-1$
         whateverPanel.add(lblX, "4, 4, center, default");
 
-        JLabel lblY = new JLabel("Y");
+        JLabel lblY = new JLabel(Translations.getString("CommonWords.Y")); //$NON-NLS-1$
         whateverPanel.add(lblY, "6, 4, center, default");
 
-        JLabel lblZ = new JLabel("Z");
+        JLabel lblZ = new JLabel(Translations.getString(
+                "SlotSchultzFeederConfigurationWizard.ZLabel.text")); //$NON-NLS-1$
         whateverPanel.add(lblZ, "8, 4, center, default");
 
-        JLabel lblRotation = new JLabel("Rotation");
+        JLabel lblRotation = new JLabel(Translations.getString(
+                "SlotSchultzFeederConfigurationWizard.RotationLabel.text")); //$NON-NLS-1$
         whateverPanel.add(lblRotation, "10, 4, center, default");
 
-        JLabel lblPickLocation = new JLabel("Location");
+        JLabel lblPickLocation = new JLabel(Translations.getString(
+                "SlotSchultzFeederConfigurationWizard.LocationLabel.text")); //$NON-NLS-1$
         whateverPanel.add(lblPickLocation, "2, 6, right, default");
 
         xPickLocTf = new JTextField();
@@ -478,9 +507,11 @@ extends AbstractConfigurationWizard {
         JButton fiducialAlign = new JButton(updateLocationAction);
         whateverPanel.add(fiducialAlign, "14, 6");
         fiducialAlign.setIcon(Icons.fiducialCheck);
-        fiducialAlign.setToolTipText("Update feeder location based on fiducial");
+        fiducialAlign.setToolTipText(Translations.getString(
+                "SlotSchultzFeederConfigurationWizard.FiducialAlignButton.toolTipText")); //$NON-NLS-1$
 
-        JLabel lblFiducialPart = new JLabel("Fiducial Part");
+        JLabel lblFiducialPart = new JLabel(Translations.getString(
+                "SlotSchultzFeederConfigurationWizard.FiducialPartLabel.text")); //$NON-NLS-1$
         whateverPanel.add(lblFiducialPart, "2, 8, right, default");
 
         fiducialPartTf = new JTextField();
@@ -489,7 +520,8 @@ extends AbstractConfigurationWizard {
             feeder.setFiducialPart(fiducialPartTf.getText());
         });
 
-        JLabel lblFeedRetryCount = new JLabel("Feed Retry Count");
+        JLabel lblFeedRetryCount = new JLabel(Translations.getString(
+                "SlotSchultzFeederConfigurationWizard.FeedRetryCountLabel.text")); //$NON-NLS-1$
         whateverPanel.add(lblFeedRetryCount, "2, 10, right, default");
 
         feedRetryCount = new JTextField();
@@ -624,7 +656,8 @@ extends AbstractConfigurationWizard {
 
     }
 
-    private Action loadFeederAction = new AbstractAction("Load") {
+    private Action loadFeederAction = new AbstractAction(Translations.getString(
+            "SlotSchultzFeederConfigurationWizard.Action.LoadFeeder")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent e) {
             Bank bank = (Bank) bankCb.getSelectedItem();
@@ -663,7 +696,8 @@ extends AbstractConfigurationWizard {
     };
      */
 
-    private Action deleteFeederAction = new AbstractAction("Delete") {
+    private Action deleteFeederAction = new AbstractAction(Translations.getString(
+            "SlotSchultzFeederConfigurationWizard.Action.DeleteFeeder")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent e) {
             Feeder feeder = (Feeder) feederCb.getSelectedItem();
@@ -673,7 +707,8 @@ extends AbstractConfigurationWizard {
         }
     };
 
-    private Action newBankAction = new AbstractAction("New") {
+    private Action newBankAction = new AbstractAction(Translations.getString(
+            "SlotSchultzFeederConfigurationWizard.Action.NewBank")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent e) {
             Bank bank = new Bank();
@@ -683,12 +718,15 @@ extends AbstractConfigurationWizard {
         }
     };
 
-    private Action deleteBankAction = new AbstractAction("Delete") {
+    private Action deleteBankAction = new AbstractAction(Translations.getString(
+            "SlotSchultzFeederConfigurationWizard.Action.DeleteBank")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent e) {
             Bank bank = (Bank) bankCb.getSelectedItem();
             if (SlotSchultzFeeder.getBanks().size() < 2) {
-                MessageBoxes.errorBox(getTopLevelAncestor(), "Error", "Can't delete the only bank. There must always be one bank defined.");
+                MessageBoxes.errorBox(getTopLevelAncestor(), Translations.getString("CommonWords.Error"), //$NON-NLS-1$
+                        Translations.getString(
+                                "SlotSchultzFeederConfigurationWizard.Error.CantDeleteOnlyBank")); //$NON-NLS-1$
                 return;
             }
             SlotSchultzFeeder.getBanks().remove(bank);
@@ -696,7 +734,8 @@ extends AbstractConfigurationWizard {
         }
     };
 
-    private Action getIdActuatorAction = new AbstractAction("Get ID") {
+    private Action getIdActuatorAction = new AbstractAction(Translations.getString(
+            "SlotSchultzFeederConfigurationWizard.ActuatorsPanel.GetIdButton.text")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
@@ -708,8 +747,9 @@ extends AbstractConfigurationWizard {
                         .getActuatorByName(feeder.getIdActuatorName());
 
                 if (actuator == null) {
-                    throw new Exception(
-                            "Failed, unable to find an actuator named " + feeder.getIdActuatorName());
+                    throw new Exception(Translations.format(
+                            "SlotSchultzFeederConfigurationWizard.Exception.ActuatorNotFound", //$NON-NLS-1$
+                            feeder.getIdActuatorName()));
                 }
                 String s = actuator.read(feeder.getActuatorValue());
                 SwingUtilities.invokeLater(() -> {
@@ -719,7 +759,8 @@ extends AbstractConfigurationWizard {
         }
     };
 
-    private Action testFeedActuatorAction = new AbstractAction("Test pre pick") {
+    private Action testFeedActuatorAction = new AbstractAction(Translations.getString(
+            "SlotSchultzFeederConfigurationWizard.ActuatorsPanel.TestPrePickButton.text")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
@@ -730,7 +771,9 @@ extends AbstractConfigurationWizard {
                 Actuator actuator = Configuration.get().getMachine().getActuatorByName(feeder.getActuatorName());
 
                 if (actuator == null) {
-                    throw new Exception("Feed failed. Unable to find an actuator named " + feeder.getActuatorName());
+                    throw new Exception(Translations.format(
+                            "SlotSchultzFeederConfigurationWizard.Exception.FeedActuatorNotFound", //$NON-NLS-1$
+                            feeder.getActuatorName()));
                 }
                 AbstractActuator.suggestValueType(actuator, Actuator.ActuatorValueType.Double);
                 actuator.actuate(feeder.getActuatorValue());
@@ -738,7 +781,8 @@ extends AbstractConfigurationWizard {
         }
     };
 
-    private Action testPostPickActuatorAction = new AbstractAction("Test post pick") {
+    private Action testPostPickActuatorAction = new AbstractAction(Translations.getString(
+            "SlotSchultzFeederConfigurationWizard.ActuatorsPanel.TestPostPickButton.text")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
@@ -750,8 +794,9 @@ extends AbstractConfigurationWizard {
                         .getActuatorByName(feeder.getPostPickActuatorName());
 
                 if (actuator == null) {
-                    throw new Exception(
-                            "Feed failed. Unable to find an actuator named " + feeder.getPostPickActuatorName());
+                    throw new Exception(Translations.format(
+                            "SlotSchultzFeederConfigurationWizard.Exception.PostPickActuatorNotFound", //$NON-NLS-1$
+                            feeder.getPostPickActuatorName()));
                 }
                 AbstractActuator.suggestValueType(actuator, Actuator.ActuatorValueType.Double);
                 actuator.actuate(feeder.getActuatorValue());
@@ -759,7 +804,8 @@ extends AbstractConfigurationWizard {
         }
     };
 
-    private Action getFeedCountActuatorAction = new AbstractAction("Get feed count") {
+    private Action getFeedCountActuatorAction = new AbstractAction(Translations.getString(
+            "SlotSchultzFeederConfigurationWizard.ActuatorsPanel.GetFeedCountButton.text")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
@@ -771,8 +817,9 @@ extends AbstractConfigurationWizard {
                         .getActuatorByName(feeder.getFeedCountActuatorName());
 
                 if (actuator == null) {
-                    throw new Exception(
-                            "Failed, unable to find an actuator named " + feeder.getFeedCountActuatorName());
+                    throw new Exception(Translations.format(
+                            "SlotSchultzFeederConfigurationWizard.Exception.ActuatorNotFound", //$NON-NLS-1$
+                            feeder.getFeedCountActuatorName()));
                 }
                 String s = actuator.read(feeder.getActuatorValue());
                 SwingUtilities.invokeLater(() -> {
@@ -782,7 +829,8 @@ extends AbstractConfigurationWizard {
         }
     };
 
-    private Action clearCountActuatorAction = new AbstractAction("Clear feed count") {
+    private Action clearCountActuatorAction = new AbstractAction(Translations.getString(
+            "SlotSchultzFeederConfigurationWizard.ActuatorsPanel.ClearFeedCountButton.text")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
@@ -794,8 +842,9 @@ extends AbstractConfigurationWizard {
                         .getActuatorByName(feeder.getClearCountActuatorName());
 
                 if (actuator == null) {
-                    throw new Exception(
-                            "Failed, unable to find an actuator named " + feeder.getClearCountActuatorName());
+                    throw new Exception(Translations.format(
+                            "SlotSchultzFeederConfigurationWizard.Exception.ActuatorNotFound", //$NON-NLS-1$
+                            feeder.getClearCountActuatorName()));
                 }
                 AbstractActuator.suggestValueType(actuator, Actuator.ActuatorValueType.Double);
                 actuator.actuate(feeder.getActuatorValue());
@@ -806,7 +855,8 @@ extends AbstractConfigurationWizard {
         }
     };
 
-    private Action pitchActuatorAction = new AbstractAction("Get pitch") {
+    private Action pitchActuatorAction = new AbstractAction(Translations.getString(
+            "SlotSchultzFeederConfigurationWizard.ActuatorsPanel.GetPitchButton.text")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
@@ -818,8 +868,9 @@ extends AbstractConfigurationWizard {
                         .getActuatorByName(feeder.getPitchActuatorName());
 
                 if (actuator == null) {
-                    throw new Exception(
-                            "Failed, unable to find an actuator named " + feeder.getPitchActuatorName());
+                    throw new Exception(Translations.format(
+                            "SlotSchultzFeederConfigurationWizard.Exception.ActuatorNotFound", //$NON-NLS-1$
+                            feeder.getPitchActuatorName()));
                 }
                 String s = actuator.read(feeder.getActuatorValue());
                 SwingUtilities.invokeLater(() -> {
@@ -829,7 +880,8 @@ extends AbstractConfigurationWizard {
         }
     };
 
-    private Action togglePitchActuatorAction = new AbstractAction("Toggle pitch") {
+    private Action togglePitchActuatorAction = new AbstractAction(Translations.getString(
+            "SlotSchultzFeederConfigurationWizard.ActuatorsPanel.TogglePitchButton.text")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
@@ -841,8 +893,9 @@ extends AbstractConfigurationWizard {
                         .getActuatorByName(feeder.getTogglePitchActuatorName());
 
                 if (actuator == null) {
-                    throw new Exception(
-                            "Failed, unable to find an actuator named " + feeder.getTogglePitchActuatorName());
+                    throw new Exception(Translations.format(
+                            "SlotSchultzFeederConfigurationWizard.Exception.ActuatorNotFound", //$NON-NLS-1$
+                            feeder.getTogglePitchActuatorName()));
                 }
                 AbstractActuator.suggestValueType(actuator, Actuator.ActuatorValueType.Double);
                 actuator.actuate(feeder.getActuatorValue());
@@ -851,7 +904,8 @@ extends AbstractConfigurationWizard {
         }
     };
 
-    private Action statusActuatorAction =  new AbstractAction("Get status") {
+    private Action statusActuatorAction =  new AbstractAction(Translations.getString(
+            "SlotSchultzFeederConfigurationWizard.ActuatorsPanel.GetStatusButton.text")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
@@ -863,8 +917,9 @@ extends AbstractConfigurationWizard {
                         .getActuatorByName(feeder.getStatusActuatorName());
 
                 if (actuator == null) {
-                    throw new Exception(
-                            "Failed, unable to find an actuator named " + feeder.getStatusActuatorName());
+                    throw new Exception(Translations.format(
+                            "SlotSchultzFeederConfigurationWizard.Exception.ActuatorNotFound", //$NON-NLS-1$
+                            feeder.getStatusActuatorName()));
                 }
                 String s = actuator.read(feeder.getActuatorValue());
                 SwingUtilities.invokeLater(() -> {
@@ -884,7 +939,7 @@ extends AbstractConfigurationWizard {
                 }
                 Location newLocation = feeder.getFiducialLocation(feeder.getLocation(), feeder.getFiducialPart());
                 if (newLocation == null) {
-                    throw new Exception("Unable to locate fiducial");
+                    throw new Exception(Translations.getString("SlotSchultzFeederConfigurationWizard.Exception.UnableToLocateFiducial")); //$NON-NLS-1$
                 } else {
                     SwingUtilities.invokeLater(() -> {
                         xPickLocTf.setText(newLocation.getLengthX().toString());

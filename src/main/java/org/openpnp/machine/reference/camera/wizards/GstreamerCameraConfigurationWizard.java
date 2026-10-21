@@ -27,6 +27,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.machine.reference.camera.GstreamerCamera;
 
@@ -49,13 +50,13 @@ public class GstreamerCameraConfigurationWizard extends AbstractConfigurationWiz
         panelPipe = new JPanel();
         contentPanel.add(panelPipe);
         panelPipe.setBorder(
-                new TitledBorder(null, "GStreamer Pipeline", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+                new TitledBorder(null, Translations.getString("GstreamerCameraConfigurationWizard.PipelineBorder"), TitledBorder.LEADING, TitledBorder.TOP, null, null)); //$NON-NLS-1$
         panelPipe.setLayout(new FormLayout(
                 new ColumnSpec[] { FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
                         FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"), },
                 new RowSpec[] { FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC, }));
 
-        JLabel lblPipeline = new JLabel("Pipeline launch string");
+        JLabel lblPipeline = new JLabel(Translations.getString("GstreamerCameraConfigurationWizard.PipelineLaunchString")); //$NON-NLS-1$
         panelPipe.add(lblPipeline, "2, 2, right, default");
         gstPipeTextField = new JTextField(40);
         panelPipe.add(gstPipeTextField, "4, 2, fill, default");

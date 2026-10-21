@@ -308,8 +308,9 @@ public class GcodeDriverGcodes extends AbstractConfigurationWizard {
                 File file = new File(new File(fileDialog.getDirectory()), filename);
                 if (file.exists()) {
                     int ret = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                            file.getName() + " already exists. Do you want to replace it?",
-                            "Replace file?", JOptionPane.YES_NO_OPTION,
+                            Translations.format("DialogMessages.ReplaceFile.message", file.getName()), //$NON-NLS-1$
+                            Translations.getString("DialogMessages.ReplaceFile.title"), //$NON-NLS-1$
+                            JOptionPane.YES_NO_OPTION,
                             JOptionPane.WARNING_MESSAGE);
                     if (ret != JOptionPane.YES_OPTION) {
                         return;
@@ -418,9 +419,8 @@ public class GcodeDriverGcodes extends AbstractConfigurationWizard {
         public void actionPerformed(ActionEvent arg0) {
             try {
                 int ret = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                        "This will delete all your Gcode and reset it to minimal defaults.\n"
-                        + "Are you absolutely sure?", 
-                        "Reset to defaults",
+                        Translations.getString("GcodeDriverGcodes.Confirm.ResetToDefaults.message"), //$NON-NLS-1$
+                        Translations.getString("DialogMessages.ResetToDefaults.title"), //$NON-NLS-1$
                         JOptionPane.YES_NO_OPTION,
                         JOptionPane.WARNING_MESSAGE);
                 if (ret == JOptionPane.YES_OPTION) {

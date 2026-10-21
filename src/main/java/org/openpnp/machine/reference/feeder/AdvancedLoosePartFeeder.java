@@ -19,6 +19,8 @@
 
 package org.openpnp.machine.reference.feeder;
 
+
+import org.openpnp.Translations;
 import java.util.List;
 
 import javax.swing.Action;
@@ -189,7 +191,7 @@ public class AdvancedLoosePartFeeder extends ReferenceFeeder {
 
     @Override
     public String getPropertySheetHolderTitle() {
-        return getClass().getSimpleName() + " " + getName();
+        return Translations.typeAndName(getClass(), getName());
     }
 
     @Override

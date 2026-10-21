@@ -21,6 +21,8 @@ package org.openpnp.machine.reference.feeder;
 
 
 
+
+import org.openpnp.Translations;
 import java.util.List;
 
 import javax.swing.Action;
@@ -77,18 +79,19 @@ import org.simpleframework.xml.core.Persist;
 public class ReferenceStripFeeder extends ReferenceFeeder {
     // This is not used
     public enum TapeType {
-        WhitePaper("White Paper"),
-        BlackPlastic("Black Plastic"),
-        ClearPlastic("Clear Plastic");
+        WhitePaper("ReferenceStripFeeder.TapeType.WhitePaper"),
+        BlackPlastic("ReferenceStripFeeder.TapeType.BlackPlastic"),
+        ClearPlastic("ReferenceStripFeeder.TapeType.ClearPlastic");
 
-        private String name;
+        private String key;
 
-        TapeType(String name) {
-            this.name = name;
+        TapeType(String key) {
+            this.key = key;
         }
 
         public String toString() {
-            return name;
+            String s = Translations.getStringOrNull(key);
+            return s != null ? s : name();
         }
     }
 
@@ -722,7 +725,7 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
 
     @Override
     public String getPropertySheetHolderTitle() {
-        return getClass().getSimpleName() + " " + getName();
+        return Translations.typeAndName(getClass(), getName());
     }
 
     @Override

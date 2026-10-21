@@ -43,6 +43,7 @@ import org.opencv.core.Size;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 import org.openpnp.ConfigurationListener;
+import org.openpnp.Translations;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
@@ -165,7 +166,13 @@ public class BlindsFeeder extends ReferenceFeeder {
     public enum OcrAction {
         None,
         CheckCorrect,
-        ChangePart
+        ChangePart;
+
+        @Override
+        public String toString() {
+            String s = Translations.getStringOrNull("BlindsFeeder.OcrAction." + name()); //$NON-NLS-1$
+            return s != null ? s : name();
+        }
     }
     @Attribute(required = false) 
     private OcrAction ocrAction = OcrAction.None;
@@ -181,7 +188,13 @@ public class BlindsFeeder extends ReferenceFeeder {
 
     public enum OcrTextOrientation {
         AwayFromTape,
-        TowardsTape
+        TowardsTape;
+
+        @Override
+        public String toString() {
+            String s = Translations.getStringOrNull("BlindsFeeder.OcrTextOrientation." + name()); //$NON-NLS-1$
+            return s != null ? s : name();
+        }
     };
     @Attribute(required = false) 
     private OcrTextOrientation ocrTextOrientation = OcrTextOrientation.AwayFromTape;
@@ -1268,10 +1281,22 @@ public class BlindsFeeder extends ReferenceFeeder {
     }
 
     public enum CoverType {
-        NoCover, BlindsCover, PushCover
+        NoCover, BlindsCover, PushCover;
+
+        @Override
+        public String toString() {
+            String s = Translations.getStringOrNull("BlindsFeeder.CoverType." + name()); //$NON-NLS-1$
+            return s != null ? s : name();
+        }
     }
     public enum CoverActuation {
-        Manual, CheckOpen, OpenOnFirstUse, OpenOnJobStart
+        Manual, CheckOpen, OpenOnFirstUse, OpenOnJobStart;
+
+        @Override
+        public String toString() {
+            String s = Translations.getStringOrNull("BlindsFeeder.CoverActuation." + name()); //$NON-NLS-1$
+            return s != null ? s : name();
+        }
     }
 
     @Attribute(required = false)
@@ -2602,14 +2627,16 @@ public class BlindsFeeder extends ReferenceFeeder {
 
     @Override
     public String getPropertySheetHolderTitle() {
-        return getClass().getSimpleName() + " " + getName();
+        return Translations.typeAndName(getClass(), getName());
     }
 
     @Override
     public PropertySheet[] getPropertySheets() {
         return new PropertySheet[] {
-                new PropertySheetWizardAdapter(getConfigurationWizard(), "Configuration"),
-                new PropertySheetWizardAdapter(new BlindsFeederArrayConfigurationWizard(this), "Feeder Array"),
+                new PropertySheetWizardAdapter(getConfigurationWizard(),
+                        Translations.getString("CommonPropertySheet.Configuration")), //$NON-NLS-1$
+                new PropertySheetWizardAdapter(new BlindsFeederArrayConfigurationWizard(this),
+                        Translations.getString("CommonPropertySheet.FeederArray")), //$NON-NLS-1$
         };
     }
 

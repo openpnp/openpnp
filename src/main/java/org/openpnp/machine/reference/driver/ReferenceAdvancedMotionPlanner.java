@@ -835,8 +835,8 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
         if (!isAllowContinuousMotion()) {
             solutions.add(new Solutions.Issue(
                     this, 
-                    "Use continuous motion. OpenPnP will only wait for the machine when really needed.", 
-                    "Enable Continuous Motion.", 
+                    Translations.getString("ReferenceAdvancedMotionPlanner.Issue.ContinuousMotion"), //$NON-NLS-1$
+                    Translations.getString("ReferenceAdvancedMotionPlanner.Solution.ContinuousMotion"), //$NON-NLS-1$
                     Severity.Suggestion.Suggestion,
                     "https://github.com/openpnp/openpnp/wiki/Motion-Planner#motion-planner") {
 

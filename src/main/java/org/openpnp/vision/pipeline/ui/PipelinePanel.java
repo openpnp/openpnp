@@ -32,6 +32,7 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.components.ClassSelectionDialog;
 import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.Icons;
@@ -254,8 +255,8 @@ public class PipelinePanel extends JPanel {
     public Action newStageAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.add);
-            putValue(NAME, "New stage...");
-            putValue(SHORT_DESCRIPTION, "Create a new stage.");
+            putValue(NAME, Translations.getString("CvPipelineEditor.Action.NewStage")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("CvPipelineEditor.Action.NewStage.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -269,8 +270,10 @@ public class PipelinePanel extends JPanel {
                 }
             });
             ClassSelectionDialog<CvStage> dialog = new ClassSelectionDialog<>(
-                    JOptionPane.getFrameForComponent(PipelinePanel.this), "New stage",
-                    "Please select a stage implemention from the list below.", stageClasses);
+                    JOptionPane.getFrameForComponent(PipelinePanel.this),
+                    Translations.getString("CvPipelineEditor.Dialog.NewStage.Title"), //$NON-NLS-1$
+                    Translations.getString("CvPipelineEditor.Dialog.NewStage.Message"), //$NON-NLS-1$
+                    stageClasses);
             dialog.setVisible(true);
             Class<? extends CvStage> stageClass = dialog.getSelectedClass();
             if (stageClass == null) {
@@ -284,7 +287,8 @@ public class PipelinePanel extends JPanel {
                 editor.process();
             }
             catch (Exception e) {
-                MessageBoxes.errorBox(JOptionPane.getFrameForComponent(PipelinePanel.this), "Error",
+                MessageBoxes.errorBox(JOptionPane.getFrameForComponent(PipelinePanel.this),
+                        Translations.getString("CommonWords.error"), //$NON-NLS-1$
                         e);
             }
         }
@@ -293,8 +297,8 @@ public class PipelinePanel extends JPanel {
     public Action deleteStageAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.delete);
-            putValue(NAME, "Delete Stage...");
-            putValue(SHORT_DESCRIPTION, "Delete the selected stage.");
+            putValue(NAME, Translations.getString("CvPipelineEditor.Action.DeleteStage")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("CvPipelineEditor.Action.DeleteStage.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -309,8 +313,8 @@ public class PipelinePanel extends JPanel {
     public final Action copyAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.copy);
-            putValue(NAME, "Copy pipeline to clipboard");
-            putValue(SHORT_DESCRIPTION, "Copy the pipeline to the clipboard in text format.");
+            putValue(NAME, Translations.getString("CvPipelineEditor.Action.CopyPipeline")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("CvPipelineEditor.Action.CopyPipeline.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -322,7 +326,9 @@ public class PipelinePanel extends JPanel {
                 clipboard.setContents(stringSelection, null);
             }
             catch (Exception e) {
-                MessageBoxes.errorBox(getTopLevelAncestor(), "Copy failed", e);
+                MessageBoxes.errorBox(getTopLevelAncestor(),
+                        Translations.getString("PipelinePanel.Action.CopyPipeline.errorMessage"), //$NON-NLS-1$
+                        e);
             }
         }
     };
@@ -330,9 +336,8 @@ public class PipelinePanel extends JPanel {
     public final Action pasteAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.paste);
-            putValue(NAME, "Create pipeline from clipboard");
-            putValue(SHORT_DESCRIPTION,
-                    "Create a new pipeline from a definition on the clipboard.");
+            putValue(NAME, Translations.getString("CvPipelineEditor.Action.PastePipeline")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("CvPipelineEditor.Action.PastePipeline.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -346,7 +351,9 @@ public class PipelinePanel extends JPanel {
                 editor.process();
             }
             catch (Exception e) {
-                MessageBoxes.errorBox(getTopLevelAncestor(), "Paste failed", e);
+                MessageBoxes.errorBox(getTopLevelAncestor(),
+                        Translations.getString("PipelinePanel.Action.PastePipeline.errorMessage"), //$NON-NLS-1$
+                        e);
             }
         }
     };
@@ -354,8 +361,8 @@ public class PipelinePanel extends JPanel {
     public final Action refreshAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.refresh);
-            putValue(NAME, "Update picture from current view.");
-            putValue(SHORT_DESCRIPTION, "Update picture from current view.");
+            putValue(NAME, Translations.getString("CvPipelineEditor.Action.Refresh")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("CvPipelineEditor.Action.Refresh.Description")); //$NON-NLS-1$
         }
 
         @Override
@@ -367,8 +374,8 @@ public class PipelinePanel extends JPanel {
     public final Action stepNextShotAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.step);
-            putValue(NAME, "Step to the next shot.");
-            putValue(SHORT_DESCRIPTION, "Step to the next shot.");
+            putValue(NAME, Translations.getString("CvPipelineEditor.Action.StepNextShot")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("CvPipelineEditor.Action.StepNextShot.Description")); //$NON-NLS-1$
         }
 
         @Override

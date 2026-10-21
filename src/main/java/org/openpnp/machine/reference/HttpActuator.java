@@ -29,6 +29,7 @@ import java.net.URL;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.wizards.HttpActuatorConfigurationWizard;
 import org.openpnp.model.Solutions;
@@ -226,8 +227,9 @@ public class HttpActuator extends ReferenceActuator {
             if (this.readUrl.length() > 0 && this.regex.length() == 0) {
 
                 solutions.add(new Solutions.Issue(this,
-                        "A HTTPActuator with Read URL likely needs a regular Expression to parse the value.",
-                        "Set an example expression", Severity.Warning,
+                        Translations.getString("HttpActuator.Issue.ReadRegex"), //$NON-NLS-1$
+                        Translations.getString("HttpActuator.Solution.ReadRegex"), //$NON-NLS-1$
+                        Severity.Warning,
                         "https://github.com/openpnp/openpnp/wiki/HttpActuatorRead") {
 
                     @Override

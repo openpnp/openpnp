@@ -4,12 +4,18 @@ import java.util.List;
 
 import javax.swing.table.AbstractTableModel;
 
+import org.openpnp.Translations;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
 
+
 @SuppressWarnings("serial")
 public class StagesTableModel extends AbstractTableModel implements Reorderable {
-    private static String[] columnNames = {"Enabled", "Name", "Stage"};
+    private static String[] columnNames = {
+            Translations.getString("StagesTableModel.Column.Enabled"), //$NON-NLS-1$
+            Translations.getString("StagesTableModel.Column.Name"), //$NON-NLS-1$
+            Translations.getString("StagesTableModel.Column.Stage") //$NON-NLS-1$
+    };
 
     private static Class<?>[] columnClasses = {Boolean.class, String.class, String.class};
 
@@ -54,7 +60,7 @@ public class StagesTableModel extends AbstractTableModel implements Reorderable 
             case 1:
                 return stage.getName();
             case 2:
-                return stage.getClass().getSimpleName();
+                return stage.getStageTypeName();
         }
         return null;
     }

@@ -35,6 +35,7 @@ import javax.swing.border.TitledBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.Icons;
@@ -69,7 +70,7 @@ public class OpenCvCameraConfigurationWizard extends AbstractConfigurationWizard
         panelGeneral = new JPanel();
         contentPanel.add(panelGeneral);
         panelGeneral.setBorder(new TitledBorder(null,
-                "General", TitledBorder.LEADING, TitledBorder.TOP, null));
+                Translations.getString("CommonPropertySheet.General"), TitledBorder.LEADING, TitledBorder.TOP, null)); //$NON-NLS-1$
         panelGeneral.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
@@ -85,7 +86,7 @@ public class OpenCvCameraConfigurationWizard extends AbstractConfigurationWizard
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
 
-        JLabel lblDeviceId = new JLabel("USB Device Index");
+        JLabel lblDeviceId = new JLabel(Translations.getString("OpenCvCameraConfigurationWizard.UsbDeviceIndex")); //$NON-NLS-1$
         panelGeneral.add(lblDeviceId, "2, 2, right, default");
 
         comboBoxDeviceIndex = new JComboBox();
@@ -94,31 +95,31 @@ public class OpenCvCameraConfigurationWizard extends AbstractConfigurationWizard
         }
         panelGeneral.add(comboBoxDeviceIndex, "4, 2, left, default");
 
-        lbluseFor_di = new JLabel("(physical camera to use)");
+        lbluseFor_di = new JLabel(Translations.getString("OpenCvCameraConfigurationWizard.PhysicalCameraHint")); //$NON-NLS-1$
         panelGeneral.add(lbluseFor_di, "6, 2");
 
-        lblPreferredWidth = new JLabel("Preferred Width");
+        lblPreferredWidth = new JLabel(Translations.getString("OpenCvCameraConfigurationWizard.PreferredWidth")); //$NON-NLS-1$
         panelGeneral.add(lblPreferredWidth, "2, 4, right, default");
 
         textFieldPreferredWidth = new JTextField();
         panelGeneral.add(textFieldPreferredWidth, "4, 4, fill, default");
         textFieldPreferredWidth.setColumns(10);
 
-        lbluseFor_w = new JLabel("(Use 0 for native resolution)");
+        lbluseFor_w = new JLabel(Translations.getString("OpenCvCameraConfigurationWizard.UseZeroNativeResolution")); //$NON-NLS-1$
         panelGeneral.add(lbluseFor_w, "6, 4");
 
-        lblPreferredHeight = new JLabel("Preferred Height");
+        lblPreferredHeight = new JLabel(Translations.getString("OpenCvCameraConfigurationWizard.PreferredHeight")); //$NON-NLS-1$
         panelGeneral.add(lblPreferredHeight, "2, 6, right, default");
 
         textFieldPreferredHeight = new JTextField();
         panelGeneral.add(textFieldPreferredHeight, "4, 6, fill, default");
         textFieldPreferredHeight.setColumns(10);
 
-        lbluseFor_h = new JLabel("(Use 0 for native resolution)");
+        lbluseFor_h = new JLabel(Translations.getString("OpenCvCameraConfigurationWizard.UseZeroNativeResolution")); //$NON-NLS-1$
         panelGeneral.add(lbluseFor_h, "6, 6");
 
         panel = new JPanel();
-        panel.setBorder(new TitledBorder(null, "Properties (Experimental)", TitledBorder.LEADING,
+        panel.setBorder(new TitledBorder(null, Translations.getString("OpenCvCameraConfigurationWizard.PropertiesExperimental"), TitledBorder.LEADING, //$NON-NLS-1$
                 TitledBorder.TOP, null, null));
         contentPanel.add(panel);
         panel.setLayout(new FormLayout(new ColumnSpec[] {
@@ -138,10 +139,10 @@ public class OpenCvCameraConfigurationWizard extends AbstractConfigurationWizard
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
 
-        lblProperty = new JLabel("Property");
+        lblProperty = new JLabel(Translations.getString("OpenCvCameraConfigurationWizard.Property")); //$NON-NLS-1$
         panel.add(lblProperty, "2, 2");
 
-        lblValue = new JLabel("Value");
+        lblValue = new JLabel(Translations.getString("OpenCvCameraConfigurationWizard.Value")); //$NON-NLS-1$
         panel.add(lblValue, "4, 2");
 
         propertyCb = new JComboBox(OpenCvCaptureProperty.values());
@@ -155,10 +156,10 @@ public class OpenCvCameraConfigurationWizard extends AbstractConfigurationWizard
         readPropertyValueBtn.setHideActionText(true);
         panel.add(readPropertyValueBtn, "6, 4");
         
-        setBeforeOpenCk = new JCheckBox("Set Before Open");
+        setBeforeOpenCk = new JCheckBox(Translations.getString("OpenCvCameraConfigurationWizard.SetBeforeOpen")); //$NON-NLS-1$
         panel.add(setBeforeOpenCk, "8, 4");
         
-        setAfterOpenCk = new JCheckBox("Set After Open");
+        setAfterOpenCk = new JCheckBox(Translations.getString("OpenCvCameraConfigurationWizard.SetAfterOpen")); //$NON-NLS-1$
         panel.add(setAfterOpenCk, "10, 4");
 
         propertyCb.addItemListener(e -> propertyChanged());
@@ -311,8 +312,8 @@ public class OpenCvCameraConfigurationWizard extends AbstractConfigurationWizard
     public Action readPropertyValueAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.refresh);
-            putValue(NAME, "Read Property Value");
-            putValue(SHORT_DESCRIPTION, "Read the current property value directly from the camera.");
+            putValue(NAME, Translations.getString("OpenCvCameraConfigurationWizard.ReadPropertyValue")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("OpenCvCameraConfigurationWizard.ReadPropertyValue.Tooltip")); //$NON-NLS-1$
         }
 
         @Override

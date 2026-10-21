@@ -205,10 +205,10 @@ public class HeadSolutions implements Solutions.Subject {
                     }
                 }
 
-                ActuatorSolutions.findActuateIssues(solutions, head, head.getPumpActuator(), "pump control",
+                ActuatorSolutions.findActuateIssues(solutions, head, head.getPumpActuator(), Translations.getString("HeadSolutions.Qualifier.PumpControl"), //$NON-NLS-1$
                         "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Vacuum-Setup#pump-control-setup");
                 if (head.getzProbeActuator() != null) {
-                    ActuatorSolutions.findActuatorReadIssues(solutions, head, head.getzProbeActuator(), "Z probe",
+                    ActuatorSolutions.findActuatorReadIssues(solutions, head, head.getzProbeActuator(), Translations.getString("HeadSolutions.Qualifier.ZProbe"), //$NON-NLS-1$
                         "https://github.com/openpnp/openpnp/wiki/Z-Probing");
                 }
             }
@@ -226,16 +226,16 @@ public class HeadSolutions implements Solutions.Subject {
         if (nozzle.getAxisZ() == null) {
             solutions.add(new Solutions.PlainIssue(
                     nozzle, 
-                    "Nozzle "+nozzle.getName()+" does not have a Z axis assigned.", 
-                    "Please assign a proper Z axis. You might need to create one first.", 
+                    Translations.format("HeadSolutions.Issue.NoZAxis", nozzle.getName()), //$NON-NLS-1$
+                    Translations.getString("HeadSolutions.Solution.NoZAxis"), //$NON-NLS-1$
                     Severity.Error,
                     "https://github.com/openpnp/openpnp/wiki/Mapping-Axes"));
         }
         if (nozzle.getAxisRotation() == null) {
             solutions.add(new Solutions.PlainIssue(
                     nozzle, 
-                    "Nozzle "+nozzle.getName()+" does not have a Rotation axis assigned.", 
-                    "Please assign a proper Rotation axis. You might need to create one first.", 
+                    Translations.format("HeadSolutions.Issue.NoRotationAxis", nozzle.getName()), //$NON-NLS-1$
+                    Translations.getString("HeadSolutions.Solution.NoRotationAxis"), //$NON-NLS-1$
                     Severity.Error,
                     "https://github.com/openpnp/openpnp/wiki/Mapping-Axes"));
         }
@@ -255,16 +255,16 @@ public class HeadSolutions implements Solutions.Subject {
                 if (nozzle2.getAxisZ() == nozzle.getAxisZ()) {
                     solutions.add(new Solutions.PlainIssue(
                             nozzle, 
-                            "Nozzles "+nozzle2.getName()+" and "+nozzle.getName()+" have the same Z axis assigned.", 
-                            "Please assign a different Z axis.", 
+                            Translations.format("HeadSolutions.Issue.DuplicateZAxis", nozzle2.getName(), nozzle.getName()), //$NON-NLS-1$
+                            Translations.getString("HeadSolutions.Solution.DuplicateZAxis"), //$NON-NLS-1$
                             Severity.Error,
                             "https://github.com/openpnp/openpnp/wiki/Mapping-Axes"));
                 }
                 if (nozzle2.getAxisRotation() == nozzle.getAxisRotation()) {
                     solutions.add(new Solutions.PlainIssue(
                             nozzle, 
-                            "Nozzles "+nozzle2.getName()+" and "+nozzle.getName()+" have the same Rotation axis assigned.", 
-                            "It is OK to share rotation axes. If intentional, just dismiss this issue. Otherwise assign a different Rotation axis.", 
+                            Translations.format("HeadSolutions.Issue.DuplicateRotationAxis", nozzle2.getName(), nozzle.getName()), //$NON-NLS-1$
+                            Translations.getString("HeadSolutions.Solution.DuplicateRotationAxis"), //$NON-NLS-1$
                             Severity.Information,
                             "https://github.com/openpnp/openpnp/wiki/Mapping-Axes"));
                 }
@@ -276,9 +276,8 @@ public class HeadSolutions implements Solutions.Subject {
             Axis axis, Axis.Type type) {
         solutions.add(new Solutions.Issue(
                 head, 
-                "Camera "+camera.getName()+" and "+hm.getName()+" have the same "+type+" axis "+axis.getName()+" assigned.", 
-                "Unassign the "+type+" axis "+axis.getName()+" from the camera "+camera.getName()+". Later you can press Find Issues & Solutions "
-                        + "again to get a new Solution for a virtual axis replacement.",
+                Translations.format("HeadSolutions.Issue.SameAxisAssigned", camera.getName(), hm.getName(), type, axis.getName()), //$NON-NLS-1$
+                Translations.format("HeadSolutions.Solution.SameAxisAssigned", type, axis.getName(), camera.getName()), //$NON-NLS-1$
                 Severity.Error,
                 "https://github.com/openpnp/openpnp/wiki/Machine-Axes#referencevirtualaxis") {
             @Override
@@ -323,11 +322,13 @@ public class HeadSolutions implements Solutions.Subject {
         solutions.add(new Solutions.Issue(
                 hm, 
                 (oldAxis == null ? 
-                        "Missing "+type.name()+" axis assignment. Assign one to continue." :
-                            oldAxis.getClass().getSimpleName()+" "+oldAxis.getName()+" assigned as "+type.name()+" has wrong type."), 
+                        Translations.format("HeadSolutions.Issue.MissingAxis", type.name()) : //$NON-NLS-1$
+                            Translations.format("HeadSolutions.Issue.WrongAxisType", oldAxis.getClass().getSimpleName(), oldAxis.getName(), type.name())), //$NON-NLS-1$
                 (axis == null ? 
-                        "Create and assign a "+type.name()+" axis manually."  
-                        : "Assign "+(isNew ? "new " : "existing ")+axis.getClass().getSimpleName()+" "+axis.getName()+" as "+type.name()+"."), 
+                        Translations.format("HeadSolutions.Solution.CreateAxisManually", type.name()) //$NON-NLS-1$
+                        : Translations.format("HeadSolutions.Solution.AssignAxis", //$NON-NLS-1$
+                                isNew ? Translations.getString("HeadSolutions.Choice.AssignAxis.New") : Translations.getString("HeadSolutions.Choice.AssignAxis.Existing"), //$NON-NLS-1$ //$NON-NLS-2$
+                                axis.getClass().getSimpleName(), axis.getName(), type.name())), 
                 (isPhysical || oldAxis != null) ? Severity.Error : Severity.Warning,
                 "https://github.com/openpnp/openpnp/wiki/Mapping-Axes") {
 
@@ -366,10 +367,9 @@ public class HeadSolutions implements Solutions.Subject {
                 && oldAxis != camera.getAxis(type)) {
             solutions.add(new Solutions.Issue(
                     hm, 
-                    "Inconsistent "+type.name()+" axis assignment "
-                            +(oldAxis != null ? oldAxis.getName() : "null")
-                            +" (not the same as default camera "+camera.getName()+").", 
-                            "Assign "+camera.getAxis(type).getName()+" as the "+type.name()+" axis.", 
+                    Translations.format("HeadSolutions.Issue.InconsistentAxis", type.name(), //$NON-NLS-1$
+                            (oldAxis != null ? oldAxis.getName() : "null"), camera.getName()), 
+                    Translations.format("HeadSolutions.Solution.InconsistentAxis", camera.getAxis(type).getName(), type.name()), //$NON-NLS-1$
                             (hm instanceof Nozzle) ? Severity.Error : Severity.Warning,
                     "https://github.com/openpnp/openpnp/wiki/Mapping-Axes") {
 

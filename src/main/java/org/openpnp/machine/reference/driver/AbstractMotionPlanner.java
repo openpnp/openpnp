@@ -33,6 +33,7 @@ import java.util.TreeMap;
 import javax.swing.Action;
 import javax.swing.Icon;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceMachine;
@@ -236,7 +237,7 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
         for (Axis axis : getMachine().getAxes()) {
             if (axis instanceof ControllerAxis) {
                 if (((ControllerAxis) axis).getDriver() == null) {
-                    throw new Exception("Axis "+axis.getName()+" has no driver set.");
+                    throw new Exception(Translations.format("Exception.AxisHasNoDriver", axis.getName())); //$NON-NLS-1$
                 }
             }
             else if (axis instanceof ReferenceVirtualAxis) {
@@ -337,7 +338,7 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
         int optionFlags = Motion.optionFlags(options);
 
         if (speed <= 0) {
-            throw new Exception("Speed must be greater than 0.");
+            throw new Exception(Translations.getString("Exception.SpeedMustBeGreaterThanZero")); //$NON-NLS-1$
         }
         else if (speed < getMinimumSpeed()) {
             speed = getMinimumSpeed();
@@ -384,13 +385,17 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
                 if (Motion.MotionOption.JogMotion.isSetIn(optionFlags)) {
                     // This is a jog move, allow if initial position was synced.
                     if (!driver.isSyncInitialLocation()) {
-                        throw new Exception("Machine not homed. Jogging only allowed if driver "+driver.getName()+" has option \"Sync. Initial Location\" enabled.");
+                        throw new Exception(Translations.format(
+                                "AbstractMotionPlanner.Error.NotHomedJog", //$NON-NLS-1$
+                                driver.getName()));
                     }
                 }
                 else {
                     // Not a jog move.
                     if (!(driver.isSyncInitialLocation() && driver.isAllowUnhomedMotion())) {
-                        throw new Exception("Machine not homed. Motion only allowed if driver "+driver.getName()+" has option \"Allow Unhomed Motion\" enabled.");
+                        throw new Exception(Translations.format(
+                                "AbstractMotionPlanner.Error.NotHomedMotion", //$NON-NLS-1$
+                                driver.getName()));
                     }
                 }
             }
@@ -784,7 +789,8 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
                             if (silent) {
                                 return null;    
                             }
-                            throw new Exception(String.format("Can't move %s to %s, lower than soft limit %s.",
+                            throw new Exception(Translations.format(
+                                    "AbstractMotionPlanner.Error.SoftLimitLow", //$NON-NLS-1$
                                     refAxis.getName(), coordinate, limit));
                         }
                     }
@@ -796,7 +802,8 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
                             if (silent) {
                                 return null;    
                             }
-                            throw new Exception(String.format("Can't move %s to %s, higher than soft limit %s.",
+                            throw new Exception(Translations.format(
+                                    "AbstractMotionPlanner.Error.SoftLimitHigh", //$NON-NLS-1$
                                     refAxis.getName(), coordinate, limit));
                         }
                     }
@@ -1108,7 +1115,8 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
 
     @Override
     public PropertySheet[] getPropertySheets() {
-        return new PropertySheet[] {new PropertySheetWizardAdapter(getConfigurationWizard(), "Motion Planning")};
+        return new PropertySheet[] {new PropertySheetWizardAdapter(getConfigurationWizard(),
+                Translations.getString("CommonPropertySheet.MotionPlanning"))}; //$NON-NLS-1$
     }
 
     @Override

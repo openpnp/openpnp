@@ -26,6 +26,7 @@ import java.awt.geom.NoninvertibleTransformException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.JobPanel;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.MessageBoxes;
@@ -54,16 +55,6 @@ public class MultiPlacementBoardLocationProcess {
     private final Camera camera;
 
     private int step = -1;
-    private String[] instructionsAuto = new String[] {
-            "<html><body>Select two or more (four or more is better) easily identifiable placements in the placements table. They should be near the corners of the board. Click Next to continue and the camera will move near one of the selected placements.</body></html>",
-            "<html><body>Now, manually jog the camera's crosshairs over the center of %s. Try to be as precise as possible. Click Next to continue to the next placement.</body></html>",
-            "<html><body>The board's location and rotation have been set. Click Finish to position the camera at the board's origin, or Cancel to reject the changes.</body></html>",};
-
-    private String[] instructionsManual = new String[] {
-            "<html><body>Select two or more (four or more is better) easily identifiable placements in the placements table. They should be near the corners of the board. Click Next to continue.</body></html>",
-            "<html><body>Now, manually jog the camera's crosshairs over the center of %s. Try to be as precise as possible. Click Next to continue to the next placement.</body></html>",
-            "<html><body>The board's location and rotation have been set. Click Finish to position the camera at the board's origin, or Cancel to reject the changes.</body></html>",};
-
     private String placementId;
     private List<Placement> placements;
     private List<Location> expectedLocations;
@@ -133,6 +124,41 @@ public class MultiPlacementBoardLocationProcess {
         advance();
     }
 
+    private String getInstruction(int stepIndex) {
+        if (autoMove) {
+            switch (stepIndex) {
+                case 0:
+                    return Translations.getString(
+                            "MultiPlacementBoardLocationProcess.Instructions.Auto.Step1"); //$NON-NLS-1$
+                case 1:
+                    return Translations.format(
+                            "MultiPlacementBoardLocationProcess.Instructions.Auto.Step2", //$NON-NLS-1$
+                            placementId);
+                case 2:
+                    return Translations.getString(
+                            "MultiPlacementBoardLocationProcess.Instructions.Auto.Step3"); //$NON-NLS-1$
+                default:
+                    return "";
+            }
+        }
+        else {
+            switch (stepIndex) {
+                case 0:
+                    return Translations.getString(
+                            "MultiPlacementBoardLocationProcess.Instructions.Manual.Step1"); //$NON-NLS-1$
+                case 1:
+                    return Translations.format(
+                            "MultiPlacementBoardLocationProcess.Instructions.Manual.Step2", //$NON-NLS-1$
+                            placementId);
+                case 2:
+                    return Translations.getString(
+                            "MultiPlacementBoardLocationProcess.Instructions.Manual.Step3"); //$NON-NLS-1$
+                default:
+                    return "";
+            }
+        }
+    }
+
     private void advance() {
         boolean stepResult = true;
         if (step == 0) {
@@ -153,9 +179,13 @@ public class MultiPlacementBoardLocationProcess {
             mainFrame.hideInstructions();
         }
         else {
-            String title = String.format("Set Board Location (%d / 3)", step + 1);
-            mainFrame.showInstructions(title, String.format(autoMove ? instructionsAuto[step] : instructionsManual[step], placementId), true, true,
-                    step == 2 ? "Finish" : "Next", cancelActionListener, proceedActionListener);
+            String title = Translations.format(
+                    "MultiPlacementBoardLocationProcess.Title", step + 1); //$NON-NLS-1$
+            String proceedButtonText = step == 2
+                    ? Translations.getString("MultiPlacementBoardLocationProcess.Finish") //$NON-NLS-1$
+                    : Translations.getString("General.Next"); //$NON-NLS-1$
+            mainFrame.showInstructions(title, getInstruction(step), true, true,
+                    proceedButtonText, cancelActionListener, proceedActionListener);
         }
     }
 
@@ -164,7 +194,10 @@ public class MultiPlacementBoardLocationProcess {
         placements = jobPanel.getJobPlacementsPanel().getSelections();
         nPlacements = placements.size();
         if (nPlacements < 2) {
-            MessageBoxes.errorBox(mainFrame, "Error", "Please select at least two placements.");
+            MessageBoxes.errorBox(mainFrame,
+                    Translations.getString("CommonWords.Error"), //$NON-NLS-1$
+                    Translations.getString(
+                            "MultiPlacementBoardLocationProcess.Error.SelectAtLeastTwo")); //$NON-NLS-1$
             return false;
         }
         
@@ -196,7 +229,10 @@ public class MultiPlacementBoardLocationProcess {
         //Save the result of the current placement measurement
         Location measuredLocation = camera.getLocation();
         if (measuredLocation == null) {
-            MessageBoxes.errorBox(mainFrame, "Error", "Please position the camera.");
+            MessageBoxes.errorBox(mainFrame,
+                    Translations.getString("CommonWords.Error"), //$NON-NLS-1$
+                    Translations.getString(
+                            "MultiPlacementBoardLocationProcess.Error.PositionCamera")); //$NON-NLS-1$
             return false;
         }
         measuredLocations.add(measuredLocation);
@@ -265,32 +301,49 @@ public class MultiPlacementBoardLocationProcess {
             
             String errString = "";
             if (ai.xScale > 0 && Math.abs(ai.xScale-1) > props.scalingTolerance) {
-                errString += "x scaling = " + String.format("%.5f", ai.xScale) + " which is outside the expected range of [" +
-                        String.format("%.5f", 1-props.scalingTolerance) + ", " + String.format("%.5f", 1+props.scalingTolerance) + "], ";
+                errString += Translations.format(
+                        "MultiPlacementBoardLocationProcess.Error.XScaling", //$NON-NLS-1$
+                        String.format("%.5f", ai.xScale),
+                        String.format("%.5f", 1-props.scalingTolerance),
+                        String.format("%.5f", 1+props.scalingTolerance));
             }
             else if (ai.xScale < 0 && Math.abs(ai.xScale+1) > props.scalingTolerance) {
-                errString += "x scaling = " + String.format("%.5f", ai.xScale) + " which is outside the expected range of [" +
-                        String.format("-%.5f", 1+props.scalingTolerance) + ", " + String.format("-%.5f", 1-props.scalingTolerance) + "], ";
+                errString += Translations.format(
+                        "MultiPlacementBoardLocationProcess.Error.XScaling", //$NON-NLS-1$
+                        String.format("%.5f", ai.xScale),
+                        String.format("-%.5f", 1+props.scalingTolerance),
+                        String.format("-%.5f", 1-props.scalingTolerance));
             }
             if (Math.abs(ai.yScale-1) > props.scalingTolerance) {
-                errString += "y scaling = " + String.format("%.5f", ai.yScale) + " which is outside the expected range of [" +
-                        String.format("%.5f", 1-props.scalingTolerance) + ", " + String.format("%.5f", 1+props.scalingTolerance) + "], ";
+                errString += Translations.format(
+                        "MultiPlacementBoardLocationProcess.Error.YScaling", //$NON-NLS-1$
+                        String.format("%.5f", ai.yScale),
+                        String.format("%.5f", 1-props.scalingTolerance),
+                        String.format("%.5f", 1+props.scalingTolerance));
             }
             if (Math.abs(ai.xShear) > props.shearingTolerance) {
-                errString += "x shearing = " + String.format("%.5f", ai.xShear) + " which is outside the expected range of [" +
-                        String.format("%.5f", -props.shearingTolerance) + ", " + String.format("%.5f", props.shearingTolerance) + "], ";
+                errString += Translations.format(
+                        "MultiPlacementBoardLocationProcess.Error.XShearing", //$NON-NLS-1$
+                        String.format("%.5f", ai.xShear),
+                        String.format("%.5f", -props.shearingTolerance),
+                        String.format("%.5f", props.shearingTolerance));
             }
             if (boardOffset > props.boardLocationTolerance.convertToUnits(LengthUnit.Millimeters).getValue()) {
-                errString += "the board origin moved " + String.format("%.4f", boardOffset) +
-                        "mm which is greater than the allowed amount of " +
-                        String.format("%.4f", props.boardLocationTolerance.convertToUnits(LengthUnit.Millimeters).getValue()) + "mm, ";
+                errString += Translations.format(
+                        "MultiPlacementBoardLocationProcess.Error.BoardOriginMoved", //$NON-NLS-1$
+                        String.format("%.4f", boardOffset),
+                        String.format("%.4f", props.boardLocationTolerance.convertToUnits(LengthUnit.Millimeters).getValue()));
             }
             if (errString.length() > 0) {
-                errString = errString.substring(0, errString.length()-2); //strip off the last comma and space
-                MessageBoxes.errorBox(mainFrame, "Error", "Results invalid because " + errString + "; double check to ensure you are " +
-                        "jogging the camera to the correct placements.  Other potential remidies include " +
-                        "setting the initial board X, Y, Z, and Rotation in the Boards panel; using a different set of placements; " +
-                        "or changing the allowable tolerances in the MultiPlacementBoardLocationProperties section of machine.xml.");
+                // Strip trailing ", " if present
+                if (errString.endsWith(", ")) {
+                    errString = errString.substring(0, errString.length()-2);
+                }
+                MessageBoxes.errorBox(mainFrame,
+                        Translations.getString("CommonWords.Error"), //$NON-NLS-1$
+                        Translations.format(
+                                "MultiPlacementBoardLocationProcess.Error.ResultsInvalid", //$NON-NLS-1$
+                                errString));
                 cancel();
                 return false;
             }

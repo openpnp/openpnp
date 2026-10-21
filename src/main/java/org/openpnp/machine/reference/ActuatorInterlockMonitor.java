@@ -22,6 +22,7 @@
 package org.openpnp.machine.reference;
 
 import org.openpnp.ConfigurationListener;
+import org.openpnp.Translations;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.wizards.ActuatorInterlockMonitorConfigurationWizard;
 import org.openpnp.model.AbstractModelObject;
@@ -106,6 +107,12 @@ public class ActuatorInterlockMonitor extends AbstractModelObject implements Act
         public boolean isReadingString() {
             return this == ConfirmMatchBeforeAxesMove || this == ConfirmMatchAfterAxesMove;
         }
+
+        @Override
+        public String toString() {
+            String s = Translations.getStringOrNull("ActuatorInterlockMonitor.InterlockType." + name()); //$NON-NLS-1$
+            return s != null ? s : name();
+        }
     }
 
     public enum ActuatorState {
@@ -126,6 +133,12 @@ public class ActuatorInterlockMonitor extends AbstractModelObject implements Act
         }
         public boolean justChanged() {
             return this == SwitchedJustOn || this == SwitchedJustOff || this == SwitchedJustOnOrUnknown || this == SwitchedJustOffOrUnknown;
+        }
+
+        @Override
+        public String toString() {
+            String s = Translations.getStringOrNull("ActuatorInterlockMonitor.ActuatorState." + name()); //$NON-NLS-1$
+            return s != null ? s : name();
         }
     }
 

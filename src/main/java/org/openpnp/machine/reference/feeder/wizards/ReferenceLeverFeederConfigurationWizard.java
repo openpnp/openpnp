@@ -57,6 +57,7 @@ import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.gui.support.PercentConverter;
+import org.openpnp.Translations;
 import org.openpnp.machine.reference.feeder.ReferenceLeverFeeder;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Camera;
@@ -121,7 +122,8 @@ public class ReferenceLeverFeederConfigurationWizard
         panelFields.setLayout(new BoxLayout(panelFields, BoxLayout.Y_AXIS));
 
         panelGeneral = new JPanel();
-        panelGeneral.setBorder(new TitledBorder(null, "General Settings", TitledBorder.LEADING,
+        panelGeneral.setBorder(new TitledBorder(null, Translations.getString(
+                "ReferenceLeverFeederConfigurationWizard.GeneralPanel.Border.title"), TitledBorder.LEADING, //$NON-NLS-1$
                 TitledBorder.TOP, null, null));
 
         panelFields.add(panelGeneral);
@@ -135,28 +137,32 @@ public class ReferenceLeverFeederConfigurationWizard
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
 
-        lblPartPitch = new JLabel("Part Pitch");
+        lblPartPitch = new JLabel(Translations.getString(
+                "ReferenceLeverFeederConfigurationWizard.GeneralPanel.PartPitchLabel.text")); //$NON-NLS-1$
         panelGeneral.add(lblPartPitch, "2, 2, right, default");
 
         textFieldPartPitch = new JTextField();
         panelGeneral.add(textFieldPartPitch, "4, 2");
         textFieldPartPitch.setColumns(5);
 
-        lblFeedRate = new JLabel("Feed Speed %");
+        lblFeedRate = new JLabel(Translations.getString(
+                "ReferenceLeverFeederConfigurationWizard.GeneralPanel.FeedSpeedLabel.text")); //$NON-NLS-1$
         panelGeneral.add(lblFeedRate, "2, 4");
 
         textFieldFeedRate = new JTextField();
         panelGeneral.add(textFieldFeedRate, "4, 4");
         textFieldFeedRate.setColumns(5);
 
-        lblActuatorId = new JLabel("Actuator Name");
+        lblActuatorId = new JLabel(Translations.getString(
+                "ReferenceLeverFeederConfigurationWizard.GeneralPanel.ActuatorNameLabel.text")); //$NON-NLS-1$
         panelGeneral.add(lblActuatorId, "2, 6, right, default");
 
         textFieldActuatorId = new JTextField();
         panelGeneral.add(textFieldActuatorId, "4, 6");
         textFieldActuatorId.setColumns(5);
 
-        lblPeelOffActuatorId = new JLabel("Peel Off Actuator Name");
+        lblPeelOffActuatorId = new JLabel(Translations.getString(
+                "ReferenceLeverFeederConfigurationWizard.GeneralPanel.PeelOffActuatorNameLabel.text")); //$NON-NLS-1$
         panelGeneral.add(lblPeelOffActuatorId, "6, 6, right, default");
 
         textFieldPeelOffActuatorId = new JTextField();
@@ -165,7 +171,8 @@ public class ReferenceLeverFeederConfigurationWizard
 
         panelLocations = new JPanel();
         panelFields.add(panelLocations);
-        panelLocations.setBorder(new TitledBorder(null, "Locations", TitledBorder.LEADING,
+        panelLocations.setBorder(new TitledBorder(null, Translations.getString(
+                "ReferenceLeverFeederConfigurationWizard.LocationsPanel.Border.title"), TitledBorder.LEADING, //$NON-NLS-1$
                 TitledBorder.TOP, null, null));
         panelLocations.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -190,16 +197,18 @@ public class ReferenceLeverFeederConfigurationWizard
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
 
-        JLabel lblX = new JLabel("X");
+        JLabel lblX = new JLabel(Translations.getString("CommonWords.X")); //$NON-NLS-1$
         panelLocations.add(lblX, "4, 4");
 
-        JLabel lblY = new JLabel("Y");
+        JLabel lblY = new JLabel(Translations.getString("CommonWords.Y")); //$NON-NLS-1$
         panelLocations.add(lblY, "6, 4");
 
-        JLabel lblZ = new JLabel("Z");
+        JLabel lblZ = new JLabel(Translations.getString(
+                "ReferenceLeverFeederConfigurationWizard.LocationsPanel.ZLabel.text")); //$NON-NLS-1$
         panelLocations.add(lblZ, "8, 4");
 
-        JLabel lblFeedStartLocation = new JLabel("Feed Start Location");
+        JLabel lblFeedStartLocation = new JLabel(Translations.getString(
+                "ReferenceLeverFeederConfigurationWizard.LocationsPanel.FeedStartLocationLabel.text")); //$NON-NLS-1$
         panelLocations.add(lblFeedStartLocation, "2, 6, right, default");
 
         textFieldFeedStartX = new JTextField();
@@ -218,7 +227,8 @@ public class ReferenceLeverFeederConfigurationWizard
                 textFieldFeedStartY, textFieldFeedStartZ, null);
         panelLocations.add(locationButtonsPanelFeedStart, "10, 6");
 
-        JLabel lblFeedEndLocation = new JLabel("Feed End Location");
+        JLabel lblFeedEndLocation = new JLabel(Translations.getString(
+                "ReferenceLeverFeederConfigurationWizard.LocationsPanel.FeedEndLocationLabel.text")); //$NON-NLS-1$
         panelLocations.add(lblFeedEndLocation, "2, 8, right, default");
 
         textFieldFeedEndX = new JTextField();
@@ -239,7 +249,8 @@ public class ReferenceLeverFeederConfigurationWizard
         
         //
         panelVision = new JPanel();
-        panelVision.setBorder(new TitledBorder(null, "Vision", TitledBorder.LEADING,
+        panelVision.setBorder(new TitledBorder(null, Translations.getString(
+                "ReferenceLeverFeederConfigurationWizard.VisionPanel.Border.title"), TitledBorder.LEADING, //$NON-NLS-1$
                 TitledBorder.TOP, null, null));
         panelFields.add(panelVision);
         panelVision.setLayout(new BoxLayout(panelVision, BoxLayout.Y_AXIS));
@@ -249,7 +260,8 @@ public class ReferenceLeverFeederConfigurationWizard
         fl_panelVisionEnabled.setAlignment(FlowLayout.LEFT);
         panelVision.add(panelVisionEnabled);
 
-        chckbxVisionEnabled = new JCheckBox("Vision Enabled?");
+        chckbxVisionEnabled = new JCheckBox(Translations.getString(
+                "ReferenceLeverFeederConfigurationWizard.VisionPanel.VisionEnabledCheckBox.text")); //$NON-NLS-1$
         panelVisionEnabled.add(chckbxVisionEnabled);
 
         separator = new JSeparator();
@@ -264,7 +276,9 @@ public class ReferenceLeverFeederConfigurationWizard
 
         panelTemplate = new JPanel();
         panelTemplate.setBorder(new TitledBorder(null,
-                "Template Image", TitledBorder.LEADING, TitledBorder.TOP, null));
+                Translations.getString(
+                        "ReferenceLeverFeederConfigurationWizard.VisionPanel.TemplateImagePanel.Border.title"), //$NON-NLS-1$
+                TitledBorder.LEADING, TitledBorder.TOP, null));
         panelVisionTemplateAndAoe.add(panelTemplate, "2, 2, center, fill");
         panelTemplate.setLayout(new BoxLayout(panelTemplate, BoxLayout.Y_AXIS));
 
@@ -289,7 +303,9 @@ public class ReferenceLeverFeederConfigurationWizard
         panel.add(btnCancelChangeTemplateImage);
 
         panelAoE = new JPanel();
-        panelAoE.setBorder(new TitledBorder(null, "Area of Interest", TitledBorder.LEADING,
+        panelAoE.setBorder(new TitledBorder(null, Translations.getString(
+                "ReferenceLeverFeederConfigurationWizard.VisionPanel.AreaOfInterestPanel.Border.title"), //$NON-NLS-1$
+                TitledBorder.LEADING,
                 TitledBorder.TOP, null, null));
         panelVisionTemplateAndAoe.add(panelAoE, "4, 2, fill, fill");
         panelAoE.setLayout(new FormLayout(
@@ -307,16 +323,16 @@ public class ReferenceLeverFeederConfigurationWizard
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         }));
 
-        lblX_1 = new JLabel("X");
+        lblX_1 = new JLabel(Translations.getString("CommonWords.X")); //$NON-NLS-1$
         panelAoE.add(lblX_1, "2, 2");
 
-        lblY_1 = new JLabel("Y");
+        lblY_1 = new JLabel(Translations.getString("CommonWords.Y")); //$NON-NLS-1$
         panelAoE.add(lblY_1, "4, 2");
 
-        lblWidth = new JLabel("Width");
+        lblWidth = new JLabel(Translations.getString("CommonWords.Width")); //$NON-NLS-1$
         panelAoE.add(lblWidth, "6, 2");
 
-        lblHeight = new JLabel("Height");
+        lblHeight = new JLabel(Translations.getString("CommonWords.Height")); //$NON-NLS-1$
         panelAoE.add(lblHeight, "8, 2");
 
         textFieldAoiX = new JTextField();
@@ -335,19 +351,16 @@ public class ReferenceLeverFeederConfigurationWizard
         panelAoE.add(textFieldAoiHeight, "8, 4, fill, default");
         textFieldAoiHeight.setColumns(5);
 
-        btnChangeAoi = new JButton("Change");
-        btnChangeAoi.setAction(selectAoiAction);
+        btnChangeAoi = new JButton(selectAoiAction);
         panelAoE.add(btnChangeAoi, "10, 4");
 
-        btnCancelChangeAoi = new JButton("Cancel");
-        btnCancelChangeAoi.setAction(cancelSelectAoiAction);
+        btnCancelChangeAoi = new JButton(cancelSelectAoiAction);
         panelAoE.add(btnCancelChangeAoi, "12, 4");
 
         cancelSelectTemplateImageAction.setEnabled(false);
         cancelSelectAoiAction.setEnabled(false);
 
-        btnResetVisionOffsets = new JButton("Reset offsets");
-        btnResetVisionOffsets.setAction(resetVisionOffsets);
+        btnResetVisionOffsets = new JButton(resetVisionOffsets);
         panelAoE.add(btnResetVisionOffsets, "12, 10");
 
         contentPanel.add(panelFields);
@@ -415,7 +428,8 @@ public class ReferenceLeverFeederConfigurationWizard
     }
 
     @SuppressWarnings("serial")
-    private Action selectTemplateImageAction = new AbstractAction("Select") {
+    private Action selectTemplateImageAction = new AbstractAction(Translations.getString(
+            "ReferenceLeverFeederConfigurationWizard.SelectTemplateImageAction.Name")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.messageBoxOnException(() -> {
@@ -441,7 +455,8 @@ public class ReferenceLeverFeederConfigurationWizard
     };
 
     @SuppressWarnings("serial")
-    private Action confirmSelectTemplateImageAction = new AbstractAction("Confirm") {
+    private Action confirmSelectTemplateImageAction = new AbstractAction(Translations.getString(
+            "ReferenceLeverFeederConfigurationWizard.ConfirmSelectTemplateImageAction.Name")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.messageBoxOnException(() -> {
@@ -452,8 +467,10 @@ public class ReferenceLeverFeederConfigurationWizard
                 BufferedImage image = cameraView.captureSelectionImage();
                 if (image == null) {
                     MessageBoxes.errorBox(ReferenceLeverFeederConfigurationWizard.this,
-                            "No Image Selected",
-                            "Please select an area of the camera image using the mouse.");
+                            Translations.getString(
+                                    "ReferenceLeverFeederConfigurationWizard.NoImageSelectedError.title"), //$NON-NLS-1$
+                            Translations.getString(
+                                    "ReferenceLeverFeederConfigurationWizard.NoImageSelectedError.message")); //$NON-NLS-1$
                 }
                 else {
                     labelTemplateImage.setIcon(new ImageIcon(image));
@@ -466,7 +483,8 @@ public class ReferenceLeverFeederConfigurationWizard
     };
 
     @SuppressWarnings("serial")
-    private Action cancelSelectTemplateImageAction = new AbstractAction("Cancel") {
+    private Action cancelSelectTemplateImageAction = new AbstractAction(Translations.getString(
+            "CommonWords.Cancel")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.messageBoxOnException(() -> {
@@ -482,7 +500,8 @@ public class ReferenceLeverFeederConfigurationWizard
     };
 
     @SuppressWarnings("serial")
-    private Action selectAoiAction = new AbstractAction("Select") {
+    private Action selectAoiAction = new AbstractAction(Translations.getString(
+            "ReferenceLeverFeederConfigurationWizard.SelectAoiAction.Name")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.messageBoxOnException(() -> {
@@ -506,7 +525,8 @@ public class ReferenceLeverFeederConfigurationWizard
     };
 
     @SuppressWarnings("serial")
-    private Action confirmSelectAoiAction = new AbstractAction("Confirm") {
+    private Action confirmSelectAoiAction = new AbstractAction(Translations.getString(
+            "ReferenceLeverFeederConfigurationWizard.ConfirmSelectAoiAction.Name")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.messageBoxOnException(() -> {
@@ -532,7 +552,8 @@ public class ReferenceLeverFeederConfigurationWizard
     };
 
     @SuppressWarnings("serial")
-    private Action cancelSelectAoiAction = new AbstractAction("Cancel") {
+    private Action cancelSelectAoiAction = new AbstractAction(Translations.getString(
+            "CommonWords.Cancel")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.messageBoxOnException(() -> {
@@ -550,7 +571,8 @@ public class ReferenceLeverFeederConfigurationWizard
     };
 
     @SuppressWarnings("serial")
-    private Action resetVisionOffsets = new AbstractAction("Reset vision offsets") {
+    private Action resetVisionOffsets = new AbstractAction(Translations.getString(
+            "ReferenceLeverFeederConfigurationWizard.ResetVisionOffsetsAction.Name")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.messageBoxOnException(() -> {

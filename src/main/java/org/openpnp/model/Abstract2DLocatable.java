@@ -20,6 +20,8 @@
 package org.openpnp.model;
 
 import java.beans.PropertyChangeListener;
+
+import org.openpnp.Translations;
 import org.openpnp.spi.Definable;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -39,7 +41,13 @@ public abstract class Abstract2DLocatable<T extends Abstract2DLocatable<T>> exte
      */
     public enum Side {
         Bottom, Top;
-        
+
+        @Override
+        public String toString() {
+            String s = Translations.getStringOrNull("Placement.Side." + name()); //$NON-NLS-1$
+            return s != null ? s : name();
+        }
+
         public Side flip() {
             if (this.equals(Side.Top)) {
                 return Side.Bottom;
@@ -48,7 +56,7 @@ public abstract class Abstract2DLocatable<T extends Abstract2DLocatable<T>> exte
                 return Side.Top;
             }
         }
-        
+
         public Side flip(boolean value) {
             if (value) {
                 return flip();

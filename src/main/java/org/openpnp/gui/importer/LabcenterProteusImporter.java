@@ -302,11 +302,7 @@ public class LabcenterProteusImporter implements BoardImporter {
                     }
                 }
                 catch (Exception e1) {
-                    MessageBoxes.errorBox(Dlg.this, "Import Error", "The expected file format is the default file export in Labcenter Proteus " //$NON-NLS-1$ //$NON-NLS-2$
-                    		+ "Data after header information should be :\n" //$NON-NLS-1$
-							+ "Part ID, Value, Package,[Stock Code,] Layer, Rotation, X, Y\n" //$NON-NLS-1$
-                    		+ "Likely cause: the number of data fields does not match expected input\n" //$NON-NLS-1$
-							+ "ie: Include stock codes check box is not checked but file has stock codes"); //$NON-NLS-1$
+                    MessageBoxes.errorBox(Dlg.this, "Import Error", Translations.getString("LabcenterProteusImporter.ImportFormatHelp")); //$NON-NLS-1$ //$NON-NLS-2$
                     return;
                 }
                 for (Placement placement : placements) {

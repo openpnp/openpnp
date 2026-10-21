@@ -21,6 +21,7 @@
 
 package org.openpnp.vision.pipeline.stages;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.support.AreaConverter;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.model.Area;
@@ -99,6 +100,12 @@ public class ParameterNumeric extends CvAbstractScalarParameterStage {
                 default:
                     return (Double)value;
             }
+        }
+
+        @Override
+        public String toString() {
+            String s = Translations.getStringOrNull("ParameterNumeric.NumericType." + name());
+            return s != null ? s : name();
         }
     }
 

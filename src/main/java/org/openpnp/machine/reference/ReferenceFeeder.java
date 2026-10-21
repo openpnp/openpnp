@@ -30,18 +30,18 @@ public abstract class ReferenceFeeder extends AbstractFeeder {
      * a vision may be requested
      */
     public enum FeedOptions {
-        Normal("Normal feed"),
-        SkipNext("Skip next feed"),
-        Disable("Disable feed");
+        Normal("ReferenceFeeder.FeedOptions.Normal"),
+        SkipNext("ReferenceFeeder.FeedOptions.SkipNext"),
+        Disable("ReferenceFeeder.FeedOptions.Disable");
 
-        private String name;
+        private final String translationKey;
 
-        FeedOptions(String name) {
-            this.name = name;
+        FeedOptions(String translationKey) {
+            this.translationKey = translationKey;
         }
 
         public String toString() {
-            return name;
+            return Translations.getString(translationKey);
         }
     }
 

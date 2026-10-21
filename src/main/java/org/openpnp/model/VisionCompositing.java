@@ -30,6 +30,7 @@ import java.util.Map.Entry;
 import java.util.TreeSet;
 
 import org.opencv.core.RotatedRect;
+import org.openpnp.Translations;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.model.Footprint.Pad;
 import org.openpnp.spi.Camera;
@@ -53,6 +54,11 @@ public class VisionCompositing extends AbstractModelObject{
         Body,
         Automatic,
         SingleCorners;
+
+        @Override
+        public String toString() {
+            return Translations.getString("VisionCompositing.CompositingMethod." + name()); //$NON-NLS-1$
+        }
 
         public boolean isEnforced() {
             return this == Body || this == Automatic || this == SingleCorners;
@@ -87,6 +93,11 @@ public class VisionCompositing extends AbstractModelObject{
         }
         public boolean isInvalid() {
             return ordinal() >= VisionOffsets.ordinal();
+        }
+
+        public String getLocalizedName() {
+            return Translations.getString(
+                    "VisionCompositing.CompositingSolution." + name()); //$NON-NLS-1$
         }
     }
 
@@ -846,19 +857,25 @@ public class VisionCompositing extends AbstractModelObject{
                         maxPartDiameter, maxPartDiameter, maxPartDiameter/2, maxPartDiameter/2, false, ShotConfiguration.Unknown));
                 if (visionSettings.getVisionOffset().isInitialized()) {
                     compositingSolution = CompositingSolution.VisionOffsets;
-                    diagnostics += visionSettings.getClass().getSimpleName()+" "+visionSettings.getName()
-                        + " has Vision Offsets "
-                        + lengthConverter.convertForward(visionSettings.getVisionOffset().getLengthX())+", "
-                        + lengthConverter.convertForward(visionSettings.getVisionOffset().getLengthY())
-                        + ", compositing unsupported. ";
+                    diagnostics += Translations.format(
+                            "VisionCompositing.Diagnostics.VisionOffsets", //$NON-NLS-1$
+                            visionSettings.getClass().getSimpleName(),
+                            visionSettings.getName(),
+                            lengthConverter.convertForward(visionSettings.getVisionOffset().getLengthX()),
+                            lengthConverter.convertForward(visionSettings.getVisionOffset().getLengthY()));
                 }
                 else if (!camera.getRoamingRadius().isInitialized()) {
                     compositingSolution = CompositingSolution.NoCameraRoaming;
-                    diagnostics += camera.getClass().getSimpleName()+" "+camera.getName()+" has no roaming radius set, compositing forbidden. ";
+                    diagnostics += Translations.format(
+                            "VisionCompositing.Diagnostics.NoCameraRoaming", //$NON-NLS-1$
+                            camera.getClass().getSimpleName(),
+                            camera.getName());
                 }
                 else {
                     compositingSolution = CompositingSolution.NoFootprint;
-                    diagnostics += "Package "+pkg.getId()+" has no footprint defined, compositing not possible. ";
+                    diagnostics += Translations.format(
+                            "VisionCompositing.Diagnostics.NoFootprint", //$NON-NLS-1$
+                            pkg.getId());
                 }
                 return;
             }
@@ -870,7 +887,9 @@ public class VisionCompositing extends AbstractModelObject{
             for (Footprint.Pad pad : pads) {
                 if (Math.abs(pad.getRotation() % 90) > eps) {
                     if (compositingMethod.isEnforced()) { 
-                        throw new Exception("Package "+pkg.getId()+" pad "+pad.getName()+" not at 90° step angle.");
+                        throw new Exception(Translations.format(
+                                "VisionCompositing.Error.PadNotAt90Degrees", //$NON-NLS-1$
+                                pkg.getId(), pad.getName()));
                     }
                 }
                 Pad rectifiedPad = pad.boundingBox();
@@ -946,7 +965,9 @@ public class VisionCompositing extends AbstractModelObject{
                 }
                 else {
                     compositeSolution = CompositingSolution.RestrictedCameraRoaming;
-                    diagnostics += "Compositing method "+compositingMethod+" blocks compositing. ";
+                    diagnostics += Translations.format(
+                            "VisionCompositing.Diagnostics.MethodBlocks", //$NON-NLS-1$
+                            compositingMethod);
                 }
             }
             else if (cornerSolution != null){
@@ -961,11 +982,15 @@ public class VisionCompositing extends AbstractModelObject{
                         false, ShotConfiguration.Unknown));
                 if (outOfRoamingCandidates > 0) {
                     compositeSolution = CompositingSolution.RestrictedCameraRoaming;
-                    diagnostics += camera.getClass().getSimpleName()+" "+camera.getName()+" has insufficient roaming radius, compositing blocked. ";
+                    diagnostics += Translations.format(
+                            "VisionCompositing.Diagnostics.InsufficientRoaming", //$NON-NLS-1$
+                            camera.getClass().getSimpleName(),
+                            camera.getName());
                 }
                 else {
                     compositeSolution = CompositingSolution.Invalid;
-                    diagnostics += "No solution found. Cannot isolate corners with compositable X and Y symmetries. Check footprint. ";
+                    diagnostics += Translations.getString(
+                            "VisionCompositing.Diagnostics.NoSolution"); //$NON-NLS-1$
                 }
             }
             this.compositingSolution = compositeSolution;
@@ -1554,10 +1579,14 @@ public class VisionCompositing extends AbstractModelObject{
             }
             // Evaluate the stats.
             if(centerWeights==0) { // divide by zero ahead!
-                throw new Exception("Unable to calculate center from composite vision for package "+pkg.getId());
+                throw new Exception(Translations.format(
+                        "VisionCompositing.Error.UnableToCalculateCenter", //$NON-NLS-1$
+                        pkg.getId()));
             }
             if(angleWeights==0) {
-                throw new Exception("Unable to calculate angle from composite vision for package "+pkg.getId());
+                throw new Exception(Translations.format(
+                        "VisionCompositing.Error.UnableToCalculateAngle", //$NON-NLS-1$
+                        pkg.getId()));
             }
             detectedCenter = centerSum.divide(centerWeights);
             detectedAngle = angleSum/angleWeights;

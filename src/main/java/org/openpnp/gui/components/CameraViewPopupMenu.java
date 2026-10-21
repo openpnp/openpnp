@@ -33,6 +33,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.CameraView.RenderingQuality;
 import org.openpnp.gui.components.CameraView.ZoomSensitivity;
@@ -64,14 +65,16 @@ public class CameraViewPopupMenu extends JPopupMenu {
         // For cameras that have been calibrated at two different heights, add menu options to reset
         // the viewing plane and for estimating an object's height
         if (cameraView.isViewingPlaneChangable()) {
-            JMenuItem mntmEstimateZCoordinate = new JMenuItem("Estimate Z Coordinate of Object");
+            JMenuItem mntmEstimateZCoordinate = new JMenuItem(Translations.getString(
+                    "CameraViewPopupMenu.MenuItem.EstimateZCoordinate")); //$NON-NLS-1$
             mntmEstimateZCoordinate.addActionListener(estimateZCoordinateAction);
             add(mntmEstimateZCoordinate);
         }
 
         // For non-movable cameras, add a menu option to move the selected nozzle to the camera
         if (cameraView.getCamera().getHead() == null) {
-            JMenuItem mntmMoveSelectedNozzleToCamera = new JMenuItem("Move Selected Nozzle to Camera");
+            JMenuItem mntmMoveSelectedNozzleToCamera = new JMenuItem(Translations.getString(
+                    "CameraViewPopupMenu.MenuItem.MoveSelectedNozzleToCamera")); //$NON-NLS-1$
             mntmMoveSelectedNozzleToCamera.addActionListener(moveSelectedNozzleToCameraAction);
             add(mntmMoveSelectedNozzleToCamera);
         }
@@ -114,15 +117,18 @@ public class CameraViewPopupMenu extends JPopupMenu {
     }
 
     private JMenu createZoomIncMenu() {
-        JMenu subMenu = new JMenu("Zoom Sensitivity");
+        JMenu subMenu = new JMenu(Translations.getString(
+                "CameraViewPopupMenu.Menu.ZoomSensitivity")); //$NON-NLS-1$
         ButtonGroup buttonGroup = new ButtonGroup();
-        JRadioButtonMenuItem menuItem = new JRadioButtonMenuItem("High");
+        JRadioButtonMenuItem menuItem = new JRadioButtonMenuItem(Translations.getString(
+                "CameraViewPopupMenu.ZoomSensitivity.High")); //$NON-NLS-1$
         buttonGroup.add(menuItem);
         if (cameraView.getZoomIncPerMouseWheelTick()
                 == CameraView.zoomIncrements.get(ZoomSensitivity.High)) {
             menuItem.setSelected(true);
         }
-        menuItem.setToolTipText("One mouse wheel tick changes the zoom by 2x.");
+        menuItem.setToolTipText(Translations.getString(
+                "CameraViewPopupMenu.ZoomSensitivity.High.ToolTip")); //$NON-NLS-1$
         menuItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -131,13 +137,15 @@ public class CameraViewPopupMenu extends JPopupMenu {
             }
         });
         subMenu.add(menuItem);
-        menuItem = new JRadioButtonMenuItem("Medium");
+        menuItem = new JRadioButtonMenuItem(Translations.getString(
+                "CameraViewPopupMenu.ZoomSensitivity.Medium")); //$NON-NLS-1$
         buttonGroup.add(menuItem);
         if (cameraView.getZoomIncPerMouseWheelTick()
                 == CameraView.zoomIncrements.get(ZoomSensitivity.Medium)) {
             menuItem.setSelected(true);
         }
-        menuItem.setToolTipText("Two mouse wheel ticks change the zoom by 2x.");
+        menuItem.setToolTipText(Translations.getString(
+                "CameraViewPopupMenu.ZoomSensitivity.Medium.ToolTip")); //$NON-NLS-1$
         menuItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -146,13 +154,15 @@ public class CameraViewPopupMenu extends JPopupMenu {
             }
         });
         subMenu.add(menuItem);
-        menuItem = new JRadioButtonMenuItem("Low");
+        menuItem = new JRadioButtonMenuItem(Translations.getString(
+                "CameraViewPopupMenu.ZoomSensitivity.Low")); //$NON-NLS-1$
         buttonGroup.add(menuItem);
         if (cameraView.getZoomIncPerMouseWheelTick()
                 == CameraView.zoomIncrements.get(ZoomSensitivity.Low)) {
             menuItem.setSelected(true);
         }
-        menuItem.setToolTipText("Four mouse wheel ticks change the zoom by 2x.");
+        menuItem.setToolTipText(Translations.getString(
+                "CameraViewPopupMenu.ZoomSensitivity.Low.ToolTip")); //$NON-NLS-1$
         menuItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -166,11 +176,13 @@ public class CameraViewPopupMenu extends JPopupMenu {
     }
 
     private JMenu createRenderingQualityMenu() {
-        JMenu subMenu = new JMenu("Rendering Quality");
+        JMenu subMenu = new JMenu(Translations.getString(
+                "CameraViewPopupMenu.Menu.RenderingQuality")); //$NON-NLS-1$
         ButtonGroup buttonGroup = new ButtonGroup();
         JRadioButtonMenuItem menuItem;
         
-        menuItem = new JRadioButtonMenuItem("Low Quality");
+        menuItem = new JRadioButtonMenuItem(Translations.getString(
+                "CameraViewPopupMenu.RenderingQuality.Low")); //$NON-NLS-1$
         buttonGroup.add(menuItem);
         if (cameraView.getRenderingQuality() == RenderingQuality.Low) {
             menuItem.setSelected(true);
@@ -183,7 +195,8 @@ public class CameraViewPopupMenu extends JPopupMenu {
         });
         subMenu.add(menuItem);
         
-        menuItem = new JRadioButtonMenuItem("High Quality");
+        menuItem = new JRadioButtonMenuItem(Translations.getString(
+                "CameraViewPopupMenu.RenderingQuality.High")); //$NON-NLS-1$
         buttonGroup.add(menuItem);
         if (cameraView.getRenderingQuality() == RenderingQuality.High) {
             menuItem.setSelected(true);
@@ -196,7 +209,8 @@ public class CameraViewPopupMenu extends JPopupMenu {
         });
         subMenu.add(menuItem);
         
-        menuItem = new JRadioButtonMenuItem("Highest Quality (best scale)");
+        menuItem = new JRadioButtonMenuItem(Translations.getString(
+                "CameraViewPopupMenu.RenderingQuality.BestScale")); //$NON-NLS-1$
         buttonGroup.add(menuItem);
         if (cameraView.getRenderingQuality() == RenderingQuality.BestScale) {
             menuItem.setSelected(true);
@@ -213,7 +227,8 @@ public class CameraViewPopupMenu extends JPopupMenu {
     }
 
     private JMenu createReticleMenu() {
-        JMenu menu = new JMenu("Reticle");
+        JMenu menu = new JMenu(Translations.getString(
+                "CameraViewPopupMenu.Menu.Reticle")); //$NON-NLS-1$
 
         ButtonGroup buttonGroup = new ButtonGroup();
 
@@ -275,42 +290,62 @@ public class CameraViewPopupMenu extends JPopupMenu {
         return menuItem;
     }
 
+    private void addColorMenuItems(JMenu menu, ButtonGroup buttonGroup, CrosshairReticle reticle) {
+        menu.add(createColorMenuItem(Translations.getString("CameraViewPopupMenu.Color.Red"), //$NON-NLS-1$
+                Color.red, buttonGroup, reticle));
+        menu.add(createColorMenuItem(Translations.getString("CameraViewPopupMenu.Color.Green"), //$NON-NLS-1$
+                Color.green, buttonGroup, reticle));
+        menu.add(createColorMenuItem(Translations.getString("CameraViewPopupMenu.Color.Yellow"), //$NON-NLS-1$
+                Color.yellow, buttonGroup, reticle));
+        menu.add(createColorMenuItem(Translations.getString("CameraViewPopupMenu.Color.Orange"), //$NON-NLS-1$
+                Color.decode("#ffd35d"), buttonGroup, reticle));
+        menu.add(createColorMenuItem(Translations.getString("CameraViewPopupMenu.Color.Blue"), //$NON-NLS-1$
+                Color.blue, buttonGroup, reticle));
+        menu.add(createColorMenuItem(Translations.getString("CameraViewPopupMenu.Color.White"), //$NON-NLS-1$
+                Color.white, buttonGroup, reticle));
+    }
+
     private JMenu createCrosshairReticleOptionsMenu(final CrosshairReticle reticle) {
-        JMenu menu = new JMenu("Options");
+        JMenu menu = new JMenu(Translations.getString(
+                "CameraViewPopupMenu.Menu.Options")); //$NON-NLS-1$
 
         ButtonGroup buttonGroup = new ButtonGroup();
 
-        menu.add(createColorMenuItem("Red", Color.red, buttonGroup, reticle));
-        menu.add(createColorMenuItem("Green", Color.green, buttonGroup, reticle));
-        menu.add(createColorMenuItem("Yellow", Color.yellow, buttonGroup, reticle));
-        menu.add(createColorMenuItem("Orange", Color.decode("#ffd35d"), buttonGroup, reticle));
-        menu.add(createColorMenuItem("Blue", Color.blue, buttonGroup, reticle));
-        menu.add(createColorMenuItem("White", Color.white, buttonGroup, reticle));
-        menu.add(createColorMenuItem("Red", Color.red, buttonGroup, reticle));
+        addColorMenuItems(menu, buttonGroup, reticle);
+        // Preserve original duplicate Red entry
+        menu.add(createColorMenuItem(Translations.getString("CameraViewPopupMenu.Color.Red"), //$NON-NLS-1$
+                Color.red, buttonGroup, reticle));
 
         return menu;
     }
 
+    private String getUnitsLabel(LengthUnit units) {
+        if (units == LengthUnit.Millimeters) {
+            return Translations.getString("CameraViewPopupMenu.Units.Millimeters"); //$NON-NLS-1$
+        }
+        if (units == LengthUnit.Inches) {
+            return Translations.getString("CameraViewPopupMenu.Units.Inches"); //$NON-NLS-1$
+        }
+        return units.toString();
+    }
+
     private JMenu createRulerReticleOptionsMenu(final RulerReticle reticle) {
-        JMenu menu = new JMenu("Options");
+        JMenu menu = new JMenu(Translations.getString(
+                "CameraViewPopupMenu.Menu.Options")); //$NON-NLS-1$
 
         JMenu subMenu;
         JRadioButtonMenuItem menuItem;
         ButtonGroup buttonGroup;
 
-        subMenu = new JMenu("Color");
+        subMenu = new JMenu(Translations.getString("CameraViewPopupMenu.Menu.Color")); //$NON-NLS-1$
         buttonGroup = new ButtonGroup();
-        subMenu.add(createColorMenuItem("Red", Color.red, buttonGroup, reticle));
-        subMenu.add(createColorMenuItem("Green", Color.green, buttonGroup, reticle));
-        subMenu.add(createColorMenuItem("Yellow", Color.yellow, buttonGroup, reticle));
-        subMenu.add(createColorMenuItem("Orange", Color.decode("#ffd35d"), buttonGroup, reticle));
-        subMenu.add(createColorMenuItem("Blue", Color.blue, buttonGroup, reticle));
-        subMenu.add(createColorMenuItem("White", Color.white, buttonGroup, reticle));
+        addColorMenuItems(subMenu, buttonGroup, reticle);
         menu.add(subMenu);
 
-        subMenu = new JMenu("Units");
+        subMenu = new JMenu(Translations.getString("CameraViewPopupMenu.Menu.Units")); //$NON-NLS-1$
         buttonGroup = new ButtonGroup();
-        menuItem = new JRadioButtonMenuItem("Millimeters");
+        menuItem = new JRadioButtonMenuItem(Translations.getString(
+                "CameraViewPopupMenu.Units.Millimeters")); //$NON-NLS-1$
         buttonGroup.add(menuItem);
         if (reticle.getUnits() == LengthUnit.Millimeters) {
             menuItem.setSelected(true);
@@ -323,7 +358,8 @@ public class CameraViewPopupMenu extends JPopupMenu {
             }
         });
         subMenu.add(menuItem);
-        menuItem = new JRadioButtonMenuItem("Inches");
+        menuItem = new JRadioButtonMenuItem(Translations.getString(
+                "CameraViewPopupMenu.Units.Inches")); //$NON-NLS-1$
         buttonGroup.add(menuItem);
         if (reticle.getUnits() == LengthUnit.Inches) {
             menuItem.setSelected(true);
@@ -338,7 +374,8 @@ public class CameraViewPopupMenu extends JPopupMenu {
         subMenu.add(menuItem);
         menu.add(subMenu);
 
-        subMenu = new JMenu("Units Per Tick");
+        subMenu = new JMenu(Translations.getString(
+                "CameraViewPopupMenu.Menu.UnitsPerTick")); //$NON-NLS-1$
         buttonGroup = new ButtonGroup();
         menuItem = new JRadioButtonMenuItem("0.1");
         buttonGroup.add(menuItem);
@@ -437,25 +474,22 @@ public class CameraViewPopupMenu extends JPopupMenu {
     }
 
     private JMenu createFiducialReticleOptionsMenu(final FiducialReticle reticle) {
-        JMenu menu = new JMenu("Options");
+        JMenu menu = new JMenu(Translations.getString(
+                "CameraViewPopupMenu.Menu.Options")); //$NON-NLS-1$
 
         JMenu subMenu;
         JRadioButtonMenuItem menuItem;
         ButtonGroup buttonGroup;
 
-        subMenu = new JMenu("Color");
+        subMenu = new JMenu(Translations.getString("CameraViewPopupMenu.Menu.Color")); //$NON-NLS-1$
         buttonGroup = new ButtonGroup();
-        subMenu.add(createColorMenuItem("Red", Color.red, buttonGroup, reticle));
-        subMenu.add(createColorMenuItem("Green", Color.green, buttonGroup, reticle));
-        subMenu.add(createColorMenuItem("Yellow", Color.yellow, buttonGroup, reticle));
-        subMenu.add(createColorMenuItem("Orange", Color.decode("#ffd35d"), buttonGroup, reticle));
-        subMenu.add(createColorMenuItem("Blue", Color.blue, buttonGroup, reticle));
-        subMenu.add(createColorMenuItem("White", Color.white, buttonGroup, reticle));
+        addColorMenuItems(subMenu, buttonGroup, reticle);
         menu.add(subMenu);
 
-        subMenu = new JMenu("Units");
+        subMenu = new JMenu(Translations.getString("CameraViewPopupMenu.Menu.Units")); //$NON-NLS-1$
         buttonGroup = new ButtonGroup();
-        menuItem = new JRadioButtonMenuItem("Millimeters");
+        menuItem = new JRadioButtonMenuItem(Translations.getString(
+                "CameraViewPopupMenu.Units.Millimeters")); //$NON-NLS-1$
         buttonGroup.add(menuItem);
         if (reticle.getUnits() == LengthUnit.Millimeters) {
             menuItem.setSelected(true);
@@ -468,7 +502,8 @@ public class CameraViewPopupMenu extends JPopupMenu {
             }
         });
         subMenu.add(menuItem);
-        menuItem = new JRadioButtonMenuItem("Inches");
+        menuItem = new JRadioButtonMenuItem(Translations.getString(
+                "CameraViewPopupMenu.Units.Inches")); //$NON-NLS-1$
         buttonGroup.add(menuItem);
         if (reticle.getUnits() == LengthUnit.Inches) {
             menuItem.setSelected(true);
@@ -483,9 +518,10 @@ public class CameraViewPopupMenu extends JPopupMenu {
         subMenu.add(menuItem);
         menu.add(subMenu);
 
-        subMenu = new JMenu("Shape");
+        subMenu = new JMenu(Translations.getString("CameraViewPopupMenu.Menu.Shape")); //$NON-NLS-1$
         buttonGroup = new ButtonGroup();
-        menuItem = new JRadioButtonMenuItem("Circle");
+        menuItem = new JRadioButtonMenuItem(Translations.getString(
+                "CameraViewPopupMenu.Shape.Circle")); //$NON-NLS-1$
         buttonGroup.add(menuItem);
         if (reticle.getShape() == FiducialReticle.Shape.Circle) {
             menuItem.setSelected(true);
@@ -498,7 +534,8 @@ public class CameraViewPopupMenu extends JPopupMenu {
             }
         });
         subMenu.add(menuItem);
-        menuItem = new JRadioButtonMenuItem("Square");
+        menuItem = new JRadioButtonMenuItem(Translations.getString(
+                "CameraViewPopupMenu.Shape.Square")); //$NON-NLS-1$
         buttonGroup.add(menuItem);
         if (reticle.getShape() == FiducialReticle.Shape.Square) {
             menuItem.setSelected(true);
@@ -513,7 +550,8 @@ public class CameraViewPopupMenu extends JPopupMenu {
         subMenu.add(menuItem);
         menu.add(subMenu);
 
-        JCheckBoxMenuItem chkMenuItem = new JCheckBoxMenuItem("Filled");
+        JCheckBoxMenuItem chkMenuItem = new JCheckBoxMenuItem(Translations.getString(
+                "CameraViewPopupMenu.MenuItem.Filled")); //$NON-NLS-1$
         chkMenuItem.setSelected(reticle.isFilled());
         chkMenuItem.addActionListener(new ActionListener() {
             @Override
@@ -524,13 +562,15 @@ public class CameraViewPopupMenu extends JPopupMenu {
         });
         menu.add(chkMenuItem);
 
-        JMenuItem inputMenuItem = new JMenuItem("Size");
+        JMenuItem inputMenuItem = new JMenuItem(Translations.getString(
+                "CameraViewPopupMenu.MenuItem.Size")); //$NON-NLS-1$
         inputMenuItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 String result = JOptionPane.showInputDialog(cameraView,
-                        String.format("Enter the size in %s",
-                                reticle.getUnits().toString().toLowerCase()),
+                        Translations.format(
+                                "CameraViewPopupMenu.Dialog.EnterSize", //$NON-NLS-1$
+                                getUnitsLabel(reticle.getUnits())),
                         reticle.getSize() + "");
                 if (result != null) {
                     reticle.setSize(Double.valueOf(result));
@@ -555,14 +595,16 @@ public class CameraViewPopupMenu extends JPopupMenu {
         reticleOptionsMenu = menu;
     }
 
-    private Action showImageInfoAction = new AbstractAction("Show Image Info?") {
+    private Action showImageInfoAction = new AbstractAction(Translations.getString(
+            "CameraViewPopupMenu.MenuItem.ShowImageInfo")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent e) {
             cameraView.setShowImageInfo(((JCheckBoxMenuItem) e.getSource()).isSelected());
         }
     };
 
-    private Action noReticleAction = new AbstractAction("None") {
+    private Action noReticleAction = new AbstractAction(Translations.getString(
+            "CameraViewPopupMenu.Reticle.None")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
             setReticleOptionsMenu(null);
@@ -570,7 +612,8 @@ public class CameraViewPopupMenu extends JPopupMenu {
         }
     };
 
-    private Action crosshairReticleAction = new AbstractAction("Crosshair") {
+    private Action crosshairReticleAction = new AbstractAction(Translations.getString(
+            "CameraViewPopupMenu.Reticle.Crosshair")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
             CrosshairReticle reticle = new CrosshairReticle();
@@ -580,7 +623,8 @@ public class CameraViewPopupMenu extends JPopupMenu {
         }
     };
 
-    private Action gridReticleAction = new AbstractAction("Grid") {
+    private Action gridReticleAction = new AbstractAction(Translations.getString(
+            "CameraViewPopupMenu.Reticle.Grid")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
             GridReticle reticle = new GridReticle();
@@ -590,7 +634,8 @@ public class CameraViewPopupMenu extends JPopupMenu {
         }
     };
 
-    private Action rulerReticleAction = new AbstractAction("Ruler") {
+    private Action rulerReticleAction = new AbstractAction(Translations.getString(
+            "CameraViewPopupMenu.Reticle.Ruler")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
             RulerReticle reticle = new RulerReticle();
@@ -600,7 +645,8 @@ public class CameraViewPopupMenu extends JPopupMenu {
         }
     };
 
-    private Action fiducialReticleAction = new AbstractAction("Fiducial") {
+    private Action fiducialReticleAction = new AbstractAction(Translations.getString(
+            "CameraViewPopupMenu.Reticle.Fiducial")) { //$NON-NLS-1$
         @Override
         public void actionPerformed(ActionEvent arg0) {
             FiducialReticle reticle = new FiducialReticle();

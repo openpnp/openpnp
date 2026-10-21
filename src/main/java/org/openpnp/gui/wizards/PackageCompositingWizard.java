@@ -250,11 +250,18 @@ public class PackageCompositingWizard extends AbstractConfigurationWizard {
             }
             setComposite(composite);
             if (composite.getCompositingSolution().isInvalid()) {
-                setStatus("Error: "+composite.getCompositingSolution()+" | "+composite.getDiagnostics()); //$NON-NLS-1$ //$NON-NLS-2$
+                setStatus(Translations.format(
+                        "PackageCompositingWizard.Status.Error", //$NON-NLS-1$
+                        composite.getCompositingSolution().getLocalizedName(),
+                        composite.getDiagnostics()));
             }
             else {
-                setStatus("Solution: "+composite.getCompositingSolution()+" | Min. shots: "+minShots+" | Max. shots: "+maxShots //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                        +" | Computation: "+String.format("%.2f", composite.getComputeTime())+"ms"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                setStatus(Translations.format(
+                        "PackageCompositingWizard.Status.Solution", //$NON-NLS-1$
+                        composite.getCompositingSolution().getLocalizedName(),
+                        minShots,
+                        maxShots,
+                        String.format("%.2f", composite.getComputeTime()))); //$NON-NLS-1$
             }
             return composite;
         }

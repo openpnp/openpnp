@@ -263,9 +263,7 @@ public class DipTraceImporter implements BoardImporter {
                     }
                 }
                 catch (Exception e1) {
-                    MessageBoxes.errorBox(Dlg.this, "Import Error", "The expected file format is the default file export in DipTrace " //$NON-NLS-1$ //$NON-NLS-2$
-                    		+ "PCB: File -> Export -> Pick and Place. The first line indicates RefDes, Name, X (mm), Y (mm), Side, Rotate, Value." //$NON-NLS-1$
-                    		+ "The lines that follow are data."); //$NON-NLS-1$
+                    MessageBoxes.errorBox(Dlg.this, "Import Error", Translations.getString("DipTraceImporter.ImportFormatHelp")); //$NON-NLS-1$ //$NON-NLS-2$
                     return;
                 }
                 for (Placement placement : placements) {

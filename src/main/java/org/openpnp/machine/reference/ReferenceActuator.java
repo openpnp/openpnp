@@ -59,7 +59,12 @@ public class ReferenceActuator extends AbstractActuator implements HeadMountable
         AssumeActuatedOff,
         AssumeActuatedOn,
         ActuateOff,
-        ActuateOn
+        ActuateOn;
+
+        @Override
+        public String toString() {
+            return Translations.getString("ReferenceActuator.MachineStateActuation." + name()); //$NON-NLS-1$
+        }
     };
 
     @Attribute(required = false)
@@ -341,7 +346,7 @@ public class ReferenceActuator extends AbstractActuator implements HeadMountable
 
     @Override
     public String getPropertySheetHolderTitle() {
-        return getClass().getSimpleName() + " " + getName();
+        return Translations.typeAndName(getClass(), getName());
     }
 
     @Override
@@ -354,10 +359,12 @@ public class ReferenceActuator extends AbstractActuator implements HeadMountable
         ArrayList<PropertySheet> propertySheets = new ArrayList<>();
         propertySheets.add(new PropertySheetWizardAdapter(getConfigurationWizard()));
         if (getInterlockMonitor() != null) {
-            propertySheets.add(new PropertySheetWizardAdapter(getInterlockMonitor().getConfigurationWizard(this), "Axis Interlock"));
+            propertySheets.add(new PropertySheetWizardAdapter(getInterlockMonitor().getConfigurationWizard(this),
+                    Translations.getString("CommonPropertySheet.AxisInterlock"))); //$NON-NLS-1$
         }
         if (getValueType() == ActuatorValueType.Profile) {
-            propertySheets.add(new PropertySheetWizardAdapter(getActuatorProfiles().getConfigurationWizard(this), "Profiles"));
+            propertySheets.add(new PropertySheetWizardAdapter(getActuatorProfiles().getConfigurationWizard(this),
+                    Translations.getString("CommonPropertySheet.Profiles"))); //$NON-NLS-1$
         }
         return propertySheets.toArray(new PropertySheet[propertySheets.size()]);
     }

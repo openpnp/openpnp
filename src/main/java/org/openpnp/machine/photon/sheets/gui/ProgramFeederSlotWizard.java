@@ -10,6 +10,8 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.RowSpec;
 import com.jgoodies.forms.layout.FormSpecs;
 
+import org.openpnp.Translations;
+
 public class ProgramFeederSlotWizard extends JDialog {
 
 	private final JPanel wizardSteps;
@@ -20,7 +22,7 @@ public class ProgramFeederSlotWizard extends JDialog {
 	private final JButton wizardButton;
 
 	public ProgramFeederSlotWizard() {
-		setTitle("Program Feeder Slot Wizard");
+		setTitle(Translations.getString("PhotonFeeder.ProgramFeederSlotWizard.title")); //$NON-NLS-1$
 		setBounds(100, 100, 450, 300);
 		
 		JPanel buttonsPanel = new JPanel();
@@ -36,7 +38,7 @@ public class ProgramFeederSlotWizard extends JDialog {
 				RowSpec.decode("29px"),
 				FormSpecs.RELATED_GAP_ROWSPEC,}));
 
-		wizardButton = new JButton("Next");
+		wizardButton = new JButton(Translations.getString("General.Next")); //$NON-NLS-1$
 		buttonsPanel.add(wizardButton, "4, 2, left, top");
 		wizardButton.addActionListener(wizardButtonAction);
 
@@ -65,7 +67,7 @@ public class ProgramFeederSlotWizard extends JDialog {
 			CardLayout wizardStepsLayout = (CardLayout) wizardSteps.getLayout();
 			if(removeAllFeedersStep.isVisible()) {
 				wizardStepsLayout.show(wizardSteps, UPDATE_FLOORS_PANEL);
-				wizardButton.setText("Finish");
+				wizardButton.setText(Translations.getString("PhotonFeeder.ProgramFeederSlotWizard.FinishButton.text")); //$NON-NLS-1$
 				feederSlotUpdateStep.startThread();
 			} else if(feederSlotUpdateStep.isVisible()) {
 				wizard.setVisible(false);

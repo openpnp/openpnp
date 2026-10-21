@@ -19,6 +19,7 @@
 
 package org.openpnp.gui.support;
 
+import org.openpnp.Translations;
 import org.openpnp.spi.Actuator;
 
 public class ActuatorItem extends HeadMountableItem {
@@ -32,7 +33,9 @@ public class ActuatorItem extends HeadMountableItem {
 
     @Override
     public String toString() {
-        return String.format("Actuator: %s %s", hm.getName(), hm.getHead() != null
-                ? String.format("(Head: %s)", hm.getHead().getName()) : "");
+        return String.format(Translations.getString("HeadMountableItem.Format.Actuator"), //$NON-NLS-1$
+                hm.getName(), hm.getHead() != null
+                ? String.format(Translations.getString("HeadMountableItem.Format.Head"), //$NON-NLS-1$
+                        hm.getHead().getName()) : "");
     }
 }

@@ -264,7 +264,7 @@ public class IssuePanel extends JPanel {
                     if (stringProperty.getSuggestions() != null) {
                         JPanel suggestPanel = new JPanel();
                         suggestPanel.setLayout(new BorderLayout());
-                        JLabel lbl2 = new JLabel("Templates: ");
+                        JLabel lbl2 = new JLabel(Translations.getString("IssuePanel.TemplatesLabel.text")); //$NON-NLS-1$
                         lbl2.setToolTipText(stringProperty.getSuggestionToolTip());
                         suggestPanel.add(lbl2, BorderLayout.WEST);
                         JComboBox comboBox = new JComboBox(stringProperty.getSuggestions());

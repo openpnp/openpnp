@@ -7,6 +7,7 @@ import java.util.List;
 import javax.swing.Icon;
 
 import org.openpnp.ConfigurationListener;
+import org.openpnp.Translations;
 import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
@@ -70,6 +71,11 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
         PartOn,
         TaskDuration,
         KeepRunning;
+
+        @Override
+        public String toString() {
+            return Translations.getString("AbstractHead.VacuumPumpControl." + name()); //$NON-NLS-1$
+        }
     }
 
     @Attribute(required = false)
@@ -94,7 +100,12 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
     public enum VisualHomingMethod {
         None,
         ResetToFiducialLocation,
-        ResetToHomeLocation
+        ResetToHomeLocation;
+
+        @Override
+        public String toString() {
+            return Translations.getString("AbstractHead.VisualHomingMethod." + name()); //$NON-NLS-1$
+        }
     }
 
     @Attribute(required = false)

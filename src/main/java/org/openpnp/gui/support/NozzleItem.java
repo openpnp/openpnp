@@ -19,6 +19,7 @@
 
 package org.openpnp.gui.support;
 
+import org.openpnp.Translations;
 import org.openpnp.spi.Nozzle;
 
 public class NozzleItem extends HeadMountableItem {
@@ -35,9 +36,12 @@ public class NozzleItem extends HeadMountableItem {
     public String toString() {
         Nozzle nozzle = (Nozzle)hm;
 
-        return String.format("Nozzle: %s - %s%s %s", nozzle.getName(),
-                nozzle.getNozzleTip() != null ? nozzle.getNozzleTip().getName() : "No Nozzle Tip", 
+        return String.format(Translations.getString("HeadMountableItem.Format.Nozzle"), nozzle.getName(), //$NON-NLS-1$
+                nozzle.getNozzleTip() != null ? nozzle.getNozzleTip().getName()
+                        : Translations.getString("HeadMountableItem.NoNozzleTip"), //$NON-NLS-1$
                 nozzle.getPart() != null ? String.format(" - %s", nozzle.getPart().getId()) : "", 
-                nozzle.getHead() != null ? String.format("(Head: %s)", nozzle.getHead().getName()) : "");
+                nozzle.getHead() != null ? String.format(
+                        Translations.getString("HeadMountableItem.Format.Head"), //$NON-NLS-1$
+                        nozzle.getHead().getName()) : "");
     }
 }

@@ -49,7 +49,7 @@ public class Welcome2_0Dialog extends JDialog {
 
     public Welcome2_0Dialog(Frame frame) {
         super(frame, true);
-        String title = String.format(Translations.getString("WelcomeDialog.title"), Main.getVersionString()); //$NON-NLS-1$
+        String title = Translations.format("WelcomeDialog.title", Main.getVersionString()); //$NON-NLS-1$
         setTitle(title);
         setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
         setBounds(100, 100, 648, 434);
@@ -58,15 +58,15 @@ public class Welcome2_0Dialog extends JDialog {
         getContentPane().add(contentPanel, BorderLayout.CENTER);
         contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
         JLabel lblOpenpnp = new JLabel(
-                Translations.getString(title)); //$NON-NLS-1$
+                Translations.format("WelcomeDialog.title", Main.getVersionString())); //$NON-NLS-1$
         lblOpenpnp.setAlignmentX(Component.CENTER_ALIGNMENT);
         lblOpenpnp.setFont(new Font("Lucida Grande", Font.BOLD, 32));
         contentPanel.add(lblOpenpnp);
-        JLabel lblCopyright = new JLabel("Copyright © 2011 - 2025 Jason von Nieda and contributors");
+        JLabel lblCopyright = new JLabel(Translations.getString("WelcomeDialog.Copyright")); //$NON-NLS-1$
         lblCopyright.setFont(new Font("Lucida Grande", Font.PLAIN, 10));
         lblCopyright.setAlignmentX(Component.CENTER_ALIGNMENT);
         contentPanel.add(lblCopyright);
-        JLabel lblVersion = new JLabel("Version: " + Main.getVersion());
+        JLabel lblVersion = new JLabel(Translations.format("WelcomeDialog.Version", Main.getVersion())); //$NON-NLS-1$
         lblVersion.setFont(new Font("Lucida Grande", Font.PLAIN, 10));
         lblVersion.setAlignmentX(Component.CENTER_ALIGNMENT);
         contentPanel.add(lblVersion);
@@ -77,14 +77,14 @@ public class Welcome2_0Dialog extends JDialog {
         JPanel buttonPane = new JPanel();
         buttonPane.setLayout(new FlowLayout(FlowLayout.RIGHT));
         getContentPane().add(buttonPane, BorderLayout.SOUTH);
-        JButton okButton = new JButton("OK");
+        JButton okButton = new JButton(Translations.getString("CommonWords.OK")); //$NON-NLS-1$
         okButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent arg0) {
                 setVisible(false);
             }
         });
-        okButton.setActionCommand("OK");
+        okButton.setActionCommand(Translations.getString("CommonWords.OK")); //$NON-NLS-1$
         buttonPane.add(okButton);
         getRootPane().setDefaultButton(okButton);
 

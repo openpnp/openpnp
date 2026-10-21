@@ -26,6 +26,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import javax.swing.SwingUtilities;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.CameraView;
 import org.openpnp.model.LengthUnit;
@@ -48,39 +49,9 @@ public class EstimateObjectZCoordinateProcess {
     private java.awt.Point pixelPoint2;
     private Location observationLocation1;
     private Location observationLocation2;
-    private String estimatedZStr = "unavailable";
+    private String estimatedZStr;
 
     private int step = -1;
-    private String[] moveableCameraInstructions = new String[] {
-            "<html><body>Jog the camera so that an easily identifiable feature of the object " +
-                    "(such as a sharp corner) is in the camera's field-of-view (FOV). It is " +
-                    "better for the feature to be towards the edge of the FOV rather than " +
-                    "centered. When ready, click the mouse on the feature to capture its " +
-                    "apparent position." +
-                    "</body></html>",
-            "<html><body>Now jog the camera in X and/or Y so that the same feature is visible in " +
-                    "another part of the camera's FOV. The farther away from the original " +
-                    "position, the better.  When ready, click the mouse on the feature to " +
-                    "capture its new apparent position and estimate its Z coordinate." +
-                    "</body></html>",
-            "<html><body>The estimated Z coordinate of the feature is <b>%s</b>. Click Cancel if " +
-                    "finished or Again to perform another measurment." +
-                    "</body></html>",};
-    private String[] fixedCameraInstructions = new String[] {
-            "<html><body>Jog the nozzle so that an easily identifiable feature of the object " +
-                    "(such as a sharp corner) is in the camera's field-of-view (FOV). It is " +
-                    "better for the feature to be towards the edge of the FOV rather than " +
-                    "centered. When ready, click the mouse on the feature to capture its " +
-                    "apparent position." +
-                    "</body></html>",
-            "<html><body>Now jog the nozzle in X and/or Y so that the same feature is visible in " +
-                    "another part of the camera's FOV. The farther away from the original " +
-                    "position, the better.  When ready, click the mouse on the feature to " +
-                    "capture its new apparent position and estimate its Z coordinate." +
-                    "</body></html>",
-            "<html><body>The estimated Z coordinate of the feature is <b>%s</b>. Click Cancel if " +
-                    "finished or Again to perform another measurment." +
-                    "</body></html>",};
 
     public EstimateObjectZCoordinateProcess(MainFrame mainFrame, CameraView cameraView)
             throws Exception {
@@ -88,6 +59,8 @@ public class EstimateObjectZCoordinateProcess {
         this.cameraView = cameraView;
         camera = cameraView.getCamera();
         fixedCamera = camera.getHead() == null;
+        estimatedZStr = Translations.getString(
+                "EstimateObjectZCoordinateProcess.Unavailable"); //$NON-NLS-1$
 
         cameraView.addMouseListener(mouseListener);
 
@@ -96,6 +69,41 @@ public class EstimateObjectZCoordinateProcess {
         });
 
         advance();
+    }
+
+    private String getInstruction(int stepIndex) {
+        if (fixedCamera) {
+            switch (stepIndex) {
+                case 0:
+                    return Translations.getString(
+                            "EstimateObjectZCoordinateProcess.Instructions.Fixed.Step1"); //$NON-NLS-1$
+                case 1:
+                    return Translations.getString(
+                            "EstimateObjectZCoordinateProcess.Instructions.Fixed.Step2"); //$NON-NLS-1$
+                case 2:
+                    return Translations.format(
+                            "EstimateObjectZCoordinateProcess.Instructions.Fixed.Step3", //$NON-NLS-1$
+                            estimatedZStr);
+                default:
+                    return "";
+            }
+        }
+        else {
+            switch (stepIndex) {
+                case 0:
+                    return Translations.getString(
+                            "EstimateObjectZCoordinateProcess.Instructions.Movable.Step1"); //$NON-NLS-1$
+                case 1:
+                    return Translations.getString(
+                            "EstimateObjectZCoordinateProcess.Instructions.Movable.Step2"); //$NON-NLS-1$
+                case 2:
+                    return Translations.format(
+                            "EstimateObjectZCoordinateProcess.Instructions.Movable.Step3", //$NON-NLS-1$
+                            estimatedZStr);
+                default:
+                    return "";
+            }
+        }
     }
 
     /**
@@ -118,10 +126,12 @@ public class EstimateObjectZCoordinateProcess {
             cancel();
         }
         else {
-            mainFrame.showInstructions("Instructions to Estimate an Object's Z Coordinate",
-                    String.format(fixedCamera ? fixedCameraInstructions[step]
-                            : moveableCameraInstructions[step], estimatedZStr),
-                    true, step == 2, "Again", cancelActionListener, proceedActionListener);
+            mainFrame.showInstructions(
+                    Translations.getString("EstimateObjectZCoordinateProcess.Title"), //$NON-NLS-1$
+                    getInstruction(step),
+                    true, step == 2,
+                    Translations.getString("EstimateObjectZCoordinateProcess.Again"), //$NON-NLS-1$
+                    cancelActionListener, proceedActionListener);
         }
     }
 
@@ -155,7 +165,9 @@ public class EstimateObjectZCoordinateProcess {
                     estimateZCoordinateOfObject(observedUnitsPerPixel).toString();
         }
         catch (Exception ex) {
-            estimatedZStr = "unavailable (due to " + ex.getMessage() + ")";
+            estimatedZStr = Translations.format(
+                    "EstimateObjectZCoordinateProcess.UnavailableDueTo", //$NON-NLS-1$
+                    ex.getMessage());
         }
         return true;
     }

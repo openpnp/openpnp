@@ -258,6 +258,10 @@ public class Solutions extends AbstractTableModel {
         Severity(Color color) {
             this.color = color;
         }
+
+        public String toDisplayString() {
+            return Translations.getString("Solutions.Severity." + name()); //$NON-NLS-1$
+        }
     }
 
     public enum State {
@@ -270,11 +274,16 @@ public class Solutions extends AbstractTableModel {
         State(Color color) {
             this.color = color;
         }
+
+        public String toDisplayString() {
+            return Translations.getString("Solutions.State." + name()); //$NON-NLS-1$
+        }
     }
 
     public boolean confirm(String message, boolean warning) {
         int result = JOptionPane.showConfirmDialog(MainFrame.get(),
-                message, warning ? "Warning" : "Question", 
+                message, warning ? Translations.getString("MessageBoxes.Title.Warning") //$NON-NLS-1$
+                        : Translations.getString("MessageBoxes.Title.Question"), //$NON-NLS-1$
                         JOptionPane.YES_NO_OPTION, 
                         warning ? JOptionPane.WARNING_MESSAGE : JOptionPane.QUESTION_MESSAGE);
         return (result == JOptionPane.YES_OPTION);
@@ -825,7 +834,7 @@ public class Solutions extends AbstractTableModel {
             Severity severity = (Severity) value; 
             setForeground(Color.black);
             setBackground(severity.color);
-            setText(severity.toString());
+            setText(severity.toDisplayString());
             setBorder(new LineBorder(getBackground()));
         }
     }
@@ -838,7 +847,7 @@ public class Solutions extends AbstractTableModel {
             State state = (State) value; 
             setForeground(Color.black);
             setBackground(state.color);
-            setText(state.toString());
+            setText(state.toDisplayString());
             setBorder(new LineBorder(getBackground()));
         }
     }

@@ -19,6 +19,7 @@
 
 package org.openpnp.gui.support;
 
+import org.openpnp.Translations;
 import org.openpnp.spi.Camera;
 
 public class CameraItem extends HeadMountableItem {
@@ -33,7 +34,9 @@ public class CameraItem extends HeadMountableItem {
 
     @Override
     public String toString() {
-        return String.format("Camera: %s %s", hm.getName(), hm.getHead() != null
-                ? String.format("(Head: %s)", hm.getHead().getName()) : "");
+        return String.format(Translations.getString("HeadMountableItem.Format.Camera"), //$NON-NLS-1$
+                hm.getName(), hm.getHead() != null
+                ? String.format(Translations.getString("HeadMountableItem.Format.Head"), //$NON-NLS-1$
+                        hm.getHead().getName()) : "");
     }
 }

@@ -19,6 +19,8 @@
 
 package org.openpnp.machine.reference.camera;
 
+
+import org.openpnp.Translations;
 import java.awt.Dimension;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
@@ -159,7 +161,7 @@ public class Webcams extends ReferenceCamera implements Runnable, WebcamImageTra
 
     @Override
     public String getPropertySheetHolderTitle() {
-        return getClass().getSimpleName() + " " + getName();
+        return Translations.typeAndName(getClass(), getName());
     }
 
     @Override

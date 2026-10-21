@@ -21,6 +21,8 @@
 
 package org.openpnp.machine.reference.solutions;
 
+
+import org.openpnp.Translations;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -110,8 +112,8 @@ public class GcodeDriverSolutions implements Solutions.Subject {
             if (!(gcodeDriver instanceof GcodeAsyncDriver)) {
                 Solutions.Issue issue = new Solutions.Issue(
                         gcodeDriver, 
-                        "Use the GcodeAsyncDriver for advanced features. Accept or Dismiss to continue.", 
-                        "Convert to GcodeAsyncDriver.", 
+                        Translations.getString("GcodeDriverSolutions.Issue.UseAsyncDriver"), //$NON-NLS-1$ 
+                        Translations.getString("GcodeDriverSolutions.Solution.UseAsyncDriver"), //$NON-NLS-1$ 
                         Severity.Fundamental,
                         "https://github.com/openpnp/openpnp/wiki/GcodeAsyncDriver") {
 
@@ -138,8 +140,8 @@ public class GcodeDriverSolutions implements Solutions.Subject {
             if (gcodeDriver instanceof GcodeAsyncDriver) {
                 Solutions.Issue issue = new Solutions.Issue(
                         gcodeDriver, 
-                        "Use the GcodeDriver for simpler setup. Accept or Dismiss to continue.", 
-                        "Convert to GcodeDriver.", 
+                        Translations.getString("GcodeDriverSolutions.Issue.UsePlainDriver"), //$NON-NLS-1$ 
+                        Translations.getString("GcodeDriverSolutions.Solution.UsePlainDriver"), //$NON-NLS-1$ 
                         Severity.Information,
                         "https://github.com/openpnp/openpnp/wiki/GcodeAsyncDriver") {
 
@@ -151,9 +153,7 @@ public class GcodeDriverSolutions implements Solutions.Subject {
 
                     @Override 
                     public String getExtendedDescription() {
-                        return "<html><span color=\"red\">CAUTION:</span>  This is a troubleshooting option offered to remove the GcodeAsyncDriver "
-                                + "if it causes problems, or if you don't want it after all. Going back to the plain GcodeDriver will lose you all the "
-                                + "advanced configuration.</html>";
+                        return Translations.getString("GcodeDriverSolutions.ExtendedDescription.UsePlainDriver"); //$NON-NLS-1$
                     }
 
                     @Override
@@ -176,8 +176,8 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                     && gcodeDriver.getIpAddress().contentEquals("GcodeServer")) {
                 solutions.add(new Solutions.PlainIssue(
                         gcodeDriver, 
-                        "Connect the driver to your controller.", 
-                        "Choose the right communications type and port/address settings.", 
+                        Translations.getString("GcodeDriverSolutions.Issue.ConnectDriver"), //$NON-NLS-1$ 
+                        Translations.getString("GcodeDriverSolutions.Solution.ConnectDriver"), //$NON-NLS-1$ 
                         Severity.Fundamental,
                         "https://github.com/openpnp/openpnp/wiki/GcodeDriver#connection"));
             }
@@ -199,11 +199,11 @@ public class GcodeDriverSolutions implements Solutions.Subject {
             if (gcodeDriver.getDetectedFirmware() == null) {
                 solutions.add(new Solutions.Issue(
                         gcodeDriver, 
-                        "Firmware was not detected ("+
+                        Translations.format("GcodeDriverSolutions.Issue.FirmwareNotDetected", //$NON-NLS-1$
                                 (machine.isEnabled() ? 
-                                        (gcodeDriver.isSpeakingGcode() ? "failure, check log" : "controller may not speak Gcode") 
-                                        : "machine is disabled")+"). Only if the firmware is know, can Issues & Solutions generate suggested G-code for your machine configuration.", 
-                                "Retry the detection by connecting to the controller or assume a generic controller.", 
+                                        (gcodeDriver.isSpeakingGcode() ? Translations.getString("GcodeDriverSolutions.Choice.FirmwareNotDetected.Failure") : Translations.getString("GcodeDriverSolutions.Choice.FirmwareNotDetected.NoGcode")) 
+                                        : Translations.getString("GcodeDriverSolutions.Choice.FirmwareNotDetected.Disabled"))), 
+                                Translations.getString("GcodeDriverSolutions.Solution.FirmwareNotDetected"), //$NON-NLS-1$ 
                                 Severity.Fundamental,
                         "https://www.reprap.org/wiki/G-code#M115:_Get_Firmware_Version_and_Capabilities") {
 
@@ -211,20 +211,10 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                     public Solutions.Issue.Choice[] getChoices() {
                         return new Solutions.Issue.Choice[] {
                                 new Solutions.Issue.Choice(true, 
-                                        "<html><h3>Detect the firmware automatically</h3>"
-                                                + "<p>The M115 command must be supported by the firmware. Make sure the controller "
-                                                + "is connected to the computer and accept the solution to perform the detection.</p><br/>"
-                                                + "<p>This might take a while!</p><br/>"
-                                                + "<p>If the firmware is known by OpenPnP, it will be able to automatically generate G-code "
-                                                + "configuration for you."
-                                                + "</html>",
+                                        Translations.getString("GcodeDriverSolutions.Choice.DetectFirmware"), //$NON-NLS-1$
                                                 Icons.powerOn),
                                 new Solutions.Issue.Choice(false, 
-                                        "<html><h3>Assume a generic G-code controller</h3>"
-                                                + "<p>When the M115 command is not supported by your controller you can let "
-                                                + "OpenPnP propose a generic G-code configuration.</p><br/>"
-                                                + "<p>You will likely need to hand-tune the G-code configuration to work with your controller.</p>"
-                                                + "</html>",
+                                        Translations.getString("GcodeDriverSolutions.Choice.AssumeGeneric"), //$NON-NLS-1$
                                                 Icons.powerOff),
                         };
                     }
@@ -275,8 +265,8 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                     else {
                         solutions.add(new Solutions.PlainIssue(
                                 gcodeDriver, 
-                                "There is a better Smoothieware firmware available. "+gcodeDriver.getDetectedFirmware(), 
-                                "Please upgrade to the special PnP version. See info link.", 
+                                Translations.format("GcodeDriverSolutions.Issue.SmoothiewareUpgrade", gcodeDriver.getDetectedFirmware()), 
+                                Translations.getString("GcodeDriverSolutions.Solution.SmoothiewareUpgrade"), //$NON-NLS-1$ 
                                 Severity.Error, 
                                 "https://github.com/openpnp/openpnp/wiki/Motion-Controller-Firmwares#smoothieware"));
                     }
@@ -284,8 +274,8 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                             && firmwarePrimaryAxesCount != firmwareAxesCount) {
                         solutions.add(new Solutions.PlainIssue(
                                 gcodeDriver, 
-                                "Smoothieware firmware should be built with the PAXIS="+firmwareAxesCount+" option.", 
-                                "Download up-to-date firmware optimized for OpenPnP, or if you build the firmware yourself, please use the `make AXIS="+firmwareAxesCount+" PAXIS="+firmwareAxesCount+"` command. See info link.", 
+                                Translations.format("GcodeDriverSolutions.Issue.SmoothiewarePAxis", firmwareAxesCount), 
+                                Translations.format("GcodeDriverSolutions.Solution.SmoothiewarePAxis", firmwareAxesCount), 
                                 Severity.Warning, 
                                 "https://github.com/openpnp/openpnp/wiki/Motion-Controller-Firmwares#smoothieware"));
                     }
@@ -309,8 +299,8 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                             || major < 3 || (major == 3 && minor < 3)) {
                         solutions.add(new Solutions.PlainIssue(
                                 gcodeDriver,
-                                "RepRapFirmware was improved for OpenPnP, please use version 3.3beta or newer. Current version is "+firmwareVersion,
-                                "Get the new version through the linked web page.",
+                                Translations.format("GcodeDriverSolutions.Issue.RepRapFirmwareVersion", firmwareVersion),
+                                Translations.getString("GcodeDriverSolutions.Solution.RepRapFirmwareVersion"), //$NON-NLS-1$
                                 Severity.Error,
                                 "https://github.com/openpnp/openpnp/wiki/Motion-Controller-Firmwares#duet"));
                     }
@@ -327,8 +317,8 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                         if (gcodeDriver.getConfiguredAxes().contains("(r)")) {
                             solutions.add(new Solutions.PlainIssue(
                                     gcodeDriver,
-                                    "Axes should be configured as linear in feedrate calculations on the RepRapFirmware controller. See the linked web page.",
-                                    "Use the M584 S0 option in your config.g file.",
+                                    Translations.getString("GcodeDriverSolutions.Issue.RepRapLinearAxes"),
+                                    Translations.getString("GcodeDriverSolutions.Solution.RepRapLinearAxes"), //$NON-NLS-1$
                                     Severity.Error,
                                     "https://duet3d.dozuki.com/Wiki/Gcode#Section_M584_Set_drive_mapping"));
                         }
@@ -346,8 +336,8 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                     else {
                         solutions.add(new Solutions.PlainIssue(
                                 gcodeDriver, 
-                                "Marlin firmware is not reporting support for rotation axes (A B C). "+gcodeDriver.getDetectedFirmware(), 
-                                "Please upgrade the firmware and/or axis configuration. See the info link.", 
+                                Translations.format("GcodeDriverSolutions.Issue.MarlinRotationAxes", gcodeDriver.getDetectedFirmware()), 
+                                Translations.getString("GcodeDriverSolutions.Solution.MarlinRotationAxes"), //$NON-NLS-1$ 
                                 Severity.Error, 
                                 "https://github.com/openpnp/openpnp/wiki/Motion-Controller-Firmwares#marlin-20"));
                     }
@@ -365,8 +355,8 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                 else { 
                     solutions.add(new Solutions.PlainIssue(
                             gcodeDriver, 
-                            "Unknown firmware. "+gcodeDriver.getDetectedFirmware(), 
-                            "Check out firmwares known to be well supported. See info link.", 
+                            Translations.format("GcodeDriverSolutions.Issue.UnknownFirmware", gcodeDriver.getDetectedFirmware()), 
+                            Translations.getString("GcodeDriverSolutions.Solution.UnknownFirmware"), //$NON-NLS-1$ 
                             Severity.Warning, 
                             "https://github.com/openpnp/openpnp/wiki/Motion-Controller-Firmwares"));
                 }
@@ -378,10 +368,12 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                     if (oldFlowControl != newFlowControl) {
                         solutions.add(new Solutions.Issue(
                                 gcodeDriver, 
-                                "Change of serial port Flow Control recommended.",
-                                "Set Flow Control to "+newFlowControl.name()+" on serial port."
-                                +(newFlowControl == FlowControl.Off ? " The detected "+firmware+" controller is known to not "
-                                + "(reliably) support serial flow-control." : ""),
+                                Translations.getString("GcodeDriverSolutions.Issue.FlowControl"), //$NON-NLS-1$
+                                Translations.format("GcodeDriverSolutions.Solution.FlowControl", //$NON-NLS-1$
+                                        newFlowControl.name(),
+                                        (newFlowControl == FlowControl.Off
+                                                ? Translations.format("GcodeDriverSolutions.Solution.FlowControl.OffNote", firmware) //$NON-NLS-1$
+                                                : "")),
                                 newFlowControl == FlowControl.Off ? Severity.Warning : Severity.Suggestion,
                                 "https://en.wikipedia.org/wiki/Flow_control_(data)#Hardware_flow_control") {
 
@@ -398,8 +390,8 @@ public class GcodeDriverSolutions implements Solutions.Subject {
             if (gcodeDriver.isConnectionKeepAlive()) {
                 solutions.add(new Solutions.Issue(
                         gcodeDriver, 
-                        "Use Keep-Alive only when necessary. It may cause hard to diagnose problems.", 
-                        "Disable Connection Keep-Alive.", 
+                        Translations.getString("GcodeDriverSolutions.Issue.KeepAlive"), //$NON-NLS-1$ 
+                        Translations.getString("GcodeDriverSolutions.Solution.KeepAlive"), //$NON-NLS-1$ 
                         Severity.Warning,
                         null) {
 
@@ -421,12 +413,12 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                                 gcodeDriver, 
                                 (locationConfirmationRecommended
                                         ? (confirmationFlowControl
-                                                ? "Location Confirmation recommended for extra features in homing, contact probing, etc."
-                                                        : "Location Confirmation required when Confirmation Flow Control is off. "
-                                                                + "Supports extra features in homing, contact probing, etc.")
-                                                : ( !hasAxes ? "Location Confirmation usually not available when no axes present."
-                                                             : "Marlin sends location-like responses to other commands so Location Confirmation is not reliable")),
-                                (locationConfirmationRecommended ? "Enable Location Confirmation" : "Disable Location Confirmation"),
+                                                ? Translations.getString("GcodeDriverSolutions.Issue.LocationConfirmation.RecommendedWithFlow") //$NON-NLS-1$
+                                                        : Translations.getString("GcodeDriverSolutions.Issue.LocationConfirmation.RequiredNoFlow")) //$NON-NLS-1$
+                                                : ( !hasAxes ? Translations.getString("GcodeDriverSolutions.Issue.LocationConfirmation.NotAvailable") //$NON-NLS-1$
+                                                             : Translations.getString("GcodeDriverSolutions.Issue.LocationConfirmation.MarlinUnreliable"))), //$NON-NLS-1$
+                                (locationConfirmationRecommended ? Translations.getString("GcodeDriverSolutions.Solution.LocationConfirmation.Enable") //$NON-NLS-1$
+                                        : Translations.getString("GcodeDriverSolutions.Solution.LocationConfirmation.Disable")), //$NON-NLS-1$
                                 (confirmationFlowControl ? Severity.Suggestion : Severity.Error),
                                 "https://github.com/openpnp/openpnp/wiki/GcodeAsyncDriver#advanced-settings") {
 
@@ -447,12 +439,13 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                         solutions.add(new Solutions.Issue(
                                 gcodeDriver,
                                 (confirmationFlowControl ?
-                                        "Disable Confirmation Flow Control for full asynchronous operation."
-                                        : "Enable Confirmation Flow Control" + (hasAxes ? "" : ", controller has no axes") 
-                                        + (serialFlowControlOff ? ", serial flow control is not available" : "") + "."),
+                                        Translations.getString("GcodeDriverSolutions.Issue.ConfirmationFlowControl.Disable") //$NON-NLS-1$
+                                        : Translations.format("GcodeDriverSolutions.Issue.ConfirmationFlowControl.Enable", //$NON-NLS-1$
+                                                (hasAxes ? "" : Translations.getString("GcodeDriverSolutions.Issue.ConfirmationFlowControl.Enable.NoAxes")) //$NON-NLS-1$
+                                                + (serialFlowControlOff ? Translations.getString("GcodeDriverSolutions.Issue.ConfirmationFlowControl.Enable.NoSerialFlow") : ""))), //$NON-NLS-1$
                                 (confirmationFlowControl ?
-                                        "Disable Confirmation Flow Control."
-                                        :"Enable Confirmation Flow Control."),
+                                        Translations.getString("GcodeDriverSolutions.Solution.ConfirmationFlowControl.Disable") //$NON-NLS-1$
+                                        : Translations.getString("GcodeDriverSolutions.Solution.ConfirmationFlowControl.Enable")), //$NON-NLS-1$
                                 confirmationFlowControl ? Severity.Suggestion : Severity.Error,
                                 "https://github.com/openpnp/openpnp/wiki/GcodeAsyncDriver#advanced-settings") {
 
@@ -470,8 +463,8 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                     if (gcodeDriver.isSupportingPreMove()) {
                         solutions.add(new Solutions.Issue(
                                 gcodeDriver, 
-                                "Disallow Pre-Move Commands for automatic G-code setup and other advanced features. Accept or Dismiss to continue.", 
-                                "Disable Allow Letter Pre-Move Commands.", 
+                                Translations.getString("GcodeDriverSolutions.Issue.DisallowPreMove"), 
+                                Translations.getString("GcodeDriverSolutions.Solution.DisallowPreMove"), //$NON-NLS-1$ 
                                 Severity.Fundamental,
                                 "https://github.com/openpnp/openpnp/wiki/Advanced-Motion-Control#migration-from-a-previous-version") {
 
@@ -485,8 +478,8 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                     else if (!gcodeDriver.isUsingLetterVariables()) {
                         solutions.add(new Solutions.Issue(
                                 gcodeDriver, 
-                                "Use Axis Letter Variables for simpler use, automatic G-code setup, and other advanced features.", 
-                                "Enable Letter Variables.", 
+                                Translations.getString("GcodeDriverSolutions.Issue.UseLetterVariables"), 
+                                Translations.getString("GcodeDriverSolutions.Solution.UseLetterVariables"), //$NON-NLS-1$ 
                                 Severity.Fundamental,
                                 "https://github.com/openpnp/openpnp/wiki/Advanced-Motion-Control#migration-from-a-previous-version") {
 
@@ -506,9 +499,10 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                                 || ((firmware == FirmwareType.TinyG) && newMotionControlType != oldMotionControlType)) {
                             solutions.add(new Solutions.Issue(
                                     gcodeDriver, 
-                                    ((firmware == FirmwareType.TinyG) ? "Choose "+newMotionControlType.name()+" for proper TinyG operation." :
-                                            "Choose an advanced Motion Control Type for your controller type."), 
-                                    "Set to "+newMotionControlType.name()+".", 
+                                    (firmware == FirmwareType.TinyG)
+                                            ? Translations.format("GcodeDriverSolutions.Issue.MotionControlType.TinyG", newMotionControlType.name()) //$NON-NLS-1$
+                                            : Translations.getString("GcodeDriverSolutions.Issue.MotionControlType.Advanced"), //$NON-NLS-1$
+                                    Translations.format("GcodeDriverSolutions.Solution.MotionControlType", newMotionControlType.name()), //$NON-NLS-1$
                                     ((firmware == FirmwareType.TinyG) ? Severity.Error : Severity.Suggestion),
                                     "https://github.com/openpnp/openpnp/wiki/GcodeAsyncDriver#gcodedriver-new-settings") {
 
@@ -523,8 +517,8 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                         else if (gcodeDriver.getMaxFeedRate() > 0) {
                             solutions.add(new Solutions.Issue(
                                     gcodeDriver, 
-                                    "Axis velocity limited by driver Maximum Feed Rate. ", 
-                                    "Remove driver Maximum Feed Rate.", 
+                                    Translations.getString("GcodeDriverSolutions.Issue.MaxFeedRate"), 
+                                    Translations.getString("GcodeDriverSolutions.Solution.MaxFeedRate"), //$NON-NLS-1$ 
                                     Severity.Suggestion,
                                     "https://github.com/openpnp/openpnp/wiki/GcodeAsyncDriver#gcodedriver-new-settings") {
                                 final int oldMaxFeedRate = gcodeDriver.getMaxFeedRate();
@@ -544,8 +538,8 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                         if (oldMotionControlType != newMotionControlType) {
                             solutions.add(new Solutions.Issue(
                                     gcodeDriver, 
-                                    "Choose the simplest Motion Control Type for the first basic setup.", 
-                                    "Set to "+newMotionControlType.name()+".", 
+                                    Translations.getString("GcodeDriverSolutions.Issue.SimpleMotionControl"), //$NON-NLS-1$
+                                    Translations.format("GcodeDriverSolutions.Solution.MotionControlType", newMotionControlType.name()), //$NON-NLS-1$
                                     Severity.Information,
                                     "https://github.com/openpnp/openpnp/wiki/GcodeAsyncDriver#gcodedriver-new-settings") {
 
@@ -557,9 +551,8 @@ public class GcodeDriverSolutions implements Solutions.Subject {
 
                                 @Override 
                                 public String getExtendedDescription() {
-                                    return "<html><span color=\"red\">CAUTION:</span> This is a troubleshooting option, you should only choose "
-                                            + newMotionControlType.name()+" if the current "+oldMotionControlType.name()+" causes problems and you "
-                                            + "want to try a simpler setting.</html>";
+                                    return Translations.format("GcodeDriverSolutions.ExtendedDescription.SimpleMotionControl", //$NON-NLS-1$
+                                            newMotionControlType.name(), oldMotionControlType.name());
                                 }
 
                                 @Override
@@ -578,8 +571,8 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                         if (!gcodeDriver.isCompressGcode()) {
                             solutions.add(new Solutions.Issue(
                                     gcodeDriver, 
-                                    "Compress Gcode for superior communications speed.", 
-                                    "Enable Compress Gcode.", 
+                                    Translations.getString("GcodeDriverSolutions.Issue.CompressGcode.Enable"), 
+                                    Translations.getString("GcodeDriverSolutions.Solution.CompressGcode.Enable"), //$NON-NLS-1$ 
                                     Severity.Suggestion,
                                     "https://github.com/openpnp/openpnp/wiki/GcodeAsyncDriver#gcodedriver-new-settings") {
 
@@ -593,8 +586,8 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                         if (!gcodeDriver.isRemoveComments()) {
                             solutions.add(new Solutions.Issue(
                                     gcodeDriver, 
-                                    "Remove Gcode comments for superior communications speed.", 
-                                    "Enable Remove Comments.", 
+                                    Translations.getString("GcodeDriverSolutions.Issue.RemoveComments.Enable"), 
+                                    Translations.getString("GcodeDriverSolutions.Solution.RemoveComments.Enable"), //$NON-NLS-1$ 
                                     Severity.Suggestion,
                                     "https://github.com/openpnp/openpnp/wiki/GcodeAsyncDriver#gcodedriver-new-settings") {
 
@@ -611,8 +604,8 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                         if (gcodeDriver.isCompressGcode()) {
                             solutions.add(new Solutions.Issue(
                                     gcodeDriver, 
-                                    "Disable G-code compression for trouble-free operation with incompatible controllers.", 
-                                    "Disable Compress G-code.", 
+                                    Translations.getString("GcodeDriverSolutions.Issue.CompressGcode.Disable"), 
+                                    Translations.getString("GcodeDriverSolutions.Solution.CompressGcode.Disable"), //$NON-NLS-1$ 
                                     Severity.Information,
                                     "https://github.com/openpnp/openpnp/wiki/GcodeAsyncDriver#gcodedriver-new-settings") {
 
@@ -624,8 +617,8 @@ public class GcodeDriverSolutions implements Solutions.Subject {
 
                                 @Override 
                                 public String getExtendedDescription() {
-                                    return "<html><span color=\"red\">CAUTION:</span> This is a troubleshooting option, you should "
-                                            + "only disable G-code compression if it causes problems.</html>";
+                                    return Translations.getString(
+                                            "GcodeDriverSolutions.ExtendedDescription.CompressGcode.Disable"); //$NON-NLS-1$
                                 }
 
                                 @Override
@@ -638,8 +631,8 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                         if (gcodeDriver.isRemoveComments()) {
                             solutions.add(new Solutions.Issue(
                                     gcodeDriver, 
-                                    "Keep G-code comments for better debugging.", 
-                                    "Disable Remove Comments.", 
+                                    Translations.getString("GcodeDriverSolutions.Issue.RemoveComments.Disable"), 
+                                    Translations.getString("GcodeDriverSolutions.Solution.RemoveComments.Disable"), //$NON-NLS-1$ 
                                     Severity.Information,
                                     "https://github.com/openpnp/openpnp/wiki/GcodeAsyncDriver#gcodedriver-new-settings") {
 
@@ -651,8 +644,8 @@ public class GcodeDriverSolutions implements Solutions.Subject {
 
                                 @Override 
                                 public String getExtendedDescription() {
-                                    return "<html><span color=\"red\">CAUTION:</span> This is a troubleshooting option, you should "
-                                            + "only keep G-code comments if removing them causes problems.</html>";
+                                    return Translations.getString(
+                                            "GcodeDriverSolutions.ExtendedDescription.RemoveComments.Disable"); //$NON-NLS-1$
                                 }
 
                                 @Override
@@ -682,8 +675,8 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                                 final boolean oldInvertLinearRotational = ((ReferenceControllerAxis) axis).isInvertLinearRotational();
                                 solutions.add(new Solutions.Issue(
                                         axis, 
-                                        "Axis should be treated as a linear for detected firmware (all-primary axes mode).", 
-                                        (oldInvertLinearRotational ? "Disable" : "Enable")+" Switch Linear ↔ Rotational.", 
+                                        Translations.getString("GcodeDriverSolutions.Issue.InvertLinearRotational.Primary"), 
+                                        Translations.format("GcodeDriverSolutions.Solution.InvertLinearRotational", (oldInvertLinearRotational ? Translations.getString("GcodeDriverSolutions.Choice.InvertLinearRotational.Disable") : Translations.getString("GcodeDriverSolutions.Choice.InvertLinearRotational.Enable"))), 
                                         Severity.Error,
                                         "https://github.com/openpnp/openpnp/wiki/Machine-Axes#controller-settings") {
 
@@ -702,8 +695,10 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                                 final boolean oldInvertLinearRotational = ((ReferenceControllerAxis) axis).isInvertLinearRotational();
                                 solutions.add(new Solutions.Issue(
                                         axis, 
-                                        "Axis should be treated as "+(rotational ? "rotational" : "linear")+" according to its letter.", 
-                                        (oldInvertLinearRotational ? "Disable" : "Enable")+" Switch Linear ↔ Rotational.", 
+                                        Translations.format("GcodeDriverSolutions.Issue.InvertLinearRotational.Letter", //$NON-NLS-1$
+                                                (rotational ? Translations.getString("GcodeDriverSolutions.Choice.InvertLinearRotational.Rotational") //$NON-NLS-1$
+                                                        : Translations.getString("GcodeDriverSolutions.Choice.InvertLinearRotational.Linear"))), //$NON-NLS-1$
+                                        Translations.format("GcodeDriverSolutions.Solution.InvertLinearRotational", (oldInvertLinearRotational ? Translations.getString("GcodeDriverSolutions.Choice.InvertLinearRotational.Disable") : Translations.getString("GcodeDriverSolutions.Choice.InvertLinearRotational.Enable"))), 
                                         Severity.Warning,
                                         "https://github.com/openpnp/openpnp/wiki/Machine-Axes#controller-settings-rotational-axis") {
 
@@ -738,18 +733,16 @@ public class GcodeDriverSolutions implements Solutions.Subject {
 
                     String headMountable;
                     if (command.headMountableId == null) {
-                        headMountable = "the default head mountable";
+                        headMountable = Translations.getString("GcodeDriverSolutions.Choice.ActuatorReadHeadMountable.Default"); //$NON-NLS-1$
                     } else if (command.headMountableId.equals("*")) {
-                        headMountable = "the catch all head mountable";
+                        headMountable = Translations.getString("GcodeDriverSolutions.Choice.ActuatorReadHeadMountable.CatchAll"); //$NON-NLS-1$
                     } else {
-                        headMountable = "head mountable id " + command.headMountableId;
+                        headMountable = Translations.format("GcodeDriverSolutions.Choice.ActuatorReadHeadMountable.Id", command.headMountableId); //$NON-NLS-1$
                     }
                     solutions.add(new Solutions.Issue(
                             gcodeDriver,
-                            "Both ACTUATOR_READ_COMMAND and ACTUATOR_READ_WITH_DOUBLE_COMMAND are set for " +
-                                    headMountable +
-                                    " but the latter is deprecated",
-                                    "Accept to replace ACTUATOR_READ_COMMAND with ACTUATOR_READ_WITH_DOUBLE_COMMAND. Dismiss to remove read with double.",
+                            Translations.format("GcodeDriverSolutions.Issue.ActuatorReadDeprecated", headMountable), //$NON-NLS-1$
+                                    Translations.getString("GcodeDriverSolutions.Solution.ActuatorReadDeprecated"), //$NON-NLS-1$
                                     Severity.Suggestion,
                                     "https://github.com/openpnp/openpnp/wiki/GcodeDriver%3A-Command-Reference#actuator_read_command"
                             ) {
@@ -801,27 +794,27 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                     else {
                         if (gcodeDriver.getUnits() == LengthUnit.Millimeters) {
                             if (command.contains("G20 ")) {
-                                rationale += "Replace G20 (inches) with G21 (millimeters). ";
+                                rationale += Translations.getString("GcodeDriverSolutions.Rationale.ReplaceG20WithG21"); //$NON-NLS-1$
                                 commandBuilt = command
                                         .replace("G20 ", "G21 ")
                                         .replace("inches", "millimeters");
                             }
                             else if (! command.contains("G21 "))
                             {
-                                rationale += "Explicitly set millimeters mode. ";
+                                rationale += Translations.getString("GcodeDriverSolutions.Rationale.SetMillimeters"); //$NON-NLS-1$
                                 commandBuilt = "G21 ; Set millimeters mode \n" + command;
                             }
                         }
                         else if (gcodeDriver.getUnits() == LengthUnit.Inches) {
                             if (command.contains("G21 ")) {
-                                rationale += "Replace G21 (millimeters) with G20 (inches). ";
+                                rationale += Translations.getString("GcodeDriverSolutions.Rationale.ReplaceG21WithG20"); //$NON-NLS-1$
                                 commandBuilt = command
                                         .replace("G21 ", "G20 ")
                                         .replace("millimeters", "inches");
                             }
                             else if (! command.contains("G20 "))
                             {
-                                rationale += "Explicitly set inches mode. ";
+                                rationale += Translations.getString("GcodeDriverSolutions.Rationale.SetInches"); //$NON-NLS-1$
                                 commandBuilt = "G20 ; Set inches mode \n" + command;
                             }
                         }
@@ -1029,9 +1022,9 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                                     && !gcodeDriver.getReportedAxes().matches(commandBuilt)) {
                                 solutions.add(new Solutions.PlainIssue(
                                         gcodeDriver, 
-                                        "The driver does not report axes in the expected "+pattern+" pattern: "+gcodeDriver.getReportedAxes(), 
-                                        (dialect.isSmoothie() ? "Check axis letters and make sure use a proper 6-axis configuration without extruders."
-                                                : "Check axis letters and make sure the controller is capable to use extra axes (i.e. not extruders)."), 
+                                        Translations.format("GcodeDriverSolutions.Issue.PositionReportPattern", pattern, gcodeDriver.getReportedAxes()), //$NON-NLS-1$
+                                        (dialect.isSmoothie() ? Translations.getString("GcodeDriverSolutions.Solution.PositionReportPattern.Smoothie") //$NON-NLS-1$
+                                                : Translations.getString("GcodeDriverSolutions.Solution.PositionReportPattern.Generic")), //$NON-NLS-1$
                                         Severity.Error,
                                         (dialect.isSmoothie() ? "https://github.com/openpnp/openpnp/wiki/Motion-Controller-Firmwares#axes-vs-extruder-configuration"
                                                 : "https://github.com/openpnp/openpnp/wiki/Motion-Controller-Firmwares")));
@@ -1090,18 +1083,26 @@ public class GcodeDriverSolutions implements Solutions.Subject {
             boolean disallowHeadMountables, String rationale) {
         String currentCommand = gcodeDriver.getCommand(headMountable, commandType);
         if (suggestedCommand != null && !suggestedCommand.equals(currentCommand)) {
-            String solution = "";
+            final String solution;
             if (suggestedCommand.isEmpty()) {
-                solution = "Delete it.";
+                solution = Translations.getString("GcodeDriverSolutions.Solution.GcodeCommand.Delete"); //$NON-NLS-1$
             } else if (commandModified) {
-                solution = "Modify it.";
+                solution = Translations.getString("GcodeDriverSolutions.Solution.GcodeCommand.Modify"); //$NON-NLS-1$
             } else {
-                solution = "Change it.";
+                solution = Translations.getString("GcodeDriverSolutions.Solution.GcodeCommand.Change"); //$NON-NLS-1$
             }
+            final String issueSuffix;
+            if (suggestedCommand.isEmpty()) {
+                issueSuffix = Translations.getString("GcodeDriverSolutions.Choice.GcodeCommand.Obsolete"); //$NON-NLS-1$
+            } else if (commandModified) {
+                issueSuffix = Translations.getString("GcodeDriverSolutions.Choice.GcodeCommand.Modification"); //$NON-NLS-1$
+            } else {
+                issueSuffix = Translations.getString("GcodeDriverSolutions.Choice.GcodeCommand.Suggested"); //$NON-NLS-1$
+            }
+            final String acceptNote = gcodeDriver.isSpeakingGcode() ? "" : Translations.getString("GcodeDriverSolutions.Issue.GcodeCommand.AcceptNote"); //$NON-NLS-1$
             solutions.add(new Solutions.Issue(
                     (headMountable != null ? headMountable : gcodeDriver),
-                    commandType.name()+(suggestedCommand.isEmpty() ? " obsolete." : (commandModified ? " modification suggested." : " suggested."))
-                    + (gcodeDriver.isSpeakingGcode() ? "" : " Accept if this is a true Gcode controller."),
+                    Translations.format("GcodeDriverSolutions.Issue.GcodeCommand", commandType.name(), issueSuffix + acceptNote), //$NON-NLS-1$
                     solution,
                     suggestedCommand.isEmpty() ? Severity.Warning
                             : (gcodeDriver.isSpeakingGcode() ? Severity.Suggestion : Severity.Fundamental),
@@ -1114,21 +1115,21 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                 }
                 @Override
                 public String getExtendedDescription() {
-                    String r = "<html>\n";
-                    if (rationale!=null && !rationale.isEmpty()) {
-                        r += "<p><strong>"+rationale+"</strong></p>\n";
-                    }
+                    String rationalePart = (rationale != null && !rationale.isEmpty())
+                            ? Translations.format("GcodeDriverSolutions.ExtendedDescription.GcodeCommand.Rationale", rationale) //$NON-NLS-1$
+                            : "";
+                    String commandPart;
                     if (suggestedCommand.isEmpty()) {
-                        r += "<p>Delete it.</p>\n";
+                        commandPart = Translations.getString("GcodeDriverSolutions.ExtendedDescription.GcodeCommand.Delete"); //$NON-NLS-1$
                     } else {
-                        r += "<p>Suggested gcode is:</p><pre>"+suggestedCommand+"</pre>\n";
+                        commandPart = Translations.format("GcodeDriverSolutions.ExtendedDescription.GcodeCommand.Suggested", suggestedCommand); //$NON-NLS-1$
                     }
                     String prev = gcodeDriver.getCommand(headMountable, commandType);
-                    if(prev != null && !prev.isEmpty()) {
-                        r += "<p>Current gcode is:</p><pre>"+prev+"</pre>\n";
-                    }
-                    r += "</html>";
-                    return r;
+                    String currentPart = (prev != null && !prev.isEmpty())
+                            ? Translations.format("GcodeDriverSolutions.ExtendedDescription.GcodeCommand.Current", prev) //$NON-NLS-1$
+                            : "";
+                    return Translations.format("GcodeDriverSolutions.ExtendedDescription.GcodeCommand", //$NON-NLS-1$
+                            rationalePart, commandPart, currentPart);
                 }
             });
         }
@@ -1139,8 +1140,9 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                     if (commandHeadMountable != null) {
                         solutions.add(new Solutions.Issue(
                                 gcodeDriver,
-                                hm.getClass().getSimpleName()+" "+hm.getName()+" "+commandType+" obsolete with Letter Variables.",
-                                "Remove the command.",
+                                Translations.format("GcodeDriverSolutions.Issue.HeadMountableCommandObsolete", //$NON-NLS-1$
+                                        hm.getClass().getSimpleName(), hm.getName(), commandType),
+                                Translations.getString("GcodeDriverSolutions.Solution.HeadMountableCommandObsolete"), //$NON-NLS-1$
                                 Severity.Error,
                                 "https://github.com/openpnp/openpnp/wiki/Advanced-Motion-Control#migration-from-a-previous-version") {
 

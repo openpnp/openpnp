@@ -6,6 +6,7 @@ import java.util.List;
 import javax.swing.Action;
 import javax.swing.Icon;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.spi.JobProcessor;
@@ -29,7 +30,9 @@ public abstract class AbstractJobProcessor implements JobProcessor {
 
     @Override
     public String getPropertySheetHolderTitle() {
-        return getClass().getSimpleName();
+        String translated = Translations.getStringOrNull(
+                "JobProcessor." + getClass().getSimpleName() + ".title"); //$NON-NLS-1$ //$NON-NLS-2$
+        return translated != null ? translated : getClass().getSimpleName();
     }
 
     @Override

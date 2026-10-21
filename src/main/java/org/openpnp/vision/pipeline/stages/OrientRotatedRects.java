@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.opencv.core.RotatedRect;
+import org.openpnp.Translations;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
 import org.openpnp.vision.pipeline.Property;
@@ -17,7 +18,13 @@ public class OrientRotatedRects extends CvStage {
     public enum Orientation {
         Landscape,
         Portrait,
-        SnapToAngle,
+        SnapToAngle;
+
+        @Override
+        public String toString() {
+            String s = Translations.getStringOrNull("OrientRotatedRects.Orientation." + name()); //$NON-NLS-1$
+            return s != null ? s : name();
+        }
     }
     
     @Attribute(required = false)

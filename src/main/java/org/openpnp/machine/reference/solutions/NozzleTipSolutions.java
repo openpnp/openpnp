@@ -27,6 +27,7 @@ import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.Icon;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.LengthConverter;
@@ -77,8 +78,8 @@ public class NozzleTipSolutions implements Solutions.Subject  {
                         if (!nozzle.getManualNozzleTipChangeLocation().isInitialized()) {
                             solutions.add(new Solutions.Issue(
                                     nozzle, 
-                                    "Set the manual nozzle tip change location for "+nozzle.getName()+".", 
-                                    "Jog "+nozzle.getName()+" to the manual nozzle tip changing location, then press Accept.", 
+                                    Translations.format("NozzleTipSolutions.Issue.ManualTipChangeLocation", nozzle.getName()), //$NON-NLS-1$
+                                    Translations.format("NozzleTipSolutions.Solution.ManualTipChangeLocation", nozzle.getName()), //$NON-NLS-1$
                                     Solutions.Severity.Suggestion,
                                     "https://github.com/openpnp/openpnp/wiki/Kinematic-Solutions#capture-safe-z") {
 
@@ -94,17 +95,7 @@ public class NozzleTipSolutions implements Solutions.Subject  {
 
                                 @Override 
                                 public String getExtendedDescription() {
-                                    return "<html>"
-                                            + "<p>Jog "+nozzle.getName()+" to a suitable location where you can manually exchange the nozzle tips.</p><br/>"
-                                            + "<p>Even if you (plan to) use an automatic nozzle tip changer, it is useful to have this location "
-                                            + "definied, in case you want to disable automatic changing temporarily.</p><br/>"
-                                            + "<p>Often it is best to move Z all the way up so the tip is well reachable. On some head designs "
-                                            + "the uppermost Z position is blocked by a limiter, so it is the best position to apply the necessary "
-                                            + "force when inserting the nozzle tip.</p><br/>"
-                                            + "<p>Note for experts: the captured location will be automatically adjusted if you change the nozzle "
-                                            + "head offsets later.</p><br/>"
-                                            + "<p>Press <strong>Accept</strong> to store the location.</p><br/>"
-                                            + "</html>";
+                                    return Translations.format("NozzleTipSolutions.ExtendedDescription.ManualTipChangeLocation", nozzle.getName()); //$NON-NLS-1$
                                 }
 
                                 @Override
@@ -139,8 +130,8 @@ public class NozzleTipSolutions implements Solutions.Subject  {
                         if (defaultNozzle == null) {
                             solutions.add(new Solutions.PlainIssue(
                                     nozzleTip, 
-                                    "Nozzle tip "+nozzleTip.getName()+" has no compatible nozzle.", 
-                                    "Go to the nozzle(s) and enable the Compatible switches where appropriate.", 
+                                    Translations.format("NozzleTipSolutions.Issue.NoCompatibleNozzle", nozzleTip.getName()), //$NON-NLS-1$
+                                    Translations.getString("NozzleTipSolutions.Solution.NoCompatibleNozzle"), //$NON-NLS-1$
                                     Solutions.Severity.Error,
                                     "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration_Nozzle-Setup#nozzle-to-nozzle-tip-compatibility"));
                         }
@@ -171,8 +162,8 @@ public class NozzleTipSolutions implements Solutions.Subject  {
                     nozzleTip,
                     (ReferenceCamera) camera,
                     oldVisionDiameter,
-                    "Enable nozzle tip "+nozzleTip.getName()+" calibration.", 
-                    "Enable run-out, background and offset calibration for nozzle tip "+nozzleTip.getName()+".", 
+                    Translations.format("NozzleTipSolutions.Issue.EnableCalibration", nozzleTip.getName()), //$NON-NLS-1$
+                    Translations.format("NozzleTipSolutions.Solution.EnableCalibration", nozzleTip.getName()), //$NON-NLS-1$
                     Solutions.Severity.Suggestion,
                     "https://github.com/openpnp/openpnp/wiki/Nozzle-Tip-Calibration-Setup") {
 
@@ -184,22 +175,11 @@ public class NozzleTipSolutions implements Solutions.Subject  {
 
                 @Override 
                 public String getExtendedDescription() {
-                    return "<html>"
-                            + "<p>It is recommended to enable nozzle tip calibration for run-out and precision camera offsets. "
-                            + "For more information, press the blue Info button (below) to open the Wiki.</p><br/>"
-                            + (nozzleTip != nozzle.getNozzleTip() ?
-                                    "<p>Load nozzle tip "+nozzleTip.getName()+" to nozzle "+nozzle.getName() + ".</p><br/>"
-                                    : "<p>Nozzle tip "+nozzleTip.getName()+" is already loaded on nozzle "+nozzle.getName() + ".</p><br/>")
-                            + "<p>Press the <strong>Center Nozzle</strong> button (below) to center nozzle "+nozzle.getName()
-                            +" over the camera "+camera.getName()+".</p><br/>"
-                            + "<p>Adjust the <strong>Feature diameter</strong> up and down and see if it is detected right in the "
-                            + "camera view. A green circle and cross-hairs should appear and hug the wanted contour. "
-                            + "Zoom the camera using the scroll-wheel. Make sure to target a circular edge that can be detected "
-                            + "consistently even when seen from the side. This means it has to be a rather sharp-angled edge. "
-                            + "To eliminate nozzle and camera tilt errors, choose a contour that is lowest in Z on the nozzle tip. "
-                            + "Typically, the air bore contour is targeted.</p><br/>"
-                            + "<p>Then press Accept to enable and perform the nozzle tip calibration.</p>"
-                            + "</html>";
+                    return Translations.format("NozzleTipSolutions.ExtendedDescription.EnableCalibration", //$NON-NLS-1$
+                            (nozzleTip != nozzle.getNozzleTip() ?
+                                    Translations.format("NozzleTipSolutions.ExtendedDescription.EnableCalibration.LoadTip", nozzleTip.getName(), nozzle.getName()) //$NON-NLS-1$
+                                    : Translations.format("NozzleTipSolutions.ExtendedDescription.EnableCalibration.TipLoaded", nozzleTip.getName(), nozzle.getName())), //$NON-NLS-1$
+                            nozzle.getName(), camera.getName());
                 }
 
                 @Override
@@ -208,15 +188,15 @@ public class NozzleTipSolutions implements Solutions.Subject  {
                     Solutions.Issue.CustomProperty[] props0 = new Solutions.Issue.CustomProperty[] {
                             nozzleTipLoadActionProperty(this, nozzle, nozzleTip),
                             new Solutions.Issue.ActionProperty( 
-                                    "", "Center nozzle "+nozzle.getName()+" over camera "+camera.getName()) {
+                                    "", Translations.format("NozzleTipSolutions.Property.CenterNozzle", nozzle.getName(), camera.getName())) { //$NON-NLS-1$
                                 @Override
                                 public Action get() {
-                                    return new AbstractAction("Center Nozzle", Icons.centerTool) {
+                                    return new AbstractAction(Translations.getString("NozzleTipSolutions.Action.CenterNozzle"), Icons.centerTool) { //$NON-NLS-1$
                                         @Override
                                         public void actionPerformed(ActionEvent e) {
                                             UiUtils.submitUiMachineTask(() -> {
                                                 if (nozzleTip != nozzle.getNozzleTip()) {
-                                                    throw new Exception("The nozzle tip "+nozzleTip.getName()+" is not loaded on nozzle "+nozzle.getName()+".");
+                                                    throw new Exception(Translations.format("NozzleTipSolutions.Exception.TipNotLoaded", nozzleTip.getName(), nozzle.getName())); //$NON-NLS-1$
                                                 }
                                                 MovableUtils.moveToLocationAtSafeZ(nozzle, camera.getLocation(nozzle));
                                                 MovableUtils.fireTargetedUserAction(nozzle);
@@ -233,7 +213,7 @@ public class NozzleTipSolutions implements Solutions.Subject  {
                 public void setState(Solutions.State state) throws Exception {
                     if (state == State.Solved) {
                         if (nozzleTip != nozzle.getNozzleTip()) {
-                            throw new Exception("The nozzle tip "+nozzleTip.getName()+" is not loaded on nozzle "+nozzle.getName()+".");
+                            throw new Exception(Translations.format("NozzleTipSolutions.Exception.TipNotLoaded", nozzleTip.getName(), nozzle.getName())); //$NON-NLS-1$
                         }
                         final State oldState = getState();
                         UiUtils.submitUiMachineTask(
@@ -274,36 +254,32 @@ public class NozzleTipSolutions implements Solutions.Subject  {
             if (nozzleTip.getMaxPickTolerance().compareTo(new Length(1.0, LengthUnit.Millimeters)) > 0) {
                 solutions.add(new Solutions.PlainIssue(
                         nozzleTip, 
-                        "Nozzle tip "+nozzleTip.getName()+" has a large Max. Pick Tolerance of "+lengthConverter.convertForward(nozzleTip.getMaxPickTolerance())+".",
-                        "Set the Max. Pick Tolerance to the actual pick errors you expect. "
-                        + "Press the blue info button (below) for more information.",
+                        Translations.format("NozzleTipSolutions.Issue.LargePickTolerance", nozzleTip.getName(), lengthConverter.convertForward(nozzleTip.getMaxPickTolerance())), //$NON-NLS-1$
+                        Translations.getString("NozzleTipSolutions.Solution.LargePickTolerance"), //$NON-NLS-1$
                         Severity.Error,
                         "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration_Nozzle-Setup#nozzle-tip-configuration"));
             }
             else if (nozzleTip.getMinPartDiameter().compareTo(nozzleTip.getMaxPickTolerance().multiply(2)) <= 0) {
                 solutions.add(new Solutions.PlainIssue(
                         nozzleTip, 
-                        "Nozzle tip "+nozzleTip.getName()+" has an invalid Min. Part Diameter of "+lengthConverter.convertForward(nozzleTip.getMinPartDiameter())+".",
-                        "Make the Min. Part Diameter at least as big as the nozzle tip air bore plus two times the Max. Pick Tolerance of "
-                        + lengthConverter.convertForward(nozzleTip.getMaxPickTolerance())+". "
-                        + "Press the blue info button (below) for more information.",
+                        Translations.format("NozzleTipSolutions.Issue.InvalidMinPartDiameter", nozzleTip.getName(), lengthConverter.convertForward(nozzleTip.getMinPartDiameter())), //$NON-NLS-1$
+                        Translations.format("NozzleTipSolutions.Solution.InvalidMinPartDiameter", lengthConverter.convertForward(nozzleTip.getMaxPickTolerance())), //$NON-NLS-1$
                         Severity.Error,
                         "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration_Nozzle-Setup#nozzle-tip-configuration"));
             }
             else if (nozzleTip.getMinPartDiameter().compareTo(nozzleTip.getMaxPartDiameter()) >= 0) {
                 solutions.add(new Solutions.PlainIssue(
                         nozzleTip, 
-                        "Nozzle tip "+nozzleTip.getName()+" has a Max. Part Diameter that is not larger than the Min. Part Diameter.",
-                        "Make sure the Max. Part Diameter is larger than the Min. Part Diameter. "
-                        + "Press the blue info button (below) for more information.",
+                        Translations.format("NozzleTipSolutions.Issue.MaxMinPartDiameter", nozzleTip.getName()), //$NON-NLS-1$
+                        Translations.getString("NozzleTipSolutions.Solution.MaxMinPartDiameter"), //$NON-NLS-1$
                         Severity.Error,
                         "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration_Nozzle-Setup#nozzle-tip-configuration"));
             }
             if (oldBackgroundCalibrationMethod == BackgroundCalibrationMethod.None) {
                 solutions.add(new Solutions.Issue(
                         nozzleTip, 
-                        "Set background calibration method for "+nozzleTip.getName()+".", 
-                        "Depending on the type of nozzle tip or shade, select the proper background calibration.", 
+                        Translations.format("NozzleTipSolutions.Issue.BackgroundCalibration", nozzleTip.getName()), //$NON-NLS-1$
+                        Translations.getString("NozzleTipSolutions.Solution.BackgroundCalibration"), //$NON-NLS-1$
                         Solutions.Severity.Suggestion,
                         "https://github.com/openpnp/openpnp/wiki/Nozzle-Tip-Background-Calibration") {
 
@@ -314,19 +290,14 @@ public class NozzleTipSolutions implements Solutions.Subject  {
 
                     @Override 
                     public String getExtendedDescription() {
-                        return "<html>"
-                                + "<p>Select the proper background calibration.</p><br/>"
-                                + "<p><strong color=\"red\">CAUTION</strong>: Nozzle "+nozzle.getName()+" will move over camera "
-                                + camera.getName()+" and perform a new nozzle tip calibration calibration, including the enabled "
-                                + "background calibration. Any problems will be indicated with purple highlights.</p><br/>"
-                                + "<p>When ready, press Accept.</p>"
-                                + (getState() == State.Solved ? 
-                                        "<br/><h4>Results</h4>"
-                                        + "<p style=\"max-width: 40em\">"+nozzleTip.getCalibration().getBackgroundDiagnostics()
-                                        .replace("<html>", "").replace("</html>", "").replace("<hr/>", "<br/>")+"</p><br/>" 
-                                        + "<p>More information on the Calibration tab of nozzle tip "+nozzleTip.getName()+".</p>"
-                                        : "")
-                                + "</html>";
+                        return Translations.format("NozzleTipSolutions.ExtendedDescription.BackgroundCalibration", //$NON-NLS-1$
+                                nozzle.getName(), camera.getName(),
+                                (getState() == State.Solved ? 
+                                        Translations.format("NozzleTipSolutions.ExtendedDescription.BackgroundCalibration.Results", //$NON-NLS-1$
+                                                nozzleTip.getCalibration().getBackgroundDiagnostics()
+                                                .replace("<html>", "").replace("</html>", "").replace("<hr/>", "<br/>"),
+                                                nozzleTip.getName())
+                                        : ""));
                     }
 
                     @Override
@@ -340,17 +311,10 @@ public class NozzleTipSolutions implements Solutions.Subject  {
                     public Solutions.Issue.Choice[] getChoices() {
                         return new Solutions.Issue.Choice[] {
                                 new Solutions.Issue.Choice(BackgroundCalibrationMethod.BrightnessAndKeyColor, 
-                                        "<html><h3>Brighness and Key-Color</h3>"
-                                                + "<p>The nozzle tip and/or background (shade) is color-keyed "
-                                                + "so computer vision can robustly distinguish background pixels from "
-                                                + "foreground pixels (\"green-screening\"). Use for green Juki style nozzles.</p>"
-                                                + "</html>",
-                                                null),
+                                        Translations.getString("NozzleTipSolutions.Choice.BrightnessAndKeyColor"), //$NON-NLS-1$
+                                        null),
                                 new Solutions.Issue.Choice(BackgroundCalibrationMethod.Brightness, 
-                                        "<html><h3>Brightness</h3>"
-                                                + "<p>The background is just dark, the foreground is distinguished by "
-                                                + "brighness only.</p><br/>"
-                                                + "</html>",
+                                        Translations.getString("NozzleTipSolutions.Choice.Brightness"), //$NON-NLS-1$
                                                 null),
                         };
                     }
@@ -362,7 +326,7 @@ public class NozzleTipSolutions implements Solutions.Subject  {
                                         (BackgroundCalibrationMethod) getChoice() : oldBackgroundCalibrationMethod);
                         if (state == State.Solved) {
                             if (nozzleTip != nozzle.getNozzleTip()) {
-                                throw new Exception("The nozzle tip "+nozzleTip.getName()+" is not loaded on nozzle "+nozzle.getName()+".");
+                                throw new Exception(Translations.format("NozzleTipSolutions.Exception.TipNotLoaded", nozzleTip.getName(), nozzle.getName())); //$NON-NLS-1$
                             }
                             UiUtils.submitUiMachineTask(() -> {
                                 nozzleTip.getCalibration().calibrate((ReferenceNozzle) nozzle);
@@ -384,15 +348,15 @@ public class NozzleTipSolutions implements Solutions.Subject  {
     protected Solutions.Issue.ActionProperty nozzleTipLoadActionProperty(Solutions.Issue issue, Nozzle nozzle,
             ReferenceNozzleTip nozzleTip) {
         return issue.new ActionProperty( 
-                "", "Load nozzle tip "+nozzleTip.getName()+" on "+nozzle.getName()) {
+                "", Translations.format("NozzleTipSolutions.Property.LoadNozzleTip", nozzleTip.getName(), nozzle.getName())) { //$NON-NLS-1$
             @Override
             public Action get() {
-                return new AbstractAction("Load Nozzle Tip "+nozzleTip.getName(), Icons.nozzleTipLoad) {
+                return new AbstractAction(Translations.format("NozzleTipSolutions.Action.LoadNozzleTip", nozzleTip.getName()), Icons.nozzleTipLoad) { //$NON-NLS-1$
                     @Override
                     public void actionPerformed(ActionEvent e) {
                         UiUtils.submitUiMachineTask(() -> {
                             if (nozzleTip == nozzle.getNozzleTip()) {
-                                throw new Exception("The nozzle tip "+nozzleTip.getName()+" is already loaded on nozzle "+nozzle.getName()+".");
+                                throw new Exception(Translations.format("NozzleTipSolutions.Exception.TipAlreadyLoaded", nozzleTip.getName(), nozzle.getName())); //$NON-NLS-1$
                             }
                             nozzle.loadNozzleTip(nozzleTip);
                         });

@@ -88,6 +88,11 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     public enum VisionCalibration {
         None, FirstLocation, SecondLocation, ThirdLocation, LastLocation, TouchLocation;
 
+        @Override
+        public String toString() {
+            return Translations.getString("ReferenceNozzleTip.VisionCalibration." + name()); //$NON-NLS-1$
+        }
+
         public Location getLocation(ReferenceNozzleTip nt) {
             switch (this) {
                 case None:
@@ -111,7 +116,13 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     private VisionCalibration visionCalibration = VisionCalibration.None;
     
     public enum VisionCalibrationTrigger {
-        Manual, MachineHome, NozzleTipChange
+        Manual, MachineHome, NozzleTipChange;
+
+        @Override
+        public String toString() {
+            String s = Translations.getStringOrNull("ReferenceNozzleTip.VisionCalibrationTrigger." + name()); //$NON-NLS-1$
+            return s != null ? s : name();
+        }
     }
 
     @Attribute(required = false)
@@ -151,6 +162,12 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         public boolean isPerNozzleTip() {
             return this == NozzleTipChange;
         }
+
+        @Override
+        public String toString() {
+            String s = Translations.getStringOrNull("ReferenceNozzleTip.ZCalibrationTrigger." + name()); //$NON-NLS-1$
+            return s != null ? s : name();
+        }
     }
 
     @Attribute(required = false)
@@ -181,10 +198,15 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     private ReferenceNozzleTipCalibration calibration = new ReferenceNozzleTipCalibration();
 
     public enum VacuumMeasurementMethod {
-        None, 
+        None,
         Absolute,
         Difference;
-        
+
+        @Override
+        public String toString() {
+            return Translations.getString("ReferenceNozzleTip.VacuumMeasurementMethod." + name()); //$NON-NLS-1$
+        }
+
         public boolean isDifferenceMethod() {
             // there might be more difference methods in the future, so make this easy
             return this == Difference;
@@ -324,7 +346,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
 
     @Override
     public String getPropertySheetHolderTitle() {
-        return getClass().getSimpleName() + " " + getName();
+        return Translations.typeAndName(getClass(), getName());
     }
 
     @Override

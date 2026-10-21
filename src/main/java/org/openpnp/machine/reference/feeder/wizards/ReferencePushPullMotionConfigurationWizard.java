@@ -42,6 +42,7 @@ import javax.swing.UIManager;
 import javax.swing.border.TitledBorder;
 
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
+import org.openpnp.Translations;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.components.LocationButtonsPanel;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
@@ -158,12 +159,14 @@ extends AbstractConfigurationWizard {
         JPanel panelFields = new JPanel();
         panelFields.setLayout(new BoxLayout(panelFields, BoxLayout.Y_AXIS));
         panelLocations = new JPanel();
-        panelLocations.setBorder(new TitledBorder(null, "Tape Settings", TitledBorder.LEADING,
+        panelLocations.setBorder(new TitledBorder(null, Translations.getString(
+                "ReferencePushPullMotionConfigurationWizard.PanelTape.Border.title"), TitledBorder.LEADING, //$NON-NLS-1$
                 TitledBorder.TOP, null, null));
 
         panelPushPull = new JPanel();
         panelFields.add(panelPushPull);
-        panelPushPull.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "Push-Pull Settings", TitledBorder.LEADING, TitledBorder.TOP, null));
+        panelPushPull.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), Translations.getString( //$NON-NLS-1$
+                "ReferencePushPullMotionConfigurationWizard.PanelPushPull.Border.title"), TitledBorder.LEADING, TitledBorder.TOP, null)); //$NON-NLS-1$
         panelPushPull.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("max(70dlu;default)"),
@@ -227,8 +230,10 @@ extends AbstractConfigurationWizard {
             Logger.error(e, "Cannot determine default head of machine.");
         }
 
-        lblActuatorId = new JLabel("Feed Actuator");
-        lblActuatorId.setToolTipText("Actuator for feed signal and for motion");
+        lblActuatorId = new JLabel(Translations.getString(
+                "ReferencePushPullMotionConfigurationWizard.FeedActuatorLabel.text")); //$NON-NLS-1$
+        lblActuatorId.setToolTipText(Translations.getString(
+                "ReferencePushPullMotionConfigurationWizard.FeedActuatorLabel.toolTipText")); //$NON-NLS-1$
         panelPushPull.add(lblActuatorId, "2, 2, right, default");
 
         actuator = new JComboBox();
@@ -242,8 +247,10 @@ extends AbstractConfigurationWizard {
         actuator.setModel(new ActuatorsComboBoxModel(head));
 
 
-        lblPeelOffActuatorId = new JLabel("Auxiliary Actuator");
-        lblPeelOffActuatorId.setToolTipText("Actuator for auxiliary purpose (e.g. peeling).");
+        lblPeelOffActuatorId = new JLabel(Translations.getString(
+                "ReferencePushPullMotionConfigurationWizard.AuxiliaryActuatorLabel.text")); //$NON-NLS-1$
+        lblPeelOffActuatorId.setToolTipText(Translations.getString(
+                "ReferencePushPullMotionConfigurationWizard.AuxiliaryActuatorLabel.toolTipText")); //$NON-NLS-1$
         panelPushPull.add(lblPeelOffActuatorId, "2, 4, right, default");
 
         actuator2 = new JComboBox();
@@ -251,32 +258,42 @@ extends AbstractConfigurationWizard {
         actuator2.setMaximumRowCount(15);
         actuator2.setModel(new ActuatorsComboBoxModel(head));
 
-        JLabel lblX = new JLabel("X");
+        JLabel lblX = new JLabel(Translations.getString("CommonWords.X")); //$NON-NLS-1$
         panelPushPull.add(lblX, "4, 8, center, default");
 
-        JLabel lblY = new JLabel("Y");
+        JLabel lblY = new JLabel(Translations.getString("CommonWords.Y")); //$NON-NLS-1$
         panelPushPull.add(lblY, "6, 8, center, default");
 
-        JLabel lblZ = new JLabel("Z");
+        JLabel lblZ = new JLabel(Translations.getString(
+                "ReferencePushPullMotionConfigurationWizard.ZLabel.text")); //$NON-NLS-1$
         panelPushPull.add(lblZ, "8, 8, center, default");
 
-        lblRotation = new JLabel("Rotation");
+        lblRotation = new JLabel(Translations.getString(
+                "ReferencePushPullMotionConfigurationWizard.RotationLabel.text")); //$NON-NLS-1$
         panelPushPull.add(lblRotation, "10, 8, center, default");
 
-        lblPush = new JLabel("↓");
-        lblPush.setToolTipText("Locations that are included when pushing.");
+        lblPush = new JLabel(Translations.getString(
+                "ReferencePushPullMotionConfigurationWizard.PushColumnLabel.text")); //$NON-NLS-1$
+        lblPush.setToolTipText(Translations.getString(
+                "ReferencePushPullMotionConfigurationWizard.PushColumnLabel.toolTipText")); //$NON-NLS-1$
         panelPushPull.add(lblPush, "12, 8, center, default");
 
-        lblMulti = new JLabel("↑↓");
-        lblMulti.setToolTipText("<html>Locations that are included, when actuating multiple times.<br/>\r\nThe combination with the push ↓ and pull ↑ switch is taken.</html>");
+        lblMulti = new JLabel(Translations.getString(
+                "ReferencePushPullMotionConfigurationWizard.MultiColumnLabel.text")); //$NON-NLS-1$
+        lblMulti.setToolTipText(Translations.getString(
+                "ReferencePushPullMotionConfigurationWizard.MultiColumnLabel.toolTipText")); //$NON-NLS-1$
         panelPushPull.add(lblMulti, "14, 8, 3, 1, center, default");
 
-        lblPull = new JLabel("↑");
-        lblPull.setToolTipText("Locations that are included when pulling.");
+        lblPull = new JLabel(Translations.getString(
+                "ReferencePushPullMotionConfigurationWizard.PullColumnLabel.text")); //$NON-NLS-1$
+        lblPull.setToolTipText(Translations.getString(
+                "ReferencePushPullMotionConfigurationWizard.PullColumnLabel.toolTipText")); //$NON-NLS-1$
         panelPushPull.add(lblPull, "18, 8, center, default");
 
-        lblCalibrate = new JLabel("Vision Calibrate?");
-        lblCalibrate.setToolTipText("Apply the offsets obtained from Vision Calibration");
+        lblCalibrate = new JLabel(Translations.getString(
+                "ReferencePushPullMotionConfigurationWizard.VisionCalibrateLabel.text")); //$NON-NLS-1$
+        lblCalibrate.setToolTipText(Translations.getString(
+                "ReferencePushPullMotionConfigurationWizard.VisionCalibrateLabel.toolTipText")); //$NON-NLS-1$
         panelPushPull.add(lblCalibrate, "2, 10, right, default");
 
         calibrateMotionX = new JCheckBox("");
@@ -285,16 +302,19 @@ extends AbstractConfigurationWizard {
         calibrateMotionY = new JCheckBox("");
         panelPushPull.add(calibrateMotionY, "6, 10, center, default");
 
-        additiveRotation = new JCheckBox("Additive");
+        additiveRotation = new JCheckBox(Translations.getString(
+                "ReferencePushPullMotionConfigurationWizard.AdditiveRotationCheckBox.text")); //$NON-NLS-1$
         additiveRotation.addItemListener(new ItemListener() {
             public void itemStateChanged(ItemEvent arg0) {
                 resetRotation();
             }
         });
-        additiveRotation.setToolTipText("<html>Before the feed is performed, the current coordinate of the Rotation axis is taken.<br/>\nRotations stated below are then added to that base angle.<br/>\nThis is typically used for peeling axes, creating a continuous cover tape spool wind-up.\n</html>");
+        additiveRotation.setToolTipText(Translations.getString(
+                "ReferencePushPullMotionConfigurationWizard.AdditiveRotationCheckBox.toolTipText")); //$NON-NLS-1$
         panelPushPull.add(additiveRotation, "10, 10, center, default");
 
-        JLabel lblFeedStartLocation = new JLabel("Start Location");
+        JLabel lblFeedStartLocation = new JLabel(Translations.getString(
+                "ReferencePushPullMotionConfigurationWizard.StartLocationLabel.text")); //$NON-NLS-1$
         panelPushPull.add(lblFeedStartLocation, "2, 12, right, default");
 
         textFieldFeedStartX = new JTextField();
@@ -314,12 +334,14 @@ extends AbstractConfigurationWizard {
         textFieldFeedStartC.setColumns(8);
 
         chckbxMulti0 = new JCheckBox("");
-        chckbxMulti0.setToolTipText("Include the Start Location in multi-actuating motion (if the pull switch is also set).");
+        chckbxMulti0.setToolTipText(Translations.getString(
+                "ReferencePushPullMotionConfigurationWizard.StartLocationMultiCheckBox.toolTipText")); //$NON-NLS-1$
         chckbxMulti0.setSelected(true);
         panelPushPull.add(chckbxMulti0, "14, 12, 3, 1, center, default");
 
         chckbxPull0 = new JCheckBox("");
-        chckbxPull0.setToolTipText("Go to the Start Location when pulling.");
+        chckbxPull0.setToolTipText(Translations.getString(
+                "ReferencePushPullMotionConfigurationWizard.StartLocationPullCheckBox.toolTipText")); //$NON-NLS-1$
         chckbxPull0.setSelected(true);
         panelPushPull.add(chckbxPull0, "18, 12, center, default");
 
@@ -329,7 +351,8 @@ extends AbstractConfigurationWizard {
         locationButtonsPanelFeedStart.setBaseLocationVectorial(true);
         panelPushPull.add(locationButtonsPanelFeedStart, "20, 12, fill, default");
 
-        lblFeedSpeed0_1 = new JLabel("Speed ↕");
+        lblFeedSpeed0_1 = new JLabel(Translations.getString(
+                "ReferencePushPullMotionConfigurationWizard.SpeedLabel.text")); //$NON-NLS-1$
         panelPushPull.add(lblFeedSpeed0_1, "10, 14, right, default");
 
         textFieldFeedPush1 = new JTextField();
@@ -340,15 +363,18 @@ extends AbstractConfigurationWizard {
         panelPushPull.add(textFieldFeedPull0, "16, 14, 3, 1");
         textFieldFeedPull0.setColumns(10);
 
-        lblDelay0 = new JLabel("Delay");
+        lblDelay0 = new JLabel(Translations.getString(
+                "ReferencePushPullMotionConfigurationWizard.DelayLabel.text")); //$NON-NLS-1$
         panelPushPull.add(lblDelay0, "4, 14, right, default");
 
         textFieldDelay0 = new JTextField();
         panelPushPull.add(textFieldDelay0, "6, 14, left, default");
         textFieldDelay0.setColumns(4);
-        textFieldDelay0.setToolTipText("The delay (in milliseconds) after reaching this location");
+        textFieldDelay0.setToolTipText(Translations.getString(
+                "ReferencePushPullMotionConfigurationWizard.DelayTextField.toolTipText")); //$NON-NLS-1$
 
-        lblFeedMid1Location = new JLabel("Mid 1 Location");
+        lblFeedMid1Location = new JLabel(Translations.getString(
+                "ReferencePushPullMotionConfigurationWizard.Mid1LocationLabel.text")); //$NON-NLS-1$
         panelPushPull.add(lblFeedMid1Location, "2, 16, right, default");
 
         textFieldFeedMid1X = new JTextField();
@@ -368,17 +394,20 @@ extends AbstractConfigurationWizard {
         textFieldFeedMid1C.setColumns(8);
 
         chckbxPush1 = new JCheckBox("");
-        chckbxPush1.setToolTipText("Go to the Mid 1 Location when pushing.");
+        chckbxPush1.setToolTipText(Translations.getString(
+                "ReferencePushPullMotionConfigurationWizard.Mid1LocationPushCheckBox.toolTipText")); //$NON-NLS-1$
         chckbxPush1.setSelected(true);
         panelPushPull.add(chckbxPush1, "12, 16, center, default");
 
         chckbxMulti1 = new JCheckBox("");
-        chckbxMulti1.setToolTipText("Include the Mid 1 Location in multi-actuation motion (if the push/pull switch is also set).");
+        chckbxMulti1.setToolTipText(Translations.getString(
+                "ReferencePushPullMotionConfigurationWizard.Mid1LocationMultiCheckBox.toolTipText")); //$NON-NLS-1$
         chckbxMulti1.setSelected(true);
         panelPushPull.add(chckbxMulti1, "14, 16, 3, 1, center, default");
 
         chckbxPull1 = new JCheckBox("");
-        chckbxPull1.setToolTipText("Go to the Mid 1 Location when pulling.");
+        chckbxPull1.setToolTipText(Translations.getString(
+                "ReferencePushPullMotionConfigurationWizard.Mid1LocationPullCheckBox.toolTipText")); //$NON-NLS-1$
         chckbxPull1.setSelected(true);
         panelPushPull.add(chckbxPull1, "18, 16, center, default");
 
@@ -387,7 +416,8 @@ extends AbstractConfigurationWizard {
         locationButtonsPanelFeedMid1.setBaseLocationVectorial(true);
         panelPushPull.add(locationButtonsPanelFeedMid1, "20, 16, fill, default");
 
-        lblFeedSpeed1_2 = new JLabel("Speed ↕");
+        lblFeedSpeed1_2 = new JLabel(Translations.getString(
+                "ReferencePushPullMotionConfigurationWizard.SpeedLabel.text")); //$NON-NLS-1$
         panelPushPull.add(lblFeedSpeed1_2, "10, 18, right, default");
 
         textFieldFeedPush2 = new JTextField();
@@ -398,15 +428,18 @@ extends AbstractConfigurationWizard {
         textFieldFeedPull1.setColumns(10);
         panelPushPull.add(textFieldFeedPull1, "16, 18, 3, 1");
 
-        lblDelay1 = new JLabel("Delay");
+        lblDelay1 = new JLabel(Translations.getString(
+                "ReferencePushPullMotionConfigurationWizard.DelayLabel.text")); //$NON-NLS-1$
         panelPushPull.add(lblDelay1, "4, 18, right, default");
 
         textFieldDelay1 = new JTextField();
         panelPushPull.add(textFieldDelay1, "6, 18, left, default");
         textFieldDelay1.setColumns(4);
-        textFieldDelay1.setToolTipText("The delay (in milliseconds) after reaching this location");
+        textFieldDelay1.setToolTipText(Translations.getString(
+                "ReferencePushPullMotionConfigurationWizard.DelayTextField.toolTipText")); //$NON-NLS-1$
 
-        lblFeedMid2Location = new JLabel("Mid 2 Location");
+        lblFeedMid2Location = new JLabel(Translations.getString(
+                "ReferencePushPullMotionConfigurationWizard.Mid2LocationLabel.text")); //$NON-NLS-1$
         panelPushPull.add(lblFeedMid2Location, "2, 20, right, default");
 
         textFieldFeedMid2X = new JTextField();
@@ -426,17 +459,20 @@ extends AbstractConfigurationWizard {
         textFieldFeedMid2C.setColumns(8);
 
         chckbxPush2 = new JCheckBox("");
-        chckbxPush2.setToolTipText("Go to the Mid 2 Location when pushing.");
+        chckbxPush2.setToolTipText(Translations.getString(
+                "ReferencePushPullMotionConfigurationWizard.Mid2LocationPushCheckBox.toolTipText")); //$NON-NLS-1$
         chckbxPush2.setSelected(true);
         panelPushPull.add(chckbxPush2, "12, 20, center, default");
 
         chckbxMulti2 = new JCheckBox("");
-        chckbxMulti2.setToolTipText("Include the Mid 2 Location in multi-actuation motion (if the push/pull switch is also set).");
+        chckbxMulti2.setToolTipText(Translations.getString(
+                "ReferencePushPullMotionConfigurationWizard.Mid2LocationMultiCheckBox.toolTipText")); //$NON-NLS-1$
         chckbxMulti2.setSelected(true);
         panelPushPull.add(chckbxMulti2, "14, 20, 3, 1, center, default");
 
         chckbxPull2 = new JCheckBox("");
-        chckbxPull2.setToolTipText("Go to the Mid 2 Location when pulling.");
+        chckbxPull2.setToolTipText(Translations.getString(
+                "ReferencePushPullMotionConfigurationWizard.Mid2LocationPullCheckBox.toolTipText")); //$NON-NLS-1$
         chckbxPull2.setSelected(true);
         panelPushPull.add(chckbxPull2, "18, 20, center, default");
 
@@ -445,7 +481,8 @@ extends AbstractConfigurationWizard {
         locationButtonsPanelFeedMid2.setBaseLocationVectorial(true);
         panelPushPull.add(locationButtonsPanelFeedMid2, "20, 20, fill, default");
 
-        lblFeedSpeed2_3 = new JLabel("Speed ↕");
+        lblFeedSpeed2_3 = new JLabel(Translations.getString(
+                "ReferencePushPullMotionConfigurationWizard.SpeedLabel.text")); //$NON-NLS-1$
         panelPushPull.add(lblFeedSpeed2_3, "10, 22, right, default");
 
         textFieldFeedPush3 = new JTextField();
@@ -456,15 +493,18 @@ extends AbstractConfigurationWizard {
         textFieldFeedPull2.setColumns(10);
         panelPushPull.add(textFieldFeedPull2, "16, 22, 3, 1");
 
-        lblDelay2 = new JLabel("Delay");
+        lblDelay2 = new JLabel(Translations.getString(
+                "ReferencePushPullMotionConfigurationWizard.DelayLabel.text")); //$NON-NLS-1$
         panelPushPull.add(lblDelay2, "4, 22, right, default");
 
         textFieldDelay2 = new JTextField();
         panelPushPull.add(textFieldDelay2, "6, 22, left, default");
         textFieldDelay2.setColumns(4);
-        textFieldDelay2.setToolTipText("The delay (in milliseconds) after reaching this location");
+        textFieldDelay2.setToolTipText(Translations.getString(
+                "ReferencePushPullMotionConfigurationWizard.DelayTextField.toolTipText")); //$NON-NLS-1$
 
-        lblFeedMid3Location = new JLabel("Mid 3 Location");
+        lblFeedMid3Location = new JLabel(Translations.getString(
+                "ReferencePushPullMotionConfigurationWizard.Mid3LocationLabel.text")); //$NON-NLS-1$
         panelPushPull.add(lblFeedMid3Location, "2, 24, right, default");
 
         textFieldFeedMid3X = new JTextField();
@@ -485,17 +525,20 @@ extends AbstractConfigurationWizard {
         textFieldFeedMid3C.setColumns(8);
 
         chckbxPush3 = new JCheckBox("");
-        chckbxPush3.setToolTipText("Go to the Mid 3 Location when pushing.");
+        chckbxPush3.setToolTipText(Translations.getString(
+                "ReferencePushPullMotionConfigurationWizard.Mid3LocationPushCheckBox.toolTipText")); //$NON-NLS-1$
         chckbxPush3.setSelected(true);
         panelPushPull.add(chckbxPush3, "12, 24, center, default");
 
         chckbxMulti3 = new JCheckBox("");
-        chckbxMulti3.setToolTipText("Include the Mid 3 Location in multi-actuation motion (if the push/pull switch is also set).");
+        chckbxMulti3.setToolTipText(Translations.getString(
+                "ReferencePushPullMotionConfigurationWizard.Mid3LocationMultiCheckBox.toolTipText")); //$NON-NLS-1$
         chckbxMulti3.setSelected(true);
         panelPushPull.add(chckbxMulti3, "14, 24, 3, 1, center, default");
 
         chckbxPull3 = new JCheckBox("");
-        chckbxPull3.setToolTipText("Go to the Mid 3 Location when pulling.");
+        chckbxPull3.setToolTipText(Translations.getString(
+                "ReferencePushPullMotionConfigurationWizard.Mid3LocationPullCheckBox.toolTipText")); //$NON-NLS-1$
         chckbxPull3.setSelected(true);
         panelPushPull.add(chckbxPull3, "18, 24, center, default");
 
@@ -504,7 +547,8 @@ extends AbstractConfigurationWizard {
         locationButtonsPanelFeedMid3.setBaseLocationVectorial(true);
         panelPushPull.add(locationButtonsPanelFeedMid3, "20, 24, fill, default");
 
-        lblFeedSpeed3_4 = new JLabel("Speed ↕");
+        lblFeedSpeed3_4 = new JLabel(Translations.getString(
+                "ReferencePushPullMotionConfigurationWizard.SpeedLabel.text")); //$NON-NLS-1$
         panelPushPull.add(lblFeedSpeed3_4, "10, 26, right, default");
 
         textFieldFeedPush4 = new JTextField();
@@ -515,15 +559,18 @@ extends AbstractConfigurationWizard {
         textFieldFeedPull3.setColumns(10);
         panelPushPull.add(textFieldFeedPull3, "16, 26, 3, 1");
 
-        lblDelay3 = new JLabel("Delay");
+        lblDelay3 = new JLabel(Translations.getString(
+                "ReferencePushPullMotionConfigurationWizard.DelayLabel.text")); //$NON-NLS-1$
         panelPushPull.add(lblDelay3, "4, 26, right, default");
 
         textFieldDelay3 = new JTextField();
         panelPushPull.add(textFieldDelay3, "6, 26, left, default");
         textFieldDelay3.setColumns(4);
-        textFieldDelay3.setToolTipText("The delay (in milliseconds) after reaching this location");
+        textFieldDelay3.setToolTipText(Translations.getString(
+                "ReferencePushPullMotionConfigurationWizard.DelayTextField.toolTipText")); //$NON-NLS-1$
 
-        JLabel lblFeedEndLocation = new JLabel("End Location");
+        JLabel lblFeedEndLocation = new JLabel(Translations.getString(
+                "ReferencePushPullMotionConfigurationWizard.EndLocationLabel.text")); //$NON-NLS-1$
         panelPushPull.add(lblFeedEndLocation, "2, 28, right, default");
 
         textFieldFeedEndX = new JTextField();
@@ -543,12 +590,14 @@ extends AbstractConfigurationWizard {
         textFieldFeedEndC.setColumns(8);
 
         chckbxPushEnd = new JCheckBox("");
-        chckbxPushEnd.setToolTipText("Go to the End Location when pushing.");
+        chckbxPushEnd.setToolTipText(Translations.getString(
+                "ReferencePushPullMotionConfigurationWizard.EndLocationPushCheckBox.toolTipText")); //$NON-NLS-1$
         chckbxPushEnd.setSelected(true);
         panelPushPull.add(chckbxPushEnd, "12, 28, center, default");
 
         chckbxMultiEnd = new JCheckBox("");
-        chckbxMultiEnd.setToolTipText("Include the End Location in multi-actuation motion (if the push switch is also set).");
+        chckbxMultiEnd.setToolTipText(Translations.getString(
+                "ReferencePushPullMotionConfigurationWizard.EndLocationMultiCheckBox.toolTipText")); //$NON-NLS-1$
         chckbxMultiEnd.setSelected(true);
         panelPushPull.add(chckbxMultiEnd, "14, 28, 3, 1, center, default");
 
@@ -558,13 +607,15 @@ extends AbstractConfigurationWizard {
         locationButtonsPanelFeedEnd.setBaseLocationVectorial(true);
         panelPushPull.add(locationButtonsPanelFeedEnd, "20, 28, fill, default");
 
-        lblDelay4 = new JLabel("Delay");
+        lblDelay4 = new JLabel(Translations.getString(
+                "ReferencePushPullMotionConfigurationWizard.DelayLabel.text")); //$NON-NLS-1$
         panelPushPull.add(lblDelay4, "4, 30, right, default");
 
         textFieldDelay4 = new JTextField();
         panelPushPull.add(textFieldDelay4, "6, 30, left, default");
         textFieldDelay4.setColumns(4);
-        textFieldDelay4.setToolTipText("The delay (in milliseconds) after reaching this location");
+        textFieldDelay4.setToolTipText(Translations.getString(
+                "ReferencePushPullMotionConfigurationWizard.DelayTextField.toolTipText")); //$NON-NLS-1$
 
         btnRotationReset = new JButton(actionRotationReset);
         panelPushPull.add(btnRotationReset, "10, 30, left, default");
@@ -754,11 +805,10 @@ extends AbstractConfigurationWizard {
     private final Action actionRotationReset = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.axisRotation);
-            putValue(NAME, "Reset");
-            putValue(SHORT_DESCRIPTION, "<html>"
-                    + "Reset the current rotation axis to <strong>0°</strong> for subsequent<br/>"
-                    + "capturing/positioning using the location buttons in additive mode."
-                    + "</html>");
+            putValue(NAME, Translations.getString(
+                    "ReferencePushPullMotionConfigurationWizard.Action.RotationReset.text")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString(
+                    "ReferencePushPullMotionConfigurationWizard.Action.RotationReset.shortDescription")); //$NON-NLS-1$
         }
         public void actionPerformed(ActionEvent e) {
             resetRotation();

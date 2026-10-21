@@ -28,6 +28,7 @@ import java.util.Map.Entry;
 import java.util.TreeMap;
 import java.util.function.BiFunction;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.machine.reference.camera.ImageCamera;
@@ -183,7 +184,8 @@ public class SimulationModeMachine extends ReferenceMachine {
     public PropertySheet[] getPropertySheets() {
         return Collect.concat(super.getPropertySheets(),
                 new PropertySheet[] {
-                        new PropertySheetWizardAdapter(new SimulationModeMachineConfigurationWizard(this), "Simulation Mode")
+                        new PropertySheetWizardAdapter(new SimulationModeMachineConfigurationWizard(this),
+                                Translations.getString("CommonPropertySheet.SimulationMode")) //$NON-NLS-1$
                 });
     }
 

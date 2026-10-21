@@ -5,6 +5,7 @@ import java.awt.image.BufferedImage;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.openpnp.Translations;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Camera.SettleOption;
@@ -93,7 +94,7 @@ public class ImageCapture extends CvStage {
     public Result process(CvPipeline pipeline) throws Exception {
         Camera camera = (Camera) pipeline.getProperty("camera");
         if (camera == null) {
-            throw new Exception("No Camera set on pipeline.");
+            throw new Exception(Translations.getString("Exception.NoCameraSetOnPipeline")); //$NON-NLS-1$
         }
         try {
             // Light, settle and capture the image. Keep the lights on for possible averaging.

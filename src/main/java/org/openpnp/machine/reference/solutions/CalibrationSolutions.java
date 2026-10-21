@@ -21,6 +21,8 @@
 
 package org.openpnp.machine.reference.solutions;
 
+
+import org.openpnp.Translations;
 import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -203,8 +205,8 @@ public class CalibrationSolutions implements Solutions.Subject {
 
                         solutions.add(new Solutions.Issue(
                                 camera, 
-                                "Calibrate backlash compensation for axis "+axis.getName()+".", 
-                                "Automatically calibrates the backlash compensation for "+axis.getName()+" using the primary calibration fiducial.", 
+                                Translations.format("CalibrationSolutions.Issue.BacklashCalibration", axis.getName()), //$NON-NLS-1$ 
+                                Translations.format("CalibrationSolutions.Solution.BacklashCalibration", axis.getName()), //$NON-NLS-1$ 
                                 Solutions.Severity.Fundamental,
                                 "https://github.com/openpnp/openpnp/wiki/Calibration-Solutions#calibrating-backlash-compensation") {
 
@@ -222,41 +224,27 @@ public class CalibrationSolutions implements Solutions.Subject {
 
                             @Override 
                             public String getExtendedDescription() {
-                                return "<html>"
-                                        + "<p>Backlash compensation is used to avoid the effects of any looseness or play in the mechanical "
-                                        + "linkages of machine axes. More information can be found in the Wiki (press the blue Info button below).</p><br/>"
-                                        + "<p>Set the acceptable <strong>Tolerance ±</strong> as high as possible to allow for a more efficient backlash "
-                                        + "compensation method, avoiding extra moves and direction changes.</p><br/>"
-                                        + "<p><strong color=\"red\">CAUTION 1</strong>: The camera "+camera.getName()+" will move over the primary fiducial "
-                                        + "and then perform a calibration motion pattern, moving the axis "+axis.getName()+" over its full soft-limit range.</p><br/>"
-                                        + "<p><strong color=\"red\">CAUTION 2</strong>: The machine will also perform a visual homing cycle, once the new backlash "
-                                        + "compensation method is established. This is done to recalibrate the coordinate system that might be affected by the "
-                                        + "new method.</p><br/>"
-                                        + "<p>When ready, press Accept.</p>"
-                                        + (getState() == State.Solved ? 
-                                                "<br/><h4>Results:</h4>"
-                                                + "<table>"
-                                                + "<tr><td align=\"right\">Detected Backlash:</td>"
-                                                + "<td>"+axis.getBacklashOffset()+"</td></tr>"
-                                                + "<tr><td align=\"right\">Selected Method:</td>"
-                                                + "<td>"+axis.getBacklashCompensationMethod().toString()+"</td></tr>"
-                                                + "<tr><td align=\"right\">Sneak-up Distance:</td>"
-                                                + "<td>"+axis.getSneakUpOffset()+"</td></tr>"
-                                                + "<tr><td align=\"right\">Speed Factor:</td>"
-                                                + "<td>"+axis.getBacklashSpeedFactor()+"</td></tr>"
-                                                + "<tr><td align=\"right\">Applicable Resolution:</td>"
-                                                + "<td>"+String.format("%.4f", getAxisCalibrationTolerance(camera, axis, true))+" mm</td></tr>"
-                                                + "</table>" 
-                                                : "")
-                                        + "</html>";
+                                String results = "";
+                                if (getState() == State.Solved) {
+                                    results = Translations.format(
+                                            "CalibrationSolutions.ExtendedDescription.BacklashCalibration.Results", //$NON-NLS-1$
+                                            axis.getBacklashOffset(),
+                                            axis.getBacklashCompensationMethod().toString(),
+                                            axis.getSneakUpOffset(),
+                                            axis.getBacklashSpeedFactor(),
+                                            String.format("%.4f", getAxisCalibrationTolerance(camera, axis, true))); //$NON-NLS-1$
+                                }
+                                return Translations.format(
+                                        "CalibrationSolutions.ExtendedDescription.BacklashCalibration", //$NON-NLS-1$
+                                        camera.getName(), axis.getName(), results);
                             }
 
                             @Override
                             public Solutions.Issue.CustomProperty[] getProperties() {
                                 return new Solutions.Issue.CustomProperty[] {
                                         new Solutions.Issue.LengthProperty(
-                                                "Tolerance ±",
-                                                "Set the targe tolerance. By granting a larger tolerance, a more efficient backlash compensation method may be eligible.") {
+                                                Translations.getString("CalibrationSolutions.Property.Tolerance"), //$NON-NLS-1$
+                                                Translations.getString("CalibrationSolutions.Property.ToleranceDescription")) { //$NON-NLS-1$
                                             @Override
                                             public Length get() {
                                                 return tolerance;
@@ -315,8 +303,8 @@ public class CalibrationSolutions implements Solutions.Subject {
                     && !camera.getAdvancedCalibration().isOverridingOldTransformsAndDistortionCorrectionSettings()) {
                 solutions.add(new Solutions.Issue(
                         camera, 
-                        "Advanced camera "+camera.getName()+" calibration.", 
-                        "Automatically calibrates the camera "+camera.getName()+" using the primary and secondary calibration fiducials.", 
+                        Translations.format("CalibrationSolutions.Issue.AdvancedCameraCalibration", camera.getName()), //$NON-NLS-1$ 
+                        Translations.format("CalibrationSolutions.Solution.AdvancedCameraCalibration.Down", camera.getName()), //$NON-NLS-1$ 
                         Solutions.Severity.Suggestion,
                         "https://github.com/openpnp/openpnp/wiki/Calibration-Solutions#advanced-camera-calibration") {
 
@@ -328,19 +316,9 @@ public class CalibrationSolutions implements Solutions.Subject {
 
                     @Override 
                     public String getExtendedDescription() {
-                        return "<html>"
-                                + "<p>You already performed the preliminary camera calibration earlier, now it is time for the "
-                                + "<strong>Advanced Camera Calibration</strong> that includes compensating lens distortion and camera mounting tilt. "
-                                + "A more profound and precise 3D Units per Pixel calibration is also applied.</p><br/>"
-                                + "<p>More information can be found in the Wiki (press the blue Info button below).</p><br/>"
-                                + "<p>The calibration must be performed with the same calibration rig, that you used for the "
-                                + "preliminary calibration. Make sure it is ready, and locations (including Z) are still valid.</p><br/>"
-                                + "<p>If not, please revisit the <strong>Primary calibration fiducial position</strong> and "
-                                + "<strong>Secondary calibration fiducial position</strong> steps first (Enable the "
-                                + "<strong>Include Solved?</strong> checkbox above, to see revisitable solutions).</p><br/>"
-                                + "<p><strong color=\"red\">CAUTION</strong>: The camera "+camera.getName()+" will move over the "
-                                + "calibration rig and perform a length calibration motion pattern.</p><br/>" 
-                                + "</html>";
+                        return Translations.format(
+                                "CalibrationSolutions.ExtendedDescription.AdvancedCameraCalibration.Down", //$NON-NLS-1$
+                                camera.getName());
                     }
 
                     @Override
@@ -373,8 +351,8 @@ public class CalibrationSolutions implements Solutions.Subject {
                     nozzle, 
                     defaultCamera,
                     oldTestObjectDiameter,
-                    "Calibrate precise camera ↔ nozzle "+nozzle.getName()+" offsets.", 
-                    "Use a test object to perform the precision camera ↔ nozzle "+nozzle.getName()+" offsets calibration.", 
+                    Translations.format("CalibrationSolutions.Issue.NozzleOffsetCalibration", nozzle.getName()), //$NON-NLS-1$ 
+                    Translations.format("CalibrationSolutions.Solution.NozzleOffsetCalibration", nozzle.getName()), //$NON-NLS-1$ 
                     Solutions.Severity.Fundamental,
                     "https://github.com/openpnp/openpnp/wiki/Calibration-Solutions#calibrating-precision-camera-to-nozzle-offsets") {
 
@@ -382,34 +360,22 @@ public class CalibrationSolutions implements Solutions.Subject {
 
                 @Override 
                 public String getExtendedDescription() {
-                    return "<html>"
-                            + "<p>To calibrate precision camera ↔ nozzle offsets, we let the nozzle pick, rotate and place a small "
-                            + "test object and then measure the resulting offsets using the camera.</p><br/>"
-                            + "<p>Instructions about suitable test objects etc. must be obtained in the OpenPnP "
-                            + "Wiki. Press the blue Info button (below) to open the Wiki.</p><br/>"
-                            + "<p>Place the calibration test object onto the calibration primary fiducial.</p><br/>"
-                            + "<p>Jog camera " + defaultCamera.getName()
-                            + " over the test object. Target it with the cross-hairs.</p><br/>"
-                            + "<p>Adjust the <strong>Feature diameter</strong> up and down and see if it is detected right in the "
-                            + "camera view. A green circle and cross-hairs should appear and hug the test object contour. "
-                            + "Zoom the camera using the scroll-wheel.</p><br/>"
-                            + "<p><strong color=\"red\">CAUTION</strong> The nozzle "+nozzle.getName()+" will move to the test object "
-                            + "and perform the calibration pick & place pattern. Make sure to load the right nozzle tip and "
-                            + "ready the vacuum system.</p><br/>"
-                            + "<p>When ready, press Accept.</p>"
-                            + (getState() == State.Solved && !nozzle.getHeadOffsets().equals(oldNozzleOffsets) ? 
-                                    "<br/><h4>Results:</h4>"
-                                    + "<table>"
-                                    + "<tr><td align=\"right\">Detected Nozzle Head Offsets:</td>"
-                                    + "<td>"+nozzle.getHeadOffsets()+"</td></tr>"
-                                    + (oldNozzleOffsets == null ? "" : 
-                                        "<tr><td align=\"right\">Previous Nozzle Head Offsets:</td>"
-                                        + "<td>"+oldNozzleOffsets+"</td></tr>"
-                                        + "<tr><td align=\"right\">Difference:</td>"
-                                        + "<td>"+nozzle.getHeadOffsets().subtract(oldNozzleOffsets)+"</td></tr>")
-                                    + "</table>" 
-                                    : "")
-                            + "</html>";
+                    String results = "";
+                    if (getState() == State.Solved && !nozzle.getHeadOffsets().equals(oldNozzleOffsets)) {
+                        String previousOffsets = "";
+                        if (oldNozzleOffsets != null) {
+                            previousOffsets = Translations.format(
+                                    "CalibrationSolutions.ExtendedDescription.NozzleOffsetCalibration.PreviousOffsets", //$NON-NLS-1$
+                                    oldNozzleOffsets,
+                                    nozzle.getHeadOffsets().subtract(oldNozzleOffsets));
+                        }
+                        results = Translations.format(
+                                "CalibrationSolutions.ExtendedDescription.NozzleOffsetCalibration.Results", //$NON-NLS-1$
+                                nozzle.getHeadOffsets(), previousOffsets);
+                    }
+                    return Translations.format(
+                            "CalibrationSolutions.ExtendedDescription.NozzleOffsetCalibration", //$NON-NLS-1$
+                            defaultCamera.getName(), nozzle.getName(), results);
                 }
 
                 @Override
@@ -422,8 +388,7 @@ public class CalibrationSolutions implements Solutions.Subject {
                             throw new Exception("The head "+head.getName()+" primary fiducial location Z must be set first.");
                         }
                         if (! (nozzle == defaultNozzle || nozzle.getHeadOffsets().isInitialized())) {
-                            throw new Exception("The nozzle "+nozzle.getName()+" head offsets must be roughly set first. "
-                                    + "Use the \"Noozle "+nozzle.getName()+" offset for the primary fiducial\" calibration.");
+                            throw new Exception(Translations.format("CalibrationSolutions.Exception.NozzleOffsetsRequired", nozzle.getName())); //$NON-NLS-1$
                         }
                         final State oldState = getState();
                         UiUtils.submitUiMachineTask(
@@ -473,8 +438,8 @@ public class CalibrationSolutions implements Solutions.Subject {
                 && !camera.getAdvancedCalibration().isOverridingOldTransformsAndDistortionCorrectionSettings()) {
             solutions.add(new Solutions.Issue(
                     camera, 
-                    "Advanced camera "+camera.getName()+" calibration.", 
-                    "Automatically calibrates the camera "+camera.getName()+" using the nozzle "+defaultNozzle.getName()+".", 
+                    Translations.format("CalibrationSolutions.Issue.AdvancedCameraCalibration", camera.getName()), //$NON-NLS-1$ 
+                    Translations.format("CalibrationSolutions.Solution.AdvancedCameraCalibration.Up", camera.getName(), defaultNozzle.getName()), //$NON-NLS-1$ 
                     Solutions.Severity.Suggestion,
                     "https://github.com/openpnp/openpnp/wiki/Calibration-Solutions#advanced-camera-calibration") {
 
@@ -486,21 +451,9 @@ public class CalibrationSolutions implements Solutions.Subject {
 
                 @Override 
                 public String getExtendedDescription() {
-                    return "<html>"
-                            + "<p>You already performed the preliminary camera calibration earlier, now it is time for the "
-                            + "<strong>Advanced Camera Calibration</strong> that includes compensating lens distortion and camera mounting tilt. "
-                            + "A more profound and precise 3D Units per Pixel calibration is also applied.</p><br/>"
-                            + "<p>More information can be found in the Wiki (press the blue Info button below).</p><br/>"
-                            + "<p>The calibration must be performed with the same nozzle tip, that you used for the "
-                            + "preliminary calibration. Make sure it is loaded and its <strong>Vision Diameter</strong> is "
-                            + "still valid. Furthermore the camera "+camera.getName()+" position (including Z) must still be valid.</p><br/>"
-                            + "<p>If not, please revisit the <strong>Determine up-looking camera "+camera.getName()+" position</strong> step first "
-                            + "(Enable the <strong>Include Solved?</strong> checkbox above, to see revisitable solutions).</p><br/>"
-                            + "<p><strong color=\"red\">CAUTION</strong>: The nozzle "+defaultNozzle.getName()+" will perform a lengthy "
-                            + "calibration motion pattern all over the view area of the camera "+camera.getName()+". "
-                            + "Before pressing <strong>Accept</strong>, you need to be sure nozzle "+defaultNozzle.getName()+" will not collide "
-                            + "with anything!</p><br/>" 
-                            + "</html>";
+                    return Translations.format(
+                            "CalibrationSolutions.ExtendedDescription.AdvancedCameraCalibration.Up", //$NON-NLS-1$
+                            camera.getName(), defaultNozzle.getName());
                 }
 
                 @Override
@@ -522,14 +475,14 @@ public class CalibrationSolutions implements Solutions.Subject {
             HeadMountable movable, ReferenceControllerAxis axis) throws Exception {
         // Check pre-conditions (this method can be called from outside Issues & Solutions).
         if (!(axis.isSoftLimitLowEnabled() && axis.isSoftLimitHighEnabled())) {
-            throw new Exception("Axis "+axis.getName()+" must have soft limits enabled for backlash calibration.");
+            throw new Exception(Translations.format("CalibrationSolutions.Exception.SoftLimitsRequired", axis.getName())); //$NON-NLS-1$
         }
         if (! head.getCalibrationPrimaryFiducialLocation().isInitialized()) {
-            throw new Exception("Head "+head.getName()+" primary fiducial location must be set for backlash calibration.");
+            throw new Exception(Translations.format("CalibrationSolutions.Exception.PrimaryFiducialRequired", head.getName())); //$NON-NLS-1$
         }
         if (head.getCalibrationPrimaryFiducialDiameter() == null 
                 || ! head.getCalibrationPrimaryFiducialDiameter().isInitialized()) {
-            throw new Exception("Head "+head.getName()+" primary fiducial diameter must be set for backlash calibration.");
+            throw new Exception(Translations.format("CalibrationSolutions.Exception.PrimaryFiducialDiameterRequired", head.getName())); //$NON-NLS-1$
         }
 
         // Diagnostics graph.
@@ -696,9 +649,8 @@ public class CalibrationSolutions implements Solutions.Subject {
                 speedGraph.getRow(VELOCITY, VELOCITY+0).recordDataPoint(speed, effSpeed);
                 if (speed == minimumSpeed) {
                     if (effSpeed > Math.sqrt(speed)) {
-                        throw new Exception("Speed factor control seems not to be effective: "
-                                + "Should move at "+(int)(speed*100)+"%, but moved at "+(int)(effSpeed*100)+"%. "
-                                        + "Check your driver motion control and axis configuration (must use acceleration control).");
+                        throw new Exception(Translations.format("CalibrationSolutions.Exception.SpeedFactorIneffective", //$NON-NLS-1$
+                                (int)(speed*100), (int)(effSpeed*100)));
                     }
                 }
             }
@@ -746,11 +698,10 @@ public class CalibrationSolutions implements Solutions.Subject {
             LengthConverter lengthConverter = new LengthConverter();
             Length stepTest = new Length(stepTestMm, LengthUnit.Millimeters);
             LengthUnit sysUnits = Configuration.get().getSystemUnits();
-            throw new Exception("Large absolute error detected: measured "+lengthConverter.convertForward(
-                    stepTest.subtract(absoluteErr))+sysUnits.getShortName()+", but should be "
-                    +lengthConverter.convertForward(stepTest)+sysUnits.getShortName()+". "
-                    + "Please check camera Units per Pixel and primary calibration fiducial Z. "
-                    + "Revisit Issues & Solutions primary calibration fiducial and camera calibration step, if needed.");
+            throw new Exception(Translations.format("CalibrationSolutions.Exception.LargeAbsoluteError", //$NON-NLS-1$
+                    lengthConverter.convertForward(stepTest.subtract(absoluteErr))+sysUnits.getShortName(),
+                    lengthConverter.convertForward(stepTest)+sysUnits.getShortName(),
+                    sysUnits.getShortName()));
         }
 
         // Perform a backlash test over distances. The distances are a geometric series.   
@@ -1013,9 +964,9 @@ public class CalibrationSolutions implements Solutions.Subject {
             axis.setBacklashSpeedFactor(backlashProbingSpeeds[consistent-1]);
         }
         else {
-            throw new Exception("Axis "+axis.getName()+" seems to overshoot, even at the lowest speed factor. "
-                    + "Make sure OpenPnP has effective acceleration/jerk control. "
-                    + "Automatic compensation not possible.");
+            throw new Exception(Translations.format(
+                    "CalibrationSolutions.Exception.AxisOvershoot", //$NON-NLS-1$
+                    axis.getName()));
         }
         // Because this change may affect the coordinate system, perform a (visual) homing cycle.
         if (head.getVisualHomingMethod() == VisualHomingMethod.ResetToFiducialLocation) {
@@ -1183,7 +1134,7 @@ public class CalibrationSolutions implements Solutions.Subject {
     private void advancedCameraCalibration(ReferenceCamera camera, HeadMountable movable, ReferenceHead head, Solutions.Issue issue)
             throws Exception {
         if (!Configuration.get().getMachine().isHomed()) {
-            throw new Exception("Machine is not enabled and homed.");
+            throw new Exception(Translations.getString("CalibrationSolutions.Exception.MachineNotHomed")); //$NON-NLS-1$
         }
         AdvancedCalibration advCal = camera.getAdvancedCalibration();
         try {

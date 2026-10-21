@@ -11,6 +11,7 @@ import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JTextField;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.support.ActuatorProfilesComboBoxModel;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Actuator.ActuatorValueType;
@@ -73,10 +74,10 @@ public class ActuatorControlDialog extends JDialog {
 
         setModalityType(JDialog.ModalityType.MODELESS);
 
-        lblBoolean = new JLabel("Set Boolean Value");
+        lblBoolean = new JLabel(Translations.getString("ActuatorControlDialog.SetBooleanValue")); //$NON-NLS-1$
         getContentPane().add(lblBoolean, "2, 2");
 
-        onBtn = new JButton("On");
+        onBtn = new JButton(Translations.getString("CommonWords.On")); //$NON-NLS-1$
         getContentPane().add(onBtn, "4, 2");
         onBtn.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -87,7 +88,7 @@ public class ActuatorControlDialog extends JDialog {
             }
         });
 
-        offBtn = new JButton("Off");
+        offBtn = new JButton(Translations.getString("CommonWords.Off")); //$NON-NLS-1$
         getContentPane().add(offBtn, "6, 2");
         offBtn.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -98,14 +99,14 @@ public class ActuatorControlDialog extends JDialog {
             }
         });
 
-        lblValue = new JLabel("Set Value");
+        lblValue = new JLabel(Translations.getString("ActuatorControlDialog.SetValue")); //$NON-NLS-1$
         getContentPane().add(lblValue, "2, 4, right, default");
 
         valueTf = new JTextField();
         getContentPane().add(valueTf, "4, 4, 3, 1");
         valueTf.setColumns(10);
 
-        setBtn = new JButton("Set");
+        setBtn = new JButton(Translations.getString("CommonWords.Set")); //$NON-NLS-1$
         setBtn.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 UiUtils.submitUiMachineTask(() -> {
@@ -116,13 +117,13 @@ public class ActuatorControlDialog extends JDialog {
         });
         getContentPane().add(setBtn, "8, 4");
 
-        lblSetProfile = new JLabel("Set Profile");
+        lblSetProfile = new JLabel(Translations.getString("ActuatorControlDialog.SetProfile")); //$NON-NLS-1$
         getContentPane().add(lblSetProfile, "2, 5, right, default");
 
         profile = new JComboBox(new ActuatorProfilesComboBoxModel((AbstractActuator) actuator));
         getContentPane().add(profile, "4, 5, 3, 1, fill, default");
 
-        setProfileBtn = new JButton("Set");
+        setProfileBtn = new JButton(Translations.getString("CommonWords.Set")); //$NON-NLS-1$
         setProfileBtn.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 UiUtils.submitUiMachineTask(() -> {
@@ -132,14 +133,14 @@ public class ActuatorControlDialog extends JDialog {
         });
         getContentPane().add(setProfileBtn, "8, 5");
 
-        lblRead = new JLabel("Read Value");
+        lblRead = new JLabel(Translations.getString("ActuatorControlDialog.ReadValue")); //$NON-NLS-1$
         getContentPane().add(lblRead, "2, 7, right, default");
 
         readTf = new JTextField();
         getContentPane().add(readTf, "4, 7, 3, 1");
         readTf.setColumns(10);
 
-        readBtn = new JButton("Read");
+        readBtn = new JButton(Translations.getString("CommonWords.Read")); //$NON-NLS-1$
         readBtn.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 UiUtils.submitUiMachineTask(() -> {
@@ -150,7 +151,7 @@ public class ActuatorControlDialog extends JDialog {
         });
         getContentPane().add(readBtn, "8, 7");
 
-        readWithDoubleBtn = new JButton("Read with Double");
+        readWithDoubleBtn = new JButton(Translations.getString("ActuatorControlDialog.ReadWithDouble")); //$NON-NLS-1$
         readWithDoubleBtn.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 UiUtils.submitUiMachineTask(() -> {
@@ -160,7 +161,7 @@ public class ActuatorControlDialog extends JDialog {
             }
         });
 
-        lblWith = new JLabel("With");
+        lblWith = new JLabel(Translations.getString("CommonWords.With")); //$NON-NLS-1$
         getContentPane().add(lblWith, "2, 9, right, default");
 
         withDoubleTf = new JTextField();
@@ -168,7 +169,7 @@ public class ActuatorControlDialog extends JDialog {
         withDoubleTf.setColumns(10);
         getContentPane().add(readWithDoubleBtn, "8, 9");
 
-        closeBtn = new JButton("Close");
+        closeBtn = new JButton(Translations.getString("CommonWords.Close")); //$NON-NLS-1$
         closeBtn.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 setVisible(false);

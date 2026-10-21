@@ -19,6 +19,8 @@
 
 package org.openpnp.machine.reference.feeder;
 
+
+import org.openpnp.Translations;
 import javax.swing.Action;
 
 import org.openpnp.ConfigurationListener;
@@ -198,7 +200,7 @@ public class ReferenceAutoFeeder extends ReferenceFeeder {
 
     @Override
     public String getPropertySheetHolderTitle() {
-        return getClass().getSimpleName() + " " + getName();
+        return Translations.typeAndName(getClass(), getName());
     }
 
     @Override

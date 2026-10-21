@@ -52,7 +52,7 @@ public abstract class AbstractSignaler extends AbstractModelObject implements Si
     
     @Override
     public String getPropertySheetHolderTitle() {
-        return getClass().getSimpleName() + " " + getName();
+        return Translations.typeAndName(getClass(), getName());
     }
 
     @Override

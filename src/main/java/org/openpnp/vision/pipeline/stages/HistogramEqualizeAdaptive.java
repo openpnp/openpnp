@@ -5,6 +5,7 @@ import org.opencv.core.Mat;
 import org.opencv.core.Size;
 import org.opencv.imgproc.CLAHE;
 import org.opencv.imgproc.Imgproc;
+import org.openpnp.Translations;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
 import org.openpnp.vision.pipeline.Property;
@@ -34,6 +35,13 @@ public class HistogramEqualizeAdaptive extends CvStage {
 
         public int getCode() {
             return code;
+        }
+
+        @Override
+        public String toString() {
+            // Reuse the same display names as HistogramEqualize.
+            String s = Translations.getStringOrNull("HistogramEqualize.ChannelsToEqualize." + name()); //$NON-NLS-1$
+            return s != null ? s : name();
         }
     }
     

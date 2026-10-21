@@ -4,6 +4,7 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
+import org.openpnp.Translations;
 import org.openpnp.machine.photon.PhotonFeeder;
 import org.openpnp.machine.photon.PhotonProperties;
 import org.openpnp.machine.photon.protocol.PhotonBusInterface;
@@ -23,11 +24,6 @@ public class FeederSlotUpdateStep extends JPanel {
     private final JSpinner feederAddressSpinner;
     private final JTextArea statusLabel;
 
-    private static final String PLEASE_INSERT_FEEDER = "Please insert a feeder into slot %s.";
-    private static final String FOUND_FEEDER = "Feeder found! Programming address %s.";
-    private static final String DONE = "Programming done.";
-    private static final String FAILED = "Feeder address programming failed.";
-    private static final String MAX_HIT = "Max feeder address reached.";
     private final SpinnerNumberModel feederAddressModal;
 
     private final Thread updateThread;
@@ -60,13 +56,15 @@ public class FeederSlotUpdateStep extends JPanel {
 
         JTextArea instructionsText = new JTextArea();
         instructionsText.setBackground(UIManager.getColor("Panel.background"));
-        instructionsText.setText("Insert a feeder into the physical slot corresponding to the number shown below. You can change this number as needed if you want to program a different address. This number will automatically increment after the feeder slot is programmed. You can then move the current feeder or insert a new feeder into the next slot.");
+        instructionsText.setText(Translations.getString(
+                "PhotonFeeder.FeederSlotUpdateStep.instructionsText")); //$NON-NLS-1$
         instructionsText.setWrapStyleWord(true);
         instructionsText.setLineWrap(true);
         instructionsText.setEditable(false);
         add(instructionsText, "2, 2, 5, 1, fill, fill");
 
-        JLabel lblNewLabel = new JLabel("Current Slot Address");
+        JLabel lblNewLabel = new JLabel(Translations.getString(
+                "PhotonFeeder.FeederSlotUpdateStep.CurrentSlotAddressLabel.text")); //$NON-NLS-1$
         add(lblNewLabel, "2, 4");
 
         feederAddressModal = new SpinnerNumberModel(254, 1, 254, 1);
@@ -101,7 +99,8 @@ public class FeederSlotUpdateStep extends JPanel {
         @Override
         public void stateChanged(ChangeEvent e) {
             int feederAddress = (int) feederAddressSpinner.getValue();
-            statusLabel.setText(String.format(PLEASE_INSERT_FEEDER, feederAddress));
+            statusLabel.setText(Translations.format(
+                    "PhotonFeeder.FeederSlotUpdateStep.PleaseInsertFeeder", feederAddress)); //$NON-NLS-1$
         }
     };
 
@@ -121,7 +120,8 @@ public class FeederSlotUpdateStep extends JPanel {
                     feederAddressSpinner.setEnabled(false);
                     int feederAddress = (int) feederAddressSpinner.getValue();
 
-                    statusLabel.setText(String.format(FOUND_FEEDER, feederAddress));
+                    statusLabel.setText(Translations.format(
+                            "PhotonFeeder.FeederSlotUpdateStep.FoundFeeder", feederAddress)); //$NON-NLS-1$
 
                     updateFeederAddress(uuid, feederAddress);
 
@@ -131,12 +131,14 @@ public class FeederSlotUpdateStep extends JPanel {
                     UiUtils.submitUiMachineTask(feeder::initializeIfNeeded).get();
 
                     if (!feeder.isInitialized()) {
-                        throw new Exception("Failed to initialize feeder after updating slot address.");
+                        throw new Exception(Translations.getString(
+                                "PhotonFeeder.FeederSlotUpdateStep.Exception.InitAfterUpdateFailed")); //$NON-NLS-1$
                     }
 
                     if (feederAddress == 254) {
                         shouldStopThread = true;
-                        statusLabel.setText(MAX_HIT);
+                        statusLabel.setText(Translations.getString(
+                                "PhotonFeeder.FeederSlotUpdateStep.MaxAddressReached")); //$NON-NLS-1$
                         break;
                     }
 
@@ -159,14 +161,17 @@ public class FeederSlotUpdateStep extends JPanel {
 
                 if (response == null) {
                     shouldStopThread = true;
-                    statusLabel.setText(FAILED);
+                    statusLabel.setText(Translations.getString(
+                            "PhotonFeeder.FeederSlotUpdateStep.ProgrammingFailed")); //$NON-NLS-1$
 
-                    throw new Exception("Failed to update feeder slot address");
+                    throw new Exception(Translations.getString(
+                            "PhotonFeeder.FeederSlotUpdateStep.Exception.UpdateSlotAddressFailed")); //$NON-NLS-1$
                 }
             });
             voidFuture.get();
 
-            statusLabel.setText(DONE);
+            statusLabel.setText(Translations.getString(
+                    "PhotonFeeder.FeederSlotUpdateStep.ProgrammingDone")); //$NON-NLS-1$
         }
 
         private String findUninitializedFeeder() throws ExecutionException, InterruptedException {

@@ -27,6 +27,7 @@ import java.util.TreeMap;
 import org.opencv.core.Mat;
 import org.opencv.core.RotatedRect;
 import org.opencv.core.Size;
+import org.openpnp.Translations;
 import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 import org.openpnp.model.Point;
@@ -350,6 +351,12 @@ public class DetectRectlinearSymmetry extends CvStage {
 
         public boolean isMasked() {
             return this == OutlineSymmetryMasked;
+        }
+
+        @Override
+        public String toString() {
+            String s = Translations.getStringOrNull("DetectRectlinearSymmetry.SymmetryFunction." + name()); //$NON-NLS-1$
+            return s != null ? s : name();
         }
 
         double [] getKernel(int size) {

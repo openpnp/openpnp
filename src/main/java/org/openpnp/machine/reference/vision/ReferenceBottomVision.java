@@ -10,6 +10,7 @@ import org.opencv.core.Point;
 import org.opencv.core.RotatedRect;
 import org.opencv.core.Size;
 import org.openpnp.ConfigurationListener;
+import org.openpnp.Translations;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.LengthConverter;
@@ -469,9 +470,11 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                 pkg, bottomVisionSettings, nozzle, nozzleTip, camera, wantedLocation);
         if (visionCompositing.getCompositingMethod().isEnforced() 
                 && composite.getCompositingSolution().isInvalid()) {
-            throw new Exception("Vision Compositing has not found a valid solution for package "+pkg.getId()+". "
-                    + "Status: "+composite.getCompositingSolution()+", "+composite.getDiagnostics()+". "
-                    + "For more diagnostic information go to the Vision Compositing tab on package "+pkg.getId()+". ");
+            throw new Exception(Translations.format(
+                    "VisionCompositing.Error.NoValidSolution", //$NON-NLS-1$
+                    pkg.getId(),
+                    composite.getCompositingSolution().getLocalizedName(),
+                    composite.getDiagnostics()));
         }
         pipeline.resetReusedPipeline();
         for (Shot shot : composite.getShotsTravel()) {
@@ -728,7 +731,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
 
     @Override
     public String getPropertySheetHolderTitle() {
-        return "Bottom Vision";
+        return Translations.getString("ReferenceBottomVision.PropertySheetHolderTitle"); //$NON-NLS-1$
     }
 
     public static CvPipeline createStockPipeline(String variant) {
@@ -755,15 +758,33 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
     }
 
     public enum PreRotateUsage {
-        Default, AlwaysOn, AlwaysOff
+        Default, AlwaysOn, AlwaysOff;
+
+        @Override
+        public String toString() {
+            String s = Translations.getStringOrNull("ReferenceBottomVision.PreRotateUsage." + name()); //$NON-NLS-1$
+            return s != null ? s : name();
+        }
     }
 
     public enum PartSizeCheckMethod {
-        Disabled, BodySize, PadExtents
+        Disabled, BodySize, PadExtents;
+
+        @Override
+        public String toString() {
+            String s = Translations.getStringOrNull("ReferenceBottomVision.PartSizeCheckMethod." + name()); //$NON-NLS-1$
+            return s != null ? s : name();
+        }
     }
 
     public enum MaxRotation {
-        Adjust, Full
+        Adjust, Full;
+
+        @Override
+        public String toString() {
+            String s = Translations.getStringOrNull("ReferenceBottomVision.MaxRotation." + name()); //$NON-NLS-1$
+            return s != null ? s : name();
+        }
     }
 
     @Deprecated

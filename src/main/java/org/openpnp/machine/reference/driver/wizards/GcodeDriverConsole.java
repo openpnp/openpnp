@@ -149,7 +149,8 @@ public class GcodeDriverConsole extends AbstractConfigurationWizard {
 
         // Check that machine is started before sending commands
         if(!Configuration.get().getMachine().isEnabled()){
-            JOptionPane.showMessageDialog(null, "Please start machine before sending commands.");
+            JOptionPane.showMessageDialog(null,
+                    Translations.getString("GcodeDriverConsole.Error.MachineNotStarted")); //$NON-NLS-1$
             return;
         }
 

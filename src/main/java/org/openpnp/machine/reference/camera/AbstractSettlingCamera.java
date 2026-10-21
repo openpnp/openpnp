@@ -39,6 +39,7 @@ import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
+import org.openpnp.Translations;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.MotionPlanner.CompletionType;
@@ -58,6 +59,11 @@ public abstract class AbstractSettlingCamera extends AbstractCamera {
         Euclidean,
         Square,
         Motion;
+
+        @Override
+        public String toString() {
+            return Translations.getString("AbstractSettlingCamera.SettleMethod." + name()); //$NON-NLS-1$
+        }
 
         protected int getNorm() {
             switch(this) {

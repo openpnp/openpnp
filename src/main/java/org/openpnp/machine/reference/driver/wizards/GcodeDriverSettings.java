@@ -337,8 +337,9 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
                 File file = new File(new File(fileDialog.getDirectory()), filename);
                 if (file.exists()) {
                     int ret = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                            file.getName() + " already exists. Do you want to replace it?",
-                            "Replace file?", JOptionPane.YES_NO_OPTION,
+                            Translations.format("DialogMessages.ReplaceFile.message", file.getName()), //$NON-NLS-1$
+                            Translations.getString("DialogMessages.ReplaceFile.title"), //$NON-NLS-1$
+                            JOptionPane.YES_NO_OPTION,
                             JOptionPane.WARNING_MESSAGE);
                     if (ret != JOptionPane.YES_OPTION) {
                         return;

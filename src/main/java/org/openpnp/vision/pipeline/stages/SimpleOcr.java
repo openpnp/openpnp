@@ -36,6 +36,7 @@ import java.util.List;
 
 import javax.imageio.ImageIO;
 
+import org.openpnp.Translations;
 import org.opencv.core.Core;
 import org.opencv.core.Core.MinMaxLocResult;
 import org.opencv.core.CvType;
@@ -106,7 +107,13 @@ public class SimpleOcr extends CvStage {
     public enum DrawStyle {
         None,
         OverScaledImage, 
-        OverOriginalImage
+        OverOriginalImage;
+
+        @Override
+        public String toString() {
+            String s = Translations.getStringOrNull("SimpleOcr.DrawStyle." + name()); //$NON-NLS-1$
+            return s != null ? s : name();
+        }
     };
 
     @Attribute(required = false)

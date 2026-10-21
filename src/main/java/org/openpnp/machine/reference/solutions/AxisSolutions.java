@@ -26,6 +26,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.openpnp.Translations;
 import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
 import org.openpnp.machine.reference.driver.GcodeDriver;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision;
@@ -71,8 +72,8 @@ public class AxisSolutions implements Solutions.Subject {
             if (axis.getDriver() == null) {
                 solutions.add(new Solutions.PlainIssue(
                         axis, 
-                        "Axis is not assigned to a driver.", 
-                        "Assign a driver.", 
+                        Translations.getString("AxisSolutions.Issue.NoDriver"), //$NON-NLS-1$
+                        Translations.getString("AxisSolutions.Solution.NoDriver"), //$NON-NLS-1$
                         Severity.Fundamental,
                         "https://github.com/openpnp/openpnp/wiki/Machine-Axes#controller-settings"));
 
@@ -80,9 +81,8 @@ public class AxisSolutions implements Solutions.Subject {
             if (axis.getLetter().isEmpty()) {
                 solutions.add(new AxisLetterIssue(
                         axis, 
-                        "Axis letter is missing. Assign the letter to continue.", 
-                        "Please assign the correct controller axis letter. Choose from the list or enter a custom letter "
-                                + "(some contoller may support an extended range of letters).", 
+                        Translations.getString("AxisSolutions.Issue.MissingLetter"), //$NON-NLS-1$
+                        Translations.getString("AxisSolutions.Solution.MissingLetter"), //$NON-NLS-1$
                                 Severity.Fundamental,
                         "https://github.com/openpnp/openpnp/wiki/Machine-Axes#controller-settings"));
             }
@@ -90,9 +90,8 @@ public class AxisSolutions implements Solutions.Subject {
                 if (axis.getDriver() != null && !axis.getDriver().isSupportingPreMove()) {
                     solutions.add(new AxisLetterIssue(
                             axis, 
-                            "Avoid axis letter E, if possible. Use proper rotation axes instead.", 
-                            "Check if your controller supports proper axes A B C (etc.) instead of \"extruder\" E. "
-                            + "Press the blue info button (below) for more information.", 
+                            Translations.getString("AxisSolutions.Issue.AvoidLetterE"), //$NON-NLS-1$
+                            Translations.getString("AxisSolutions.Solution.AvoidLetterE"), //$NON-NLS-1$
                             Severity.Warning,
                             "https://github.com/openpnp/openpnp/wiki/Motion-Controller-Firmwares#upgrading-and-configuring-firmwares"));
                 }
@@ -100,13 +99,10 @@ public class AxisSolutions implements Solutions.Subject {
             else if (!getValidAxisLetters().contains(axis.getLetter())) {
                 solutions.add(new AxisLetterIssue(
                         axis, 
-                        "Axis letter "+axis.getLetter()+" is not a "+(getReportedAxisLetters() != null ? "controller reported" : "G-code standard")
-                        +" letter, one of "+String.join(" ", getValidAxisLetters())+".", 
-                        "Please assign the correct controller axis letter. Some controllers may "
-                                +(getReportedAxisLetters() != null ? 
-                                        "not report all axes on M114, in which case the letter might still be valid"
-                                        : "support an extended range of letters, in which case the letter might still be valid"
-                                        )+". Press the blue info button (below) for more information.", 
+                        Translations.format("AxisSolutions.Issue.InvalidLetter", axis.getLetter(), //$NON-NLS-1$
+                                (getReportedAxisLetters() != null ? Translations.getString("AxisSolutions.Choice.InvalidLetter.ControllerReported") : Translations.getString("AxisSolutions.Choice.InvalidLetter.GcodeStandard")), //$NON-NLS-1$ //$NON-NLS-2$
+                                String.join(" ", getValidAxisLetters())), 
+                        Translations.getString(getReportedAxisLetters() != null ? "AxisSolutions.Solution.InvalidLetter.Reported" : "AxisSolutions.Solution.InvalidLetter.Extended"), //$NON-NLS-1$ //$NON-NLS-2$
                                 Severity.Warning,
                         "https://github.com/openpnp/openpnp/wiki/Machine-Axes#controller-settings"));
             }
@@ -125,8 +121,8 @@ public class AxisSolutions implements Solutions.Subject {
                 if (duplicates.size() > 1) {
                     solutions.add(new AxisLetterIssue(
                             axis, 
-                            "Duplicate axis letter "+axis.getLetter()+" on axes "+String.join(", ", duplicates)+".", 
-                            "Assign the unique axis letter where wrong, press Accept, then press Find Issues & Solutions again to clear the correct one.", 
+                            Translations.format("AxisSolutions.Issue.DuplicateLetter", axis.getLetter(), String.join(", ", duplicates)), //$NON-NLS-1$
+                            Translations.getString("AxisSolutions.Solution.DuplicateLetter"), //$NON-NLS-1$
                             Severity.Error,
                             "https://github.com/openpnp/openpnp/wiki/Machine-Axes#controller-settings"));
                 }
@@ -139,9 +135,8 @@ public class AxisSolutions implements Solutions.Subject {
                 // tuned them.
                 solutions.add(new Solutions.PlainIssue(
                         axis, 
-                        "Feed-rate, acceleration, jerk etc. can now be set individually per axis.", 
-                        "Go to Machine Setup / Axes / "+axis.getClass().getSimpleName()+" "+axis.getName()+" and tune "
-                                + "Feed Rate, Acceleration for best performance.", 
+                        Translations.getString("AxisSolutions.Issue.PerAxisLimits"), //$NON-NLS-1$
+                        Translations.format("AxisSolutions.Solution.PerAxisLimits", axis.getClass().getSimpleName(), axis.getName()), //$NON-NLS-1$
                         Severity.Suggestion,
                         "https://github.com/openpnp/openpnp/wiki/Machine-Axes#kinematic-settings--rate-limits"));
             }
@@ -151,8 +146,8 @@ public class AxisSolutions implements Solutions.Subject {
                         && axis.getMotionLimit(1) <= 0) {
                     solutions.add(new Solutions.PlainIssue(
                             axis, 
-                            "For motion control type "+motionControlType+" a feed-rate must be set on axis "+axis.getName()+".", 
-                            "Go to Machine Setup / Axes / "+axis.getClass().getSimpleName()+" "+axis.getName()+" and set the Feed Rate.", 
+                            Translations.format("AxisSolutions.Issue.FeedRateRequired", motionControlType, axis.getName()), //$NON-NLS-1$
+                            Translations.format("AxisSolutions.Solution.FeedRateRequired", axis.getClass().getSimpleName(), axis.getName()), //$NON-NLS-1$
                             Severity.Error,
                             "https://github.com/openpnp/openpnp/wiki/Machine-Axes#kinematic-settings--rate-limits"));
                 }
@@ -160,8 +155,8 @@ public class AxisSolutions implements Solutions.Subject {
                         && axis.getMotionLimit(2) <= 0) {
                     solutions.add(new Solutions.PlainIssue(
                             axis, 
-                            "For motion control type "+motionControlType+" an acceleration limit must be set on axis "+axis.getName()+".", 
-                            "Go to Machine Setup / Axes / "+axis.getClass().getSimpleName()+" "+axis.getName()+" and set the Acceleration.", 
+                            Translations.format("AxisSolutions.Issue.AccelerationRequired", motionControlType, axis.getName()), //$NON-NLS-1$
+                            Translations.format("AxisSolutions.Solution.AccelerationRequired", axis.getClass().getSimpleName(), axis.getName()), //$NON-NLS-1$
                             Severity.Error,
                             "https://github.com/openpnp/openpnp/wiki/Machine-Axes#kinematic-settings--rate-limits"));
                 }
@@ -169,8 +164,8 @@ public class AxisSolutions implements Solutions.Subject {
                         && axis.getMotionLimit(3) <= 0) {
                     solutions.add(new Solutions.PlainIssue(
                             axis, 
-                            "For motion control type "+motionControlType+" a jerk limit must be set on axis "+axis.getName()+".", 
-                            "Go to Machine Setup / Axes / "+axis.getClass().getSimpleName()+" "+axis.getName()+" and set the Jerk.", 
+                            Translations.format("AxisSolutions.Issue.JerkRequired", motionControlType, axis.getName()), //$NON-NLS-1$
+                            Translations.format("AxisSolutions.Solution.JerkRequired", axis.getClass().getSimpleName(), axis.getName()), //$NON-NLS-1$
                             Severity.Error,
                             "https://github.com/openpnp/openpnp/wiki/Machine-Axes#kinematic-settings--rate-limits"));
                 }
@@ -195,9 +190,8 @@ public class AxisSolutions implements Solutions.Subject {
                         final RotationMode oldRotationMode = nozzle.getRotationMode();
                         solutions.add(new Solutions.Issue(
                                 nozzle, 
-                                "Rotation axis "+axis.getName()+" is limiting Nozzle "+nozzle.getName()+" to less than 360°. "
-                                        + "Must use the " + RotationMode.LimitedArticulation + " rotation mode.", 
-                                "Set the " + RotationMode.LimitedArticulation + " rotation mode.", 
+                                Translations.format("AxisSolutions.Issue.LimitedArticulationRotationMode", axis.getName(), nozzle.getName(), RotationMode.LimitedArticulation), //$NON-NLS-1$
+                                Translations.format("AxisSolutions.Solution.LimitedArticulationRotationMode", RotationMode.LimitedArticulation), //$NON-NLS-1$
                                 Severity.Error,
                                 "https://github.com/openpnp/openpnp/wiki/Nozzle-Rotation-Mode") {
 
@@ -213,9 +207,8 @@ public class AxisSolutions implements Solutions.Subject {
                     if (!nozzle.isAligningRotationMode()) {
                         solutions.add(new Solutions.Issue(
                                 nozzle, 
-                                "Align nozzle "+nozzle.getName()+" rotation with part.", 
-                                        "Enable part aligned nozzle rotation mode, so camera view cross-hairs and DRO-coordinates show the "
-                                        + "bottom vision aligned part rotation instead of the unadjusted nozzle rotation.", 
+                                Translations.format("AxisSolutions.Issue.AlignNozzleRotation", nozzle.getName()), //$NON-NLS-1$
+                                Translations.getString("AxisSolutions.Solution.AlignNozzleRotation"), //$NON-NLS-1$
                                         Severity.Suggestion,
                                 "https://github.com/openpnp/openpnp/wiki/Nozzle-Rotation-Mode#align-nozzle-rotation-with-part") {
 
@@ -234,8 +227,8 @@ public class AxisSolutions implements Solutions.Subject {
                                 if (!referenceBottomVision.isPreRotate()) {
                                     solutions.add(new Solutions.Issue(
                                             referenceBottomVision, 
-                                            "Pre-rotate bottom vision must be enabled, because the machine has a limited articulation nozzle.", 
-                                            "Enable Pre-Rotate.", 
+                                            Translations.getString("AxisSolutions.Issue.PreRotateRequired"), //$NON-NLS-1$
+                                            Translations.getString("AxisSolutions.Solution.PreRotateRequired"), //$NON-NLS-1$
                                             Severity.Error,
                                             "https://github.com/openpnp/openpnp/wiki/Bottom-Vision#global-configuration") {
 
@@ -260,21 +253,17 @@ public class AxisSolutions implements Solutions.Subject {
                                 if (!visionSettings.isEmpty()) {
                                     solutions.add(new Solutions.Issue(
                                             referenceBottomVision, 
-                                            "Pre-rotate bottom vision must be allowed on all vision settings, because the machine has a "
-                                                    + "limited articulation nozzle.", 
-                                                    "Switch from "+PreRotateUsage.AlwaysOff+" to "+PreRotateUsage.Default, 
+                                            Translations.getString("AxisSolutions.Issue.PreRotateVisionSettings"), //$NON-NLS-1$
+                                            Translations.format("AxisSolutions.Solution.PreRotateVisionSettings", PreRotateUsage.AlwaysOff, PreRotateUsage.Default), //$NON-NLS-1$
                                                     Severity.Error,
                                             "https://github.com/openpnp/openpnp/wiki/Bottom-Vision#part-configuration") {
 
 
                                         @Override 
                                         public String getExtendedDescription() {
-                                            return "<html><p>Switch vision settings pre-rotate usage from <strong>"+PreRotateUsage.AlwaysOff+"</strong> "
-                                                    + "to <strong>"+PreRotateUsage.Default+"</strong> on these parts:</p>"
-                                                    + "<ol><li>"
-                                                    + items.stream().collect(Collectors.joining("</li><li>"))
-                                                    + "</li><ol>"
-                                                    + "</html>";
+                                            return Translations.format("AxisSolutions.ExtendedDescription.PreRotateVisionSettings", //$NON-NLS-1$
+                                                    PreRotateUsage.AlwaysOff, PreRotateUsage.Default,
+                                                    items.stream().collect(Collectors.joining("</li><li>")));
                                         }
 
                                         @Override
@@ -297,8 +286,8 @@ public class AxisSolutions implements Solutions.Subject {
                         if (!axis.isWrapAroundRotation()) {
                             solutions.add(new Solutions.Issue(
                                     axis, 
-                                    "Rotation can be optimized by wrapping-around the shorter way. Best combined with Limit ±180°.", 
-                                    "Enable Wrap Around.", 
+                                    Translations.getString("AxisSolutions.Issue.WrapAroundSuggestion"), //$NON-NLS-1$
+                                    Translations.getString("AxisSolutions.Solution.WrapAroundSuggestion"), //$NON-NLS-1$
                                     Severity.Suggestion,
                                     "https://github.com/openpnp/openpnp/wiki/Machine-Axes#controller-settings-rotational-axis") {
 
@@ -312,9 +301,8 @@ public class AxisSolutions implements Solutions.Subject {
                         if (!axis.isLimitRotation()) {
                             solutions.add(new Solutions.Issue(
                                     axis, 
-                                    "Rotation can be optimized by limiting angles to ±180°. "
-                                            + "Best combined with Wrap Around.", 
-                                            "Enable Limit to Range.", 
+                                    Translations.getString("AxisSolutions.Issue.LimitRotationSuggestion"), //$NON-NLS-1$
+                                    Translations.getString("AxisSolutions.Solution.LimitRotationSuggestion"), //$NON-NLS-1$
                                             Severity.Suggestion,
                                     "https://github.com/openpnp/openpnp/wiki/Machine-Axes#controller-settings-rotational-axis") {
 
@@ -332,8 +320,8 @@ public class AxisSolutions implements Solutions.Subject {
                     if (axis.isWrapAroundRotation()) {
                         solutions.add(new Solutions.Issue(
                                 axis, 
-                                "Rotation cannot be wrapped-around on a limited articulation axis.", 
-                                "Disable Wrap Around.", 
+                                Translations.getString("AxisSolutions.Issue.WrapAroundError"), //$NON-NLS-1$
+                                Translations.getString("AxisSolutions.Solution.WrapAroundError"), //$NON-NLS-1$
                                 Severity.Error,
                                 "https://github.com/openpnp/openpnp/wiki/Nozzle-Rotation-Mode#setting-up-the-nozzle-rotation-axis") {
 
@@ -347,8 +335,8 @@ public class AxisSolutions implements Solutions.Subject {
                     if (!axis.isLimitRotation()) {
                         solutions.add(new Solutions.Issue(
                                 axis, 
-                                "Rotation must be limited on a limited articulation axis.", 
-                                "Enable Limit to Range.", 
+                                Translations.getString("AxisSolutions.Issue.LimitRotationError"), //$NON-NLS-1$
+                                Translations.getString("AxisSolutions.Solution.LimitRotationError"), //$NON-NLS-1$
                                 Severity.Error,
                                 "https://github.com/openpnp/openpnp/wiki/Nozzle-Rotation-Mode#setting-up-the-nozzle-rotation-axis") {
 
@@ -403,7 +391,7 @@ public class AxisSolutions implements Solutions.Subject {
         public void setState(Solutions.State state) throws Exception {
             if (state == State.Solved) {
                 if (newAxisLetter == null || newAxisLetter.isEmpty()) {
-                    throw new Exception("Axis letter must not be empty");
+                    throw new Exception(Translations.getString("AxisSolutions.Exception.AxisLetterEmpty")); //$NON-NLS-1$
                 }
                 axis.setLetter(newAxisLetter);
             }
@@ -417,8 +405,8 @@ public class AxisSolutions implements Solutions.Subject {
         public Solutions.Issue.CustomProperty[] getProperties() {
             return new Solutions.Issue.CustomProperty[] {
                     new Solutions.Issue.StringProperty(
-                            "Axis Letter",
-                            "Axis letter as used in G-code sent to the controller.") {
+                            Translations.getString("AxisSolutions.Property.AxisLetter"), //$NON-NLS-1$
+                            Translations.getString("AxisSolutions.Property.AxisLetterDescription")) { //$NON-NLS-1$
 
                         @Override
                         public String get() {

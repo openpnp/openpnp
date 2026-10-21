@@ -70,6 +70,7 @@ import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.utils.Converters;
+import org.openpnp.Translations;
 import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
@@ -115,6 +116,12 @@ public class FluentCv {
         HlsFull,
         Hsv,
         HsvFull;
+
+        @Override
+        public String toString() {
+            String s = Translations.getStringOrNull("FluentCv.ColorSpace." + name()); //$NON-NLS-1$
+            return s != null ? s : name();
+        }
     }
 
     public enum ColorCode {
@@ -135,6 +142,12 @@ public class FluentCv {
 
         ColorCode(int code) {
             this.code = code;
+        }
+
+        @Override
+        public String toString() {
+            String s = Translations.getStringOrNull("FluentCv.ColorCode." + name()); //$NON-NLS-1$
+            return s != null ? s : name();
         }
 
         public int getCode() {

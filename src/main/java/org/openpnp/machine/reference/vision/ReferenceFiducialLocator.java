@@ -17,6 +17,7 @@ import javax.swing.Icon;
 import org.apache.commons.io.IOUtils;
 import org.opencv.core.KeyPoint;
 import org.openpnp.ConfigurationListener;
+import org.openpnp.Translations;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.CameraView;
 import org.openpnp.gui.support.LengthConverter;
@@ -738,7 +739,7 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
 
     @Override
     public String getPropertySheetHolderTitle() {
-        return "Fiducal Locator";
+        return Translations.getString("ReferenceFiducialLocator.PropertySheetHolderTitle"); //$NON-NLS-1$
     }
 
     @Override

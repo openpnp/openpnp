@@ -32,6 +32,7 @@ import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.IntegerConverter;
@@ -53,7 +54,8 @@ public class Neoden4DriverConfigurationWizard extends AbstractConfigurationWizar
 
         JPanel panelMachineDetails = new JPanel();
         panelMachineDetails.setBorder(new TitledBorder(null,
-                "Machine Details", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+                Translations.getString("Neoden4DriverConfigurationWizard.MachinePanel.Border.title"), //$NON-NLS-1$
+                TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
         contentPanel.add(panelMachineDetails);
         panelMachineDetails.setLayout(new FormLayout(
                 new ColumnSpec[] { 
@@ -73,28 +75,28 @@ public class Neoden4DriverConfigurationWizard extends AbstractConfigurationWizar
                     FormSpecs.DEFAULT_ROWSPEC,
                     FormSpecs.RELATED_GAP_ROWSPEC, }));
 
-        JLabel lblHomeCoordinateX = new JLabel("Home Coordinate X");
+        JLabel lblHomeCoordinateX = new JLabel(Translations.getString("Neoden4DriverConfigurationWizard.HomeCoordinateXLabel.text")); //$NON-NLS-1$
         panelMachineDetails.add(lblHomeCoordinateX, "2, 2, right, default");
 
         homeCoordinateXTextField = new JTextField();
         panelMachineDetails.add(homeCoordinateXTextField, "4, 2, fill, default");
         homeCoordinateXTextField.setColumns(10);
 
-        JLabel lblHomeCoordinateY = new JLabel("Home Coordinate Y");
+        JLabel lblHomeCoordinateY = new JLabel(Translations.getString("Neoden4DriverConfigurationWizard.HomeCoordinateYLabel.text")); //$NON-NLS-1$
         panelMachineDetails.add(lblHomeCoordinateY, "2, 4, right, default");
 
         homeCoordinateYTextField = new JTextField();
         homeCoordinateYTextField.setColumns(10);
         panelMachineDetails.add(homeCoordinateYTextField, "4, 4, fill, default");
 
-        JLabel lblScaleFactorX = new JLabel("Scale Factor - X");
+        JLabel lblScaleFactorX = new JLabel(Translations.getString("Neoden4DriverConfigurationWizard.ScaleFactorXLabel.text")); //$NON-NLS-1$
         panelMachineDetails.add(lblScaleFactorX, "2, 6, right, default");
 
         scaleFactorXTextField = new JTextField();
         scaleFactorXTextField.setColumns(10);
         panelMachineDetails.add(scaleFactorXTextField, "4, 6, fill, default");
 
-        JLabel lblScaleFactorY = new JLabel("Scale Factor - Y");
+        JLabel lblScaleFactorY = new JLabel(Translations.getString("Neoden4DriverConfigurationWizard.ScaleFactorYLabel.text")); //$NON-NLS-1$
         panelMachineDetails.add(lblScaleFactorY, "2, 8, right, default");
 
         scaleFactorYTextField = new JTextField();

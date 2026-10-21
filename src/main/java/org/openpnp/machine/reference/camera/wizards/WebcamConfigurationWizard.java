@@ -25,6 +25,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.border.TitledBorder;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.machine.reference.camera.Webcams;
 import org.openpnp.util.UiUtils;
@@ -52,14 +53,14 @@ public class WebcamConfigurationWizard extends AbstractConfigurationWizard
         panelGeneral = new JPanel();
         contentPanel.add(panelGeneral);
         panelGeneral.setBorder(new TitledBorder(null,
-                "General", TitledBorder.LEADING, TitledBorder.TOP, null));
+                Translations.getString("CommonPropertySheet.General"), TitledBorder.LEADING, TitledBorder.TOP, null)); //$NON-NLS-1$
         panelGeneral.setLayout(new FormLayout(
                 new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
                         FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"),},
                 new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
 
-        JLabel lblDeviceId = new JLabel("Device ID");
+        JLabel lblDeviceId = new JLabel(Translations.getString("WebcamConfigurationWizard.DeviceId")); //$NON-NLS-1$
         panelGeneral.add(lblDeviceId, "2, 2, right, default");
 
         Object[] deviceIds = null;
@@ -72,7 +73,7 @@ public class WebcamConfigurationWizard extends AbstractConfigurationWizard
         comboBoxDeviceId = new JComboBox(deviceIds);
         panelGeneral.add(comboBoxDeviceId, "4, 2, left, default");
 
-        chckbxGray = new JCheckBox("Force Grayscale?");
+        chckbxGray = new JCheckBox(Translations.getString("WebcamConfigurationWizard.ForceGrayscale")); //$NON-NLS-1$
         panelGeneral.add(chckbxGray, "2, 4, 3, 1");
     }
 
