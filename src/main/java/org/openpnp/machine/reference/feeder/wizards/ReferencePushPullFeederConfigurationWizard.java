@@ -55,6 +55,7 @@ import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.LongConverter;
+import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.machine.reference.feeder.ReferencePushPullFeeder;
 import org.openpnp.machine.reference.feeder.ReferencePushPullFeeder.OcrWrongPartAction;
@@ -858,7 +859,7 @@ extends AbstractReferenceFeederConfigurationWizard {
                         report.append(Translations.getString(
                                 "ReferencePushPullFeederConfigurationWizard.OcrReport.NoActionTaken")); //$NON-NLS-1$
                     }
-                    JOptionPane.showMessageDialog(getTopLevelAncestor(), "<html>"+report+"</html>", //$NON-NLS-1$
+                    MessageBoxes.infoBox(getTopLevelAncestor(), "<html>"+report+"</html>", //$NON-NLS-1$
                             Translations.getString("ReferencePushPullFeederConfigurationWizard.OcrReport.title"), //$NON-NLS-1$
                             JOptionPane.INFORMATION_MESSAGE);
                 });
@@ -915,7 +916,7 @@ extends AbstractReferenceFeederConfigurationWizard {
                     report.append(Translations.getString(
                             "ReferencePushPullFeederConfigurationWizard.OcrReport.NoActionTaken")); //$NON-NLS-1$
                 }
-                JOptionPane.showMessageDialog(getTopLevelAncestor(), "<html>"+report+"</html>", //$NON-NLS-1$
+                MessageBoxes.infoBox(getTopLevelAncestor(), "<html>"+report+"</html>", //$NON-NLS-1$
                         Translations.getString("ReferencePushPullFeederConfigurationWizard.OcrReport.title"), //$NON-NLS-1$
                         JOptionPane.INFORMATION_MESSAGE);
             });

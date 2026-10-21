@@ -21,6 +21,7 @@ import org.openpnp.Translations;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.IntegerConverter;
+import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.machine.reference.driver.GcodeDriver;
 import org.openpnp.machine.reference.driver.GcodeDriver.CommandType;
 import org.openpnp.model.Configuration;
@@ -149,7 +150,7 @@ public class GcodeDriverConsole extends AbstractConfigurationWizard {
 
         // Check that machine is started before sending commands
         if(!Configuration.get().getMachine().isEnabled()){
-            JOptionPane.showMessageDialog(null,
+            MessageBoxes.infoBox(null,
                     Translations.getString("GcodeDriverConsole.Error.MachineNotStarted")); //$NON-NLS-1$
             return;
         }
