@@ -1082,7 +1082,7 @@ public class MainFrame extends JFrame {
             configuration.save();
         }
         catch (Exception e) {
-			JOptionPane.showMessageDialog(this,
+			MessageBoxes.infoBox(this,
 			        Translations.format("MainFrame.ConfigurationSaveError.message", e.getMessage()), //$NON-NLS-1$
 			        Translations.getString("MainFrame.ConfigurationSaveError.title"), //$NON-NLS-1$
 			        JOptionPane.ERROR_MESSAGE);

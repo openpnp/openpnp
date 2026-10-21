@@ -52,6 +52,7 @@ import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.LengthConverter;
+import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.machine.reference.feeder.BlindsFeeder;
 import org.openpnp.model.Configuration;
@@ -465,9 +466,11 @@ public class BlindsFeederArrayConfigurationWizard extends AbstractConfigurationW
                         }
                     }
                     if (! opended) {
-                        JOptionPane.showMessageDialog(getTopLevelAncestor(), Translations.format(
-                                "BlindsFeederArrayConfigurationWizard.Message.FilesExtracted", //$NON-NLS-1$
-                                directory.getAbsolutePath()));
+                        MessageBoxes.infoBox(getTopLevelAncestor(),
+                                "OpenSCAD",
+                                Translations.format("BlindsFeederArrayConfigurationWizard.Message.FilesExtracted", //$NON-NLS-1$
+                                                    directory.getAbsolutePath()),
+                                JOptionPane.INFORMATION_MESSAGE);
                     }
                 }
             });
