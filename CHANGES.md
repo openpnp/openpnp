@@ -12,6 +12,7 @@ a complete change list, only those that may directly interest or affect users.
 * Support for 4 discard bins. Each part selects the bin where it should be discarded [PR 1908](https://github.com/openpnp/openpnp/pull/1908)
 * Error message boxes have a "copy" button to copy the error text to the clipboard [PR 1970](https://github.com/openpnp/openpnp/pull/1970)
 * Reduce horizontal padding in some table columns, for more compact displays [PR 1950](https://github.com/openpnp/openpnp/pull/1950)
+* Photon feeders are listed sorted by slot, rather than uuid [PR 1930](https://github.com/openpnp/openpnp/pull/1930)
 
 ## Bug Fixes
 
