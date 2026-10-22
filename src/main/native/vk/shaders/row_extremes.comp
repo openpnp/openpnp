@@ -1,0 +1,47 @@
+#version 450
+#extension GL_EXT_shader_8bit_storage : require
+#extension GL_EXT_shader_explicit_arithmetic_types_int8 : require
+
+// For each row of a gray image, the first and last column within [low, high] plus the count and
+// column sum of such pixels: all MinAreaRect needs to stake out the convex hull.
+
+layout(local_size_x = 64) in;
+
+layout(binding = 0) uniform Params {
+    int cols;
+    int rows;
+    int low;
+    int high;
+} p;
+
+layout(binding = 1) readonly buffer Source {
+    uint8_t src[];
+};
+
+layout(binding = 2) writeonly buffer Extremes {
+    ivec4 extremes[];
+};
+
+void main() {
+    int row = int(gl_GlobalInvocationID.x);
+    if (row >= p.rows) {
+        return;
+    }
+    int first = -1;
+    int last = -1;
+    int n = 0;
+    int sum = 0;
+    int base = row * p.cols;
+    for (int col = 0; col < p.cols; col++) {
+        int v = int(src[base + col]);
+        if (v >= p.low && v <= p.high) {
+            if (first < 0) {
+                first = col;
+            }
+            last = col;
+            n++;
+            sum += col;
+        }
+    }
+    extremes[row] = ivec4(first, last, n, sum);
+}

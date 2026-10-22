@@ -1,0 +1,141 @@
+#version 450
+
+// Computes the rotated x and y cross-sections of one DetectRectlinearSymmetry pass for all angles,
+// mirroring the splatting loop in DetectRectlinearSymmetry.findReclinearSymmetry(). Each invocation
+// gathers one (angle, bin) by walking only the strip of pixels that can land in that bin, which keeps
+// the sums deterministic without atomics.
+
+layout(local_size_x = 64) in;
+
+layout(constant_id = 0) const int CHANNELS = 1;
+
+layout(binding = 0) uniform Params {
+    int width;
+    int x0;
+    int sub;
+    int cols;
+    int rows;
+    int cxPixels;
+    int cyPixels;
+    int wCross;
+    int hCross;
+    int angles;
+    float cxCross;
+    float cyCross;
+    float thresholdLuminance;
+} p;
+
+layout(binding = 1) readonly buffer Pixels {
+    uint words[];
+} pixels;
+
+layout(binding = 2) readonly buffer GammaLut {
+    float gammaLut[];
+};
+
+layout(binding = 3) readonly buffer Sines {
+    float sines[];
+};
+
+layout(binding = 4) readonly buffer Cosines {
+    float cosines[];
+};
+
+layout(binding = 5) writeonly buffer Sums {
+    float sums[];
+};
+
+layout(binding = 6) writeonly buffer Weights {
+    float weights[];
+};
+
+layout(binding = 7) writeonly buffer MaskedWeights {
+    float maskedWeights[];
+};
+
+uint pixelAt(int i) {
+    return (pixels.words[i >> 2] >> ((i & 3) * 8)) & 0xFFu;
+}
+
+void main() {
+    // Neighbouring invocations take neighbouring bins, so their pixel strips are adjacent in memory.
+    int j = int(gl_GlobalInvocationID.x);
+    int a = int(gl_GlobalInvocationID.y);
+    int bins = p.wCross + p.hCross;
+    if (a >= p.angles || j >= bins) {
+        return;
+    }
+    float s = sines[a];
+    float c = cosines[a];
+    bool alongX = j < p.wCross;
+    int bin = alongX ? j : j - p.wCross;
+    // u is the coordinate along this cross-section: u = alpha*i + beta*k + u0 for pixel column i, row k.
+    float alpha = (alongX ? c : -s) * p.sub;
+    float beta = (alongX ? s : c) * p.sub;
+    float u0 = alongX ? -c * p.cxPixels - s * p.cyPixels + p.cxCross : s * p.cxPixels - c * p.cyPixels + p.cyCross;
+    // Only pixels rounding to bin or bin + 1 contribute.
+    float lo = bin - 0.5;
+    float hi = bin + 1.5;
+
+    float sum[CHANNELS];
+    for (int ch = 0; ch < CHANNELS; ch++) {
+        sum[ch] = 0.0;
+    }
+    float n = 0.0;
+    float masked = 0.0;
+    bool outerRows = abs(alpha) >= abs(beta);
+    int outerCount = outerRows ? p.rows : p.cols;
+    int innerCount = outerRows ? p.cols : p.rows;
+    float innerStep = outerRows ? alpha : beta;
+    float outerStep = outerRows ? beta : alpha;
+    for (int outer = 0; outer < outerCount; outer++) {
+        float base = outerStep * outer + u0;
+        float t0 = (lo - base) / innerStep;
+        float t1 = (hi - base) / innerStep;
+        int first = max(0, int(floor(min(t0, t1))) - 1);
+        int last = min(innerCount - 1, int(ceil(max(t0, t1))) + 1);
+        for (int inner = first; inner <= last; inner++) {
+            int i = outerRows ? inner : outer;
+            int k = outerRows ? outer : inner;
+            float dx = i * p.sub - p.cxPixels;
+            float dy = k * p.sub - p.cyPixels;
+            float xCross = c * dx + s * dy + p.cxCross;
+            float yCross = -s * dx + c * dy + p.cyCross;
+            int ix = int(floor(xCross + 0.5));
+            int iy = int(floor(yCross + 0.5));
+            if (iy <= 1 || iy >= p.hCross || ix <= 1 || ix >= p.wCross) {
+                continue;
+            }
+            float u = alongX ? xCross : yCross;
+            int iu = alongX ? ix : iy;
+            float w1 = u + 0.5 - iu;
+            float w;
+            if (iu == bin) {
+                w = w1;
+            }
+            else if (iu == bin + 1) {
+                w = 1.0 - w1;
+            }
+            else {
+                continue;
+            }
+            int pixel = ((k * p.sub) * p.width + p.x0 + i * p.sub) * CHANNELS;
+            float luminance = 0.0;
+            for (int ch = 0; ch < CHANNELS; ch++) {
+                float v = gammaLut[pixelAt(pixel + ch)];
+                luminance += v;
+                sum[ch] += v * w;
+            }
+            n += w;
+            if (luminance > p.thresholdLuminance) {
+                masked += w;
+            }
+        }
+    }
+    int out_ = a * bins + j;
+    for (int ch = 0; ch < CHANNELS; ch++) {
+        sums[out_ * CHANNELS + ch] = sum[ch];
+    }
+    weights[out_] = n;
+    maskedWeights[out_] = masked;
+}

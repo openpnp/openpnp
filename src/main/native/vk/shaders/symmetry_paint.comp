@@ -1,0 +1,141 @@
+#version 450
+#extension GL_EXT_shader_8bit_storage : require
+#extension GL_EXT_shader_explicit_arithmetic_types_int8 : require
+
+// Overlays one circular symmetry pass' score heat map and, for the outermost pass, the result
+// indicator onto the image, like the diagnostics at the end of findCircularSymmetry().
+
+layout(local_size_x = 16, local_size_y = 16) in;
+
+layout(constant_id = 0) const int CHANNELS = 3;
+
+layout(binding = 0) uniform Params {
+    int level;
+    int finalLevel;
+    int sub;
+    int r;
+    int maxCols;
+    int width;
+    int indicator;
+    int heatMap;
+    int xCenter;
+    int yCenter;
+    int nominalDiameter;
+    float minSymmetry;
+} p;
+
+layout(binding = 1) buffer Image {
+    uint8_t pixels[];
+};
+
+layout(binding = 2) readonly buffer Scores {
+    float scores[];
+};
+
+#define STATE_BINDING 3
+#include "symmetry_state.glsl"
+
+const float PI = 3.14159265358979;
+
+float scoreHeat(float score) {
+    float range = state.rangeMax - state.rangeMin;
+    float avg = (state.rangeSum / float(state.rangeN) - state.rangeMin) / range;
+    float s = (score - state.rangeMin) / range;
+    float e = log(0.71) / log(avg);
+    return s <= 0.0 ? pow(0.0, e) : pow(s, e);
+}
+
+void main() {
+    Level plan = state.levels[p.level];
+    int sub = p.sub;
+    int xi = int(gl_GlobalInvocationID.x) - sub / 2;
+    int yi = int(gl_GlobalInvocationID.y) - sub / 2;
+    if (plan.status != STATUS_OK || xi >= plan.cols * sub - sub / 2 || yi >= plan.rows * sub - sub / 2) {
+        return;
+    }
+    int xis = (xi + sub / 2) / sub;
+    int yis = (yi + sub / 2) / sub;
+    float s = scores[yis * p.maxCols + xis];
+    if (!(s > 0.0)) {
+        return;
+    }
+    int col = xi + plan.x0 + p.r;
+    int row = yi + plan.y0 + p.r;
+    float xBest = plan.index >= 0 ? float(plan.xBase) + 0.5 : 0.0;
+    float yBest = plan.index >= 0 ? float(plan.yBase) + 0.5 : 0.0;
+    float dx2 = float(col) - xBest;
+    float dy2 = float(row) - yBest;
+    int distance2 = int(floor(sqrt(dx2 * dx2 + dy2 * dy2) + 0.5));
+    if (sub != 1 && distance2 < sub * 2 / 2) {
+        return;
+    }
+    float heatMin = scoreHeat(state.rangeMin);
+    float rscale = 1.0 / (scoreHeat(state.rangeMax) - heatMin);
+    float scale = 255.0 * float(CHANNELS) * rscale;
+    float heat = scoreHeat(s);
+    if (isnan(heat) || isinf(heat)) {
+        heat = heatMin;
+    }
+    heat -= heatMin;
+    float score = heat * scale;
+
+    Level result = state.levels[p.finalLevel];
+    bool found = result.status == STATUS_OK && result.index >= 0 && result.score > p.minSymmetry;
+    float indicate = 0.0;
+    if (p.indicator != 0) {
+        if (!found) {
+            float dx = float(col - p.xCenter) + 0.501;
+            float dy = float(row - p.yCenter) + 0.501;
+            float distance = sqrt(dx * dx + dy * dy);
+            indicate = 1.0 - abs(distance - float(p.nominalDiameter));
+            if (indicate > 0.0 && (int(atan(dy, dx) / PI * 12.0 + 12.0) & 1) == 0) {
+                indicate = 0.0;
+            }
+        }
+        else {
+            float dx = float(col) - (float(result.xBase) + 0.5) + 0.501;
+            float dy = float(row) - (float(result.yBase) + 0.5) + 0.501;
+            float diameter = float(result.radius * 2);
+            float distance = sqrt(dx * dx + dy * dy);
+            if (distance < diameter) {
+                indicate = 1.0 - min(min(abs(distance - diameter / 2.0), abs(dx)), abs(dy));
+            }
+        }
+    }
+    float alpha = pow(heat * rscale, 3.0);
+    float alphaCompl = 1.0 - alpha;
+    int offset = (row * p.width + col) * CHANNELS;
+    if (CHANNELS == 3) {
+        int red = 0;
+        int green = 0;
+        int blue = 0;
+        if (indicate > 0.0) {
+            red = found ? 0 : 255;
+            green = found ? 255 : 0;
+            alpha = indicate;
+            alphaCompl = 1.0 - alpha;
+        }
+        else if (score <= 255.0) {
+            blue = int(score);
+        }
+        else if (score <= 510.0) {
+            blue = int(510.0 - score);
+            red = int(score - 255.0);
+        }
+        else {
+            red = 255;
+            green = int(score - 510.0);
+        }
+        if (indicate > 0.0 || p.heatMap != 0) {
+            pixels[offset + 2] = uint8_t(int(alpha * red + alphaCompl * float(uint(pixels[offset + 2]))));
+            pixels[offset + 1] = uint8_t(int(alpha * green + alphaCompl * float(uint(pixels[offset + 1]))));
+            pixels[offset] = uint8_t(int(alpha * blue + alphaCompl * float(uint(pixels[offset]))));
+        }
+    }
+    else if (indicate > 0.0) {
+        pixels[offset] = uint8_t(255);
+    }
+    else {
+        pixels[offset] = uint8_t(int(alpha * score + alphaCompl * float(uint(pixels[offset]))));
+    }
+}

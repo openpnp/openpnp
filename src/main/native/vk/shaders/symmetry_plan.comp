@@ -1,0 +1,67 @@
+#version 450
+
+// Places one circular symmetry search pass: around the stage's center for the first pass, around the
+// previous pass' best candidate for the finer ones, with findCircularSymmetry()'s margin arithmetic.
+
+layout(local_size_x = 1) in;
+
+layout(binding = 0) uniform Params {
+    int level;
+    int xCenter;
+    int yCenter;
+    int searchWidth;
+    int searchHeight;
+    int sub;
+    int r;
+    int maxDiameter;
+    int width;
+    int height;
+    int maxCols;
+    int maxRows;
+} p;
+
+#define STATE_BINDING 1
+#include "symmetry_state.glsl"
+
+void main() {
+    int xc = p.xCenter;
+    int yc = p.yCenter;
+    Level plan;
+    plan.index = -1;
+    plan.score = uintBitsToFloat(0xff800000u);
+    plan.radius = 0;
+    plan.xBase = 0;
+    plan.yBase = 0;
+    if (p.level == 0) {
+        state.rangeMin = uintBitsToFloat(0x7f800000u);
+        state.rangeMax = uintBitsToFloat(0xff800000u);
+        state.rangeSum = 0.0;
+        state.rangeN = 0;
+    }
+    else {
+        Level previous = state.levels[p.level - 1];
+        if (previous.status != STATUS_OK) {
+            plan.status = previous.status;
+            plan.cols = 0;
+            plan.rows = 0;
+            state.levels[p.level] = plan;
+            return;
+        }
+        xc = previous.xBase;
+        yc = previous.yBase;
+    }
+    int sub = p.sub;
+    int r = p.r;
+    plan.x0 = max(0, (xc - r - p.searchWidth / 2) / sub) * sub;
+    plan.y0 = max(0, (yc - r - p.searchHeight / 2) / sub) * sub;
+    int x1 = min((p.width - p.maxDiameter) / sub, (xc - r + p.searchWidth / 2 + sub / 2) / sub) * sub;
+    int y1 = min((p.height - p.maxDiameter) / sub, (yc - r + p.searchHeight / 2 + sub / 2) / sub) * sub;
+    plan.xSearch = xc - r - plan.x0;
+    plan.ySearch = yc - r - plan.y0;
+    int w = x1 - plan.x0;
+    int h = y1 - plan.y0;
+    plan.status = w < 1 || h < 1 ? STATUS_CROPPED : STATUS_OK;
+    plan.cols = plan.status == STATUS_OK ? min(w / sub, p.maxCols) : 0;
+    plan.rows = plan.status == STATUS_OK ? min(h / sub, p.maxRows) : 0;
+    state.levels[p.level] = plan;
+}

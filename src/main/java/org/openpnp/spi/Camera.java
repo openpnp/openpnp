@@ -26,6 +26,7 @@ import org.openpnp.Translations;
 import org.openpnp.CameraListener;
 import org.openpnp.model.Length;
 import org.openpnp.model.Location;
+import org.openpnp.vision.gpu.GpuImage;
 
 /**
  * Represents a Camera attached to the system and allows a caller to retrieve images from it.
@@ -153,6 +154,14 @@ public interface Camera extends HeadMountable, WizardConfigurable,
      * @return
      * @throws Exception
      */
+    /**
+     * Like settleAndCapture(), but records the captured frame into the thread's GpuRecording so it
+     * stays on the GPU. Returns null when the camera can't.
+     */
+    public default GpuImage settleAndCaptureGpu(SettleOption settleOption) throws Exception {
+        return null;
+    }
+
     public default BufferedImage settleAndCapture() throws Exception {
         return settleAndCapture(SettleOption.Settle);
     }

@@ -1,0 +1,29 @@
+#version 450
+#extension GL_EXT_shader_8bit_storage : require
+#extension GL_EXT_shader_explicit_arithmetic_types_int8 : require
+
+// OpenCV's THRESH_BINARY(_INV) on 8-bit images, per channel.
+
+layout(local_size_x = 256) in;
+
+layout(binding = 0) uniform Params {
+    int count;
+    int threshold;
+    int invert;
+} p;
+
+layout(binding = 1) readonly buffer Source {
+    uint8_t src[];
+};
+
+layout(binding = 2) writeonly buffer Destination {
+    uint8_t dst[];
+};
+
+void main() {
+    int i = int(gl_GlobalInvocationID.x);
+    if (i < p.count) {
+        bool above = int(src[i]) > p.threshold;
+        dst[i] = above != (p.invert != 0) ? uint8_t(255) : uint8_t(0);
+    }
+}

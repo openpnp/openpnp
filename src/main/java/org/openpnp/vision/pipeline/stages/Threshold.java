@@ -2,6 +2,8 @@ package org.openpnp.vision.pipeline.stages;
 
 import org.opencv.core.Mat;
 import org.opencv.imgproc.Imgproc;
+import org.openpnp.vision.gpu.GpuImage;
+import org.openpnp.vision.gpu.GpuImageOps;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
 import org.simpleframework.xml.Attribute;
@@ -42,6 +44,10 @@ public class Threshold extends CvStage {
 
     @Override
     public Result process(CvPipeline pipeline) throws Exception {
+        GpuImage gpuImage = pipeline.getWorkingGpuImage();
+        if (gpuImage != null && !auto) {
+            return new Result(GpuImageOps.threshold(gpuImage, threshold, invert));
+        }
         Mat mat = pipeline.getWorkingImage();
         int type = invert ? Imgproc.THRESH_BINARY_INV : Imgproc.THRESH_BINARY;
         type |= auto ? Imgproc.THRESH_OTSU : 0;

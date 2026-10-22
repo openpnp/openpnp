@@ -1,0 +1,66 @@
+#version 450
+#extension GL_EXT_shader_8bit_storage : require
+#extension GL_EXT_shader_explicit_arithmetic_types_int8 : require
+
+// A separable Gaussian applied as one 2D convolution, with OpenCV's default BORDER_REFLECT_101.
+
+layout(local_size_x = 16, local_size_y = 16) in;
+
+layout(constant_id = 0) const int CHANNELS = 3;
+layout(constant_id = 1) const int KSIZE = 3;
+
+layout(binding = 0) uniform Params {
+    int cols;
+    int rows;
+} p;
+
+layout(binding = 1) readonly buffer Source {
+    uint8_t src[];
+};
+
+layout(binding = 2) writeonly buffer Destination {
+    uint8_t dst[];
+};
+
+layout(binding = 3) readonly buffer Kernel {
+    float weights[];
+};
+
+int reflect101(int i, int n) {
+    if (n == 1) {
+        return 0;
+    }
+    while (i < 0 || i >= n) {
+        i = i < 0 ? -i : 2 * n - 2 - i;
+    }
+    return i;
+}
+
+void main() {
+    int x = int(gl_GlobalInvocationID.x);
+    int y = int(gl_GlobalInvocationID.y);
+    if (x >= p.cols || y >= p.rows) {
+        return;
+    }
+    const int R = KSIZE / 2;
+    float sum[CHANNELS];
+    for (int c = 0; c < CHANNELS; c++) {
+        sum[c] = 0.0;
+    }
+    for (int j = 0; j < KSIZE; j++) {
+        int yy = reflect101(y + j - R, p.rows);
+        float wy = weights[j];
+        for (int k = 0; k < KSIZE; k++) {
+            int xx = reflect101(x + k - R, p.cols);
+            float w = wy * weights[k];
+            int i = (yy * p.cols + xx) * CHANNELS;
+            for (int c = 0; c < CHANNELS; c++) {
+                sum[c] += w * float(int(src[i + c]));
+            }
+        }
+    }
+    int o = (y * p.cols + x) * CHANNELS;
+    for (int c = 0; c < CHANNELS; c++) {
+        dst[o + c] = uint8_t(clamp(int(round(sum[c])), 0, 255));
+    }
+}

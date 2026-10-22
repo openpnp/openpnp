@@ -10,6 +10,8 @@ import org.opencv.imgproc.Imgproc;
 import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 import org.openpnp.vision.FluentCv;
+import org.openpnp.vision.gpu.GpuImage;
+import org.openpnp.vision.gpu.GpuImageOps;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
 import org.openpnp.vision.pipeline.Property;
@@ -54,22 +56,31 @@ public class MaskCircle extends CvStage {
 
     @Override
     public Result process(CvPipeline pipeline) throws Exception {
-        Mat mat = pipeline.getWorkingImage();
-        Mat mask = mat.clone();
-        Mat masked = mat.clone();
-        Scalar color = FluentCv.colorToScalar(Color.black);
-        mask.setTo(color);
-        masked.setTo(color);
+        GpuImage gpuImage = pipeline.getWorkingGpuImage();
+        int cols = gpuImage != null ? gpuImage.cols() : pipeline.getWorkingImage().cols();
+        int rows = gpuImage != null ? gpuImage.rows() : pipeline.getWorkingImage().rows();
 
         //Check for overriding properties
         int diameter = this.diameter;
-        Point center = new Point(mat.cols()*0.5, mat.rows()*0.5);
+        Point center = new Point(cols*0.5, rows*0.5);
         
         diameter = getPossiblePipelinePropertyOverride(diameter, pipeline, propertyName+".diameter", 
                 Double.class, Integer.class, Length.class);
         
         center = getPossiblePipelinePropertyOverride(center, pipeline, propertyName+".center", 
                 Point.class, org.openpnp.model.Point.class, Location.class);
+
+        if (gpuImage != null) {
+            // Imgproc.circle() truncates the center to whole pixels.
+            return new Result(GpuImageOps.maskCircle(gpuImage, (int) center.x, (int) center.y,
+                    diameter == 0 ? -1 : Math.abs(diameter) / 2, diameter < 0));
+        }
+        Mat mat = pipeline.getWorkingImage();
+        Mat mask = mat.clone();
+        Mat masked = mat.clone();
+        Scalar color = FluentCv.colorToScalar(Color.black);
+        mask.setTo(color);
+        masked.setTo(color);
 
         if(diameter!=0) {
             Imgproc.circle(mask, center,  Math.abs(diameter) / 2,

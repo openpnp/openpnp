@@ -68,6 +68,8 @@ import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
 
 import org.openpnp.CameraListener;
+import org.openpnp.CameraPreviewListener;
+import org.openpnp.CameraPreviewListener.Preview;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.reticle.Reticle;
 import org.openpnp.gui.support.LengthConverter;
@@ -89,7 +91,7 @@ import org.openpnp.util.XmlSerialize;
 import org.pmw.tinylog.Logger;
 
 @SuppressWarnings("serial")
-public class CameraView extends JComponent implements CameraListener {
+public class CameraView extends JComponent implements CameraPreviewListener {
     private static final String PREF_RETICLE = "CamerView.reticle";
     private static final String DEFAULT_RETICLE_KEY = "DEFAULT_RETICLE_KEY";
     private static final String PREF_ZOOM_INCREMENT = "CamerView.zoomIncrement";
@@ -136,6 +138,25 @@ public class CameraView extends JComponent implements CameraListener {
      * The last frame received, reported by the Camera.
      */
     private BufferedImage lastFrame;
+
+    /**
+     * The full size of the camera frame lastFrame shows; lastFrame itself may be a downscaled
+     * preview.
+     */
+    private int frameWidth, frameHeight;
+
+    private final BufferedImage[] previewPool = new BufferedImage[3];
+    private BufferedImage pendingPreview;
+    // The region of the frame lastFrame shows when it is a preview, null for full frames.
+    private Preview lastPreview;
+    private BufferedImage[] shownImages;
+    private String[] shownTexts;
+    private long shownStart;
+    private long shownMilliseconds;
+    private ScheduledFuture<?> shownTimer;
+    // A full size frame scaled once to the size it is painted at, instead of on every repaint.
+    private BufferedImage scaledFrame;
+    private BufferedImage scaledFrameSource;
 
     private LinkedHashMap<Object, Reticle> reticles = new LinkedHashMap<>();
 
@@ -468,31 +489,56 @@ public class CameraView extends JComponent implements CameraListener {
      * @param millseconds
      */
     public void showFilteredImages(BufferedImage [] filteredImages, String [] texts, long milliseconds) {
-        setCameraViewFilter(new CameraViewFilter() {
-            long t = System.currentTimeMillis();
-            int n = filteredImages.length;
-
-            @Override
-            public BufferedImage filterCameraImage(Camera camera, BufferedImage image) {
-                long elapsed = System.currentTimeMillis() - t;
-                if (elapsed < milliseconds*n) {
-                    int i = (int) (elapsed/milliseconds);
-                    if (texts != null && i < texts.length) {
-                        setText(texts[i]);
-                    }
-                    return filteredImages[i];
-                }
-                else {
-                    if (texts != null) {
-                        setText(null);
-                    }
-                    setCameraViewFilter(null);
-                    return image;
-                }
+        synchronized (this) {
+            shownImages = filteredImages;
+            shownTexts = texts;
+            shownStart = System.currentTimeMillis();
+            shownMilliseconds = Math.max(1, milliseconds);
+            if (shownTimer != null) {
+                shownTimer.cancel(false);
             }
-        });
-        // Make sure the filtered image is shown immediately and also counted as fps (for 0 or low fps cameras). 
-        frameReceived(null);
+            shownTimer = scheduledExecutor.scheduleAtFixedRate(this::advanceShownImage, shownMilliseconds,
+                    shownMilliseconds, TimeUnit.MILLISECONDS);
+        }
+        if (camera.isAutoVisible()) {
+            camera.ensureCameraVisible();
+        }
+        advanceShownImage();
+    }
+
+    // Timed images replace the camera image without a CameraViewFilter, so the camera renders no
+    // frames only to have them thrown away meanwhile.
+    private void advanceShownImage() {
+        BufferedImage image;
+        String shownText = null;
+        boolean hasTexts;
+        synchronized (this) {
+            if (shownImages == null) {
+                return;
+            }
+            hasTexts = shownTexts != null;
+            int i = (int) ((System.currentTimeMillis() - shownStart) / shownMilliseconds);
+            if (i >= shownImages.length) {
+                shownImages = null;
+                shownTexts = null;
+                shownTimer.cancel(false);
+                shownTimer = null;
+                image = null;
+            }
+            else {
+                image = shownImages[i];
+                shownText = hasTexts && i < shownTexts.length ? shownTexts[i] : null;
+            }
+        }
+        if (hasTexts) {
+            setText(shownText);
+        }
+        if (image != null) {
+            showFrame(image, null, image.getWidth(), image.getHeight());
+        }
+        else {
+            repaint();
+        }
     }
 
     /**
@@ -538,9 +584,17 @@ public class CameraView extends JComponent implements CameraListener {
         int sw = selection.width;
         int sh = selection.height;
 
+        // The selection is in full frame pixels, which a downscaled preview doesn't have.
+        BufferedImage frame = lastFrame;
+        if (lastPreview != null && camera instanceof AbstractBroadcastingCamera) {
+            BufferedImage full = ((AbstractBroadcastingCamera) camera).getLastBroadcastImage();
+            if (full != null) {
+                frame = full;
+            }
+        }
         BufferedImage image = new BufferedImage(sw, sh, BufferedImage.TYPE_INT_ARGB);
         Graphics g = image.getGraphics();
-        g.drawImage(lastFrame, 0, 0, sw, sh, sx, sy, sx + sw, sy + sh, null);
+        g.drawImage(frame, 0, 0, sw, sh, sx, sy, sx + sw, sy + sh, null);
         g.dispose();
 
         while (!future.isDone()) {
@@ -556,22 +610,122 @@ public class CameraView extends JComponent implements CameraListener {
 
     @Override
     public void frameReceived(BufferedImage img) {
+        synchronized (this) {
+            if (shownImages != null) {
+                return;
+            }
+        }
         if (cameraViewFilter != null) {
             img = cameraViewFilter.filterCameraImage(camera, img);
         }
         if (img == null) {
             return;
         }
-        BufferedImage oldFrame = lastFrame;
-        lastFrame = img;
-        if (oldFrame == null
-                || (oldFrame.getWidth() != img.getWidth() || oldFrame.getHeight() != img.getHeight()
-                        || !camera.getUnitsPerPixelAtZ().equals(lastUnitsPerPixel))) {
+        showFrame(img, null, img.getWidth(), img.getHeight());
+    }
+
+    @Override
+    public boolean isPreviewWanted() {
+        synchronized (this) {
+            if (shownImages != null) {
+                return false;
+            }
+        }
+        return isShowing();
+    }
+
+    @Override
+    public synchronized Preview previewBuffer(int frameWidth, int frameHeight) {
+        if (cameraViewFilter != null) {
+            return null;
+        }
+        // Only the part of the frame inside the component, at the size it is painted at.
+        Insets ins = getInsets();
+        int viewWidth = Math.max(1, getWidth() - ins.left - ins.right);
+        int viewHeight = Math.max(1, getHeight() - ins.top - ins.bottom);
+        Dimension scaled = scaledSize(frameWidth, frameHeight);
+        int x0 = viewWidth / 2 - scaled.width / 2;
+        int y0 = viewHeight / 2 - scaled.height / 2;
+        int left = Math.max(0, -x0);
+        int top = Math.max(0, -y0);
+        int width = Math.max(1, Math.min(scaled.width, viewWidth - x0) - left);
+        int height = Math.max(1, Math.min(scaled.height, viewHeight - y0) - top);
+        double ratioX = frameWidth / (double) scaled.width;
+        double ratioY = frameHeight / (double) scaled.height;
+        for (int i = 0; i < previewPool.length; i++) {
+            BufferedImage image = previewPool[i];
+            if (image != null && (image == lastFrame || image == pendingPreview)) {
+                continue;
+            }
+            if (image == null || image.getWidth() != width || image.getHeight() != height) {
+                image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+                previewPool[i] = image;
+            }
+            pendingPreview = image;
+            return new Preview(image, left * ratioX, top * ratioY, width * ratioX, height * ratioY);
+        }
+        return null;
+    }
+
+    @Override
+    public void previewReceived(Preview preview, int frameWidth, int frameHeight) {
+        synchronized (this) {
+            if (preview.image == pendingPreview) {
+                pendingPreview = null;
+            }
+        }
+        synchronized (this) {
+            if (shownImages != null) {
+                return;
+            }
+        }
+        showFrame(preview.image, preview, frameWidth, frameHeight);
+    }
+
+    private void showFrame(BufferedImage img, Preview preview, int width, int height) {
+        boolean resized = !camera.getUnitsPerPixelAtZ().equals(lastUnitsPerPixel);
+        synchronized (this) {
+            resized |= lastFrame == null || width != frameWidth || height != frameHeight;
+            lastFrame = img;
+            lastPreview = preview;
+            frameWidth = width;
+            frameHeight = height;
+        }
+        if (resized) {
             calculateScalingData();
         }
         fps = 1000.0 / fpsAverage.next(System.currentTimeMillis() - lastFrameReceivedTime);
         lastFrameReceivedTime = System.currentTimeMillis();
         repaint();
+    }
+
+    /**
+     * The size a frame of the given size is painted at, for the current component size and zoom.
+     */
+    private Dimension scaledSize(double sourceWidth, double sourceHeight) {
+        Insets ins = getInsets();
+        double destWidth = getWidth() - ins.left - ins.right;
+        double destHeight = getHeight() - ins.top - ins.bottom;
+        int width, height;
+        if (sourceHeight / destHeight > sourceWidth / destWidth) {
+            height = (int) destHeight;
+            width = (int) (height * sourceWidth / sourceHeight);
+        }
+        else {
+            width = (int) destWidth;
+            height = (int) (width * sourceHeight / sourceWidth);
+        }
+        width *= zoom;
+        height *= zoom;
+        if (renderingQuality == RenderingQuality.BestScale) {
+            // Bring to an integral scaling factor.
+            double scalingFactor = sourceWidth > width ?
+                    1./Math.max(1, Math.ceil(sourceWidth/width))
+                    : Math.max(1, Math.floor(width/sourceWidth));
+            width = (int)(sourceWidth*scalingFactor);
+            height = (int)(sourceHeight*scalingFactor);
+        }
+        return new Dimension(width, height);
     }
 
     /**
@@ -590,39 +744,15 @@ public class CameraView extends JComponent implements CameraListener {
         int width = getWidth() - ins.left - ins.right;
         int height = getHeight() - ins.top - ins.bottom;
 
-        double destWidth = width, destHeight = height;
-
         lastWidth = width;
         lastHeight = height;
 
-        lastSourceWidth = image.getWidth();
-        lastSourceHeight = image.getHeight();
-        
-        double heightRatio = lastSourceHeight / destHeight;
-        double widthRatio = lastSourceWidth / destWidth;
+        lastSourceWidth = frameWidth;
+        lastSourceHeight = frameHeight;
 
-        if (heightRatio > widthRatio) {
-            double aspectRatio = lastSourceWidth / lastSourceHeight;
-            scaledHeight = (int) destHeight;
-            scaledWidth = (int) (scaledHeight * aspectRatio);
-        }
-        else {
-            double aspectRatio = lastSourceHeight / lastSourceWidth;
-            scaledWidth = (int) destWidth;
-            scaledHeight = (int) (scaledWidth * aspectRatio);
-        }
-
-        scaledWidth *= zoom;
-        scaledHeight *= zoom;
-
-        if (renderingQuality == RenderingQuality.BestScale) {
-            // Bring to an integral scaling factor.
-            double scalingFactor = lastSourceWidth > scaledWidth ? 
-                    1./Math.max(1, Math.ceil(lastSourceWidth/scaledWidth))
-                    : Math.max(1, Math.floor(scaledWidth/lastSourceWidth));
-            scaledWidth = (int)(lastSourceWidth*scalingFactor);
-            scaledHeight = (int)(lastSourceHeight*scalingFactor);
-        }
+        Dimension scaled = scaledSize(lastSourceWidth, lastSourceHeight);
+        scaledWidth = scaled.width;
+        scaledHeight = scaled.height;
 
         imageX = ins.left + (width / 2) - (scaledWidth / 2);
         imageY = ins.top + (height / 2) - (scaledHeight / 2);
@@ -640,6 +770,24 @@ public class CameraView extends JComponent implements CameraListener {
         }
     }
 
+    private BufferedImage scaledFrame(BufferedImage image, int viewWidth, int viewHeight) {
+        if ((long) scaledWidth * scaledHeight > 4L * viewWidth * viewHeight) {
+            return null;
+        }
+        if (scaledFrameSource != image || scaledFrame == null || scaledFrame.getWidth() != scaledWidth
+                || scaledFrame.getHeight() != scaledHeight) {
+            scaledFrame = new BufferedImage(scaledWidth, scaledHeight, image.getColorModel().hasAlpha()
+                    ? BufferedImage.TYPE_INT_ARGB : BufferedImage.TYPE_INT_RGB);
+            Graphics2D g = scaledFrame.createGraphics();
+            g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+            g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+            g.drawImage(image, 0, 0, scaledWidth, scaledHeight, null);
+            g.dispose();
+            scaledFrameSource = image;
+        }
+        return scaledFrame;
+    }
+
     @Override
     protected synchronized void paintComponent(Graphics g) {
         super.paintComponent(g);
@@ -653,10 +801,30 @@ public class CameraView extends JComponent implements CameraListener {
         Graphics2D g2d = (Graphics2D) g;
         g.setColor(getBackground());
         g2d.fillRect(ins.left, ins.top, width, height);
+        Preview preview = lastPreview;
         if (image != null) {
             // Only render if there is a valid image.
-            if (renderingQuality == RenderingQuality.Low) {
+            if (preview != null && preview.image == image) {
+                int x = imageX + (int) Math.round(preview.x / scaleRatioX);
+                int y = imageY + (int) Math.round(preview.y / scaleRatioY);
+                int w = (int) Math.round(preview.width / scaleRatioX);
+                int h = (int) Math.round(preview.height / scaleRatioY);
+                if (w == image.getWidth() && h == image.getHeight()) {
+                    g2d.drawImage(image, x, y, null);
+                }
+                else {
+                    // Zoomed or resized since this preview was rendered; the next one fits again.
+                    g2d.drawImage(image, x, y, w, h, null);
+                }
+            }
+            else if (image.getWidth() == scaledWidth && image.getHeight() == scaledHeight) {
+                g2d.drawImage(image, imageX, imageY, null);
+            }
+            else if (renderingQuality == RenderingQuality.Low) {
                 g2d.drawImage(lastFrame, imageX, imageY, scaledWidth, scaledHeight, null);
+            }
+            else if (scaledFrame(image, width, height) != null) {
+                g2d.drawImage(scaledFrame, imageX, imageY, null);
             }
             else {
                 g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
@@ -1159,8 +1327,8 @@ public class CameraView extends JComponent implements CameraListener {
             return;
         }
         String text = String.format("Resolution: %d x %d\nZoom: %d%%\nFPS: %.1f\nHistogram:", 
-                image.getWidth(),
-                image.getHeight(), 
+                frameWidth,
+                frameHeight, 
                 (int) (zoom * 100),
                 fps);
         Insets insets = new Insets(10, 10, 10, 10);

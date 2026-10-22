@@ -22,9 +22,12 @@ public class ImageRecall extends CvStage {
             return null;
         }
         Result result = pipeline.getExpectedResult(imageStageName);
-        if (result.image == null) {
+        if (result.getGpuImage() != null) {
+            return new Result(result.getGpuImage().retain(), result.colorSpace);
+        }
+        if (result.getImage() == null) {
             return null;
         }
-        return new Result(result.image.clone(), result.colorSpace);
+        return new Result(result.getImage().clone(), result.colorSpace);
     }
 }

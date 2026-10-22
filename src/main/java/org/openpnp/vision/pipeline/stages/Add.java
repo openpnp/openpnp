@@ -66,8 +66,8 @@ public class Add extends CvStage {
             return null;
         }
         // TODO STOPSHIP memory?
-        Mat first = pipeline.getExpectedResult(firstStageName).image;
-        Mat second = pipeline.getExpectedResult(secondStageName).image;
+        Mat first = pipeline.getExpectedResult(firstStageName).getImage();
+        Mat second = pipeline.getExpectedResult(secondStageName).getImage();
 
 				if(this.firstScalar < 0){
 					throw new Exception("firstScalar < 0!");

@@ -140,12 +140,12 @@ public class MatchPartTemplate extends CvStage {
         }
         Result template = pipeline.getExpectedResult(templateStageName);
         // no template image is an error
-        if (template.image == null) {
+        if (template.getImage() == null) {
 
             return null;
         }
 
-        Mat timage = template.image.clone();
+        Mat timage = template.getImage().clone();
         Result result = new Result(originalImage);
         RotatedRect rrect = null;
 

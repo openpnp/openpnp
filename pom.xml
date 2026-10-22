@@ -428,6 +428,32 @@
 				</executions>
 			</plugin>
 
+			<!-- Builds the Vulkan compute runtime. Skipped with a message where the toolchain is
+				missing; the GPU path is then unavailable. -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<version>3.1.0</version>
+				<executions>
+					<execution>
+						<id>build-openpnp-vk</id>
+						<phase>generate-resources</phase>
+						<goals>
+							<goal>run</goal>
+						</goals>
+						<configuration>
+							<target>
+								<exec executable="bash" failonerror="false" osfamily="unix">
+									<arg value="${project.basedir}/src/main/native/vk/build.sh" />
+									<arg value="${project.build.outputDirectory}/native/linux-x86-64" />
+									<arg value="${project.build.directory}/native-cache" />
+								</exec>
+							</target>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
 			<!-- Increase memory availability for mvn test -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
