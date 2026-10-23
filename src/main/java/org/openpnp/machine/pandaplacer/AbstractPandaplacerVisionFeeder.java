@@ -77,6 +77,9 @@ public abstract class AbstractPandaplacerVisionFeeder extends ReferenceFeeder {
     protected PipelineType pipelineType = PipelineType.CircularSymmetry;
 
     @Element(required = false)
+    protected Location visionLocationOffset = new Location(LengthUnit.Millimeters);
+
+    @Element(required = false)
     private Length precisionWanted = new Length(0.1, LengthUnit.Millimeters);
     @Attribute(required = false)
     private int calibrationCount = 0;
@@ -160,7 +163,7 @@ public abstract class AbstractPandaplacerVisionFeeder extends ReferenceFeeder {
             , normalizePickLocation, snapToAxis
             , partPitch, feedPitch, 1 //multiplier is fixed to 1, not used in Pandaplacer feeders
             , location, hole1Location, hole2Location
-            , calibrationToleranceMm, sprocketHoleToleranceMm);
+            , calibrationToleranceMm, sprocketHoleToleranceMm, visionLocationOffset);
     }
 
     public Camera getCamera() throws Exception {
@@ -276,6 +279,16 @@ public abstract class AbstractPandaplacerVisionFeeder extends ReferenceFeeder {
         Object oldValue = this.snapToAxis;
         this.snapToAxis = snapToAxis;
         firePropertyChange("snapToAxis", oldValue, snapToAxis);
+    }
+
+    public Location getVisionLocationOffset() {
+        return visionLocationOffset;
+    }
+
+    public void setVisionLocationOffset(Location visionLocationOffset) {
+        Object oldValue = this.visionLocationOffset;
+        this.visionLocationOffset = visionLocationOffset;
+        firePropertyChange("visionLocationOffset", oldValue, visionLocationOffset);
     }
 
     public Location getHole1Location() {
@@ -475,6 +488,7 @@ public abstract class AbstractPandaplacerVisionFeeder extends ReferenceFeeder {
         else {
             ensureCameraZ(getCamera(), false);
             return getHole1Location().add(getHole2Location()).multiply(0.5)
+                    .add(getVisionLocationOffset().derive(null, null, 0.0, 0.0))
                     .deriveLengths(null, null, getLocation().getLengthZ(),
                             getLocation().getRotation()+getRotationInFeeder());
         }
@@ -506,6 +520,12 @@ public abstract class AbstractPandaplacerVisionFeeder extends ReferenceFeeder {
                         .add(new Length(sprocketHolePitchMm, LengthUnit.Millimeters));
             }
             pipeline.setProperty("sprocketHole.maxDistance", range);
+            // Set the search center to the holes midpoint so the search area is
+            // centered on the holes rather than the (potentially offset) camera position.
+            if (hole1Location.isInitialized() && hole2Location.isInitialized()) {
+                pipeline.setProperty("sprocketHole.center",
+                        hole1Location.add(hole2Location).multiply(0.5));
+            }
 
             return pipeline;
         }
@@ -517,7 +537,7 @@ public abstract class AbstractPandaplacerVisionFeeder extends ReferenceFeeder {
     public void showFeatures() throws Exception {
         Camera camera = getCamera();
         ensureCameraZ(camera, true);
-        camera.moveTo(this.getLocation()); //make sure the camera is pointing to the currently selected pick location
+        MovableUtils.moveToLocationAtSafeZ(camera, getNominalVisionLocation());
         try (CvPipeline pipeline = getCvPipeline(camera, true, true)) {
 
             // Process vision and show feature without applying anything
@@ -545,11 +565,20 @@ public abstract class AbstractPandaplacerVisionFeeder extends ReferenceFeeder {
 
     protected Exception autoSetupPipeline(Camera camera, PipelineType type) {
         try (CvPipeline pipeline = getCvPipeline(camera, true, true)) {
+            Location initialPickLocation = camera.getLocation()
+                    .derive(getLocation(), false, false, true, false);
+            if (hole1Location.isInitialized() && hole2Location.isInitialized()) {
+                Location midPoint = hole1Location.add(hole2Location).multiply(0.5)
+                        .add(getVisionLocationOffset().derive(null, null, 0.0, 0.0))
+                        .derive(camera.getLocation(), false, false, true, false);
+                MovableUtils.moveToLocationAtSafeZ(camera, midPoint);
+            }
             // Process vision and get some features
             FeederVisionHelper feature = new FeederVisionHelper(getVisionHelperParams(camera, pipeline))
                     .findFeatures(FindFeaturesMode.FromPickLocationGetHoles);
             // Store the initial vision based results
-            setLocation(feature.getCalibratedPickLocation());
+            setLocation(initialPickLocation.derive(feature.getCalibratedPickLocation(),
+                    false, false, false, true));
             setHole1Location(feature.getCalibratedHole1Location());
             setHole2Location(feature.getCalibratedHole2Location());
             // As we've changed all this -> reset any stats
@@ -621,6 +650,7 @@ public abstract class AbstractPandaplacerVisionFeeder extends ReferenceFeeder {
             for (int i = 0; i < calibrateMaxPasses; i++) {
                 // move the camera to the mid-point
                 Location midPoint = runningHole1Location.add(runningHole2Location).multiply(0.5, 0.5, 0, 0)
+                        .add(getVisionLocationOffset().derive(null, null, 0.0, 0.0))
                         .derive(camera.getLocation(), false, false, true, false)
                         .derive(null, null, null, runningPickLocation.getRotation()+getRotationInFeeder());
                 Logger.debug("calibrating sprocket holes pass "+ i+ " midPoint is "+midPoint);

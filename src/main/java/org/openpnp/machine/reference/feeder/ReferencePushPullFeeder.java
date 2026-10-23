@@ -92,6 +92,9 @@ public class ReferencePushPullFeeder extends ReferenceFeeder implements PickOffs
     @Element(required = false)
     protected Location hole2Location = new Location(LengthUnit.Millimeters);
 
+    @Element(required = false)
+    protected Location visionLocationOffset = new Location(LengthUnit.Millimeters);
+
     @Attribute(required = false)
     protected boolean usedAsTemplate = false; 
 
@@ -349,7 +352,8 @@ public class ReferencePushPullFeeder extends ReferenceFeeder implements PickOffs
             , this.normalizePickLocation, this.snapToAxis
             , this.partPitch, this.feedPitch, this.feedMultiplier
             , this.location, this.hole1Location, this.hole2Location
-            , this.calibrationToleranceMm, this.sprocketHoleToleranceMm);
+            , this.calibrationToleranceMm, this.sprocketHoleToleranceMm
+            , this.visionLocationOffset);
     }
 
     public void assertCalibrated(boolean tapeFeed) throws Exception {
@@ -704,6 +708,16 @@ public class ReferencePushPullFeeder extends ReferenceFeeder implements PickOffs
         firePropertyChange("hole2Location", oldValue, hole2Location);
         pickOffsetCorrection.reset();
         resetCalibration();
+    }
+
+    public Location getVisionLocationOffset() {
+        return visionLocationOffset;
+    }
+
+    public void setVisionLocationOffset(Location visionLocationOffset) {
+        Object oldValue = this.visionLocationOffset;
+        this.visionLocationOffset = visionLocationOffset;
+        firePropertyChange("visionLocationOffset", oldValue, visionLocationOffset);
     }
 
     public boolean isUsedAsTemplate() {
@@ -1327,7 +1341,8 @@ public class ReferencePushPullFeeder extends ReferenceFeeder implements PickOffs
         else {
             ensureCameraZ(getCamera(), false);
             return getHole1Location().add(getHole2Location()).multiply(0.5)
-                    .deriveLengths(null, null, getLocation().getLengthZ(), 
+                    .add(getVisionLocationOffset().derive(null, null, 0.0, 0.0))
+                    .deriveLengths(null, null, getLocation().getLengthZ(),
                             getLocation().getRotation()+getRotationInFeeder());
         }
     }
@@ -1379,12 +1394,18 @@ public class ReferencePushPullFeeder extends ReferenceFeeder implements PickOffs
                         : upp.getLengthY().multiply(camera.getWidth());
             }
             else {
-                // Normal mode: search range is half the distance between the holes plus one pitch. 
+                // Normal mode: search range is half the distance between the holes plus one pitch.
                 range = getHole1Location().getLinearLengthTo(getHole2Location())
                         .multiply(0.5)
                         .add(new Length(sprocketHolePitchMm, LengthUnit.Millimeters));
             }
             pipeline.setProperty("sprocketHole.maxDistance", range);
+            // Set the search center to the holes midpoint so the search area is
+            // centered on the holes rather than the (potentially offset) camera position.
+            if (hole1Location.isInitialized() && hole2Location.isInitialized()) {
+                pipeline.setProperty("sprocketHole.center",
+                        hole1Location.add(hole2Location).multiply(0.5));
+            }
             if (performOcr && getOcrRegion() != null) {
                 setupOcr(camera, pipeline);
             }
@@ -1402,6 +1423,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder implements PickOffs
     public void showFeatures() throws Exception {
         Camera camera = getCamera();
         ensureCameraZ(camera, true);
+        MovableUtils.moveToLocationAtSafeZ(camera, getNominalVisionLocation());
         try (CvPipeline pipeline = getCvPipeline(camera, true, true, true)) {
 
             // Process vision and show feature without applying anything
@@ -1452,12 +1474,26 @@ public class ReferencePushPullFeeder extends ReferenceFeeder implements PickOffs
             resetPipeline(type);
         }
         try (CvPipeline pipeline = getCvPipeline(camera, true, true, true)) {
-            // Process vision and get some features 
+            // Save the initial pick location before potentially moving the camera.
+            // We only want the rotation from vision; X/Y/Z stay as the user set them.
+            Location initialPickLocation = camera.getLocation()
+                    .derive(getLocation(), false, false, true, false);
+            // Move the camera to apply the vision offset before detecting sprocket holes.
+            // If hole locations are already known, use the midpoint + offset. Otherwise
+            // stay at the current camera position (pick location) for first-time setup.
+            if (hole1Location.isInitialized() && hole2Location.isInitialized()) {
+                Location midPoint = hole1Location.add(hole2Location).multiply(0.5)
+                        .add(getVisionLocationOffset().derive(null, null, 0.0, 0.0))
+                        .derive(camera.getLocation(), false, false, true, false);
+                MovableUtils.moveToLocationAtSafeZ(camera, midPoint);
+            }
+            // Process vision and get some features
             FeederVisionHelper feature = new FeederVisionHelper(getVisionHelperParams(camera, pipeline));
             feature.findFeatures(FindFeaturesMode.FromPickLocationGetHoles);
 
             // Store the initial vision based results
-            setLocation(feature.getCalibratedPickLocation());
+            setLocation(initialPickLocation.derive(feature.getCalibratedPickLocation(),
+                    false, false, false, true));
             setHole1Location(feature.getCalibratedHole1Location());
             setHole2Location(feature.getCalibratedHole2Location());
             // Second preliminary smart clone to get pipeline, OCR region etc. from a template,
@@ -2140,6 +2176,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder implements PickOffs
             for (int i = 0; i < calibrateMaxPasses; i++) {
                 // move the camera to the mid-point 
                 Location midPoint = runningHole1Location.add(runningHole2Location).multiply(0.5, 0.5, 0, 0)
+                        .add(getVisionLocationOffset().derive(null, null, 0.0, 0.0))
                         .derive(camera.getLocation(), false, false, true, false)
                         .derive(null, null, null, runningPickLocation.getRotation()+getRotationInFeeder());
                 Logger.debug("calibrating sprocket holes pass "+ i+ " midPoint is "+midPoint);

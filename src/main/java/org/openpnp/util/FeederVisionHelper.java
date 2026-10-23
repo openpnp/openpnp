@@ -106,6 +106,8 @@ public class FeederVisionHelper {
             public double calibrationToleranceMm = 1.95;
             // vision and comparison sprocket hole tolerance (in size, position)
             public double sprocketHoleToleranceMm = 0.6;
+            // optional offset applied to the camera position for vision operations
+            public Location visionLocationOffset = new Location(LengthUnit.Millimeters);
 
             public void resetPipeline(PipelineType type) {
                 this.pipelineType = type;
@@ -133,7 +135,7 @@ public class FeederVisionHelper {
  * - calibrationToleranceMm, sprocketHoleToleranceMm: calibration tolerance parameters, either used from internal constants or provided by the caller class *
  */
         public FeederVisionHelperParams(Camera camera, PipelineType pipelineType, CvPipeline pipeline, long showResultMilliseconds, boolean normalizePickLocation, boolean snapToAxis, Length partPitch, Length feedPitch, long feedMultiplier, Location partLocation, Location hole1Location, Location hole2Location
-                ,double calibrationToleranceMm, double sprocketHoleToleranceMm) {
+                ,double calibrationToleranceMm, double sprocketHoleToleranceMm, Location visionLocationOffset) {
             this.camera = camera;
             this.pipelineType = pipelineType;
             this.pipeline = pipeline;
@@ -152,6 +154,7 @@ public class FeederVisionHelper {
 
             this.calibrationToleranceMm = calibrationToleranceMm;
             this.sprocketHoleToleranceMm = sprocketHoleToleranceMm;
+            this.visionLocationOffset = visionLocationOffset;
         }
 
     }
@@ -539,8 +542,12 @@ public class FeederVisionHelper {
                     // sprocket holes than to the neighboring tape's holes.
                     // In Calibration mode we are between the the sprocket holes, and there is no minimum distance
                     // and the line must simply be within calibration tolerance.
-                    double distanceMm = camera.getLocation().convertToUnits(LengthUnit.Millimeters)
-                            .getLinearDistanceToLineSegment(aLocation, bLocation);
+                    Location referenceLocation = (autoSetupMode == FindFeaturesMode.FromPickLocationGetHoles
+                            ? partLocation
+                            : autoSetupMode == FindFeaturesMode.CalibrateHoles
+                                    ? camera.getLocation().subtract(this.settings.visionLocationOffset)
+                                    : camera.getLocation()).convertToUnits(LengthUnit.Millimeters);
+                    double distanceMm = referenceLocation.getLinearDistanceToLineSegment(aLocation, bLocation);
                     double minDistanceMm = (autoSetupMode == FindFeaturesMode.CalibrateHoles ?
                             0 : minSprocketHolesDistanceMm)
                             - sprocketHoleToleranceMm;
@@ -584,8 +591,11 @@ public class FeederVisionHelper {
                     Collections.sort(holes, new Comparator<Result.Circle>() {
                         @Override
                         public int compare(Result.Circle o1, Result.Circle o2) {
-                            double d1 = VisionUtils.getPixelLocation(camera, o1.x, o1.y).getLinearDistanceTo(camera.getLocation());
-                            double d2 = VisionUtils.getPixelLocation(camera, o2.x, o2.y).getLinearDistanceTo(camera.getLocation());
+                            Location referenceLocation = (autoSetupMode == FindFeaturesMode.FromPickLocationGetHoles
+                                    ? partLocation
+                                    : camera.getLocation()).convertToUnits(LengthUnit.Millimeters);
+                            double d1 = VisionUtils.getPixelLocation(camera, o1.x, o1.y).getLinearDistanceTo(referenceLocation);
+                            double d2 = VisionUtils.getPixelLocation(camera, o2.x, o2.y).getLinearDistanceTo(referenceLocation);
                             return Double.compare(d1, d2);
                         }
                     });
@@ -600,7 +610,9 @@ public class FeederVisionHelper {
                                 .convertToUnits(LengthUnit.Millimeters);
                         calibratedHole2Location = VisionUtils.getPixelLocation(camera, holes.get(1).x, holes.get(1).y)
                                 .convertToUnits(LengthUnit.Millimeters);
-                        Location pocketLocation = camera.getLocation().convertToUnits(LengthUnit.Millimeters);
+                        Location pocketLocation = (autoSetupMode == FindFeaturesMode.FromPickLocationGetHoles
+                                ? partLocation
+                                : camera.getLocation()).convertToUnits(LengthUnit.Millimeters);
                         double angle1 = Math.atan2(calibratedHole1Location.getY()-pocketLocation.getY(), calibratedHole1Location.getX()-pocketLocation.getX());
                         double angle2 = Math.atan2(calibratedHole2Location.getY()-pocketLocation.getY(), calibratedHole2Location.getX()-pocketLocation.getX());
                         double angleDiff = Utils2D.angleNorm(Math.toDegrees(angle2-angle1), 180);
