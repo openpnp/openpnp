@@ -46,6 +46,7 @@ import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Solutions;
+import org.openpnp.model.Solutions.Issue.Portability;
 import org.openpnp.model.Solutions.Milestone;
 import org.openpnp.model.Solutions.Severity;
 import org.openpnp.model.Solutions.State;
@@ -179,7 +180,8 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                         Translations.getString("GcodeDriverSolutions.Issue.ConnectDriver"), //$NON-NLS-1$ 
                         Translations.getString("GcodeDriverSolutions.Solution.ConnectDriver"), //$NON-NLS-1$ 
                         Severity.Fundamental,
-                        "https://github.com/openpnp/openpnp/wiki/GcodeDriver#connection"));
+                        "https://github.com/openpnp/openpnp/wiki/GcodeDriver#connection",
+                        Portability.NonPortablePC));
             }
             if (gcodeDriver.isSpeakingGcode() 
                     && (gcodeDriver.getDetectedFirmware() == null

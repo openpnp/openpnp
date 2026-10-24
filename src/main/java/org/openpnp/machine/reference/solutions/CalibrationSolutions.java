@@ -49,6 +49,7 @@ import org.openpnp.model.Location;
 import org.openpnp.model.Package;
 import org.openpnp.model.Part;
 import org.openpnp.model.Solutions;
+import org.openpnp.model.Solutions.Issue.Portability;
 import org.openpnp.model.Solutions.Milestone;
 import org.openpnp.model.Solutions.State;
 import org.openpnp.spi.Axis.Type;
@@ -208,7 +209,8 @@ public class CalibrationSolutions implements Solutions.Subject {
                                 Translations.format("CalibrationSolutions.Issue.BacklashCalibration", axis.getName()), //$NON-NLS-1$ 
                                 Translations.format("CalibrationSolutions.Solution.BacklashCalibration", axis.getName()), //$NON-NLS-1$ 
                                 Solutions.Severity.Fundamental,
-                                "https://github.com/openpnp/openpnp/wiki/Calibration-Solutions#calibrating-backlash-compensation") {
+                                "https://github.com/openpnp/openpnp/wiki/Calibration-Solutions#calibrating-backlash-compensation",
+                                Portability.NonPortableController) {
 
                             {
                                 tolerance = oldAcceptableTolerance;
@@ -306,7 +308,8 @@ public class CalibrationSolutions implements Solutions.Subject {
                         Translations.format("CalibrationSolutions.Issue.AdvancedCameraCalibration", camera.getName()), //$NON-NLS-1$ 
                         Translations.format("CalibrationSolutions.Solution.AdvancedCameraCalibration.Down", camera.getName()), //$NON-NLS-1$ 
                         Solutions.Severity.Suggestion,
-                        "https://github.com/openpnp/openpnp/wiki/Calibration-Solutions#advanced-camera-calibration") {
+                        "https://github.com/openpnp/openpnp/wiki/Calibration-Solutions#advanced-camera-calibration",
+                        Portability.NonPortableController) {
 
                     @Override 
                     public void activate() throws Exception {
@@ -354,7 +357,8 @@ public class CalibrationSolutions implements Solutions.Subject {
                     Translations.format("CalibrationSolutions.Issue.NozzleOffsetCalibration", nozzle.getName()), //$NON-NLS-1$ 
                     Translations.format("CalibrationSolutions.Solution.NozzleOffsetCalibration", nozzle.getName()), //$NON-NLS-1$ 
                     Solutions.Severity.Fundamental,
-                    "https://github.com/openpnp/openpnp/wiki/Calibration-Solutions#calibrating-precision-camera-to-nozzle-offsets") {
+                    "https://github.com/openpnp/openpnp/wiki/Calibration-Solutions#calibrating-precision-camera-to-nozzle-offsets",
+                    Portability.NonPortableController) {
 
                 private Location oldNozzleOffsets = null;
 
@@ -441,7 +445,8 @@ public class CalibrationSolutions implements Solutions.Subject {
                     Translations.format("CalibrationSolutions.Issue.AdvancedCameraCalibration", camera.getName()), //$NON-NLS-1$ 
                     Translations.format("CalibrationSolutions.Solution.AdvancedCameraCalibration.Up", camera.getName(), defaultNozzle.getName()), //$NON-NLS-1$ 
                     Solutions.Severity.Suggestion,
-                    "https://github.com/openpnp/openpnp/wiki/Calibration-Solutions#advanced-camera-calibration") {
+                    "https://github.com/openpnp/openpnp/wiki/Calibration-Solutions#advanced-camera-calibration",
+                    Portability.NonPortableController) {
 
                 @Override 
                 public void activate() throws Exception {
