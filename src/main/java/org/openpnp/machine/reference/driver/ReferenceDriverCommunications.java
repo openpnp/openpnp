@@ -70,7 +70,7 @@ public abstract class ReferenceDriverCommunications {
     }
     abstract public String getConnectionName();
 
-    abstract protected void writeBytes(byte[] data) throws IOException;
+    abstract public void writeBytes(byte[] data) throws IOException;
 
     abstract public int read() throws TimeoutException, IOException;
 
