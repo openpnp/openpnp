@@ -30,7 +30,14 @@ import org.openpnp.model.Footprint;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 
+/**
+ * Draws a footprint at the center of the camera view: its pads, its body (dashed) and its marked
+ * pad, such as pin 1, filled in red.
+ */
 public class FootprintReticle implements Reticle {
+    public static final Color MARK_COLOR = new Color(255, 60, 60);
+    static final Color MARK_FILL = new Color(255, 60, 60, 110);
+
     private Color color;
     private Footprint footprint;
 
@@ -43,35 +50,76 @@ public class FootprintReticle implements Reticle {
     public void draw(Graphics2D g2d, LengthUnit cameraUnitsPerPixelUnits,
             double cameraUnitsPerPixelX, double cameraUnitsPerPixelY, double viewPortCenterX,
             double viewPortCenterY, int viewPortWidth, int viewPortHeight, double rotation) {
-
-        g2d.setStroke(new BasicStroke(1f));
-        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        g2d.setColor(color);
-
-        Shape shape = footprint.getPadsShape();
-        if (shape == null) {
+        if (footprint == null) {
             return;
         }
-        // Determine the scaling factor to go from Outline units to
-        // Camera units.
-        Length l = new Length(1, footprint.getUnits());
-        l = l.convertToUnits(cameraUnitsPerPixelUnits);
-        double unitScale = l.getValue();
+        AffineTransform tx = toView(footprint.getUnits(), cameraUnitsPerPixelUnits,
+                cameraUnitsPerPixelX, cameraUnitsPerPixelY, viewPortCenterX, viewPortCenterY,
+                rotation);
+        drawFootprint(g2d, footprint, tx, color);
+    }
 
-        // Create a transform to scale the Shape by
+    /**
+     * The transform from footprint units (Y up, centered on the footprint) to view pixels, with the
+     * footprint at the given view point and rotated counter-clockwise by the given angle.
+     */
+    static AffineTransform toView(LengthUnit footprintUnits, LengthUnit cameraUnitsPerPixelUnits,
+            double cameraUnitsPerPixelX, double cameraUnitsPerPixelY, double viewX, double viewY,
+            double rotation) {
+        // Determine the scaling factor to go from footprint units to camera units.
+        double unitScale = new Length(1, footprintUnits).convertToUnits(cameraUnitsPerPixelUnits)
+                .getValue();
+
         AffineTransform tx = new AffineTransform();
+        tx.translate(viewX, viewY);
+        // Camera units to pixels, with Y inverted for the left-hand view. This comes before the
+        // rotation, so that each view axis keeps its own scale whatever the angle.
+        tx.scale(1 / cameraUnitsPerPixelX, -1 / cameraUnitsPerPixelY);
+        // Right-hand coordinates (Y up): counter-clockwise positive.
+        tx.rotate(Math.toRadians(rotation));
+        tx.scale(unitScale, unitScale);
+        return tx;
+    }
 
-        tx.translate(viewPortCenterX, viewPortCenterY);
-        // Left-hand coordinate system rotates positive clockwise, so we invert the value.
-        tx.rotate(Math.toRadians(-rotation));
+    /**
+     * Draws a footprint with the given transform from footprint units to view pixels: the body
+     * dashed, the pads outlined, and the marked pad filled and outlined in red.
+     */
+    public static void drawFootprint(Graphics2D g2d, Footprint footprint, AffineTransform tx,
+            Color color) {
+        Graphics2D g = (Graphics2D) g2d.create();
+        try {
+            g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g.setColor(color);
 
-        // First we scale by units to convert the units and then we divide
-        // by the camera X and Y units per pixels to get pixel locations.
-        // Left-hand coordinate system, Y inverted.
-        tx.scale(unitScale / cameraUnitsPerPixelX, -unitScale / cameraUnitsPerPixelY);
+            if (footprint.getBodyWidth() > 0 && footprint.getBodyHeight() > 0) {
+                g.setStroke(new BasicStroke(1f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10f,
+                        new float[] {6f, 4f}, 0f));
+                g.draw(tx.createTransformedShape(footprint.getBodyShape()));
+            }
 
-        // Transform the Shape and draw it out.
-        shape = tx.createTransformedShape(shape);
-        g2d.draw(shape);
+            g.setStroke(new BasicStroke(1f));
+            Footprint.Pad marked = null;
+            for (Footprint.Pad pad : footprint.getPads()) {
+                if (pad.getMark()) {
+                    marked = pad;
+                }
+                else {
+                    g.draw(tx.createTransformedShape(pad.getShape()));
+                }
+            }
+            // Drawn last, so that it stays on top where pads overlap.
+            if (marked != null) {
+                Shape shape = tx.createTransformedShape(marked.getShape());
+                g.setColor(MARK_FILL);
+                g.fill(shape);
+                g.setColor(MARK_COLOR);
+                g.setStroke(new BasicStroke(1.5f));
+                g.draw(shape);
+            }
+        }
+        finally {
+            g.dispose();
+        }
     }
 }

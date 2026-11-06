@@ -24,12 +24,10 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Path2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.geom.RoundRectangle2D;
-import java.awt.geom.Ellipse2D;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.openpnp.gui.importer.KicadModImporter;
-import org.python.antlr.base.boolop;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.ElementList;
 
@@ -338,17 +336,9 @@ public class Footprint extends AbstractModelObject{
             AffineTransform tx = new AffineTransform();
             tx.translate(x, y);
             tx.rotate(Math.toRadians(rotation));
-            Path2D.Double result = (Path2D.Double) tx.createTransformedShape(padShape);
-            if (mark) {
-                /* simple mark in center of pad. It is XORed in vision compositing view so might overlap.
-                 * It would be not easy to compute where put mark outside as pads might be each other.
-                 */
-                r = Math.min(width, height) * 0.9;
-                r = Math.min(r, 1);  // limit max.size of mark
-                Shape markShape = new java.awt.geom.Ellipse2D.Double(x - r / 2, y - r / 2, r, r);
-                result.append(markShape, false);
-            }
-            return result;
+            // The shape is the pad alone, also for a marked pad: vision fills it to make templates.
+            // The mark is drawn by the GUI, see FootprintReticle.
+            return tx.createTransformedShape(padShape);
         }
 
         /**
