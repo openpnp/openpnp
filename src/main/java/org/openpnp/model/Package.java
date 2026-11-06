@@ -45,6 +45,29 @@ public class Package extends AbstractPartSettingsHolder {
     @Attribute(required = false)
     private String tapeSpecification;
 
+    /**
+     * The package's rotation in its carrier tape, in degrees, counter-clockwise positive, relative
+     * to the package at 0 degrees. Measured in the EIA-481 tape frame: looking down on the cover
+     * tape with the sprocket holes along the top and the tape feeding left to right. Null when not
+     * known.
+     */
+    @Attribute(required = false)
+    private Double tapeRotation;
+
+    /**
+     * The distance between parts in the carrier tape (component pitch P1 in EIA-481). Null when
+     * not known.
+     */
+    @Element(required = false)
+    private Length tapePitch;
+
+    /**
+     * The width of the carrier tape (W in EIA-481): 8, 12, 16, 24 mm and so on. Null when not
+     * known.
+     */
+    @Element(required = false)
+    private Length tapeWidth;
+
     @Attribute(required = false)
     private double pickVacuumLevel;
 
@@ -106,6 +129,36 @@ public class Package extends AbstractPartSettingsHolder {
         Object oldValue = this.tapeSpecification;
         this.tapeSpecification = tapeSpecification;
         firePropertyChange("tapeSpecification", oldValue, tapeSpecification);
+    }
+
+    public Double getTapeRotation() {
+        return tapeRotation;
+    }
+
+    public void setTapeRotation(Double tapeRotation) {
+        Object oldValue = this.tapeRotation;
+        this.tapeRotation = tapeRotation;
+        firePropertyChange("tapeRotation", oldValue, tapeRotation);
+    }
+
+    public Length getTapePitch() {
+        return tapePitch;
+    }
+
+    public void setTapePitch(Length tapePitch) {
+        Object oldValue = this.tapePitch;
+        this.tapePitch = tapePitch;
+        firePropertyChange("tapePitch", oldValue, tapePitch);
+    }
+
+    public Length getTapeWidth() {
+        return tapeWidth;
+    }
+
+    public void setTapeWidth(Length tapeWidth) {
+        Object oldValue = this.tapeWidth;
+        this.tapeWidth = tapeWidth;
+        firePropertyChange("tapeWidth", oldValue, tapeWidth);
     }
 
     public void setPlaceBlowOffLevel(double level) {
