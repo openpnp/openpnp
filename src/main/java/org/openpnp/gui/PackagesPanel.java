@@ -182,6 +182,15 @@ public class PackagesPanel extends JPanel implements WizardContainer {
             public String getToolTipText(MouseEvent evt) {
                 int column = convertColumnIndexToModel(columnAtPoint(evt.getPoint()));
                 if(column==2) { return Translations.getString("PackagesTableModel.Column.TapeSpecification.toolTip"); } //$NON-NLS-1$
+                if (column == 5) {
+                    return Translations.getString("PackagesTableModel.Column.TapeRotation.toolTip"); //$NON-NLS-1$
+                }
+                if (column == 6) {
+                    return Translations.getString("PackagesTableModel.Column.TapePitch.toolTip"); //$NON-NLS-1$
+                }
+                if (column == 7) {
+                    return Translations.getString("PackagesTableModel.Column.TapeWidth.toolTip"); //$NON-NLS-1$
+                }
                 return null;
             }
         };
