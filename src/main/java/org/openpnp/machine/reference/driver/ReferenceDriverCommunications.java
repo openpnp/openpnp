@@ -74,6 +74,18 @@ public abstract class ReferenceDriverCommunications {
 
     abstract public int read() throws TimeoutException, IOException;
 
+    public void setReadTimeoutMs(int ms) throws IOException { }
+
+    public void flushInput() throws IOException {
+        try {
+            while (true) {
+                read();
+            }
+        }
+        catch (TimeoutException e) {
+        }
+    }
+
     /**
      * Read a line from the input stream. Blocks for the default timeout. If the read times out a
      * TimeoutException is thrown. Any other failure to read results in an IOExeption;

@@ -224,6 +224,7 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
         createMachineObjects();
 
         getCommunications().setDriverName(getName());
+        getCommunications().setReadTimeoutMs(timeoutMilliseconds);
         getCommunications().connect();
 
         connected = false;
@@ -268,14 +269,8 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
         }
     }
 
-    void flushInput() throws Exception{
-        try {
-            while(true) {
-                read();
-            }
-        }
-        catch (TimeoutException e) {
-        }
+    void flushInput() throws Exception {
+        getCommunications().flushInput();
     }
 
     void write(int d) throws Exception {

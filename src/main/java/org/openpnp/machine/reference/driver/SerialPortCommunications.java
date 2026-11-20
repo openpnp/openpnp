@@ -91,6 +91,11 @@ public class SerialPortCommunications extends ReferenceDriverCommunications {
     @Attribute(required = false)
     protected String name = "SerialPortCommunications";
 
+    /**
+     * Read timeout in milliseconds, 0 means blocking indefinitely (default). Drivers that need a
+     * read timeout must set it explicitly using setReadTimeoutMs().
+     */
+    protected int readTimeoutMs = 0;
 
     private SerialPort serialPort;
 
@@ -109,7 +114,8 @@ public class SerialPortCommunications extends ReferenceDriverCommunications {
             serialPort.setRTS();
         }
         serialPort.setComPortTimeouts(
-                SerialPort.TIMEOUT_READ_SEMI_BLOCKING | SerialPort.TIMEOUT_WRITE_BLOCKING, 0, 0);
+                SerialPort.TIMEOUT_READ_SEMI_BLOCKING | SerialPort.TIMEOUT_WRITE_BLOCKING,
+                readTimeoutMs, 0);
     }
 
     @Override
@@ -120,6 +126,22 @@ public class SerialPortCommunications extends ReferenceDriverCommunications {
         }
     }
 
+    @Override
+    public synchronized void setReadTimeoutMs(int ms) {
+        this.readTimeoutMs = ms;
+        if (serialPort != null && serialPort.isOpen()) {
+            serialPort.setComPortTimeouts(
+                    SerialPort.TIMEOUT_READ_SEMI_BLOCKING | SerialPort.TIMEOUT_WRITE_BLOCKING,
+                    readTimeoutMs, 0);
+        }
+    }
+
+    @Override
+    public synchronized void flushInput() {
+        if (serialPort != null && serialPort.isOpen()) {
+            serialPort.flushIOBuffers();
+        }
+    }
 
     /**
      * Returns an array of Strings containing the names of serial ports
