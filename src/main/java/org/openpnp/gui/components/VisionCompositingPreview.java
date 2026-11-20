@@ -42,6 +42,7 @@ import java.util.List;
 import javax.swing.JComponent;
 import javax.swing.UIManager;
 
+import org.openpnp.gui.components.reticle.FootprintReticle;
 import org.openpnp.model.Footprint;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
@@ -123,6 +124,13 @@ public class VisionCompositingPreview extends JComponent implements MouseMotionL
             g2d.fill(bodyShape);
             g2d.setColor(Color.white);
             g2d.fill(padsShape);
+            // The marked pad, such as pin 1.
+            g2d.setColor(FootprintReticle.MARK_COLOR);
+            for (Footprint.Pad pad : footprint.getPads()) {
+                if (pad.getMark()) {
+                    g2d.fill(pad.getShape());
+                }
+            }
 
             // Draw fused pads.
             if (pressedMouse && composite.getRectifiedPads() != null) {
