@@ -13,21 +13,31 @@ import org.jcodec.api.awt.SequenceEncoder;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+
+import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceMachine;
+import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.machine.reference.ReferencePnpJobProcessor;
+import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
+import org.openpnp.machine.reference.driver.NullDriver;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision;
 import org.openpnp.spi.Locatable.LocationOption;
 import org.openpnp.spi.PnpJobPlanner;
 import org.openpnp.spi.PnpJobProcessor.JobPlacement;
 import org.openpnp.spi.PnpJobPlanner.PlannedPlacement;
 import org.openpnp.spi.PnpJobPlanner.PlannerStepResults;
+import org.openpnp.spi.Axis;
+import org.openpnp.spi.JobProcessor.JobProcessorException;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
 import org.openpnp.util.Utils2D;
+import org.openpnp.model.AxesLocation;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Part;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Job;
+import org.openpnp.model.Length;
+import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Placement;
 import org.openpnp.model.Location;
 import org.pmw.tinylog.Configurator;
@@ -311,6 +321,80 @@ public class JobProcessorTest {
         assertEquals(27, partChanges(), 3);
     }
 
+    @Test
+    public void testNozzleBoardReach() throws Exception {
+        setup("testNozzleBoardReach");        
+        // This test puts a portion of the board placements beyond the reach of one of the nozzles
+
+        // Configure soft limits on the X/Y axes such that a portion of the board
+        // is just out of reach of N1
+        ReferenceControllerAxis xAxis = (ReferenceControllerAxis) machine.getDefaultAxis(Axis.Type.X);
+        xAxis.setSoftLimitLowEnabled(true);
+        xAxis.setSoftLimitLow(new Length(30, AxesLocation.getUnits()));
+        
+        ReferenceControllerAxis yAxis = (ReferenceControllerAxis) machine.getDefaultAxis(Axis.Type.Y);
+        yAxis.setSoftLimitLowEnabled(true);
+        
+        // Ensure the park location is within the soft limits
+        ReferenceHead head = (ReferenceHead) machine.getDefaultHead();
+        head.setParkLocation(new Location(LengthUnit.Millimeters, 50.0, 50.0, 10.0, 0.0));
+        
+        // Make sure only Brd8 is enabled to simplify test case
+        for (BoardLocation boardLocation : job.getBoardLocations()) {
+            if (boardLocation.getId().equals("Brd8")) {
+                boardLocation.setLocallyEnabled(true);
+            } else {
+                boardLocation.setLocallyEnabled(false);
+            }
+        }
+
+        // Run the placement test.
+        // If the machine attempts a placement beyond the soft limits, this
+        // will throw an exception and cause the test to fail.
+        run();
+        
+        saveCsv();
+        saveSvg();
+    }
+
+    @Test
+    public void testNozzleFeederReach() throws Exception {
+        setup("testNozzleFeederReach");
+        // This test puts a feeder beyond the reach of one of the nozzles
+        
+        // Configure soft limits on the X/Y axes such that the "f0805-10k"
+        // feeder is just out of reach of N1
+        ReferenceControllerAxis xAxis = (ReferenceControllerAxis) machine.getDefaultAxis(Axis.Type.X);
+        xAxis.setSoftLimitHighEnabled(true);
+        xAxis.setSoftLimitHigh(new Length(190, AxesLocation.getUnits()));
+
+        ReferenceControllerAxis yAxis = (ReferenceControllerAxis) machine.getDefaultAxis(Axis.Type.Y);
+        yAxis.setSoftLimitHighEnabled(false);
+        machine.addAxis(yAxis);
+
+        // Ensure the park location is within the soft limits
+        ReferenceHead head = (ReferenceHead) machine.getDefaultHead();
+        head.setParkLocation(new Location(LengthUnit.Millimeters, 50.0, 50.0, 10.0, 0.0));
+        
+        // Make sure only Brd8 is enabled to simplify test case
+        for (BoardLocation boardLocation : job.getBoardLocations()) {
+            if (boardLocation.getId().equals("Brd8")) {
+                boardLocation.setLocallyEnabled(true);
+            } else {
+                boardLocation.setLocallyEnabled(false);
+            }
+        }
+        
+        // Run the placement test.
+        // If the machine attempts a feeder pick beyond the soft limits, this
+        // will throw an exception and cause the test to fail.
+        run();
+
+        saveCsv();
+        saveSvg();
+        checkRanks();
+    }
+    
     private void setup(String testName) throws Exception {
         this.testName = testName;
         workingDirectory = Files.createTempDir();

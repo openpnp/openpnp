@@ -2894,10 +2894,25 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                         Placement placement = jobPlacement.getPlacement();
                         Part part = placement.getPart();
                         org.openpnp.model.Package pkg = part.getPackage();
-                        return pkg.getCompatibleNozzleTips().contains(nozzleTip);
+                        if (pkg.getCompatibleNozzleTips().contains(nozzleTip)) {
+                            // check if the pick and place locations are actually reachable by the nozzle
+                            boolean reachable;
+                            Location pickLocation = jobPlacement.getPlannedPickLocation();
+                            Location placeLocation =
+                                    Utils2D.calculateBoardPlacementLocation(jobPlacement.getBoardLocation(), placement.getLocation());
+                            try {
+                                reachable = nozzle.isReachable(pickLocation) && nozzle.isReachable(placeLocation);
+                            } catch (Exception e) {
+                                Logger.warn("Unable to check nozzle reachability: {}", e.toString());
+                                reachable = false;
+                            }
+                            return reachable;
+                        } else {
+                            return false;
+                        }
                     })
                     .collect(Collectors.toList());
-
+            
             // if there are no compatible job placements, leave now
             if (compatibleJobPlacements.isEmpty()) {
                 return null;
