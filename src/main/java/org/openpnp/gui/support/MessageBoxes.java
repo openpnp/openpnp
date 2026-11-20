@@ -141,6 +141,9 @@ public class MessageBoxes {
             editor.setFocusable(true);
             editor.setOpaque(false);
             editor.putClientProperty(JEditorPane.HONOR_DISPLAY_PROPERTIES, Boolean.TRUE);
+            editor.setPreferredSize(null);
+            editor.setSize(editor.getPreferredSize());
+            editor.revalidate();
             add(editor, BorderLayout.CENTER);
 
             copiedMessage = new JLabel(" ");
