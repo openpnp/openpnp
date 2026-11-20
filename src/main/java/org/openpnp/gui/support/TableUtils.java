@@ -19,15 +19,20 @@
 
 package org.openpnp.gui.support;
 
+import java.awt.Component;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.prefs.Preferences;
+import java.util.regex.Pattern;
 
+import javax.swing.AbstractButton;
+import javax.swing.JLabel;
 import javax.swing.JTable;
 import javax.swing.RowFilter;
 import javax.swing.SwingUtilities;
+import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
 import javax.swing.table.TableModel;
@@ -177,6 +182,14 @@ public class TableUtils {
     /**
      * Creates a case-insensitive {@link RowFilter} that matches the given search text against only
      * the columns currently shown in the specified table.
+     * <p>
+     * Each cell is matched against the text its renderer actually displays, not the cell value's
+     * {@code toString()}. For example a Part cell displays the part id, whereas
+     * {@code Part.toString()} also contains the name, height and package id, which would otherwise
+     * cause rows to match on text the user cannot see. Cells rendered without text (such as
+     * check boxes) are not searched. Boolean columns are skipped without calling their renderer,
+     * because some of those renderers look up other data by view row, which is not meaningful
+     * while the rows are being filtered.
      *
      * @param table the table whose visible columns should be searched
      * @param searchText the user's raw search text
@@ -185,11 +198,64 @@ public class TableUtils {
      */
     public static <M extends TableModel> RowFilter<M, Integer> createVisibleColumnsSearchFilter(
             JTable table, String searchText) {
-        TableColumnModel columnModel = table.getColumnModel();
-        int[] modelColumnIndices = new int[columnModel.getColumnCount()];
-        for (int i = 0; i < modelColumnIndices.length; i++) {
-            modelColumnIndices[i] = columnModel.getColumn(i).getModelIndex();
+        String trimmed = searchText == null ? "" : searchText.trim(); //$NON-NLS-1$
+        if (trimmed.isEmpty()) {
+            return new RowFilter<M, Integer>() {
+                @Override
+                public boolean include(Entry<? extends M, ? extends Integer> entry) {
+                    return true;
+                }
+            };
         }
-        return RowFilter.regexFilter("(?i)" + searchText.trim(), modelColumnIndices); //$NON-NLS-1$
+        Pattern pattern = Pattern.compile(trimmed, Pattern.CASE_INSENSITIVE);
+        TableColumnModel columnModel = table.getColumnModel();
+        int columnCount = columnModel.getColumnCount();
+        TableColumn[] columns = new TableColumn[columnCount];
+        for (int i = 0; i < columnCount; i++) {
+            columns[i] = columnModel.getColumn(i);
+        }
+        return new RowFilter<M, Integer>() {
+            @Override
+            public boolean include(Entry<? extends M, ? extends Integer> entry) {
+                for (int viewColumn = 0; viewColumn < columns.length; viewColumn++) {
+                    Object value = entry.getValue(columns[viewColumn].getModelIndex());
+                    String text = getDisplayedText(table, columns[viewColumn], viewColumn, value);
+                    if (text != null && pattern.matcher(text).find()) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+        };
+    }
+
+    /**
+     * Returns the text the table displays for the given value in the given column, or null if the
+     * cell displays no text.
+     */
+    static String getDisplayedText(JTable table, TableColumn column, int viewColumn,
+            Object value) {
+        if (value == null || value instanceof Boolean) {
+            // Booleans are shown as check boxes, which have no text to match.
+            return null;
+        }
+        TableCellRenderer renderer = column.getCellRenderer();
+        if (renderer == null) {
+            renderer = table.getDefaultRenderer(
+                    table.getModel().getColumnClass(column.getModelIndex()));
+        }
+        if (renderer == null) {
+            return value.toString();
+        }
+        Component component = renderer.getTableCellRendererComponent(table, value, false, false,
+                0, viewColumn);
+        if (component instanceof JLabel) {
+            return ((JLabel) component).getText();
+        }
+        if (component instanceof AbstractButton) {
+            // Check boxes and similar show state, not text.
+            return null;
+        }
+        return value.toString();
     }
 }
